@@ -1,0 +1,29 @@
+<div class="report-container">
+    <h2>Report Summary</h2>
+  
+    <!-- Report Data Table -->
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Date</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of reportData; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.date }}</td>
+          <td>{{ item.value | currency }}</td>
+        </tr>
+      </tbody>
+    </table>
+  
+    <!-- Chart.js Bar Chart -->
+    <h3>Report Chart</h3>
+    <div class="chart-wrapper">
+      <canvas #barCanvas></canvas>
+    </div>
+  </div>
