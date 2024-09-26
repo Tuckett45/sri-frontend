@@ -1,0 +1,8 @@
+<mat-form-field appearance="fill">
+    <mat-label>Select Date Range</mat-label>
+    <mat-select [(value)]="selectedValue" (selectionChange)="applyFilter()">
+      <mat-option value="week">Last Week</mat-option>
+      <mat-option value="month">Last Month</mat-option>
+      <mat-option value="year">Last Year</mat-option>
+    </mat-select>
+  </mat-form-field>
