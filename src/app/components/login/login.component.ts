@@ -22,9 +22,10 @@ export class LoginComponent {
       // In real applications, authentication logic (e.g., API call) would go here.
       const email = this.loginForm.get('email')?.value;
       const password = this.loginForm.get('password')?.value;
-
+      
       // Simple example: authenticate and navigate
       if (email === 'admin@example.com' && password === 'password123') {
+        localStorage.setItem('loggedIn', 'true');
         this.router.navigate(['/overview']); // Navigate to dashboard
       } else {
         alert('Invalid credentials');

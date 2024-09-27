@@ -1,11 +1,9 @@
 <mat-toolbar color="primary">
-    <span>Dashboard</span>
-    <span class="spacer"></span>
-    <button mat-icon-button [matMenuTriggerFor]="menu">
-      <mat-icon>account_circle</mat-icon>
-    </button>
-    <mat-menu #menu="matMenu">
-      <button mat-menu-item>Profile</button>
-      <button mat-menu-item>Logout</button>
-    </mat-menu>
-  </mat-toolbar>
+  <img width="100" alt="SRI Logo" src="assets\images\SRI_IntegrationServices-logo-white-small-2.png"/>
+  <!-- <span class="logo">SRI Tools</span> -->
+  <span class="spacer"></span>
+  <button mat-button routerLink="/overview">Overview</button>
+  <button mat-button routerLink="/osp">OSP Project Tracker</button>
+  <button mat-button routerLink="/profile">Profile</button>
+  <button mat-button (click)="logout()">Logout</button>
+</mat-toolbar>

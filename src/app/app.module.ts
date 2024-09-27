@@ -20,19 +20,21 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatDialogActions, MatDialogContent } from '@angular/material/dialog';
 
 // Chart.js and ng2-charts
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 // Custom Components
-import { SidebarComponent } from './components/sidebar/sidebar.component';
+// import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { OverviewComponent } from './components/overview/overview.component';
 import { WidgetComponent } from './components/widget/widget.component';
 import { FilterComponent } from './components/filter/filter.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { ChartComponent } from './components/charts/chart.component';
 import { TableComponent } from './components/table/table.component';
-import { ReportsComponent } from './components/reports/reports.component';
+import { OSPComponent } from './components/osp/osp.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { LoginComponent } from './components/login/login.component';
 
@@ -44,8 +46,8 @@ import { LoginComponent } from './components/login/login.component';
     LoginComponent,
     NavbarComponent,
     OverviewComponent,
-    ReportsComponent,
-    SidebarComponent,
+    OSPComponent,
+    // SidebarComponent,
     TableComponent,
     UserProfileComponent,
     WidgetComponent    
@@ -67,7 +69,10 @@ import { LoginComponent } from './components/login/login.component';
     MatTableModule,
     MatSelectModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatGridListModule,
+    MatDialogContent,
+    MatDialogActions
   ],
   providers: [provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]

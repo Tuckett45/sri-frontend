@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -6,5 +7,11 @@ import { Component } from '@angular/core';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-  constructor() {}
+  constructor(private router: Router) {}
+
+  logout(): void {
+    // Clear user session or token (optional: use localStorage)
+    localStorage.removeItem('loggedIn');
+    this.router.navigate(['/login']); // Redirect to login page
+  }
 }

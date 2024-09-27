@@ -1,10 +1,39 @@
-<mat-card>
-    <mat-card-header>
-      <div mat-card-avatar class="example-header-image"></div>
-      <mat-card-title>{{ user.name }}</mat-card-title>
-      <mat-card-subtitle>{{ user.email }}</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <button mat-raised-button color="primary">Edit Profile</button>
-    </mat-card-content>
-  </mat-card>
+<mat-card class="profile-card">
+  <mat-card-header>
+    <mat-card-title>User Profile</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="profile-info">
+      <p><strong>Username:</strong> <span class="profile-text">{{profileData.username}}</span></p>
+      <p><strong>Email:</strong> <span class="profile-text">{{profileData.email}}</span></p>
+    </div>
+
+    <!-- Button to open modal -->
+    <button mat-raised-button color="primary" (click)="openEditModal()">Edit Profile</button>
+  </mat-card-content>
+</mat-card>
+
+<!-- Modal Template -->
+<ng-template #editProfileModal>
+  <h2 mat-dialog-title>Edit Profile</h2>
+
+  <mat-dialog-content>
+    <form>
+      <mat-form-field appearance="fill">
+        <mat-label>Username</mat-label>
+        <input matInput [(ngModel)]="profileData.username" name="username">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Email</mat-label>
+        <input matInput [(ngModel)]="profileData.email" name="email">
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close (click)="closeModal()">Close</button>
+    <button mat-button color="primary" (click)="saveChanges()">Save</button>
+  </mat-dialog-actions>
+</ng-template>

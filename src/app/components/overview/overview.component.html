@@ -1,12 +1,58 @@
+<!-- Overview Page Content -->
 <div class="overview-container">
-    <h2>Overview</h2>
-    <div class="widget-grid">
-      <app-widget title="Total Sales" [data]="1000"></app-widget>
-      <app-widget title="New Users" [data]="50"></app-widget>
-      <app-widget title="Revenue" [data]="5000"></app-widget>
-    </div>
-  
-    <div class="chart-container">
-      <app-chart></app-chart>
-    </div>
-  </div>
+  <h2>Overview</h2>
+  <mat-grid-list cols="12" rowHeight="100px" gutterSize="16px">
+    <!-- Widget 1 -->
+    <mat-grid-tile colspan="3" rowspan="2">
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-icon>show_chart</mat-icon>
+          <mat-card-title>Statistics</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Here are the statistics for the month.</p>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <!-- Widget 2 -->
+    <mat-grid-tile colspan="3" rowspan="2">
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-icon>account_balance_wallet</mat-icon>
+          <mat-card-title>Balance</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Your current balance is $12,345.</p>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <!-- Widget 3 -->
+    <mat-grid-tile colspan="3" rowspan="2">
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-icon>group</mat-icon>
+          <mat-card-title>Users</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Active users: 1,234</p>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <!-- Widget 4 (Full width chart) -->
+    <mat-grid-tile colspan="12" rowspan="4">
+      <mat-card class="dashboard-card full-width-chart">
+        <mat-card-header>
+          <mat-icon>timeline</mat-icon>
+          <mat-card-title>Performance</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <!-- Replace this with your chart component -->
+          <app-chart></app-chart>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+  </mat-grid-list>
+</div>
