@@ -1,0 +1,26 @@
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .login-card {
+    padding: 30px;
+    width: 400px;
+    text-align: center;
+    background-color: #144f80;
+  }
+  
+  mat-form-field {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  mat-toolbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 2;
+    background-color: #e18a25;
+  }

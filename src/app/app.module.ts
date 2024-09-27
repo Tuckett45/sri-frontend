@@ -34,12 +34,14 @@ import { ChartComponent } from './components/charts/chart.component';
 import { TableComponent } from './components/table/table.component';
 import { ReportsComponent } from './components/reports/reports.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
+import { LoginComponent } from './components/login/login.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ChartComponent,
     FilterComponent,
+    LoginComponent,
     NavbarComponent,
     OverviewComponent,
     ReportsComponent,
