@@ -1,5 +1,5 @@
 .profile-card {
-  background-color: #f5f5f5;
+  background-color: #dddddd;
   padding: 20px;
   max-width: 400px;
   margin: 0 auto;
@@ -7,6 +7,7 @@
 }
 
 .profile-info {
+  margin-top: 8%;
   margin-bottom: 20px;
 
   .profile-text {
@@ -14,8 +15,24 @@
   }
 }
 
-button {
-  margin-top: 20px;
+mat-card {
+  button{
+    align-items: center;
+    background-color: #e18a25;
+    color: #fff;
+  }
+}
+
+mat-dialog-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1.5rem;  // Adjust the font size
+  font-weight: bold;  // Make the title bold
+  padding: 10px;  // Add padding
+  background-color: #f5f5f5;  // Light gray background
+  color: #333;  // Dark text color
+  border-bottom: 1px solid #ddd;  // Add a bottom border
 }
 
 mat-dialog-content {

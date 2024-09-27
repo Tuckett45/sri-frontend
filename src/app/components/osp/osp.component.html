@@ -1,4 +1,62 @@
-<div class="Osp-container">
-    <h2>OSP Project Tracker</h2>
-    <app-table></app-table>
-  </div>
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>OSP Management</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Button to open the form modal -->
+    <button mat-raised-button (click)="openAddEntryModal()">Add New Entry</button>
+
+    <!-- Table to display entries -->
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+
+      <!-- ID Column -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef> ID </th>
+        <td mat-cell *matCellDef="let element"> {{element.id}} </td>
+      </ng-container>
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef> Name </th>
+        <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+      </ng-container>
+
+      <!-- Description Column -->
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef> Description </th>
+        <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+      </ng-container>
+
+      <!-- Table Header and Row Declarations -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </mat-card-content>
+</mat-card>
+
+<!-- Modal Template -->
+<ng-template #addEntryModal>
+  <h2 mat-dialog-title>
+    Add New Entry
+  </h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="entryForm">
+      <mat-form-field appearance="fill">
+        <mat-label>Entry Name</mat-label>
+        <input matInput formControlName="name">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Description</mat-label>
+        <input matInput formControlName="description">
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="closeModal()">Cancel</button>
+    <button mat-button color="primary" (click)="saveEntry()">Save</button>
+  </mat-dialog-actions>
+</ng-template>

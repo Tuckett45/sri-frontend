@@ -21,7 +21,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { MatDialogActions, MatDialogContent } from '@angular/material/dialog';
+import { MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 
 // Chart.js and ng2-charts
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
@@ -72,7 +72,8 @@ import { LoginComponent } from './components/login/login.component';
     MatInputModule,
     MatGridListModule,
     MatDialogContent,
-    MatDialogActions
+    MatDialogActions,
+    MatDialogTitle
   ],
   providers: [provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]
