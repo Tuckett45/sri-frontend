@@ -34,7 +34,8 @@ import { FilterComponent } from './components/filter/filter.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { ChartComponent } from './components/charts/chart.component';
 import { TableComponent } from './components/table/table.component';
-import { OSPComponent } from './components/osp/osp.component';
+import { PreliminaryPunchListComponent } from './components/preliminary-punch-list/preliminary-punch-list.component';
+import { PreliminaryPunchListModalComponent } from './components/preliminary-punch-list/preliminary-punch-list-modal.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { LoginComponent } from './components/login/login.component';
 
@@ -46,7 +47,8 @@ import { LoginComponent } from './components/login/login.component';
     LoginComponent,
     NavbarComponent,
     OverviewComponent,
-    OSPComponent,
+    PreliminaryPunchListComponent,
+    PreliminaryPunchListModalComponent,
     // SidebarComponent,
     TableComponent,
     UserProfileComponent,

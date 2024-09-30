@@ -1,0 +1,132 @@
+<div class="preliminary-punch-list-page">
+  <h2>Preliminary Punch List</h2>
+
+  <button mat-raised-button (click)="openModal()">Add New Entry</button>
+
+  <table mat-table [dataSource]="preliminaryPunchList" class="mat-elevation-z8">
+
+    <!-- Segment ID Column -->
+    <ng-container matColumnDef="segmentId">
+      <th mat-header-cell *matHeaderCellDef> Segment ID </th>
+      <td mat-cell *matCellDef="let report"> {{ report.segmentId }} </td>
+    </ng-container>
+
+    <!-- Street Address Column -->
+    <ng-container matColumnDef="streetAddress">
+      <th mat-header-cell *matHeaderCellDef> Street Address </th>
+      <td mat-cell *matCellDef="let report"> {{ report.streetAddress }} </td>
+    </ng-container>
+
+    <!-- City Column -->
+    <ng-container matColumnDef="city">
+      <th mat-header-cell *matHeaderCellDef> City </th>
+      <td mat-cell *matCellDef="let report"> {{ report.city }} </td>
+    </ng-container>
+
+    <!-- State Column -->
+    <ng-container matColumnDef="state">
+      <th mat-header-cell *matHeaderCellDef> State </th>
+      <td mat-cell *matCellDef="let report"> {{ report.state }} </td>
+    </ng-container>
+
+    <!-- Vault Issues Column -->
+    <ng-container matColumnDef="vaultIssues">
+      <th mat-header-cell *matHeaderCellDef> Vault Issues </th>
+      <td mat-cell *matCellDef="let report"> {{ report.vaultIssues.join(', ') }} </td>
+    </ng-container>
+
+    <!-- DB Issues Column -->
+    <ng-container matColumnDef="dbIssues">
+      <th mat-header-cell *matHeaderCellDef> DB Issues </th>
+      <td mat-cell *matCellDef="let report"> {{ report.dbIssues.join(', ') }} </td>
+    </ng-container>
+
+    <!-- Trench Issues Column -->
+    <ng-container matColumnDef="trenchIssues">
+      <th mat-header-cell *matHeaderCellDef> Trench Issues </th>
+      <td mat-cell *matCellDef="let report"> {{ report.trenchIssues.join(', ') }} </td>
+    </ng-container>
+
+    <!-- Site Clean Up Column -->
+    <ng-container matColumnDef="siteCleanUp">
+      <th mat-header-cell *matHeaderCellDef> Site Clean Up </th>
+      <td mat-cell *matCellDef="let report"> {{ report.siteCleanUp.join(', ') }} </td>
+    </ng-container>
+
+    <!-- Sidewalk Panels Column -->
+    <ng-container matColumnDef="sidewalkPanels">
+      <th mat-header-cell *matHeaderCellDef> Sidewalk Panels </th>
+      <td mat-cell *matCellDef="let report"> {{ report.sidewalkPanels.join(', ') }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="sealantIssues">
+      <th mat-header-cell *matHeaderCellDef> Sealant Issues </th>
+      <td mat-cell *matCellDef="let report"> {{ report.sealantIssues.join(', ') }} </td>
+    </ng-container>
+
+    <!-- Additional Concerns Column -->
+    <ng-container matColumnDef="additionalConcerns">
+      <th mat-header-cell *matHeaderCellDef> Additional Concerns </th>
+      <td mat-cell *matCellDef="let report"> {{ report.additionalConcerns }} </td>
+    </ng-container>
+
+    <!-- Notified To Column -->
+    <ng-container matColumnDef="notifiedTo">
+      <th mat-header-cell *matHeaderCellDef> Notified To </th>
+      <td mat-cell *matCellDef="let report"> {{ report.notifiedTo }} </td>
+    </ng-container>
+
+    <!-- Notified How Column -->
+    <ng-container matColumnDef="notifiedHow">
+      <th mat-header-cell *matHeaderCellDef> Notified How </th>
+      <td mat-cell *matCellDef="let report"> {{ report.notifiedHow }} </td>
+    </ng-container>
+
+    <!-- Date Reported Column -->
+    <ng-container matColumnDef="dateReported">
+      <th mat-header-cell *matHeaderCellDef> Date Reported </th>
+      <td mat-cell *matCellDef="let report"> {{ report.dateReported }} </td>
+    </ng-container>
+
+    <!-- Issue Image Column -->
+    <ng-container matColumnDef="issueImage">
+      <th mat-header-cell *matHeaderCellDef> Issue Image </th>
+      <td mat-cell *matCellDef="let report"> {{ report.issueImage }} </td>
+    </ng-container>
+
+    <!-- PM Resolved Column -->
+    <ng-container matColumnDef="pmResolved">
+      <th mat-header-cell *matHeaderCellDef> PM Resolved </th>
+      <td mat-cell *matCellDef="let report"> {{ report.pmResolved }} </td>
+    </ng-container>
+
+    <!-- CM Resolved Column -->
+    <ng-container matColumnDef="cmResolved">
+      <th mat-header-cell *matHeaderCellDef> CM Resolved </th>
+      <td mat-cell *matCellDef="let report"> {{ report.cmResolved }} </td>
+    </ng-container>
+
+    <!-- Resolved Date Column -->
+    <ng-container matColumnDef="resolvedDate">
+      <th mat-header-cell *matHeaderCellDef> Resolved Date </th>
+      <td mat-cell *matCellDef="let report"> {{ report.resolvedDate }} </td>
+    </ng-container>
+
+    <!-- Actions Column (Delete Button) -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef> Actions </th>
+      <td mat-cell *matCellDef="let report; let i = index">
+        <button mat-icon-button color="warn" (click)="removeReport(i)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <!-- Table Header -->
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+    <!-- Table Rows -->
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+  </table>
+</div>
