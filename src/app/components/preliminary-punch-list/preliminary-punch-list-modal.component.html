@@ -1,133 +1,156 @@
 <div mat-dialog-title class="modal-header">
-    <h3 class="modal-title">Preliminary Punch List Report</h3>
-    <button mat-icon-button (click)="close()">
-      <mat-icon>close</mat-icon>
-    </button>
-  </div>
-  
-  <div mat-dialog-content class="modal-body">
-    <form [formGroup]="preliminaryPunchListForm">
-  
+  <h3 class="modal-title">Preliminary Punch List Report</h3>
+  <button mat-icon-button (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div mat-dialog-content class="modal-body">
+  <form [formGroup]="preliminaryPunchListForm">
+
+    <mat-grid-list cols="4" rowHeight="115px" gutterSize="2px">
+
       <!-- Segment ID -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Segment ID</mat-label>
-        <input matInput formControlName="segmentId" placeholder="Enter Segment ID">
-      </mat-form-field>
-  
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Segment ID</mat-label>
+          <input matInput formControlName="segmentId" placeholder="Enter Segment ID">
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- Street Address -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Street Address</mat-label>
-        <input matInput formControlName="streetAddress" placeholder="Enter Street Address">
-      </mat-form-field>
-  
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Street Address</mat-label>
+          <input matInput formControlName="streetAddress" placeholder="Enter Street Address">
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- City -->
-      <mat-form-field appearance="outline" class="half-width">
-        <mat-label>City</mat-label>
-        <input matInput formControlName="city" placeholder="Enter City">
-      </mat-form-field>
-  
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" placeholder="Enter City">
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- State -->
-      <mat-form-field appearance="outline" class="half-width">
-        <mat-label>State</mat-label>
-        <input matInput formControlName="state" placeholder="Enter State">
-      </mat-form-field>
-  
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>State</mat-label>
+          <input matInput formControlName="state" placeholder="Enter State">
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- Vault Issues Multi-Select -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Vault Issues</mat-label>
-      <mat-select formControlName="vaultIssues" multiple>
-        <mat-option *ngFor="let issue of vaultIssuesList" [value]="issue">
-          {{ issue }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Vault Issues</mat-label>
+          <mat-select formControlName="vaultIssues" multiple>
+            <mat-option *ngFor="let vaultIssue of vaultIssuesList" [value]="vaultIssue">
+              {{ vaultIssue }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
 
-    <!-- DB Issues Multi-Select -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>DB Issues</mat-label>
-      <mat-select formControlName="dbIssues" multiple>
-        <mat-option *ngFor="let issue of dbIssuesList" [value]="issue">
-          {{ issue }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+      <!-- DB Issues Multi-Select -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>DB Issues</mat-label>
+          <mat-select formControlName="dbIssues" multiple>
+            <mat-option *ngFor="let dbIssue of dbIssuesList" [value]="dbIssue">
+              {{ dbIssue }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
 
-    <!-- Trench Issues Multi-Select -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Trench Issues</mat-label>
-      <mat-select formControlName="trenchIssues" multiple>
-        <mat-option *ngFor="let issue of trenchIssuesList" [value]="issue">
-          {{ issue }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+      <!-- Trench Issues Multi-Select -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Trench Issues</mat-label>
+          <mat-select formControlName="trenchIssues" multiple>
+            <mat-option *ngFor="let trenchIssue of trenchIssuesList" [value]="trenchIssue">
+              {{ trenchIssue }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
 
-    <!-- Site Clean Up Multi-Select -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Site Clean Up</mat-label>
-      <mat-select formControlName="siteCleanUp" multiple>
-        <mat-option *ngFor="let issue of siteCleanUpList" [value]="issue">
-          {{ issue }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+      <!-- Site Clean Up Multi-Select -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Site Clean Up</mat-label>
+          <mat-select formControlName="siteCleanUp" multiple>
+            <mat-option *ngFor="let siteCleanUp of siteCleanUpList" [value]="siteCleanUp">
+              {{ siteCleanUp }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
 
-    <!-- Sidewalk Panels Multi-Select -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Sidewalk Panels</mat-label>
-      <mat-select formControlName="sidewalkPanels" multiple>
-        <mat-option *ngFor="let panel of sidewalkPanelsList" [value]="panel">
-          {{ panel }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+      <!-- Sidewalk Panels Multi-Select -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Sidewalk Panels</mat-label>
+          <mat-select formControlName="sidewalkPanels" multiple>
+            <mat-option *ngFor="let sidewalkPanel of sidewalkPanelsList" [value]="sidewalkPanel">
+              {{ sidewalkPanel }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
 
-    <!-- Sealant Issues Multi-Select -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Sealant Issues</mat-label>
-      <mat-select formControlName="sealantIssues" multiple>
-        <mat-option *ngFor="let issue of sealantIssuesList" [value]="issue">
-          {{ issue }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-  
+      <!-- Sealant Issues Multi-Select -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Sealant Issues</mat-label>
+          <mat-select formControlName="sealantIssues" multiple>
+            <mat-option *ngFor="let sealantIssue of sealantIssuesList" [value]="sealantIssue">
+              {{ sealantIssue }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- Additional Concerns -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Additional Concerns</mat-label>
-        <textarea matInput formControlName="additionalConcerns" placeholder="Enter Additional Concerns"></textarea>
-      </mat-form-field>
-  
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Additional Concerns</mat-label>
+          <textarea matInput formControlName="additionalConcerns" placeholder="Enter Additional Concerns"></textarea>
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- Notified To -->
-      <mat-form-field appearance="outline" class="half-width">
-        <mat-label>Notified To</mat-label>
-        <input matInput formControlName="notifiedTo" placeholder="Notified To">
-      </mat-form-field>
-  
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Notified To</mat-label>
+          <input matInput formControlName="notifiedTo" placeholder="Notified To">
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- Notified How -->
-      <mat-form-field appearance="outline" class="half-width">
-        <mat-label>Notified How</mat-label>
-        <input matInput formControlName="notifiedHow" placeholder="Notified How">
-      </mat-form-field>
-  
-      <!-- Date Reported -->
-      <!-- <mat-form-field appearance="outline" class="half-width">
-        <mat-label>Date Reported</mat-label>
-        <input matInput [matDatepicker]="picker" formControlName="dateReported" placeholder="Choose a date">
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-      </mat-form-field> -->
-  
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Notified How</mat-label>
+          <input matInput formControlName="notifiedHow" placeholder="Notified How">
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- Issue Image -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Issue Image</mat-label>
-        <input type="file" (change)="onFileSelected($event)">
-      </mat-form-field>
-  
-    </form>
-  </div>
-  
-  <div mat-dialog-actions class="modal-footer">
-    <button mat-raised-button class="cancel-btn" (click)="close()">Cancel</button>
-    <button mat-raised-button class="save-btn" (click)="save()">Save</button>
-  </div>
+      <mat-grid-tile colspan="4">
+        <div class="file-input-wrapper">
+          <label class="custom-label">Issue Image</label>
+          <input type="file" (change)="onFileSelected($event)" class="file-input">
+        </div>
+      </mat-grid-tile>
+      
+    </mat-grid-list>
+  </form>
+</div>
+
+<div mat-dialog-actions class="modal-footer">
+  <button mat-raised-button class="cancel-btn" (click)="close()">Cancel</button>
+  <button mat-raised-button class="save-btn" (click)="save()">Save</button>
+</div>
