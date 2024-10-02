@@ -22,6 +22,13 @@ export class PreliminaryPunchListService {
     this.punchListEntriesSubject.next([...currentEntries, entry]);
   }
 
+  // Update an existing entry in the list
+  updateEntry(index: number, updatedEntry: PreliminaryPunchList): void {
+    const currentEntries = [...this.punchListEntriesSubject.value];
+    currentEntries[index] = updatedEntry;
+    this.punchListEntriesSubject.next(currentEntries);
+  }
+
   // Remove an entry by index
   removeEntry(index: number): void {
     const currentEntries = [...this.punchListEntriesSubject.value];

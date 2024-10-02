@@ -46,6 +46,21 @@ export class PreliminaryPunchListComponent implements OnInit {
     });
   }
 
+  // Open modal to edit an existing entry
+  editReport(report: PreliminaryPunchList, index: number): void {
+    const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
+      width: '600px',
+      data: { ...report }  // Pass a copy of the report to edit
+    });
+
+    dialogRef.afterClosed().subscribe((result: PreliminaryPunchList | undefined) => {
+      if (result) {
+        // Update the entry in the shared punch list service
+        this.punchListService.updateEntry(index, result);
+      }
+    });
+  }
+
   // Method to remove a report
   removeReport(index: number): void {
     this.punchListService.removeEntry(index);

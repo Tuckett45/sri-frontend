@@ -2,29 +2,137 @@
   background-color: #dddddd;
   padding: 20px;
   margin: 20px;
+  box-sizing: border-box;
 
-  button{
+  .header-section {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    background-color: #e18a25;
-    color: #fff;
-  }
+    margin-bottom: 20px;
 
-  header{
-    title{
-      padding-top: 2%;
-      padding-left: 2%;
+    h2 {
+      font-size: 2rem;
+    }
+
+    button {
+      align-items: center;
+      background-color: #e18a25;
+      color: #fff;
+
+      &:hover {
+        background-color: #b86404;
+      }
     }
   }
-}
 
-table {
-  width: 100%;
-  margin-top: 20px;
-}
+  .table-wrapper {
+    overflow-x: auto; // Horizontal scroll on small screens if needed
 
-.header-btn{
-  margin-left: 91%;
-  align-items: center;
-  background-color: #e18a25;
-  color: #fff;
+    table {
+      width: 100%;
+      margin-top: 20px;
+      min-width: 600px; // Set minimum width to avoid collapsing columns on small screens
+
+      th,
+      td {
+        text-align: left;
+        padding: 10px;
+      }
+    }
+  }
+
+  .actions-container {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .clickable-icon {
+    cursor: pointer;
+    font-size: 20px;
+    color: #e18a25;
+
+    &:hover {
+      color: #b86404;
+    }
+  }
+
+  // Mobile styles
+  @media (max-width: 768px) {
+    padding: 10px;
+    margin: 10px;
+
+    .header-section {
+      flex-direction: column;
+      align-items: flex-start;
+
+      h2 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+      }
+
+      button {
+        width: 100%; // Full width for better usability on smaller screens
+        margin-bottom: 10px;
+      }
+    }
+
+    .table-wrapper {
+      table {
+        font-size: 14px;
+      }
+
+      // Convert the table into a card layout on very small screens
+      table {
+        display: block;
+
+        tr {
+          display: flex;
+          flex-direction: column;
+          border-bottom: 1px solid #ccc;
+          padding: 10px;
+          margin-bottom: 10px;
+        }
+
+        th, td {
+          display: block;
+          width: 100%;
+          text-align: left;
+
+          &:before {
+            content: attr(data-label);
+            font-weight: bold;
+            display: inline-block;
+            width: 40%;
+          }
+        }
+      }
+    }
+  }
+
+  // Tablet styles
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .header-section {
+      flex-direction: row;
+      align-items: center;
+
+      h2 {
+        font-size: 1.8rem;
+      }
+
+      button {
+        margin-left: auto;
+      }
+    }
+
+    .table-wrapper {
+      table {
+        font-size: 15px;
+      }
+
+      th,
+      td {
+        padding: 8px;
+      }
+    }
+  }
 }
