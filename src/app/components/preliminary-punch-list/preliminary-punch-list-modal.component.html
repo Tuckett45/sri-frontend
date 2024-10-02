@@ -144,9 +144,17 @@
           <label class="custom-label">Issue Image</label>
           <input type="file" (change)="onFileSelected($event)" class="file-input">
         </div>
-      </mat-grid-tile>
-      
-    </mat-grid-list>
+      </mat-grid-tile>      
+    </mat-grid-list> 
+    <!-- PM Resolved Checkbox (Only in Edit Mode) -->
+    <div *ngIf="isEditMode" class="checkbox-container">
+      <mat-checkbox formControlName="pmResolved">PM Resolved</mat-checkbox>
+    </div>
+
+    <!-- CM Resolved Checkbox (Only in Edit Mode) -->
+    <div *ngIf="isEditMode" class="checkbox-container">
+      <mat-checkbox formControlName="cmResolved">CM Resolved</mat-checkbox>
+    </div>
   </form>
 </div>
 

@@ -121,11 +121,11 @@
       <!-- Actions Column (Delete Button) -->
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef> Actions </th>
-        <td mat-cell *matCellDef="let report; let i = index" class="actions-container" data-label="Actions">
-          <!-- Edit Icon -->
-          <mat-icon class="clickable-icon" color="primary" (click)="editReport(report, i)">edit</mat-icon>
-          <!-- Delete Icon -->
-          <mat-icon class="clickable-icon" color="warn" (click)="removeReport(i)">delete</mat-icon>
+        <td mat-cell *matCellDef="let report; let i = index" data-label="Actions">
+          <div class="actions-container">
+            <mat-icon (click)="editReport(report)" class="edit-icon">edit</mat-icon>
+            <mat-icon (click)="removeReport(i)" class="delete-icon" color="warn">delete</mat-icon>
+          </div>
         </td>
       </ng-container>
 

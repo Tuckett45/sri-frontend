@@ -23,10 +23,15 @@ export class PreliminaryPunchListService {
   }
 
   // Update an existing entry in the list
-  updateEntry(index: number, updatedEntry: PreliminaryPunchList): void {
+  updateEntry(updatedEntry: PreliminaryPunchList): void {
     const currentEntries = [...this.punchListEntriesSubject.value];
-    currentEntries[index] = updatedEntry;
-    this.punchListEntriesSubject.next(currentEntries);
+    const index = currentEntries.findIndex(entry => entry.segmentId === updatedEntry.segmentId);
+    
+    if (index !== -1) {
+      // Replace the old entry with the updated one
+      currentEntries[index] = updatedEntry;
+      this.punchListEntriesSubject.next(currentEntries);
+    }
   }
 
   // Remove an entry by index

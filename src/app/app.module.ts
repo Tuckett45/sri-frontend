@@ -9,6 +9,7 @@ import { AppRoutingModule } from './app-routing.module'; // For routing between 
 import { AppComponent } from './app.component';
 
 // Angular Material Modules
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -75,7 +76,8 @@ import { LoginComponent } from './components/login/login.component';
     MatGridListModule,
     MatDialogContent,
     MatDialogActions,
-    MatDialogTitle
+    MatDialogTitle,
+    MatCheckboxModule 
   ],
   providers: [provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]

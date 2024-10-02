@@ -32,33 +32,28 @@ export class PreliminaryPunchListComponent implements OnInit {
   ngOnInit(): void {}
 
   // Open modal to add a new entry
-  openModal(): void {
+  openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
       width: '600px',
-      data: {}
+      data: data || null
     });
 
-    dialogRef.afterClosed().subscribe((result: PreliminaryPunchList | undefined) => {
+    dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // Add the result to the shared punch list service
-        this.punchListService.addEntry(result);
+        if (data) {
+          // Update an existing entry (edit mode)
+          this.punchListService.updateEntry(result);
+        } else {
+          // Add a new entry (add mode)
+          this.punchListService.addEntry(result);
+        }
       }
     });
   }
 
   // Open modal to edit an existing entry
-  editReport(report: PreliminaryPunchList, index: number): void {
-    const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
-      width: '600px',
-      data: { ...report }  // Pass a copy of the report to edit
-    });
-
-    dialogRef.afterClosed().subscribe((result: PreliminaryPunchList | undefined) => {
-      if (result) {
-        // Update the entry in the shared punch list service
-        this.punchListService.updateEntry(index, result);
-      }
-    });
+  editReport(report: PreliminaryPunchList): void {
+    this.openModal(report);
   }
 
   // Method to remove a report

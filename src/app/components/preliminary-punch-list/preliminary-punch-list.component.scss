@@ -46,13 +46,23 @@
     gap: 8px;
   }
 
-  .clickable-icon {
+  .edit-icon {
     cursor: pointer;
     font-size: 20px;
     color: #e18a25;
 
     &:hover {
       color: #b86404;
+    }
+  }
+
+  .delete-icon {
+    cursor: pointer;
+    font-size: 20px;
+    color: #f44336;;
+
+    &:hover {
+      color: #e53935;
     }
   }
 

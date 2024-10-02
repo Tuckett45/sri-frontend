@@ -12,6 +12,7 @@ import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.mode
 })
 export class PreliminaryPunchListModalComponent {
   preliminaryPunchListForm: FormGroup;
+  isEditMode: boolean = false;
 
   // Options for each of the issue fields
 
@@ -91,7 +92,7 @@ export class PreliminaryPunchListModalComponent {
     private dialogRef: MatDialogRef<PreliminaryPunchListModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList 
   ) {  
-
+    this.isEditMode = !!data; // If data exists, we are in edit mode
     this.preliminaryPunchListForm = this.fb.group({
       segmentId: [data?.segmentId || '', Validators.required],
       streetAddress: [data?.streetAddress || '', Validators.required],
@@ -106,7 +107,9 @@ export class PreliminaryPunchListModalComponent {
       additionalConcerns: [data?.additionalConcerns || ''],
       notifiedTo: [data?.notifiedTo || '', Validators.required],
       notifiedHow: [data?.notifiedHow || '', Validators.required],
-      issueImage: [data?.issueImage || null]
+      issueImage: [data?.issueImage || null],
+      pmResolved: [data?.pmResolved || false],  // Add PM Resolved with default value
+      cmResolved: [data?.cmResolved || false] 
     });
   }
 
@@ -175,8 +178,8 @@ export class PreliminaryPunchListModalComponent {
         notifiedHow: this.preliminaryPunchListForm.get('notifiedHow')?.value,
         issueImage: this.preliminaryPunchListForm.get('issueImage')?.value,
         dateReported: new Date,
-        pmResolved: false,
-        cmResolved: false,
+        pmResolved: (this.preliminaryPunchListForm.get('pmResolved')?.value ? this.preliminaryPunchListForm.get('pmResolved')?.value : false),
+        cmResolved: (this.preliminaryPunchListForm.get('cmResolved')?.value ? this.preliminaryPunchListForm.get('cmResolved')?.value : false),
         resolvedDate: null
       };
       
