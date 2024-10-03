@@ -1,0 +1,104 @@
+.modal-header {
+    background-color: #144f80;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  
+    .modal-title {
+      font-size: 1.5rem;
+      color: #fff;
+    }
+  
+    button {
+      color: #ffffff;
+  
+      &:hover {
+        color: #000;
+      }
+    }
+  }
+
+  mat-form-field {
+    width: 100%;
+    margin-bottom: 10px;
+    margin-top: 10px;
+  
+    mat-form-field-wrapper {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      padding: 5px;
+    }
+  
+    mat-label {
+      color: #000000;
+    }
+  }
+
+  ::ng-deep .mat-mdc-input-element {
+    color: #000000 !important; /* Set the input text color */
+  }
+  
+  .modal-body {
+    background-color: #ffffff;
+    padding: 25px;
+    color: #000000;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  
+  mat-form-field {
+    width: 100%;
+    margin-bottom: 20px;
+  
+    .mat-label {
+      color: #525252;
+    }
+  
+    mat-error {
+      font-size: 0.875rem;
+      color: #e53935;
+    }
+  }
+  
+  .modal-footer {
+    background-color: #144f80;
+    display: flex;
+    justify-content: flex-end;
+    padding: 20px;
+  
+    .cancel-btn {
+      background-color: #f44336;
+      color: #ffffff;
+      margin-right: 10px;
+  
+      &:hover {
+        background-color: #e53935;
+      }
+    }
+  
+    .save-btn {
+      background-color: #e18a25;
+      color: #ffffff;
+  
+      &:hover {
+        background-color: #b86404;
+      }
+    }
+  }
+  
+  button.mat-raised-button {
+    color: #fff;
+  
+    &.mat-primary {
+      background-color: #144f80;
+    }
+  
+    &.mat-accent {
+      background-color: #ff4081;
+    }
+  
+    &.mat-warn {
+      background-color: #f44336;
+    }
+  }

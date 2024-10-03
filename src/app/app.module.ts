@@ -39,13 +39,18 @@ import { PreliminaryPunchListComponent } from './components/preliminary-punch-li
 import { PreliminaryPunchListModalComponent } from './components/preliminary-punch-list/preliminary-punch-list-modal.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { LoginComponent } from './components/login/login.component';
+import { RegisterModalComponent } from './components/register-modal/register-modal.component';
+import { UserProfileModalComponent } from './components/user-profile/user-profile-modal/user-profile-modal.component';
+import { ForgotPasswordModalComponent } from './components/forgot-password-modal/forgot-password-modal.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ChartComponent,
     FilterComponent,
+    ForgotPasswordModalComponent,
     LoginComponent,
+    RegisterModalComponent,
     NavbarComponent,
     OverviewComponent,
     PreliminaryPunchListComponent,
@@ -53,6 +58,7 @@ import { LoginComponent } from './components/login/login.component';
     // SidebarComponent,
     TableComponent,
     UserProfileComponent,
+    UserProfileModalComponent,
     WidgetComponent    
   ],
   imports: [

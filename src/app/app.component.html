@@ -1,7 +1,7 @@
-<app-navbar *ngIf="isLoggedIn()"></app-navbar>
+<app-navbar *ngIf="isUserLoggedIn"></app-navbar>
 
-<mat-toolbar color="primary" *ngIf="!isLoggedIn()">
-    <img width="100" alt="SRI Logo" src="assets\images\SRI_IntegrationServices-logo-white-small-2.png"/>
+<mat-toolbar color="primary" *ngIf="!isUserLoggedIn">
+    <img width="100" alt="SRI Logo" src="assets/images/SRI_IntegrationServices-logo-white-small-2.png"/>
 </mat-toolbar>
 
 <div class="main-content" role="main">

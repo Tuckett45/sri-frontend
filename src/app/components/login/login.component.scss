@@ -1,18 +1,135 @@
 .login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-  
-  .login-card {
-    padding: 30px;
-    width: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 70vh; // Full viewport height to center form vertically and horizontally
+  padding: 20px;
+
+  .login-header {
     text-align: center;
-    background-color: #144f80;
-  }
-  
-  mat-form-field {
-    width: 100%;
     margin-bottom: 20px;
   }
+
+  .login-body {
+    background-color: #ffffff;
+    padding: 25px 25px 0px 25px;
+    border-radius: 5px;
+    color: #000000;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  
+
+  .forgot-password {
+    text-align: right;
+    margin-bottom: 20px;
+
+    a {
+      color: #e18a25;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+::ng-deep .mat-mdc-input-element {
+  color: #000000 !important; /* Set the input text color */
+}
+
+::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused):hover .mdc-floating-label   {
+    color: #000000 !important; /* Set the input text color */
+
+}
+
+::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-floating-label {
+  color: #000000 !important; /* Set the input text color */
+}
+
+.login-card {
+  padding: 30px;
+  width: 100%;
+  max-width: 400px; // Constrain the card width to make it look better on larger screens
+  background-color: #144f80;
+  color: #fff; // Ensure all text inside the card is white for readability
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); // Add shadow for depth
+  border-radius: 10px; // Rounded corners for a modern look
+
+  mat-card-title {
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    color: #ffffff;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+
+    mat-form-field {
+      width: 100%;
+      margin-bottom: 20px;
+
+      .mat-label {
+        color: #000000;
+      }
+
+      .mat-input-element {
+        color: #000000 !important; // Make input text white to ensure readability
+      }
+
+      .mat-hint,
+      .mat-error {
+        color: #ffd1a9 !important; // Lighter accent color for hints and error messages
+      }
+    }
+    
+
+    .button-container {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 20px;
+  
+      button {
+        color: #ffffff;
+
+        &.login-btn {
+          background-color: #e18a25;
+  
+          &:hover {
+            background-color: #b86404;
+          }
+          &:disabled{
+            background-color: #88827a;
+          }
+        }
+  
+        &.register-btn {
+          background-color: #144f80;// Accent color
+          color: #fff;
+          margin-left: 15px;
+        
+          &:hover {
+            background-color: #207bc5; // Darker version of the accent color
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .login-container {
+    height: 90vh; // Increase height slightly for smaller screens to accommodate keyboard space
+  }
+
+  .login-card {
+    width: 100%;
+    padding: 20px; // Reduce padding to prevent overflow on small screens
+  }
+
+  button.login-button {
+    padding: 10px;
+  }
+}

@@ -1,5 +1,6 @@
 import { Component, TemplateRef, ViewChild } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { UserProfileModalComponent } from './user-profile-modal/user-profile-modal.component';
 
 @Component({
   selector: 'app-user-profile',  // Update selector
@@ -22,9 +23,17 @@ export class UserProfileComponent {
 
   constructor(private dialog: MatDialog) {}
 
-   // Method to open the modal
-   openEditModal(): void {
-    this.dialogRef = this.dialog.open(this.editProfileModal);
+  openEditModal(): void {
+    const dialogRef = this.dialog.open(UserProfileModalComponent, {
+      width: '400px',
+      data: this.profileData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.profileData = result;
+      }
+    });
   }
 
   // Method to close the modal
