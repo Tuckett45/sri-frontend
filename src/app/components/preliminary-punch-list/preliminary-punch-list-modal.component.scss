@@ -5,6 +5,20 @@
   color: #000000;
   max-height: 70vh;
   overflow-y: auto;
+
+  .issue-btn{
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #e18a25;
+    border-color: #e18a25;
+    margin-right: 15px;
+
+    &:hover {
+      background-color: #b86404;
+      color: #ffffff;
+    }
+  }
 }
 
 /* Ensure text field colors are properly set */
@@ -19,6 +33,10 @@
 
 ::ng-deep .mat-mdc-checkbox .mat-internal-form-field {
   color: #000000 !important; /* Set the label text color */
+}
+
+::ng-deep .mat-mdc-select {
+  color: #000000 !important;
 }
 
 /* Style the checkbox */

@@ -11,10 +11,17 @@
     <mat-grid-list cols="4" rowHeight="115px" gutterSize="2px">
 
       <!-- Segment ID -->
-      <mat-grid-tile colspan="4">
+      <mat-grid-tile colspan="2">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Segment ID</mat-label>
           <input matInput formControlName="segmentId" placeholder="Enter Segment ID">
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Vendor</mat-label>
+          <input matInput formControlName="vendorName" placeholder="Enter Vendor">
         </mat-form-field>
       </mat-grid-tile>
 
@@ -42,76 +49,33 @@
         </mat-form-field>
       </mat-grid-tile>
 
-      <!-- Vault Issues Multi-Select -->
-      <mat-grid-tile colspan="2">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Vault Issues</mat-label>
-          <mat-select formControlName="vaultIssues" multiple>
-            <mat-option *ngFor="let vaultIssue of vaultIssuesList" [value]="vaultIssue">
-              {{ vaultIssue }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </mat-grid-tile>
+      <!-- Issue Areas and Quality Issues -->
+      <div formArrayName="issues" *ngFor="let issueArea of issueAreasFormArray.controls; let i = index">
+        <div [formGroupName]="i">
+          <mat-grid-tile colspan="2">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Issue Area</mat-label>
+              <mat-select formControlName="area" placeholder="Select Issue Area" (selectionChange)="onIssueAreaChange(i)">
+                <mat-option *ngFor="let area of issueAreaList" [value]="area">{{ area }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-grid-tile>
 
-      <!-- DB Issues Multi-Select -->
-      <mat-grid-tile colspan="2">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>DB Issues</mat-label>
-          <mat-select formControlName="dbIssues" multiple>
-            <mat-option *ngFor="let dbIssue of dbIssuesList" [value]="dbIssue">
-              {{ dbIssue }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </mat-grid-tile>
-
-      <!-- Trench Issues Multi-Select -->
-      <mat-grid-tile colspan="2">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Trench Issues</mat-label>
-          <mat-select formControlName="trenchIssues" multiple>
-            <mat-option *ngFor="let trenchIssue of trenchIssuesList" [value]="trenchIssue">
-              {{ trenchIssue }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </mat-grid-tile>
-
-      <!-- Site Clean Up Multi-Select -->
-      <mat-grid-tile colspan="2">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Site Clean Up</mat-label>
-          <mat-select formControlName="siteCleanUp" multiple>
-            <mat-option *ngFor="let siteCleanUp of siteCleanUpList" [value]="siteCleanUp">
-              {{ siteCleanUp }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </mat-grid-tile>
-
-      <!-- Sidewalk Panels Multi-Select -->
-      <mat-grid-tile colspan="2">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Sidewalk Panels</mat-label>
-          <mat-select formControlName="sidewalkPanels" multiple>
-            <mat-option *ngFor="let sidewalkPanel of sidewalkPanelsList" [value]="sidewalkPanel">
-              {{ sidewalkPanel }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </mat-grid-tile>
-
-      <!-- Sealant Issues Multi-Select -->
-      <mat-grid-tile colspan="2">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Sealant Issues</mat-label>
-          <mat-select formControlName="sealantIssues" multiple>
-            <mat-option *ngFor="let sealantIssue of sealantIssuesList" [value]="sealantIssue">
-              {{ sealantIssue }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+          <!-- Quality Issues for Selected Area -->
+          <mat-grid-tile colspan="2">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Quality Issues</mat-label>
+              <mat-select formControlName="qualityIssues" multiple placeholder="Select Quality Issues">
+                <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-grid-tile>
+        </div>
+      </div>
+      
+      <!-- Button to Add Another Issue Area -->
+      <mat-grid-tile colspan="4" class="half-width">
+        <button mat-stroked-button class="issue-btn" (click)="addIssueArea()">Add Issue</button>
       </mat-grid-tile>
 
       <!-- Additional Concerns -->
@@ -122,39 +86,35 @@
         </mat-form-field>
       </mat-grid-tile>
 
-      <!-- Notified To -->
-      <mat-grid-tile colspan="2">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Notified To</mat-label>
-          <input matInput formControlName="notifiedTo" placeholder="Notified To">
-        </mat-form-field>
-      </mat-grid-tile>
-
-      <!-- Notified How -->
-      <mat-grid-tile colspan="2">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Notified How</mat-label>
-          <input matInput formControlName="notifiedHow" placeholder="Notified How">
-        </mat-form-field>
-      </mat-grid-tile>
-
       <!-- Issue Image -->
       <mat-grid-tile colspan="4">
         <div class="file-input-wrapper">
           <label class="custom-label">Issue Image</label>
-          <input type="file" (change)="onFileSelected($event)" class="file-input">
+          <input type="file" (change)="uploadIssueImage($event)" class="file-input">
         </div>
       </mat-grid-tile>      
-    </mat-grid-list> 
-    <!-- PM Resolved Checkbox (Only in Edit Mode) -->
-    <div *ngIf="isEditMode" class="checkbox-container">
-      <mat-checkbox formControlName="pmResolved">PM Resolved</mat-checkbox>
-    </div>
 
-    <!-- CM Resolved Checkbox (Only in Edit Mode) -->
-    <div *ngIf="isEditMode" class="checkbox-container">
-      <mat-checkbox formControlName="cmResolved">CM Resolved</mat-checkbox>
-    </div>
+      <mat-grid-tile colspan="2" *ngIf="isEditMode">
+        <div class="checkbox-container">
+          <mat-checkbox formControlName="pmResolved">PM Resolved</mat-checkbox>
+        </div>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2" *ngIf="isEditMode && preliminaryPunchListForm.get('pmResolved')?.value">
+        <div class="file-input-wrapper">
+          <label class="custom-label">Resolution Image</label>
+          <input type="file" (change)="uploadResolutionImage($event)" class="file-input">
+        </div>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2" *ngIf="isEditMode">
+        <div class="checkbox-container">
+          <mat-checkbox formControlName="cmResolved">CM Resolved</mat-checkbox>
+        </div>
+      </mat-grid-tile>
+
+    </mat-grid-list> 
+
   </form>
 </div>
 

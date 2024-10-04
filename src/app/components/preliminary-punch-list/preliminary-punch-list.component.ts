@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PreliminaryPunchListModalComponent } from './preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { Observable } from 'rxjs';
+import { MatTableDataSource } from '@angular/material/table';
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -16,20 +17,26 @@ export class PreliminaryPunchListComponent implements OnInit {
 
   // Table column headers
   displayedColumns: string[] = [
-    'segmentId', 'streetAddress', 'city', 'state', 'vaultIssues', 'dbIssues',
-    'trenchIssues', 'siteCleanUp', 'sidewalkPanels', 'sealantIssues',
-    'additionalConcerns', 'notifiedTo', 'notifiedHow', 'dateReported',
-    'issueImage', 'pmResolved', 'cmResolved', 'actions'
+    'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
+    'additionalConcerns', 'dateReported',
+    'issueImage', 'pmResolved', 'resolutionImage', 'dateResolved', 'cmResolved', 'actions'
   ];
+
+  dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource<PreliminaryPunchList>();
 
   constructor(
     private dialog: MatDialog,
-    private punchListService: PreliminaryPunchListService
+    private punchListService: PreliminaryPunchListService,
+    private changeDetectorRef: ChangeDetectorRef
   ) {
     this.preliminaryPunchList$ = this.punchListService.getEntries();
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.preliminaryPunchList$.subscribe(data => {
+      this.dataSource.data = data;
+    });
+  }
 
   // Open modal to add a new entry
   openModal(data?: PreliminaryPunchList): void {
@@ -47,6 +54,11 @@ export class PreliminaryPunchListComponent implements OnInit {
           // Add a new entry (add mode)
           this.punchListService.addEntry(result);
         }
+        // Update the data source after changes
+        this.punchListService.getEntries().subscribe(entries => {
+          this.dataSource.data = entries;
+          this.changeDetectorRef.detectChanges();
+        });
       }
     });
   }
@@ -62,7 +74,13 @@ export class PreliminaryPunchListComponent implements OnInit {
   }
 
   // Convert image file to object URL for display in the table
-  getImageUrl(file: File): string {
-    return URL.createObjectURL(file);
+  getImageUrl(file: string | null): string {
+    return file ? URL.createObjectURL(file as any) : '';
+  }
+
+  // Filter the data source based on user input
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
   }
 }
