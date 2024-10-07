@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
+import { PreliminaryPunchList } from '.././models/preliminary-punch-list.model';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -8,36 +9,23 @@ import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.mode
 export class PreliminaryPunchListService {
   // Use a BehaviorSubject to keep the list of entries and allow components to subscribe to changes
   private punchListEntriesSubject: BehaviorSubject<PreliminaryPunchList[]> = new BehaviorSubject<PreliminaryPunchList[]>([]);
+  private apiUrl = 'https://localhost:7265/api/PunchList';
   
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
-  // Get the current value of the entries
   getEntries(): Observable<PreliminaryPunchList[]> {
-    return this.punchListEntriesSubject.asObservable();
+    return this.http.get<PreliminaryPunchList[]>(this.apiUrl);
   }
 
-  // Add a new entry to the list
-  addEntry(entry: PreliminaryPunchList): void {
-    const currentEntries = this.punchListEntriesSubject.value;
-    this.punchListEntriesSubject.next([...currentEntries, entry]);
+  addEntry(entry: PreliminaryPunchList): Observable<void> {
+    return this.http.post<void>(this.apiUrl, entry);
   }
 
-  // Update an existing entry in the list
-  updateEntry(updatedEntry: PreliminaryPunchList): void {
-    const currentEntries = [...this.punchListEntriesSubject.value];
-    const index = currentEntries.findIndex(entry => entry.segmentId === updatedEntry.segmentId);
-    
-    if (index !== -1) {
-      // Replace the old entry with the updated one
-      currentEntries[index] = updatedEntry;
-      this.punchListEntriesSubject.next(currentEntries);
-    }
+  updateEntry(entry: PreliminaryPunchList): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${entry.segmentId}`, entry);
   }
 
-  // Remove an entry by index
-  removeEntry(index: number): void {
-    const currentEntries = [...this.punchListEntriesSubject.value];
-    currentEntries.splice(index, 1);
-    this.punchListEntriesSubject.next(currentEntries);
+  removeEntry(segmentId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${segmentId}`);
   }
 }

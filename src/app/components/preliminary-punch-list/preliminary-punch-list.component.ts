@@ -69,8 +69,8 @@ export class PreliminaryPunchListComponent implements OnInit {
   }
 
   // Method to remove a report
-  removeReport(index: number): void {
-    this.punchListService.removeEntry(index);
+  removeReport(report: PreliminaryPunchList): void {
+    this.punchListService.removeEntry(report.segmentId);
   }
 
   // Convert image file to object URL for display in the table

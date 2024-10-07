@@ -109,7 +109,7 @@
         <td mat-cell *matCellDef="let report; let i = index" data-label="Actions">
           <div class="actions-container">
             <mat-icon (click)="editReport(report)" class="edit-icon">edit</mat-icon>
-            <mat-icon (click)="removeReport(i)" class="delete-icon" color="warn">delete</mat-icon>
+            <mat-icon (click)="removeReport(report)" class="delete-icon" color="warn">delete</mat-icon>
           </div>
         </td>
       </ng-container>
