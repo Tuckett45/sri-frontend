@@ -44,20 +44,19 @@ export class PreliminaryPunchListComponent implements OnInit {
       width: '600px',
       data: data || null
     });
-
+  
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        if (data) {
-          // Update an existing entry (edit mode)
-          this.punchListService.updateEntry(result);
-        } else {
-          // Add a new entry (add mode)
-          this.punchListService.addEntry(result);
-        }
-        // Update the data source after changes
-        this.punchListService.getEntries().subscribe(entries => {
-          this.dataSource.data = entries;
-          this.changeDetectorRef.detectChanges();
+        const action$ = data
+          ? this.punchListService.updateEntry(result)  // Update an existing entry (edit mode)
+          : this.punchListService.addEntry(result);    // Add a new entry (add mode)
+  
+        // After action (add or update), refresh the table data
+        action$.subscribe(() => {
+          this.punchListService.getEntries().subscribe(entries => {
+            this.dataSource.data = entries;
+            this.changeDetectorRef.detectChanges();
+          });
         });
       }
     });
@@ -73,11 +72,18 @@ export class PreliminaryPunchListComponent implements OnInit {
     this.punchListService.removeEntry(report.segmentId);
   }
 
-  // Convert image file to object URL for display in the table
-  getImageUrl(file: string | null): string {
-    return file ? URL.createObjectURL(file as any) : '';
+  getImageUrl(fileOrUrl: string | File): string {
+    if (typeof fileOrUrl === 'string') {
+      // If it's a string, assume it's a URL or a base64 string and return it directly
+      return fileOrUrl;
+    } else if (fileOrUrl instanceof File) {
+      // If it's a File object, create an object URL
+      return URL.createObjectURL(fileOrUrl);
+    } else {
+      // Fallback if something unexpected is passed
+      return '';
+    }
   }
-
   // Filter the data source based on user input
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;

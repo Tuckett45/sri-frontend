@@ -1,15 +1,16 @@
 export class IssueArea {
   area: string; // The name of the issue area (e.g., Vault Issues, DB Issues, etc.)
-  qualityIssues: string[]; // List of quality issues for the given area
+  qualityIssues: string[]; // List of quality issues for the given area (as a string[])
 
   constructor(area: string, qualityIssues: string[] = []) {
     this.area = area;
-    this.qualityIssues = qualityIssues;
+    this.qualityIssues = qualityIssues; // This should be an array of strings (string[])
   }
 }
 
 export class PreliminaryPunchList {
   // Basic project details
+  id: string;
   segmentId: string;
   vendorName:string;
   streetAddress: string;
@@ -31,6 +32,7 @@ export class PreliminaryPunchList {
 
   // Constructor to initialize properties
   constructor(
+    id: string,
     segmentId: string,
     vendorName: string,
     streetAddress: string,
@@ -45,6 +47,7 @@ export class PreliminaryPunchList {
     cmResolved: boolean = false,
     dateResolved: Date | null = null
   ) {
+    this.id = id;
     this.segmentId = segmentId;
     this.vendorName = vendorName;
     this.streetAddress = streetAddress;
