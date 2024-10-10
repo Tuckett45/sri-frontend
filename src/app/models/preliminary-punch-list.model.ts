@@ -1,18 +1,22 @@
 export class IssueArea {
+  id?: string; // ID for the IssueArea (optional)
   area: string; // The name of the issue area (e.g., Vault Issues, DB Issues, etc.)
-  qualityIssues: string[]; // List of quality issues for the given area (as a string[])
+  qualityIssues: string[]; // List of quality issues for the given area
+  preliminaryPunchListId?: string; // Foreign key to PreliminaryPunchList (optional)
 
-  constructor(area: string, qualityIssues: string[] = []) {
+  constructor(area: string, qualityIssues: string[] = [], id?: string, preliminaryPunchListId?: string) {
     this.area = area;
-    this.qualityIssues = qualityIssues; // This should be an array of strings (string[])
+    this.qualityIssues = qualityIssues;
+    this.id = id; // Optional ID for consistency with back-end
+    this.preliminaryPunchListId = preliminaryPunchListId; // Optional FK
   }
 }
 
 export class PreliminaryPunchList {
   // Basic project details
-  id: string;
+  id?: string; // ID (optional, generated on front-end)
   segmentId: string;
-  vendorName:string;
+  vendorName: string;
   streetAddress: string;
   city: string;
   state: string;
@@ -20,19 +24,16 @@ export class PreliminaryPunchList {
   // Combined Issue Areas
   issues: IssueArea[]; // List of issue areas and their respective quality issues
 
-  additionalConcerns: string; // Any additional concerns not captured by the issues above
+  additionalConcerns: string; // Any additional concerns
   dateReported: Date; // Date when the punch list was reported
 
-  issueImage: string | null; // Base64 encoded string or URL for an image, can be null if no image is available
+  issueImage: string | null; // Base64 encoded string or URL for an image, can be null
+  pmResolved: boolean; // Project Manager resolution status
+  cmResolved: boolean; // Construction Manager resolution status
+  resolutionImage: string | null; // Image for resolution, can be null
+  dateResolved: Date | null; // Date when resolved, can be null
 
-  pmResolved: boolean; // Indicates whether the project manager has resolved the issue
-  resolutionImage: string | null;
-  cmResolved: boolean; // Indicates whether the construction manager has resolved the issue
-  dateResolved: Date | null; // Date when the issues were resolved, can be null if unresolved
-
-  // Constructor to initialize properties
   constructor(
-    id: string,
     segmentId: string,
     vendorName: string,
     streetAddress: string,
@@ -43,9 +44,10 @@ export class PreliminaryPunchList {
     dateReported: Date = new Date(),
     issueImage: string | null = null,
     pmResolved: boolean = false,
-    resolutionImage: string | null = null,
     cmResolved: boolean = false,
-    dateResolved: Date | null = null
+    resolutionImage: string | null = null,
+    dateResolved: Date | null = null,
+    id?: string // Optional ID
   ) {
     this.id = id;
     this.segmentId = segmentId;
@@ -58,8 +60,8 @@ export class PreliminaryPunchList {
     this.dateReported = dateReported;
     this.issueImage = issueImage;
     this.pmResolved = pmResolved;
-    this.resolutionImage = resolutionImage;
     this.cmResolved = cmResolved;
+    this.resolutionImage = resolutionImage;
     this.dateResolved = dateResolved;
   }
 }

@@ -10,6 +10,7 @@ import { AuthService } from '../../services/auth.service'; // Add import if need
 })
 export class RegisterModalComponent {
   registerForm: FormGroup;
+  roles: string[] = ['CM', 'PM', 'Vendor'];
 
   constructor(
     private fb: FormBuilder,
@@ -20,7 +21,20 @@ export class RegisterModalComponent {
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', Validators.required]
+      confirmPassword: ['', Validators.required],
+      role: ['', Validators.required],
+      createdDate: [new Date],
+    }, { validator: this.passwordMatchValidator });
+  }
+
+  ngOnInit(): void {
+    this.registerForm = this.fb.group({
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required],
+      role: ['', Validators.required],
+      createdDate: [new Date],
     }, { validator: this.passwordMatchValidator });
   }
 
@@ -32,9 +46,15 @@ export class RegisterModalComponent {
 
   onSubmit(): void {
     if (this.registerForm.valid) {
-      // Registration logic goes here (e.g., API call to register the user)
-      console.log('Register Form Data:', this.registerForm.value);
-      this.dialogRef.close(); // Close the dialog without making changes to auth state.
+      this.authService.register(this.registerForm.value).subscribe({
+        next: (response) => {
+          alert('Registration successful.');
+          this.dialogRef.close();
+        },
+        error: (error) => {
+          alert('Registration failed.');
+        }
+      });
     }
   }
 

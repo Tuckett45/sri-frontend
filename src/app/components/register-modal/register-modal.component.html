@@ -17,6 +17,16 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Role</mat-label>
+            <mat-select formControlName="role" placeholder="Select a role">
+              <mat-option *ngFor="let role of roles" [value]="role">{{ role }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="registerForm.get('role')?.invalid && registerForm.get('role')?.touched">
+              Role is required.
+            </mat-error>
+          </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
         <mat-label>Email</mat-label>
         <input matInput formControlName="email" type="email" placeholder="Enter your email" />
         <mat-error *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">

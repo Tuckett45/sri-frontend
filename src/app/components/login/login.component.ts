@@ -27,19 +27,23 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     // Ensure user is logged out when accessing /login
     this.authService.logout();
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+    });
   }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
-      const email = this.loginForm.get('email')?.value;
-      const password = this.loginForm.get('password')?.value;
-
-      if (email === 'admin@example.com' && password === 'password123') {
-        this.authService.login();
-        this.router.navigate(['/overview']);
-      } else {
-        alert('Invalid credentials');
-      }
+      this.authService.login(this.loginForm.value).subscribe({
+        next: (response) => {
+          localStorage.setItem('loggedIn', 'true');
+          this.router.navigate(['/overview']);
+        },
+        error: (error) => {
+          alert('Login failed. Please check your credentials.');
+        }
+      });
     }
   }
 

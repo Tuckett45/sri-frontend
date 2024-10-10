@@ -7,6 +7,23 @@
     overflow-y: auto;
   }
   
+  /* Ensure text field colors are properly set */
+::ng-deep .mat-mdc-input-element {
+  color: #000000 !important; /* Set the input text color */
+}
+
+/* Ensure select input label color is set properly */
+::ng-deep .mat-mdc-select .mdc-label {
+  color: #000000 !important; /* Set the label text color */
+}
+
+::ng-deep .mat-mdc-checkbox .mat-internal-form-field {
+  color: #000000 !important; /* Set the label text color */
+}
+
+::ng-deep .mat-mdc-select {
+  color: #000000 !important;
+}
   
   /* General mat-form-field styles */
   mat-form-field {

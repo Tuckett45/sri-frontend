@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-forgot-password-modal',
@@ -12,6 +13,7 @@ export class ForgotPasswordModalComponent {
 
   constructor(
     private fb: FormBuilder,
+    private authService: AuthService,
     private dialogRef: MatDialogRef<ForgotPasswordModalComponent>
   ) {
     this.forgotPasswordForm = this.fb.group({
@@ -19,11 +21,23 @@ export class ForgotPasswordModalComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.forgotPasswordForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+    });
+  }
+
   onSubmit(): void {
     if (this.forgotPasswordForm.valid) {
-      // Password reset logic goes here (e.g., API call)
-      console.log('Forgot Password Form Data:', this.forgotPasswordForm.value);
-      this.dialogRef.close(this.forgotPasswordForm.value);
+      this.authService.forgotPassword(this.forgotPasswordForm.value.email).subscribe({
+        next: () => {
+          alert('Password reset email sent.');
+          this.dialogRef.close();
+        },
+        error: () => {
+          alert('Error sending reset password email.');
+        }
+      });
     }
   }
 

@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { PreliminaryPunchList } from '../models/preliminary-punch-list.model';
+import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PreliminaryPunchListService {
-  private apiUrl = 'http://localhost:5024/api/PunchList';
+  private apiUrl = 'https://localhost:44376/api/PunchList';
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -36,13 +37,25 @@ export class PreliminaryPunchListService {
   }
 
   addEntry(entry: PreliminaryPunchList): Observable<PreliminaryPunchList> {
-    entry.issues.forEach(issueArea => {
-      // Convert string[] to comma-separated string
-      issueArea.qualityIssues = issueArea.qualityIssues.join(', ') as any;
+    debugger;
+    entry.dateReported.toISOString();
+    // Generate unique ID for the punch list if it doesn't have one
+    if (!entry.id) {
+      entry.id = uuidv4(); // Generate UUID for the punch list ID
+    }
+
+    // Generate unique IDs for each issue area
+    entry.issues.forEach((issue: IssueArea) => {
+      if (!issue.id) {
+        issue.id = uuidv4(); // Generate UUID for each issue area ID
+      }
+      issue.preliminaryPunchListId = entry.id; // Set the foreign key to the punch list ID
     });
 
+    console.log(entry);
+
     return this.http.post<PreliminaryPunchList>(this.apiUrl, entry, this.httpOptions).pipe(
-      catchError(this.handleError)
+      catchError(this.handleError) // Handle errors for the POST request
     );
   }
 
