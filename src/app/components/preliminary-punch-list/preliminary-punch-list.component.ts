@@ -5,6 +5,7 @@ import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.mode
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { Observable } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -27,7 +28,8 @@ export class PreliminaryPunchListComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
+    private toastr: ToastrService
   ) {
     this.preliminaryPunchList$ = this.punchListService.getEntries();
   }
@@ -45,7 +47,7 @@ export class PreliminaryPunchListComponent implements OnInit {
       data: data || null
     });
   
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result: PreliminaryPunchList) => {
       if (result) {
         const action$ = data
           ? this.punchListService.updateEntry(result)  // Update an existing entry (edit mode)
@@ -69,7 +71,19 @@ export class PreliminaryPunchListComponent implements OnInit {
 
   // Method to remove a report
   removeReport(report: PreliminaryPunchList): void {
-    this.punchListService.removeEntry(report.segmentId);
+    this.punchListService.removeEntry(report.id).subscribe(
+      () => {
+        this.toastr.success('Punch List entry deleted successfully!', 'Success');
+        this.punchListService.getEntries().subscribe(entries => {
+          this.dataSource.data = entries;
+          this.changeDetectorRef.detectChanges();
+        });
+      },
+      (error) => {
+        this.toastr.error('Failed to delete the Punch List entry.', 'Error');
+        console.error('Delete failed', error);
+      }
+    );
   }
 
   getImageUrl(fileOrUrl: string | File): string {

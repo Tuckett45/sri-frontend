@@ -32,6 +32,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.isEditMode = !!this.data;
 
     this.preliminaryPunchListForm = this.fb.group({
+      id: [this.data?.id || ''],
       segmentId: [this.data?.segmentId || '', Validators.required],
       vendorName: [this.data?.vendorName || '', Validators.required],
       streetAddress: [this.data?.streetAddress || '', Validators.required],
@@ -62,12 +63,13 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   getInitialIssueAreas(data: PreliminaryPunchList | null): FormGroup[] {
     if (!data?.issues) return [];
-    return data.issues.map(issueArea =>
-      this.fb.group({
-        area: [issueArea.area, Validators.required],
-        qualityIssues: [issueArea.qualityIssues || []]
-      })
-    );
+    
+    return data.issues.map(issueArea => this.fb.group({
+      id: [issueArea.id],
+      area: [issueArea.area, Validators.required],
+      qualityIssues: [Array.isArray(issueArea.qualityIssues) ? issueArea.qualityIssues : issueArea.qualityIssues.split(',') || []],
+      preliminaryPunchListId: [issueArea.preliminaryPunchListId]
+    }));
   }
 
   // Getter for the FormArray
@@ -78,14 +80,16 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   // Add a new Issue Area to the FormArray
   addIssueArea(): void {
     this.issueAreasFormArray.push(this.fb.group({
+      id: [''],
       area: ['', Validators.required],
-      qualityIssues: [[]]
+      qualityIssues: [[]],
+      preliminaryPunchListId: ['']
     }));
   }
 
   // Handle issue area selection change
   onIssueAreaChange(index: number): void {
-    const issueAreaControl = this.issueAreasFormArray.at(index).get('area');
+    const issueAreaControl = this.issueAreasFormArray.at(index).get('area')?.value;
     if (issueAreaControl?.value) {
       const qualityIssuesControl = this.issueAreasFormArray.at(index).get('qualityIssues');
       qualityIssuesControl?.reset(); // Reset quality issues when area changes
@@ -122,7 +126,19 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   save(): void {
     if (this.preliminaryPunchListForm.valid) {
-      this.dialogRef.close(this.preliminaryPunchListForm.value);
+      const formValue = this.preliminaryPunchListForm.value;
+  
+      const issues = formValue.issues.map((issue: any) => ({
+        ...issue,
+        qualityIssues: Array.isArray(issue.qualityIssues) ? issue.qualityIssues.join(',') : issue.qualityIssues
+      }));
+  
+      const updatedFormValue = {
+        ...formValue,
+        issues: issues
+      };
+  
+      this.dialogRef.close(updatedFormValue);
     } else {
       console.error('Form is invalid');
     }

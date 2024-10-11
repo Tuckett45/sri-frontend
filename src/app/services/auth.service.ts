@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class AuthService {
   private loggedInStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
 
-  private apiUrl = 'https://localhost:7265/api/auth';
+  private apiUrl = 'https://localhost:44376/api/auth';
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -41,7 +41,14 @@ export class AuthService {
 
   login(credentials: LoginModel): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/login`, credentials, this.httpOptions).pipe(
-      tap(response => localStorage.setItem('token', response))
+      tap(user => {
+        if (user) {
+          localStorage.setItem('loggedIn', 'true');
+          localStorage.setItem('user', JSON.stringify(user)); 
+  
+          this.loggedInStatus.next(true);
+        }
+      })
     );
   }
 
@@ -50,14 +57,12 @@ export class AuthService {
   }
 
   logout(): void {
-    // Clear authentication state
     localStorage.removeItem('loggedIn');
     sessionStorage.removeItem('authToken');
+    localStorage.removeItem('user');
     
-    // Set the login status to false to reflect changes
     this.loggedInStatus.next(false);
     
-    // Redirect to login page to ensure the state is reset
     this.router.navigate(['/login']);
   }
 }

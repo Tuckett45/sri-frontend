@@ -42,6 +42,7 @@ import { LoginComponent } from './components/login/login.component';
 import { RegisterModalComponent } from './components/register-modal/register-modal.component';
 import { UserProfileModalComponent } from './components/user-profile/user-profile-modal/user-profile-modal.component';
 import { ForgotPasswordModalComponent } from './components/forgot-password-modal/forgot-password-modal.component';
+import { ToastrModule } from 'ngx-toastr';
 
 @NgModule({
   declarations: [
@@ -64,6 +65,11 @@ import { ForgotPasswordModalComponent } from './components/forgot-password-modal
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
+    ToastrModule.forRoot({
+      timeOut: 3000, // Duration of the toast
+      positionClass: 'toast-top-right', // Position of the toast
+      preventDuplicates: true, // Prevent duplicate toasts
+    }),
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule,

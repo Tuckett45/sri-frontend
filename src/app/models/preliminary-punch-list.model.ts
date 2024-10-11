@@ -1,10 +1,10 @@
 export class IssueArea {
-  id?: string; // ID for the IssueArea (optional)
+  id: string; // ID for the IssueArea (optional)
   area: string; // The name of the issue area (e.g., Vault Issues, DB Issues, etc.)
-  qualityIssues: string[]; // List of quality issues for the given area
-  preliminaryPunchListId?: string; // Foreign key to PreliminaryPunchList (optional)
+  qualityIssues: string; // List of quality issues for the given area
+  preliminaryPunchListId: string; // Foreign key to PreliminaryPunchList (optional)
 
-  constructor(area: string, qualityIssues: string[] = [], id?: string, preliminaryPunchListId?: string) {
+  constructor(area: string, qualityIssues: string, id: string, preliminaryPunchListId: string) {
     this.area = area;
     this.qualityIssues = qualityIssues;
     this.id = id; // Optional ID for consistency with back-end
@@ -14,7 +14,7 @@ export class IssueArea {
 
 export class PreliminaryPunchList {
   // Basic project details
-  id?: string; // ID (optional, generated on front-end)
+  id: string; // ID (optional, generated on front-end)
   segmentId: string;
   vendorName: string;
   streetAddress: string;
@@ -47,7 +47,7 @@ export class PreliminaryPunchList {
     cmResolved: boolean = false,
     resolutionImage: string | null = null,
     dateResolved: Date | null = null,
-    id?: string // Optional ID
+    id: string // Optional ID
   ) {
     this.id = id;
     this.segmentId = segmentId;

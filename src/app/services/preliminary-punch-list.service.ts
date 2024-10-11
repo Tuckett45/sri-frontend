@@ -26,7 +26,7 @@ export class PreliminaryPunchListService {
           punchList.issues.forEach(issueArea => {
             // Convert comma-separated string to string[]
             if (typeof issueArea.qualityIssues === 'string') {
-              issueArea.qualityIssues = (issueArea.qualityIssues as string).split(', ');
+              issueArea.qualityIssues = issueArea.qualityIssues;
             }
           });
           return punchList;
@@ -37,7 +37,6 @@ export class PreliminaryPunchListService {
   }
 
   addEntry(entry: PreliminaryPunchList): Observable<PreliminaryPunchList> {
-    debugger;
     entry.dateReported.toISOString();
     // Generate unique ID for the punch list if it doesn't have one
     if (!entry.id) {
@@ -62,17 +61,25 @@ export class PreliminaryPunchListService {
   // Update an existing punch list entry
   updateEntry(entry: PreliminaryPunchList): Observable<PreliminaryPunchList> {
     // Convert QualityIssues array into a comma-separated string
-    entry.issues.forEach(issueArea => {
-      issueArea.qualityIssues = issueArea.qualityIssues.join(', ') as any;
+    if (!entry.id) {
+      entry.id = uuidv4(); // Generate UUID for the punch list ID
+    }
+
+    // Generate unique IDs for each issue area
+    entry.issues.forEach((issue: IssueArea) => {
+      if (!issue.id) {
+        issue.id = uuidv4(); // Generate UUID for each issue area ID
+      }
+      issue.preliminaryPunchListId = entry.id; // Set the foreign key to the punch list ID
     });
 
-    return this.http.put<PreliminaryPunchList>(`${this.apiUrl}/${entry.segmentId}`, entry, this.httpOptions).pipe(
+    return this.http.put<PreliminaryPunchList>(`${this.apiUrl}/${entry.id}`, entry, this.httpOptions).pipe(
       catchError(this.handleError) // Handle errors for the PUT request
     );
   }
 
   // Remove an entry by its ID
-  removeEntry(id: string): Observable<void> {
+  removeEntry(id: string | undefined): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
       catchError(this.handleError) // Handle errors for the DELETE request
     );

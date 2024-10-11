@@ -25,6 +25,7 @@
     "@swimlane/ngx-charts": "^20.5.0",
     "chart.js": "^4.4.4",
     "ng2-charts": "^6.0.1",
+    "ngx-toastr": "^19.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "uuid": "^10.0.0",
