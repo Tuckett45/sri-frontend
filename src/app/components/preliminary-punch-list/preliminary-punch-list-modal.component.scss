@@ -1,6 +1,6 @@
 .modal-body {
   background-color: #fff;
-  padding: 25px;
+  padding: 15px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   color: #000000;
   max-height: 70vh;
@@ -17,6 +17,16 @@
     &:hover {
       background-color: #b86404;
       color: #ffffff;
+    }
+  }
+
+  .delete-icon {
+    justify-items: center;
+    cursor: pointer;
+    color: #f44336;;
+
+    &:hover {
+      color: #e53935;
     }
   }
 }
@@ -129,6 +139,7 @@ mat-form-field {
       background-color: #e53935;
     }
   }
+
 }
 
 /* Button styling */
@@ -146,6 +157,32 @@ button.mat-raised-button {
   &.mat-warn {
     background-color: #f44336;
   }
+}
+
+.file-preview {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+
+  span {
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: 14px;
+    color: #666;
+  }
+}
+
+.image-btn {
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #fff;
+  background-color: #144f80;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+
 }
 
 /* File input styling */

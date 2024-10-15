@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth.service';
 import { RegisterModalComponent } from '../register-modal/register-modal.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ForgotPasswordModalComponent } from '../forgot-password-modal/forgot-password-modal.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
@@ -17,7 +18,8 @@ export class LoginComponent implements OnInit {
   constructor(private fb: FormBuilder, 
               private router: Router, 
               private authService: AuthService, 
-              private dialog: MatDialog) {
+              private dialog: MatDialog,
+              private toastr: ToastrService) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
@@ -25,7 +27,6 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Ensure user is logged out when accessing /login
     this.authService.logout();
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -38,10 +39,11 @@ export class LoginComponent implements OnInit {
       this.authService.login(this.loginForm.value).subscribe({
         next: (response) => {
           localStorage.setItem('loggedIn', 'true');
+          this.toastr.success('Login successful!', 'Success');
           this.router.navigate(['/overview']);
         },
         error: (error) => {
-          alert('Login failed. Please check your credentials.');
+          this.toastr.error(error.error, 'error');
         }
       });
     }

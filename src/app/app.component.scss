@@ -6,27 +6,23 @@ mat-toolbar {
     background-color: #144f80;
   }
 
-  // Ensure the navbar stays fixed and does not overlap the content
 app-navbar {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1000;  // Ensure the navbar stays on top of other content
+    z-index: 1000;  
   }
   
-  // Main content wrapper
   .main-content {
-    margin-top: 64px;  // Adjust this value based on the height of your navbar
-    padding: 20px;     // Padding for some spacing around the content
+    margin-top: 64px;  
+    padding: 20px;    
   }
   
-  // Ensure the content takes up full width
   mat-grid-list {
     width: 100%;
   }
   
-  // Optional: If you need to ensure the content grows to fill the page
   html, body, .main-content {
     height: 100%;
   }

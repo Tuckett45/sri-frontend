@@ -11,7 +11,7 @@
 }
 
 .full-width-chart {
-  height: 100%; // Ensures the card takes up the full height based on rowspan
+  height: 100%; 
 }
 
 mat-card-header {
@@ -31,6 +31,6 @@ mat-card-content {
 }
 
 mat-card-content app-chart {
-  width: 100%; // Ensure the chart takes up the entire card width
-  height: 100%; // Ensure the chart takes up the entire card height
+  width: 100%; 
+  height: 100%; 
 }

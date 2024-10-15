@@ -27,7 +27,6 @@ export class AuthService {
       user.id = uuidv4();
       user.createdDate.toISOString();
     }
-    debugger;
     return this.http.post<User>(`${this.apiUrl}/register`, user, this.httpOptions);
   }
 

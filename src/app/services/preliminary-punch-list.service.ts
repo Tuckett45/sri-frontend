@@ -24,7 +24,6 @@ export class PreliminaryPunchListService {
       map(punchLists => {
         return punchLists.map(punchList => {
           punchList.issues.forEach(issueArea => {
-            // Convert comma-separated string to string[]
             if (typeof issueArea.qualityIssues === 'string') {
               issueArea.qualityIssues = issueArea.qualityIssues;
             }
@@ -36,63 +35,28 @@ export class PreliminaryPunchListService {
     );
   }
 
-  addEntry(entry: PreliminaryPunchList): Observable<PreliminaryPunchList> {
-    entry.dateReported.toISOString();
-    // Generate unique ID for the punch list if it doesn't have one
-    if (!entry.id) {
-      entry.id = uuidv4(); // Generate UUID for the punch list ID
-    }
+  addEntry(formData: FormData): Observable<void> {
+    return this.http.post<void>(this.apiUrl, formData);
+  }
 
-    // Generate unique IDs for each issue area
-    entry.issues.forEach((issue: IssueArea) => {
-      if (!issue.id) {
-        issue.id = uuidv4(); // Generate UUID for each issue area ID
-      }
-      issue.preliminaryPunchListId = entry.id; // Set the foreign key to the punch list ID
-    });
-
-    console.log(entry);
-
-    return this.http.post<PreliminaryPunchList>(this.apiUrl, entry, this.httpOptions).pipe(
-      catchError(this.handleError) // Handle errors for the POST request
+  updateEntry(formData: FormData): Observable<void> {
+    const punchListId = JSON.parse(formData.get('punchList') as string).id;
+    return this.http.put<void>(`${this.apiUrl}/${punchListId}`, formData).pipe(
+      catchError(this.handleError)
     );
   }
 
-  // Update an existing punch list entry
-  updateEntry(entry: PreliminaryPunchList): Observable<PreliminaryPunchList> {
-    // Convert QualityIssues array into a comma-separated string
-    if (!entry.id) {
-      entry.id = uuidv4(); // Generate UUID for the punch list ID
-    }
-
-    // Generate unique IDs for each issue area
-    entry.issues.forEach((issue: IssueArea) => {
-      if (!issue.id) {
-        issue.id = uuidv4(); // Generate UUID for each issue area ID
-      }
-      issue.preliminaryPunchListId = entry.id; // Set the foreign key to the punch list ID
-    });
-
-    return this.http.put<PreliminaryPunchList>(`${this.apiUrl}/${entry.id}`, entry, this.httpOptions).pipe(
-      catchError(this.handleError) // Handle errors for the PUT request
-    );
-  }
-
-  // Remove an entry by its ID
   removeEntry(id: string | undefined): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
-      catchError(this.handleError) // Handle errors for the DELETE request
+      catchError(this.handleError)
     );
   }
 
-  // Error handling function
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Unknown error!';
     if (error.error instanceof ErrorEvent) {
-      // Client-side error
       errorMessage = `Client-side error: ${error.error.message}`;
     } else {
-      // Server-side error
       errorMessage = `Server-side error: ${error.status} ${error.message}`;
     }
     console.error(errorMessage);

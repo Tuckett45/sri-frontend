@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
-import { AuthService } from '../../services/auth.service'; // Add import if needed
+import { AuthService } from '../../services/auth.service';
+import { User } from 'src/app/models/user.model';
+import { v4 as uuidv4 } from 'uuid';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-register-modal',
@@ -15,7 +18,8 @@ export class RegisterModalComponent {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<RegisterModalComponent>,
-    private authService: AuthService // Add dependency if any further changes needed
+    private authService: AuthService,
+    private toastr: ToastrService
   ) {
     this.registerForm = this.fb.group({
       name: ['', Validators.required],
@@ -45,14 +49,25 @@ export class RegisterModalComponent {
   }
 
   onSubmit(): void {
+    const formValues = this.registerForm.value;
+
+    const newUser: User = new User(
+      uuidv4(),
+      formValues.name,
+      formValues.email,
+      formValues.password,
+      formValues.role,
+      formValues.createdDate.toISOString()
+    );
+
     if (this.registerForm.valid) {
-      this.authService.register(this.registerForm.value).subscribe({
+      this.authService.register(newUser).subscribe({
         next: (response) => {
-          alert('Registration successful.');
+          this.toastr.success('Registration successful!', 'Success');
           this.dialogRef.close();
         },
         error: (error) => {
-          alert('Registration failed.');
+          this.toastr.error(error.error, 'Error');
         }
       });
     }

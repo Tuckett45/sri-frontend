@@ -4,11 +4,10 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
-import { AppRoutingModule } from './app-routing.module'; // For routing between components
+import { AppRoutingModule } from './app-routing.module';
 
 import { AppComponent } from './app.component';
 
-// Angular Material Modules
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,10 +23,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 
-// Chart.js and ng2-charts
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
-// Custom Components
 // import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { OverviewComponent } from './components/overview/overview.component';
 import { WidgetComponent } from './components/widget/widget.component';
@@ -43,6 +40,7 @@ import { RegisterModalComponent } from './components/register-modal/register-mod
 import { UserProfileModalComponent } from './components/user-profile/user-profile-modal/user-profile-modal.component';
 import { ForgotPasswordModalComponent } from './components/forgot-password-modal/forgot-password-modal.component';
 import { ToastrModule } from 'ngx-toastr';
+import { MatPaginatorModule } from '@angular/material/paginator';
 
 @NgModule({
   declarations: [
@@ -66,9 +64,9 @@ import { ToastrModule } from 'ngx-toastr';
     BrowserModule,
     BrowserAnimationsModule,
     ToastrModule.forRoot({
-      timeOut: 3000, // Duration of the toast
-      positionClass: 'toast-top-right', // Position of the toast
-      preventDuplicates: true, // Prevent duplicate toasts
+      timeOut: 3000, 
+      positionClass: 'toast-top-right',
+      preventDuplicates: true, 
     }),
     HttpClientModule,
     FormsModule,
@@ -89,7 +87,8 @@ import { ToastrModule } from 'ngx-toastr';
     MatDialogContent,
     MatDialogActions,
     MatDialogTitle,
-    MatCheckboxModule 
+    MatCheckboxModule,
+    MatPaginatorModule
   ],
   providers: [provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]

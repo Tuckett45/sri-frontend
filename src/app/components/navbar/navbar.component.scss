@@ -13,9 +13,8 @@ mat-toolbar {
       background-color: #207bc5;
     }
     
-    // Highlight the active link
     &.active-link {
-      background-color: #e18a25;  // Change this to your preferred color
+      background-color: #e18a25;
       color: #fff;
     }
   }

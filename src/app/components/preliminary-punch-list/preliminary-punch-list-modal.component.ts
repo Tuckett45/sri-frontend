@@ -1,7 +1,10 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { ToastrService } from 'ngx-toastr';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
+import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-preliminary-punch-list-modal',
@@ -11,6 +14,9 @@ import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.mode
 export class PreliminaryPunchListModalComponent implements OnInit {
   preliminaryPunchListForm!: FormGroup;
   isEditMode: boolean = false;
+
+  @ViewChild('issueImageInput') issueImageInput!: ElementRef;
+  @ViewChild('resolutionImageInput') resolutionImageInput!: ElementRef;
 
   issueAreaList: string[] = ['Vault', 'DB', 'Trench', 'Site Clean Up', 'Sidewalk Panels', 'Sealant'];
   qualityIssuesMap: { [key: string]: string[] } = {
@@ -25,6 +31,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<PreliminaryPunchListModalComponent>,
+    private punchListService: PreliminaryPunchListService,
+    private toastr: ToastrService,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
   ) {}
 
@@ -36,8 +44,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       segmentId: [this.data?.segmentId || '', Validators.required],
       vendorName: [this.data?.vendorName || '', Validators.required],
       streetAddress: [this.data?.streetAddress || '', Validators.required],
-      city: [this.data?.city || '', Validators.required],
-      state: [this.data?.state || '', Validators.required],
+      city: [this.data?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
+      state: [this.data?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       issues: this.fb.array(this.getInitialIssueAreas(this.data)),
       additionalConcerns: [this.data?.additionalConcerns || ''],
       dateReported: [this.data?.dateReported || new Date],
@@ -61,6 +69,26 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     });
   }
 
+  triggerIssueImageUpload(): void {
+    this.issueImageInput.nativeElement.click();
+  }
+
+  triggerResolutionImageUpload(): void {
+    this.resolutionImageInput.nativeElement.click();
+  }
+
+  removeIssueImage(): void {
+    this.preliminaryPunchListForm.patchValue({ issueImage: null });
+    this.preliminaryPunchListForm.get('issueImage')?.updateValueAndValidity();
+    this.toastr.warning('Image removed');
+  }
+  
+  removeResolutionImage(): void {
+    this.preliminaryPunchListForm.patchValue({ resolutionImage: null });
+    this.preliminaryPunchListForm.get('resolutionImage')?.updateValueAndValidity();
+    this.toastr.warning('Image removed');
+  }
+
   getInitialIssueAreas(data: PreliminaryPunchList | null): FormGroup[] {
     if (!data?.issues) return [];
     
@@ -72,31 +100,31 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     }));
   }
 
-  // Getter for the FormArray
   get issueAreasFormArray(): FormArray {
     return this.preliminaryPunchListForm.get('issues') as FormArray;
   }
 
-  // Add a new Issue Area to the FormArray
   addIssueArea(): void {
     this.issueAreasFormArray.push(this.fb.group({
-      id: [''],
+      id: [uuidv4()],
       area: ['', Validators.required],
       qualityIssues: [[]],
-      preliminaryPunchListId: ['']
+      preliminaryPunchListId: [this.preliminaryPunchListForm.get('id')?.value]
     }));
   }
 
-  // Handle issue area selection change
+  removeIssueArea(index: number): void {
+    this.issueAreasFormArray.removeAt(index);
+  }
+
   onIssueAreaChange(index: number): void {
     const issueAreaControl = this.issueAreasFormArray.at(index).get('area')?.value;
     if (issueAreaControl?.value) {
       const qualityIssuesControl = this.issueAreasFormArray.at(index).get('qualityIssues');
-      qualityIssuesControl?.reset(); // Reset quality issues when area changes
+      qualityIssuesControl?.reset(); 
     }
   }
 
-  // Get quality issues based on the selected issue area
   getQualityIssues(index: number): string[] {
     const selectedArea = this.issueAreasFormArray.at(index).get('area')?.value;
     return this.qualityIssuesMap[selectedArea] || [];
@@ -108,6 +136,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       const file = input.files[0];
       this.preliminaryPunchListForm.patchValue({ issueImage: file });
       this.preliminaryPunchListForm.get('issueImage')?.updateValueAndValidity();
+      this.toastr.success('Image added');
     }
   }
 
@@ -117,6 +146,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       const file = input.files[0];
       this.preliminaryPunchListForm.patchValue({ resolutionImage: file });
       this.preliminaryPunchListForm.get('resolutionImage')?.updateValueAndValidity();
+      this.toastr.success('Image added');
     }
   }
 
@@ -127,18 +157,29 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   save(): void {
     if (this.preliminaryPunchListForm.valid) {
       const formValue = this.preliminaryPunchListForm.value;
-  
+    
       const issues = formValue.issues.map((issue: any) => ({
         ...issue,
         qualityIssues: Array.isArray(issue.qualityIssues) ? issue.qualityIssues.join(',') : issue.qualityIssues
       }));
-  
+    
       const updatedFormValue = {
         ...formValue,
         issues: issues
       };
   
-      this.dialogRef.close(updatedFormValue);
+      const formData = new FormData();
+      formData.append('punchList', JSON.stringify(updatedFormValue));
+  
+      if (formValue.issueImage instanceof File) {
+        formData.append('issueImage', formValue.issueImage);
+      }
+  
+      if (formValue.resolutionImage instanceof File) {
+        formData.append('resolutionImage', formValue.resolutionImage);
+      }
+  
+      this.dialogRef.close(formData);
     } else {
       console.error('Form is invalid');
     }

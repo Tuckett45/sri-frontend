@@ -29,7 +29,7 @@
     width: 100%;
     margin-bottom: 10px;
     margin-top: 10px;
-    
+
     mat-label {
       color: #e18a25;
     }
@@ -55,17 +55,31 @@
   }
 
   .table-wrapper {
-    overflow-x: auto; // Horizontal scroll on small screens if needed
+    overflow-x: auto;
 
     table {
       width: 100%;
       margin-top: 20px;
-      min-width: 600px; // Set minimum width to avoid collapsing columns on small screens
+      min-width: 600px;
+
+      th {
+        background-color: #e18a25;
+        color: white;
+      }
 
       th,
       td {
         text-align: left;
         padding: 10px;
+      }
+
+      /* Striped rows for the table */
+      tr:nth-child(odd) {
+        background-color: #000000; /* Light gray for odd rows */
+      }
+
+      tr:nth-child(even) {
+        background-color: #525252; /* White for even rows */
       }
     }
   }
@@ -88,14 +102,27 @@
   .delete-icon {
     cursor: pointer;
     font-size: 20px;
-    color: #f44336;;
+    color: #f44336;
 
     &:hover {
       color: #e53935;
     }
   }
 
-  // Mobile styles
+  .mat-cell {
+    padding: 16px;
+  }
+
+  .mat-header-cell {
+    background-color: #e18a25;
+    color: white;
+  }
+
+  .mat-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  /* Responsive design */
   @media (max-width: 768px) {
     padding: 10px;
     margin: 10px;
@@ -110,23 +137,24 @@
       }
 
       button {
-        width: 100%; // Full width for better usability on smaller screens
+        width: 100%;
         margin-bottom: 10px;
       }
     }
+
     .search-bar {
       display: flex;
       justify-content: flex-start;
       width: 100%;
-  
+
       mat-form-field {
         width: 50%;
         margin-right: 15px;
-  
+
         input {
           padding-left: 2px;
         }
-  
+
         mat-icon {
           color: #e18a25;
         }
@@ -138,7 +166,6 @@
         font-size: 14px;
       }
 
-      // Convert the table into a card layout on very small screens
       table {
         display: block;
 
@@ -150,7 +177,8 @@
           margin-bottom: 10px;
         }
 
-        th, td {
+        th,
+        td {
           display: block;
           width: 100%;
           text-align: left;
@@ -166,7 +194,6 @@
     }
   }
 
-  // Tablet styles
   @media (min-width: 768px) and (max-width: 1024px) {
     .header-section {
       flex-direction: row;
@@ -185,15 +212,15 @@
       display: flex;
       justify-content: flex-start;
       width: 100%;
-  
+
       mat-form-field {
         width: 50%;
         margin-right: 15px;
-  
+
         input {
           padding-left: 2px;
         }
-  
+
         mat-icon {
           color: #e18a25;
         }
