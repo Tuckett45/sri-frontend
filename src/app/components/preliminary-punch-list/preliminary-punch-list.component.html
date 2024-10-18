@@ -71,24 +71,24 @@
       </ng-container>
 
       <!-- Issue Image Column -->
-      <ng-container matColumnDef="issueImage">
+      <ng-container matColumnDef="issueImageId">
         <th mat-header-cell *matHeaderCellDef> Issue Image </th>
         <td mat-cell *matCellDef="let report" data-label="Issue Image">
-          <img *ngIf="report.issueImage" [src]="getImageUrl(report.issueImage)" alt="Issue Image" width="100">
+          <img *ngIf="report.issueImageId" [src]="getImageUrl(report.issueImageId)" alt="Issue Image" width="100">
         </td>
       </ng-container>
 
       <!-- PM Resolved Column -->
       <ng-container matColumnDef="pmResolved">
         <th mat-header-cell *matHeaderCellDef> PM Resolved </th>
-        <td mat-cell *matCellDef="let report" data-label="PM Resolved"> {{ report.pmResolved }} </td>
+        <td mat-cell *matCellDef="let report" data-label="PM Resolved"> {{ report.pmResolved ? "True" : "False"}} </td>
       </ng-container>
 
       <!-- Resolution Image Column -->
-      <ng-container matColumnDef="resolutionImage">
+      <ng-container matColumnDef="resolutionImageId">
         <th mat-header-cell *matHeaderCellDef> Resolution Image </th>
         <td mat-cell *matCellDef="let report" data-label="Resolution Image">
-          <img *ngIf="report.resolutionImage" [src]="getImageUrl(report.resolutionImage)" alt="Resolution Image" width="100">
+          <img *ngIf="report.resolutionImageId" [src]="getImageUrl(report.resolutionImageId)" alt="Resolution Image" width="100">
         </td>
       </ng-container>
 
@@ -100,7 +100,7 @@
       <!-- CM Resolved Column -->
       <ng-container matColumnDef="cmResolved">
         <th mat-header-cell *matHeaderCellDef> CM Resolved </th>
-        <td mat-cell *matCellDef="let report" data-label="CM Resolved"> {{ report.cmResolved }} </td>
+        <td mat-cell *matCellDef="let report" data-label="CM Resolved"> {{ report.cmResolved ? "True" : "False"  }} </td>
       </ng-container>
 
       <!-- Actions Column (Edit and Delete) -->

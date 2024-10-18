@@ -35,13 +35,14 @@ export class PreliminaryPunchListService {
     );
   }
 
-  addEntry(formData: FormData): Observable<void> {
-    return this.http.post<void>(this.apiUrl, formData);
+  addEntry(punchList: PreliminaryPunchList): Observable<any> {  
+    return this.http.post(`${this.apiUrl}`, punchList, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
   }
 
-  updateEntry(formData: FormData): Observable<void> {
-    const punchListId = JSON.parse(formData.get('punchList') as string).id;
-    return this.http.put<void>(`${this.apiUrl}/${punchListId}`, formData).pipe(
+  updateEntry(punchList: PreliminaryPunchList): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${punchList.id}`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }

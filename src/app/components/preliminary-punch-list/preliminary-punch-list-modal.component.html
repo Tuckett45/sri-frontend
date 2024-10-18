@@ -112,37 +112,44 @@
         </div>
       </mat-grid-tile>
 
-      <mat-grid-tile colspan="2" rowspan="2">
-        <div>
+      <mat-grid-tile colspan="2">
+        <div *ngIf="!this.preliminaryPunchListForm.get('issueImageId')?.value">
           <button mat-raised-button class="image-btn" (click)="triggerIssueImageUpload()">
             Issue Image
             <mat-icon>attach_file</mat-icon>
           </button>
           <input type="file" #issueImageInput (change)="uploadIssueImage($event)" style="display: none;">
+          <mat-error *ngIf="this.preliminaryPunchListForm.get('issues')?.value > 0 && !this.preliminaryPunchListForm.get('issueImageId')?.value">
+            Issue Image is Required when Issues are added
+          </mat-error>
         </div>
-        <div *ngIf="preliminaryPunchListForm.get('issueImage')?.value" class="file-preview">
-          <span>{{ preliminaryPunchListForm.get('issueImage')?.value.name }}</span>
+        <div *ngIf="this.preliminaryPunchListForm.get('issueImageId')?.value" class="file-preview">
+          <img [src]="this.preliminaryPunchListForm.get('issueImageId')?.value" alt="Preview" class="preview-image">
           <button mat-icon-button class="delete-icon" (click)="removeIssueImage()">
             <mat-icon>delete</mat-icon>
           </button>
         </div>
       </mat-grid-tile>
-
-      <mat-grid-tile colspan="2" rowspan="2" *ngIf="isEditMode && preliminaryPunchListForm.get('pmResolved')?.value">
-        <div>
+      
+      <mat-grid-tile colspan="2" *ngIf="isEditMode && preliminaryPunchListForm.get('pmResolved')?.value">
+        <div *ngIf="!this.preliminaryPunchListForm.get('resolutionImageId')?.value">
           <button mat-raised-button class="image-btn" (click)="triggerResolutionImageUpload()">
             Resolution Image
             <mat-icon>attach_file</mat-icon>
           </button>
           <input type="file" #resolutionImageInput (change)="uploadResolutionImage($event)" style="display: none;">
+          <mat-error *ngIf="this.preliminaryPunchListForm.get('pmResolved')?.value && !this.preliminaryPunchListForm.get('resolutionImageId')?.value">
+            Resolution Image is Required when Issues are resolved
+          </mat-error>
         </div>
-        <div *ngIf="preliminaryPunchListForm.get('resolutionImage')?.value" class="file-preview">
-          <span>{{ preliminaryPunchListForm.get('resolutionImage')?.value.name }}</span>
+        <div *ngIf="this.preliminaryPunchListForm.get('resolutionImageId')?.value" class="file-preview">
+          <img [src]="this.preliminaryPunchListForm.get('resolutionImageId')?.value" alt="Preview" class="preview-image">
           <button mat-icon-button class="delete-icon" (click)="removeResolutionImage()">
             <mat-icon>delete</mat-icon>
           </button>
         </div>
       </mat-grid-tile>
+      
 
     </mat-grid-list> 
 

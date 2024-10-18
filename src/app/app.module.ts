@@ -22,8 +22,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
+import { MatPaginatorModule } from '@angular/material/paginator';
 
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import { ToastrModule } from 'ngx-toastr';
 
 // import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { OverviewComponent } from './components/overview/overview.component';
@@ -39,8 +41,9 @@ import { LoginComponent } from './components/login/login.component';
 import { RegisterModalComponent } from './components/register-modal/register-modal.component';
 import { UserProfileModalComponent } from './components/user-profile/user-profile-modal/user-profile-modal.component';
 import { ForgotPasswordModalComponent } from './components/forgot-password-modal/forgot-password-modal.component';
-import { ToastrModule } from 'ngx-toastr';
-import { MatPaginatorModule } from '@angular/material/paginator';
+import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
+
+
 
 @NgModule({
   declarations: [
@@ -50,6 +53,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     ForgotPasswordModalComponent,
     LoginComponent,
     RegisterModalComponent,
+    ResetPasswordComponent,
     NavbarComponent,
     OverviewComponent,
     PreliminaryPunchListComponent,

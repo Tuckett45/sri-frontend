@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PreliminaryPunchListModalComponent } from './preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, fromEvent, Observable } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator } from '@angular/material/paginator';
@@ -19,7 +19,7 @@ export class PreliminaryPunchListComponent implements OnInit {
   displayedColumns: string[] = [
     'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
     'additionalConcerns', 'dateReported',
-    'issueImage', 'pmResolved', 'resolutionImage', 'dateResolved', 'cmResolved', 'actions'
+    'issueImageId', 'pmResolved', 'resolutionImageId', 'dateResolved', 'cmResolved', 'actions'
   ];
 
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource<PreliminaryPunchList>();
@@ -47,11 +47,13 @@ export class PreliminaryPunchListComponent implements OnInit {
       data: data || null
     });
   
-    dialogRef.afterClosed().subscribe((result: FormData) => { // Now expect FormData
+    dialogRef.afterClosed().subscribe((result: { punchList: PreliminaryPunchList}) => {
       if (result) {
+        const { punchList } = result;
+        
         const action$ = data
-          ? this.punchListService.updateEntry(result)
-          : this.punchListService.addEntry(result); 
+          ? this.punchListService.updateEntry(punchList) 
+          : this.punchListService.addEntry(punchList);   
   
         action$.subscribe({
           next: () => {
@@ -75,7 +77,7 @@ export class PreliminaryPunchListComponent implements OnInit {
     this.punchListService.removeEntry(report.id).subscribe(
       () => {
         this.refreshTable();
-        this.toastr.warning('Punch List entry deleted');
+        this.toastr.success('Punch List entry deleted');
       },
       (error) => {
         this.toastr.error(error.error, 'Error');
@@ -101,7 +103,14 @@ export class PreliminaryPunchListComponent implements OnInit {
   }
   
   applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
+  
+    this.dataSource.filterPredicate = (data: any, filter: string) => {
+      const transformedFilter = filter.trim().toLowerCase();
+      const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
+      return dataStr.includes(transformedFilter);
+    };
+  
+    this.dataSource.filter = filterValue;
   }
 }

@@ -1,3 +1,5 @@
+import { PunchListImages } from "./punch-list-images.model";
+
 export class IssueArea {
   id: string; 
   area: string;
@@ -13,24 +15,23 @@ export class IssueArea {
 }
 
 export class PreliminaryPunchList {
-  id: string; 
+  id?: string;
   segmentId: string;
   vendorName: string;
   streetAddress: string;
   city: string;
   state: string;
-
-  issues: IssueArea[]; 
-  additionalConcerns: string; 
+  issues: IssueArea[];
+  additionalConcerns: string;
   dateReported: Date;
-
-  issueImage: File | null; 
   pmResolved: boolean;
-  cmResolved: boolean; 
-  resolutionImage: File | null; 
-  dateResolved: Date | null; 
+  cmResolved: boolean;
+  dateResolved: Date | null;
+  issueImageId?: string;  // Store image IDs
+  resolutionImageId?: string;
 
   constructor(
+    id: string,
     segmentId: string,
     vendorName: string,
     streetAddress: string,
@@ -39,12 +40,11 @@ export class PreliminaryPunchList {
     issues: IssueArea[] = [],
     additionalConcerns: string = '',
     dateReported: Date = new Date(),
-    issueImage: File | null = null,
     pmResolved: boolean = false,
     cmResolved: boolean = false,
-    resolutionImage: File | null = null,
     dateResolved: Date | null = null,
-    id: string
+    issueImageId: string = '',
+    resolutionImageId: string = ''
   ) {
     this.id = id;
     this.segmentId = segmentId;
@@ -55,10 +55,10 @@ export class PreliminaryPunchList {
     this.issues = issues;
     this.additionalConcerns = additionalConcerns;
     this.dateReported = dateReported;
-    this.issueImage = issueImage;
     this.pmResolved = pmResolved;
     this.cmResolved = cmResolved;
-    this.resolutionImage = resolutionImage;
     this.dateResolved = dateResolved;
+    this.issueImageId = issueImageId;
+    this.resolutionImageId = resolutionImageId;
   }
 }

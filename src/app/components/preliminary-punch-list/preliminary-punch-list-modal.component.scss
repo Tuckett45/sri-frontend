@@ -160,16 +160,18 @@ button.mat-raised-button {
 }
 
 .file-preview {
+  margin-top: 10px;
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  gap: 10px;
+}
 
-  span {
-    margin-left: 10px;
-    margin-right: 10px;
-    font-size: 14px;
-    color: #666;
-  }
+.preview-image {
+  width: 100px;   // Set the desired width
+  height: auto;   // Keep the aspect ratio
+  border: 1px solid #ddd;   // Optional: add a border around the image
+  border-radius: 4px;       // Optional: make the edges rounded
+  object-fit: cover;        // Ensures the image fits nicely within the set width
 }
 
 .image-btn {
