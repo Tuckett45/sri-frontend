@@ -49,7 +49,14 @@ export class ResetPasswordComponent implements OnInit {
     // Call the backend to reset the password
     this.authService.resetPassword(this.token, newPassword).subscribe(
       () => {
-        this.toastr.success('Password reset successfully!');
+        this.toastr.success(
+          'Password reset successfully! <a href="/login" class="toastr-link">Log in</a>',
+          'Success', {
+            enableHtml: true, // Allows HTML content in the message
+            closeButton: true,
+            timeOut: 5000
+          }
+        );
         this.resetSuccessful = true;
       },
       (error) => {
