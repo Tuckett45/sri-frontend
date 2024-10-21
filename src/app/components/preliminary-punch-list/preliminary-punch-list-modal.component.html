@@ -1,0 +1,162 @@
+<div mat-dialog-title class="modal-header">
+  <h3 class="modal-title">Preliminary Punch List Report</h3>
+  <button mat-icon-button (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div mat-dialog-content class="modal-body">
+  <form [formGroup]="preliminaryPunchListForm">
+
+    <mat-grid-list cols="4" rowHeight="115px" gutterSize="2px">
+
+      <!-- Segment ID -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Segment ID</mat-label>
+          <input matInput formControlName="segmentId" placeholder="Enter Segment ID">
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Vendor</mat-label>
+          <input matInput formControlName="vendorName" placeholder="Enter Vendor">
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- Street Address -->
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Street Address</mat-label>
+          <input matInput formControlName="streetAddress" placeholder="Enter Street Address">
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- City -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" placeholder="Enter City">
+          <mat-error *ngIf="preliminaryPunchListForm.get('city')?.hasError('required')">
+            City is required.
+          </mat-error>
+          <mat-error *ngIf="preliminaryPunchListForm.get('city')?.hasError('pattern')">
+            City must contain only letters.
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- State -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>State</mat-label>
+          <input matInput formControlName="state" placeholder="Enter State">
+          <mat-error *ngIf="preliminaryPunchListForm.get('state')?.hasError('required')">
+            State is required.
+          </mat-error>
+          <mat-error *ngIf="preliminaryPunchListForm.get('state')?.hasError('pattern')">
+            State must be 2 alphabetic characters (e.g., CA).
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- Issue Areas and Quality Issues -->
+      <div formArrayName="issues" *ngFor="let issueArea of issueAreasFormArray.controls; let i = index">
+        <div [formGroupName]="i">
+          <mat-grid-tile colspan="2">
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>Issue Area</mat-label>
+              <mat-select formControlName="area" placeholder="Select Issue Area" (selectionChange)="onIssueAreaChange(i)">
+                <mat-option *ngFor="let area of issueAreaList" [value]="area">{{ area }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-grid-tile>
+
+          <!-- Quality Issues for Selected Area -->
+          <mat-grid-tile colspan="2">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Quality Issues</mat-label>
+              <mat-select formControlName="qualityIssues" multiple placeholder="Select Quality Issues">
+                <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-icon (click)="removeIssueArea(i)" class="delete-icon">delete</mat-icon>
+          </mat-grid-tile>
+
+        </div>
+      </div>
+      
+      <!-- Button to Add Another Issue Area -->
+      <mat-grid-tile colspan="4" class="half-width">
+        <button mat-stroked-button class="issue-btn" (click)="addIssueArea()">Add Issue</button>
+      </mat-grid-tile>
+
+      <!-- Additional Concerns -->
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Additional Concerns</mat-label>
+          <textarea matInput formControlName="additionalConcerns" placeholder="Enter Additional Concerns"></textarea>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2" *ngIf="isEditMode">
+        <div class="checkbox-container">
+          <mat-checkbox formControlName="pmResolved">PM Resolved</mat-checkbox>
+        </div>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2" *ngIf="isEditMode">
+        <div class="checkbox-container">
+          <mat-checkbox formControlName="cmResolved">CM Resolved</mat-checkbox>
+        </div>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2">
+        <div *ngIf="!this.preliminaryPunchListForm.get('issueImageId')?.value">
+          <button mat-raised-button class="image-btn" (click)="triggerIssueImageUpload()">
+            Issue Image
+            <mat-icon>attach_file</mat-icon>
+          </button>
+          <input type="file" #issueImageInput (change)="uploadIssueImage($event)" style="display: none;">
+          <mat-error *ngIf="this.preliminaryPunchListForm.get('issues')?.value > 0 && !this.preliminaryPunchListForm.get('issueImageId')?.value">
+            Issue Image is Required when Issues are added
+          </mat-error>
+        </div>
+        <div *ngIf="this.preliminaryPunchListForm.get('issueImageId')?.value" class="file-preview">
+          <img [src]="this.preliminaryPunchListForm.get('issueImageId')?.value" alt="Preview" class="preview-image">
+          <button mat-icon-button class="delete-icon" (click)="removeIssueImage()">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </mat-grid-tile>
+      
+      <mat-grid-tile colspan="2" *ngIf="isEditMode && preliminaryPunchListForm.get('pmResolved')?.value">
+        <div *ngIf="!this.preliminaryPunchListForm.get('resolutionImageId')?.value">
+          <button mat-raised-button class="image-btn" (click)="triggerResolutionImageUpload()">
+            Resolution Image
+            <mat-icon>attach_file</mat-icon>
+          </button>
+          <input type="file" #resolutionImageInput (change)="uploadResolutionImage($event)" style="display: none;">
+          <mat-error *ngIf="this.preliminaryPunchListForm.get('pmResolved')?.value && !this.preliminaryPunchListForm.get('resolutionImageId')?.value">
+            Resolution Image is Required when Issues are resolved
+          </mat-error>
+        </div>
+        <div *ngIf="this.preliminaryPunchListForm.get('resolutionImageId')?.value" class="file-preview">
+          <img [src]="this.preliminaryPunchListForm.get('resolutionImageId')?.value" alt="Preview" class="preview-image">
+          <button mat-icon-button class="delete-icon" (click)="removeResolutionImage()">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </mat-grid-tile>
+      
+
+    </mat-grid-list> 
+
+  </form>
+</div>
+
+<div mat-dialog-actions class="modal-footer">
+  <button mat-raised-button class="cancel-btn" (click)="close()">Cancel</button>
+  <button mat-raised-button class="save-btn" (click)="save()">Save</button>
+</div>

@@ -1,0 +1,28 @@
+mat-toolbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 2;
+    background-color: #144f80;
+  }
+
+app-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;  
+  }
+  
+  .main-content {
+    margin-top: 64px;  
+    padding: 20px;    
+  }
+  
+  mat-grid-list {
+    width: 100%;
+  }
+  
+  html, body, .main-content {
+    height: 100%;
+  }

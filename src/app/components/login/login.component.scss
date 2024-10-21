@@ -1,0 +1,135 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 70vh; 
+  padding: 20px;
+
+  .login-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .login-body {
+    background-color: #ffffff;
+    padding: 25px 25px 0px 25px;
+    border-radius: 5px;
+    color: #000000;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  
+
+  .forgot-password {
+    text-align: right;
+    margin-bottom: 20px;
+
+    a {
+      color: #e18a25;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+::ng-deep .mat-mdc-input-element {
+  color: #000000 !important; 
+}
+
+::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused):hover .mdc-floating-label   {
+    color: #000000 !important; 
+
+}
+
+::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-floating-label {
+  color: #000000 !important; 
+}
+
+.login-card {
+  padding: 30px;
+  width: 100%;
+  max-width: 400px;
+  background-color: #144f80;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
+  border-radius: 10px; 
+
+  mat-card-title {
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    color: #ffffff;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+
+    mat-form-field {
+      width: 100%;
+      margin-bottom: 20px;
+
+      .mat-label {
+        color: #000000;
+      }
+
+      .mat-input-element {
+        color: #000000 !important; 
+      }
+
+      .mat-hint,
+      .mat-error {
+        color: #ffd1a9 !important; 
+      }
+    }
+    
+
+    .button-container {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 20px;
+  
+      button {
+        color: #ffffff;
+
+        &.login-btn {
+          background-color: #e18a25;
+  
+          &:hover {
+            background-color: #b86404;
+          }
+          &:disabled{
+            background-color: #88827a;
+          }
+        }
+  
+        &.register-btn {
+          background-color: #144f80;
+          color: #fff;
+          margin-left: 15px;
+        
+          &:hover {
+            background-color: #207bc5;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .login-container {
+    height: 90vh;
+  }
+
+  .login-card {
+    width: 100%;
+    padding: 20px;
+  }
+
+  button.login-button {
+    padding: 10px;
+  }
+}

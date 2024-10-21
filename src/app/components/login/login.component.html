@@ -1,0 +1,43 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <div class="login-header">
+      <mat-card-title>Login</mat-card-title>
+    </div>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- Email Field -->
+      <div mat-dialog-content class="login-body">
+        <mat-form-field appearance="outline" class="login-form-field">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" placeholder="Enter your email" />
+          <mat-error *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            Please enter a valid email.
+          </mat-error>
+        </mat-form-field>
+  
+        <!-- Password Field -->
+        <mat-form-field appearance="outline" class="login-form-field">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" type="password" placeholder="Enter your password" />
+          <mat-error *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            Password must be at least 6 characters.
+          </mat-error>
+        </mat-form-field>
+  
+        <!-- Forgot Password Link -->
+        <div class="forgot-password">
+          <a class="forgot-password-link" (click)="openForgotPasswordModal()">Forgot Password?</a>
+        </div>
+      </div>
+
+      <!-- Login and Register Buttons -->
+      <div class="button-container">
+        <button mat-raised-button color="primary" type="submit" class="login-btn" [disabled]="loginForm.invalid">
+          Login
+        </button>
+        <button mat-button color="accent" class="register-btn" (click)="openRegisterModal()">
+          Register
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</div>
