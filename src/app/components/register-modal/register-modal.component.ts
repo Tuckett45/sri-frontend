@@ -13,7 +13,7 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class RegisterModalComponent {
   registerForm: FormGroup;
-  roles: string[] = ['CM', 'PM', 'Vendor'];
+  roles: string[] = ['CM', 'PM', 'Client'];
 
   constructor(
     private fb: FormBuilder,
