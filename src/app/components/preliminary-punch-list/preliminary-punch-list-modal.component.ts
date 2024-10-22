@@ -94,7 +94,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     return data.issues.map(issueArea => this.fb.group({
       id: [issueArea.id],
       area: [issueArea.area, Validators.required],
-      qualityIssues: [Array.isArray(issueArea.qualityIssues) ? issueArea.qualityIssues : issueArea.qualityIssues.split(',') || []],
+      qualityIssues: [Array.isArray(issueArea.qualityIssues) ? issueArea.qualityIssues : issueArea.qualityIssues.split(',').map(q => q.trim()) || []],
       preliminaryPunchListId: [issueArea.preliminaryPunchListId]
     }));
   }
@@ -206,6 +206,11 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   save(): void {
     if (this.preliminaryPunchListForm.valid) {
       const punchList = this.preliminaryPunchListForm.value;
+
+      punchList.issues = punchList.issues.map((issue: any) => ({
+        ...issue,
+        qualityIssues: Array.isArray(issue.qualityIssues) ? issue.qualityIssues.join(',') : issue.qualityIssues
+      }));
   
       if (punchList.id === '') {
         punchList.id = uuidv4();
