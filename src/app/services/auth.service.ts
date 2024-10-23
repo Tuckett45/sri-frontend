@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { User } from '../models/user.model';
 import { LoginModel } from '../models/login-model.model';
+import { environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable({
@@ -12,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class AuthService {
   private loggedInStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
 
-  private apiUrl = 'https://localhost:44376/api/auth';
+  private apiUrl = '${environment.apiUrl}/auth';
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -27,7 +28,7 @@ export class AuthService {
       user.id = uuidv4();
       user.createdDate.toISOString();
     }
-    return this.http.post<User>(`${this.apiUrl}/register`, user, this.httpOptions);
+    return this.http.post<User>(`${environment.apiUrl}/auth/register`, user, this.httpOptions);
   }
 
   isLoggedIn(): boolean {
@@ -39,7 +40,7 @@ export class AuthService {
   }
 
   login(credentials: LoginModel): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/login`, credentials, this.httpOptions).pipe(
+    return this.http.post<any>(`${environment.apiUrl}/auth/login`, credentials, this.httpOptions).pipe(
       tap(user => {
         if (user) {
           localStorage.setItem('loggedIn', 'true');
@@ -52,13 +53,13 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/forgot-password/${email}`, [this.httpOptions, 'text']);
+    return this.http.post<any>(`${environment.apiUrl}/auth/forgot-password/${email}`, [this.httpOptions, 'text']);
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {
     const payload = { token, newPassword }
 
-    return this.http.post(`${this.apiUrl}/reset-password`, payload, this.httpOptions);
+    return this.http.post(`${environment.apiUrl}/auth/reset-password`, payload, this.httpOptions);
   }
 
   logout(): void {
