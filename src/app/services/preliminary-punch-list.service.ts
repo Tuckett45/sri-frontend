@@ -3,24 +3,26 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
+import { environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PreliminaryPunchListService {
-  private apiUrl = 'https://localhost:44376/api/PunchList';
+  private apiUrl = '${environment.apiUrl}/PunchList';
 
   private httpOptions = {
     headers: new HttpHeaders({
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
     })
   };
   
   constructor(private http: HttpClient) {}
 
   getEntries(): Observable<PreliminaryPunchList[]> {
-    return this.http.get<PreliminaryPunchList[]>(`${this.apiUrl}/all`, this.httpOptions).pipe(
+    return this.http.get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions).pipe(
       map(punchLists => {
         return punchLists.map(punchList => {
           punchList.issues.forEach(issueArea => {
@@ -36,19 +38,19 @@ export class PreliminaryPunchListService {
   }
 
   addEntry(punchList: PreliminaryPunchList): Observable<any> {  
-    return this.http.post(`${this.apiUrl}`, punchList, this.httpOptions).pipe(
+    return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
   updateEntry(punchList: PreliminaryPunchList): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${punchList.id}`, punchList, this.httpOptions).pipe(
+    return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
   removeEntry(id: string | undefined): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
+    return this.http.delete<void>(`${environment.apiUrl}/PunchList/${id}`, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }

@@ -60,7 +60,8 @@
               "namedChunks": true
             }
           },
-          "defaultConfiguration": "production"
+          "defaultConfiguration": "production",
+          "baseHref": "/"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
