@@ -23,7 +23,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'  # Ensure you use a compatible Node.js version
+          node-version: '20.x'  # Ensure you use a compatible Node.js version
 
       - name: Clean npm cache and install dependencies
         run: |
