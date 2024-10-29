@@ -40,7 +40,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
           action: "upload"
           app_location: "/"  # App source code path, adjust if necessary
-          api_location: ""  # Api source code path - optional
           output_location: "dist/sri-frontend"  # Adjust to your build output directory
 
   close_pull_request_job:
