@@ -3,7 +3,7 @@
   "configurations": {
     "sri-frontend": {
       "appLocation": ".",
-      "outputLocation": "dist\\sri-frontend",
+      "outputLocation": "dist/sri-frontend",
       "appBuildCommand": "npm run build",
       "run": "npm start",
       "appDevserverUrl": "http://localhost:4200",
