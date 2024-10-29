@@ -23,14 +23,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.x'  # Ensure you use a compatible Node.js version
+          node-version: '18.x'  # Ensure you use a compatible Node.js version
 
       - name: Clean npm cache and install dependencies
         run: |
           rm -rf node_modules
           rm package-lock.json
           npm cache clean --force
-          npm install --no-optional  # Avoid installing optional dependencies
+          npm install --no-optional
 
       - name: Build And Deploy
         id: builddeploy
@@ -39,9 +39,9 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_THANKFUL_MOSS_0110F6E1E }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
           action: "upload"
-          app_location: "/"  # App source code path
+          app_location: "/"  # App source code path, adjust if necessary
           api_location: ""  # Api source code path - optional
-          output_location: "dist/sri-frontend"  # Built app content directory
+          output_location: "dist/sri-frontend"  # Adjust to your build output directory
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
