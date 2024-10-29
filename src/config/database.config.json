@@ -5,7 +5,7 @@
       "options": {
         "set-session-context": false 
       },
-      "connection-string": "Server=tcp:sri-database-prod.database.windows.net,1433;Initial Catalog=sri-prod;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+      "connection-string": "Data Source=sri-database-prod.database.windows.net,1433;Initial Catalog=sri-prod;User ID=atuckett@sritelecom.net;Password=Chedd@r#21"
     },
     "runtime": {
       "rest": {
