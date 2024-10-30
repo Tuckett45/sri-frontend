@@ -40,7 +40,7 @@ export class LoginComponent implements OnInit {
         next: (response) => {
           localStorage.setItem('loggedIn', 'true');
           this.toastr.success('Login successful!', 'Success');
-          this.router.navigate(['/overview']);
+          this.router.navigate(['/preliminary-punch-list']);
         },
         error: (error) => {
           this.toastr.error(error.error, 'error');

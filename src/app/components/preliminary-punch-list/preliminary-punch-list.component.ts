@@ -7,6 +7,7 @@ import { debounceTime, distinctUntilChanged, fromEvent, Observable } from 'rxjs'
 import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator } from '@angular/material/paginator';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -29,7 +30,8 @@ export class PreliminaryPunchListComponent implements OnInit {
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
     private changeDetectorRef: ChangeDetectorRef,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    public authService: AuthService
   ) {
     this.preliminaryPunchList$ = this.punchListService.getEntries();
   }

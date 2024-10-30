@@ -89,7 +89,7 @@
       
       <!-- Button to Add Another Issue Area -->
       <mat-grid-tile colspan="4" class="half-width">
-        <button mat-stroked-button class="issue-btn" (click)="addIssueArea()">Add Issue</button>
+        <button [disabled]="!authService.isCM()" mat-stroked-button class="issue-btn" (click)="addIssueArea()">Add Issue</button>
       </mat-grid-tile>
 
       <!-- Additional Concerns -->
@@ -114,18 +114,18 @@
 
       <mat-grid-tile colspan="2">
         <div *ngIf="!this.preliminaryPunchListForm.get('issueImageId')?.value">
-          <button mat-raised-button class="image-btn" (click)="triggerIssueImageUpload()">
+          <button [disabled]="!authService.isCM()" mat-raised-button class="image-btn" (click)="triggerIssueImageUpload()">
             Issue Image
             <mat-icon>attach_file</mat-icon>
           </button>
-          <input type="file" #issueImageInput (change)="uploadIssueImage($event)" style="display: none;">
+          <input [disabled]="!authService.isCM()" type="file" #issueImageInput (change)="uploadIssueImage($event)" style="display: none;">
           <mat-error *ngIf="this.preliminaryPunchListForm.get('issues')?.value > 0 && !this.preliminaryPunchListForm.get('issueImageId')?.value">
             Issue Image is Required when Issues are added
           </mat-error>
         </div>
         <div *ngIf="this.preliminaryPunchListForm.get('issueImageId')?.value" class="file-preview">
           <img [src]="this.preliminaryPunchListForm.get('issueImageId')?.value" alt="Preview" class="preview-image">
-          <button mat-icon-button class="delete-icon" (click)="removeIssueImage()">
+          <button [disabled]="!authService.isCM()" mat-icon-button class="delete-icon" (click)="removeIssueImage()">
             <mat-icon>delete</mat-icon>
           </button>
         </div>
