@@ -1,0 +1,14 @@
+{
+  "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
+  "configurations": {
+    "sri-frontend": {
+      "appLocation": ".",
+      "outputLocation": "dist/sri-frontend",
+      "appBuildCommand": "npm run build",
+      "run": "npm start",
+      "appDevserverUrl": "http://localhost:4200",
+      "appName": "sri-frontend",
+      "resourceGroup": "sri-frontend-rg"
+    }
+  }
+}
