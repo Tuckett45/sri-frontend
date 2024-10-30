@@ -2,7 +2,7 @@
   <!-- Header section with flex layout for title and add button -->
   <div class="header-section">
     <h2>Preliminary Punch List</h2>
-    <button mat-raised-button color="primary" class="header-btn" (click)="openModal()">Add New Entry</button>
+    <button *ngIf="this.authService.isCM()" mat-raised-button color="primary" class="header-btn" (click)="openModal()">Add New Entry</button>
   </div>
 
   <div class="search-bar">
@@ -108,8 +108,8 @@
         <th mat-header-cell *matHeaderCellDef> Actions </th>
         <td mat-cell *matCellDef="let report; let i = index" data-label="Actions">
           <div class="actions-container">
-            <mat-icon (click)="editReport(report)" class="edit-icon">edit</mat-icon>
-            <mat-icon (click)="removeReport(report)" class="delete-icon" color="warn">delete</mat-icon>
+            <mat-icon *ngIf="!this.authService.isClient()" (click)="editReport(report)" class="edit-icon">edit</mat-icon>
+            <mat-icon *ngIf="this.authService.isCM()" (click)="removeReport(report)" class="delete-icon" color="warn">delete</mat-icon>
           </div>
         </td>
       </ng-container>

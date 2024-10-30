@@ -4,6 +4,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PunchListImages } from 'src/app/models/punch-list-images.model';
+import { UserRole } from 'src/app/models/role.enum';
+import { AuthService } from 'src/app/services/auth.service';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -36,6 +38,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     private dialogRef: MatDialogRef<PreliminaryPunchListModalComponent>,
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
+    public authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
   ) {}
 
@@ -78,6 +81,22 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       }
       this.preliminaryPunchListForm.get('resolutionImageId')?.updateValueAndValidity();
     });
+
+    this.setFormState();
+  }
+
+  setFormState(): void {
+    if (this.authService.isUserInRole([UserRole.PM])) {
+      this.preliminaryPunchListForm.controls['segmentId'].disable(); 
+      this.preliminaryPunchListForm.controls["segmentId"].disable();
+      this.preliminaryPunchListForm.controls["vendorName"].disable();
+      this.preliminaryPunchListForm.controls["streetAddress"].disable();
+      this.preliminaryPunchListForm.controls["city"].disable();
+      this.preliminaryPunchListForm.controls["state"].disable();
+      this.preliminaryPunchListForm.controls["qualityIssues"].disable();
+      this.preliminaryPunchListForm.controls["additionalConcerns"].disable();
+      this.preliminaryPunchListForm.controls["cmResolved"]?.disable();
+    }
   }
 
   triggerIssueImageUpload(): void {
@@ -204,8 +223,9 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   }
 
   save(): void {
+    
     if (this.preliminaryPunchListForm.valid) {
-      const punchList = this.preliminaryPunchListForm.value;
+      const punchList = this.preliminaryPunchListForm.getRawValue();
 
       punchList.issues = punchList.issues.map((issue: any) => ({
         ...issue,
