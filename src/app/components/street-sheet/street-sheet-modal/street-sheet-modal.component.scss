@@ -1,0 +1,222 @@
+.modal-body {
+    background-color: #fff;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    color: #000000;
+    max-height: 70vh;
+    overflow-y: auto;
+  
+    .issue-btn{
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      color: #e18a25;
+      border-color: #e18a25;
+      margin-right: 15px;
+  
+      &:hover {
+        background-color: #b86404;
+        color: #ffffff;
+      }
+    }
+  
+    .delete-icon {
+      justify-items: center;
+      cursor: pointer;
+      color: #f44336;;
+  
+      &:hover {
+        color: #e53935;
+      }
+    }
+  }
+  
+  /* Ensure text field colors are properly set */
+  ::ng-deep .mat-mdc-input-element {
+    color: #000000 !important; /* Set the input text color */
+  }
+  
+  /* Ensure select input label color is set properly */
+  ::ng-deep .mat-mdc-select .mdc-label {
+    color: #000000 !important; /* Set the label text color */
+  }
+  
+  ::ng-deep .mat-mdc-checkbox .mat-internal-form-field {
+    color: #000000 !important; /* Set the label text color */
+  }
+  
+  ::ng-deep .mat-mdc-select {
+    color: #000000 !important;
+  }
+  
+  /* Style the checkbox */
+  ::ng-deep .mat-checkbox-inner-container {
+    background-color: rgba(20, 79, 128, 0.2) !important; /* Light version of the primary color for the unchecked state */
+  }
+  
+  ::ng-deep .mat-checkbox-checked .mat-checkbox-background {
+    background-color: #144f80 !important; /* Checked state matches the primary color */
+  }
+  
+  /* Checkbox border on hover */
+  ::ng-deep .mat-checkbox:not(.mat-checkbox-checked):hover .mat-checkbox-frame {
+    border-color: #b86404 !important; /* Border color on hover */
+  }
+  
+  /* Style the label for the checkbox */
+  ::ng-deep .mat-checkbox-label {
+    color: #144f80 !important; /* Label text color */
+  }
+  
+  /* General mat-form-field styles */
+  mat-form-field {
+    width: 100%;
+    margin-bottom: 10px;
+    margin-top: 10px;
+  
+    mat-form-field-wrapper {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      padding: 5px;
+    }
+  
+    mat-label {
+      color: #525252;
+    }
+  }
+  
+  /* Modal header styles */
+  .modal-header {
+    background-color: #144f80;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  
+    .modal-title {
+      font-size: 1.5rem;
+      color: #fff;
+    }
+  
+    button {
+      color: #ffffff;
+  
+      &:hover {
+        color: #000;
+      }
+    }
+  }
+  
+  /* Modal footer styles */
+  .modal-footer {
+    background-color: #144f80;
+    display: flex;
+    justify-content: flex-end;
+    padding: 20px 25px;
+  
+    .save-btn,
+    .cancel-btn {
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      color: #fff;
+    }
+  
+    .save-btn {
+      background-color: #e18a25;
+      margin-right: 15px;
+  
+      &:hover {
+        background-color: #b86404;
+      }
+    }
+  
+    .cancel-btn {
+      background-color: #f44336;
+  
+      &:hover {
+        background-color: #e53935;
+      }
+    }
+  
+  }
+  
+  /* Button styling */
+  button.mat-raised-button {
+    color: #fff;
+  
+    &.mat-primary {
+      background-color: #144f80;
+    }
+  
+    &.mat-accent {
+      background-color: #ff4081;
+    }
+  
+    &.mat-warn {
+      background-color: #f44336;
+    }
+  }
+  
+  .file-preview {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .preview-image {
+    width: 100px;   // Set the desired width
+    height: auto;   // Keep the aspect ratio
+    border: 1px solid #ddd;   // Optional: add a border around the image
+    border-radius: 4px;       // Optional: make the edges rounded
+    object-fit: cover;        // Ensures the image fits nicely within the set width
+  }
+  
+  .image-btn {
+    width: 202px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #fff;
+    background-color: #144f80;
+  
+    &:hover {
+      background-color: #0e3453;
+    }
+  
+  }
+  
+  /* File input styling */
+  .file-input-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+  
+    .custom-label {
+      margin-bottom: 5px;
+    }
+  
+    .file-input {
+      padding: 8px;
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .modal-body,
+    .modal-header,
+    .modal-footer {
+      padding: 15px;
+    }
+  
+    .save-btn,
+    .cancel-btn {
+      padding: 8px 15px;
+    }
+  }

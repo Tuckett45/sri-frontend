@@ -4,6 +4,7 @@
   <span class="spacer"></span>
   <button *ngIf="authService.isCM()" mat-button routerLink="/overview" routerLinkActive="active-link">Overview</button>
   <button mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">Prelim Punch List Tracker</button>
+  <button mat-button routerLink="/street-sheet" routerLinkActive="active-link">Street Sheet Tracker</button>
   <button *ngIf="authService.isCM()" mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Profile</button>
   <button mat-button (click)="logout()">Logout</button>
 </mat-toolbar>

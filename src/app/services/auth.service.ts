@@ -15,8 +15,6 @@ export class AuthService {
   private loggedInStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
   private userRole: BehaviorSubject<UserRole> = new BehaviorSubject<UserRole>(UserRole.CM);
 
-  private apiUrl = '${environment.apiUrl}/auth';
-
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
