@@ -31,7 +31,7 @@ jobs:
 
       - name: Build Angular Application
         run: |
-          npm run build -- --prod  # Make sure this matches your build script in package.json
+          npm build  # Make sure this matches your build script in package.json
 
       - name: Build And Deploy
         id: builddeploy
