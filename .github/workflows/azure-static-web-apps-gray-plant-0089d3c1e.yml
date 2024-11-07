@@ -34,6 +34,7 @@ jobs:
 
       - name: Build Angular Application
         run: |
+          npm install
           npm run build  # Ensure this matches your actual build command
 
       - name: List Files for Debugging
