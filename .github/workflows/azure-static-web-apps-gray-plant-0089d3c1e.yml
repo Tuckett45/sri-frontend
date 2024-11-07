@@ -30,7 +30,7 @@ jobs:
           rm -rf node_modules
           rm package-lock.json
           npm cache clean --force
-          npm i  # Use this for a clean install
+          npm ci  # Use this for a clean install
 
       - name: Build Angular Application
         run: |
