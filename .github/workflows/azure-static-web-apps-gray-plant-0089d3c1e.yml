@@ -32,7 +32,8 @@ jobs:
           npm install --no-optional
 
       - name: Build Angular Application
-        run: |
+        run: | 
+          npm install
           npm run build  # Make sure this matches your build script in package.json
 
       - name: Build And Deploy
