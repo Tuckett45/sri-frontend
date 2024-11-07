@@ -30,12 +30,20 @@ jobs:
           rm -rf node_modules
           rm package-lock.json
           npm cache clean --force
-          npm ci  # Use this for a clean install
+          npm install --no-optional
 
       - name: Build Angular Application
         run: |
-          npm install --no-optional
           npm run build  # Ensure this matches your actual build command
+
+      - name: List Files for Debugging
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Listing files:"
+          ls -la
+          echo "Node modules:"
+          ls -la node_modules
 
       - name: Build And Deploy
         id: builddeploy
