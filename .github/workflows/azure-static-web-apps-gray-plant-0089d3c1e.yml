@@ -33,7 +33,7 @@ jobs:
       - name: Build Angular Application
         run: |
           npm install --no-optional
-          npm build  # Ensure this matches your actual build command
+          npm run build  # Ensure this matches your actual build command
 
       - name: Build And Deploy
         id: builddeploy
