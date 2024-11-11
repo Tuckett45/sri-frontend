@@ -10,5 +10,8 @@
       "appName": "sri-frontend",
       "resourceGroup": "sri-frontend-rg"
     }
+  },
+  "navigationFallback": {
+    "rewrite": "/"
   }
 }

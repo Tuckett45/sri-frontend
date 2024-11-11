@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import * as L from 'leaflet';
 import { StreetSheet } from '../../models/street-sheet.model';
-import { StreetSheetModalComponent } from './street-sheet-modal/street-sheet-modal.component';
+import { StreetSheetModalComponent } from './street-sheet-modal.component';
 
 @Component({
   selector: 'app-street-sheet',

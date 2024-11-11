@@ -23,8 +23,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core'; 
+import { MatDatepickerModule } from '@angular/material/datepicker'
 
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { ToastrModule } from 'ngx-toastr';
@@ -44,9 +43,9 @@ import { RegisterModalComponent } from './components/register-modal/register-mod
 import { UserProfileModalComponent } from './components/user-profile/user-profile-modal/user-profile-modal.component';
 import { ForgotPasswordModalComponent } from './components/forgot-password-modal/forgot-password-modal.component';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
-import { StreetSheetModalComponent } from './components/street-sheet/street-sheet-modal/street-sheet-modal.component';
+import { StreetSheetModalComponent } from './components/street-sheet/street-sheet-modal.component';
 import { StreetSheetComponent } from './components/street-sheet/street-sheet.component';
-import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map/street-sheet-map.component';
+import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 
 
 
@@ -101,8 +100,7 @@ import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-
     MatDialogTitle,
     MatCheckboxModule,
     MatPaginatorModule,
-    MatDatepickerModule,
-    MatNativeDateModule
+    MatDatepickerModule
   ],
   providers: [provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]
