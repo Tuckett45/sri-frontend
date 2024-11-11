@@ -1,8 +1,1 @@
-{
-  "routes": [
-    {
-      "route": "/login",
-      "redirect": "https://www.ark-sri.com/login"
-    }
-  ]
-}
+{}
