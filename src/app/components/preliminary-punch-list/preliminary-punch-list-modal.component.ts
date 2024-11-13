@@ -25,13 +25,74 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   issueAreaList: string[] = ['Vault', 'DB', 'Trench', 'Site Clean Up', 'Sidewalk Panels', 'Sealant'];
   qualityIssuesMap: { [key: string]: string[] } = {
-    'Vault': ['Broken vault lid', 'Missing bolt(s)', 'Raised vault - trip hazard'],
-    'DB': ['Raised DB - trip hazard', 'Open DB', 'Missing sod/dead sod'],
-    'Trench': ['Sunken Core', 'Missing cones', 'Low flowfill'],
-    'Site Clean Up': ['Debris', 'Materials left behind', 'Oil spill on the road'],
-    'Sidewalk Panels': ['Panel removed', 'Open panel exceeded time', 'Not covered properly'],
-    'Sealant': ['Missing sealant', 'Sealant peeling up', 'Cracks in sealant']
+    'Vault': [
+      'Broken vault lid', 
+      'Missing bolt(s)', 
+      'Softscape restoration around vault', 
+      'Tracer connected improperly', 
+      'Raised vault - trip hazard', 
+      'Sunken vault - trip hazard', 
+      'Missing ground rod', 
+      'Drops related', 
+      'Missing 5 post ground connector', 
+      'Missing directional tape', 
+      'Fiber tags', 
+      'Trim conduit', 
+      'Missing stub out', 
+      'Missing gravel', 
+      'Need to seal sidewalls', 
+      'Missing wire nut on tracer wire', 
+      'Need to seal the unused conduits', 
+      'Missing vault lid anchor hardware'
+    ],
+    'DB': [
+      'Raised DB - trip hazard', 
+      'Sunken DB - trip hazard', 
+      'Raised Core', 
+      'Sunken Core', 
+      'Softscape restoration', 
+      'DB not covered to google standards', 
+      'Open DB', 
+      'Drops related', 
+      'Missing sod/dead sod'
+    ],
+    'Trench': [
+      'Sunken Core', 
+      'Raised Core', 
+      'Low flowfill', 
+      'Trip hazard', 
+      'SWPPP', 
+      'Missing cones', 
+      'Road fell apart', 
+      'Hot patch', 
+      'Missing backer rod', 
+      'Trench wider than 4". Should be hot patch, not flowfill'
+    ],
+    'Sealant': [
+      'Car skip', 
+      'Missing sealant', 
+      'Sealant is peeling up',
+      'Cracks in sealant'
+    ],
+    'Sidewalk Panels': [
+      'Panel removed (timestamp)', 
+      'Open panel has exceeded Google\'s turn around time', 
+      'Open panel has exceeded city\'s turn around time', 
+      'Panel not covered/secured properly', 
+      'Missing sidewalk closed signage', 
+      'Panel needs restoration (trip hazard, wrong color, not meeting spec, etc.)'
+    ],
+    'Site Clean Up': [
+      'Core(s)', 
+      'Materials', 
+      'Debris', 
+      'Dirt', 
+      'Equipment', 
+      'Oil spill on the road from equipment', 
+      'Flowfill washout on the road'
+    ]
   };
+  
 
   constructor(
     private fb: FormBuilder,

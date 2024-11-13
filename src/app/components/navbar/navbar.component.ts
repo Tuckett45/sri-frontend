@@ -7,7 +7,14 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
+  isMenuOpen = false;  // Track if the menu is open or not
+
   constructor(public authService: AuthService) {}
+
+  // Function to toggle the menu on and off
+  toggleMenu(): void {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
 
   logout(): void {
     this.authService.logout();

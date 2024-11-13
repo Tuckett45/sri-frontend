@@ -42,7 +42,6 @@
 
     mat-form-field {
       width: 25%;
-      margin-right: 15px;
 
       input {
         padding-left: 2px;
@@ -123,7 +122,7 @@
   }
 
   /* Responsive design */
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     padding: 10px;
     margin: 10px;
 
@@ -137,7 +136,7 @@
       }
 
       button {
-        width: 100%;
+        width: 70%;
         margin-bottom: 10px;
       }
     }
@@ -148,8 +147,7 @@
       width: 100%;
 
       mat-form-field {
-        width: 50%;
-        margin-right: 15px;
+        width: 100%;
 
         input {
           padding-left: 2px;
@@ -160,44 +158,12 @@
         }
       }
     }
-
-    .table-wrapper {
-      table {
-        font-size: 14px;
-      }
-
-      table {
-        display: block;
-
-        tr {
-          display: flex;
-          flex-direction: column;
-          border-bottom: 1px solid #ccc;
-          padding: 10px;
-          margin-bottom: 10px;
-        }
-
-        th,
-        td {
-          display: block;
-          width: 100%;
-          text-align: left;
-
-          &:before {
-            content: attr(data-label);
-            font-weight: bold;
-            display: inline-block;
-            width: 40%;
-          }
-        }
-      }
-    }
   }
 
   @media (min-width: 768px) and (max-width: 1024px) {
     .header-section {
-      flex-direction: row;
-      align-items: center;
+      flex-direction: flex;
+      justify-content: space-between;
 
       h2 {
         font-size: 1.8rem;
