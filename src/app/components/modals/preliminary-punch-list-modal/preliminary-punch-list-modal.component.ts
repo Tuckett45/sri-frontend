@@ -1,6 +1,6 @@
 import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PunchListImages } from 'src/app/models/punch-list-images.model';
@@ -8,6 +8,7 @@ import { UserRole } from 'src/app/models/role.enum';
 import { AuthService } from 'src/app/services/auth.service';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { v4 as uuidv4 } from 'uuid';
+import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
 
 @Component({
   selector: 'app-preliminary-punch-list-modal',
@@ -97,6 +98,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<PreliminaryPunchListModalComponent>,
+    private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
     public authService: AuthService,
@@ -277,6 +279,16 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.resolutionImageModel.image = null;
     this.preliminaryPunchListForm.patchValue({ resolutionImageId: null });
     this.toastr.warning('Resolution image removed');
+  }
+
+  openDeleteConfirmationDialog(index: number): void {
+    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
+    
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.removeIssueArea(index);
+      }
+    });
   }
 
   close(): void {

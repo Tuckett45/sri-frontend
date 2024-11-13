@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { RegisterModalComponent } from '../register-modal/register-modal.component';
 import { MatDialog } from '@angular/material/dialog';
-import { ForgotPasswordModalComponent } from '../forgot-password-modal/forgot-password-modal.component';
+import { ForgotPasswordModalComponent } from '../modals/forgot-password-modal/forgot-password-modal.component';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
