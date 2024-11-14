@@ -7,24 +7,158 @@ mat-toolbar {
   padding: 0 20px;
   margin-bottom: 20px;
   background-color: #144f80;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
   button {
     &:hover {
       background-color: #207bc5;
     }
-    
+
     &.active-link {
       background-color: #e18a25;
       color: #fff;
     }
   }
+
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .nav-links {
+    padding-top: 5px;
+    display: flex;
+    gap: 15px;
+    justify-content: center; /* Center the links on larger screens */
+    align-items: center; /* Center items vertically */
+    margin: 0 auto; /* Center horizontally */
+
+    button {
+      align-items: center !important;
+      text-decoration: none;
+      color: white;
+      padding: 10px;
+      border: none;
+
+      &:hover {
+        background-color: #207bc5;
+      }
+
+      &.active-link {
+        align-items: center;
+        width: fit-content;
+        background-color: #e18a25;
+        color: white;
+      }
+    }
+  }
+
+  /* Hamburger Menu (hidden by default) */
+  .menu-toggle {
+    flex-direction: column;
+    justify-content: space-around;
+    height: 24px;
+    width: 30px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+
+    mat-icon {
+      color: white;
+      font-size: 30px;
+      transition: transform 0.5s ease;  /* Smooth transition */
+    }
+
+    /* Rotate hamburger icon when menu is open */
+    &.open mat-icon.menu-icon {
+      transform: rotate(90deg);  /* Rotate the hamburger icon */
+    }
+  }
 }
 
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
+/* For screens smaller than 768px */
+@media (max-width: 768px) {
+  /* Show hamburger icon and hide nav links */
+  .menu-toggle {
+    display: flex;  /* Show hamburger menu on small screens */
+  }
+
+  .nav-links {
+    align-items: center !important;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #144f80;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    z-index: 999;
+    overflow-y: auto;  /* Prevents overflow of links */
+    max-height: 80vh;  /* Restrict max height to allow scrolling if needed */
+    justify-content: center; /* Keep links centered vertically */
+  }
+
+  /* Link styling and active link border */
+  .nav-links a, .nav-links button {
+    width: 100%;  /* Ensure buttons take up the full width */
+    padding: 12px;
+    text-align: center; /* Center text in the buttons */
+    font-size: 1.2rem;
+    text-decoration: none;
+    color: white;
+
+    &:hover {
+      background-color: #207bc5;
+    }
+
+    &.active-link {
+      background-color: #e18a25;
+      color: white;
+    }
+  }
+
+  /* When the menu is open, show the nav links */
+  .nav-links.open {
+    display: flex; /* Show the nav links when hamburger is clicked */
+  }
+
+  .nav-links.closed {
+    display: none !important;
+  }
+
+  .spacer {
+    display: none; /* Hide the spacer on mobile */
+  }
 }
 
-.spacer {
-  flex: 1;
+/* For screens larger than 768px */
+@media (min-width: 769px) {
+  /* Hide the hamburger menu on larger screens */
+  .menu-toggle {
+    display: none;  /* Hide the hamburger button on screens larger than 768px */
+  }
+
+  /* Ensure the nav links are visible on larger screens */
+  .nav-links {
+    display: flex; /* Make sure the nav links are visible and centered */
+    flex-direction: row; /* Align the nav links horizontally */
+    gap: 15px; /* Keep the space between the links */
+  }
+}
+
+/* For screens smaller than 500px */
+@media (max-width: 500px) {
+  .logo {
+    font-size: 1.2rem; /* Make the logo smaller on very small screens */
+  }
 }

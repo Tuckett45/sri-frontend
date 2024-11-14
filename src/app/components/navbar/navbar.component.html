@@ -1,10 +1,26 @@
 <mat-toolbar color="primary">
-  <img width="100" alt="SRI Logo" src="assets\images\SRI_IntegrationServices-logo-white-small-2.png"/>
-  <!-- <span class="logo">SRI Tools</span> -->
+  <!-- Logo -->
+  <img width="100" alt="SRI Logo" src="assets/images/SRI_IntegrationServices-logo-white-small-2.png" />
+
+  <!-- Spacer to push the navigation links to the right -->
   <span class="spacer"></span>
-  <button *ngIf="authService.isCM()" mat-button routerLink="/overview" routerLinkActive="active-link">Overview</button>
-  <button mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">Prelim Punch List Tracker</button>
-  <button mat-button routerLink="/street-sheet" routerLinkActive="active-link">Street Sheet Tracker</button>
-  <button *ngIf="authService.isCM()" mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Profile</button>
-  <button mat-button (click)="logout()">Logout</button>
+
+  <!-- Hamburger Menu Icon -->
+  <div aria-label="Toggle menu">
+    <mat-icon mat-button class="menu-toggle" (click)="toggleMenu()">{{ isMenuOpen ? 'close' : 'menu' }}</mat-icon>  <!-- Toggle between 'menu' and 'close' icon -->
+  </div>
+
+  <!-- Navigation Links -->
+  <div class="nav-links" [ngClass]="{ 'open': isMenuOpen, 'closed': !isMenuOpen }">
+    <button *ngIf="authService.isCM()" mat-button routerLink="/overview" routerLinkActive="active-link">
+      Overview
+    </button>
+    <button mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">
+      Prelim Punch List Tracker
+    </button>
+    <button *ngIf="authService.isCM()" mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
+      Profile
+    </button>
+    <button mat-button (click)="logout()">Logout</button>
+  </div>
 </mat-toolbar>

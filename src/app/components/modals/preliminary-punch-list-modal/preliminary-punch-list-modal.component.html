@@ -1,5 +1,5 @@
 <div mat-dialog-title class="modal-header">
-  <h3 class="modal-title">Preliminary Punch List Report</h3>
+  <h5 class="modal-title">Preliminary Punch List Report</h5>
   <button mat-icon-button (click)="close()">
     <mat-icon>close</mat-icon>
   </button>
@@ -81,7 +81,7 @@
                 <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
               </mat-select>
             </mat-form-field>
-            <mat-icon (click)="removeIssueArea(i)" class="delete-icon">delete</mat-icon>
+            <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
           </mat-grid-tile>
 
         </div>

@@ -1,6 +1,6 @@
 import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PunchListImages } from 'src/app/models/punch-list-images.model';
@@ -8,6 +8,7 @@ import { UserRole } from 'src/app/models/role.enum';
 import { AuthService } from 'src/app/services/auth.service';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { v4 as uuidv4 } from 'uuid';
+import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
 
 @Component({
   selector: 'app-preliminary-punch-list-modal',
@@ -25,17 +26,79 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   issueAreaList: string[] = ['Vault', 'DB', 'Trench', 'Site Clean Up', 'Sidewalk Panels', 'Sealant'];
   qualityIssuesMap: { [key: string]: string[] } = {
-    'Vault': ['Broken vault lid', 'Missing bolt(s)', 'Raised vault - trip hazard'],
-    'DB': ['Raised DB - trip hazard', 'Open DB', 'Missing sod/dead sod'],
-    'Trench': ['Sunken Core', 'Missing cones', 'Low flowfill'],
-    'Site Clean Up': ['Debris', 'Materials left behind', 'Oil spill on the road'],
-    'Sidewalk Panels': ['Panel removed', 'Open panel exceeded time', 'Not covered properly'],
-    'Sealant': ['Missing sealant', 'Sealant peeling up', 'Cracks in sealant']
+    'Vault': [
+      'Broken vault lid', 
+      'Missing bolt(s)', 
+      'Softscape restoration around vault', 
+      'Tracer connected improperly', 
+      'Raised vault - trip hazard', 
+      'Sunken vault - trip hazard', 
+      'Missing ground rod', 
+      'Drops related', 
+      'Missing 5 post ground connector', 
+      'Missing directional tape', 
+      'Fiber tags', 
+      'Trim conduit', 
+      'Missing stub out', 
+      'Missing gravel', 
+      'Need to seal sidewalls', 
+      'Missing wire nut on tracer wire', 
+      'Need to seal the unused conduits', 
+      'Missing vault lid anchor hardware'
+    ],
+    'DB': [
+      'Raised DB - trip hazard', 
+      'Sunken DB - trip hazard', 
+      'Raised Core', 
+      'Sunken Core', 
+      'Softscape restoration', 
+      'DB not covered to google standards', 
+      'Open DB', 
+      'Drops related', 
+      'Missing sod/dead sod'
+    ],
+    'Trench': [
+      'Sunken Core', 
+      'Raised Core', 
+      'Low flowfill', 
+      'Trip hazard', 
+      'SWPPP', 
+      'Missing cones', 
+      'Road fell apart', 
+      'Hot patch', 
+      'Missing backer rod', 
+      'Trench wider than 4". Should be hot patch, not flowfill'
+    ],
+    'Sealant': [
+      'Car skip', 
+      'Missing sealant', 
+      'Sealant is peeling up',
+      'Cracks in sealant'
+    ],
+    'Sidewalk Panels': [
+      'Panel removed (timestamp)', 
+      'Open panel has exceeded Google\'s turn around time', 
+      'Open panel has exceeded city\'s turn around time', 
+      'Panel not covered/secured properly', 
+      'Missing sidewalk closed signage', 
+      'Panel needs restoration (trip hazard, wrong color, not meeting spec, etc.)'
+    ],
+    'Site Clean Up': [
+      'Core(s)', 
+      'Materials', 
+      'Debris', 
+      'Dirt', 
+      'Equipment', 
+      'Oil spill on the road from equipment', 
+      'Flowfill washout on the road'
+    ]
   };
+  
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<PreliminaryPunchListModalComponent>,
+    private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
     public authService: AuthService,
@@ -216,6 +279,16 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.resolutionImageModel.image = null;
     this.preliminaryPunchListForm.patchValue({ resolutionImageId: null });
     this.toastr.warning('Resolution image removed');
+  }
+
+  openDeleteConfirmationDialog(index: number): void {
+    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
+    
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.removeIssueArea(index);
+      }
+    });
   }
 
   close(): void {

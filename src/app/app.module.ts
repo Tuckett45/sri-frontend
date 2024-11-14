@@ -37,16 +37,17 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { ChartComponent } from './components/charts/chart.component';
 import { TableComponent } from './components/table/table.component';
 import { PreliminaryPunchListComponent } from './components/preliminary-punch-list/preliminary-punch-list.component';
-import { PreliminaryPunchListModalComponent } from './components/preliminary-punch-list/preliminary-punch-list-modal.component';
+import { PreliminaryPunchListModalComponent } from './components/modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterModalComponent } from './components/register-modal/register-modal.component';
 import { UserProfileModalComponent } from './components/user-profile/user-profile-modal/user-profile-modal.component';
-import { ForgotPasswordModalComponent } from './components/forgot-password-modal/forgot-password-modal.component';
+import { ForgotPasswordModalComponent } from './components/modals/forgot-password-modal/forgot-password-modal.component';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
 import { StreetSheetModalComponent } from './components/street-sheet/street-sheet-modal.component';
 import { StreetSheetComponent } from './components/street-sheet/street-sheet.component';
 import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
+import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 
 
 
@@ -54,6 +55,7 @@ import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-
   declarations: [
     AppComponent,
     ChartComponent,
+    DeleteConfirmationModalComponent,
     FilterComponent,
     ForgotPasswordModalComponent,
     LoginComponent,

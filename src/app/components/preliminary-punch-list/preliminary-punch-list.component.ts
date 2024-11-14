@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { PreliminaryPunchListModalComponent } from './preliminary-punch-list-modal.component';
+import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { debounceTime, distinctUntilChanged, fromEvent, Observable } from 'rxjs';
@@ -8,6 +8,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator } from '@angular/material/paginator';
 import { AuthService } from 'src/app/services/auth.service';
+import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -73,6 +74,16 @@ export class PreliminaryPunchListComponent implements OnInit {
 
   editReport(report: PreliminaryPunchList): void {
     this.openModal(report);
+  }
+
+  openDeleteConfirmationDialog(report: PreliminaryPunchList): void {
+    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
+    
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.removeReport(report);
+      }
+    });
   }
 
   removeReport(report: PreliminaryPunchList): void {

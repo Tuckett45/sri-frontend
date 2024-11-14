@@ -6,7 +6,7 @@
   max-height: 70vh;
   overflow-y: auto;
 
-  .issue-btn{
+  .issue-btn {
     padding: 10px 20px;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -23,7 +23,7 @@
   .delete-icon {
     justify-items: center;
     cursor: pointer;
-    color: #f44336;;
+    color: #f44336;
 
     &:hover {
       color: #e53935;
@@ -94,7 +94,7 @@ mat-form-field {
   align-items: center;
 
   .modal-title {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     color: #fff;
   }
 
@@ -139,7 +139,6 @@ mat-form-field {
       background-color: #e53935;
     }
   }
-
 }
 
 /* Button styling */
@@ -184,7 +183,6 @@ button.mat-raised-button {
   &:hover {
     background-color: #0e3453;
   }
-
 }
 
 /* File input styling */
@@ -214,8 +212,47 @@ button.mat-raised-button {
     padding: 15px;
   }
 
+  /* Adjust font size in the modal */
+  .modal-title {
+    font-size: 1.1rem;  /* Smaller font size for mobile */
+  }
+
+  /* Button size adjustments */
   .save-btn,
   .cancel-btn {
     padding: 8px 15px;
+    font-size: 1rem;  /* Smaller font size for mobile */
+  }
+
+  /* Image preview adjustments */
+  .preview-image {
+    width: 80px;  /* Adjust image size for mobile */
+  }
+
+  /* File input adjustment */
+  .file-input-wrapper {
+    width: 100%;
+  }
+
+  .file-input {
+    padding: 10px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .modal-body {
+    max-height: 60vh;  /* Adjust max height for very small screens */
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 10px 15px;
+  }
+
+  .save-btn,
+  .cancel-btn {
+    padding: 8px 12px;  /* Further decrease padding for smaller screens */
+    font-size: 0.9rem;  /* Reduce font size */
   }
 }
