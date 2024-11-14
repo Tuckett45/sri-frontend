@@ -9,6 +9,8 @@ import { AuthService } from 'src/app/services/auth.service';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { v4 as uuidv4 } from 'uuid';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
+import { HttpClient } from '@angular/common/http';
+import { fromEvent, debounceTime, distinctUntilChanged, of, catchError, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-preliminary-punch-list-modal',
@@ -23,6 +25,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   @ViewChild('issueImageInput') issueImageInput!: ElementRef;
   @ViewChild('resolutionImageInput') resolutionImageInput!: ElementRef;
+  @ViewChild('addressInput') addressInput!: ElementRef;
 
   issueAreaList: string[] = ['Vault', 'DB', 'Trench', 'Site Clean Up', 'Sidewalk Panels', 'Sealant'];
   qualityIssuesMap: { [key: string]: string[] } = {
@@ -93,7 +96,23 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       'Flowfill washout on the road'
     ]
   };
-  
+
+  stateAbbreviations: { [key: string]: string } = {
+    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+    'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+    'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+    'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+    'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+    'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+    'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+    'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+    'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+    'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
+  };
+
+  suggestions: any[] = [];
+  isAddressLoading = false;
+  filteredQualityIssues: string[][] = []; 
 
   constructor(
     private fb: FormBuilder,
@@ -102,6 +121,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
     public authService: AuthService,
+    private http: HttpClient,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
   ) {}
 
@@ -118,7 +138,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       issues: this.fb.array(this.getInitialIssueAreas(this.data)),
       additionalConcerns: [this.data?.additionalConcerns || ''],
       dateReported: [this.data?.dateReported ||  new Date().toISOString()],
-      issueImageId: [this.data?.issueImageId || null],
+      issueImageId: [this.data?.issueImageId || null, Validators.required],
       pmResolved: [this.data?.pmResolved || false],
       resolutionImageId: [this.data?.resolutionImageId || null],
       dateResolved: [this.data?.dateResolved || ''],
@@ -132,6 +152,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       this.issueImageModel = new PunchListImages('', 'issueImage');
       this.resolutionImageModel = new PunchListImages('', 'resolutionImage');
     }
+
+    this.setupAddressAutocomplete();
 
     this.preliminaryPunchListForm.get('pmResolved')?.valueChanges.subscribe((pmResolved: boolean) => {
       if (pmResolved) {
@@ -160,6 +182,52 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       this.preliminaryPunchListForm.controls["additionalConcerns"].disable();
       this.preliminaryPunchListForm.controls["cmResolved"]?.disable();
     }
+  }
+
+  setupAddressAutocomplete(): void {
+    const streetAddressControl = this.preliminaryPunchListForm.get('streetAddress');
+    
+    streetAddressControl?.valueChanges.pipe(
+      debounceTime(300),  
+      distinctUntilChanged(),  
+      switchMap((query: string) => {
+        if (query.length > 2) {
+          this.isAddressLoading = true;
+          return this.getAddressSuggestions(query);  // Fetch suggestions if query is valid
+        } else {
+          this.suggestions = [];
+          return of([]); 
+        }
+      }),
+      catchError(() => {
+        this.isAddressLoading = false;
+        return of([]);  
+      })
+    ).subscribe(suggestions => {
+      this.suggestions = suggestions;
+      this.isAddressLoading = false;
+    });
+  }
+
+
+  // Fetch address suggestions from Nominatim API
+  getAddressSuggestions(query: string) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=US&limit=5`;
+    return this.http.get<any[]>(url);  // Return observable of suggestions
+  }
+
+  selectAddress(suggestion: any): void {
+    const addressParts = suggestion.display_name.split(',');
+    const abbreviatedState = this.stateAbbreviations[suggestion.address.state] || suggestion.address.state;
+
+    // Set form controls with the selected address details
+    this.preliminaryPunchListForm.patchValue({
+      streetAddress: addressParts[0][1],
+      city: suggestion.address.city || '',
+      state: abbreviatedState || ''
+    });
+
+    this.suggestions = [];  // Clear suggestions after selection
   }
 
   triggerIssueImageUpload(): void {
@@ -199,10 +267,18 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   }
 
   onIssueAreaChange(index: number): void {
-    const issueAreaControl = this.issueAreasFormArray.at(index).get('area')?.value;
-    if (issueAreaControl?.value) {
-      const qualityIssuesControl = this.issueAreasFormArray.at(index).get('qualityIssues');
-      qualityIssuesControl?.reset(); 
+    if(this.issueAreasFormArray.at(index).get('qualityIssues')?.value){
+      this.issueAreasFormArray.at(index).reset;
+    }
+    const issueArea = this.issueAreasFormArray.at(index).get('area')?.value;
+    this.filterQualityIssues(index, issueArea);
+  }
+
+  filterQualityIssues(index: number, issueArea?: string): void {
+    if (issueArea) {
+      this.filteredQualityIssues[index] = this.qualityIssuesMap[issueArea] || [];
+    } else {
+      this.filteredQualityIssues[index] = [];
     }
   }
 
@@ -217,7 +293,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       const file = input.files[0];
       const reader = new FileReader();
   
-      const maxFileSizeInMB = 5;
+      const maxFileSizeInMB = 15;
       const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
   
       if (file.size > maxFileSizeInBytes) {

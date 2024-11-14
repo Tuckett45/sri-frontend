@@ -8,6 +8,7 @@ import { AppRoutingModule } from './app-routing.module';
 
 import { AppComponent } from './app.component';
 
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -78,6 +79,7 @@ import { DeleteConfirmationModalComponent } from './components/modals/delete-con
     FormsModule,
     ReactiveFormsModule,
     AppRoutingModule,
+    MatAutocompleteModule,
     MatToolbarModule,
     MatIconModule,
     MatSidenavModule,

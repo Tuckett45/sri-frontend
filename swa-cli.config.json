@@ -10,8 +10,5 @@
       "appName": "ark-sri",
       "resourceGroup": "SRI-FRONTEND"
     }
-  }, 
-  "navigationFallback": {
-    "rewrite": "/index.html"
   }
 }
