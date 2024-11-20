@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { User } from 'src/app/models/user.model';
 
 @Component({
   selector: 'app-user-profile-modal',
@@ -13,10 +14,10 @@ export class UserProfileModalComponent {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<UserProfileModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public profileData: any
+    @Inject(MAT_DIALOG_DATA) public profileData: User
   ) {
     this.editProfileForm = this.fb.group({
-      username: [profileData?.username || '', Validators.required],
+      name: [profileData?.name || '', Validators.required],
       email: [profileData?.email || '', [Validators.required, Validators.email]]
     });
   }

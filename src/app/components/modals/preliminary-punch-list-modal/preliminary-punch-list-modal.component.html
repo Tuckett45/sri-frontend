@@ -124,7 +124,7 @@
           </mat-error>
         </div>
         <div *ngIf="this.preliminaryPunchListForm.get('issueImageId')?.value" class="file-preview">
-          <img [src]="this.preliminaryPunchListForm.get('issueImageId')?.value" alt="Preview" class="preview-image">
+          <img [src]="this.preliminaryPunchListForm.get('issueImageId')?.value" alt="Preview" (click)="openImageModal(this.preliminaryPunchListForm.get('issueImageId')?.value)" class="preview-image">
           <button [disabled]="!authService.isCM()" mat-icon-button class="delete-icon" (click)="removeIssueImage()">
             <mat-icon>delete</mat-icon>
           </button>
@@ -143,7 +143,7 @@
           </mat-error>
         </div>
         <div *ngIf="this.preliminaryPunchListForm.get('resolutionImageId')?.value" class="file-preview">
-          <img [src]="this.preliminaryPunchListForm.get('resolutionImageId')?.value" alt="Preview" class="preview-image">
+          <img [src]="this.preliminaryPunchListForm.get('resolutionImageId')?.value" alt="Preview" (click)="openImageModal(this.preliminaryPunchListForm.get('resolutionImageId')?.value)" class="preview-image">
           <button mat-icon-button class="delete-icon" (click)="removeResolutionImage()">
             <mat-icon>delete</mat-icon>
           </button>

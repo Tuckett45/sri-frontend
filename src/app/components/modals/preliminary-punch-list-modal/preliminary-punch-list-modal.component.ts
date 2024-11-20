@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
 import { HttpClient } from '@angular/common/http';
 import { fromEvent, debounceTime, distinctUntilChanged, of, catchError, switchMap } from 'rxjs';
+import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
 
 @Component({
   selector: 'app-preliminary-punch-list-modal',
@@ -70,7 +71,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       'Road fell apart', 
       'Hot patch', 
       'Missing backer rod', 
-      'Trench wider than 4". Should be hot patch, not flowfill'
+      'Trench wider than 4". Should be hot patch, not flowfill',
+      'No Signage'
     ],
     'Sealant': [
       'Car skip', 
@@ -94,6 +96,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       'Equipment', 
       'Oil spill on the road from equipment', 
       'Flowfill washout on the road'
+    ],
+    'Signage':[
+      'Missing parking signs',
+      'Missing A frame'
     ]
   };
 
@@ -113,6 +119,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   suggestions: any[] = [];
   isAddressLoading = false;
   filteredQualityIssues: string[][] = []; 
+  galleryImages: Image[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -122,6 +129,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     private toastr: ToastrService,
     public authService: AuthService,
     private http: HttpClient,
+    private modalGalleryService: ModalGalleryService,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
   ) {}
 
@@ -138,7 +146,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       issues: this.fb.array(this.getInitialIssueAreas(this.data)),
       additionalConcerns: [this.data?.additionalConcerns || ''],
       dateReported: [this.data?.dateReported ||  new Date().toISOString()],
-      issueImageId: [this.data?.issueImageId || null, Validators.required],
+      issueImageId: [this.data?.issueImageId || null],
       pmResolved: [this.data?.pmResolved || false],
       resolutionImageId: [this.data?.resolutionImageId || null],
       dateResolved: [this.data?.dateResolved || ''],
@@ -322,7 +330,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       const file = input.files[0];
       const reader = new FileReader();
   
-      const maxFileSizeInMB = 5;
+      const maxFileSizeInMB = 15;
       const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
   
       if (file.size > maxFileSizeInBytes) {
@@ -331,9 +339,11 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       }
   
       reader.onload = () => {
-        const base64String = reader.result as string; 
-        this.preliminaryPunchListForm.patchValue({ resolutionImageId: base64String });
-        this.resolutionImageModel.image = file;
+        if (!this.resolutionImageModel.id) {
+          this.resolutionImageModel.id = uuidv4();
+        }
+        this.preliminaryPunchListForm.patchValue({ resolutionImageId: this.resolutionImageModel.id });
+        this.resolutionImageModel.image = file; 
         this.toastr.success('Resolution image uploaded');
       };
   
@@ -355,6 +365,26 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.resolutionImageModel.image = null;
     this.preliminaryPunchListForm.patchValue({ resolutionImageId: null });
     this.toastr.warning('Resolution image removed');
+  }
+
+  openImageModal(imageUrl: string): void {
+    const modalImage: ModalImage = {
+      img: imageUrl,
+      title: 'Full Image',
+      alt: 'Full Image'
+    };
+
+    const image = new Image(0, modalImage); 
+
+    this.galleryImages = [image]; 
+
+    const currentIndex = 0;
+
+    const dialogRef: ModalGalleryRef = this.modalGalleryService.open({
+      id: currentIndex,
+      images: this.galleryImages,
+      currentImage: this.galleryImages[currentIndex]
+    }) as ModalGalleryRef;
   }
 
   openDeleteConfirmationDialog(index: number): void {

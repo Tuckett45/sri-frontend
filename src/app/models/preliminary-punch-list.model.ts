@@ -27,7 +27,7 @@ export class PreliminaryPunchList {
   pmResolved: boolean;
   cmResolved: boolean;
   dateResolved: Date | null;
-  issueImageId?: string;  // Store image IDs
+  issueImageId?: string;
   resolutionImageId?: string;
 
   constructor(
