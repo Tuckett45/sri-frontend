@@ -9,10 +9,10 @@
     <form [formGroup]="editProfileForm">
   
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Username</mat-label>
-        <input matInput formControlName="username" placeholder="Enter your username" />
-        <mat-error *ngIf="editProfileForm.get('username')?.invalid && editProfileForm.get('username')?.touched">
-          Username is required.
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" placeholder="Enter your name" />
+        <mat-error *ngIf="editProfileForm.get('name')?.invalid && editProfileForm.get('name')?.touched">
+          Name is required.
         </mat-error>
       </mat-form-field>
   
@@ -29,5 +29,6 @@
   
   <div mat-dialog-actions class="modal-footer">
     <button mat-raised-button class="cancel-btn" (click)="close()">Cancel</button>
-    <button mat-raised-button class="save-btn" (click)="saveChanges()" [disabled]="editProfileForm.invalid">Save</button>
+    <!-- editProfileForm.invalid -->
+    <button mat-raised-button class="save-btn" (click)="saveChanges()" [disabled]="true">Save</button>
   </div>

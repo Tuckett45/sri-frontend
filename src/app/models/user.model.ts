@@ -22,3 +22,21 @@ export class User {
       this.createdDate = createdDate;
     }
   }
+
+  const userString = localStorage.getItem('user');
+
+  if (userString) {
+      const userObj = JSON.parse(userString);
+
+      const user = new User(
+          userObj.id,
+          userObj.name,
+          userObj.email,
+          userObj.password,
+          userObj.role,
+          new Date(userObj.createdDate)
+      );
+
+  } else {
+      console.log('User data not found in localStorage');
+  }

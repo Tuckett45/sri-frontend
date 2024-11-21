@@ -9,6 +9,9 @@ import { AuthService } from 'src/app/services/auth.service';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { v4 as uuidv4 } from 'uuid';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
+import { HttpClient } from '@angular/common/http';
+import { fromEvent, debounceTime, distinctUntilChanged, of, catchError, switchMap } from 'rxjs';
+import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
 
 @Component({
   selector: 'app-preliminary-punch-list-modal',
@@ -23,6 +26,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   @ViewChild('issueImageInput') issueImageInput!: ElementRef;
   @ViewChild('resolutionImageInput') resolutionImageInput!: ElementRef;
+  @ViewChild('addressInput') addressInput!: ElementRef;
 
   issueAreaList: string[] = ['Vault', 'DB', 'Trench', 'Site Clean Up', 'Sidewalk Panels', 'Sealant'];
   qualityIssuesMap: { [key: string]: string[] } = {
@@ -67,7 +71,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       'Road fell apart', 
       'Hot patch', 
       'Missing backer rod', 
-      'Trench wider than 4". Should be hot patch, not flowfill'
+      'Trench wider than 4". Should be hot patch, not flowfill',
+      'No Signage'
     ],
     'Sealant': [
       'Car skip', 
@@ -91,9 +96,30 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       'Equipment', 
       'Oil spill on the road from equipment', 
       'Flowfill washout on the road'
+    ],
+    'Signage':[
+      'Missing parking signs',
+      'Missing A frame'
     ]
   };
-  
+
+  stateAbbreviations: { [key: string]: string } = {
+    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+    'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+    'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+    'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+    'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+    'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+    'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+    'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+    'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+    'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
+  };
+
+  suggestions: any[] = [];
+  isAddressLoading = false;
+  filteredQualityIssues: string[][] = []; 
+  galleryImages: Image[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -102,6 +128,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
     public authService: AuthService,
+    private http: HttpClient,
+    private modalGalleryService: ModalGalleryService,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
   ) {}
 
@@ -133,6 +161,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       this.resolutionImageModel = new PunchListImages('', 'resolutionImage');
     }
 
+    this.setupAddressAutocomplete();
+
     this.preliminaryPunchListForm.get('pmResolved')?.valueChanges.subscribe((pmResolved: boolean) => {
       if (pmResolved) {
         this.preliminaryPunchListForm.patchValue({ dateResolved: new Date().toISOString() });
@@ -160,6 +190,52 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       this.preliminaryPunchListForm.controls["additionalConcerns"].disable();
       this.preliminaryPunchListForm.controls["cmResolved"]?.disable();
     }
+  }
+
+  setupAddressAutocomplete(): void {
+    const streetAddressControl = this.preliminaryPunchListForm.get('streetAddress');
+    
+    streetAddressControl?.valueChanges.pipe(
+      debounceTime(300),  
+      distinctUntilChanged(),  
+      switchMap((query: string) => {
+        if (query.length > 2) {
+          this.isAddressLoading = true;
+          return this.getAddressSuggestions(query);  // Fetch suggestions if query is valid
+        } else {
+          this.suggestions = [];
+          return of([]); 
+        }
+      }),
+      catchError(() => {
+        this.isAddressLoading = false;
+        return of([]);  
+      })
+    ).subscribe(suggestions => {
+      this.suggestions = suggestions;
+      this.isAddressLoading = false;
+    });
+  }
+
+
+  // Fetch address suggestions from Nominatim API
+  getAddressSuggestions(query: string) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=US&limit=5`;
+    return this.http.get<any[]>(url);  // Return observable of suggestions
+  }
+
+  selectAddress(suggestion: any): void {
+    const addressParts = suggestion.display_name.split(',');
+    const abbreviatedState = this.stateAbbreviations[suggestion.address.state] || suggestion.address.state;
+
+    // Set form controls with the selected address details
+    this.preliminaryPunchListForm.patchValue({
+      streetAddress: addressParts[0][1],
+      city: suggestion.address.city || '',
+      state: abbreviatedState || ''
+    });
+
+    this.suggestions = [];  // Clear suggestions after selection
   }
 
   triggerIssueImageUpload(): void {
@@ -199,10 +275,18 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   }
 
   onIssueAreaChange(index: number): void {
-    const issueAreaControl = this.issueAreasFormArray.at(index).get('area')?.value;
-    if (issueAreaControl?.value) {
-      const qualityIssuesControl = this.issueAreasFormArray.at(index).get('qualityIssues');
-      qualityIssuesControl?.reset(); 
+    if(this.issueAreasFormArray.at(index).get('qualityIssues')?.value){
+      this.issueAreasFormArray.at(index).reset;
+    }
+    const issueArea = this.issueAreasFormArray.at(index).get('area')?.value;
+    this.filterQualityIssues(index, issueArea);
+  }
+
+  filterQualityIssues(index: number, issueArea?: string): void {
+    if (issueArea) {
+      this.filteredQualityIssues[index] = this.qualityIssuesMap[issueArea] || [];
+    } else {
+      this.filteredQualityIssues[index] = [];
     }
   }
 
@@ -217,7 +301,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       const file = input.files[0];
       const reader = new FileReader();
   
-      const maxFileSizeInMB = 5;
+      const maxFileSizeInMB = 15;
       const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
   
       if (file.size > maxFileSizeInBytes) {
@@ -246,7 +330,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       const file = input.files[0];
       const reader = new FileReader();
   
-      const maxFileSizeInMB = 5;
+      const maxFileSizeInMB = 15;
       const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
   
       if (file.size > maxFileSizeInBytes) {
@@ -255,9 +339,11 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       }
   
       reader.onload = () => {
-        const base64String = reader.result as string; 
-        this.preliminaryPunchListForm.patchValue({ resolutionImageId: base64String });
-        this.resolutionImageModel.image = file;
+        if (!this.resolutionImageModel.id) {
+          this.resolutionImageModel.id = uuidv4();
+        }
+        this.preliminaryPunchListForm.patchValue({ resolutionImageId: this.resolutionImageModel.id });
+        this.resolutionImageModel.image = file; 
         this.toastr.success('Resolution image uploaded');
       };
   
@@ -279,6 +365,26 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.resolutionImageModel.image = null;
     this.preliminaryPunchListForm.patchValue({ resolutionImageId: null });
     this.toastr.warning('Resolution image removed');
+  }
+
+  openImageModal(imageUrl: string): void {
+    const modalImage: ModalImage = {
+      img: imageUrl,
+      title: 'Full Image',
+      alt: 'Full Image'
+    };
+
+    const image = new Image(0, modalImage); 
+
+    this.galleryImages = [image]; 
+
+    const currentIndex = 0;
+
+    const dialogRef: ModalGalleryRef = this.modalGalleryService.open({
+      id: currentIndex,
+      images: this.galleryImages,
+      currentImage: this.galleryImages[currentIndex]
+    }) as ModalGalleryRef;
   }
 
   openDeleteConfirmationDialog(index: number): void {

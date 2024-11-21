@@ -72,17 +72,17 @@
               </mat-select>
             </mat-form-field>
           </mat-grid-tile>
-
-          <!-- Quality Issues for Selected Area -->
-          <mat-grid-tile colspan="2">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Quality Issues</mat-label>
+          
+              <!-- Quality Issues for Selected Area -->
+              <mat-grid-tile colspan="2">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Quality Issues</mat-label>
               <mat-select formControlName="qualityIssues" multiple placeholder="Select Quality Issues">
                 <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
               </mat-select>
-            </mat-form-field>
-            <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
-          </mat-grid-tile>
+                </mat-form-field>
+                <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
+              </mat-grid-tile>
 
         </div>
       </div>
@@ -119,12 +119,12 @@
             <mat-icon>attach_file</mat-icon>
           </button>
           <input [disabled]="!authService.isCM()" type="file" #issueImageInput (change)="uploadIssueImage($event)" style="display: none;">
-          <mat-error *ngIf="this.preliminaryPunchListForm.get('issues')?.value > 0 && !this.preliminaryPunchListForm.get('issueImageId')?.value">
-            Issue Image is Required when Issues are added
+          <mat-error *ngIf="preliminaryPunchListForm.get('issueImageId')?.hasError('required')">
+            Issue Image is required.
           </mat-error>
         </div>
         <div *ngIf="this.preliminaryPunchListForm.get('issueImageId')?.value" class="file-preview">
-          <img [src]="this.preliminaryPunchListForm.get('issueImageId')?.value" alt="Preview" class="preview-image">
+          <img [src]="this.preliminaryPunchListForm.get('issueImageId')?.value" alt="Preview" (click)="openImageModal(this.preliminaryPunchListForm.get('issueImageId')?.value)" class="preview-image">
           <button [disabled]="!authService.isCM()" mat-icon-button class="delete-icon" (click)="removeIssueImage()">
             <mat-icon>delete</mat-icon>
           </button>
@@ -143,7 +143,7 @@
           </mat-error>
         </div>
         <div *ngIf="this.preliminaryPunchListForm.get('resolutionImageId')?.value" class="file-preview">
-          <img [src]="this.preliminaryPunchListForm.get('resolutionImageId')?.value" alt="Preview" class="preview-image">
+          <img [src]="this.preliminaryPunchListForm.get('resolutionImageId')?.value" alt="Preview" (click)="openImageModal(this.preliminaryPunchListForm.get('resolutionImageId')?.value)" class="preview-image">
           <button mat-icon-button class="delete-icon" (click)="removeResolutionImage()">
             <mat-icon>delete</mat-icon>
           </button>

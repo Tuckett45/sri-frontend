@@ -48,7 +48,7 @@ export class PreliminaryPunchListService {
     );
   }
 
-  removeEntry(id: string | undefined): Observable<void> {
+  removeEntry(id: string | undefined): Observable<any> {
     return this.http.delete<void>(`${environment.apiUrl}/PunchList/${id}`, this.httpOptions).pipe(
       catchError(this.handleError)
     );

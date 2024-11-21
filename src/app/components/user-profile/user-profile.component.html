@@ -1,15 +1,18 @@
 <mat-card class="profile-card">
-  <mat-card-header>
-    <mat-card-title>User Profile</mat-card-title>
-  </mat-card-header>
+  <div class="header-section">
+    <h2>User Profile</h2>
+  </div>
 
   <mat-card-content>
+    <!-- Profile Information Section -->
     <div class="profile-info">
-      <p><strong>Username:</strong> <span class="profile-text">{{profileData.username}}</span></p>
-      <p><strong>Email:</strong> <span class="profile-text">{{profileData.email}}</span></p>
+      <p><strong>Name:  </strong> <span class="profile-text">{{ profileData.name }}</span></p>
+      <p><strong>Email:  </strong> <span class="profile-text">{{ profileData.email }}</span></p>
     </div>
 
-    <!-- Button to open modal -->
-    <button mat-raised-button color="primary-button" (click)="openEditModal()">Edit Profile</button>
+    <!-- Edit Profile Button -->
+    <div class="button-container">
+      <button mat-raised-button (click)="openEditModal()">Edit Profile</button>
+    </div>
   </mat-card-content>
 </mat-card>

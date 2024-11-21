@@ -3,12 +3,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { debounceTime, distinctUntilChanged, fromEvent, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator } from '@angular/material/paginator';
 import { AuthService } from 'src/app/services/auth.service';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { Image, ModalGalleryComponent, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery'; 
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -26,12 +27,15 @@ export class PreliminaryPunchListComponent implements OnInit {
 
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource<PreliminaryPunchList>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  galleryImages: Image[] = [];
   
   constructor(
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
     private changeDetectorRef: ChangeDetectorRef,
     private toastr: ToastrService,
+    private modalGalleryService: ModalGalleryService,
     public authService: AuthService
   ) {
     this.preliminaryPunchList$ = this.punchListService.getEntries();
@@ -44,6 +48,27 @@ export class PreliminaryPunchListComponent implements OnInit {
     });
   }
 
+  openImageModal(imageUrl: string): void {
+    const modalImage: ModalImage = {
+      img: imageUrl,
+      title: 'Full Image',
+      alt: 'Full Image'
+    };
+
+    const image = new Image(0, modalImage); 
+
+    this.galleryImages = [image]; 
+
+    const currentIndex = 0;
+
+    const dialogRef: ModalGalleryRef = this.modalGalleryService.open({
+      id: currentIndex,
+      images: this.galleryImages,
+      currentImage: this.galleryImages[currentIndex]
+    }) as ModalGalleryRef;
+  }
+
+  // Open the punch list modal for creating or editing punch list entries
   openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
       width: '600px',
@@ -61,7 +86,7 @@ export class PreliminaryPunchListComponent implements OnInit {
         action$.subscribe({
           next: () => {
             this.refreshTable();
-            this.toastr.success('Punch List updated');
+            this.toastr.success('Punch List saved');
           },
           error: (err) => {
             this.toastr.error('Error saving Punch List.');
@@ -72,10 +97,12 @@ export class PreliminaryPunchListComponent implements OnInit {
     });
   }
 
+  // Open the edit modal for punch list report
   editReport(report: PreliminaryPunchList): void {
     this.openModal(report);
   }
 
+  // Open the delete confirmation modal for removing a punch list
   openDeleteConfirmationDialog(report: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
     
@@ -86,18 +113,24 @@ export class PreliminaryPunchListComponent implements OnInit {
     });
   }
 
+  // Remove a punch list report from the table and database
   removeReport(report: PreliminaryPunchList): void {
-    this.punchListService.removeEntry(report.id).subscribe(
-      () => {
-        this.refreshTable();
-        this.toastr.success('Punch List entry deleted');
-      },
-      (error) => {
-        this.toastr.error(error.error, 'Error');
-      }
-    );
+    const index = this.dataSource.data.findIndex(item => item.id === report.id);
+    if (index !== -1) {
+        this.dataSource.data.splice(index, 1);
+        this.dataSource.data = [...this.dataSource.data];
+        this.punchListService.removeEntry(report.id).subscribe(
+          () => {
+              this.toastr.success('Punch List entry deleted');
+          },
+          (error) => {
+            this.toastr.error(error.error, 'Error');
+          }
+        );
+    }
   }
 
+  // Refresh the table after performing actions like adding/editing/deleting punch list entries
   refreshTable(): void {
     this.punchListService.getEntries().subscribe((entries: PreliminaryPunchList[]) => {
       this.dataSource.data = entries; 
@@ -105,6 +138,7 @@ export class PreliminaryPunchListComponent implements OnInit {
     });
   }
 
+  // Utility function to get the image URL from file or URL
   getImageUrl(fileOrUrl: string | File): string {
     if (typeof fileOrUrl === 'string') {
       return fileOrUrl;
@@ -115,6 +149,7 @@ export class PreliminaryPunchListComponent implements OnInit {
     }
   }
   
+  // Apply the search filter in the table
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
   

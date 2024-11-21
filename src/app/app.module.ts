@@ -8,6 +8,7 @@ import { AppRoutingModule } from './app-routing.module';
 
 import { AppComponent } from './app.component';
 
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,11 +22,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
+import { MatDialogActions, MatDialogContent, MatDialogModule, MatDialogTitle } from '@angular/material/dialog';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDatepickerModule } from '@angular/material/datepicker'
 import { MatNativeDateModule } from '@angular/material/core';
 
+import { GalleryModule } from '@ks89/angular-modal-gallery';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { ToastrModule } from 'ngx-toastr';
 
@@ -36,7 +38,6 @@ import { FilterComponent } from './components/filter/filter.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { ChartComponent } from './components/charts/chart.component';
 import { TableComponent } from './components/table/table.component';
-import { PreliminaryPunchListComponent } from './components/preliminary-punch-list/preliminary-punch-list.component';
 import { PreliminaryPunchListModalComponent } from './components/modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { LoginComponent } from './components/login/login.component';
@@ -48,6 +49,8 @@ import { StreetSheetModalComponent } from './components/street-sheet/street-shee
 import { StreetSheetComponent } from './components/street-sheet/street-sheet.component';
 import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
+import { RouterModule } from '@angular/router';
 
 
 
@@ -63,7 +66,6 @@ import { DeleteConfirmationModalComponent } from './components/modals/delete-con
     ResetPasswordComponent,
     NavbarComponent,
     OverviewComponent,
-    PreliminaryPunchListComponent,
     PreliminaryPunchListModalComponent,
     // SidebarComponent,
     StreetSheetComponent,
@@ -86,6 +88,9 @@ import { DeleteConfirmationModalComponent } from './components/modals/delete-con
     FormsModule,
     ReactiveFormsModule,
     AppRoutingModule,
+    GalleryModule,
+    MatDialogModule,
+    MatAutocompleteModule,
     MatToolbarModule,
     MatIconModule,
     MatSidenavModule,
@@ -104,7 +109,8 @@ import { DeleteConfirmationModalComponent } from './components/modals/delete-con
     MatCheckboxModule,
     MatPaginatorModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    PreliminaryPunchListModule
   ],
   providers: [provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]
