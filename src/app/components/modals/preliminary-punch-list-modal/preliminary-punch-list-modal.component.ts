@@ -188,7 +188,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       this.preliminaryPunchListForm.controls["state"].disable();
       this.preliminaryPunchListForm.controls["qualityIssues"].disable();
       this.preliminaryPunchListForm.controls["additionalConcerns"].disable();
-      this.preliminaryPunchListForm.controls["cmResolved"]?.disable();
+      this.preliminaryPunchListForm.controls["cmResolved"].disable();
     }
   }
 
@@ -342,7 +342,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
         if (!this.resolutionImageModel.id) {
           this.resolutionImageModel.id = uuidv4();
         }
-        this.preliminaryPunchListForm.patchValue({ resolutionImageId: this.resolutionImageModel.id });
+        const base64String = reader.result as string; 
+        this.preliminaryPunchListForm.patchValue({ resolutionImageId: base64String });
         this.resolutionImageModel.image = file; 
         this.toastr.success('Resolution image uploaded');
       };
