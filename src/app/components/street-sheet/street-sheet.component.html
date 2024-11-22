@@ -1,7 +1,32 @@
 <div class="street-sheet-page">
-  <div class="header-section">
-    <h2>Street Sheet</h2>
-    <button (click)="openEntryFormModal()" mat-raised-button color="primary">Add New Entry</button>
-  </div>
-    <street-sheet-map></street-sheet-map>
-  </div>
+  <!-- Container for the main content and side panel -->
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav #sidenav mode="side" opened="false" class="side-panel">
+      <div class="side-panel-content">
+        <div class="side-panel-header">
+          <h3 class="modal-title">Added Street Markers</h3>
+          <button mat-icon-button class="close-btn" (click)="sidenav.close()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <ul>
+          <!-- Loop through the list of markers and display them here -->
+          <li *ngFor="let marker of streetMarkers">
+            {{ marker.name }} - {{ marker.location }}
+          </li>
+        </ul>
+      </div>
+    </mat-sidenav>
+
+    <!-- Main content with map -->
+    <mat-sidenav-content>
+      <div class="header-section">
+        <button class="show-markers-btn" (click)="toggleSidePanel(sidenav)" mat-raised-button color="accent"><mat-icon> list_alt</mat-icon> Show Markers</button>
+        <h2>Street Sheet</h2>
+        <button class="add-entry-btn" (click)="openEntryFormModal()" mat-raised-button color="primary"><mat-icon> add_location</mat-icon> Add New Location</button>
+      </div>
+      
+      <street-sheet-map></street-sheet-map>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

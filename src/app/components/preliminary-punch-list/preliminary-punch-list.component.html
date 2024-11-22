@@ -2,7 +2,7 @@
   <!-- Header section with flex layout for title and add button -->
   <div class="header-section">
     <h2>Preliminary Punch List</h2>
-    <button *ngIf="this.authService.isCM()" mat-raised-button color="primary" class="header-btn" (click)="openModal()">Add New Entry</button>
+    <button *ngIf="this.authService.isCM()" mat-raised-button color="primary" class="header-btn" (click)="openModal()"><mat-icon>add</mat-icon> Add New Entry</button>
   </div>
 
   <div class="search-bar">
@@ -77,8 +77,7 @@
           <img *ngIf="report.issueImageId" 
                 [src]="report.issueImageId" 
                 alt="Issue Image" width="100" 
-                (click)="openImageModal(report.issueImageId)" 
-                
+                (click)="openImageModal(report.issueImageId)"                 
                 >
         </td>
       </ng-container>
