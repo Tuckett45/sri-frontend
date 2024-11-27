@@ -10,7 +10,7 @@ import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-
 import { v4 as uuidv4 } from 'uuid';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
 import { HttpClient } from '@angular/common/http';
-import { fromEvent, debounceTime, distinctUntilChanged, of, catchError, switchMap } from 'rxjs';
+import { fromEvent, debounceTime, distinctUntilChanged, of, catchError, switchMap, Observable } from 'rxjs';
 import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
 
 @Component({
@@ -219,9 +219,18 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
 
   // Fetch address suggestions from Nominatim API
-  getAddressSuggestions(query: string) {
+  getAddressSuggestions(query: string): Observable<any[]> {
+    if (!query) {
+      return of([]);
+    }
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=US&limit=5`;
-    return this.http.get<any[]>(url);  // Return observable of suggestions
+
+    return this.http.get<any[]>(url).pipe(
+      catchError((error) => {
+        console.error('Error fetching address suggestions:', error);
+        return of([]);
+      })
+    );
   }
 
   selectAddress(suggestion: any): void {

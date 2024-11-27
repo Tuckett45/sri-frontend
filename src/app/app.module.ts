@@ -26,6 +26,7 @@ import { MatDialogActions, MatDialogContent, MatDialogModule, MatDialogTitle } f
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDatepickerModule } from '@angular/material/datepicker'
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { GalleryModule } from '@ks89/angular-modal-gallery';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
@@ -110,6 +111,7 @@ import { RouterModule } from '@angular/router';
     MatPaginatorModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatProgressSpinnerModule,
     PreliminaryPunchListModule
   ],
   providers: [provideCharts(withDefaultRegisterables())],

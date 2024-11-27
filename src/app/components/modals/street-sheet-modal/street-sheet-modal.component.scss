@@ -30,6 +30,44 @@
       }
     }
   }
+
+  ::ng-deep .mat-autocomplete-panel {
+    z-index: 9999 !important; /* Ensure it's on top */
+    position: relative;
+  }
+
+  .autocomplete-suggestions {
+    position: absolute;
+    background-color: white;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    max-height: 150px;
+    overflow-y: auto;
+    width: 100%;
+    z-index: 9999;
+  }
+
+  ::ng-deep .mat-mdc-option .mdc-list-item__primary-text{
+    padding-top: 10px !important;
+  }
+  
+  .autocomplete-suggestions mat-option {
+    cursor: pointer;
+    padding: 10px;
+    color: #000 !important;
+  }
+  
+  .autocomplete-suggestions mat-option:hover {
+    padding-top: 10px;
+    background-color: #f5f5f5;
+  }
+
+  .loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999; /* Ensure spinner is on top */
+  }
   
   /* Ensure text field colors are properly set */
   ::ng-deep .mat-mdc-input-element {

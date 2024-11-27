@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { StreetSheetService } from 'src/app/services/street-sheet.service'; // Adjust the import path as needed
 import * as L from 'leaflet';
+import { MapMarker } from 'src/app/models/map-marker.model';
+import { StreetSheet } from 'src/app/models/street-sheet.model';
 
 @Component({
   selector: 'street-sheet-map',
@@ -17,38 +19,25 @@ export class StreetSheetMapComponent implements OnInit {
     this.loadStreetSheets();
   }
 
-  private initMap(): void {
-    this.map = L.map('map').setView([37.138556308643494, -92.26058157648076], 13); // Set the default center and zoom level
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(this.map);
-  }
-
   private loadStreetSheets(): void {
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
-      streetSheets.forEach((sheet: any) => {
-        this.addMarker(sheet);
+      streetSheets.forEach((sheet: StreetSheet) => {
+        // this.addMarker(sheet);
       });
     });
   }
 
-  public addMarker(sheet: any): void {
-    // Make sure your sheet object has latitude and longitude properties
-    const marker = L.marker([37.138556308643494, -92.26058157648076]).addTo(this.map!);
-    
-    // Create a popup with details
-    marker.bindPopup(`
-      <b>Vendor Name:</b> SCI<br>
-      <b>Street Address:</b> 1103 Julia Ave Mountain Grove, MO 65711<br>
-      <b>Deployment:</b> Micro trenching<br>
-      <b>Date:</b> ${new Date(sheet.date).toLocaleDateString()}<br>
-    `);
-
-    // <b>Vendor Name:</b> ${sheet.vendorName}<br>
-    //   <b>Street Address:</b> ${sheet.streetAddress}<br>
-    //   <b>Deployment:</b> ${sheet.deployment}<br>
-    //   <b>Date:</b> ${new Date(sheet.date).toLocaleDateString()}<br>
+  private initMap(): void {
+    this.map = L.map('map').setView([37.138556308643494, -92.26058157648076], 13);  // Default center
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    }).addTo(this.map);
+  }
+  
+  public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
+    if (marker.latitude && marker.longitude) {
+      L.marker([marker.latitude, marker.longitude]).addTo(this.map!)
+        .bindPopup(`<b>${streetSheet.vendorName}</b><br>Street: ${streetSheet.streetAddress}<br>City: ${streetSheet.city}`)
+        .openPopup();
+    }
   }
 }
