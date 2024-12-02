@@ -12,6 +12,7 @@ import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/d
 import { HttpClient } from '@angular/common/http';
 import { fromEvent, debounceTime, distinctUntilChanged, of, catchError, switchMap } from 'rxjs';
 import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
+import { User } from 'src/app/models/user.model';
 
 @Component({
   selector: 'app-preliminary-punch-list-modal',
@@ -23,6 +24,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   resolutionImageModel!: PunchListImages; 
   preliminaryPunchListForm!: FormGroup;
   isEditMode: boolean = false;
+  isDisabled: boolean = false;
 
   @ViewChild('issueImageInput') issueImageInput!: ElementRef;
   @ViewChild('resolutionImageInput') resolutionImageInput!: ElementRef;
@@ -120,6 +122,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   isAddressLoading = false;
   filteredQualityIssues: string[][] = []; 
   galleryImages: Image[] = [];
+  userData!: User;
 
   constructor(
     private fb: FormBuilder,
@@ -134,7 +137,9 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadUserProfile();
     this.isEditMode = !!this.data;
+    this.isDisabled = !this.authService.isCM();
 
     this.preliminaryPunchListForm = this.fb.group({
       id: [this.data?.id || ''],
@@ -145,13 +150,20 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       state: [this.data?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       issues: this.fb.array(this.getInitialIssueAreas(this.data)),
       additionalConcerns: [this.data?.additionalConcerns || ''],
+      createdBy: [this.data?.createdBy || ''],
       dateReported: [this.data?.dateReported ||  new Date().toISOString()],
       issueImageId: [this.data?.issueImageId || null],
       pmResolved: [this.data?.pmResolved || false],
       resolutionImageId: [this.data?.resolutionImageId || null],
       dateResolved: [this.data?.dateResolved || ''],
-      cmResolved: [this.data?.cmResolved || false]
+      cmResolved: [this.data?.cmResolved || false],
+      updatedBy: [this.data?.updatedBy || ''],
+      updatedDate: [this.data?.updatedDate ||  new Date().toISOString()]
     });
+
+    if (this.isDisabled) {
+      this.preliminaryPunchListForm.get('cmResolved')?.disable();
+    }
 
     if (this.isEditMode) {
       this.issueImageModel = new PunchListImages(this.data.id || '', 'issueImage', this.data.issueImageId);
@@ -175,21 +187,6 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       this.preliminaryPunchListForm.get('resolutionImageId')?.updateValueAndValidity();
     });
 
-    this.setFormState();
-  }
-
-  setFormState(): void {
-    if (this.authService.isUserInRole([UserRole.PM])) {
-      this.preliminaryPunchListForm.controls['segmentId'].disable(); 
-      this.preliminaryPunchListForm.controls["segmentId"].disable();
-      this.preliminaryPunchListForm.controls["vendorName"].disable();
-      this.preliminaryPunchListForm.controls["streetAddress"].disable();
-      this.preliminaryPunchListForm.controls["city"].disable();
-      this.preliminaryPunchListForm.controls["state"].disable();
-      this.preliminaryPunchListForm.controls["qualityIssues"].disable();
-      this.preliminaryPunchListForm.controls["additionalConcerns"].disable();
-      this.preliminaryPunchListForm.controls["cmResolved"].disable();
-    }
   }
 
   setupAddressAutocomplete(): void {
@@ -217,25 +214,23 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     });
   }
 
-
   // Fetch address suggestions from Nominatim API
   getAddressSuggestions(query: string) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=US&limit=5`;
-    return this.http.get<any[]>(url);  // Return observable of suggestions
+    return this.http.get<any[]>(url); 
   }
 
   selectAddress(suggestion: any): void {
     const addressParts = suggestion.display_name.split(',');
     const abbreviatedState = this.stateAbbreviations[suggestion.address.state] || suggestion.address.state;
 
-    // Set form controls with the selected address details
     this.preliminaryPunchListForm.patchValue({
       streetAddress: addressParts[0][1],
       city: suggestion.address.city || '',
       state: abbreviatedState || ''
     });
 
-    this.suggestions = [];  // Clear suggestions after selection
+    this.suggestions = [];
   }
 
   triggerIssueImageUpload(): void {
@@ -398,6 +393,24 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     });
   }
 
+  loadUserProfile(): void {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const userObj = JSON.parse(userString);
+
+      this.userData = new User(
+        userObj.id,
+        userObj.name,
+        userObj.email,
+        userObj.password,
+        userObj.role,
+        new Date(userObj.createdDate)  
+      );
+    } else {
+      console.error('User not found in localStorage');
+    }
+  }
+
   close(): void {
     this.dialogRef.close();
   }
@@ -414,6 +427,12 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   
       if (punchList.id === '') {
         punchList.id = uuidv4();
+      }
+
+      if(this.isEditMode){
+        punchList.updatedBy = this.userData.id
+      }else{
+        punchList.createdBy = this.userData.id
       }
   
       if (this.issueImageModel.image != null) {
