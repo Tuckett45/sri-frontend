@@ -61,7 +61,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       'DB not covered to google standards', 
       'Open DB', 
       'Drops related', 
-      'Missing sod/dead sod'
+      'Missing sod',
+      'Dead sod'
     ],
     'Trench': [
       'Sunken Core', 
