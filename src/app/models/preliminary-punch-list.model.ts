@@ -29,6 +29,9 @@ export class PreliminaryPunchList {
   dateResolved: Date | null;
   issueImageId?: string;
   resolutionImageId?: string;
+  createdBy?: string;
+  updatedBy?: string; 
+  updatedDate?: Date;
 
   constructor(
     id: string,
@@ -44,7 +47,10 @@ export class PreliminaryPunchList {
     cmResolved: boolean = false,
     dateResolved: Date | null = null,
     issueImageId: string = '',
-    resolutionImageId: string = ''
+    resolutionImageId: string = '',
+    createdBy?: string,
+    updatedBy?: string,
+    updatedDate?: Date
   ) {
     this.id = id;
     this.segmentId = segmentId;
@@ -60,5 +66,8 @@ export class PreliminaryPunchList {
     this.dateResolved = dateResolved;
     this.issueImageId = issueImageId;
     this.resolutionImageId = resolutionImageId;
+    this.createdBy = createdBy;
+    this.updatedBy = updatedBy;
+    this.updatedDate = updatedDate;
   }
 }

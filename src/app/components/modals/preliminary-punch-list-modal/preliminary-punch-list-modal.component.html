@@ -81,7 +81,9 @@
                 <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
               </mat-select>
                 </mat-form-field>
-                <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
+                <button [disabled]="!authService.isCM()" mat-icon-button class="delete-icon" >
+                  <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
+                </button>
               </mat-grid-tile>
 
         </div>
@@ -108,7 +110,7 @@
 
       <mat-grid-tile colspan="2" *ngIf="isEditMode">
         <div class="checkbox-container">
-          <mat-checkbox formControlName="cmResolved">CM Resolved</mat-checkbox>
+          <mat-checkbox [disabled]="this.isDisabled" formControlName="cmResolved">CM Resolved</mat-checkbox>
         </div>
       </mat-grid-tile>
 

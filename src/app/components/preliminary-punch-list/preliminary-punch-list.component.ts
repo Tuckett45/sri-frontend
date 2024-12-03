@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
@@ -21,12 +22,13 @@ export class PreliminaryPunchListComponent implements OnInit {
 
   displayedColumns: string[] = [
     'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
-    'additionalConcerns', 'dateReported',
+    'additionalConcerns', 'createdBy', 'dateReported',
     'issueImageId', 'pmResolved', 'resolutionImageId', 'dateResolved', 'cmResolved', 'actions'
   ];
 
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource<PreliminaryPunchList>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
   galleryImages: Image[] = [];
   
@@ -44,6 +46,7 @@ export class PreliminaryPunchListComponent implements OnInit {
   ngOnInit(): void {
     this.preliminaryPunchList$.subscribe(data => {
       this.dataSource.data = data;
+      this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;
     });
   }
@@ -155,7 +158,7 @@ export class PreliminaryPunchListComponent implements OnInit {
   
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
+      const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.createdBy} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
       return dataStr.includes(transformedFilter);
     };
   

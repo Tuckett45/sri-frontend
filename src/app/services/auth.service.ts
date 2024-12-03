@@ -34,6 +34,10 @@ export class AuthService {
     return this.http.post<User>(`${environment.apiUrl}/auth/register`, user, this.httpOptions);
   }
 
+  getUserById(userId: string){
+    return this.http.get<User>(`${environment.apiUrl}/auth/user-${userId}`, this.httpOptions);
+  }
+
   setUserRole(role: string) {
     this.userRole.next(role as UserRole);
   }
