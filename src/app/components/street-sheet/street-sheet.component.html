@@ -2,17 +2,17 @@
   <!-- Container for the main content and side panel -->
   <mat-sidenav-container class="sidenav-container">
     <mat-sidenav #sidenav mode="side" opened="false" class="side-panel">
-      <div class="side-panel-content">
-        <div class="side-panel-header">
-          <h3 class="modal-title">Added Street Markers</h3>
-          <button mat-icon-button class="close-btn" (click)="sidenav.close()">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
+      <div class="side-panel-header">
+        <h3 class="modal-title">Added Street Markers</h3>
+        <button mat-icon-button class="close-btn" (click)="sidenav.close()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div *ngFor="let streetSheet of streetSheets">
+        <h4>{{ streetSheet.vendorName }} - {{ streetSheet.segmentId }}</h4>
         <ul>
-          <!-- Loop through the list of markers and display them here -->
-          <li *ngFor="let marker of streetMarkers">
-            {{ marker.name }} - {{ marker.location }}
+          <li *ngFor="let marker of streetSheet.marker">
+            {{ marker.latitude }} - {{ marker.longitude }}
           </li>
         </ul>
       </div>

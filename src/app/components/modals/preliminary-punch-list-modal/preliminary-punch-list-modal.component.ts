@@ -13,6 +13,7 @@ import { HttpClient } from '@angular/common/http';
 import { fromEvent, debounceTime, distinctUntilChanged, of, catchError, switchMap, Observable } from 'rxjs';
 import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
 import { User } from 'src/app/models/user.model';
+import { GeocodingService } from 'src/app/services/geocoding.service';
 
 @Component({
   selector: 'app-preliminary-punch-list-modal',
@@ -119,8 +120,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
   };
 
-  suggestions: any[] = [];
   isAddressLoading = false;
+  filteredAddresses: any[] = [];
   filteredQualityIssues: string[][] = []; 
   galleryImages: Image[] = [];
   userData!: User;
@@ -129,11 +130,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<PreliminaryPunchListModalComponent>,
     private dialog: MatDialog,
-    private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
     public authService: AuthService,
-    private http: HttpClient,
     private modalGalleryService: ModalGalleryService,
+    private geocodingService: GeocodingService,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
   ) {}
 
@@ -159,7 +159,14 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       dateResolved: [this.data?.dateResolved || ''],
       cmResolved: [this.data?.cmResolved || false],
       updatedBy: [this.data?.updatedBy || ''],
-      updatedDate: [this.data?.updatedDate ||  new Date().toISOString()]
+      updatedDate: [this.data?.updatedDate ||  '']
+    });
+
+    this.preliminaryPunchListForm.get('streetAddress')?.valueChanges.pipe(
+      debounceTime(300),
+      switchMap((value) => this.getAddressSuggestions(value))
+    ).subscribe(suggestions => {
+      this.filteredAddresses = suggestions;
     });
 
     if (this.isDisabled) {
@@ -173,8 +180,6 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       this.issueImageModel = new PunchListImages('', 'issueImage');
       this.resolutionImageModel = new PunchListImages('', 'resolutionImage');
     }
-
-    this.setupAddressAutocomplete();
 
     this.preliminaryPunchListForm.get('pmResolved')?.valueChanges.subscribe((pmResolved: boolean) => {
       if (pmResolved) {
@@ -190,57 +195,67 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   }
 
-  setupAddressAutocomplete(): void {
-    const streetAddressControl = this.preliminaryPunchListForm.get('streetAddress');
-    
-    streetAddressControl?.valueChanges.pipe(
-      debounceTime(300),  
-      distinctUntilChanged(),  
-      switchMap((query: string) => {
-        if (query.length > 2) {
-          this.isAddressLoading = true;
-          return this.getAddressSuggestions(query);  // Fetch suggestions if query is valid
-        } else {
-          this.suggestions = [];
-          return of([]); 
-        }
-      }),
-      catchError(() => {
-        this.isAddressLoading = false;
-        return of([]);  
-      })
-    ).subscribe(suggestions => {
-      this.suggestions = suggestions;
-      this.isAddressLoading = false;
-    });
+  onAddressInput(event: any): void {
+    const query = event.target.value;
+    if (query && query.length > 2) {
+      this.isAddressLoading = true;
+      this.getAddressSuggestions(query)
+        .pipe(
+          debounceTime(1000),
+          distinctUntilChanged(),
+          catchError(() => {
+            this.isAddressLoading = false;
+            return of([]); 
+          })
+        )
+        .subscribe(suggestions => {
+          
+          this.filteredAddresses = suggestions.filter(suggestion => {
+            const address = suggestion.address || {};
+            const streetAddress = address.house_number && address.road 
+              ? `${address.house_number} ${address.road}` 
+              : address.road || '';
+  
+            const city = address.city || address.town || '';
+            const state = address.state || '';
+            const abbreviatedState = this.stateAbbreviations[state] || state || '';
+  
+            const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
+            return {
+              formattedAddress: formattedAddress,  
+              original: suggestion
+            };
+          });
+  
+          this.isAddressLoading = false;
+        });
+    } else {
+      this.filteredAddresses = [];
+    }
   }
 
-  // Fetch address suggestions from Nominatim API
   getAddressSuggestions(query: string): Observable<any[]> {
-    if (!query) {
-      return of([]);
-    }
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=US&limit=5`;
-
-    return this.http.get<any[]>(url).pipe(
-      catchError((error) => {
-        console.error('Error fetching address suggestions:', error);
-        return of([]);
-      })
-    );
+    if (!query) return of([]);
+    
+    return this.geocodingService.geocodeAddress(query);  // Use Geocoding Service here
   }
 
   selectAddress(suggestion: any): void {
-    const addressParts = suggestion.display_name.split(',');
-    const abbreviatedState = this.stateAbbreviations[suggestion.address.state] || suggestion.address.state;
-
+    const streetAddress = suggestion.address.house_number
+      ? suggestion.address.house_number + ' ' + suggestion.address.road
+      : suggestion.address.road || suggestion.address.residential;
+  
+    const city = suggestion.address.city || suggestion.address.town || suggestion.address.village || suggestion.address.municipality;
+    const state = suggestion.address.state;
+    const abbreviatedState = this.stateAbbreviations[state] || state;
+  
     this.preliminaryPunchListForm.patchValue({
-      streetAddress: addressParts[0][1],
-      city: suggestion.address.city || '',
-      state: abbreviatedState || ''
+      streetAddress: streetAddress,
+      city: city,
+      state: abbreviatedState
     });
 
-    this.suggestions = [];
+    this.filteredAddresses = [];
   }
 
   triggerIssueImageUpload(): void {
@@ -440,7 +455,9 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       }
 
       if(this.isEditMode){
+        debugger;
         punchList.updatedBy = this.userData.id
+        punchList.updatedDate = new Date().toISOString();
       }else{
         punchList.createdBy = this.userData.id
       }

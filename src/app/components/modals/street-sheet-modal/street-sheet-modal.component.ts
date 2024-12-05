@@ -1,4 +1,4 @@
-import { Component, ElementRef, Inject, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
@@ -9,6 +9,9 @@ import { debounceTime, switchMap, Observable, of, distinctUntilChanged, catchErr
 import { HttpClient } from '@angular/common/http';
 import { MapMarker } from 'src/app/models/map-marker.model';
 import { StreetSheetMapComponent } from '../../street-sheet/street-sheet-map.component';
+import { GeocodingService } from 'src/app/services/geocoding.service';
+import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
+import { User } from 'src/app/models/user.model';
 
 @Component({
   selector: 'app-street-sheet-modal',
@@ -22,6 +25,10 @@ export class StreetSheetModalComponent implements OnInit {
   isEditMode: boolean = false;
   filteredAddresses: any[] = [];
   isAddressLoading: boolean = false;
+  isDisabled: boolean = false;
+
+  galleryImages: Image[] = [];
+  userData!: User;
 
   pmOptions: { name: string, email: string }[] = [];
   deploymentOptions: string[] = ['Micro tench', 'Mastech', 'Fiber'];
@@ -50,17 +57,19 @@ export class StreetSheetModalComponent implements OnInit {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<StreetSheetModalComponent>,
     private toastr: ToastrService,
-    private http: HttpClient,
+    private modalGalleryService: ModalGalleryService,
     public streetSheetService: StreetSheetService,
+    private geocodingService: GeocodingService,
     @Inject(MAT_DIALOG_DATA) public data: StreetSheet
   ) {}
 
   ngOnInit(): void {
+    this.loadUserProfile();
     this.fetchPMOptions();
-    this.isEditMode = !!this.data;
+    // this.isEditMode = !!this.data;
 
     this.streetSheetForm = this.fb.group({
-      id: [this.data?.id || ''],
+      id: [this.data?.id || uuidv4()],
       segmentId: [this.data?.segmentId || '', Validators.required],
       pm: [this.data?.pm || '', Validators.required],
       vendorName: [this.data?.vendorName || '', Validators.required],
@@ -69,10 +78,14 @@ export class StreetSheetModalComponent implements OnInit {
       state: [this.data?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       deployment: [this.data?.deployment || '', Validators.required],
       date: [this.data?.date || new Date().toISOString(), Validators.required],
-      swpppImage: [this.data?.swpppImage || '', Validators.required],
-      ppeImage: [this.data?.ppeImage || '', Validators.required],
-      trafficControlImage: [this.data?.trafficControlImage || '', Validators.required],
-      signageImage: [this.data?.signageImage || '', Validators.required]
+      swpppImage: [this.data?.swpppImage || ''],
+      ppeImage: [this.data?.ppeImage || ''],
+      trafficControlImage: [this.data?.trafficControlImage || ''],
+      signageImage: [this.data?.signageImage || ''],
+      marker: [this.data?.marker || ''],
+      createdBy: [this.data?.createdBy || ''],
+      updatedBy: [this.data?.updatedBy || ''],
+      updatedDate: [this.data?.updatedDate || '']
     });
 
     this.streetSheetForm.get('streetAddress')?.valueChanges.pipe(
@@ -146,34 +159,28 @@ export class StreetSheetModalComponent implements OnInit {
       this.isAddressLoading = true;
       this.getAddressSuggestions(query)
         .pipe(
-          debounceTime(300), // debounce for better performance
+          debounceTime(300),
           distinctUntilChanged(),
           catchError(() => {
             this.isAddressLoading = false;
-            return of([]); // Return empty if there's an error
+            return of([]); 
           })
         )
         .subscribe(suggestions => {
-          // Filter out suggestions with missing required components (house_number, road, city, state)
+          
           this.filteredAddresses = suggestions.filter(suggestion => {
             const address = suggestion.address || {};
-            return address.house_number && address.road && address.city && address.state;
-          }).map(suggestion => {
-            const address = suggestion.address || {};
-            // Construct a valid street address
             const streetAddress = address.house_number && address.road 
               ? `${address.house_number} ${address.road}` 
-              : address.road || ''; // If no house number, only use road
+              : address.road || '';
   
-            // Ensure city, state, and abbreviated state are not undefined
             const city = address.city || address.town || '';
             const state = address.state || '';
             const abbreviatedState = this.stateAbbreviations[state] || state || '';
   
-            // Construct the formatted address
             const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
             return {
-              formattedAddress: formattedAddress,  // Ensure empty strings if address is undefined
+              formattedAddress: formattedAddress,  
               original: suggestion
             };
           });
@@ -190,73 +197,108 @@ export class StreetSheetModalComponent implements OnInit {
   }
 
   selectAddress(suggestion: any): void {
-    const streetAddress = suggestion.address.house_number || suggestion.address.house_name ? suggestion.address.house_number + ' ' + suggestion.address.road : suggestion.address.road || suggestion.address.residential;
+    const streetAddress = suggestion.address.house_number
+      ? suggestion.address.house_number + ' ' + suggestion.address.road
+      : suggestion.address.road || suggestion.address.residential;
+  
     const city = suggestion.address.city || suggestion.address.town || suggestion.address.village || suggestion.address.municipality;
     const state = suggestion.address.state;
     const abbreviatedState = this.stateAbbreviations[state] || state;
-
+  
     this.streetSheetForm.patchValue({
-        streetAddress: streetAddress,
-        city: city,
-        state: abbreviatedState
+      streetAddress: streetAddress,
+      city: city,
+      state: abbreviatedState
+    });
+  
+    const mapMarker = new MapMarker(
+      uuidv4(),
+      this.streetSheetForm.controls["id"].value,
+      suggestion.lat,
+      suggestion.lon,
+      true,
+      new Date()
+    );
+
+    this.mapMarker = mapMarker;
+    this.streetSheetForm.patchValue({
+      marker: [mapMarker]
     });
 
-    this.mapMarker = new MapMarker(
-        uuidv4(),
-        this.streetSheetForm.controls["id"].value,
-        suggestion.lat,
-        suggestion.lon,
-        true,
-        new Date()
-    );
-
     this.filteredAddresses = [];
-}
+  }
   
 
-//   0:"Object Metal" 
-// 1:" 85" 
-// 2:" 19th Street" 
-// 3:" South Slope" 
-// 4:" Sunset Park" 
-// 5:" Brooklyn" 
-// 6:" Kings County" 
-// 7:  " New York" 
-// 8:  " 11232" 
-// 9:  " United States" 
-// length: 10 
-// [[Prototype]]
-// : 
-// Array(0)
-
   getAddressSuggestions(query: string): Observable<any[]> {
-    if (!query) {
-      return of([]);
+    if (!query) return of([]);
+    
+    return this.geocodingService.geocodeAddress(query);  // Use Geocoding Service here
+  }
+
+  openImageModal(imageUrl: string): void {
+    const modalImage: ModalImage = {
+      img: imageUrl,
+      title: 'Full Image',
+      alt: 'Full Image'
+    };
+
+    const image = new Image(0, modalImage); 
+
+    this.galleryImages = [image]; 
+
+    const currentIndex = 0;
+
+    const dialogRef: ModalGalleryRef = this.modalGalleryService.open({
+      id: currentIndex,
+      images: this.galleryImages,
+      currentImage: this.galleryImages[currentIndex]
+    }) as ModalGalleryRef;
+  }
+
+  loadUserProfile(): void {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const userObj = JSON.parse(userString);
+
+      this.userData = new User(
+        userObj.id,
+        userObj.name,
+        userObj.email,
+        userObj.password,
+        userObj.role,
+        new Date(userObj.createdDate)  
+      );
+    } else {
+      console.error('User not found in localStorage');
     }
-    const url = `https://nominatim.openstreetmap.org/search?addressdetails=1&format=jsonv2&q=${query}&countrycodes=US&layer=address&limit=5`;
-    return this.http.get<any[]>(url).pipe(
-      catchError((error) => {
-        console.error('Error fetching address suggestions:', error);
-        return of([]);
-      })
-    );
   }
 
   save(): void {
     if (this.streetSheetForm.valid) {
       const streetSheet = this.streetSheetForm.getRawValue();
-      if (streetSheet.id === '') {
-        streetSheet.id = uuidv4();
-        this.mapMarker.streetSheetId = streetSheet.id;
+
+      if(this.isEditMode){
+        streetSheet.updatedBy = this.userData.id
+        streetSheet.updatedDate = new Date().toISOString();
+      }else{
+        streetSheet.createdBy = this.userData.id
       }
   
-      this.streetSheetMap.addMarker(this.mapMarker, streetSheet);
-
-      this.dialogRef.close(streetSheet);
+      this.streetSheetService.saveStreetSheet(streetSheet).subscribe(
+        (response) => {
+          this.toastr.success('Street Sheet saved');
+          this.dialogRef.close(streetSheet); 
+        },
+        (error) => {
+          this.toastr.error('Error saving Street Sheet');
+          console.error(error);
+        }
+      );
     } else {
       this.toastr.error('Form is invalid');
     }
   }
+  
 
   closeModal(): void {
     this.dialogRef.close();

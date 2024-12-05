@@ -3,6 +3,7 @@ import { StreetSheetService } from 'src/app/services/street-sheet.service'; // A
 import * as L from 'leaflet';
 import { MapMarker } from 'src/app/models/map-marker.model';
 import { StreetSheet } from 'src/app/models/street-sheet.model';
+import { MapMarkerService } from 'src/app/services/map-marker.service';
 
 @Component({
   selector: 'street-sheet-map',
@@ -11,8 +12,9 @@ import { StreetSheet } from 'src/app/models/street-sheet.model';
 })
 export class StreetSheetMapComponent implements OnInit {
   private map: L.Map | undefined;
+  streetSheets: StreetSheet[] = []
 
-  constructor(private streetSheetService: StreetSheetService) {}
+  constructor(private streetSheetService: StreetSheetService, private mapMarkerService: MapMarkerService) {}
 
   ngOnInit(): void {
     this.initMap();
@@ -22,8 +24,11 @@ export class StreetSheetMapComponent implements OnInit {
   private loadStreetSheets(): void {
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
       streetSheets.forEach((sheet: StreetSheet) => {
-        // this.addMarker(sheet);
+        this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe(mapMarkers => {
+          sheet.marker = mapMarkers;  
+        });
       });
+      this.streetSheets = streetSheets;
     });
   }
 
@@ -36,7 +41,12 @@ export class StreetSheetMapComponent implements OnInit {
   public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
     if (marker.latitude && marker.longitude) {
       L.marker([marker.latitude, marker.longitude]).addTo(this.map!)
-        .bindPopup(`<b>${streetSheet.vendorName}</b><br>Street: ${streetSheet.streetAddress}<br>City: ${streetSheet.city}`)
+        .bindPopup(`
+          <b>${streetSheet.vendorName}</b><br>
+          Street: ${streetSheet.streetAddress}<br>
+          City: ${streetSheet.city}<br>
+          <b>Marker ID:</b> ${marker.id}
+        `)
         .openPopup();
     }
   }

@@ -29,8 +29,26 @@
       <mat-grid-tile colspan="4">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Street Address</mat-label>
-          <input matInput formControlName="streetAddress" placeholder="Enter Street Address">
-        </mat-form-field>
+          <input
+            matInput
+            formControlName="streetAddress"
+            [matAutocomplete]="auto"
+            (input)="onAddressInput($event)"
+            placeholder="Enter Street Address"
+            required
+          />
+          <mat-error *ngIf="preliminaryPunchListForm.get('streetAddress')?.hasError('required')">
+            Street address is required.
+          </mat-error>
+        
+          <mat-spinner *ngIf="isAddressLoading" diameter="24" class="loading-spinner"></mat-spinner>
+        
+          <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)" class="autocomplete-suggestions">
+            <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
+              {{ suggestion.display_name }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>       
       </mat-grid-tile>
 
       <!-- City -->

@@ -123,7 +123,7 @@
           <input type="file" #swpppImageInput (change)="uploadImage($event, 'swpppImage')" style="display: none;">
         </div>
         <div *ngIf="this.streetSheetForm.get('swpppImage')?.value" class="file-preview">
-          <img [src]="this.streetSheetForm.get('swpppImage')?.value" alt="Preview" class="preview-image">
+          <img [src]="this.streetSheetForm.get('swpppImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('swpppImage')?.value)" class="preview-image">
           <button mat-icon-button class="delete-icon" (click)="removeImage('swpppImage')">
             <mat-icon>delete</mat-icon>
           </button>
@@ -140,7 +140,7 @@
           <input type="file" #ppeImageInput (change)="uploadImage($event, 'ppeImage')" style="display: none;">
         </div>
         <div *ngIf="this.streetSheetForm.get('ppeImage')?.value" class="file-preview">
-          <img [src]="this.streetSheetForm.get('ppeImage')?.value" alt="Preview" class="preview-image">
+          <img [src]="this.streetSheetForm.get('ppeImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('ppeImage')?.value)" class="preview-image">
           <button mat-icon-button class="delete-icon" (click)="removeImage('ppeImage')">
             <mat-icon>delete</mat-icon>
           </button>
@@ -157,7 +157,7 @@
           <input type="file" #trafficControlImageInput (change)="uploadImage($event, 'trafficControlImage')" style="display: none;">
         </div>
         <div *ngIf="this.streetSheetForm.get('trafficControlImage')?.value" class="file-preview">
-          <img [src]="this.streetSheetForm.get('trafficControlImage')?.value" alt="Preview" class="preview-image">
+          <img [src]="this.streetSheetForm.get('trafficControlImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('trafficControlImage')?.value)" class="preview-image">
           <button mat-icon-button class="delete-icon" (click)="removeImage('trafficControlImage')">
             <mat-icon>delete</mat-icon>
           </button>
@@ -174,7 +174,7 @@
           <input type="file" #signageImageInput (change)="uploadImage($event, 'signageImage')" style="display: none;">
         </div>
         <div *ngIf="this.streetSheetForm.get('signageImage')?.value" class="file-preview">
-          <img [src]="this.streetSheetForm.get('signageImage')?.value" alt="Preview" class="preview-image">
+          <img [src]="this.streetSheetForm.get('signageImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('signageImage')?.value)" class="preview-image">
           <button mat-icon-button class="delete-icon" (click)="removeImage('signageImage')">
             <mat-icon>delete</mat-icon>
           </button>
