@@ -38,7 +38,8 @@ export class PreliminaryPunchListService {
   }
 
   addEntry(punchList: PreliminaryPunchList): Observable<any> {  
-    return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions).pipe(
+    debugger;
+    return this.http.post(`https://localhost:44376/api/PunchList`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }

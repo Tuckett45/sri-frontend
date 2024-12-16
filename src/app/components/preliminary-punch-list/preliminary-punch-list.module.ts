@@ -20,6 +20,9 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSortModule } from '@angular/material/sort';
+import { GalleriaModule } from 'primeng/galleria';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 
 @NgModule({
   declarations: [PreliminaryPunchListComponent],
@@ -27,6 +30,9 @@ import { MatSortModule } from '@angular/material/sort';
     CommonModule,
     PreliminaryPunchListRoutingModule,
     FormsModule,
+    ButtonModule,
+    DialogModule,
+    GalleriaModule,
     ReactiveFormsModule,
     MatAutocompleteModule,
     MatToolbarModule,

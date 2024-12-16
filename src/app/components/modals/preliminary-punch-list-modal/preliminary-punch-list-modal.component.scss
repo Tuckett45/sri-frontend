@@ -21,7 +21,6 @@
   }
 
   .delete-icon {
-    justify-items: center;
     cursor: pointer;
     color: #f44336;
 
@@ -183,7 +182,28 @@ button.mat-raised-button {
   &:hover {
     background-color: #0e3453;
   }
+
+  &:disabled{
+    background-color: #88827a;
+  }
 }
+
+.upload-btn {
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #fff;
+  background-color: #144f80;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+
+  &:disabled{
+    background-color: #88827a;
+  }
+}
+
 
 /* File input styling */
 .file-input-wrapper {
@@ -204,6 +224,11 @@ button.mat-raised-button {
   }
 }
 
+::ng-deep .mat-autocomplete-panel {
+  z-index: 9999 !important; /* Ensure it's on top */
+  position: relative;
+}
+
 .autocomplete-suggestions {
   position: absolute;
   background-color: white;
@@ -214,6 +239,10 @@ button.mat-raised-button {
   z-index: 9999;
 }
 
+::ng-deep .mat-mdc-option .mdc-list-item__primary-text{
+  padding-top: 10px !important;
+}
+
 .autocomplete-suggestions mat-option {
   cursor: pointer;
   padding: 10px;
@@ -221,7 +250,16 @@ button.mat-raised-button {
 }
 
 .autocomplete-suggestions mat-option:hover {
+  padding-top: 10px;
   background-color: #f5f5f5;
+}
+
+.loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999; /* Ensure spinner is on top */
 }
 
 /* Responsive styles */

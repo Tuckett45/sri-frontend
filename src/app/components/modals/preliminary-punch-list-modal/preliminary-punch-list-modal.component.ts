@@ -4,15 +4,14 @@ import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dial
 import { ToastrService } from 'ngx-toastr';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PunchListImages } from 'src/app/models/punch-list-images.model';
-import { UserRole } from 'src/app/models/role.enum';
 import { AuthService } from 'src/app/services/auth.service';
-import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { v4 as uuidv4 } from 'uuid';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
 import { HttpClient } from '@angular/common/http';
-import { fromEvent, debounceTime, distinctUntilChanged, of, catchError, switchMap } from 'rxjs';
-import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
+import { debounceTime, distinctUntilChanged, of, catchError, switchMap } from 'rxjs';
+import { Image, ModalGalleryService } from '@ks89/angular-modal-gallery';
 import { User } from 'src/app/models/user.model';
+// import { GeocodingService } from 'src/app/services/geocoding.service';
 
 @Component({
   selector: 'app-preliminary-punch-list-modal',
@@ -20,11 +19,12 @@ import { User } from 'src/app/models/user.model';
   styleUrls: ['./preliminary-punch-list-modal.component.scss']
 })
 export class PreliminaryPunchListModalComponent implements OnInit {
-  issueImageModel!: PunchListImages;
-  resolutionImageModel!: PunchListImages; 
   preliminaryPunchListForm!: FormGroup;
   isEditMode: boolean = false;
   isDisabled: boolean = false;
+  displayModal: boolean = false;
+  currentImage: string = '';
+  currentImageIndex: number = 0;
 
   @ViewChild('issueImageInput') issueImageInput!: ElementRef;
   @ViewChild('resolutionImageInput') resolutionImageInput!: ElementRef;
@@ -119,21 +119,58 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
   };
 
-  suggestions: any[] = [];
   isAddressLoading = false;
+  filteredAddresses: any[] = [];
   filteredQualityIssues: string[][] = []; 
-  galleryImages: Image[] = [];
+  isIssueGalleryVisible: boolean = false;
+  isResolutionGalleryVisible: boolean = false;
+
+  issueGalleryImages: Image[] = [];
+  resolutionGalleryImages: Image[] = [];
+
+  responsiveOptions: any[] = [
+    {
+      breakpoint: '1024px',
+      numVisible: 5,
+      rows: 1
+    },
+    {
+      breakpoint: '768px',
+      numVisible: 3,
+      rows: 1
+    },
+    {
+      breakpoint: '560px',
+      numVisible: 1,
+      rows: 1
+    }
+  ];
+
+  position: string = 'bottom';  // Thumbnail position for the gallery (can be 'top', 'bottom', 'left', 'right')
+
+
+  currentIssueImageIndex: number = 0;
+  currentResolutionImageIndex: number = 0;
   userData!: User;
+  galleryImages: any[] = [];
+
+  get issueImagesFormArray(): FormArray {
+    return this.preliminaryPunchListForm.get('issueImages') as FormArray;
+  }
+  
+  get resolutionImagesFormArray(): FormArray {
+    return this.preliminaryPunchListForm.get('resolutionImages') as FormArray;
+  }
 
   constructor(
     private fb: FormBuilder,
+    private http: HttpClient,
     private dialogRef: MatDialogRef<PreliminaryPunchListModalComponent>,
     private dialog: MatDialog,
-    private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
     public authService: AuthService,
-    private http: HttpClient,
     private modalGalleryService: ModalGalleryService,
+    // private geocodingService: GeocodingService,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
   ) {}
 
@@ -151,15 +188,22 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       state: [this.data?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       issues: this.fb.array(this.getInitialIssueAreas(this.data)),
       additionalConcerns: [this.data?.additionalConcerns || ''],
-      createdBy: [this.data?.createdBy || ''],
+      createdBy: [this.data?.createdBy || null],
       dateReported: [this.data?.dateReported ||  new Date().toISOString()],
-      issueImageId: [this.data?.issueImageId || null],
+      issueImages: this.fb.array(this.data?.issueImages || []),
+      resolutionImages: this.fb.array(this.data?.resolutionImages || []), 
       pmResolved: [this.data?.pmResolved || false],
-      resolutionImageId: [this.data?.resolutionImageId || null],
-      dateResolved: [this.data?.dateResolved || ''],
+      resolvedDate: [this.data?.resolvedDate || null],
       cmResolved: [this.data?.cmResolved || false],
-      updatedBy: [this.data?.updatedBy || ''],
-      updatedDate: [this.data?.updatedDate ||  new Date().toISOString()]
+      updatedBy: [this.data?.updatedBy || null],
+      updatedDate: [this.data?.updatedDate || null]
+    });
+
+    this.preliminaryPunchListForm.get('streetAddress')?.valueChanges.pipe(
+      debounceTime(300),
+      switchMap((value) => this.getAddressSuggestions(value))
+    ).subscribe(suggestions => {
+      this.filteredAddresses = suggestions;
     });
 
     if (this.isDisabled) {
@@ -167,79 +211,92 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     }
 
     if (this.isEditMode) {
-      this.issueImageModel = new PunchListImages(this.data.id || '', 'issueImage', this.data.issueImageId);
-      this.resolutionImageModel = new PunchListImages(this.data.id || '', 'resolutionImage', this.data.resolutionImageId);
-    } else {
-      this.issueImageModel = new PunchListImages('', 'issueImage');
-      this.resolutionImageModel = new PunchListImages('', 'resolutionImage');
+      this.initializeImages(this.data.issueImages || [], 'issueImages');
+      this.initializeImages(this.data.resolutionImages || [], 'resolutionImages');
     }
-
-    this.setupAddressAutocomplete();
 
     this.preliminaryPunchListForm.get('pmResolved')?.valueChanges.subscribe((pmResolved: boolean) => {
       if (pmResolved) {
-        this.preliminaryPunchListForm.patchValue({ dateResolved: new Date().toISOString() });
-        this.preliminaryPunchListForm.get('resolutionImageId')?.setValidators(Validators.required);
+        this.preliminaryPunchListForm.patchValue({ resolvedDate: new Date().toISOString() });
+        this.preliminaryPunchListForm.get('resolutionImages')?.setValidators(Validators.required);
       } else {
-        this.preliminaryPunchListForm.patchValue({ dateResolved: '' });
-        this.preliminaryPunchListForm.patchValue({ resolutionImageId: null });
-        this.preliminaryPunchListForm.get('resolutionImageId')?.clearValidators();
+        this.preliminaryPunchListForm.patchValue({ resolvedDate: '' });
+        this.preliminaryPunchListForm.patchValue({ resolutionImages: [] });
+        this.preliminaryPunchListForm.get('resolutionImages')?.clearValidators();
       }
-      this.preliminaryPunchListForm.get('resolutionImageId')?.updateValueAndValidity();
+      this.preliminaryPunchListForm.get('resolutionImages')?.updateValueAndValidity();
     });
 
   }
 
-  setupAddressAutocomplete(): void {
-    const streetAddressControl = this.preliminaryPunchListForm.get('streetAddress');
-    
-    streetAddressControl?.valueChanges.pipe(
-      debounceTime(300),  
-      distinctUntilChanged(),  
-      switchMap((query: string) => {
-        if (query.length > 2) {
-          this.isAddressLoading = true;
-          return this.getAddressSuggestions(query);  // Fetch suggestions if query is valid
-        } else {
-          this.suggestions = [];
-          return of([]); 
-        }
-      }),
-      catchError(() => {
-        this.isAddressLoading = false;
-        return of([]);  
-      })
-    ).subscribe(suggestions => {
-      this.suggestions = suggestions;
-      this.isAddressLoading = false;
-    });
+  initializeImages(imageIds: PunchListImages[], formArrayName: 'issueImages' | 'resolutionImages') {
+    if (imageIds?.length) {
+      imageIds.forEach(id => {
+        (this.preliminaryPunchListForm.get(formArrayName) as FormArray).push(this.fb.control(id));
+      });
+    }
   }
 
-  // Fetch address suggestions from Nominatim API
+  onAddressInput(event: any): void {
+    const query = event.target.value;
+    if (query && query.length > 2) {
+      this.isAddressLoading = true;
+      this.getAddressSuggestions(query)
+        .pipe(
+          debounceTime(1000),
+          distinctUntilChanged(),
+          catchError(() => {
+            this.isAddressLoading = false;
+            return of([]); 
+          })
+        )
+        .subscribe(suggestions => {
+          
+          this.filteredAddresses = suggestions.filter(suggestion => {
+            const address = suggestion.address || {};
+            const streetAddress = address.house_number && address.road 
+              ? `${address.house_number} ${address.road}` 
+              : address.road || '';
+  
+            const city = address.city || address.town || '';
+            const state = address.state || '';
+            const abbreviatedState = this.stateAbbreviations[state] || state || '';
+  
+            const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
+            return {
+              formattedAddress: formattedAddress,  
+              original: suggestion
+            };
+          });
+  
+          this.isAddressLoading = false;
+        });
+    } else {
+      this.filteredAddresses = [];
+    }
+  }
+
   getAddressSuggestions(query: string) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=US&limit=5`;
+    const url = `https://nominatim.openstreetmap.org/search?addressdetails=1&format=jsonv2&q=${query}&countrycodes=US&layer=address&limit=5`;
     return this.http.get<any[]>(url); 
   }
 
   selectAddress(suggestion: any): void {
-    const addressParts = suggestion.display_name.split(',');
-    const abbreviatedState = this.stateAbbreviations[suggestion.address.state] || suggestion.address.state;
-
+    const streetAddress = suggestion.address.house_number
+      ? suggestion.address.house_number + ' ' + suggestion.address.road
+      : suggestion.address.road || suggestion.address.residential;
+  
+    const city = suggestion.address.city || suggestion.address.town || suggestion.address.village || suggestion.address.municipality;
+    const state = suggestion.address.state;
+    const abbreviatedState = this.stateAbbreviations[state] || state;
+  
     this.preliminaryPunchListForm.patchValue({
-      streetAddress: addressParts[0][1],
-      city: suggestion.address.city || '',
-      state: abbreviatedState || ''
+      streetAddress: streetAddress,
+      city: city,
+      state: abbreviatedState
     });
 
-    this.suggestions = [];
-  }
-
-  triggerIssueImageUpload(): void {
-    this.issueImageInput.nativeElement.click();
-  }
-
-  triggerResolutionImageUpload(): void {
-    this.resolutionImageInput.nativeElement.click();
+    this.filteredAddresses = [];
   }
 
   getInitialIssueAreas(data: PreliminaryPunchList | null): FormGroup[] {
@@ -291,97 +348,51 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     return this.qualityIssuesMap[selectedArea] || [];
   }
 
-  uploadIssueImage(event: Event): void {
+  triggerImageUpload(imageType: 'issueImages' | 'resolutionImages'): void {
+    if (imageType === 'issueImages' && this.issueImageInput) {
+      this.issueImageInput.nativeElement.click();
+    } else if (imageType === 'resolutionImages' && this.resolutionImageInput) {
+      this.resolutionImageInput.nativeElement.click();
+    }
+  }
+
+  uploadImage(event: Event, imageType: 'issueImages' | 'resolutionImages'): void {
     const input = event.target as HTMLInputElement;
     if (input?.files && input.files.length > 0) {
       const file = input.files[0];
       const reader = new FileReader();
-  
-      const maxFileSizeInMB = 15;
-      const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
-  
-      if (file.size > maxFileSizeInBytes) {
-        this.toastr.error(`File size should not exceed ${maxFileSizeInMB} MB`);
-        return;
-      }
-  
+
       reader.onload = () => {
-        const base64String = reader.result as string; 
-        this.preliminaryPunchListForm.patchValue({ issueImageId: base64String });
-        this.issueImageModel.image = file; 
-        this.toastr.success('Issue image uploaded');
+        const formArray = imageType === 'issueImages' ? this.issueImagesFormArray : this.resolutionImagesFormArray;
+        formArray.push(this.fb.control(reader.result as string));
+        this.toastr.success('Image uploaded');
       };
-  
-      reader.onerror = (error) => {
-        console.error('Error converting image: ', error);
-      };
-  
+
       reader.readAsDataURL(file);
     }
   }
   
-  uploadResolutionImage(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input?.files && input.files.length > 0) {
-      const file = input.files[0];
-      const reader = new FileReader();
+  openGallery(imageType: 'issueImages' | 'resolutionImages', images: any[]): void {
+    this.galleryImages = images.map(img => ({
+      itemImageSrc: img
+    }));
   
-      const maxFileSizeInMB = 15;
-      const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
-  
-      if (file.size > maxFileSizeInBytes) {
-        this.toastr.error(`File size should not exceed ${maxFileSizeInMB} MB`);
-        return;
-      }
-  
-      reader.onload = () => {
-        if (!this.resolutionImageModel.id) {
-          this.resolutionImageModel.id = uuidv4();
-        }
-        const base64String = reader.result as string; 
-        this.preliminaryPunchListForm.patchValue({ resolutionImageId: base64String });
-        this.resolutionImageModel.image = file; 
-        this.toastr.success('Resolution image uploaded');
-      };
-  
-      reader.onerror = (error) => {
-        console.error('Error converting image: ', error);
-      };
-  
-      reader.readAsDataURL(file);
+    if(imageType == 'issueImages'){
+      this.isIssueGalleryVisible = true;
+    }else{
+      this.isResolutionGalleryVisible = true;
     }
   }
+
+  closeImageModal(): void {
+    this.isIssueGalleryVisible = false;
+    this.isResolutionGalleryVisible = false;
+  }
   
-  removeIssueImage(): void {
-    this.issueImageModel.image = null;
-    this.preliminaryPunchListForm.patchValue({ issueImageId: null });
-    this.toastr.warning('Issue image removed');
-  }
-
-  removeResolutionImage(): void {
-    this.resolutionImageModel.image = null;
-    this.preliminaryPunchListForm.patchValue({ resolutionImageId: null });
-    this.toastr.warning('Resolution image removed');
-  }
-
-  openImageModal(imageUrl: string): void {
-    const modalImage: ModalImage = {
-      img: imageUrl,
-      title: 'Full Image',
-      alt: 'Full Image'
-    };
-
-    const image = new Image(0, modalImage); 
-
-    this.galleryImages = [image]; 
-
-    const currentIndex = 0;
-
-    const dialogRef: ModalGalleryRef = this.modalGalleryService.open({
-      id: currentIndex,
-      images: this.galleryImages,
-      currentImage: this.galleryImages[currentIndex]
-    }) as ModalGalleryRef;
+  removeImage(index: number, imageType: 'issueImages' | 'resolutionImages'): void {
+    const imageFormArray = imageType === 'issueImages' ? this.issueImagesFormArray : this.resolutionImagesFormArray;
+    imageFormArray.removeAt(index);
+    this.toastr.warning('Image removed');
   }
 
   openDeleteConfirmationDialog(index: number): void {
@@ -417,49 +428,29 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   }
 
   save(): void {
-    
     if (this.preliminaryPunchListForm.valid) {
       const punchList = this.preliminaryPunchListForm.getRawValue();
-
+  
       punchList.issues = punchList.issues.map((issue: any) => ({
         ...issue,
         qualityIssues: Array.isArray(issue.qualityIssues) ? issue.qualityIssues.join(',') : issue.qualityIssues
       }));
   
-      if (punchList.id === '') {
-        punchList.id = uuidv4();
+      if (this.isEditMode) {
+        punchList.updatedBy = this.userData.id;
+        punchList.updatedDate = new Date().toISOString();
+      } else {
+        punchList.createdBy = this.userData.id;
       }
 
-      if(this.isEditMode){
-        punchList.updatedBy = this.userData.id
-      }else{
-        punchList.createdBy = this.userData.id
+      if(!punchList.id){
+        punchList.id = uuidv4();
       }
   
-      if (this.issueImageModel.image != null) {
-        if (!this.issueImageModel.id) {
-          this.issueImageModel.id = uuidv4();
-        }
-        this.issueImageModel.preliminaryPunchListId = punchList.id;
-      }
-  
-      if (this.resolutionImageModel.image != null) {
-        if (!this.resolutionImageModel.id) {
-          this.resolutionImageModel.id = uuidv4();
-        }
-        this.resolutionImageModel.preliminaryPunchListId = punchList.id;
-      }
-  
-      // Return the punchList and the images
-      const result = {
-        punchList,
-        issueImage: this.issueImageModel.image instanceof File ? this.issueImageModel.image : null,
-        resolutionImage: this.resolutionImageModel.image instanceof File ? this.resolutionImageModel.image : null
-      };
-  
-      this.dialogRef.close(result);
+      this.dialogRef.close(punchList);
     } else {
       console.error('Form is invalid');
     }
   }
+  
 }

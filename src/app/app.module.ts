@@ -24,8 +24,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialogActions, MatDialogContent, MatDialogModule, MatDialogTitle } from '@angular/material/dialog';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { GalleryModule } from '@ks89/angular-modal-gallery';
+import { DialogModule } from 'primeng/dialog';
+import { ImageModule } from 'primeng/image';
+import { GalleriaModule } from 'primeng/galleria';
+
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { ToastrModule } from 'ngx-toastr';
 
@@ -46,6 +50,8 @@ import { ResetPasswordComponent } from './components/reset-password/reset-passwo
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
 import { RouterModule } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { StyleClassModule } from 'primeng/styleclass';
 
 
 
@@ -76,11 +82,15 @@ import { RouterModule } from '@angular/router';
       positionClass: 'toast-top-right',
       preventDuplicates: true, 
     }),
+    DialogModule,
+    ButtonModule,
+    ImageModule,
+    StyleClassModule,
     HttpClientModule,
     FormsModule,
-    ReactiveFormsModule,
+    ReactiveFormsModule, 
     AppRoutingModule,
-    GalleryModule,
+    GalleriaModule,
     MatDialogModule,
     MatAutocompleteModule,
     MatToolbarModule,
@@ -100,6 +110,7 @@ import { RouterModule } from '@angular/router';
     MatDialogTitle,
     MatCheckboxModule,
     MatPaginatorModule,
+    MatProgressSpinnerModule,
     PreliminaryPunchListModule
   ],
   providers: [provideCharts(withDefaultRegisterables())],
