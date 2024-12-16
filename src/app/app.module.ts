@@ -25,6 +25,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialogActions, MatDialogContent, MatDialogModule, MatDialogTitle } from '@angular/material/dialog';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {MatDatepickerModule} from '@angular/material/datepicker';
 
 import { DialogModule } from 'primeng/dialog';
 import { ImageModule } from 'primeng/image';
@@ -116,6 +117,8 @@ import { StyleClassModule } from 'primeng/styleclass';
     MatDialogTitle,
     MatCheckboxModule,
     MatPaginatorModule,
+    MatProgressSpinnerModule,
+    MatDatepickerModule,
     PreliminaryPunchListModule
   ],
   providers: [provideCharts(withDefaultRegisterables())],
