@@ -15,7 +15,7 @@ export class IssueArea {
 }
 
 export class PreliminaryPunchList {
-  id?: string;
+  id: string;
   segmentId: string;
   vendorName: string;
   streetAddress: string;
@@ -26,12 +26,12 @@ export class PreliminaryPunchList {
   dateReported: Date;
   pmResolved: boolean;
   cmResolved: boolean;
-  dateResolved: Date | null;
-  issueImageId?: string;
-  resolutionImageId?: string;
+  resolvedDate: Date | null;
+  issueImages: PunchListImages[]; 
+  resolutionImages?: PunchListImages[];
   createdBy?: string;
   updatedBy?: string; 
-  updatedDate?: Date;
+  updatedDate: Date | null;
 
   constructor(
     id: string,
@@ -45,12 +45,12 @@ export class PreliminaryPunchList {
     dateReported: Date = new Date(),
     pmResolved: boolean = false,
     cmResolved: boolean = false,
-    dateResolved: Date | null = null,
-    issueImageId: string = '',
-    resolutionImageId: string = '',
+    resolvedDate: Date | null = null,
+    issueImages: PunchListImages[] = [],
+    resolutionImages: PunchListImages[] = [], 
     createdBy?: string,
     updatedBy?: string,
-    updatedDate?: Date
+    updatedDate: Date | null = null
   ) {
     this.id = id;
     this.segmentId = segmentId;
@@ -63,9 +63,9 @@ export class PreliminaryPunchList {
     this.dateReported = dateReported;
     this.pmResolved = pmResolved;
     this.cmResolved = cmResolved;
-    this.dateResolved = dateResolved;
-    this.issueImageId = issueImageId;
-    this.resolutionImageId = resolutionImageId;
+    this.resolvedDate = resolvedDate;
+    this.issueImages = issueImages;
+    this.resolutionImages = resolutionImages;
     this.createdBy = createdBy;
     this.updatedBy = updatedBy;
     this.updatedDate = updatedDate;

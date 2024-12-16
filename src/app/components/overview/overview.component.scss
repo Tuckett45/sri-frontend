@@ -2,6 +2,12 @@
   padding: 20px;
 }
 
+body {
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 .dashboard-card {
   height: 100%;
   display: flex;

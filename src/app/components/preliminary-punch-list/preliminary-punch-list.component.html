@@ -1,5 +1,4 @@
-<div class="preliminary-punch-list-page">
-  <!-- Header section with flex layout for title and add button -->
+<div class="preliminary-punch-list-page surface-card shadow-4 p-3 border-round">
   <div class="header-section">
     <h2>Preliminary Punch List</h2>
     <button *ngIf="this.authService.isCM()" mat-raised-button color="primary" class="header-btn" (click)="openModal()"><mat-icon>add</mat-icon> Add New Entry</button>
@@ -16,39 +15,27 @@
   </div>
 
   <div class="table-wrapper">
-
     <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-
-      <!-- Segment ID Column -->
       <ng-container matColumnDef="segmentId">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Segment ID </th>
         <td mat-cell *matCellDef="let report" data-label="Segment ID"> {{ report.segmentId }} </td>
       </ng-container>
-
       <ng-container matColumnDef="vendorName">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Vendor </th>
         <td mat-cell *matCellDef="let report" data-label="Vendor"> {{ report.vendorName }} </td>
       </ng-container>
-
-      <!-- Street Address Column -->
       <ng-container matColumnDef="streetAddress">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Street Address </th>
         <td mat-cell *matCellDef="let report" data-label="Street Address"> {{ report.streetAddress }} </td>
       </ng-container>
-
-      <!-- City Column -->
       <ng-container matColumnDef="city">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> City </th>
         <td mat-cell *matCellDef="let report" data-label="City"> {{ report.city }} </td>
       </ng-container>
-
-      <!-- State Column -->
       <ng-container matColumnDef="state">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> State </th>
         <td mat-cell *matCellDef="let report" data-label="State"> {{ report.state }} </td>
       </ng-container>
-
-      <!-- Issues Column -->
       <ng-container matColumnDef="issues">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Issues </th>
         <td mat-cell *matCellDef="let report" data-label="Issues">
@@ -57,66 +44,79 @@
           </div>
         </td>
       </ng-container>
-
-      <!-- Additional Concerns Column -->
       <ng-container matColumnDef="additionalConcerns">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Additional Concerns </th>
         <td mat-cell *matCellDef="let report" data-label="Additional Concerns"> {{ report.additionalConcerns }} </td>
       </ng-container>
-
       <ng-container matColumnDef="createdBy">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Created By </th>
         <td mat-cell *matCellDef="let report" data-label="Created By"> {{ report.createdBy}} </td>
       </ng-container>
-
-      <!-- Date Reported Column -->
       <ng-container matColumnDef="dateReported">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Date Reported </th>
         <td mat-cell *matCellDef="let report" data-label="Date Reported"> {{ report.dateReported.toLocaleString() | date: 'short' }} </td>
       </ng-container>
-
-      <!-- Issue Image Column -->
       <ng-container matColumnDef="issueImageId">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Issue Image </th>
         <td mat-cell *matCellDef="let report" data-label="Issue Image">
-          <img *ngIf="report.issueImageId" 
-                [src]="report.issueImageId" 
-                alt="Issue Image" width="100" 
-                (click)="openImageModal(report.issueImageId)"                 
-                >
+          <button mat-raised-button class="image-btn" *ngIf="report.issueImages?.length"
+            (click)="openGallery('issueImages', report.issueImages)">
+            Issue Images
+            <mat-icon>photo_library</mat-icon>
+          </button>
+          <p-galleria [value]="report.issueImages" 
+                      [(visible)]="isIssueGalleryVisible" 
+                      [responsiveOptions]="responsiveOptions"
+                      [containerStyle]="{ 'max-width': '550px' }"
+                      [circular]="true" 
+                      [fullScreen]="true" 
+                      [transitionInterval]="1500" 
+                      [showItemNavigators]="true"
+                      [showThumbnails]="false">
+                      
+            <ng-template pTemplate="item" let-item>                
+              <img [src]="this.galleryImages[0].itemImageSrc" style="width: 100%; height: auto; object-fit: contain; display: block;" />
+            </ng-template>
+          </p-galleria>
         </td>
       </ng-container>
-
-      <!-- PM Resolved Column -->
+      
       <ng-container matColumnDef="pmResolved">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> PM Resolved </th>
         <td mat-cell *matCellDef="let report" data-label="PM Resolved"> {{ report.pmResolved ? "True" : "False"}} </td>
       </ng-container>
-
-      <!-- Resolution Image Column -->
       <ng-container matColumnDef="resolutionImageId">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Resolution Image </th>
         <td mat-cell *matCellDef="let report" data-label="Resolution Image">
-          <img *ngIf="report.resolutionImageId" 
-                [src]="report.resolutionImageId" 
-                alt="Resolution Image" width="100" 
-                (click)="openImageModal(report.resolutionImageId)"
-                >
+          <button mat-raised-button class="image-btn" *ngIf="report.resolutionImages?.length"
+            (click)="openGallery('resolutionImages', report.resolutionImages)">
+            Resolution Images
+            <mat-icon>photo_library</mat-icon>
+          </button>
+          <p-galleria [value]="this.galleryImages" 
+                      [(visible)]="isResolutionGalleryVisible" 
+                      [responsiveOptions]="responsiveOptions"
+                      [containerStyle]="{ 'max-width': '450px' }"
+                      [circular]="true" 
+                      [fullScreen]="true" 
+                      [transitionInterval]="1500" 
+                      [showItemNavigators]="true"
+                      [showThumbnails]="true">
+                      
+            <ng-template pTemplate="item" let-item>                
+              <img [src]="this.galleryImages[0].itemImageSrc" style="width: 100%; height: auto; object-fit: contain; display: block;" />
+            </ng-template>
+          </p-galleria>
         </td>
       </ng-container>
-
-      <ng-container matColumnDef="dateResolved">
+      <ng-container matColumnDef="resolvedDate">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Date Resolved </th>
-        <td mat-cell *matCellDef="let report" data-label="Date Resolved"> {{ report.dateResolved | date: 'short' }} </td>
+        <td mat-cell *matCellDef="let report" data-label="Date Resolved"> {{ report.resolvedDate | date: 'short' }} </td>
       </ng-container>
-
-      <!-- CM Resolved Column -->
       <ng-container matColumnDef="cmResolved">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> CM Resolved </th>
         <td mat-cell *matCellDef="let report" data-label="CM Resolved"> {{ report.cmResolved ? "True" : "False"  }} </td>
       </ng-container>
-
-      <!-- Actions Column (Edit and Delete) -->
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef> Actions </th>
         <td mat-cell *matCellDef="let report; let i = index" data-label="Actions">
@@ -126,13 +126,8 @@
           </div>
         </td>
       </ng-container>
-
-      <!-- Table Header -->
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-
-      <!-- Table Rows -->
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-
     </table>
     <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
   </div>

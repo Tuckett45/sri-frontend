@@ -91,19 +91,18 @@
             </mat-form-field>
           </mat-grid-tile>
           
-              <!-- Quality Issues for Selected Area -->
-              <mat-grid-tile colspan="2">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Quality Issues</mat-label>
-              <mat-select formControlName="qualityIssues" multiple placeholder="Select Quality Issues">
-                <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
-              </mat-select>
-                </mat-form-field>
-                <button [disabled]="!authService.isCM()" mat-icon-button class="delete-icon" >
-                  <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
-                </button>
-              </mat-grid-tile>
-
+          <!-- Quality Issues for Selected Area -->
+          <mat-grid-tile colspan="2">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Quality Issues</mat-label>
+          <mat-select formControlName="qualityIssues" multiple placeholder="Select Quality Issues">
+            <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
+          </mat-select>
+            </mat-form-field>
+            <button [disabled]="!authService.isCM()" mat-icon-button class="delete-icon" >
+              <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
+            </button>
+          </mat-grid-tile>
         </div>
       </div>
       
@@ -132,47 +131,76 @@
         </div>
       </mat-grid-tile>
 
-      <mat-grid-tile colspan="2">
-        <div *ngIf="!this.preliminaryPunchListForm.get('issueImageId')?.value">
-          <button [disabled]="!authService.isCM()" mat-raised-button class="image-btn" (click)="triggerIssueImageUpload()">
-            Issue Image
-            <mat-icon>attach_file</mat-icon>
+      <!-- Add Issue Image Button -->
+      <mat-grid-tile colspan="4" class="half-width">
+        <div>
+          <button mat-raised-button [disabled]="!authService.isCM()" class="upload-btn" (click)="triggerImageUpload('issueImages')">
+            Add Issue Image
+            <mat-icon>add_a_photo</mat-icon>
           </button>
-          <input [disabled]="!authService.isCM()" type="file" #issueImageInput (change)="uploadIssueImage($event)" style="display: none;">
-          <mat-error *ngIf="preliminaryPunchListForm.get('issueImageId')?.hasError('required')">
-            Issue Image is required.
-          </mat-error>
+          <input type="file" #issueImageInput (change)="uploadImage($event, 'issueImages')" style="display: none;">
         </div>
-        <div *ngIf="this.preliminaryPunchListForm.get('issueImageId')?.value" class="file-preview">
-          <img [src]="this.preliminaryPunchListForm.get('issueImageId')?.value" alt="Preview" (click)="openImageModal(this.preliminaryPunchListForm.get('issueImageId')?.value)" class="preview-image">
-          <button [disabled]="!authService.isCM()" mat-icon-button class="delete-icon" (click)="removeIssueImage()">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
-      </mat-grid-tile>
-      
-      <mat-grid-tile colspan="2" *ngIf="isEditMode && preliminaryPunchListForm.get('pmResolved')?.value">
-        <div *ngIf="!this.preliminaryPunchListForm.get('resolutionImageId')?.value">
-          <button mat-raised-button class="image-btn" (click)="triggerResolutionImageUpload()">
-            Resolution Image
-            <mat-icon>attach_file</mat-icon>
-          </button>
-          <input type="file" #resolutionImageInput (change)="uploadResolutionImage($event)" style="display: none;">
-          <mat-error *ngIf="this.preliminaryPunchListForm.get('pmResolved')?.value && !this.preliminaryPunchListForm.get('resolutionImageId')?.value">
-            Resolution Image is Required when Issues are resolved
-          </mat-error>
-        </div>
-        <div *ngIf="this.preliminaryPunchListForm.get('resolutionImageId')?.value" class="file-preview">
-          <img [src]="this.preliminaryPunchListForm.get('resolutionImageId')?.value" alt="Preview" (click)="openImageModal(this.preliminaryPunchListForm.get('resolutionImageId')?.value)" class="preview-image">
-          <button mat-icon-button class="delete-icon" (click)="removeResolutionImage()">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
-      </mat-grid-tile>
-      
 
+
+        <div>
+          <button mat-raised-button [disabled]="preliminaryPunchListForm.get('pmResolved')?.value == false"
+                  class="upload-btn" (click)="triggerImageUpload('resolutionImages')">
+            Add Resolution Image
+            <mat-icon>add_a_photo</mat-icon>
+          </button>
+          <input type="file" #resolutionImageInput (change)="uploadImage($event, 'resolutionImages')" style="display: none;">
+        </div>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="4" class="half-width">
+      <div>
+        <button mat-raised-button class="image-btn" *ngIf="this.issueImagesFormArray && this.issueImagesFormArray.length > 0" 
+          (click)="openGallery('issueImages', this.issueImagesFormArray.controls)">
+          View Issue Images
+          <mat-icon>photo_library</mat-icon>
+        </button>
+        <div *ngFor="let image of this.issueImagesFormArray.controls; let i = index">
+          <p-galleria *ngIf="isIssueGalleryVisible" 
+                      [value]="this.issueImagesFormArray.controls" 
+                      [(visible)]="isIssueGalleryVisible" 
+                      [responsiveOptions]="responsiveOptions" 
+                      [containerStyle]="{ 'max-width': '550px' }"
+                      [circular]="true" 
+                      [fullScreen]="true" 
+                      [transitionInterval]="1500" 
+                      [showItemNavigators]="true"
+                      [showThumbnails]="false">
+            <ng-template pTemplate="item" let-item>
+              <img [src]="image.value" style="width: 100%; height: auto; object-fit: contain; display: block;" />
+            </ng-template>
+          </p-galleria>
+        </div>
+      </div>
+      <div>
+        <button mat-raised-button class="image-btn" *ngIf="this.resolutionImagesFormArray && this.resolutionImagesFormArray.length > 0"
+          (click)="openGallery('resolutionImages', this.resolutionImagesFormArray.controls)">
+          View Resolution Images
+          <mat-icon>photo_library</mat-icon>
+        </button>
+         <div *ngFor="let image of issueImagesFormArray.controls; let i = index">
+          <p-galleria *ngIf="isResolutionGalleryVisible" 
+                      [value]="resolutionImagesFormArray.controls" 
+                      [(visible)]="isResolutionGalleryVisible" 
+                      [responsiveOptions]="responsiveOptions" 
+                      [containerStyle]="{ 'max-width': '450px' }"
+                      [circular]="true" 
+                      [fullScreen]="true" 
+                      [transitionInterval]="1500" 
+                      [showItemNavigators]="true">
+            <ng-template pTemplate="item" let-item>
+              <img [src]="image.value" style="width: 100%; display: block;" />
+            </ng-template>
+            </p-galleria>
+          </div>
+        </div>
+
+      </mat-grid-tile>
     </mat-grid-list> 
-
   </form>
 </div>
 

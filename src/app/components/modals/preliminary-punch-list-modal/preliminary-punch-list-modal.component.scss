@@ -21,7 +21,6 @@
   }
 
   .delete-icon {
-    justify-items: center;
     cursor: pointer;
     color: #f44336;
 
@@ -183,7 +182,28 @@ button.mat-raised-button {
   &:hover {
     background-color: #0e3453;
   }
+
+  &:disabled{
+    background-color: #88827a;
+  }
 }
+
+.upload-btn {
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #fff;
+  background-color: #144f80;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+
+  &:disabled{
+    background-color: #88827a;
+  }
+}
+
 
 /* File input styling */
 .file-input-wrapper {

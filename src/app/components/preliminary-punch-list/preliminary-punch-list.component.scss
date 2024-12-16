@@ -1,5 +1,5 @@
 .preliminary-punch-list-page {
-  background-color: #dddddd;
+  background-color: #e7e5e5 !important;
   padding: 20px;
   margin: 20px;
   box-sizing: border-box;
@@ -121,6 +121,23 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
 
+  .image-btn {
+    font-size: small;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #fff;
+    background-color: #144f80;
+  
+    &:hover {
+      background-color: #0e3453;
+    }
+  
+    &:disabled{
+      background-color: #88827a;
+    }
+  }
+
   /* Responsive design */
   @media (max-width: 767px) {
     padding: 10px;
@@ -204,4 +221,13 @@
       }
     }
   }
+}
+
+::ng-deep .mat-mdc-raised-button .mat-icon {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  font-size: 1.125rem;
+  height: 1.125rem;
+  width: 1.3rem !important;
 }

@@ -10,7 +10,7 @@ import { ToastrService } from 'ngx-toastr';
 import { MatPaginator } from '@angular/material/paginator';
 import { AuthService } from 'src/app/services/auth.service';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
-import { Image, ModalGalleryComponent, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery'; 
+import { Image, ModalGalleryService } from '@ks89/angular-modal-gallery'; 
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -19,18 +19,37 @@ import { Image, ModalGalleryComponent, ModalGalleryRef, ModalGalleryService, Mod
 })
 export class PreliminaryPunchListComponent implements OnInit {
   preliminaryPunchList$: Observable<PreliminaryPunchList[]>;
+  isIssueGalleryVisible: boolean = false;
+  isResolutionGalleryVisible: boolean = false;
+  issueGalleryImages: Image[] = [];
+  resolutionGalleryImages: Image[] = [];
 
   displayedColumns: string[] = [
     'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
     'additionalConcerns', 'createdBy', 'dateReported',
-    'issueImageId', 'pmResolved', 'resolutionImageId', 'dateResolved', 'cmResolved', 'actions'
+    'issueImageId', 'pmResolved', 'resolutionImageId', 'resolvedDate', 'cmResolved', 'actions'
+  ];
+
+  responsiveOptions: any[] = [
+    {
+      breakpoint: '1024px',
+      numVisible: 3
+    },
+    {
+      breakpoint: '768px',
+      numVisible: 2
+    },
+    {
+      breakpoint: '560px',
+      numVisible: 1
+    }
   ];
 
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource<PreliminaryPunchList>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  galleryImages: Image[] = [];
+  galleryImages: any[] = [];
   
   constructor(
     private dialog: MatDialog,
@@ -51,26 +70,6 @@ export class PreliminaryPunchListComponent implements OnInit {
     });
   }
 
-  openImageModal(imageUrl: string): void {
-    const modalImage: ModalImage = {
-      img: imageUrl,
-      title: 'Full Image',
-      alt: 'Full Image'
-    };
-
-    const image = new Image(0, modalImage); 
-
-    this.galleryImages = [image]; 
-
-    const currentIndex = 0;
-
-    const dialogRef: ModalGalleryRef = this.modalGalleryService.open({
-      id: currentIndex,
-      images: this.galleryImages,
-      currentImage: this.galleryImages[currentIndex]
-    }) as ModalGalleryRef;
-  }
-
   // Open the punch list modal for creating or editing punch list entries
   openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
@@ -78,13 +77,13 @@ export class PreliminaryPunchListComponent implements OnInit {
       data: data || null
     });
   
-    dialogRef.afterClosed().subscribe((result: { punchList: PreliminaryPunchList}) => {
+    dialogRef.afterClosed().subscribe((result: PreliminaryPunchList) => {
       if (result) {
-        const { punchList } = result;
+        var punchListAdd = result;
         
         const action$ = data
-          ? this.punchListService.updateEntry(punchList) 
-          : this.punchListService.addEntry(punchList);   
+          ? this.punchListService.updateEntry(punchListAdd) 
+          : this.punchListService.addEntry(punchListAdd);   
   
         action$.subscribe({
           next: () => {
@@ -150,6 +149,25 @@ export class PreliminaryPunchListComponent implements OnInit {
     } else {
       return '';
     }
+  }
+
+  openGallery(imageType: 'issueImages' | 'resolutionImages', images: string[]): void {
+    this.galleryImages = images.map(img => ({
+      itemImageSrc: img
+    }));
+  
+    if(imageType == 'issueImages'){
+      this.isIssueGalleryVisible = true;
+    }else{
+      this.isResolutionGalleryVisible = true;
+    }
+    debugger;
+  }
+  
+
+  closeImageModal(): void {
+    this.isIssueGalleryVisible = false;
+    this.isResolutionGalleryVisible = false;
   }
   
   // Apply the search filter in the table
