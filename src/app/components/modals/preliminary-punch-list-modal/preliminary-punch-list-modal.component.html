@@ -159,22 +159,29 @@
           View Issue Images
           <mat-icon>photo_library</mat-icon>
         </button>
-        <div *ngFor="let image of this.issueImagesFormArray.controls; let i = index">
           <p-galleria *ngIf="isIssueGalleryVisible" 
                       [value]="this.issueImagesFormArray.controls" 
                       [(visible)]="isIssueGalleryVisible" 
                       [responsiveOptions]="responsiveOptions" 
-                      [containerStyle]="{ 'max-width': '550px' }"
+                      [containerStyle]="{ 'max-width': '80%' }"
                       [circular]="true" 
                       [fullScreen]="true" 
                       [transitionInterval]="1500" 
                       [showItemNavigators]="true"
-                      [showThumbnails]="false">
+                      [showThumbnails]="true">
             <ng-template pTemplate="item" let-item>
-              <img [src]="image.value" style="width: 100%; height: auto; object-fit: contain; display: block;" />
+              <div style="display: flex; justify-content: center; align-items: center;">
+                <img [src]="item.value" 
+                    style="max-width: 80%; max-height: 1000px; object-fit: contain; display: block; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);" />
+              </div>
+            </ng-template>
+            <ng-template pTemplate="thumbnail" let-item>
+              <div style="display: flex; justify-content: center; align-items: center;">
+                <img [src]="item.value" 
+                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer; border: 2px solid #ddd;" />
+              </div>
             </ng-template>
           </p-galleria>
-        </div>
       </div>
       <div>
         <button mat-raised-button class="image-btn" *ngIf="this.resolutionImagesFormArray && this.resolutionImagesFormArray.length > 0"
@@ -182,22 +189,30 @@
           View Resolution Images
           <mat-icon>photo_library</mat-icon>
         </button>
-         <div *ngFor="let image of issueImagesFormArray.controls; let i = index">
           <p-galleria *ngIf="isResolutionGalleryVisible" 
-                      [value]="resolutionImagesFormArray.controls" 
+                      [value]="this.resolutionImagesFormArray.controls" 
                       [(visible)]="isResolutionGalleryVisible" 
                       [responsiveOptions]="responsiveOptions" 
-                      [containerStyle]="{ 'max-width': '450px' }"
+                      [containerStyle]="{ 'max-width': '80%' }"
                       [circular]="true" 
                       [fullScreen]="true" 
                       [transitionInterval]="1500" 
-                      [showItemNavigators]="true">
+                      [showItemNavigators]="true"
+                      [showThumbnails]="true">
             <ng-template pTemplate="item" let-item>
-              <img [src]="image.value" style="width: 100%; display: block;" />
+              <div style="display: flex; justify-content: center; align-items: center;">
+                <img [src]="item.value" 
+                    style="max-width: 80%; max-height: 1000px; object-fit: contain; display: block; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);" />
+              </div>
             </ng-template>
-            </p-galleria>
-          </div>
-        </div>
+            <ng-template pTemplate="thumbnail" let-item>
+              <div style="display: flex; justify-content: center; align-items: center;">
+                <img [src]="item.value" 
+                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer; border: 2px solid #ddd;" />
+              </div>
+            </ng-template>
+          </p-galleria>
+      </div>
 
       </mat-grid-tile>
     </mat-grid-list> 

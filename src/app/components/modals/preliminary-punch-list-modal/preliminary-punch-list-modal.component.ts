@@ -439,7 +439,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       if (this.isEditMode) {
         punchList.updatedBy = this.userData.id;
         punchList.updatedDate = new Date().toISOString();
-      } else {
+      }
+
+      if(!punchList.createdBy || punchList.createdBy == null)
+      {
         punchList.createdBy = this.userData.id;
       }
 

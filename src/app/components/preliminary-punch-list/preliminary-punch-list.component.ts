@@ -21,8 +21,6 @@ export class PreliminaryPunchListComponent implements OnInit {
   preliminaryPunchList$: Observable<PreliminaryPunchList[]>;
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
-  issueGalleryImages: Image[] = [];
-  resolutionGalleryImages: Image[] = [];
 
   displayedColumns: string[] = [
     'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
@@ -161,7 +159,6 @@ export class PreliminaryPunchListComponent implements OnInit {
     }else{
       this.isResolutionGalleryVisible = true;
     }
-    debugger;
   }
   
 
