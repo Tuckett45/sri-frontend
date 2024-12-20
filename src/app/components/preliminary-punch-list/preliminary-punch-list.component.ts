@@ -10,7 +10,7 @@ import { ToastrService } from 'ngx-toastr';
 import { MatPaginator } from '@angular/material/paginator';
 import { AuthService } from 'src/app/services/auth.service';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
-import { Image, ModalGalleryService } from '@ks89/angular-modal-gallery'; 
+import { User } from 'src/app/models/user.model';
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -21,6 +21,7 @@ export class PreliminaryPunchListComponent implements OnInit {
   preliminaryPunchList$: Observable<PreliminaryPunchList[]>;
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
+  user!: User;
 
   displayedColumns: string[] = [
     'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
@@ -36,6 +37,8 @@ export class PreliminaryPunchListComponent implements OnInit {
     {
       breakpoint: '768px',
       numVisible: 2
+
+
     },
     {
       breakpoint: '560px',
@@ -54,21 +57,36 @@ export class PreliminaryPunchListComponent implements OnInit {
     private punchListService: PreliminaryPunchListService,
     private changeDetectorRef: ChangeDetectorRef,
     private toastr: ToastrService,
-    private modalGalleryService: ModalGalleryService,
     public authService: AuthService
   ) {
     this.preliminaryPunchList$ = this.punchListService.getEntries();
   }
 
   ngOnInit(): void {
-    this.preliminaryPunchList$.subscribe(data => {
-      this.dataSource.data = data;
+    debugger;
+    this.filterPunchLists(this.preliminaryPunchList$);
+  }
+
+  filterPunchLists(punchlists: Observable<PreliminaryPunchList[]>){
+    this.user = this.authService.getUser();
+    punchlists.subscribe(data => {
+      let filteredData = data;
+  
+      if (this.user.role === 'PM') {
+        filteredData = filteredData.filter(punchList => 
+          punchList.vendorName === this.user.company && punchList.state === this.user.market);
+      } else if (this.user.market !== 'RG') {
+        filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
+      }else{
+        filteredData = data
+      }
+  
+      this.dataSource.data = filteredData;
       this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;
     });
   }
 
-  // Open the punch list modal for creating or editing punch list entries
   openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
       width: '600px',
@@ -97,12 +115,10 @@ export class PreliminaryPunchListComponent implements OnInit {
     });
   }
 
-  // Open the edit modal for punch list report
   editReport(report: PreliminaryPunchList): void {
     this.openModal(report);
   }
 
-  // Open the delete confirmation modal for removing a punch list
   openDeleteConfirmationDialog(report: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
     
@@ -113,7 +129,6 @@ export class PreliminaryPunchListComponent implements OnInit {
     });
   }
 
-  // Remove a punch list report from the table and database
   removeReport(report: PreliminaryPunchList): void {
     const index = this.dataSource.data.findIndex(item => item.id === report.id);
     if (index !== -1) {
@@ -130,7 +145,6 @@ export class PreliminaryPunchListComponent implements OnInit {
     }
   }
 
-  // Refresh the table after performing actions like adding/editing/deleting punch list entries
   refreshTable(): void {
     this.punchListService.getEntries().subscribe((entries: PreliminaryPunchList[]) => {
       this.dataSource.data = entries; 
@@ -138,7 +152,6 @@ export class PreliminaryPunchListComponent implements OnInit {
     });
   }
 
-  // Utility function to get the image URL from file or URL
   getImageUrl(fileOrUrl: string | File): string {
     if (typeof fileOrUrl === 'string') {
       return fileOrUrl;
@@ -167,7 +180,6 @@ export class PreliminaryPunchListComponent implements OnInit {
     this.isResolutionGalleryVisible = false;
   }
   
-  // Apply the search filter in the table
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
   

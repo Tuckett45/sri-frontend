@@ -12,6 +12,7 @@ import { UserRole } from '../models/role.enum';
   providedIn: 'root'
 })
 export class AuthService {
+  currentUser: User = new User();
   private loggedInStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
   private userRole: BehaviorSubject<UserRole> = new BehaviorSubject<UserRole>(UserRole.CM);
 
@@ -44,8 +45,16 @@ export class AuthService {
     this.userRole.next(role as UserRole);
   }
 
+  setUser(user: User) {
+    this.currentUser = user;
+  }
+
   getUserRole(): UserRole {
     return this.userRole.getValue();
+  }
+
+  getUser(): any {
+    return this.currentUser;
   }
 
   isUserInRole(roles: UserRole[]): boolean {
@@ -81,6 +90,7 @@ export class AuthService {
   
           this.loggedInStatus.next(true);
           this.setUserRole(user.role);
+          this.setUser(user);
         }
       })
     );
@@ -90,7 +100,8 @@ export class AuthService {
     const user = localStorage.getItem('user');
     if (user) {
       const parsedUser = JSON.parse(user);
-      this.setUserRole(parsedUser.role); // Set role from local storage
+      this.setUserRole(parsedUser.role);
+      this.currentUser = parsedUser; // Set role from local storage
       this.loggedInStatus.next(true);
     }
   }
@@ -109,7 +120,9 @@ export class AuthService {
     localStorage.removeItem('loggedIn');
     sessionStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    
+
+    this.currentUser = new User();
+
     this.loggedInStatus.next(false);
     
     this.router.navigate(['/login']);

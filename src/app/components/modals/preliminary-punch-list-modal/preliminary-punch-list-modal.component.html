@@ -21,7 +21,9 @@
       <mat-grid-tile colspan="2">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Vendor</mat-label>
-          <input matInput formControlName="vendorName" placeholder="Enter Vendor">
+          <mat-select formControlName="vendorName" placeholder="Select a Vendor">
+            <mat-option *ngFor="let vendor of vendors" [value]="vendor">{{ vendor }}</mat-option>
+          </mat-select>
         </mat-form-field>
       </mat-grid-tile>
 

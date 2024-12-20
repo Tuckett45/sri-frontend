@@ -119,6 +119,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
   };
 
+  vendors: string[] = ['Conguex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
+
   isAddressLoading = false;
   filteredAddresses: any[] = [];
   filteredQualityIssues: string[][] = []; 
@@ -416,6 +418,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
         userObj.email,
         userObj.password,
         userObj.role,
+        userObj.market,
+        userObj.company,
         new Date(userObj.createdDate)  
       );
     } else {

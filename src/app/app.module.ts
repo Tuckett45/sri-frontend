@@ -43,7 +43,7 @@ import { TableComponent } from './components/table/table.component';
 import { PreliminaryPunchListModalComponent } from './components/modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { LoginComponent } from './components/login/login.component';
-import { RegisterModalComponent } from './components/register-modal/register-modal.component';
+import { RegisterModalComponent } from './components/modals/register-modal/register-modal.component';
 import { UserProfileModalComponent } from './components/user-profile/user-profile-modal/user-profile-modal.component';
 import { ForgotPasswordModalComponent } from './components/modals/forgot-password-modal/forgot-password-modal.component';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
