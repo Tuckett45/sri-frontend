@@ -1,17 +1,20 @@
 export class User {
-    id: string;
-    name: string;         
-    email: string;  
-    password: string;         
-    role: string;    
-    createdDate: Date;    
-  
+    id?: string;
+    name?: string;         
+    email?: string;  
+    password?: string;         
+    role?: string;    
+    market?: string;
+    company?: string;
+    createdDate: Date;
     constructor(
-      id: string,
-      name: string,
-      email: string,
-      password: string,
-      role: string,
+      id?: string,
+      name?: string,
+      email?: string,
+      password?: string,
+      role?: string,
+      market?: string,
+      company?: string,
       createdDate: Date = new Date()
     ) {
       this.id =  id;
@@ -19,6 +22,8 @@ export class User {
       this.email = email;
       this.password = password;
       this.role = role;
+      this.market = market;
+      this.company = company;
       this.createdDate = createdDate;
     }
   }
@@ -34,6 +39,8 @@ export class User {
           userObj.email,
           userObj.password,
           userObj.role,
+          userObj.market,
+          userObj.company,
           new Date(userObj.createdDate)
       );
 

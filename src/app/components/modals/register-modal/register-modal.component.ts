@@ -12,8 +12,18 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: ['./register-modal.component.scss']
 })
 export class RegisterModalComponent {
-  registerForm: FormGroup;
+  registerForm!: FormGroup;
   roles: string[] = ['CM', 'PM', 'Client'];
+  companys: string[] = ['Conguex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
+  markets: { name: string, abbreviation: string }[] = [
+    { name: 'Arizona', abbreviation: 'AZ' },
+    { name: 'Colorado', abbreviation: 'CO' },
+    { name: 'Idaho', abbreviation: 'ID' },
+    { name: 'Nevada', abbreviation: 'NV' },
+    { name: 'Texas', abbreviation: 'TX' },
+    { name: 'Utah', abbreviation: 'UT' },
+    { name: 'Regional', abbreviation: 'RG' }
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -21,14 +31,6 @@ export class RegisterModalComponent {
     private authService: AuthService,
     private toastr: ToastrService
   ) {
-    this.registerForm = this.fb.group({
-      name: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', Validators.required],
-      role: ['', Validators.required],
-      createdDate: [new Date],
-    }, { validator: this.passwordMatchValidator });
   }
 
   ngOnInit(): void {
@@ -38,6 +40,8 @@ export class RegisterModalComponent {
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
       role: ['', Validators.required],
+      market: ['', Validators.required],
+      company: [''],
       createdDate: [new Date],
     }, { validator: this.passwordMatchValidator });
   }
@@ -46,6 +50,13 @@ export class RegisterModalComponent {
     return form.get('password')?.value === form.get('confirmPassword')?.value
       ? null
       : { mismatch: true };
+  }
+
+  onRoleChange(): void {
+    const role = this.registerForm.get('role')?.value;
+    if (role !== 'PM') {
+      this.registerForm.get('company')?.reset();
+    }
   }
 
   onSubmit(): void {
@@ -57,6 +68,8 @@ export class RegisterModalComponent {
       formValues.email,
       formValues.password,
       formValues.role,
+      formValues.market,
+      formValues.company,
       formValues.createdDate.toISOString()
     );
 
