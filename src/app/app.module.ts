@@ -56,6 +56,7 @@ import { PreliminaryPunchListModule } from './components/preliminary-punch-list/
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { StyleClassModule } from 'primeng/styleclass';
+import { MatNativeDateModule } from '@angular/material/core';
 
 
 
@@ -119,6 +120,7 @@ import { StyleClassModule } from 'primeng/styleclass';
     MatPaginatorModule,
     MatProgressSpinnerModule,
     MatDatepickerModule,
+    MatNativeDateModule,
     PreliminaryPunchListModule
   ],
   providers: [provideCharts(withDefaultRegisterables())],

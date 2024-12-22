@@ -266,6 +266,8 @@ export class StreetSheetModalComponent implements OnInit {
         userObj.email,
         userObj.password,
         userObj.role,
+        userObj.market,
+        userObj.company,
         new Date(userObj.createdDate)  
       );
     } else {
