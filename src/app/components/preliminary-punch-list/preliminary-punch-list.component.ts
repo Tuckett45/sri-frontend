@@ -63,7 +63,6 @@ export class PreliminaryPunchListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    debugger;
     this.filterPunchLists(this.preliminaryPunchList$);
   }
 
@@ -147,6 +146,15 @@ export class PreliminaryPunchListComponent implements OnInit {
 
   refreshTable(): void {
     this.punchListService.getEntries().subscribe((entries: PreliminaryPunchList[]) => {
+      this.user = this.authService.getUser();
+      if (this.user.role === 'PM') {
+        entries = entries.filter(punchList => 
+          punchList.vendorName === this.user.company && punchList.state === this.user.market);
+      } else if (this.user.market !== 'RG') {
+        entries = entries.filter(punchList => punchList.state === this.user.market);
+      }else{
+        this.dataSource.data = entries; 
+      }
       this.dataSource.data = entries; 
       this.changeDetectorRef.detectChanges(); 
     });
