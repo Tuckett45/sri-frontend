@@ -62,6 +62,13 @@ export class RegisterModalComponent {
   onSubmit(): void {
     const formValues = this.registerForm.value;
 
+    if (formValues.role == 'CM') {
+      formValues.company = 'SRI';
+    }else if(formValues.role == 'Client'){
+      formValues.company = 'Google'; 
+      //Change values of companies in the future based on role
+    }
+
     const newUser: User = new User(
       uuidv4(),
       formValues.name,
