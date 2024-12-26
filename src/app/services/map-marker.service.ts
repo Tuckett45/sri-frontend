@@ -13,7 +13,7 @@ export class MapMarkerService {
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
     })
   };
 
@@ -28,6 +28,6 @@ export class MapMarkerService {
   }
 
   getMapMarkersForStreetSheet(streetSheetId: string): Observable<MapMarker[]> {
-    return this.http.get<MapMarker[]>(`/api/MapMarker/${streetSheetId}`);
+    return this.http.get<MapMarker[]>(`https://localhost:44376/api/MapMarker/${streetSheetId}`);
   }
 }

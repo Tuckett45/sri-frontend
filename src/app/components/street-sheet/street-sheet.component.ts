@@ -41,11 +41,12 @@ export class StreetSheetComponent implements AfterViewInit {
   updateStreetSheet(updatedStreetSheet: StreetSheet): void {
     this.streetSheetService.updateStreetSheet(updatedStreetSheet).subscribe(result => {
       console.log('Street sheet updated:', result);
-      this.loadStreetSheets();  // Reload the list after updating
+      this.streetSheetMap.loadStreetSheets(); 
     });
   }
 
-  private loadStreetSheets(): void {
+  toggleSidePanel(sidenav: any): void {
+    sidenav.toggle();
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
       streetSheets.forEach((sheet: StreetSheet) => {
         this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe(mapMarkers => {
@@ -54,22 +55,5 @@ export class StreetSheetComponent implements AfterViewInit {
       });
       this.streetSheets = streetSheets;
     });
-  }
-
-  toggleSidePanel(sidenav: any): void {
-    sidenav.toggle();
-  }
-
-  public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
-    if (marker.latitude && marker.longitude) {
-      L.marker([marker.latitude, marker.longitude]).addTo(this.map!)
-        .bindPopup(`
-          <b>${streetSheet.vendorName}</b><br>
-          Street: ${streetSheet.streetAddress}<br>
-          City: ${streetSheet.city}<br>
-          <b>Marker ID:</b> ${marker.id}
-        `)
-        .openPopup();
-    }
   }
 }

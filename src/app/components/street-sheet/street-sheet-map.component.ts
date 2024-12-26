@@ -21,11 +21,17 @@ export class StreetSheetMapComponent implements OnInit {
     this.loadStreetSheets();
   }
 
-  private loadStreetSheets(): void {
+  public loadStreetSheets(): void {
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
       streetSheets.forEach((sheet: StreetSheet) => {
         this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe(mapMarkers => {
-          sheet.marker = mapMarkers;  
+          sheet.marker = mapMarkers;
+  
+          mapMarkers.forEach(marker => {
+            if (marker.latitude && marker.longitude) {
+              this.addMarker(marker, sheet);
+            }
+          });
         });
       });
       this.streetSheets = streetSheets;
@@ -43,6 +49,7 @@ export class StreetSheetMapComponent implements OnInit {
       L.marker([marker.latitude, marker.longitude]).addTo(this.map!)
         .bindPopup(`
           <b>${streetSheet.vendorName}</b><br>
+          Segment ID: ${streetSheet.segmentId}<br>
           Street: ${streetSheet.streetAddress}<br>
           City: ${streetSheet.city}<br>
           <b>Marker ID:</b> ${marker.id}

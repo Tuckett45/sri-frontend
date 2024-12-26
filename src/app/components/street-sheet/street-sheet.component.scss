@@ -1,204 +1,187 @@
+/* Overall Page */
 .street-sheet-page {
   background-color: #144f80;  /* Primary blue background */
   color: #fff;  /* Ensures text is visible on the blue background */
   padding: 0 20px 20px;
   margin: 20px;
   box-sizing: border-box;
+}
 
-  .header-section {
-    background-color: #144f80;  /* Background same as the page */
+/* Header Section */
+.header-section {
+  background-color: #144f80;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  flex-wrap: wrap;
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  button {
+    background-color: #e18a25;
+    color: #fff;
+    width: auto;
+    padding: 10px 20px;
+    border-radius: 5px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 20px;
-    flex-wrap: wrap;  /* Allow items to wrap on smaller screens */
+    justify-content: center;
+
+    &:hover {
+      background-color: #b86404;
+      transform: scale(1.05);
+    }
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+/* Sidenav Styling */
+mat-sidenav-container {
+  display: flex;
+  height: 100%;
+}
+
+mat-sidenav {
+  width: 300px;
+  background-color: #f5f5f5;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+  border-radius: 8px;
+}
+
+mat-sidenav-content {
+  flex: 1;
+}
+
+.side-panel-header {
+  background-color: #e18a25;
+  color: white;
+  padding: 20px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .modal-title {
+    font-size: 1.5rem;
+    color: #fff;
+  }
+
+  button {
+    background-color: transparent;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+.side-panel-content {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px;
+}
+
+.side-panel-content ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.side-panel-content li {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s, transform 0.3s;
+
+  &:hover {
+    background-color: #e18a25;
+    color: white;
+    cursor: pointer;
+    transform: translateX(5px);
+  }
+}
+
+.side-panel-content li h5 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.side-panel-content li p {
+  font-size: 0.9rem;
+  color: #030303;
+}
+
+/* Responsive design */
+@media (max-width: 550px) {
+  .header-section {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
     h2 {
-      font-size: 2rem;
-      margin-bottom: 10px; /* Space between title and button */
-      flex-grow: 1;  /* Ensure title takes up remaining space in the row */
-      text-align: center;  /* Center align the title */
+      font-size: 1.7rem;
+      margin-bottom: 10px;
+      color: #ffffff;
+      text-align: center;
     }
 
     button {
-      background-color: #e18a25;  /* Accent color */
-      color: #fff;
-      width: auto; /* Adjust width */
-      align-items: center;
-
-      &:hover {
-        background-color: #b86404;
-      }
+      width: auto;
+      margin-bottom: 10px;
+      color: #ffffff;
     }
-
   }
 
-  mat-form-field {
+  mat-sidenav {
     width: 100%;
-    margin-bottom: 10px;
-    margin-top: 10px;
-
-    mat-label {
-      color: #e18a25;
-    }
+    padding: 10px;
   }
 
-  .search-bar {
-    display: flex;
-    justify-content: flex-start;
-    width: 100%;
-
-    mat-form-field {
-      width: 25%;
-      margin-right: 15px;
-
-      input {
-        padding-left: 2px;
-      }
-
-      mat-icon {
-        color: #e18a25;
-      }
-    }
+  .side-panel-content ul {
+    padding: 0;
   }
 
-  .table-wrapper {
-    overflow-x: auto;
-
-    table {
-      width: 100%;
-      margin-top: 20px;
-      min-width: 600px;
-
-      th {
-        background-color: #e18a25;
-        color: white;
-      }
-
-      th,
-      td {
-        text-align: left;
-        padding: 10px;
-      }
-
-      /* Striped rows for the table */
-      tr:nth-child(odd) {
-        background-color: #000000; /* Light gray for odd rows */
-      }
-
-      tr:nth-child(even) {
-        background-color: #525252; /* White for even rows */
-      }
-    }
+  .side-panel-content li {
+    margin: 10px 0;
+    background-color: #f5f5f5;
   }
+}
 
-  /* Sidenav Styling */
-  mat-sidenav-container {
-    display: flex;
-    height: 100%;
+/* For tablets and larger screens */
+@media (min-width: 768px) {
+  .header-section {
+    flex-direction: row;
+    justify-content: space-between;
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 0;
+      text-align: center;
+    }
+
+    button {
+      width: auto;
+    }
   }
 
   mat-sidenav {
     width: 300px;
-    background-color: #f0f0f0;
-  }
-
-  mat-sidenav-content {
-    flex: 1;
-  }
-
-  .side-panel-header {
-    background-color: #e18a25;  /* Accent color for side panel header */
-    color: white;
-    padding: 15px 25px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    .modal-title {
-      font-size: 1.2rem;
-      color: #fff;
-    }
-
-    button {
-      color: #ffffff;
-  
-      &:hover {
-        color: #000;
-      }
-    }
-  }
-
-  .side-panel-content {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .side-panel-content ul {
-    list-style-type: none;
-    padding: 15px;
-  }
-
-  .side-panel-content li {
-    margin: 5px 0;
-  }
-
-  /* Responsive design */
-  @media (max-width: 550px) {
-    justify-content: center;
-    padding: 10px;
-    margin: 10px;
-
-    .header-section {
-      flex-direction: column;
-      align-items: center;
-      h2 {
-        font-size: 1.7rem;
-        margin-bottom: 10px;
-        color: #ffffff;
-      }
-
-      button {
-        width: auto;
-        margin-bottom: 10px;
-        color: #ffffff;
-      }
-    }
-
-    .search-bar {
-      display: flex;
-      justify-content: flex-start;
-      width: 100%;
-
-      mat-form-field {
-        width: 100%;
-
-        input {
-          padding-left: 2px;
-        }
-
-        mat-icon {
-          color: #e18a25;
-        }
-      }
-    }
-
-  }
-
-  /* Layout changes for larger screens */
-  @media (min-width: 768px) {
-    .header-section {
-      flex-direction: row;  /* Row layout for larger screens */
-      justify-content: space-between;
-
-      h2 {
-        font-size: 2rem;
-        margin-bottom: 0;
-        text-align: center;
-      }
-
-      button {
-        width: auto;
-      }
-    }
   }
 }
