@@ -74,9 +74,10 @@ export class PreliminaryPunchListComponent implements OnInit {
       if (this.user.role === 'PM') {
         filteredData = filteredData.filter(punchList => 
           punchList.vendorName === this.user.company && punchList.state === this.user.market);
-      } else if (this.user.market !== 'RG') {
+      } else if (this.user.market !== 'RG' && this.user.market !== undefined) {
         filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
       }else{
+        debugger;
         filteredData = data
       }
   
