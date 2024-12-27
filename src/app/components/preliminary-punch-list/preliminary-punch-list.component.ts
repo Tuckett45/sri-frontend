@@ -70,14 +70,12 @@ export class PreliminaryPunchListComponent implements OnInit {
     this.user = this.authService.getUser();
     punchlists.subscribe(data => {
       let filteredData = data;
-  
       if (this.user.role === 'PM') {
         filteredData = filteredData.filter(punchList => 
           punchList.vendorName === this.user.company && punchList.state === this.user.market);
-      } else if (this.user.market !== 'RG' && this.user.market !== undefined) {
+      } else if (this.user.market !== 'RG' && this.user.market !== undefined && this.user.market !== null) {
         filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
       }else{
-        debugger;
         filteredData = data
       }
   
