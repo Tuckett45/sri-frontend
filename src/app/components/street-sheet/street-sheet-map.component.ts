@@ -86,10 +86,6 @@ export class StreetSheetMapComponent implements OnInit {
         featureGroup: drawnItems, 
       },
       draw: {
-        polygon: false,
-        polyline: false,
-        rectangle: false,
-        circle: false,
         marker: false
       }
     });
