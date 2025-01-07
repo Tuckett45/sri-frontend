@@ -12,6 +12,7 @@ import { StreetSheetMapComponent } from '../../street-sheet/street-sheet-map.com
 import { GeocodingService } from 'src/app/services/geocoding.service';
 import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
 import { User } from 'src/app/models/user.model';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-street-sheet-modal',
@@ -30,7 +31,7 @@ export class StreetSheetModalComponent implements OnInit {
   galleryImages: Image[] = [];
   userData!: User;
 
-  pmOptions: { name: string, email: string }[] = [];
+  pmOptions: User[] = [];
   deploymentOptions: string[] = ['Micro tench', 'Mastech', 'Fiber'];
 
   stateAbbreviations: { [key: string]: string } = {
@@ -60,13 +61,14 @@ export class StreetSheetModalComponent implements OnInit {
     private modalGalleryService: ModalGalleryService,
     public streetSheetService: StreetSheetService,
     private geocodingService: GeocodingService,
+    private authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: StreetSheet
   ) {}
 
   ngOnInit(): void {
     this.loadUserProfile();
     this.fetchPMOptions();
-    // this.isEditMode = !!this.data;
+    this.isEditMode = !!this.data;
 
     this.streetSheetForm = this.fb.group({
       id: [this.data?.id || uuidv4()],
@@ -118,7 +120,7 @@ export class StreetSheetModalComponent implements OnInit {
       const file = input.files[0];
       const reader = new FileReader();
 
-      const maxFileSizeInMB = 5;
+      const maxFileSizeInMB = 15;
       const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
 
       if (file.size > maxFileSizeInBytes) {
@@ -146,11 +148,9 @@ export class StreetSheetModalComponent implements OnInit {
   }
 
   fetchPMOptions() {
-    this.pmOptions = [
-      { name: 'Austin Tuckett', email: 'pm1@example.com' },
-      { name: 'Jake Sergant', email: 'pm2@example.com' },
-      { name: 'Britton Mickelson', email: 'pm3@example.com' }
-    ];
+    this.authService.getUserByRole('PM').subscribe(users => {
+      this.pmOptions = users;
+    })
   }
 
   onAddressInput(event: any): void {
@@ -213,7 +213,7 @@ export class StreetSheetModalComponent implements OnInit {
   
     const mapMarker = new MapMarker(
       uuidv4(),
-      this.streetSheetForm.controls["id"].value,
+      this.streetSheetForm.controls["segmentId"].value,
       suggestion.lat,
       suggestion.lon,
       true,
@@ -279,7 +279,7 @@ export class StreetSheetModalComponent implements OnInit {
     if (this.streetSheetForm.valid) {
       const streetSheet = this.streetSheetForm.getRawValue();
 
-      if(this.isEditMode){
+      if(this.isEditMode || streetSheet.createdBy == null){
         streetSheet.updatedBy = this.userData.id
         streetSheet.updatedDate = new Date().toISOString();
       }else{

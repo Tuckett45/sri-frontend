@@ -2,7 +2,7 @@
 .street-sheet-page {
   background-color: #144f80;  /* Primary blue background */
   color: #fff;  /* Ensures text is visible on the blue background */
-  padding: 0 20px 20px;
+  padding: 20px 20px;
   margin: 20px;
   box-sizing: border-box;
 }
@@ -12,7 +12,6 @@
   background-color: #144f80;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 20px;
   flex-wrap: wrap;
 
@@ -20,12 +19,13 @@
     font-size: 2rem;
     margin-bottom: 10px;
     text-align: center;
+    color: #ffffff;
   }
 
   button {
     background-color: #e18a25;
     color: #fff;
-    width: auto;
+    width: 115px;
     padding: 10px 20px;
     border-radius: 5px;
     display: flex;
@@ -41,6 +41,10 @@
       margin-right: 8px;
     }
   }
+}
+
+.marker-btns{
+  
 }
 
 /* Sidenav Styling */
@@ -62,6 +66,10 @@ mat-sidenav-content {
 }
 
 .side-panel-header {
+  position: sticky;  
+  top: 0; 
+  z-index: 1; 
+  background-color: #e18a25; 
   background-color: #e18a25;
   color: white;
   padding: 20px;
@@ -94,12 +102,15 @@ mat-sidenav-content {
   display: flex;
   flex-direction: column;
   padding: 10px 20px;
+  color: #000;
 }
 
 .side-panel-content ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
+  color: #000;
+  padding-top: 10px;
 }
 
 .side-panel-content li {
@@ -118,8 +129,151 @@ mat-sidenav-content {
   }
 }
 
+.edit-icon {
+  padding-left: 2px; 
+  align-items: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: #e18a25;
+
+  &:hover {
+    color: #b86404;
+  }
+}
+
+.delete-icon {
+  padding-left: 2px; 
+  align-items: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: #f44336;
+
+  &:hover {
+    color: #e53935;
+  }
+}
+
+.mat-drawer{
+  color: #000;
+}
+
+/* Street Sheet List Styling */
+.list-none {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.md\\:flex-row {
+  flex-direction: row;
+}
+
+.md\\:align-items-center {
+  align-items: center;
+}
+
+.md\\:justify-content-between {
+  justify-content: space-between;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.md\\:mt-0 {
+  margin-top: 0;
+}
+
+.mr-3 {
+  margin-right: 1rem;
+}
+
+.mr-0 {
+  margin-right: 0;
+}
+
+.md\\:mr-8 {
+  margin-right: 2rem;
+}
+
+.text-900 {
+  color: #333;
+}
+
+.text-600 {
+  color: #666;
+}
+
+.block {
+  display: block;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+
+/* Avatar and Button Styling */
+img {
+  border-radius: 50%;
+}
+
+button.mat-icon-button {
+  background-color: transparent;
+  margin-left: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s, transform 0.2s;
+
+  &:hover {
+    background-color: #e18a25;
+    transform: scale(1.1);
+  }
+
+  mat-icon {
+    color: white;
+  }
+}
+
+.mat-icon {
+  font-size: 1.25rem;
+}
+
+/* Flexbox for buttons */
+.flex-nowrap {
+  flex-wrap: nowrap;
+}
+
+
+::ng-deep .mat-typography {
+  font: 350 1rem / 1rem Roboto, sans-serif;
+  margin: 0 0 .5rem 1.5em;
+}
+
+::ng-deep .mat-typography h5{
+  padding-top: 10px;
+  font: 350 1rem / 1rem Roboto, sans-serif;
+  margin: 0 0 .5rem 1.5em;
+}
+
 .side-panel-content li h5 {
-  font-size: 1.1rem;
+  font-size: 0.7rem;
   margin: 0;
 }
 

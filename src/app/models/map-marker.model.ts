@@ -1,20 +1,20 @@
 export class MapMarker {
     id: string;
-    streetSheetId: string;
+    segmentId: string;
     latitude: number;
     longitude: number;
     isActive: boolean = true;
     dateCreated: Date;
     constructor(
         id: string,
-        streetSheetId: string,
+        segmentId: string,
         latitude: number,
         longitude: number,
         isActive: boolean,
         dateCreated: Date
       ) {
         this.id = id;
-        this.streetSheetId = streetSheetId;
+        this.segmentId = segmentId;
         this.latitude = latitude;
         this.longitude = longitude;
         this.isActive = isActive;

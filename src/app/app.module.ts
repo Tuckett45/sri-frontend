@@ -42,6 +42,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { ChartComponent } from './components/charts/chart.component';
 import { TableComponent } from './components/table/table.component';
 import { PreliminaryPunchListModalComponent } from './components/modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
+import { MapMarkerModalComponent } from './components/modals/map-marker-modal/map-marker-modal.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterModalComponent } from './components/modals/register-modal/register-modal.component';
@@ -53,11 +54,14 @@ import { StreetSheetComponent } from './components/street-sheet/street-sheet.com
 import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
+import { StatsComponent } from './components/overview/stats/stats.component';
+import { GoalsComponent } from './components/overview/goals/goals.component';
+
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
 import { StyleClassModule } from 'primeng/styleclass';
 import { MatNativeDateModule } from '@angular/material/core';
-
 
 
 @NgModule({
@@ -67,13 +71,16 @@ import { MatNativeDateModule } from '@angular/material/core';
     DeleteConfirmationModalComponent,
     FilterComponent,
     ForgotPasswordModalComponent,
+    GoalsComponent,
     LoginComponent,
     RegisterModalComponent,
     ResetPasswordComponent,
+    MapMarkerModalComponent,
     NavbarComponent,
     OverviewComponent,
     PreliminaryPunchListModalComponent,
     // SidebarComponent,
+    StatsComponent,
     StreetSheetComponent,
     StreetSheetModalComponent,
     StreetSheetMapComponent,
@@ -93,6 +100,7 @@ import { MatNativeDateModule } from '@angular/material/core';
     DialogModule,
     ButtonModule,
     ImageModule,
+    MenuModule,
     StyleClassModule,
     HttpClientModule,
     FormsModule,

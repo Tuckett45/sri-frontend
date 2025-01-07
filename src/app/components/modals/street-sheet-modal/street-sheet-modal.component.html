@@ -30,6 +30,9 @@
               {{ pm.name }}
             </mat-option>
           </mat-select>
+          <mat-error *ngIf="streetSheetForm.get('pm')?.hasError('required')">
+            PM is required.
+          </mat-error>
         </mat-form-field>
       </mat-grid-tile>
 
@@ -38,6 +41,9 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Vendor</mat-label>
           <input matInput formControlName="vendorName" placeholder="Enter Vendor">
+          <mat-error *ngIf="streetSheetForm.get('vendorName')?.hasError('required')">
+            Vendor is required.
+          </mat-error>
         </mat-form-field>
       </mat-grid-tile>
 
@@ -71,8 +77,11 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>City</mat-label>
           <input matInput formControlName="city" placeholder="Enter City">
-          <mat-error *ngIf="streetSheetForm.get('city')?.hasError('required')">
+          <mat-error *ngIf="streetSheetForm.get('city')?.hasError('required') || streetSheetForm.get('city')?.dirty">
             City is required.
+          </mat-error>
+          <mat-error *ngIf="streetSheetForm.get('city')?.hasError('pattern')">
+            City must contain only letters.
           </mat-error>
         </mat-form-field>
       </mat-grid-tile>
@@ -82,8 +91,11 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>State</mat-label>
           <input matInput formControlName="state" placeholder="Enter State" required>
-          <mat-error *ngIf="streetSheetForm.get('state')?.hasError('required')">
+          <mat-error *ngIf="streetSheetForm.get('state')?.hasError('required') || streetSheetForm.get('state')?.dirty">
             State is required.
+          </mat-error>
+          <mat-error *ngIf="streetSheetForm.get('state')?.hasError('pattern')">
+            State must be 2 alphabetic characters (e.g., CA).
           </mat-error>
         </mat-form-field>
       </mat-grid-tile>
@@ -97,6 +109,9 @@
               {{ deployment }}
             </mat-option>
           </mat-select>
+          <mat-error *ngIf="streetSheetForm.get('deployment')?.hasError('required') || streetSheetForm.get('deployment')?.dirty">
+            Deployment is required.
+          </mat-error>
         </mat-form-field>
       </mat-grid-tile>
 

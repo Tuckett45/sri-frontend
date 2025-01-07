@@ -27,7 +27,19 @@ export class MapMarkerService {
     return this.http.post<any>(`${environment.apiUrl}/MapMarker`, mapMarker);
   }
 
-  getMapMarkersForStreetSheet(streetSheetId: string): Observable<MapMarker[]> {
-    return this.http.get<MapMarker[]>(`https://localhost:44376/api/MapMarker/${streetSheetId}`);
+  getMapMarkersForStreetSheet(segmentId: string): Observable<MapMarker[]> {
+    return this.http.get<MapMarker[]>(`${environment.apiUrl}/MapMarker/${segmentId}`);
+  }
+
+  editMapMarker(mapMarker: MapMarker): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/MapMarker/update`, mapMarker);
+  }
+
+  deleteMapMarker(mapMarker: MapMarker): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}/MapMarker/delete/${mapMarker}`);
+  }
+
+  getSegmentIds(){
+    return this.http.get<any>(`${environment.apiUrl}/MapMarker/segmentIds`);
   }
 }

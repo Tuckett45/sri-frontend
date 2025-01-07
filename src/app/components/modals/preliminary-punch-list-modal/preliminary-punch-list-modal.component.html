@@ -15,6 +15,9 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Segment ID</mat-label>
           <input matInput formControlName="segmentId" placeholder="Enter Segment ID">
+          <mat-error *ngIf="preliminaryPunchListForm.get('segmentId')?.hasError('required') || preliminaryPunchListForm.get('segmentId')?.dirty">
+            Segment ID is required.
+          </mat-error>
         </mat-form-field>
       </mat-grid-tile>
 
@@ -24,6 +27,9 @@
           <mat-select formControlName="vendorName" placeholder="Select a Vendor">
             <mat-option *ngFor="let vendor of vendors" [value]="vendor">{{ vendor }}</mat-option>
           </mat-select>
+          <mat-error *ngIf="preliminaryPunchListForm.get('vendorName')?.hasError('required') || preliminaryPunchListForm.get('vendorName')?.dirty">
+            Vendor is required.
+          </mat-error>
         </mat-form-field>
       </mat-grid-tile>
 
@@ -39,7 +45,7 @@
             placeholder="Enter Street Address"
             required
           />
-          <mat-error *ngIf="preliminaryPunchListForm.get('streetAddress')?.hasError('required')">
+          <mat-error *ngIf="preliminaryPunchListForm.get('streetAddress')?.hasError('required') || preliminaryPunchListForm.get('streetAddress')?.dirty">
             Street address is required.
           </mat-error>
         
@@ -58,7 +64,7 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>City</mat-label>
           <input matInput formControlName="city" placeholder="Enter City">
-          <mat-error *ngIf="preliminaryPunchListForm.get('city')?.hasError('required')">
+          <mat-error *ngIf="preliminaryPunchListForm.get('city')?.hasError('required') || preliminaryPunchListForm.get('city')?.dirty">
             City is required.
           </mat-error>
           <mat-error *ngIf="preliminaryPunchListForm.get('city')?.hasError('pattern')">
@@ -72,7 +78,7 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>State</mat-label>
           <input matInput formControlName="state" placeholder="Enter State">
-          <mat-error *ngIf="preliminaryPunchListForm.get('state')?.hasError('required')">
+          <mat-error *ngIf="preliminaryPunchListForm.get('state')?.hasError('required') || preliminaryPunchListForm.get('state')?.dirty">
             State is required.
           </mat-error>
           <mat-error *ngIf="preliminaryPunchListForm.get('state')?.hasError('pattern')">

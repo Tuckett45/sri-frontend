@@ -1,0 +1,83 @@
+<div mat-dialog-title class="modal-header">
+    <h5 class="modal-title">Add Map Marker for Street Sheet</h5>
+    <button mat-icon-button (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  
+  <div mat-dialog-content class="modal-body">
+    <form [formGroup]="mapMarkerForm">
+  
+      <mat-grid-list cols="4" rowHeight="115px" gutterSize="2px">
+  
+        <!-- Segment ID -->
+        <mat-grid-tile colspan="2">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Segment ID</mat-label>
+            <mat-select formControlName="segmentId" placeholder="Select a Segment ID">
+              <mat-option *ngFor="let segmentId of this.segmentIds" [value]="segmentId">
+                {{ segmentId }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </mat-grid-tile>
+
+        <mat-grid-tile colspan="2">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Street Address</mat-label>
+              <input
+                matInput
+                formControlName="streetAddress"
+                [matAutocomplete]="auto"
+                (input)="onAddressInput($event)"
+                placeholder="Enter Street Address"
+                required
+              />
+              <mat-error *ngIf="mapMarkerForm.get('streetAddress')?.hasError('required')">
+                Street address is required.
+              </mat-error>
+            
+              <mat-spinner *ngIf="isAddressLoading" diameter="24" class="loading-spinner"></mat-spinner>
+            
+              <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)" class="autocomplete-suggestions">
+                <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
+                  {{ suggestion.display_name }}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>       
+          </mat-grid-tile>
+          <!-- City -->
+          <mat-grid-tile colspan="2">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>City</mat-label>
+              <input matInput formControlName="city" placeholder="Enter City">
+              <mat-error *ngIf="mapMarkerForm.get('city')?.hasError('required') || mapMarkerForm.get('city')?.dirty">
+                City is required.
+              </mat-error>
+              <mat-error *ngIf="mapMarkerForm.get('city')?.hasError('pattern')">
+                City must contain only letters.
+              </mat-error>
+            </mat-form-field>
+          </mat-grid-tile>
+    
+          <!-- State -->
+          <mat-grid-tile colspan="2">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>State</mat-label>
+              <input matInput formControlName="state" placeholder="Enter State" required>
+              <mat-error *ngIf="mapMarkerForm.get('state')?.hasError('required') || mapMarkerForm.get('state')?.dirty">
+                State is required.
+              </mat-error>
+              <mat-error *ngIf="mapMarkerForm.get('state')?.hasError('pattern')">
+                State must be 2 alphabetic characters (e.g., CA).
+              </mat-error>
+            </mat-form-field>
+          </mat-grid-tile>
+      </mat-grid-list> 
+    </form>
+  </div>
+  
+  <div mat-dialog-actions class="modal-footer">
+    <button mat-raised-button class="cancel-btn" (click)="close()">Cancel</button>
+    <button mat-raised-button class="save-btn" (click)="save()">Save</button>
+  </div>

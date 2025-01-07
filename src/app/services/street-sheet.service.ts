@@ -24,11 +24,18 @@ export class StreetSheetService {
   }
 
   saveStreetSheet(streetSheet: StreetSheet): Observable<any> {
-    debugger;
-    return this.http.post<any>(`${environment.apiUrl}/StreetSheet`, streetSheet, this.httpOptions);
+    return this.http.post<any>(`https://localhost:44376/api/StreetSheet`, streetSheet, this.httpOptions);
   }
 
   updateStreetSheet(streetSheet: StreetSheet): Observable<any> {
-    return this.http.put<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.id}`, streetSheet, this.httpOptions);
+    return this.http.put<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.segmentId}`, streetSheet, this.httpOptions);
+  }
+
+  deleteStreetSheet(streetSheet: StreetSheet): Observable<any> {
+    return this.http.delete<any>(`https://localhost:44376/api/StreetSheet/${streetSheet.segmentId}`, this.httpOptions);
+  }
+
+  isSegmentIdUnique(segmentId: string): Observable<boolean> {
+    return this.http.get<boolean>(`/api/StreetSheet/segment-id-unique/${segmentId}`);
   }
 }

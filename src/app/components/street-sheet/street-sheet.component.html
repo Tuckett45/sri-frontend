@@ -1,5 +1,4 @@
 <div class="street-sheet-page">
-  <!-- Container for the main content and side panel -->
   <mat-sidenav-container class="sidenav-container">
     <mat-sidenav #sidenav mode="side" opened="false" class="side-panel">
       <div class="side-panel-header">
@@ -8,22 +7,36 @@
           <mat-icon>close</mat-icon>
         </button>
       </div>
-      <div *ngFor="let streetSheet of streetSheets">
-        <h4>{{ streetSheet.vendorName }} - {{ streetSheet.segmentId }}</h4>
+      <div style="align-content: space-between;" *ngFor="let streetSheet of streetSheets" (click)="selectStreetSheet(streetSheet)">
+        <div class="flex">
+          <h5>{{ streetSheet.vendorName }} - {{ streetSheet.segmentId }}</h5>
+          <mat-icon (click)="editStreetSheet(streetSheet)" class="edit-icon">edit</mat-icon>
+          <mat-icon (click)="openDeleteConfirmationDialog(streetSheet)" class="delete-icon">delete</mat-icon>
+        </div>
         <ul>
-          <li *ngFor="let marker of streetSheet.marker">
+          <li *ngFor="let marker of streetSheet.marker" (click)="selectMarker(marker, streetSheet)">
             {{ marker.latitude }} - {{ marker.longitude }}
           </li>
         </ul>
       </div>
     </mat-sidenav>
 
-    <!-- Main content with map -->
     <mat-sidenav-content>
       <div class="header-section">
-        <button class="show-markers-btn" (click)="toggleSidePanel(sidenav)" mat-raised-button color="accent"><mat-icon> list_alt</mat-icon> Show Markers</button>
+        <div class="marker-btns">
+          <button (click)="toggleSidePanel(sidenav)" mat-raised-button color="accent">
+            <mat-icon> list_alt</mat-icon> 
+            Show Markers
+          </button>
+          <button mat-raised-button color="primary" (click)="addMapMarker()">
+            <mat-icon>add_location</mat-icon> 
+            Add Map Marker
+          </button>
+        </div>
         <h2>Street Sheet</h2>
-        <button class="add-entry-btn" (click)="openEntryFormModal()" mat-raised-button color="primary"><mat-icon> add_location</mat-icon> Add New Location</button>
+        <button (click)="openEntryFormModal()" mat-raised-button color="primary">
+          <mat-icon>note_add</mat-icon> 
+          Add New Street Sheet</button>
       </div>
       
       <street-sheet-map></street-sheet-map>

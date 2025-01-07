@@ -39,6 +39,10 @@ export class AuthService {
     return this.http.get<User>(`${environment.apiUrl}/auth/user-${userId}`, this.httpOptions);
   }
 
+  getUserByRole(role: string): Observable<User[]>{
+    return this.http.get<User[]>(`${environment.apiUrl}/auth/users/${role}`, this.httpOptions);
+  }
+
   setUserRole(role: string) {
     this.userRole.next(role as UserRole);
   }
