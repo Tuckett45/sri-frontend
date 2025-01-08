@@ -97,9 +97,9 @@
           <mat-grid-tile colspan="2">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Quality Issues</mat-label>
-          <mat-select formControlName="qualityIssues" multiple placeholder="Select Quality Issues">
-            <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
-          </mat-select>
+              <mat-select formControlName="qualityIssues" multiple placeholder="Select Quality Issues">
+                <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
+              </mat-select>
             </mat-form-field>
             <button [disabled]="!authService.isCM()" mat-icon-button class="delete-icon" >
               <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
@@ -184,6 +184,9 @@
               </div>
             </ng-template>
           </p-galleria>
+          <button [disabled]="!authService.isCM()" *ngIf="this.issueImagesFormArray && this.issueImagesFormArray.length > 0" mat-icon-button class="delete-icon" >
+            <mat-icon (click)="openDeleteConfirmationDialogImages(this.issueImagesFormArray.value, 'issueImages')" class="delete-icon">delete</mat-icon>
+          </button>
       </div>
       <div>
         <button mat-raised-button class="image-btn" *ngIf="this.resolutionImagesFormArray && this.resolutionImagesFormArray.length > 0"
@@ -214,6 +217,9 @@
               </div>
             </ng-template>
           </p-galleria>
+          <button [disabled]="!authService.isCM()" *ngIf="this.resolutionImagesFormArray && this.resolutionImagesFormArray.length > 0" mat-icon-button class="delete-icon" >
+            <mat-icon (click)="openDeleteConfirmationDialogImages(this.resolutionImagesFormArray.value, 'resolutionImages')" class="delete-icon">delete</mat-icon>
+          </button>
       </div>
 
       </mat-grid-tile>

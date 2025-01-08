@@ -44,13 +44,13 @@ export class PreliminaryPunchListService {
   }
 
   updateEntry(punchList: PreliminaryPunchList): Observable<any> {
-    return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions).pipe(
+    return this.http.put(`https://localhost:44376/api/PunchList/${punchList.id}`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
   removeEntry(id: string | undefined): Observable<any> {
-    return this.http.delete<void>(`${environment.apiUrl}/PunchList/${id}`, this.httpOptions).pipe(
+    return this.http.delete<void>(`https://localhost:44376/api/PunchList/${id}`, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
