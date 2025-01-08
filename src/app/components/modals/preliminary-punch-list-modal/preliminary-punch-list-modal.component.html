@@ -217,7 +217,7 @@
               </div>
             </ng-template>
           </p-galleria>
-          <button [disabled]="!authService.isCM()" *ngIf="this.resolutionImagesFormArray && this.resolutionImagesFormArray.length > 0" mat-icon-button class="delete-icon" >
+          <button *ngIf="this.resolutionImagesFormArray && this.resolutionImagesFormArray.length > 0" mat-icon-button class="delete-icon" >
             <mat-icon (click)="openDeleteConfirmationDialogImages(this.resolutionImagesFormArray.value, 'resolutionImages')" class="delete-icon">delete</mat-icon>
           </button>
       </div>
