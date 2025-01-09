@@ -476,6 +476,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       this.dialogRef.close(punchList);
     } else {
       console.error('Form is invalid');
+      this.toastr.error('Form is invalid. Check required fields');
     }
   }
   
