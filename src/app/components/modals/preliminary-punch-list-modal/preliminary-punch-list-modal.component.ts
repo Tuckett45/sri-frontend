@@ -193,7 +193,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       vendorName: [this.data?.vendorName || '', Validators.required],
       streetAddress: [this.data?.streetAddress || '', Validators.required],
       city: [this.data?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
-      state: [this.data?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
+      state: [this.data?.state.toUpperCase() || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       issues: this.fb.array(this.getInitialIssueAreas(this.data)),
       additionalConcerns: [this.data?.additionalConcerns || ''],
       createdBy: [this.data?.createdBy || null],

@@ -71,7 +71,7 @@
       <mat-grid-tile colspan="2">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>State</mat-label>
-          <input matInput formControlName="state" placeholder="Enter State">
+          <input matInput formControlName="state" oninput="this.value = this.value.toUpperCase()" placeholder="Enter State">
           <mat-error *ngIf="preliminaryPunchListForm.get('state')?.hasError('required')">
             State is required.
           </mat-error>
