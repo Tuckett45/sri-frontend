@@ -227,7 +227,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       if (pmResolved) {
         this.preliminaryPunchListForm.patchValue({ resolvedDate: new Date().toISOString() });
       } else {
-        this.preliminaryPunchListForm.patchValue({ resolvedDate: '' });
+        this.preliminaryPunchListForm.patchValue({ resolvedDate: null });
         this.preliminaryPunchListForm.patchValue({ resolutionImages: [] });
         this.preliminaryPunchListForm.get('resolutionImages')?.clearValidators();
       }
