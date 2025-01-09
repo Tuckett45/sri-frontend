@@ -30,9 +30,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   @ViewChild('resolutionImageInput') resolutionImageInput!: ElementRef;
   @ViewChild('addressInput') addressInput!: ElementRef;
 
-  issueAreaList: string[] = ['Vault', 'DB', 'Trench', 'Site Clean Up', 'Sidewalk Panels', 'Sealant'];
+  issueAreaList: string[] = ['Vault', 'DB', 'Trench', 'Site Clean Up', 'Sidewalk Panels', 'Sealant', 'Signage', 'Safety Concern'];
   qualityIssuesMap: { [key: string]: string[] } = {
     'Vault': [
+      'Cable Management',
       'Broken vault lid', 
       'Missing bolt(s)', 
       'Softscape restoration around vault', 
@@ -103,6 +104,11 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     'Signage':[
       'Missing parking signs',
       'Missing A frame'
+    ],
+    'Safety Concern':[
+      'Public Safety issue',
+      'Crew Safety issue',
+      'Public and Crew Safety issue'
     ]
   };
 
@@ -148,7 +154,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     }
   ];
 
-  position: string = 'bottom';  // Thumbnail position for the gallery (can be 'top', 'bottom', 'left', 'right')
+  position: string = 'bottom';
 
 
   currentIssueImageIndex: number = 0;
@@ -187,7 +193,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       vendorName: [this.data?.vendorName || '', Validators.required],
       streetAddress: [this.data?.streetAddress || '', Validators.required],
       city: [this.data?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
-      state: [this.data?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
+      state: [this.data?.state.toUpperCase() || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       issues: this.fb.array(this.getInitialIssueAreas(this.data)),
       additionalConcerns: [this.data?.additionalConcerns || ''],
       createdBy: [this.data?.createdBy || null],
@@ -220,9 +226,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.preliminaryPunchListForm.get('pmResolved')?.valueChanges.subscribe((pmResolved: boolean) => {
       if (pmResolved) {
         this.preliminaryPunchListForm.patchValue({ resolvedDate: new Date().toISOString() });
-        this.preliminaryPunchListForm.get('resolutionImages')?.setValidators(Validators.required);
       } else {
-        this.preliminaryPunchListForm.patchValue({ resolvedDate: '' });
+        this.preliminaryPunchListForm.patchValue({ resolvedDate: null });
         this.preliminaryPunchListForm.patchValue({ resolutionImages: [] });
         this.preliminaryPunchListForm.get('resolutionImages')?.clearValidators();
       }
@@ -329,6 +334,16 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.issueAreasFormArray.removeAt(index);
   }
 
+  removeImages(images: any, type: string){
+    if(type == 'issueImages'){
+      this.issueImagesFormArray.clear();
+      this.preliminaryPunchListForm.get('issueImages')?.reset;
+    } else {
+      this.resolutionImagesFormArray.clear();
+      this.preliminaryPunchListForm.get('resolutionImages')?.reset;
+    }
+  }
+
   onIssueAreaChange(index: number): void {
     if(this.issueAreasFormArray.at(index).get('qualityIssues')?.value){
       this.issueAreasFormArray.at(index).reset;
@@ -390,12 +405,6 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.isIssueGalleryVisible = false;
     this.isResolutionGalleryVisible = false;
   }
-  
-  removeImage(index: number, imageType: 'issueImages' | 'resolutionImages'): void {
-    const imageFormArray = imageType === 'issueImages' ? this.issueImagesFormArray : this.resolutionImagesFormArray;
-    imageFormArray.removeAt(index);
-    this.toastr.warning('Image removed');
-  }
 
   openDeleteConfirmationDialog(index: number): void {
     const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
@@ -403,6 +412,16 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.removeIssueArea(index);
+      }
+    });
+  }
+
+  openDeleteConfirmationDialogImages(images: any, type: string): void {
+    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
+    
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.removeImages(images, type);
       }
     });
   }

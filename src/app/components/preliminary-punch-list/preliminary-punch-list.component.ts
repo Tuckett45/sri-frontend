@@ -72,7 +72,7 @@ export class PreliminaryPunchListComponent implements OnInit {
       let filteredData = data;
       if (this.user.role === 'PM') {
         filteredData = filteredData.filter(punchList => 
-          punchList.vendorName === this.user.company && punchList.state === this.user.market);
+          punchList.vendorName === this.user.company && punchList.state.toUpperCase() === this.user.market);
       } else if (this.user.market !== 'RG' && this.user.market !== undefined && this.user.market !== null) {
         filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
       }else{
@@ -93,12 +93,15 @@ export class PreliminaryPunchListComponent implements OnInit {
   
     dialogRef.afterClosed().subscribe((result: PreliminaryPunchList) => {
       if (result) {
-        var punchListAdd = result;
+        let punchList = result;
+        let action$: Observable<any>;
         
-        const action$ = data
-          ? this.punchListService.updateEntry(punchListAdd) 
-          : this.punchListService.addEntry(punchListAdd);   
-  
+        if (punchList.updatedBy) {
+          action$ = this.punchListService.updateEntry(punchList);
+        } else {
+          action$ = this.punchListService.addEntry(punchList);
+        }
+    
         action$.subscribe({
           next: () => {
             this.refreshTable();
@@ -111,6 +114,7 @@ export class PreliminaryPunchListComponent implements OnInit {
         });
       }
     });
+    
   }
 
   editReport(report: PreliminaryPunchList): void {
