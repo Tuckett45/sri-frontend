@@ -64,7 +64,7 @@
           <mat-grid-tile colspan="2">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>State</mat-label>
-              <input matInput formControlName="state" placeholder="Enter State" required>
+              <input matInput formControlName="state" oninput="this.value = this.value.toUpperCase()" placeholder="Enter State" required>
               <mat-error *ngIf="mapMarkerForm.get('state')?.hasError('required') || mapMarkerForm.get('state')?.dirty">
                 State is required.
               </mat-error>

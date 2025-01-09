@@ -91,7 +91,7 @@ export class StreetSheetModalComponent implements OnInit {
     });
 
     this.streetSheetForm.get('streetAddress')?.valueChanges.pipe(
-      debounceTime(300),
+      debounceTime(1000),
       switchMap((value) => this.getAddressSuggestions(value))
     ).subscribe(suggestions => {
       this.filteredAddresses = suggestions;

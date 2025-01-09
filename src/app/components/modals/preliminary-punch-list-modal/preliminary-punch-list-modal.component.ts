@@ -208,7 +208,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     });
 
     this.preliminaryPunchListForm.get('streetAddress')?.valueChanges.pipe(
-      debounceTime(300),
+      debounceTime(1000),
       switchMap((value) => this.getAddressSuggestions(value))
     ).subscribe(suggestions => {
       this.filteredAddresses = suggestions;

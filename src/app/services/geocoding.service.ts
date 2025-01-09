@@ -13,4 +13,9 @@ export class GeocodingService {
     const url = `https://nominatim.openstreetmap.org/search?addressdetails=1&format=jsonv2&q=${query}&countrycodes=US&layer=address&limit=5`;
     return this.http.get<any[]>(url);
   }
+
+  reverseGeocode(latitude: number, longitude: number){
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`;
+    return this.http.get<any[]>(url);
+  }
 }

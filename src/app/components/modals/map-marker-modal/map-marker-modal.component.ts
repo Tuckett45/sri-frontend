@@ -59,13 +59,20 @@ export class MapMarkerModalComponent implements OnInit {
     this.isDisabled = !this.authService.isCM();
 
     this.mapMarkerForm = this.fb.group({
-      id: [this.data?.id || ''],
-      segmentId: [this.data?.segmentId || '', Validators.required],
-      latitude: [this.data?.latitude || '', Validators.required],  // Add latitude
-      longitude: [this.data?.longitude || '', Validators.required], // Add longitude
-      dateCreated: [this.data?.dateCreated || new Date().toISOString()],
-      isActive: [this.data?.isActive || true, Validators.required]
+      id: [''],
+      segmentId: ['', Validators.required],
+      latitude: ['', Validators.required],  
+      longitude: ['', Validators.required], 
+      streetAddress: ['', Validators.required], 
+      city: ['', Validators.required],  
+      state: ['', Validators.required],  
+      isActive: [true, Validators.required],
+      dateCreated: [new Date().toISOString()],
     });
+
+    if (this.data) {
+      this.reverseGeocode(this.data.latitude, this.data.longitude);
+    }
   }
 
   getSegmentIds(){
@@ -74,13 +81,47 @@ export class MapMarkerModalComponent implements OnInit {
     })
   }
 
+  // loadMapMarkerData(mapMarker: MapMarker): void {
+  //   this.mapMarkerForm.patchValue({
+  //     id: mapMarker.id,
+  //     segmentId: mapMarker.segmentId,
+  //     latitude: mapMarker.latitude,
+  //     longitude: mapMarker.longitude,
+  //     isActive: mapMarker.isActive,
+  //     dateCreated: mapMarker.dateCreated.toISOString(),
+  //   });    
+  //   this.reverseGeocode(mapMarker.latitude, mapMarker.longitude);
+  // }
+  
+  reverseGeocode(latitude: number, longitude: number): void {
+    this.geocodingService.reverseGeocode(latitude, longitude).subscribe(suggestions => {
+          debugger;
+      this.filteredAddresses = suggestions.filter(suggestion => {
+        const address = suggestion.address || {};
+        const streetAddress = address.house_number && address.road 
+          ? `${address.house_number} ${address.road}` 
+          : address.road || '';
+
+        const city = address.city || address.town || '';
+        const state = address.state || '';
+        const abbreviatedState = this.stateAbbreviations[state] || state || '';
+
+        const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
+        return {
+          formattedAddress: formattedAddress,  
+          original: suggestion
+        };
+      });
+    });
+  }
+
   onAddressInput(event: any): void {
     const query = event.target.value;
     if (query && query.length > 2) {
       this.isAddressLoading = true;
       this.getAddressSuggestions(query)
         .pipe(
-          debounceTime(300),
+          debounceTime(1000),
           distinctUntilChanged(),
           catchError(() => {
             this.isAddressLoading = false;
@@ -129,7 +170,9 @@ export class MapMarkerModalComponent implements OnInit {
     this.mapMarkerForm.patchValue({
       streetAddress: streetAddress,
       city: city,
-      state: abbreviatedState
+      state: abbreviatedState,
+      latitude: suggestion.lat,
+      longitude: suggestion.lon,
     });
   
     const mapMarker = new MapMarker(
@@ -161,20 +204,20 @@ export class MapMarkerModalComponent implements OnInit {
     if (this.mapMarkerForm.valid) {
         const formData = this.mapMarkerForm.value;
     
-        const mapMarker = new MapMarker(
-          formData.id || uuidv4(),
-          formData.segmentId,    
-          formData.latitude,    
-          formData.longitude,  
-          formData.isActive,  
-          new Date(formData.dateCreated)
-        ); 
-      this.dialogRef.close(mapMarker);
+        if(!this.mapMarker || this.mapMarker == null){
+          this.mapMarker = new MapMarker(
+            formData.id || uuidv4(),
+            formData.segmentId,    
+            formData.latitude,    
+            formData.longitude,  
+            formData.isActive,  
+            new Date(formData.dateCreated)); 
+        }
+       
+      this.dialogRef.close(this.mapMarker);
     } else {
       console.error('Form is invalid');
       this.toastr.error('Form is invalid');
     }
-  }
-
-  
+  }  
 }
