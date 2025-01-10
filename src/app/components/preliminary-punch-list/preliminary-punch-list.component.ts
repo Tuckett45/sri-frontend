@@ -109,7 +109,6 @@ export class PreliminaryPunchListComponent implements OnInit {
           },
           error: (err) => {
             this.toastr.error('Error saving Punch List.');
-            console.error(err);
           }
         });
       }

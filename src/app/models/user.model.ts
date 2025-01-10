@@ -44,6 +44,4 @@ export class User {
           new Date(userObj.createdDate)
       );
 
-  } else {
-      console.log('User data not found in localStorage');
   }

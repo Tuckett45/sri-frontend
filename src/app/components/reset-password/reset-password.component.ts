@@ -61,7 +61,6 @@ export class ResetPasswordComponent implements OnInit {
       },
       (error) => {
         this.toastr.error('Failed to reset password. Please try again.');
-        console.error(error);
       }
     );
   }

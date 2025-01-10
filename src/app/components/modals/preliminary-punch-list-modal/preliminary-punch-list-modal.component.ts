@@ -448,8 +448,6 @@ export class PreliminaryPunchListModalComponent implements OnInit {
         userObj.company,
         new Date(userObj.createdDate)  
       );
-    } else {
-      console.error('User not found in localStorage');
     }
   }
 
@@ -482,7 +480,11 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   
       this.dialogRef.close(punchList);
     } else {
-      console.error('Form is invalid');
+      this.preliminaryPunchListForm.get('segmentId')?.hasError('required') ? this.preliminaryPunchListForm.markAsTouched({'emitEvent': true}) : this.preliminaryPunchListForm.markAsTouched({'emitEvent': true});
+      this.preliminaryPunchListForm.get('vendorName')?.hasError('required');
+      this.preliminaryPunchListForm.get('streetAddress')?.hasError('required');
+      this.preliminaryPunchListForm.get('city')?.hasError('required');
+      this.preliminaryPunchListForm.get('state')?.hasError('required');
       this.toastr.error('Form is invalid. Check required fields');
     }
   }
