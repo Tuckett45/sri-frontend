@@ -215,6 +215,13 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     });
 
     if (this.isDisabled) {
+      this.preliminaryPunchListForm.get('segmentId')?.disable();
+      this.preliminaryPunchListForm.get('vendorName')?.disable();
+      this.preliminaryPunchListForm.get('streetAddress')?.disable();
+      this.preliminaryPunchListForm.get('city')?.disable();
+      this.preliminaryPunchListForm.get('state')?.disable();
+      this.preliminaryPunchListForm.get('issues')?.disable();
+      this.preliminaryPunchListForm.get('additionalConcerns')?.disable();
       this.preliminaryPunchListForm.get('cmResolved')?.disable();
     }
 
