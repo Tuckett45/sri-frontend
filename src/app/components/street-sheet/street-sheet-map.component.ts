@@ -78,25 +78,80 @@ export class StreetSheetMapComponent implements OnInit {
     this.markersClusterGroup = L.markerClusterGroup().addTo(this.map);
 
     // Add drawing tools
-    const drawnItems = new L.FeatureGroup();
-    this.map.addLayer(drawnItems);
+    // const drawnItems = new L.FeatureGroup();
+    // this.map.addLayer(drawnItems);
 
-    const drawControl = new L.Control.Draw({
-      edit: {
-        featureGroup: drawnItems, 
-      },
-      draw: {
-        marker: false
-      }
-    });
+    // const drawControl = new L.Control.Draw({
+    //   edit: {
+    //     featureGroup: drawnItems, 
+    //   },
+    //   draw: {
+    //     marker: true,  // Allow drawing of markers
+    //     polygon: true, // Allow drawing of polygons
+    //     polyline: true, // Allow drawing of polylines
+    //     rectangle: true, // Allow drawing of rectangles
+    //     circle: true // Allow drawing of circles
+    //   }
+    // });
 
-    this.map.addControl(drawControl);
+    // this.map.addControl(drawControl);
 
-    this.map.on('draw:created', (e) => {
-      const layer = e.layer;
-      drawnItems.addLayer(layer); 
-    });
+    // // Capture drawn object data
+    // this.map.on('draw:created', (e) => {
+    //   const layer = e.layer;
+    //   drawnItems.addLayer(layer); 
+
+    //   const drawnObject = this.extractShapeData(layer); // Extract shape data
+    //   this.saveDrawnShape(drawnObject);  // Save the shape to your backend
+    // });
   }
+
+  // Extract shape data based on the type of shape
+  // private extractShapeData(layer: L.Layer): any {
+  //   let shapeData: any = {};
+    
+  //   if (layer instanceof L.Marker) {
+  //     shapeData = {
+  //       type: 'marker',
+  //       lat: layer.getLatLng().lat,
+  //       lng: layer.getLatLng().lng
+  //     };
+  //   } else if (layer instanceof L.Polygon) {
+  //     shapeData = {
+  //       type: 'polygon',
+  //       coordinates: layer.getLatLngs().map(latlng => [latlng.lat, latlng.lng])
+  //     };
+  //   } else if (layer instanceof L.Polyline) {
+  //     shapeData = {
+  //       type: 'polyline',
+  //       coordinates: layer.getLatLngs().map(latlng => [latlng.lat, latlng.lng])
+  //     };
+  //   } else if (layer instanceof L.Rectangle) {
+  //     shapeData = {
+  //       type: 'rectangle',
+  //       bounds: layer.getBounds()
+  //     };
+  //   } else if (layer instanceof L.Circle) {
+  //     shapeData = {
+  //       type: 'circle',
+  //       lat: layer.getLatLng().lat,
+  //       lng: layer.getLatLng().lng,
+  //       radius: layer.getRadius()
+  //     };
+  //   }
+
+  //   return shapeData;
+  // }
+
+  // Send the shape data to the backend for saving
+  // private saveDrawnShape(shapeData: any): void {
+  //   // Replace this with the actual API call to save the shape data
+  //   this.mapMarkerService.saveDrawnShape(shapeData).subscribe(response => {
+  //     console.log('Shape saved:', response);
+  //   }, error => {
+  //     console.error('Error saving shape:', error);
+  //   });
+  // }
   
   public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
     if (marker.latitude && marker.longitude) {

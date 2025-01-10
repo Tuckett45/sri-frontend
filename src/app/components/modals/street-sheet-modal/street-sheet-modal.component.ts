@@ -34,6 +34,8 @@ export class StreetSheetModalComponent implements OnInit {
   pmOptions: User[] = [];
   deploymentOptions: string[] = ['Micro tench', 'Mastech', 'Fiber'];
 
+  vendors: string[] = ['Conguex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
+
   stateAbbreviations: { [key: string]: string } = {
     'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
     'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
@@ -135,7 +137,7 @@ export class StreetSheetModalComponent implements OnInit {
       };
 
       reader.onerror = (error) => {
-        console.error('Error converting image: ', error);
+        this.toastr.error('Error converting image');
       };
 
       reader.readAsDataURL(file);
@@ -270,8 +272,6 @@ export class StreetSheetModalComponent implements OnInit {
         userObj.company,
         new Date(userObj.createdDate)  
       );
-    } else {
-      console.error('User not found in localStorage');
     }
   }
 
@@ -279,7 +279,7 @@ export class StreetSheetModalComponent implements OnInit {
     if (this.streetSheetForm.valid) {
       const streetSheet = this.streetSheetForm.getRawValue();
 
-      if(this.isEditMode || streetSheet.createdBy == null){
+      if(this.isEditMode || streetSheet.updatedBy == null){
         streetSheet.updatedBy = this.userData.id
         streetSheet.updatedDate = new Date().toISOString();
       }else{
@@ -293,7 +293,6 @@ export class StreetSheetModalComponent implements OnInit {
         },
         (error) => {
           this.toastr.error('Error saving Street Sheet');
-          console.error(error);
         }
       );
     } else {

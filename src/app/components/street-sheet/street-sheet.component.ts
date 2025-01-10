@@ -40,6 +40,23 @@ export class StreetSheetComponent implements AfterViewInit {
   ) {}
 
   ngAfterViewInit(): void {
+    this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
+      forkJoin(
+        streetSheets.map((sheet: StreetSheet) =>
+          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.segmentId).pipe(
+            map((mapMarkers: MapMarker[]) => ({ sheet, mapMarkers })) 
+          )
+        )
+      ).subscribe(results => {
+        const filteredStreetSheets = results.filter((result: any) => result.mapMarkers.length > 0)
+          .map((result: any) => {
+            result.sheet.marker = result.mapMarkers; 
+            return result.sheet;
+          });
+  
+        this.streetSheets = filteredStreetSheets;
+      });
+    });
   }
 
   openEntryFormModal(): void {
@@ -149,24 +166,7 @@ export class StreetSheetComponent implements AfterViewInit {
 
   toggleSidePanel(sidenav: any): void {
     sidenav.toggle();
-  
-    this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
-      forkJoin(
-        streetSheets.map((sheet: StreetSheet) =>
-          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.segmentId).pipe(
-            map((mapMarkers: MapMarker[]) => ({ sheet, mapMarkers })) 
-          )
-        )
-      ).subscribe(results => {
-        const filteredStreetSheets = results.filter((result: any) => result.mapMarkers.length > 0)
-          .map((result: any) => {
-            result.sheet.marker = result.mapMarkers; 
-            return result.sheet;
-          });
-  
-        this.streetSheets = filteredStreetSheets;
-      });
-    });
+
   }
   
   
