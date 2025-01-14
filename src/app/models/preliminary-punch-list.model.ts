@@ -32,6 +32,7 @@ export class PreliminaryPunchList {
   createdBy?: string;
   updatedBy?: string; 
   updatedDate: Date | null;
+  resolvedBy?: string;
 
   constructor(
     id: string,
@@ -50,7 +51,8 @@ export class PreliminaryPunchList {
     resolutionImages: PunchListImages[] = [], 
     createdBy?: string,
     updatedBy?: string,
-    updatedDate: Date | null = null
+    updatedDate: Date | null = null,
+    resolvedBy?: string
   ) {
     this.id = id;
     this.segmentId = segmentId;
@@ -69,5 +71,6 @@ export class PreliminaryPunchList {
     this.createdBy = createdBy;
     this.updatedBy = updatedBy;
     this.updatedDate = updatedDate;
+    this.resolvedBy = resolvedBy;
   }
 }

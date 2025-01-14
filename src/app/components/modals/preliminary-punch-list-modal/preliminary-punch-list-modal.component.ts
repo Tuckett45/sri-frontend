@@ -204,7 +204,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       resolvedDate: [this.data?.resolvedDate || null],
       cmResolved: [this.data?.cmResolved || false],
       updatedBy: [this.data?.updatedBy || null],
-      updatedDate: [this.data?.updatedDate || null]
+      updatedDate: [this.data?.updatedDate || null],
+      resolvedBy: [this.data?.resolvedBy || null]
     });
 
     this.preliminaryPunchListForm.get('streetAddress')?.valueChanges.pipe(
@@ -476,6 +477,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
       if(!punchList.id){
         punchList.id = uuidv4();
+      }
+
+      if(punchList.cmResolved && punchList.pmResolved){
+        punchList.resolvedBy = this.userData.id;
       }
   
       this.dialogRef.close(punchList);
