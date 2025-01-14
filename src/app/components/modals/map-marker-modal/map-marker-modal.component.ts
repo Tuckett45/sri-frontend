@@ -8,8 +8,10 @@ import { v4 as uuidv4 } from 'uuid';import { HttpClient } from '@angular/common/
 import { User } from 'src/app/models/user.model';
 import { MapMarker } from 'src/app/models/map-marker.model';
 import { GeocodingService } from 'src/app/services/geocoding.service';
-import { debounceTime, distinctUntilChanged, catchError, of, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, catchError, of, Observable, switchMap } from 'rxjs';
 import { MapMarkerService } from 'src/app/services/map-marker.service';
+import { StreetSheet } from 'src/app/models/street-sheet.model';
+import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 // import { GeocodingService } from 'src/app/services/geocoding.service';
 
 @Component({
@@ -28,18 +30,8 @@ export class MapMarkerModalComponent implements OnInit {
   isAddressLoading: boolean = false;
   segmentIds: string[] = [];
 
-  stateAbbreviations: { [key: string]: string } = {
-    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
-    'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
-    'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
-    'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
-    'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
-    'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
-    'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
-    'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
-    'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
-    'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
-  };
+  stateAbbreviations!: StateAbbreviation;
+  
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -49,12 +41,12 @@ export class MapMarkerModalComponent implements OnInit {
     public authService: AuthService,
     private geocodingService: GeocodingService,
     private mapMarkerService: MapMarkerService,
-    private modalGalleryService: ModalGalleryService,
-    @Inject(MAT_DIALOG_DATA) public data: MapMarker
+    @Inject(MAT_DIALOG_DATA) public data: MapMarker,
+    @Inject(MAT_DIALOG_DATA) public streetSheets: StreetSheet[]
   ) {}
 
   ngOnInit(): void {
-    this.getSegmentIds();
+    this.segmentIds = this.streetSheets.map(sheet => sheet.segmentId);
     this.isEditMode = !!this.data;
     this.isDisabled = !this.authService.isCM();
 
@@ -70,15 +62,16 @@ export class MapMarkerModalComponent implements OnInit {
       dateCreated: [new Date().toISOString()],
     });
 
-    if (this.data) {
+    this.mapMarkerForm.get('streetAddress')?.valueChanges.pipe(
+      debounceTime(1000),
+      switchMap((value) => this.getAddressSuggestions(value))
+    ).subscribe(suggestions => {
+      this.filteredAddresses = suggestions;
+    });
+
+    if (this.data.latitude !== undefined) {
       this.reverseGeocode(this.data.latitude, this.data.longitude);
     }
-  }
-
-  getSegmentIds(){
-    this.mapMarkerService.getSegmentIds().subscribe(values => {
-      this.segmentIds = values;
-    })
   }
 
   // loadMapMarkerData(mapMarker: MapMarker): void {
@@ -95,7 +88,6 @@ export class MapMarkerModalComponent implements OnInit {
   
   reverseGeocode(latitude: number, longitude: number): void {
     this.geocodingService.reverseGeocode(latitude, longitude).subscribe(suggestions => {
-          debugger;
       this.filteredAddresses = suggestions.filter(suggestion => {
         const address = suggestion.address || {};
         const streetAddress = address.house_number && address.road 
@@ -213,10 +205,17 @@ export class MapMarkerModalComponent implements OnInit {
             formData.isActive,  
             new Date(formData.dateCreated)); 
         }
-       
-      this.dialogRef.close(this.mapMarker);
+
+        this.mapMarkerService.addMapMarker(this.mapMarker).subscribe(
+          () => {
+            this.toastr.success('Map Marker Added');
+            this.dialogRef.close(this.mapMarker);
+          },
+          (error) => {
+            this.toastr.error('Error adding Map Marker');
+          }
+        )
     } else {
-      console.error('Form is invalid');
       this.toastr.error('Form is invalid');
     }
   }  

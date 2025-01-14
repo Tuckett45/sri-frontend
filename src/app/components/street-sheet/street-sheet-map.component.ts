@@ -1,29 +1,45 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { StreetSheetService } from 'src/app/services/street-sheet.service'; 
 import * as L from 'leaflet';
+import 'leaflet-search';
 import 'leaflet-draw';  
 import 'leaflet.markercluster';
 import { MapMarker } from 'src/app/models/map-marker.model';
 import { StreetSheet } from 'src/app/models/street-sheet.model';
 import { MapMarkerService } from 'src/app/services/map-marker.service';
+import { GeocodingService } from 'src/app/services/geocoding.service';
+import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 
 @Component({
   selector: 'street-sheet-map',
   templateUrl: './street-sheet-map.component.html',
   styleUrls: ['./street-sheet-map.component.scss']
 })
-export class StreetSheetMapComponent implements OnInit {
-  private map: L.Map | undefined;
+export class StreetSheetMapComponent implements AfterViewInit {
+  private map!: L.Map;
+  private searchControl: any;
   streetSheets: StreetSheet[] = [];
   osmLayer!: L.TileLayer;
   satelliteLayer!: L.TileLayer;
   markersClusterGroup!: L.MarkerClusterGroup;
+  mapMarkers!: MapMarker[];
+  stateAbbreviations!: StateAbbreviation;
+  reversedAddress!: {
+    street: string;
+    city: string;
+    state: string;
+  };
 
-  constructor(private streetSheetService: StreetSheetService, private mapMarkerService: MapMarkerService) {}
+  constructor(
+    private streetSheetService: StreetSheetService, 
+    private mapMarkerService: MapMarkerService,
+    private geocodingService: GeocodingService
+  ) {}
 
-  ngOnInit(): void {
-    this.initMap();
+  ngAfterViewInit() {
     this.loadStreetSheets();
+    this.initMap();
+    // this.initSearch();
   }
 
   public loadStreetSheets(): void {
@@ -43,15 +59,38 @@ export class StreetSheetMapComponent implements OnInit {
     });
   }
 
+  getReversedAddress(marker: MapMarker){
+    this.geocodingService.reverseGeocode(marker.latitude, marker.longitude).subscribe(suggestions => {
+      if (suggestions && suggestions.length > 0) {
+        const address = suggestions[0].address || {};  
+        const streetAddress = address.house_number && address.road 
+          ? `${address.house_number} ${address.road}` 
+          : address.road || '';
+  
+        const city = address.city || address.town || ''; 
+        const state = address.state || '';  
+        const abbreviatedState = this.stateAbbreviations[state] || state || '';  
+        debugger;
+        this.reversedAddress = {
+          street: streetAddress.trim(),
+          city: city,
+          state: abbreviatedState
+        };
+      }
+    });
+  }
+
   centerMapOnMarker(marker: MapMarker, streetSheet: StreetSheet): void {
     if (this.map) {
+      this.getReversedAddress(marker);
+      debugger;
       const latLng = new L.LatLng(marker.latitude, marker.longitude);
       this.map.setView(latLng, 15); 
       L.marker(latLng).addTo(this.map).bindPopup(`
         <b>${streetSheet.vendorName}</b><br>
         Segment ID: ${streetSheet.segmentId}<br>
-        Street: ${streetSheet.streetAddress}<br>
-        City: ${streetSheet.city}<br>
+        Street: ${this.reversedAddress.street}<br>
+        City: ${this.reversedAddress.city}<br>
         <b>Marker ID:</b> ${marker.id}
       `)
       .openPopup();
@@ -64,17 +103,21 @@ export class StreetSheetMapComponent implements OnInit {
     this.osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: ''
     });
-    this.satelliteLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-      attribution: 'Map data'
-    });
 
     this.osmLayer.addTo(this.map);
 
     L.control.layers({
-      'OpenStreetMap': this.osmLayer,
-      'Satellite': this.satelliteLayer
+      'OpenStreetMap': this.osmLayer
     }).addTo(this.map);
 
+    const markers = this.mapMarkers;
+    const markerLayer = L.layerGroup().addTo(this.map); 
+
+    markers.forEach((pin) => {
+      const marker = L.marker([pin.latitude, pin.longitude]).addTo(markerLayer).bindPopup(pin.segmentId);
+      markerLayer.addLayer(marker);
+    });
+ 
     this.markersClusterGroup = L.markerClusterGroup().addTo(this.map);
 
     // Add drawing tools
@@ -152,18 +195,33 @@ export class StreetSheetMapComponent implements OnInit {
   //     console.error('Error saving shape:', error);
   //   });
   // }
+
+  private initSearch(): void {    
+    const searchLayer = L.layerGroup().addTo(this.map);
+       
+    const geoJsonLayer = L.geoJSON().addTo(searchLayer);
+      
+    // this.map.addControl(new L.Control.Search({
+    //   layer: searchLayer,
+    //   propertyName: 'street',  
+    //   initial: false,
+    //   zoom: 15,
+    //   marker: false
+    // }));
+  }
+  
   
   public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
+    this.getReversedAddress(marker);
     if (marker.latitude && marker.longitude) {
-      L.marker([marker.latitude, marker.longitude]).addTo(this.map!)
-        .bindPopup(`
-          <b>${streetSheet.vendorName}</b><br>
-          Segment ID: ${streetSheet.segmentId}<br>
-          Street: ${streetSheet.streetAddress}<br>
-          City: ${streetSheet.city}<br>
-          <b>Marker ID:</b> ${marker.id}
-        `)
-        .openPopup();
+      const newMarker = L.marker([marker.latitude, marker.longitude]).bindPopup(`
+        <b>${streetSheet.vendorName}</b><br>
+        Segment ID: ${streetSheet.segmentId}<br>
+        Street: ${this.reversedAddress.street}<br>
+        City: ${this.reversedAddress.city}<br>
+        <b>Marker ID:</b> ${marker.id}
+      `).openPopup();
+      this.markersClusterGroup.addLayer(newMarker); 
     }
   }
 }

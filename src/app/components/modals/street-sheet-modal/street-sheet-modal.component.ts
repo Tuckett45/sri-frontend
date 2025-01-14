@@ -13,6 +13,7 @@ import { GeocodingService } from 'src/app/services/geocoding.service';
 import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
 import { User } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
+import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 
 @Component({
   selector: 'app-street-sheet-modal',
@@ -36,18 +37,7 @@ export class StreetSheetModalComponent implements OnInit {
 
   vendors: string[] = ['Conguex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
 
-  stateAbbreviations: { [key: string]: string } = {
-    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
-    'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
-    'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
-    'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
-    'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
-    'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
-    'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
-    'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
-    'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
-    'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
-  };
+  stateAbbreviations!: StateAbbreviation;
 
   private addressCache: { [key: string]: any[] } = {};
 
@@ -288,7 +278,7 @@ export class StreetSheetModalComponent implements OnInit {
   
       this.streetSheetService.saveStreetSheet(streetSheet).subscribe(
         (response) => {
-          this.toastr.success('Street Sheet saved');
+          this.toastr.success('Street Sheet Saved');
           this.dialogRef.close(streetSheet); 
         },
         (error) => {

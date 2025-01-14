@@ -15,6 +15,7 @@ export class GeocodingService {
   }
 
   reverseGeocode(latitude: number, longitude: number){
+    debugger;
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`;
     return this.http.get<any[]>(url);
   }

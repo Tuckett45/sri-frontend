@@ -20,11 +20,11 @@ import { MapMarkerModalComponent } from '../modals/map-marker-modal/map-marker-m
 export class StreetSheetComponent implements AfterViewInit {
   streetMarkers: any[] = []; 
   mapMarkers: MapMarker[] = [];
-  streetSheets: StreetSheet[] = []
+  streetSheets!: StreetSheet[];
   mapMarker!: MapMarker;
   streetSheetMap!: StreetSheetMapComponent;
-  selectedStreetSheet: StreetSheet | null = null;
-  selectedMarker: MapMarker | null = null;
+  selectedStreetSheet!: StreetSheet;
+  selectedMarker!: MapMarker;
 
   filteredStreetSheets: StreetSheet[] = [];
   filteredMapMarkers: MapMarker[] = [];
@@ -67,6 +67,7 @@ export class StreetSheetComponent implements AfterViewInit {
   
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        this.mapMarker = result.marker
         this.streetSheetMap.addMarker(this.mapMarker, result);
       }
     });
@@ -116,8 +117,7 @@ export class StreetSheetComponent implements AfterViewInit {
   
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        debugger;
-        this.streetSheetMap.addMarker(this.mapMarker, result);
+        this.streetSheetMap.addMarker(result.marker, result);
       }
     });
   }
@@ -125,14 +125,20 @@ export class StreetSheetComponent implements AfterViewInit {
   addMapMarker(): void {
     const dialogRef = this.dialog.open(MapMarkerModalComponent, {
       width: '600px',
-      data: {} 
+      data: this.streetSheets
     });
   
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.streetSheetMap.addMarker(this.mapMarker, result);
+      if (result) {    
+        const streetSheet = this.streetSheets.find(sheet => sheet.segmentId === result.segmentId);
+        if (streetSheet) { 
+          this.streetSheetMap.addMarker(result, streetSheet);
+        } else {
+          this.toastr.error('Street Sheet not found.');
+        }
       }
     });
+    
   }
 
   openDeleteConfirmationDialog(streetSheet: StreetSheet): void {

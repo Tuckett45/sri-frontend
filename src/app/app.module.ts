@@ -63,6 +63,8 @@ import { MenuModule } from 'primeng/menu';
 import { StyleClassModule } from 'primeng/styleclass';
 import { MatNativeDateModule } from '@angular/material/core';
 
+import 'leaflet-search'
+
 
 @NgModule({
   declarations: [
