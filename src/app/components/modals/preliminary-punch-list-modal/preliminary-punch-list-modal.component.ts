@@ -34,6 +34,9 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   qualityIssuesMap: { [key: string]: string[] } = {
     'Vault': [
       'Cable Management',
+      'Outside of right of way',
+      'Upgrade to Vault',
+      '6 inches from hardscape',
       'Broken vault lid', 
       'Missing bolt(s)', 
       'Softscape restoration around vault', 
