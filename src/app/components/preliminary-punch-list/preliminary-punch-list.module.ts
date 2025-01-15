@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PreliminaryPunchListComponent } from './preliminary-punch-list.component';
 import { PreliminaryPunchListRoutingModule } from './preliminary-punch-list-routing.module';  // Use your routing module for the child routes
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -23,9 +22,18 @@ import { MatSortModule } from '@angular/material/sort';
 import { GalleriaModule } from 'primeng/galleria';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { TabViewModule } from 'primeng/tabview';
+
+import { PreliminaryPunchListComponent } from './preliminary-punch-list.component';
+import { UnresolvedPunchListComponent } from './unresolved-punch-list/unresolved-punch-list.component';
+import { ResolvedPunchListComponent } from './resolved-punch-list/resolved-punch-list.component';
 
 @NgModule({
-  declarations: [PreliminaryPunchListComponent],
+  declarations: [
+    PreliminaryPunchListComponent,
+    UnresolvedPunchListComponent,
+    ResolvedPunchListComponent
+  ],
   imports: [
     CommonModule,
     PreliminaryPunchListRoutingModule,
@@ -33,6 +41,7 @@ import { DialogModule } from 'primeng/dialog';
     ButtonModule,
     DialogModule,
     GalleriaModule,
+    TabViewModule,
     ReactiveFormsModule,
     MatAutocompleteModule,
     MatToolbarModule,

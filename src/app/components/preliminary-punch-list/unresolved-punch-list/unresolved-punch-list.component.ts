@@ -1,9 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
-import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
-import { UnresolvedPunchListComponent } from './unresolved-punch-list/unresolved-punch-list.component';
-import { ResolvedPunchListComponent } from './resolved-punch-list/resolved-punch-list.component';
+import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { Observable } from 'rxjs';
@@ -11,16 +9,16 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator } from '@angular/material/paginator';
 import { AuthService } from 'src/app/services/auth.service';
-import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { User } from 'src/app/models/user.model';
 
 @Component({
-  selector: 'app-preliminary-punch-list',
-  templateUrl: './preliminary-punch-list.component.html',
-  styleUrls: ['./preliminary-punch-list.component.scss']
+  selector: 'unresolved-punch-list',
+  templateUrl: './unresolved-punch-list.component.html',
+  styleUrls: ['./unresolved-punch-list.component.scss']
 })
-export class PreliminaryPunchListComponent implements OnInit {
-  preliminaryPunchList$: Observable<PreliminaryPunchList[]>;
+export class UnresolvedPunchListComponent implements OnInit {
+  unresolvedPunchList$: Observable<PreliminaryPunchList[]>;
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
   user!: User;
@@ -61,11 +59,11 @@ export class PreliminaryPunchListComponent implements OnInit {
     private toastr: ToastrService,
     public authService: AuthService
   ) {
-    this.preliminaryPunchList$ = this.punchListService.getEntries();
+    this.unresolvedPunchList$ = this.punchListService.getEntries();
   }
 
   ngOnInit(): void {
-    this.filterPunchLists(this.preliminaryPunchList$);
+    this.filterPunchLists(this.unresolvedPunchList$);
   }
 
   filterPunchLists(punchlists: Observable<PreliminaryPunchList[]>){

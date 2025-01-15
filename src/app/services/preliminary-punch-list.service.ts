@@ -37,6 +37,38 @@ export class PreliminaryPunchListService {
     );
   }
 
+  getUnresolvedEntries(): Observable<PreliminaryPunchList[]> {
+    return this.http.get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/unresolved`, this.httpOptions).pipe(
+      map(punchLists => {
+        return punchLists.map(punchList => {
+          punchList.issues.forEach(issueArea => {
+            if (typeof issueArea.qualityIssues === 'string') {
+              issueArea.qualityIssues = issueArea.qualityIssues;
+            }
+          });
+          return punchList;
+        });
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  getResolvedEntries(): Observable<PreliminaryPunchList[]> {
+    return this.http.get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/resolved`, this.httpOptions).pipe(
+      map(punchLists => {
+        return punchLists.map(punchList => {
+          punchList.issues.forEach(issueArea => {
+            if (typeof issueArea.qualityIssues === 'string') {
+              issueArea.qualityIssues = issueArea.qualityIssues;
+            }
+          });
+          return punchList;
+        });
+      }),
+      catchError(this.handleError)
+    );
+  }
+
   addEntry(punchList: PreliminaryPunchList): Observable<any> {  
     return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
