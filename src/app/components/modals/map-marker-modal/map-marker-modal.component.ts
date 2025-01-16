@@ -29,6 +29,7 @@ export class MapMarkerModalComponent implements OnInit {
   filteredAddresses: any[] = [];
   isAddressLoading: boolean = false;
   segmentIds: string[] = [];
+  reversedAddress: any;
 
   stateAbbreviations!: StateAbbreviation;
   
@@ -87,8 +88,7 @@ export class MapMarkerModalComponent implements OnInit {
   // }
   
   reverseGeocode(latitude: number, longitude: number): void {
-    this.geocodingService.reverseGeocode(latitude, longitude).subscribe(suggestions => {
-      this.filteredAddresses = suggestions.filter(suggestion => {
+    this.geocodingService.reverseGeocode(latitude, longitude).subscribe(suggestion => {
         const address = suggestion.address || {};
         const streetAddress = address.house_number && address.road 
           ? `${address.house_number} ${address.road}` 
@@ -96,15 +96,12 @@ export class MapMarkerModalComponent implements OnInit {
 
         const city = address.city || address.town || '';
         const state = address.state || '';
-        const abbreviatedState = this.stateAbbreviations[state] || state || '';
+        const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
 
         const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
-        return {
-          formattedAddress: formattedAddress,  
-          original: suggestion
-        };
+        this.reversedAddress = formattedAddress;
+        return this.reversedAddress;
       });
-    });
   }
 
   onAddressInput(event: any): void {

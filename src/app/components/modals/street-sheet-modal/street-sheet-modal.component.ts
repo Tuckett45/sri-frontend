@@ -6,13 +6,11 @@ import { StreetSheetService } from 'src/app/services/street-sheet.service';
 import { StreetSheet } from 'src/app/models/street-sheet.model';
 import { v4 as uuidv4 } from 'uuid';
 import { debounceTime, switchMap, Observable, of, distinctUntilChanged, catchError } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 import { MapMarker } from 'src/app/models/map-marker.model';
 import { StreetSheetMapComponent } from '../../street-sheet/street-sheet-map.component';
 import { GeocodingService } from 'src/app/services/geocoding.service';
 import { Image, ModalGalleryRef, ModalGalleryService, ModalImage } from '@ks89/angular-modal-gallery';
 import { User } from 'src/app/models/user.model';
-import { AuthService } from 'src/app/services/auth.service';
 import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 
 @Component({
@@ -48,38 +46,37 @@ export class StreetSheetModalComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private dialogRef: MatDialogRef<StreetSheetModalComponent>,
     private toastr: ToastrService,
     private modalGalleryService: ModalGalleryService,
     public streetSheetService: StreetSheetService,
     private geocodingService: GeocodingService,
-    private authService: AuthService,
-    @Inject(MAT_DIALOG_DATA) public data: StreetSheet
-  ) {}
+    @Inject(MAT_DIALOG_DATA) public data: { streetSheet: StreetSheet | null, pmOptions: User[] },
+    private dialogRef: MatDialogRef<StreetSheetModalComponent>
+) {}
 
   ngOnInit(): void {
     this.loadUserProfile();
-    this.fetchPMOptions();
-    this.isEditMode = !!this.data;
+    this.isEditMode = !!this.data?.streetSheet;
+    this.pmOptions = this.data?.pmOptions || [];
 
     this.streetSheetForm = this.fb.group({
-      id: [this.data?.id || uuidv4()],
-      segmentId: [this.data?.segmentId || '', Validators.required],
-      pm: [this.data?.pm || '', Validators.required],
-      vendorName: [this.data?.vendorName || '', Validators.required],
-      streetAddress: [this.data?.streetAddress || '', Validators.required],
-      city: [this.data?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
-      state: [this.data?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
-      deployment: [this.data?.deployment || '', Validators.required],
-      date: [this.data?.date || new Date().toISOString(), Validators.required],
-      swpppImage: [this.data?.swpppImage || ''],
-      ppeImage: [this.data?.ppeImage || ''],
-      trafficControlImage: [this.data?.trafficControlImage || ''],
-      signageImage: [this.data?.signageImage || ''],
-      marker: [this.data?.marker || ''],
-      createdBy: [this.data?.createdBy || ''],
-      updatedBy: [this.data?.updatedBy || ''],
-      updatedDate: [this.data?.updatedDate || '']
+      id: [this.data?.streetSheet?.id || uuidv4()],
+      segmentId: [this.data?.streetSheet?.segmentId || '', Validators.required],
+      pm: [this.data?.streetSheet?.pm || this.data.pmOptions, Validators.required],
+      vendorName: [this.data?.streetSheet?.vendorName || '', Validators.required],
+      streetAddress: [this.data?.streetSheet?.streetAddress || '', Validators.required],
+      city: [this.data?.streetSheet?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
+      state: [this.data?.streetSheet?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
+      deployment: [this.data?.streetSheet?.deployment || '', Validators.required],
+      date: [this.data?.streetSheet?.date || new Date().toISOString(), Validators.required],
+      swpppImage: [this.data?.streetSheet?.swpppImage || ''],
+      ppeImage: [this.data?.streetSheet?.ppeImage || ''],
+      trafficControlImage: [this.data?.streetSheet?.trafficControlImage || ''],
+      signageImage: [this.data?.streetSheet?.signageImage || ''],
+      marker: [this.data?.streetSheet?.marker || ''],
+      createdBy: [this.data?.streetSheet?.createdBy || ''],
+      updatedBy: [this.data?.streetSheet?.updatedBy || ''],
+      updatedDate: [this.data?.streetSheet?.updatedDate || '']
     });
 
     this.streetSheetForm.get('streetAddress')?.valueChanges.pipe(
@@ -139,12 +136,6 @@ export class StreetSheetModalComponent implements OnInit {
     this.toastr.warning(`${field.replace(/([A-Z])/g, ' $1')} removed`);
   }
 
-  fetchPMOptions() {
-    this.authService.getUserByRole('PM').subscribe(users => {
-      this.pmOptions = users;
-    })
-  }
-
   onAddressInput(event: any): void {
     const query = event.target.value;
     if (query && query.length > 2) {
@@ -168,7 +159,7 @@ export class StreetSheetModalComponent implements OnInit {
   
             const city = address.city || address.town || '';
             const state = address.state || '';
-            const abbreviatedState = this.stateAbbreviations[state] || state || '';
+            const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
   
             const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
             return {
@@ -189,13 +180,14 @@ export class StreetSheetModalComponent implements OnInit {
   }
 
   selectAddress(suggestion: any): void {
+    debugger;
     const streetAddress = suggestion.address.house_number
       ? suggestion.address.house_number + ' ' + suggestion.address.road
       : suggestion.address.road || suggestion.address.residential;
   
     const city = suggestion.address.city || suggestion.address.town || suggestion.address.village || suggestion.address.municipality;
     const state = suggestion.address.state;
-    const abbreviatedState = this.stateAbbreviations[state] || state;
+    const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
   
     this.streetSheetForm.patchValue({
       streetAddress: streetAddress,

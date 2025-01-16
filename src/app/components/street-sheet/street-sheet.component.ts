@@ -1,5 +1,5 @@
-import { Component, AfterViewInit, ViewChild } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { Component, AfterViewInit, ViewChild, OnInit, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import * as L from 'leaflet';
 import { StreetSheetMapComponent } from './street-sheet-map.component';
 import { StreetSheetModalComponent } from '../modals/street-sheet-modal/street-sheet-modal.component';
@@ -11,13 +11,17 @@ import { forkJoin, map } from 'rxjs';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { ToastrService } from 'ngx-toastr';
 import { MapMarkerModalComponent } from '../modals/map-marker-modal/map-marker-modal.component';
+import { AuthService } from 'src/app/services/auth.service';
+import { User } from 'src/app/models/user.model';
+import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
+import { GeocodingService } from 'src/app/services/geocoding.service';
 
 @Component({
   selector: 'app-street-sheet',
   templateUrl: './street-sheet.component.html',
   styleUrls: ['./street-sheet.component.scss']
 })
-export class StreetSheetComponent implements AfterViewInit {
+export class StreetSheetComponent implements OnInit {
   streetMarkers: any[] = []; 
   mapMarkers: MapMarker[] = [];
   streetSheets!: StreetSheet[];
@@ -25,7 +29,10 @@ export class StreetSheetComponent implements AfterViewInit {
   streetSheetMap!: StreetSheetMapComponent;
   selectedStreetSheet!: StreetSheet;
   selectedMarker!: MapMarker;
+  reversedAddresses: { [markerId: string]: { street: string, city: string, state: string } } = {};
 
+
+  pmOptions: User[] = [];
   filteredStreetSheets: StreetSheet[] = [];
   filteredMapMarkers: MapMarker[] = [];
   searchTerm: string = '';
@@ -36,10 +43,13 @@ export class StreetSheetComponent implements AfterViewInit {
     private dialog: MatDialog, 
     private streetSheetService: StreetSheetService, 
     private mapMarkerService: MapMarkerService,
+    private authService: AuthService,
     private toastr: ToastrService,
+    private geocodingService: GeocodingService
   ) {}
 
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
+    this.fetchPMOptions();
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
       forkJoin(
         streetSheets.map((sheet: StreetSheet) =>
@@ -59,19 +69,37 @@ export class StreetSheetComponent implements AfterViewInit {
     });
   }
 
-  openEntryFormModal(): void {
-    const dialogRef = this.dialog.open(StreetSheetModalComponent, {
-      width: '600px',
-      data: {} 
-    });
+  openEntryFormModal(data?: StreetSheet): void {
+    this.fetchPMOptions().then(() => {
+      const dialogRef = this.dialog.open(StreetSheetModalComponent, {
+        width: '600px',
+        data: { streetSheet: data || null, pmOptions: this.pmOptions }
+      });
   
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.mapMarker = result.marker
-        this.streetSheetMap.addMarker(this.mapMarker, result);
-      }
+      dialogRef.afterClosed().subscribe((result: StreetSheet) => {
+        if (result) {
+          this.mapMarker = result.marker[result.marker.length - 1]; 
+          this.streetSheetMap.addMarker(this.mapMarker, result);
+        }
+      });
+    }).catch((err) => {
+      this.toastr.error('Error loading PM options');
     });
-  }  
+  }
+
+  fetchPMOptions(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.authService.getUserByRole('PM').subscribe({
+        next: (users) => {
+          this.pmOptions = users;
+          resolve(users);
+        },
+        error: (error) => {
+          reject(error);
+        }
+      });
+    });
+  }
 
   updateStreetSheet(updatedStreetSheet: StreetSheet): void {
     this.streetSheetService.updateStreetSheet(updatedStreetSheet).subscribe(result => {
@@ -106,13 +134,16 @@ export class StreetSheetComponent implements AfterViewInit {
 
   selectMarker(marker: MapMarker, streetSheet: StreetSheet): void {
     this.selectedMarker = marker;
-    this.streetSheetMapComponent.centerMapOnMarker(marker, streetSheet); 
+    this.getReversedAddress(marker).then((reversedAddress) => {
+      this.reversedAddresses[marker.id] = reversedAddress;
+      this.streetSheetMapComponent.centerMapOnMarker(marker, streetSheet);
+    });
   }
 
   editStreetSheet(streetSheet: StreetSheet): void {
     const dialogRef = this.dialog.open(StreetSheetModalComponent, {
       width: '600px',
-      data: streetSheet 
+      data: {streetSheet: streetSheet }
     });
   
     dialogRef.afterClosed().subscribe(result => {
@@ -174,6 +205,30 @@ export class StreetSheetComponent implements AfterViewInit {
     sidenav.toggle();
 
   }
+
+  getReversedAddress(marker: MapMarker): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.geocodingService.reverseGeocode(marker.latitude, marker.longitude).subscribe(suggestion => {
+        const address = suggestion.address || {};  
+        const streetAddress = address.house_number && address.road 
+          ? `${address.house_number} ${address.road}` 
+          : address.road || '';
   
+        const city = address.city || address.town || ''; 
+        const state = address.state || '';  
+        const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
+        
+        // Save the reversed address in the mapping
+        this.reversedAddresses[marker.id] = {
+          street: streetAddress.trim(),
+          city: city,
+          state: abbreviatedState
+        };
   
+        resolve(this.reversedAddresses[marker.id]);
+      }, error => {
+        reject(error);
+      });
+    });
+  }  
 }

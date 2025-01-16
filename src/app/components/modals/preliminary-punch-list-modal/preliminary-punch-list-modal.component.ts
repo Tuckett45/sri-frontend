@@ -268,7 +268,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   
             const city = address.city || address.town || '';
             const state = address.state || '';
-            const abbreviatedState = this.stateAbbreviations[state] || state || '';
+            const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
   
             const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
             return {

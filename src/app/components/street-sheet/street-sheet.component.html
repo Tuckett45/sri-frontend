@@ -15,7 +15,7 @@
         </div>
         <ul>
           <li *ngFor="let marker of streetSheet.marker" (click)="selectMarker(marker, streetSheet)">
-            {{ marker.latitude }} - {{ marker.longitude }}
+            {{ reversedAddresses[marker.id]?.street || (marker.latitude + ' - ' + marker.longitude) }}
           </li>
         </ul>
       </div>
