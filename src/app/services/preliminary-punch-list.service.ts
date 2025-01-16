@@ -61,7 +61,6 @@ export class PreliminaryPunchListService {
     } else {
       errorMessage = `Server-side error: ${error.status} ${error.message}`;
     }
-    console.error(errorMessage);
     return throwError(errorMessage);
   }
 }

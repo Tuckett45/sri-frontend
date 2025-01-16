@@ -1,10 +1,10 @@
-import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator } from '@angular/material/paginator';
@@ -17,8 +17,8 @@ import { User } from 'src/app/models/user.model';
   templateUrl: './preliminary-punch-list.component.html',
   styleUrls: ['./preliminary-punch-list.component.scss']
 })
-export class PreliminaryPunchListComponent implements OnInit {
-  preliminaryPunchList$: Observable<PreliminaryPunchList[]>;
+export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
+  preliminaryPunchList$!: Observable<PreliminaryPunchList[]>;
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
   user!: User;
@@ -30,23 +30,12 @@ export class PreliminaryPunchListComponent implements OnInit {
   ];
 
   responsiveOptions: any[] = [
-    {
-      breakpoint: '1024px',
-      numVisible: 3
-    },
-    {
-      breakpoint: '768px',
-      numVisible: 2
-
-
-    },
-    {
-      breakpoint: '560px',
-      numVisible: 1
-    }
+    { breakpoint: '1024px', numVisible: 3 },
+    { breakpoint: '768px', numVisible: 2 },
+    { breakpoint: '560px', numVisible: 1 }
   ];
 
-  dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource<PreliminaryPunchList>();
+  dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -55,35 +44,40 @@ export class PreliminaryPunchListComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
-    private changeDetectorRef: ChangeDetectorRef,
     private toastr: ToastrService,
     public authService: AuthService
-  ) {
-    this.preliminaryPunchList$ = this.punchListService.getEntries();
-  }
+  ) {}
 
   ngOnInit(): void {
-    this.filterPunchLists(this.preliminaryPunchList$);
+    this.user = this.authService.getUser();
+    this.loadPunchLists();
   }
 
-  filterPunchLists(punchlists: Observable<PreliminaryPunchList[]>){
-    this.user = this.authService.getUser();
-    punchlists.subscribe(data => {
-      let filteredData = data;
-      if (this.user.role === 'PM') {
-        filteredData = filteredData.filter(punchList => 
-          punchList.vendorName === this.user.company && punchList.state.toUpperCase() === this.user.market);
-      } else if (this.user.market !== 'RG' && this.user.market !== undefined && this.user.market !== null) {
-        filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
-      }else{
-        filteredData = data
-      }
-  
-      this.dataSource.data = filteredData;
-      this.dataSource.sort = this.sort;
-      this.dataSource.paginator = this.paginator;
+  ngAfterViewInit(): void {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+
+  loadPunchLists(): void {
+    this.preliminaryPunchList$ = this.punchListService.getEntries(); 
+    this.preliminaryPunchList$.subscribe(data => {
+      this.dataSource.data = this.filterData(data);
     });
   }
+  
+  filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
+    let filteredData = data;
+
+    if (this.user.role === 'PM') {
+      filteredData = filteredData.filter(punchList =>
+        punchList.vendorName === this.user.company && punchList.state.toUpperCase() === this.user.market);
+    } else if (this.user.market && this.user.market !== 'RG') {
+      filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
+    }
+
+    return filteredData;
+  }
+  
 
   openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
@@ -104,12 +98,11 @@ export class PreliminaryPunchListComponent implements OnInit {
     
         action$.subscribe({
           next: () => {
-            this.refreshTable();
+            this.loadPunchLists(); 
             this.toastr.success('Punch List saved');
           },
           error: (err) => {
             this.toastr.error('Error saving Punch List.');
-            console.error(err);
           }
         });
       }
@@ -147,30 +140,21 @@ export class PreliminaryPunchListComponent implements OnInit {
     }
   }
 
-  refreshTable(): void {
-    this.punchListService.getEntries().subscribe((entries: PreliminaryPunchList[]) => {
-      this.user = this.authService.getUser();
+  refreshTable(): void {    
+    const filteredEntries = this.preliminaryPunchList$; 
+    filteredEntries?.subscribe(entries => {
+      let updatedData = entries;
+  
       if (this.user.role === 'PM') {
-        entries = entries.filter(punchList => 
-          punchList.vendorName === this.user.company && punchList.state === this.user.market);
+        updatedData = updatedData.filter(punchList =>
+          punchList.vendorName === this.user.company && punchList.state === this.user.market
+        );
       } else if (this.user.market !== 'RG') {
-        entries = entries.filter(punchList => punchList.state === this.user.market);
-      }else{
-        this.dataSource.data = entries; 
+        updatedData = updatedData.filter(punchList => punchList.state === this.user.market);
       }
-      this.dataSource.data = entries; 
-      this.changeDetectorRef.detectChanges(); 
+  
+      this.dataSource.data = updatedData;
     });
-  }
-
-  getImageUrl(fileOrUrl: string | File): string {
-    if (typeof fileOrUrl === 'string') {
-      return fileOrUrl;
-    } else if (fileOrUrl instanceof File) {
-      return URL.createObjectURL(fileOrUrl);
-    } else {
-      return '';
-    }
   }
 
   openGallery(imageType: 'issueImages' | 'resolutionImages', images: string[]): void {

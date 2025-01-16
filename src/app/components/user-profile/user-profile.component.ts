@@ -37,8 +37,6 @@ export class UserProfileComponent implements OnInit {
         userObj.company,
         new Date(userObj.createdDate) 
       );
-    } else {
-      console.error('User not found in localStorage');
     }
   }
 
@@ -62,7 +60,6 @@ export class UserProfileComponent implements OnInit {
   }
 
   saveChanges(): void {
-    console.log('Saved profile data:', this.profileData);    
     this.closeModal();
   }
 }

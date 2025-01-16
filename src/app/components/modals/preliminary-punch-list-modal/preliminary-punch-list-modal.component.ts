@@ -35,6 +35,9 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   qualityIssuesMap: { [key: string]: string[] } = {
     'Vault': [
       'Cable Management',
+      'Outside of right of way',
+      'Upgrade to Vault',
+      '6 inches from hardscape',
       'Broken vault lid', 
       'Missing bolt(s)', 
       'Softscape restoration around vault', 
@@ -194,7 +197,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       resolvedDate: [this.data?.resolvedDate || null],
       cmResolved: [this.data?.cmResolved || false],
       updatedBy: [this.data?.updatedBy || null],
-      updatedDate: [this.data?.updatedDate || null]
+      updatedDate: [this.data?.updatedDate || null],
+      resolvedBy: [this.data?.resolvedBy || null]
     });
 
     this.preliminaryPunchListForm.get('streetAddress')?.valueChanges.pipe(
@@ -438,8 +442,6 @@ export class PreliminaryPunchListModalComponent implements OnInit {
         userObj.company,
         new Date(userObj.createdDate)  
       );
-    } else {
-      console.error('User not found in localStorage');
     }
   }
 
@@ -469,16 +471,19 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       if(!punchList.id){
         punchList.id = uuidv4();
       }
+
+      if(punchList.cmResolved && punchList.pmResolved){
+        punchList.resolvedBy = this.userData.id;
+      }
   
       this.dialogRef.close(punchList);
     } else {
-      console.error('Form is invalid');
-      this.preliminaryPunchListForm.get('segmentId')?.hasError('required');
+      this.preliminaryPunchListForm.get('segmentId')?.hasError('required') ? this.preliminaryPunchListForm.markAsTouched({'emitEvent': true}) : this.preliminaryPunchListForm.markAsTouched({'emitEvent': true});
       this.preliminaryPunchListForm.get('vendorName')?.hasError('required');
       this.preliminaryPunchListForm.get('streetAddress')?.hasError('required');
       this.preliminaryPunchListForm.get('city')?.hasError('required');
       this.preliminaryPunchListForm.get('state')?.hasError('required');
-      this.toastr.error('Form is invalid');
+      this.toastr.error('Form is invalid. Check required fields');
     }
   }
   
