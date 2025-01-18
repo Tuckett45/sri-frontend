@@ -9,11 +9,13 @@ import { MapMarkerService } from 'src/app/services/map-marker.service';
 import { GeocodingService } from 'src/app/services/geocoding.service';
 import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { StreetSheetService } from 'src/app/services/street-sheet.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'street-sheet-map',
   templateUrl: './street-sheet-map.component.html',
-  styleUrls: ['./street-sheet-map.component.scss']
+  styleUrls: ['./street-sheet-map.component.scss'],
+  providers: [DatePipe]
 })
 export class StreetSheetMapComponent implements AfterViewInit {
   private map!: L.Map;
@@ -22,11 +24,13 @@ export class StreetSheetMapComponent implements AfterViewInit {
   markersClusterGroup!: L.MarkerClusterGroup;
   private mapMarkers: MapMarker[] = [];
   stateAbbreviations!: StateAbbreviation;
+  formattedDate!: string;
 
   constructor(
     private streetSheetService: StreetSheetService, 
     private mapMarkerService: MapMarkerService,
-    private geocodingService: GeocodingService
+    private geocodingService: GeocodingService,
+    private datePipe: DatePipe
   ) {}
 
   ngAfterViewInit() {
@@ -76,11 +80,14 @@ export class StreetSheetMapComponent implements AfterViewInit {
   public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
     this.getReversedAddress(marker).then(address => {
       if (marker.latitude && marker.longitude) {
+        this.formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
         const newMarker = L.marker([marker.latitude, marker.longitude]).bindPopup(`
           <b>${streetSheet.vendorName}</b><br>
           Segment ID: ${streetSheet.segmentId}<br>
           Street: ${address.street}<br>
           City: ${address.city}<br>
+          State: ${address.state}<br>
+          Date Added: <b>${this.formattedDate}</b><br>
           <b>Marker ID:</b> ${marker.id}
         `).openPopup();
         this.markersClusterGroup.addLayer(newMarker); 
@@ -90,9 +97,9 @@ export class StreetSheetMapComponent implements AfterViewInit {
 
   async centerMapOnMarker(marker: MapMarker, streetSheet: StreetSheet): Promise<void> {
     if (this.map) {
-      debugger;
       const latLng = new L.LatLng(marker.latitude, marker.longitude);      
       const reversedAddress = await this.getReversedAddress(marker);  
+      this.formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
       this.map.flyTo(latLng, 15, { animate: true, duration: 1 });
       
       L.marker(latLng).addTo(this.map).bindPopup(`
@@ -101,6 +108,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
         Street: ${reversedAddress.street}<br>
         City: ${reversedAddress.city}<br>
         State: ${reversedAddress.state}<br>
+        Date Added: <b>${this.formattedDate}</b><br>
         <b>Marker ID:</b> ${marker.id}
       `).openPopup();
     }

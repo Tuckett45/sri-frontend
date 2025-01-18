@@ -15,6 +15,7 @@ import { AuthService } from 'src/app/services/auth.service';
 import { User } from 'src/app/models/user.model';
 import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { GeocodingService } from 'src/app/services/geocoding.service';
+import { MatTableDataSource } from '@angular/material/table';
 
 @Component({
   selector: 'app-street-sheet',
@@ -30,7 +31,8 @@ export class StreetSheetComponent implements OnInit {
   selectedStreetSheet!: StreetSheet;
   selectedMarker!: MapMarker;
   reversedAddresses: { [markerId: string]: { street: string, city: string, state: string } } = {};
-
+  sidenavOpen: boolean = false;
+  searchBarOpen: boolean = false;
 
   pmOptions: User[] = [];
   filteredStreetSheets: StreetSheet[] = [];
@@ -38,6 +40,7 @@ export class StreetSheetComponent implements OnInit {
   searchTerm: string = '';
 
   @ViewChild(StreetSheetMapComponent) streetSheetMapComponent!: StreetSheetMapComponent;
+  dataSource: MatTableDataSource<StreetSheet> = new MatTableDataSource();
 
   constructor(
     private dialog: MatDialog, 
@@ -69,11 +72,10 @@ export class StreetSheetComponent implements OnInit {
     });
   }
 
-  openEntryFormModal(data?: StreetSheet): void {
-    this.fetchPMOptions().then(() => {
+  createStreetSheet(): void {
       const dialogRef = this.dialog.open(StreetSheetModalComponent, {
         width: '600px',
-        data: { streetSheet: data || null, pmOptions: this.pmOptions }
+        data: { pmOptions: this.pmOptions }
       });
   
       dialogRef.afterClosed().subscribe((result: StreetSheet) => {
@@ -82,9 +84,6 @@ export class StreetSheetComponent implements OnInit {
           this.streetSheetMap.addMarker(this.mapMarker, result);
         }
       });
-    }).catch((err) => {
-      this.toastr.error('Error loading PM options');
-    });
   }
 
   fetchPMOptions(): Promise<any> {
@@ -115,14 +114,6 @@ export class StreetSheetComponent implements OnInit {
     );
   }
 
-  // filterMapMarkers(): void {
-  //   const lowerSearchTerm = this.searchTerm.toLowerCase();
-  //   this.filteredMapMarkers = this.mapMarkers.filter(sheet =>
-  //     sheet.vendorName.toLowerCase().includes(lowerSearchTerm) ||
-  //     sheet.segmentId.toLowerCase().includes(lowerSearchTerm)
-  //   );
-  // }
-
   selectStreetSheet(streetSheet: StreetSheet): void {
     this.selectedStreetSheet = streetSheet;
     const firstMarker = streetSheet.marker[0];
@@ -143,7 +134,7 @@ export class StreetSheetComponent implements OnInit {
   editStreetSheet(streetSheet: StreetSheet): void {
     const dialogRef = this.dialog.open(StreetSheetModalComponent, {
       width: '600px',
-      data: {streetSheet: streetSheet }
+      data: { streetSheet: streetSheet, pmOptions: this.pmOptions }
     });
   
     dialogRef.afterClosed().subscribe(result => {
@@ -201,9 +192,25 @@ export class StreetSheetComponent implements OnInit {
     });
   }
 
+  toggleSearchBar() {
+    this.searchBarOpen = !this.searchBarOpen;
+  }
+
   toggleSidePanel(sidenav: any): void {
     sidenav.toggle();
+    this.sidenavOpen = !this.sidenavOpen;
+  }
 
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
+  
+    this.dataSource.filterPredicate = (data: any, filter: string) => {
+      const transformedFilter = filter.trim().toLowerCase();
+      const dataStr = `${data.segmentId} ${data.streetAddress} ${data.city} ${data.state}`.toLowerCase();
+      return dataStr.includes(transformedFilter);
+    };
+  
+    this.dataSource.filter = filterValue;
   }
 
   getReversedAddress(marker: MapMarker): Promise<any> {

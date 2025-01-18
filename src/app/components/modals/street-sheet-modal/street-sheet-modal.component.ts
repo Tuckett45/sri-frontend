@@ -30,6 +30,7 @@ export class StreetSheetModalComponent implements OnInit {
   galleryImages: Image[] = [];
   userData!: User;
 
+  streetSheet: StreetSheet | null = null;
   pmOptions: User[] = [];
   deploymentOptions: string[] = ['Micro tench', 'Mastech', 'Fiber'];
 
@@ -50,7 +51,7 @@ export class StreetSheetModalComponent implements OnInit {
     private modalGalleryService: ModalGalleryService,
     public streetSheetService: StreetSheetService,
     private geocodingService: GeocodingService,
-    @Inject(MAT_DIALOG_DATA) public data: { streetSheet: StreetSheet | null, pmOptions: User[] },
+    @Inject(MAT_DIALOG_DATA) public data: { streetSheet: StreetSheet, pmOptions: User[] },
     private dialogRef: MatDialogRef<StreetSheetModalComponent>
 ) {}
 
@@ -180,7 +181,6 @@ export class StreetSheetModalComponent implements OnInit {
   }
 
   selectAddress(suggestion: any): void {
-    debugger;
     const streetAddress = suggestion.address.house_number
       ? suggestion.address.house_number + ' ' + suggestion.address.road
       : suggestion.address.road || suggestion.address.residential;
@@ -189,6 +189,7 @@ export class StreetSheetModalComponent implements OnInit {
     const state = suggestion.address.state;
     const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
   
+    debugger;
     this.streetSheetForm.patchValue({
       streetAddress: streetAddress,
       city: city,

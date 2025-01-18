@@ -5,6 +5,11 @@
   padding: 20px 20px;
   margin: 20px;
   box-sizing: border-box;
+  border-radius: 5px;
+}
+
+::ng-deep .mat-drawer-container{
+  background-color: #144f80 !important;
 }
 
 /* Header Section */
@@ -12,8 +17,8 @@
   background-color: #144f80;
   display: flex;
   align-items: center;
-  padding: 20px;
   flex-wrap: wrap;
+  border-radius: 5px;
 
   h2 {
     font-size: 2rem;
@@ -44,7 +49,30 @@
 }
 
 .marker-btns{
-  
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 10px;
+
+  button {
+    background-color: #e18a25;
+    color: #fff;
+    width: auto;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background-color: #b86404;
+      transform: scale(1.05);
+    }
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
 }
 
 /* Sidenav Styling */
@@ -63,6 +91,7 @@ mat-sidenav {
 
 mat-sidenav-content {
   flex: 1;
+  transition: transform 0.3s ease-in-out;
 }
 
 .side-panel-header {
@@ -263,7 +292,6 @@ button.mat-icon-button {
 
 ::ng-deep .mat-typography {
   font: 350 1rem / 1rem Roboto, sans-serif;
-  margin: 0 0 .5rem 1.5em;
 }
 
 ::ng-deep .mat-typography h5{
@@ -282,10 +310,66 @@ button.mat-icon-button {
   color: #030303;
 }
 
+.search-bar {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+
+  mat-form-field {
+    width: 100%;
+
+    input {
+      padding-left: 2px;
+    }
+
+    mat-icon {
+      color: #e18a25;
+    }
+  }
+  button {
+    background-color: #e18a25;
+    color: #fff;
+    width: auto;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background-color: #b86404;
+      transform: scale(1.05);
+    }
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+.search-bar input {
+  width: 0;
+  opacity: 0;
+  transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.search-bar.open input {
+  width: 100%;
+  opacity: 1;
+}
+
 /* Responsive design */
 @media (max-width: 550px) {
+  .street-sheet-page {
+    background-color: #144f80;  /* Primary blue background */
+    color: #fff;  /* Ensures text is visible on the blue background */
+    padding: 5px 5px;
+    margin: 0px;
+    box-sizing: border-box;
+  }
   .header-section {
-    flex-direction: column;
+    display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
 
@@ -300,6 +384,65 @@ button.mat-icon-button {
       width: auto;
       margin-bottom: 10px;
       color: #ffffff;
+      font-size: smaller;
+    }
+  }
+
+  .search-bar {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+
+    mat-form-field {
+      width: 100%;
+
+      input {
+        padding-left: 2px;
+      }
+
+      mat-icon {
+        color: #e18a25;
+      }
+    }
+  }
+
+  .search-bar input {
+    width: 0;
+    opacity: 0;
+    transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  }
+  
+  .search-bar.open input {
+    width: 100%;
+    opacity: 1;
+  }
+
+  .marker-btns{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 10px;
+  
+    button {
+      font-size: smaller;
+      background-color: #e18a25;
+      color: #fff;
+      width: auto;
+      padding: 10px 10px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  
+      &:hover {
+        background-color: #b86404;
+        transform: scale(1.05);
+      }
+  
+      mat-icon {
+        margin-right: 0;
+        font-size: medium;
+      }
     }
   }
 
@@ -321,8 +464,10 @@ button.mat-icon-button {
 /* For tablets and larger screens */
 @media (min-width: 768px) {
   .header-section {
+    display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    align-items: center;
+    justify-content: center;
 
     h2 {
       font-size: 2rem;
@@ -333,6 +478,35 @@ button.mat-icon-button {
     button {
       width: auto;
     }
+  }
+
+  .search-bar {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+
+    mat-form-field {
+      width: 100%;
+
+      input {
+        padding-left: 2px;
+      }
+
+      mat-icon {
+        color: #e18a25;
+      }
+    }
+  }
+
+  .search-bar input {
+    width: 0;
+    opacity: 0;
+    transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  }
+  
+  .search-bar.open input {
+    width: 100%;
+    opacity: 1;
   }
 
   mat-sidenav {

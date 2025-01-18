@@ -1,9 +1,9 @@
 <div class="street-sheet-page">
   <mat-sidenav-container class="sidenav-container">
-    <mat-sidenav #sidenav mode="side" opened="false" class="side-panel">
+    <mat-sidenav #sidenav mode="side" [ngClass]="{ 'open': sidenavOpen, 'closed': !sidenavOpen }" opened="false" class="side-panel">
       <div class="side-panel-header">
         <h3 class="modal-title">Added Street Markers</h3>
-        <button mat-icon-button class="close-btn" (click)="sidenav.close()">
+        <button mat-icon-button class="close-btn" (click)="toggleSidePanel(sidenav)">
           <mat-icon>close</mat-icon>
         </button>
       </div>
@@ -22,21 +22,37 @@
     </mat-sidenav>
 
     <mat-sidenav-content>
-      <div class="header-section">
-        <div class="marker-btns">
-          <button (click)="toggleSidePanel(sidenav)" mat-raised-button color="accent">
-            <mat-icon> list_alt</mat-icon> 
-            Show Markers
-          </button>
-          <button mat-raised-button color="primary" (click)="addMapMarker()">
-            <mat-icon>add_location</mat-icon> 
-            Add Map Marker
-          </button>
+
+      <div class="search-bar">
+        <button mat-icon-button matSuffix (click)="toggleSearchBar()">
+          <mat-icon>search</mat-icon>
+        </button>
+        <div *ngIf="searchBarOpen">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Search</mat-label>
+            <input matInput (keyup)="applyFilter($event)" placeholder="Search by Segment ID, Address, City, State">
+          </mat-form-field>
         </div>
-        <h2>Street Sheet</h2>
-        <button (click)="openEntryFormModal()" mat-raised-button color="primary">
+      </div>
+      <div class="header-section">
+        <div row class="header-title">
+          <h2>Street Sheets</h2>
+        </div>
+      </div>
+
+      <div class="marker-btns">
+        <button (click)="toggleSidePanel(sidenav)" mat-raised-button>
+          <mat-icon> list_alt</mat-icon> 
+          Show Markers
+        </button>
+        <button mat-raised-button (click)="addMapMarker()">
+          <mat-icon>add_location</mat-icon> 
+          Add Map Marker
+        </button>
+        <button (click)="createStreetSheet()" mat-raised-button>
           <mat-icon>note_add</mat-icon> 
-          Add New Street Sheet</button>
+          New Street Sheet
+        </button>
       </div>
       
       <street-sheet-map></street-sheet-map>
