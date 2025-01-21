@@ -15,7 +15,8 @@ import { User } from 'src/app/models/user.model';
 @Component({
   selector: 'app-preliminary-punch-list',
   templateUrl: './preliminary-punch-list.component.html',
-  styleUrls: ['./preliminary-punch-list.component.scss']
+  styleUrls: ['./preliminary-punch-list.component.scss'],
+  standalone: false
 })
 export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
   preliminaryPunchList$!: Observable<PreliminaryPunchList[]>;

@@ -20,7 +20,8 @@ import { MatTableDataSource } from '@angular/material/table';
 @Component({
   selector: 'app-street-sheet',
   templateUrl: './street-sheet.component.html',
-  styleUrls: ['./street-sheet.component.scss']
+  styleUrls: ['./street-sheet.component.scss'],
+  standalone: false
 })
 export class StreetSheetComponent implements OnInit {
   streetMarkers: any[] = []; 

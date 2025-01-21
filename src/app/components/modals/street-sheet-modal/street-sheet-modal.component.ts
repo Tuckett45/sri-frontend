@@ -16,7 +16,8 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 @Component({
   selector: 'app-street-sheet-modal',
   templateUrl: './street-sheet-modal.component.html',
-  styleUrls: ['./street-sheet-modal.component.scss']
+  styleUrls: ['./street-sheet-modal.component.scss'],
+  standalone: false
 })
 export class StreetSheetModalComponent implements OnInit {
   streetSheetMap!: StreetSheetMapComponent;

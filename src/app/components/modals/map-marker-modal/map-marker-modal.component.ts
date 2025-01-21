@@ -17,7 +17,8 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 @Component({
   selector: 'map-marker-modal',
   templateUrl: './map-marker-modal.component.html',
-  styleUrls: ['./map-marker-modal.component.scss']
+  styleUrls: ['./map-marker-modal.component.scss'],
+  standalone: false
 })
 export class MapMarkerModalComponent implements OnInit {
   mapMarkerForm!: FormGroup;

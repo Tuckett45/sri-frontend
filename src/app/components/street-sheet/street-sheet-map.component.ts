@@ -15,7 +15,8 @@ import { DatePipe } from '@angular/common';
   selector: 'street-sheet-map',
   templateUrl: './street-sheet-map.component.html',
   styleUrls: ['./street-sheet-map.component.scss'],
-  providers: [DatePipe]
+  providers: [DatePipe],
+  standalone: false
 })
 export class StreetSheetMapComponent implements AfterViewInit {
   private map!: L.Map;

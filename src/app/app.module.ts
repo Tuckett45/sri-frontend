@@ -69,11 +69,9 @@ import 'leaflet-search'
 @NgModule({
   declarations: [
     AppComponent,
-    ChartComponent,
     DeleteConfirmationModalComponent,
     FilterComponent,
     ForgotPasswordModalComponent,
-    GoalsComponent,
     LoginComponent,
     RegisterModalComponent,
     ResetPasswordComponent,
@@ -131,7 +129,9 @@ import 'leaflet-search'
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    PreliminaryPunchListModule
+    PreliminaryPunchListModule,
+    GoalsComponent,
+    ChartComponent
   ],
   providers: [provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]

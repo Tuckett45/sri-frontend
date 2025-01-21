@@ -4,7 +4,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 @Component({
   selector: 'delete-confirmation-modal',
   templateUrl: './delete-confirmation-modal.component.html',
-  styleUrls: ['./delete-confirmation-modal.component.scss']
+  styleUrls: ['./delete-confirmation-modal.component.scss'],
+  standalone: false
 })
 export class DeleteConfirmationModalComponent {
 

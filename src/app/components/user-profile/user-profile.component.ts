@@ -7,7 +7,8 @@ import { User } from 'src/app/models/user.model';
 @Component({
   selector: 'app-user-profile',
   templateUrl: './user-profile.component.html',
-  styleUrls: ['./user-profile.component.scss']
+  styleUrls: ['./user-profile.component.scss'],
+  standalone: false
 })
 export class UserProfileComponent implements OnInit {
 
