@@ -54,6 +54,10 @@ export class StreetSheetComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchPMOptions();
+    this.getStreetSheets();
+  }
+
+  getStreetSheets(){
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
       forkJoin(
         streetSheets.map((sheet: StreetSheet) =>
@@ -82,7 +86,9 @@ export class StreetSheetComponent implements OnInit {
       dialogRef.afterClosed().subscribe((result: StreetSheet) => {
         if (result) {
           this.mapMarker = result.marker[result.marker.length - 1]; 
+          debugger;
           this.streetSheetMap.addMarker(this.mapMarker, result);
+          this.getStreetSheets();
         }
       });
   }
@@ -141,6 +147,7 @@ export class StreetSheetComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.streetSheetMap.addMarker(result.marker, result);
+        this.getStreetSheets();
       }
     });
   }
@@ -156,6 +163,7 @@ export class StreetSheetComponent implements OnInit {
         const streetSheet = this.streetSheets.find(sheet => sheet.segmentId === result.segmentId);
         if (streetSheet) { 
           this.streetSheetMap.addMarker(result, streetSheet);
+          this.getStreetSheets();
         } else {
           this.toastr.error('Street Sheet not found.');
         }

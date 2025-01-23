@@ -9,6 +9,7 @@ export class StreetSheet {
     city: string;
     state: string;
     deployment: string;
+    equipment: string;
     date: Date;
     swpppImage?: string;
     ppeImage?: string;
@@ -28,7 +29,8 @@ export class StreetSheet {
         streetAddress: string,
         city: string,           
         state: string, 
-        deployment: string,   
+        deployment: string, 
+        equipment: string,  
         date: Date,      
         swpppImage: string,     
         ppeImage: string,   
@@ -47,6 +49,7 @@ export class StreetSheet {
         this.city = city;
         this.state = state;
         this.deployment = deployment;
+        this.equipment = equipment;
         this.date = date;
         this.swpppImage = swpppImage;
         this.ppeImage = ppeImage;

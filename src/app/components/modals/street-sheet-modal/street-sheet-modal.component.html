@@ -116,7 +116,7 @@
           </mat-error>
         </mat-form-field>
       </mat-grid-tile>
-
+      
       <!-- Date -->
       <mat-grid-tile colspan="2">
         <mat-form-field appearance="outline" class="full-width">
@@ -126,6 +126,20 @@
           <mat-datepicker #picker></mat-datepicker>
           <mat-error *ngIf="streetSheetForm.get('date')?.hasError('required')">
             Date is required.
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Equipment on Site</mat-label>
+          <mat-select formControlName="equipment" multiple placeholder="Select Equipment">
+            <mat-option *ngFor="let equipment of equipmentOptions" [value]="equipment">
+              {{ equipment }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="streetSheetForm.get('equipment')?.hasError('required') && streetSheetForm.get('equipment')?.touched">
+            Equipment is required.
           </mat-error>
         </mat-form-field>
       </mat-grid-tile>
@@ -140,10 +154,17 @@
           <input type="file" #swpppImageInput (change)="uploadImage($event, 'swpppImage')" style="display: none;">
         </div>
         <div *ngIf="this.streetSheetForm.get('swpppImage')?.value" class="file-preview">
-          <img [src]="this.streetSheetForm.get('swpppImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('swpppImage')?.value)" class="preview-image">
-          <button mat-icon-button class="delete-icon" (click)="removeImage('swpppImage')">
-            <mat-icon>delete</mat-icon>
-          </button>
+          <div style="display: flex; flex-direction: column;">
+            <img [src]="this.streetSheetForm.get('swpppImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('swpppImage')?.value)" class="preview-image">
+            <mat-label *ngIf="this.streetSheetForm.get('swpppImage')?.value">
+              SWPPP Image
+            </mat-label>
+          </div>
+          <div class="image-label">
+            <button mat-icon-button class="delete-icon" (click)="removeImage('swpppImage')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         </div>
       </mat-grid-tile>
 
@@ -157,10 +178,17 @@
           <input type="file" #ppeImageInput (change)="uploadImage($event, 'ppeImage')" style="display: none;">
         </div>
         <div *ngIf="this.streetSheetForm.get('ppeImage')?.value" class="file-preview">
-          <img [src]="this.streetSheetForm.get('ppeImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('ppeImage')?.value)" class="preview-image">
-          <button mat-icon-button class="delete-icon" (click)="removeImage('ppeImage')">
-            <mat-icon>delete</mat-icon>
-          </button>
+          <div style="display: flex; flex-direction: column;">
+            <img [src]="this.streetSheetForm.get('ppeImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('ppeImage')?.value)" class="preview-image">
+            <mat-label *ngIf="this.streetSheetForm.get('ppeImage')?.value">
+              PPE Image
+            </mat-label>
+          </div>
+          <div class="image-label">
+            <button mat-icon-button class="delete-icon" (click)="removeImage('ppeImage')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         </div>
       </mat-grid-tile>
 
@@ -174,10 +202,17 @@
           <input type="file" #trafficControlImageInput (change)="uploadImage($event, 'trafficControlImage')" style="display: none;">
         </div>
         <div *ngIf="this.streetSheetForm.get('trafficControlImage')?.value" class="file-preview">
-          <img [src]="this.streetSheetForm.get('trafficControlImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('trafficControlImage')?.value)" class="preview-image">
-          <button mat-icon-button class="delete-icon" (click)="removeImage('trafficControlImage')">
-            <mat-icon>delete</mat-icon>
-          </button>
+          <div style="display: flex; flex-direction: column;">
+            <img [src]="this.streetSheetForm.get('trafficControlImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('trafficControlImage')?.value)" class="preview-image">
+            <mat-label *ngIf="this.streetSheetForm.get('trafficControlImage')?.value">
+              Traffic Control Image
+            </mat-label>
+          </div>
+          <div class="image-label">
+            <button mat-icon-button class="delete-icon" (click)="removeImage('trafficControlImage')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         </div>
       </mat-grid-tile>
 
@@ -191,10 +226,17 @@
           <input type="file" #signageImageInput (change)="uploadImage($event, 'signageImage')" style="display: none;">
         </div>
         <div *ngIf="this.streetSheetForm.get('signageImage')?.value" class="file-preview">
-          <img [src]="this.streetSheetForm.get('signageImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('signageImage')?.value)" class="preview-image">
-          <button mat-icon-button class="delete-icon" (click)="removeImage('signageImage')">
-            <mat-icon>delete</mat-icon>
-          </button>
+          <div style="display: flex; flex-direction: column;">
+            <img [src]="this.streetSheetForm.get('signageImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('signageImage')?.value)" class="preview-image">
+            <mat-label *ngIf="this.streetSheetForm.get('signageImage')?.value">
+              Signage Image
+            </mat-label>
+          </div>
+          <div class="image-label">
+            <button mat-icon-button class="delete-icon" (click)="removeImage('signageImage')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         </div>
       </mat-grid-tile>
 

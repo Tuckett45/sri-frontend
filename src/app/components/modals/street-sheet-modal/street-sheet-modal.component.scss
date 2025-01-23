@@ -203,6 +203,11 @@
     align-items: center;
     gap: 10px;
   }
+
+  .image-label{
+    font-size: medium;
+    color: #0c0c0c;
+  }
   
   .preview-image {
     width: 100px;   // Set the desired width
@@ -251,6 +256,26 @@
     .modal-header,
     .modal-footer {
       padding: 15px;
+    }
+
+    .image-btn {
+      width: 155px;
+      font-size: small;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      color: #fff;
+      background-color: #144f80;
+    
+      &:hover {
+        background-color: #0e3453;
+      }
+    
+    }
+
+    .image-label{
+      font-size: small;
+      color: #0c0c0c;
     }
   
     .save-btn,

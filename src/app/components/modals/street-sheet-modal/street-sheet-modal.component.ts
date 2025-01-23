@@ -33,7 +33,16 @@ export class StreetSheetModalComponent implements OnInit {
 
   streetSheet: StreetSheet | null = null;
   pmOptions: User[] = [];
-  deploymentOptions: string[] = ['Micro tench', 'Mastech', 'Fiber'];
+  deploymentOptions: string[] = ['Micro tench', 'Mastic', 'Fiber'];
+
+  equipmentOptions: string[] = ['Prelim',
+                                'CRO (Pre-con)', 
+                                'City walk',
+                                'QC inspection',
+                                'Micro trench',
+                                'Bore',
+                                'Fiber Install',
+                                'Mastic'];
 
   vendors: string[] = ['Conguex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
 
@@ -70,6 +79,7 @@ export class StreetSheetModalComponent implements OnInit {
       city: [this.data?.streetSheet?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
       state: [this.data?.streetSheet?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       deployment: [this.data?.streetSheet?.deployment || '', Validators.required],
+      equipment: [this.data?.streetSheet?.equipment ? this.data.streetSheet.equipment.split(',').map((e: string) => e.trim()) : [], Validators.required],
       date: [this.data?.streetSheet?.date || new Date().toISOString(), Validators.required],
       swpppImage: [this.data?.streetSheet?.swpppImage || ''],
       ppeImage: [this.data?.streetSheet?.ppeImage || ''],
@@ -190,7 +200,6 @@ export class StreetSheetModalComponent implements OnInit {
     const state = suggestion.address.state;
     const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
   
-    debugger;
     this.streetSheetForm.patchValue({
       streetAddress: streetAddress,
       city: city,
@@ -261,7 +270,10 @@ export class StreetSheetModalComponent implements OnInit {
 
   save(): void {
     if (this.streetSheetForm.valid) {
-      const streetSheet = this.streetSheetForm.getRawValue();
+      const streetSheet = {
+        ...this.streetSheetForm.value,
+        equipment: this.streetSheetForm.value.equipment.join(', ')
+      };
 
       if(this.isEditMode || streetSheet.updatedBy == null){
         streetSheet.updatedBy = this.userData.id

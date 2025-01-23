@@ -155,7 +155,7 @@ export class MapMarkerModalComponent implements OnInit {
   
     const city = suggestion.address.city || suggestion.address.town || suggestion.address.village || suggestion.address.municipality;
     const state = suggestion.address.state;
-    const abbreviatedState = this.stateAbbreviations[state] || state;
+    const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
   
     this.mapMarkerForm.patchValue({
       streetAddress: streetAddress,
