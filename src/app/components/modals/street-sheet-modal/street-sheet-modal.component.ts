@@ -81,6 +81,7 @@ export class StreetSheetModalComponent implements OnInit {
       deployment: [this.data?.streetSheet?.deployment || '', Validators.required],
       equipment: [this.data?.streetSheet?.equipment ? this.data.streetSheet.equipment.split(',').map((e: string) => e.trim()) : [], Validators.required],
       date: [this.data?.streetSheet?.date || new Date().toISOString(), Validators.required],
+      additionalConcerns: [this.data?.streetSheet?.additionalConcerns || '', [Validators.maxLength(65)]],
       swpppImage: [this.data?.streetSheet?.swpppImage || ''],
       ppeImage: [this.data?.streetSheet?.ppeImage || ''],
       trafficControlImage: [this.data?.streetSheet?.trafficControlImage || ''],

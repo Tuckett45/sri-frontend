@@ -2,38 +2,51 @@
   <mat-sidenav-container class="sidenav-container">
     <mat-sidenav #sidenav mode="side" [ngClass]="{ 'open': sidenavOpen, 'closed': !sidenavOpen }" opened="false" class="side-panel">
       <div class="side-panel-header">
-        <h3 class="modal-title">Added Street Markers</h3>
-        <button mat-icon-button class="close-btn" (click)="toggleSidePanel(sidenav)">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-      <div style="align-content: space-between;" *ngFor="let streetSheet of streetSheets" (click)="selectStreetSheet(streetSheet)">
-        <div class="flex">
-          <h5>{{ streetSheet.vendorName }} - {{ streetSheet.segmentId }}</h5>
-          <mat-icon (click)="editStreetSheet(streetSheet)" class="edit-icon">edit</mat-icon>
-          <mat-icon (click)="openDeleteConfirmationDialog(streetSheet)" class="delete-icon">delete</mat-icon>
+        <div class="header-title-container">
+          <h2 class="modal-title">Added Street Markers</h2>
+          <button mat-icon-button class="close-btn" (click)="toggleSidePanel(sidenav)">
+            <mat-icon>close</mat-icon>
+          </button>
         </div>
-        <ul>
-          <li *ngFor="let marker of streetSheet.marker" (click)="selectMarker(marker, streetSheet)">
-            {{ reversedAddresses[marker.id]?.street || (marker.latitude + ' - ' + marker.longitude) }}
+        <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleSearchBar()">
+          <mat-icon>search</mat-icon>
+        </button>
+        <div class="filter-section" *ngIf="searchBarOpen">
+          <mat-form-field appearance="fill" class="filter-input">
+            <mat-label>Filter by Segment ID</mat-label>
+            <input matInput [(ngModel)]="filterText" (keyup)="applyFilter()" placeholder="Search...">
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="surface-card border-round select-none">
+        <ul class="list-none p-2 m-0">
+          <li *ngFor="let streetSheet of filteredStreetSheets">
+            <a pRipple class="flex align-items-center cursor-pointer p-1 border-round transition-colors transition-duration-150"
+            pStyleClass="@next" enterClass="hidden" enterActiveClass="slidedown" leaveToClass="hidden" leaveActiveClass="slideup" style="background-color: #144f80; color: azure;">
+            <i class="pi pi-chevron-down ml-auto text-500"></i>
+              <div class="flex-grow" (click)="selectStreetSheet(streetSheet)">
+                <h5><b style="font-weight: 400;">{{ streetSheet.segmentId }}</b></h5>
+              </div>
+              <mat-icon (click)="editStreetSheet(streetSheet)" class="edit-icon ml-2">edit</mat-icon>
+              <mat-icon (click)="openDeleteConfirmationDialog(streetSheet)" class="delete-icon ml-2">delete</mat-icon>
+            </a>
+            <ul style="align-items: start; display: flex; flex-direction: column;" class="list-none py-0 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out">
+              <li *ngFor="let marker of streetSheet.marker" (click)="selectMarker(marker, streetSheet)">
+                <a pRipple class="flex align-items-center cursor-pointer p-1 hover:surface-100 border-round transition-colors transition-duration-150">
+                  <i class="pi pi-map-marker mr-2 text-700"></i>
+                  <span class="font-medium text-700">
+                    {{ reversedAddresses[marker.id]?.street || (marker.latitude + ' - ' + marker.longitude) }}
+                  </span>
+                </a>
+              </li>
+            </ul>
           </li>
         </ul>
       </div>
     </mat-sidenav>
 
     <mat-sidenav-content>
-
-      <div class="search-bar">
-        <button mat-icon-button matSuffix (click)="toggleSearchBar()">
-          <mat-icon>search</mat-icon>
-        </button>
-        <div *ngIf="searchBarOpen">
-          <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Search</mat-label>
-            <input matInput (keyup)="applyFilter($event)" placeholder="Search by Segment ID, Address, City, State">
-          </mat-form-field>
-        </div>
-      </div>
       <div class="header-section">
         <div row class="header-title">
           <h2>Street Sheets</h2>

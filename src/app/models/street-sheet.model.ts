@@ -11,6 +11,7 @@ export class StreetSheet {
     deployment: string;
     equipment: string;
     date: Date;
+    additionalConcerns: string;
     swpppImage?: string;
     ppeImage?: string;
     trafficControlImage?: string;
@@ -32,6 +33,7 @@ export class StreetSheet {
         deployment: string, 
         equipment: string,  
         date: Date,      
+        additionalConcerns: string,
         swpppImage: string,     
         ppeImage: string,   
         trafficControlImage: string,
@@ -51,6 +53,7 @@ export class StreetSheet {
         this.deployment = deployment;
         this.equipment = equipment;
         this.date = date;
+        this.additionalConcerns = additionalConcerns;
         this.swpppImage = swpppImage;
         this.ppeImage = ppeImage;
         this.trafficControlImage = trafficControlImage;

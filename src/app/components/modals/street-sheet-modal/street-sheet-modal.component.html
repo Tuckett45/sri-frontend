@@ -144,6 +144,13 @@
         </mat-form-field>
       </mat-grid-tile>
 
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Additional Concerns</mat-label>
+          <textarea matInput formControlName="additionalConcerns" placeholder="Enter Additional Concerns"></textarea>
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- SWPPP Image -->
       <mat-grid-tile colspan="2">
         <div *ngIf="!this.streetSheetForm.get('swpppImage')?.value">

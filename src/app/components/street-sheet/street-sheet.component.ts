@@ -38,7 +38,7 @@ export class StreetSheetComponent implements OnInit {
   pmOptions: User[] = [];
   filteredStreetSheets: StreetSheet[] = [];
   filteredMapMarkers: MapMarker[] = [];
-  searchTerm: string = '';
+  filterText: string = '';
 
   @ViewChild(StreetSheetMapComponent) streetSheetMapComponent!: StreetSheetMapComponent;
   dataSource: MatTableDataSource<StreetSheet> = new MatTableDataSource();
@@ -68,11 +68,17 @@ export class StreetSheetComponent implements OnInit {
       ).subscribe(results => {
         const filteredStreetSheets = results.filter((result: any) => result.mapMarkers.length > 0)
           .map((result: any) => {
-            result.sheet.marker = result.mapMarkers; 
+            result.sheet.marker = result.mapMarkers;
+            result.sheet.marker.forEach((marker: MapMarker) => {
+              this.getReversedAddress(marker).then((reversedAddress) => {
+                this.reversedAddresses[marker.id] = reversedAddress;
+              });
+            }) 
             return result.sheet;
           });
-  
+        
         this.streetSheets = filteredStreetSheets;
+        this.filteredStreetSheets = this.streetSheets;
       });
     });
   }
@@ -86,8 +92,8 @@ export class StreetSheetComponent implements OnInit {
       dialogRef.afterClosed().subscribe((result: StreetSheet) => {
         if (result) {
           this.mapMarker = result.marker[result.marker.length - 1]; 
-          debugger;
           this.streetSheetMap.addMarker(this.mapMarker, result);
+          this.streetSheetMapComponent.centerMapOnMarker(result.marker[0], result);
           this.getStreetSheets();
         }
       });
@@ -111,14 +117,6 @@ export class StreetSheetComponent implements OnInit {
     this.streetSheetService.updateStreetSheet(updatedStreetSheet).subscribe(result => {
       this.streetSheetMap.loadStreetSheets(); 
     });
-  }
-
-  filterStreetSheets(): void {
-    const lowerSearchTerm = this.searchTerm.toLowerCase();
-    this.filteredStreetSheets = this.streetSheets.filter(sheet =>
-      sheet.vendorName.toLowerCase().includes(lowerSearchTerm) ||
-      sheet.segmentId.toLowerCase().includes(lowerSearchTerm)
-    );
   }
 
   selectStreetSheet(streetSheet: StreetSheet): void {
@@ -163,6 +161,7 @@ export class StreetSheetComponent implements OnInit {
         const streetSheet = this.streetSheets.find(sheet => sheet.segmentId === result.segmentId);
         if (streetSheet) { 
           this.streetSheetMap.addMarker(result, streetSheet);
+          this.streetSheetMapComponent.centerMapOnMarker(result, streetSheet);
           this.getStreetSheets();
         } else {
           this.toastr.error('Street Sheet not found.');
@@ -210,16 +209,17 @@ export class StreetSheetComponent implements OnInit {
     this.sidenavOpen = !this.sidenavOpen;
   }
 
-  applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
-  
-    this.dataSource.filterPredicate = (data: any, filter: string) => {
-      const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.streetAddress} ${data.city} ${data.state}`.toLowerCase();
-      return dataStr.includes(transformedFilter);
-    };
-  
-    this.dataSource.filter = filterValue;
+  applyFilter() {
+    if (this.filterText.trim() === '') {
+      this.filteredStreetSheets = this.streetSheets;
+    } else {
+      this.filteredStreetSheets = this.streetSheets.filter(streetSheet =>
+        streetSheet.segmentId.toLowerCase().includes(this.filterText.toLowerCase()) ||
+        streetSheet.streetAddress.toLowerCase().includes(this.filterText.toLowerCase()) ||
+        streetSheet.city.toLowerCase().includes(this.filterText.toLowerCase()) ||
+        streetSheet.state.toLowerCase().includes(this.filterText.toLowerCase())
+      );
+    }
   }
 
   getReversedAddress(marker: MapMarker): Promise<any> {

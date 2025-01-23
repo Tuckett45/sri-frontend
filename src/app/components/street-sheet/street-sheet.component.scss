@@ -94,6 +94,105 @@ mat-sidenav-content {
   transition: transform 0.3s ease-in-out;
 }
 
+/* List Styling */
+.surface-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.shadow-2 {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.border-round {
+  border-radius: 8px;
+}
+
+.select-none {
+  user-select: none;
+}
+
+ul.list-none {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul li {
+  padding: 8px 0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+ul li:hover {
+  background-color: #f4f4f4;
+}
+
+/* Flex container for segment */
+.flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Icon styling */
+.mat-icon {
+  cursor: pointer;
+}
+
+.edit-icon {
+  color: #007bff; /* Primary color */
+}
+
+.delete-icon {
+  color: #ff4747; /* Red color for delete */
+}
+
+.text-primary {
+  color: #007bff;
+}
+
+.text-red-500 {
+  color: #ff4747;
+}
+
+/* Font for list items */
+.font-medium {
+  font-weight: 500;
+}
+
+.text-700 {
+  color: #333;
+}
+
+.hover\:surface-100:hover {
+  background-color: #f0f0f0;
+}
+
+/* Spacing between elements */
+.ml-2 {
+  margin-left: 8px;
+}
+
+.pl-4 {
+  padding-left: 16px;
+}
+
+/* Custom styling for list items in markers */
+.p-3 {
+  padding: 12px;
+}
+
+.transition-colors {
+  transition: all 0.3s ease;
+}
+
+.transition-duration-150 {
+  transition-duration: 150ms;
+}
+
+
 .side-panel-header {
   position: sticky;  
   top: 0; 
@@ -105,8 +204,8 @@ mat-sidenav-content {
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
 
   .modal-title {
     font-size: 1.5rem;
@@ -125,6 +224,21 @@ mat-sidenav-content {
       background-color: rgba(255, 255, 255, 0.2);
     }
   }
+}
+
+.header-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-section {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.filter-input {
+  width: 100%;
 }
 
 .side-panel-content {
@@ -327,7 +441,7 @@ button.mat-icon-button {
     }
   }
   button {
-    background-color: #e18a25;
+    background-color: #144f80;
     color: #fff;
     width: auto;
     padding: 10px 20px;
@@ -337,7 +451,7 @@ button.mat-icon-button {
     justify-content: center;
 
     &:hover {
-      background-color: #b86404;
+      background-color: #0e3453;
       transform: scale(1.05);
     }
 
