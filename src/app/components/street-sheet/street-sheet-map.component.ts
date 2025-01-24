@@ -141,11 +141,12 @@ export class StreetSheetMapComponent implements AfterViewInit {
       
       L.marker(latLng).addTo(this.map).bindPopup(`
         <b>${streetSheet.vendorName}</b><br>
-        Segment ID: ${streetSheet.segmentId}<br>
-        Street: ${reversedAddress.street}<br>
-        City: ${reversedAddress.city}<br>
-        State: ${reversedAddress.state}<br>
+        <b>Segment ID:</b> ${streetSheet.segmentId}<br>
+        <b>Street:</b> ${reversedAddress.street}<br>
+        <b>City:</b> ${reversedAddress.city}<br>
+        <b>State:</b> ${reversedAddress.state}<br>
         Date Added: <b>${this.formattedDate}</b><br>
+        Created By: ${streetSheet.createdBy}<br>
         <b>Marker ID:</b> ${marker.id}
       `).openPopup();
     }

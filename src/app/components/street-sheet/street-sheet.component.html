@@ -12,20 +12,23 @@
           <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleSearchBar()">
             <mat-icon>search</mat-icon>
           </button>
+          <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleUserSearch()">
+            <mat-icon>account_circle</mat-icon>
+          </button>
           <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleDateRange()">
             <mat-icon>calendar_today</mat-icon>
           </button>
         </div>
         <div class="filter-section" *ngIf="dateRangeOpen">
           
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="fill" class="w-full">
             <mat-label>Start Date</mat-label>
             <input matInput [matDatepicker]="startDatePicker" [(ngModel)]="startDate">
             <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
             <mat-datepicker #startDatePicker></mat-datepicker>
           </mat-form-field>
         
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="fill" class="w-full">
             <mat-label>End Date</mat-label>
             <input matInput [matDatepicker]="endDatePicker" [(ngModel)]="endDate">
             <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
@@ -34,6 +37,17 @@
         
           <button mat-raised-button style="background-color: #144f80" (click)="applyDateFilter()">Apply Filter</button>
           <button mat-raised-button style="align-self: flex-end; background-color: #a50000" (click)="removeDateFilter()">Remove Filter</button>
+        </div>
+        <div class="filter-section" *ngIf="userSearchOpen">
+          <mat-form-field appearance="fill" class="filter-input">
+            <mat-label>Filter by Created By</mat-label>
+            <mat-select placeholder="Select User" [(ngModel)]="filterUser">
+              <mat-option value="">-- Clear Filter --</mat-option>
+              <mat-option *ngFor="let streetSheet of filteredStreetSheets" [value]="streetSheet.createdBy" (onSelectionChange)="applyUserFilter()">
+                {{ streetSheet.createdBy }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
         <div class="filter-section" *ngIf="searchBarOpen">
           <mat-form-field appearance="fill" class="filter-input">
@@ -58,7 +72,7 @@
             </a>
             <ul style="align-items: start; display: flex; flex-direction: column; background-color: lightgray;" 
                 class="list-none py-0 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out">
-              <li class="w-full overflow-y-hidden" *ngFor="let marker of streetSheet.marker" (click)="selectMarker(marker, streetSheet)">
+              <li class="w-full overflow-y-hidden" *ngFor="let marker of streetSheet.marker" (click)="selectMarker(marker, streetSheet, sidenav)">
                 <a pRipple class="flex align-items-center cursor-pointer p-1 hover:surface-100 border-round transition-colors transition-duration-150">
                   <i class="pi pi-map-marker mr-2 text-700"></i>
                   <span class="font-medium text-700">

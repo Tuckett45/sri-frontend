@@ -48,6 +48,7 @@ export class MapMarkerModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadUserProfile();
     this.segmentIds = this.streetSheets.map(sheet => sheet.segmentId);
     this.isEditMode = !!this.data;
     this.isDisabled = !this.authService.isCM();
@@ -87,6 +88,24 @@ export class MapMarkerModalComponent implements OnInit {
   //   });    
   //   this.reverseGeocode(mapMarker.latitude, mapMarker.longitude);
   // }
+
+  loadUserProfile(): void {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const userObj = JSON.parse(userString);
+
+      this.userData = new User(
+        userObj.id,
+        userObj.name,
+        userObj.email,
+        userObj.password,
+        userObj.role,
+        userObj.market,
+        userObj.company,
+        new Date(userObj.createdDate)  
+      );
+    }
+  }
   
   reverseGeocode(latitude: number, longitude: number): void {
     this.geocodingService.reverseGeocode(latitude, longitude).subscribe(suggestion => {
@@ -171,7 +190,8 @@ export class MapMarkerModalComponent implements OnInit {
       suggestion.lat,
       suggestion.lon,
       true,
-      new Date()
+      new Date(),
+      this.userData.id
     );
 
     this.mapMarker = mapMarker;
@@ -201,7 +221,8 @@ export class MapMarkerModalComponent implements OnInit {
             formData.latitude,    
             formData.longitude,  
             formData.isActive,  
-            new Date(formData.dateCreated)); 
+            new Date(formData.dateCreated)),
+            this.userData.id; 
         }
 
         this.mapMarkerService.addMapMarker(this.mapMarker).subscribe(

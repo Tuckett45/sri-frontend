@@ -34,6 +34,7 @@ export class StreetSheetComponent implements OnInit {
   reversedAddresses: { [markerId: string]: { street: string, city: string, state: string } } = {};
   sidenavOpen: boolean = false;
   searchBarOpen: boolean = false;
+  userSearchOpen: boolean = false;
   dateRangeOpen: boolean = false;
   user!: User;
   startDate!: Date;
@@ -43,6 +44,7 @@ export class StreetSheetComponent implements OnInit {
   filteredStreetSheets: StreetSheet[] = [];
   filteredMapMarkers: MapMarker[] = [];
   filterText: string = '';
+  filterUser: string = '';
 
   @ViewChild(StreetSheetMapComponent) streetSheetMapComponent!: StreetSheetMapComponent;
   dataSource: MatTableDataSource<StreetSheet> = new MatTableDataSource();
@@ -129,7 +131,8 @@ export class StreetSheetComponent implements OnInit {
     this.streetSheetMapComponent.centerMapOnStreetSheet(streetSheet); 
   }
 
-  selectMarker(marker: MapMarker, streetSheet: StreetSheet): void {
+  selectMarker(marker: MapMarker, streetSheet: StreetSheet, sidenav: any): void {
+    this.toggleSidePanel(sidenav);
     this.selectedMarker = marker;
     this.getReversedAddress(marker).then((reversedAddress) => {
       this.reversedAddresses[marker.id] = reversedAddress;
@@ -201,21 +204,27 @@ export class StreetSheetComponent implements OnInit {
     });
   }
 
-  toggleSearchBar() {
+  toggleSearchBar(): void {
     this.searchBarOpen = !this.searchBarOpen;
     if (this.searchBarOpen) {
       this.dateRangeOpen = false;
-    } else {
-      this.dateRangeOpen = this.dateRangeOpen; // Keep searchBarOpen in its current state when closing date range
+      this.userSearchOpen = false;
     }
   }
-
-  toggleDateRange() {
+  
+  toggleUserSearch(): void {
+    this.userSearchOpen = !this.userSearchOpen;
+    if (this.userSearchOpen) {
+      this.searchBarOpen = false; 
+      this.dateRangeOpen = false;
+    }
+  }
+  
+  toggleDateRange(): void {
     this.dateRangeOpen = !this.dateRangeOpen;
     if (this.dateRangeOpen) {
-      this.searchBarOpen = false;
-    } else {
-      this.searchBarOpen = this.searchBarOpen; 
+      this.searchBarOpen = false;  
+      this.userSearchOpen = false; 
     }
   }
 
@@ -239,6 +248,20 @@ export class StreetSheetComponent implements OnInit {
   removeDateFilter(): void {
     this.filteredStreetSheets = this.streetSheets;
   }
+
+  applyUserFilter() {
+    if (this.filterUser === '') {
+      this.filteredStreetSheets = this.streetSheets;
+    } else {
+      this.filteredStreetSheets = this.streetSheets.filter(streetSheet =>
+        streetSheet.createdBy?.toLowerCase().includes(this.filterUser.toLowerCase()) ||
+        streetSheet.marker.some((marker: MapMarker) => 
+          marker.createdBy?.toLowerCase().includes(this.filterUser.toLowerCase())
+        )
+      );
+    }
+  }
+  
 
   applyFilter() {
     if (this.filterText.trim() === '') {
@@ -265,7 +288,6 @@ export class StreetSheetComponent implements OnInit {
         const state = address.state || '';  
         const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
         
-        // Save the reversed address in the mapping
         this.reversedAddresses[marker.id] = {
           street: streetAddress.trim(),
           city: city,

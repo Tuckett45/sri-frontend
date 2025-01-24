@@ -213,7 +213,8 @@ export class StreetSheetModalComponent implements OnInit {
       suggestion.lat,
       suggestion.lon,
       true,
-      new Date()
+      new Date(),
+      this.userData.id
     );
 
     this.mapMarker = mapMarker;
