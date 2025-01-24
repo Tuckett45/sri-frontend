@@ -34,6 +34,10 @@ export class StreetSheetComponent implements OnInit {
   reversedAddresses: { [markerId: string]: { street: string, city: string, state: string } } = {};
   sidenavOpen: boolean = false;
   searchBarOpen: boolean = false;
+  dateRangeOpen: boolean = false;
+  user!: User;
+  startDate!: Date;
+  endDate!: Date;
 
   pmOptions: User[] = [];
   filteredStreetSheets: StreetSheet[] = [];
@@ -54,6 +58,7 @@ export class StreetSheetComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchPMOptions();
+    this.user = this.authService.getUser();
     this.getStreetSheets();
   }
 
@@ -121,11 +126,7 @@ export class StreetSheetComponent implements OnInit {
 
   selectStreetSheet(streetSheet: StreetSheet): void {
     this.selectedStreetSheet = streetSheet;
-    const firstMarker = streetSheet.marker[0];
-    if (firstMarker) {
-      this.selectedMarker = firstMarker;
-      this.streetSheetMapComponent.centerMapOnMarker(firstMarker, streetSheet); 
-    }
+    this.streetSheetMapComponent.centerMapOnStreetSheet(streetSheet); 
   }
 
   selectMarker(marker: MapMarker, streetSheet: StreetSheet): void {
@@ -202,11 +203,41 @@ export class StreetSheetComponent implements OnInit {
 
   toggleSearchBar() {
     this.searchBarOpen = !this.searchBarOpen;
+    if (this.searchBarOpen) {
+      this.dateRangeOpen = false;
+    } else {
+      this.dateRangeOpen = this.dateRangeOpen; // Keep searchBarOpen in its current state when closing date range
+    }
+  }
+
+  toggleDateRange() {
+    this.dateRangeOpen = !this.dateRangeOpen;
+    if (this.dateRangeOpen) {
+      this.searchBarOpen = false;
+    } else {
+      this.searchBarOpen = this.searchBarOpen; 
+    }
   }
 
   toggleSidePanel(sidenav: any): void {
     sidenav.toggle();
     this.sidenavOpen = !this.sidenavOpen;
+  }
+
+  applyDateFilter(): void {
+      let filtered = this.streetSheets;
+
+    if (this.startDate && this.endDate) {
+      filtered = filtered.filter(streetSheet => {
+        const streetSheetDate = new Date(streetSheet.date);
+        return streetSheetDate >= this.startDate && streetSheetDate <= this.endDate;
+      });
+    }
+    this.filteredStreetSheets = filtered;
+  }
+
+  removeDateFilter(): void {
+    this.filteredStreetSheets = this.streetSheets;
   }
 
   applyFilter() {

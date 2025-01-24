@@ -23,7 +23,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
   streetSheets: StreetSheet[] = [];
   osmLayer!: L.TileLayer;
   markersClusterGroup!: L.MarkerClusterGroup;
-  private mapMarkers: MapMarker[] = [];
+  mapMarkers: MapMarker[] = [];
   stateAbbreviations!: StateAbbreviation;
   formattedDate!: string;
 
@@ -94,6 +94,42 @@ export class StreetSheetMapComponent implements AfterViewInit {
         this.markersClusterGroup.addLayer(newMarker); 
       }
     });
+  }
+
+  async centerMapOnStreetSheet(streetSheet: StreetSheet): Promise<void> {
+    if (this.map && streetSheet.marker && streetSheet.marker.length > 0) {
+      const bounds = new L.LatLngBounds(
+        new L.LatLng(streetSheet.marker[0].latitude, streetSheet.marker[0].longitude),
+        new L.LatLng(streetSheet.marker[0].latitude, streetSheet.marker[0].longitude)
+      );
+
+        for (const marker of streetSheet.marker) {
+            const latLng = new L.LatLng(marker.latitude, marker.longitude); 
+            
+            bounds.extend(latLng);
+
+            const reversedAddress = await this.getReversedAddress(marker);  
+            const formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
+
+            L.marker(latLng)
+                .addTo(this.map)
+                .bindPopup(`
+                    <b>${streetSheet.vendorName}</b><br>
+                    Segment ID: ${streetSheet.segmentId}<br>
+                    Street: ${reversedAddress.street}<br>
+                    City: ${reversedAddress.city}<br>
+                    State: ${reversedAddress.state}<br>
+                    Date Added: <b>${formattedDate}</b><br>
+                    <b>Marker ID:</b> ${marker.id}
+                `);
+        }
+
+        this.map.fitBounds(bounds);
+        const zoomLevel = 15;
+        const center = bounds.getCenter();
+
+        this.map.flyTo(center, zoomLevel);
+    }
   }
 
   async centerMapOnMarker(marker: MapMarker, streetSheet: StreetSheet): Promise<void> {

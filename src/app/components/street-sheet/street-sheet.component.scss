@@ -198,9 +198,8 @@ ul li:hover {
   top: 0; 
   z-index: 1; 
   background-color: #e18a25; 
-  background-color: #e18a25;
   color: white;
-  padding: 20px;
+  padding: 10px;
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
   display: flex;
@@ -217,7 +216,6 @@ ul li:hover {
     color: white;
     border: none;
     padding: 8px;
-    border-radius: 50%;
     transition: background-color 0.3s;
 
     &:hover {
@@ -228,6 +226,14 @@ ul li:hover {
 
 .header-title-container {
   display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-button-container {
+  display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
@@ -235,6 +241,7 @@ ul li:hover {
 .filter-section {
   margin-top: 8px;
   width: 100%;
+  justify-content: space-between;
 }
 
 .filter-input {
