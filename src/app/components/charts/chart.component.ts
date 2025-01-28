@@ -6,7 +6,7 @@ import { BaseChartDirective  } from 'ng2-charts';
   selector: 'app-chart',
   templateUrl: './chart.component.html',
   styleUrls: ['./chart.component.scss'],
-  standalone: true
+  standalone: false
 })
 export class ChartComponent {
   public lineChartData: ChartDataset[] = [
