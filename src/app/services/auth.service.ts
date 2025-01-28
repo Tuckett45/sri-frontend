@@ -16,8 +16,6 @@ export class AuthService {
   private loggedInStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
   private userRole: BehaviorSubject<UserRole> = new BehaviorSubject<UserRole>(UserRole.CM);
 
-  private apiUrl = '${environment.apiUrl}/auth';
-
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
@@ -39,6 +37,10 @@ export class AuthService {
 
   getUserById(userId: string){
     return this.http.get<User>(`${environment.apiUrl}/auth/user-${userId}`, this.httpOptions);
+  }
+
+  getUserByRole(role: string): Observable<User[]>{
+    return this.http.get<User[]>(`${environment.apiUrl}/auth/users/${role}`, this.httpOptions);
   }
 
   setUserRole(role: string) {

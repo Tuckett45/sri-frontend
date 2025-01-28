@@ -8,7 +8,7 @@ import { AppRoutingModule } from './app-routing.module';
 
 import { AppComponent } from './app.component';
 
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +25,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialogActions, MatDialogContent, MatDialogModule, MatDialogTitle } from '@angular/material/dialog';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 
 import { DialogModule } from 'primeng/dialog';
 import { ImageModule } from 'primeng/image';
@@ -41,34 +42,50 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { ChartComponent } from './components/charts/chart.component';
 import { TableComponent } from './components/table/table.component';
 import { PreliminaryPunchListModalComponent } from './components/modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
+import { MapMarkerModalComponent } from './components/modals/map-marker-modal/map-marker-modal.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterModalComponent } from './components/modals/register-modal/register-modal.component';
-import { UserProfileModalComponent } from './components/user-profile/user-profile-modal/user-profile-modal.component';
+import { UserProfileModalComponent } from './components/modals/user-profile-modal/user-profile-modal.component';
 import { ForgotPasswordModalComponent } from './components/modals/forgot-password-modal/forgot-password-modal.component';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
+import { StreetSheetModalComponent } from './components/modals/street-sheet-modal/street-sheet-modal.component';
+import { StreetSheetComponent } from './components/street-sheet/street-sheet.component';
+import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
-import { RouterModule } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { StyleClassModule } from 'primeng/styleclass';
+import { StatsComponent } from './components/overview/stats/stats.component';
+import { GoalsComponent } from './components/overview/goals/goals.component';
 
+import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
+import { StyleClassModule } from 'primeng/styleclass';
+import { Select } from 'primeng/select';
+import { FloatLabel } from "primeng/floatlabel"
+import { DropdownModule } from 'primeng/dropdown';
+import { MatNativeDateModule } from '@angular/material/core';
+
+import 'leaflet-search'
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    ChartComponent,
     DeleteConfirmationModalComponent,
     FilterComponent,
     ForgotPasswordModalComponent,
     LoginComponent,
     RegisterModalComponent,
     ResetPasswordComponent,
+    MapMarkerModalComponent,
     NavbarComponent,
     OverviewComponent,
     PreliminaryPunchListModalComponent,
     // SidebarComponent,
+    StatsComponent,
+    StreetSheetComponent,
+    StreetSheetModalComponent,
+    StreetSheetMapComponent,
     TableComponent,
     UserProfileComponent,
     UserProfileModalComponent,
@@ -85,7 +102,11 @@ import { StyleClassModule } from 'primeng/styleclass';
     DialogModule,
     ButtonModule,
     ImageModule,
+    MenuModule,
     StyleClassModule,
+    Select,
+    FloatLabel,
+    DropdownModule,
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule, 
@@ -111,7 +132,11 @@ import { StyleClassModule } from 'primeng/styleclass';
     MatCheckboxModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
-    PreliminaryPunchListModule
+    MatDatepickerModule,
+    MatNativeDateModule,
+    PreliminaryPunchListModule,
+    GoalsComponent,
+    ChartComponent
   ],
   providers: [provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]

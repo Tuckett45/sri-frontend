@@ -1,0 +1,125 @@
+<div class="street-sheet-page">
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav #sidenav mode="side" [ngClass]="{ 'open': sidenavOpen, 'closed': !sidenavOpen }" opened="false" class="side-panel">
+      <div class="side-panel-header">
+        <div class="header-title-container">
+          <h2 class="modal-title">Added Street Markers</h2>
+          <button mat-icon-button class="close-btn" (click)="toggleSidePanel(sidenav)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <div class="header-button-container">
+          <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleSearchBar()">
+            <mat-icon>search</mat-icon>
+          </button>
+          <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleUserSearch()">
+            <mat-icon>account_circle</mat-icon>
+          </button>
+          <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleDateRange()">
+            <mat-icon>calendar_today</mat-icon>
+          </button>
+        </div>
+        <div class="filter-section" *ngIf="dateRangeOpen">
+          
+          <mat-form-field appearance="fill" class="w-full">
+            <mat-label>Start Date</mat-label>
+            <input matInput [matDatepicker]="startDatePicker" [(ngModel)]="startDate">
+            <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #startDatePicker></mat-datepicker>
+          </mat-form-field>
+        
+          <mat-form-field appearance="fill" class="w-full">
+            <mat-label>End Date</mat-label>
+            <input matInput [matDatepicker]="endDatePicker" [(ngModel)]="endDate">
+            <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #endDatePicker></mat-datepicker>
+          </mat-form-field>
+        
+          <button mat-raised-button style="background-color: #144f80" (click)="applyDateFilter()">Apply Filter</button>
+          <button mat-raised-button style="align-self: flex-end; background-color: #a50000" (click)="removeFilter()">Remove Filter</button>
+        </div>
+        <div class="filter-section" *ngIf="userSearchOpen">
+          <mat-form-field appearance="fill" class="filter-input">
+            <mat-label>Filter by Created By</mat-label>
+            <mat-select placeholder="Select User" [(ngModel)]="filterUser" (selectionChange)="applyUserFilter()">
+              <mat-option value="" (click)="removeFilter()">-- Clear Filter --</mat-option>
+              <mat-option *ngFor="let user of uniqueCreatedByUsers" [value]="user">
+                {{ user }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="filter-section" *ngIf="searchBarOpen">
+          <mat-form-field appearance="fill" class="filter-input">
+            <mat-label>Search by Segment ID</mat-label>
+            <input matInput [(ngModel)]="filterText" (keyup)="applyFilter()" placeholder="Search...">
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="border-round select-none">
+        <ul class="list-none p-2 m-0">
+          <li *ngFor="let streetSheet of filteredStreetSheets">
+            <a pRipple class="flex align-items-center cursor-pointer p-1 border-round transition-colors transition-duration-150"
+            pStyleClass="@next" enterClass="hidden" enterActiveClass="slidedown" leaveToClass="hidden" leaveActiveClass="slideup" style="background-color: #144f80; color: azure;">
+            <i class="pi pi-chevron-down text-500"></i>
+              <div class="flex-grow" (click)="selectStreetSheet(streetSheet)">
+                <h5><b style="font-weight: 400;">{{ streetSheet.segmentId }}</b></h5>
+              </div>
+              <mat-icon *ngIf="this.user.role === 'CM'" (click)="editStreetSheet(streetSheet)" class="edit-icon ml-2">edit</mat-icon>
+              <mat-icon *ngIf="this.user.role === 'CM'" (click)="openDeleteConfirmationDialog(streetSheet)" class="delete-icon ml-2">delete</mat-icon>
+              <span *ngIf="this.user.role !== 'CM'" class="ml-6"></span>
+            </a>
+            <ul style="align-items: start; display: flex; flex-direction: column; background-color: lightgray;" 
+                class="list-none py-0 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out">
+              <li class="w-full overflow-y-hidden" *ngFor="let marker of streetSheet.marker" (click)="selectMarker(marker, streetSheet, sidenav)">
+                <a pRipple class="flex align-items-center cursor-pointer p-1 hover:surface-100 border-round transition-colors transition-duration-150">
+                  <i class="pi pi-map-marker mr-2 text-700"></i>
+                  <span class="font-medium text-700">
+                    {{ reversedAddresses[marker.id].street }}
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+      <div row class="header-section">
+        <div class="col-lg-3 location-filter">
+          <mat-form-field appearance="outline" class="filter-input">
+            <mat-label>Go to Location</mat-label>
+            <mat-select placeholder="Select a Location" [(ngModel)]="filterLocation" (selectionChange)="goToLocation($event.value)">
+              <mat-option value="">-- Clear Filter --</mat-option>
+              <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
+                {{ location }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="col-lg-9 header-title">
+          <h2>Street Sheets</h2>
+        </div>
+      </div>
+
+      <div class="marker-btns">
+        <button (click)="toggleSidePanel(sidenav)" mat-raised-button>
+          <mat-icon> list_alt</mat-icon> 
+          Show Markers
+        </button>
+        <button *ngIf="this.user.role === 'CM'" mat-raised-button (click)="addMapMarker()">
+          <mat-icon>add_location</mat-icon> 
+          Add Map Marker
+        </button>
+        <button *ngIf="this.user.role === 'CM'" (click)="createStreetSheet()" mat-raised-button>
+          <mat-icon>note_add</mat-icon> 
+          New Street Sheet
+        </button>
+      </div>
+      
+      <street-sheet-map></street-sheet-map>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

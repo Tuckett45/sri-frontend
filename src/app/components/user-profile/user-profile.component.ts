@@ -1,6 +1,6 @@
 import { Component, TemplateRef, ViewChild, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { UserProfileModalComponent } from './user-profile-modal/user-profile-modal.component';
+import { UserProfileModalComponent } from '../modals/user-profile-modal/user-profile-modal.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { User } from 'src/app/models/user.model';
 

@@ -10,7 +10,6 @@ import { v4 as uuidv4 } from 'uuid';
   providedIn: 'root'
 })
 export class PreliminaryPunchListService {
-  private apiUrl = '${environment.apiUrl}/PunchList';
 
   private httpOptions = {
     headers: new HttpHeaders({

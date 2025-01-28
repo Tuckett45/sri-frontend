@@ -1,0 +1,258 @@
+<div mat-dialog-title class="modal-header">
+  <h3 class="modal-title">Add Street Sheet</h3>
+  <button mat-icon-button (click)="closeModal()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div mat-dialog-content class="modal-body">
+  <form [formGroup]="streetSheetForm">
+
+    <mat-grid-list cols="4" rowHeight="115px" gutterSize="2px">
+
+      <!-- Segment ID -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Segment ID</mat-label>
+          <input matInput formControlName="segmentId" placeholder="Enter Segment ID" required>
+          <mat-error *ngIf="streetSheetForm.get('segmentId')?.hasError('required')">
+            Segment ID is required.
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- PM -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>PM</mat-label>
+          <mat-select formControlName="pm" placeholder="Select PM">
+            <mat-option *ngFor="let pm of pmOptions" [value]="pm.name">
+              {{ pm.name }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="streetSheetForm.get('pm')?.hasError('required')">
+            PM is required.
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- Vendor Name -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Vendor</mat-label>
+          <mat-select formControlName="vendorName" placeholder="Select a Vendor">
+            <mat-option *ngFor="let vendor of vendors" [value]="vendor">{{ vendor }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="streetSheetForm.get('vendorName')?.hasError('required') || streetSheetForm.get('vendorName')?.dirty">
+            Vendor is required.
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- Street Address -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Street Address</mat-label>
+          <input
+            matInput
+            formControlName="streetAddress"
+            [matAutocomplete]="auto"
+            (input)="onAddressInput($event)"
+            placeholder="Enter Street Address"
+            required
+          />
+          <mat-error *ngIf="streetSheetForm.get('streetAddress')?.hasError('required')">
+            Street address is required.
+          </mat-error>
+        
+          <mat-spinner *ngIf="isAddressLoading" diameter="24" class="loading-spinner"></mat-spinner>
+        
+          <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)" class="autocomplete-suggestions">
+            <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
+              {{ suggestion.display_name }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>       
+      </mat-grid-tile>
+      <!-- City -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" placeholder="Enter City">
+          <mat-error *ngIf="streetSheetForm.get('city')?.hasError('required') || streetSheetForm.get('city')?.dirty">
+            City is required.
+          </mat-error>
+          <mat-error *ngIf="streetSheetForm.get('city')?.hasError('pattern')">
+            City must contain only letters.
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- State -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>State</mat-label>
+          <input matInput formControlName="state" placeholder="Enter State" required>
+          <mat-error *ngIf="streetSheetForm.get('state')?.hasError('required') || streetSheetForm.get('state')?.dirty">
+            State is required.
+          </mat-error>
+          <mat-error *ngIf="streetSheetForm.get('state')?.hasError('pattern')">
+            State must be 2 alphabetic characters (e.g., CA).
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- Deployment -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Deployment</mat-label>
+          <mat-select formControlName="deployment" placeholder="Select Deployment">
+            <mat-option *ngFor="let deployment of deploymentOptions" [value]="deployment">
+              {{ deployment }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="streetSheetForm.get('deployment')?.hasError('required') || streetSheetForm.get('deployment')?.dirty">
+            Deployment is required.
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+      
+      <!-- Date -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="date" placeholder="Choose a date">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="streetSheetForm.get('date')?.hasError('required')">
+            Date is required.
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Equipment on Site</mat-label>
+          <mat-select formControlName="equipment" multiple placeholder="Select Equipment">
+            <mat-option *ngFor="let equipment of equipmentOptions" [value]="equipment">
+              {{ equipment }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="streetSheetForm.get('equipment')?.hasError('required') && streetSheetForm.get('equipment')?.touched">
+            Equipment is required.
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Additional Concerns</mat-label>
+          <textarea matInput formControlName="additionalConcerns" placeholder="Enter Additional Concerns"></textarea>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- SWPPP Image -->
+      <mat-grid-tile colspan="2">
+        <div *ngIf="!this.streetSheetForm.get('swpppImage')?.value">
+          <button mat-raised-button class="image-btn" (click)="triggerSWPPPImageUpload()">
+            SWPPP Image
+            <mat-icon>attach_file</mat-icon>
+          </button>
+          <input type="file" #swpppImageInput (change)="uploadImage($event, 'swpppImage')" style="display: none;">
+        </div>
+        <div *ngIf="this.streetSheetForm.get('swpppImage')?.value" class="file-preview">
+          <div style="display: flex; flex-direction: column;">
+            <img [src]="this.streetSheetForm.get('swpppImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('swpppImage')?.value)" class="preview-image">
+            <mat-label *ngIf="this.streetSheetForm.get('swpppImage')?.value">
+              SWPPP Image
+            </mat-label>
+          </div>
+          <div class="image-label">
+            <button mat-icon-button class="delete-icon" (click)="removeImage('swpppImage')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-grid-tile>
+
+      <!-- PPE Image -->
+      <mat-grid-tile colspan="2">
+        <div *ngIf="!this.streetSheetForm.get('ppeImage')?.value">
+          <button mat-raised-button class="image-btn" (click)="triggerPPEImageUpload()">
+            PPE Image
+            <mat-icon>attach_file</mat-icon>
+          </button>
+          <input type="file" #ppeImageInput (change)="uploadImage($event, 'ppeImage')" style="display: none;">
+        </div>
+        <div *ngIf="this.streetSheetForm.get('ppeImage')?.value" class="file-preview">
+          <div style="display: flex; flex-direction: column;">
+            <img [src]="this.streetSheetForm.get('ppeImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('ppeImage')?.value)" class="preview-image">
+            <mat-label *ngIf="this.streetSheetForm.get('ppeImage')?.value">
+              PPE Image
+            </mat-label>
+          </div>
+          <div class="image-label">
+            <button mat-icon-button class="delete-icon" (click)="removeImage('ppeImage')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-grid-tile>
+
+      <!-- Traffic Control Image -->
+      <mat-grid-tile colspan="2">
+        <div *ngIf="!this.streetSheetForm.get('trafficControlImage')?.value">
+          <button mat-raised-button class="image-btn" (click)="triggerTrafficControlImageUpload()">
+            Traffic Control Image
+            <mat-icon>attach_file</mat-icon>
+          </button>
+          <input type="file" #trafficControlImageInput (change)="uploadImage($event, 'trafficControlImage')" style="display: none;">
+        </div>
+        <div *ngIf="this.streetSheetForm.get('trafficControlImage')?.value" class="file-preview">
+          <div style="display: flex; flex-direction: column;">
+            <img [src]="this.streetSheetForm.get('trafficControlImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('trafficControlImage')?.value)" class="preview-image">
+            <mat-label *ngIf="this.streetSheetForm.get('trafficControlImage')?.value">
+              Traffic Control Image
+            </mat-label>
+          </div>
+          <div class="image-label">
+            <button mat-icon-button class="delete-icon" (click)="removeImage('trafficControlImage')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-grid-tile>
+
+      <!-- Signage Image -->
+      <mat-grid-tile colspan="2">
+        <div *ngIf="!this.streetSheetForm.get('signageImage')?.value">
+          <button mat-raised-button class="image-btn" (click)="triggerSignageImageUpload()">
+            Signage Image
+            <mat-icon>attach_file</mat-icon>
+          </button>
+          <input type="file" #signageImageInput (change)="uploadImage($event, 'signageImage')" style="display: none;">
+        </div>
+        <div *ngIf="this.streetSheetForm.get('signageImage')?.value" class="file-preview">
+          <div style="display: flex; flex-direction: column;">
+            <img [src]="this.streetSheetForm.get('signageImage')?.value" alt="Preview" (click)="openImageModal(this.streetSheetForm.get('signageImage')?.value)" class="preview-image">
+            <mat-label *ngIf="this.streetSheetForm.get('signageImage')?.value">
+              Signage Image
+            </mat-label>
+          </div>
+          <div class="image-label">
+            <button mat-icon-button class="delete-icon" (click)="removeImage('signageImage')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-grid-tile>
+
+    </mat-grid-list>
+
+  </form>
+</div>
+
+<div mat-dialog-actions class="modal-footer">
+  <button mat-raised-button class="cancel-btn" (click)="closeModal()">Cancel</button>
+  <button mat-raised-button class="save-btn" (click)="save()">Save</button>
+</div>
