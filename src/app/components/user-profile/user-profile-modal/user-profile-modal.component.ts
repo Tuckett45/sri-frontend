@@ -6,7 +6,8 @@ import { User } from 'src/app/models/user.model';
 @Component({
   selector: 'app-user-profile-modal',
   templateUrl: './user-profile-modal.component.html',
-  styleUrls: ['./user-profile-modal.component.scss']
+  styleUrls: ['./user-profile-modal.component.scss'],
+  standalone: false
 })
 export class UserProfileModalComponent {
   editProfileForm: FormGroup;

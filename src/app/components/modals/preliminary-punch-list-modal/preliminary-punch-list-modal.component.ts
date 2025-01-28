@@ -16,7 +16,8 @@ import { User } from 'src/app/models/user.model';
 @Component({
   selector: 'app-preliminary-punch-list-modal',
   templateUrl: './preliminary-punch-list-modal.component.html',
-  styleUrls: ['./preliminary-punch-list-modal.component.scss']
+  styleUrls: ['./preliminary-punch-list-modal.component.scss'],
+  standalone: false
 })
 export class PreliminaryPunchListModalComponent implements OnInit {
   preliminaryPunchListForm!: FormGroup;

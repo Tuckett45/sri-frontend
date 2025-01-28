@@ -7,7 +7,8 @@ import { AuthService } from 'src/app/services/auth.service';
 @Component({
   selector: 'app-forgot-password-modal',
   templateUrl: './forgot-password-modal.component.html',
-  styleUrls: ['./forgot-password-modal.component.scss']
+  styleUrls: ['./forgot-password-modal.component.scss'],
+  standalone: false
 })
 export class ForgotPasswordModalComponent {
   forgotPasswordForm: FormGroup;

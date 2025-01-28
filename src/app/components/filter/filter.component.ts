@@ -3,7 +3,8 @@ import { Component, EventEmitter, Output } from '@angular/core';
 @Component({
   selector: 'app-filter',
   templateUrl: './filter.component.html',
-  styleUrls: ['./filter.component.scss']
+  styleUrls: ['./filter.component.scss'],
+  standalone: false
 })
 export class FilterComponent {
   @Output() onFilterChange = new EventEmitter<string>();

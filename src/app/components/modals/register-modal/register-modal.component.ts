@@ -9,7 +9,8 @@ import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-register-modal',
   templateUrl: './register-modal.component.html',
-  styleUrls: ['./register-modal.component.scss']
+  styleUrls: ['./register-modal.component.scss'],
+  standalone: false
 })
 export class RegisterModalComponent {
   registerForm!: FormGroup;
