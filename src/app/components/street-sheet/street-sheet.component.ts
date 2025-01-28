@@ -1,6 +1,7 @@
 import { Component, AfterViewInit, ViewChild, OnInit, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
-import * as L from 'leaflet';
+import { Select } from 'primeng/select';
+import { FloatLabel } from "primeng/floatlabel"
 import { StreetSheetMapComponent } from './street-sheet-map.component';
 import { StreetSheetModalComponent } from '../modals/street-sheet-modal/street-sheet-modal.component';
 import { MapMarker } from 'src/app/models/map-marker.model';
@@ -16,6 +17,7 @@ import { User } from 'src/app/models/user.model';
 import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { GeocodingService } from 'src/app/services/geocoding.service';
 import { MatTableDataSource } from '@angular/material/table';
+import { StateLocation } from 'src/app/models/state-location.enum';
 
 @Component({
   selector: 'app-street-sheet',
@@ -45,6 +47,9 @@ export class StreetSheetComponent implements OnInit {
   filteredMapMarkers: MapMarker[] = [];
   filterText: string = '';
   filterUser: string = '';
+  filterLocation: string = '';
+  filteredLocations: string[] = [];
+  uniqueCreatedByUsers: string[] = [];
 
   @ViewChild(StreetSheetMapComponent) streetSheetMapComponent!: StreetSheetMapComponent;
   dataSource: MatTableDataSource<StreetSheet> = new MatTableDataSource();
@@ -86,6 +91,8 @@ export class StreetSheetComponent implements OnInit {
         
         this.streetSheets = filteredStreetSheets;
         this.filteredStreetSheets = this.streetSheets;
+        this.getLocationFilter();
+        this.getUniqueCreatedByUsers();
       });
     });
   }
@@ -171,8 +178,7 @@ export class StreetSheetComponent implements OnInit {
           this.toastr.error('Street Sheet not found.');
         }
       }
-    });
-    
+    });    
   }
 
   openDeleteConfirmationDialog(streetSheet: StreetSheet): void {
@@ -233,6 +239,22 @@ export class StreetSheetComponent implements OnInit {
     this.sidenavOpen = !this.sidenavOpen;
   }
 
+  getLocationFilter(): void {
+    const locationSet = new Set<string>();
+
+    this.streetSheets.forEach(streetSheet => {
+      if (streetSheet.state) {
+        locationSet.add(streetSheet.state);
+      }
+    });
+
+    this.filteredLocations = Array.from(locationSet); 
+  }
+
+  goToLocation(location: string): void {
+    this.streetSheetMapComponent.goToLocation(location);
+  }
+
   applyDateFilter(): void {
       let filtered = this.streetSheets;
 
@@ -245,13 +267,34 @@ export class StreetSheetComponent implements OnInit {
     this.filteredStreetSheets = filtered;
   }
 
-  removeDateFilter(): void {
+  removeFilter(): void {
     this.filteredStreetSheets = this.streetSheets;
   }
 
-  applyUserFilter() {
+  getUniqueCreatedByUsers(): void {
+    const usersSet = new Set<string>();
+
+    // Add 'createdBy' from street sheets
+    this.streetSheets.forEach(streetSheet => {
+      if (streetSheet.createdBy) {
+        usersSet.add(streetSheet.createdBy);
+      }
+    });
+
+    this.streetSheets.forEach(streetSheet => {
+      streetSheet.marker.forEach(marker => {
+        if (marker.createdBy) {
+          usersSet.add(marker.createdBy);
+        }
+      });
+    });
+
+    this.uniqueCreatedByUsers = Array.from(usersSet); 
+  }
+
+  applyUserFilter(): void {
     if (this.filterUser === '') {
-      this.filteredStreetSheets = this.streetSheets;
+      this.filteredStreetSheets = this.streetSheets; 
     } else {
       this.filteredStreetSheets = this.streetSheets.filter(streetSheet =>
         streetSheet.createdBy?.toLowerCase().includes(this.filterUser.toLowerCase()) ||
@@ -261,6 +304,7 @@ export class StreetSheetComponent implements OnInit {
       );
     }
   }
+  
   
 
   applyFilter() {

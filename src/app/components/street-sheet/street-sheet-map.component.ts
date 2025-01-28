@@ -10,6 +10,8 @@ import { GeocodingService } from 'src/app/services/geocoding.service';
 import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { StreetSheetService } from 'src/app/services/street-sheet.service';
 import { DatePipe } from '@angular/common';
+import { User } from 'src/app/models/user.model';
+import { StateLocation } from 'src/app/models/state-location.enum';
 
 @Component({
   selector: 'street-sheet-map',
@@ -19,13 +21,15 @@ import { DatePipe } from '@angular/common';
   standalone: false
 })
 export class StreetSheetMapComponent implements AfterViewInit {
-  private map!: L.Map;
+  [x: string]: any;
+  map!: L.Map;
   streetSheets: StreetSheet[] = [];
   osmLayer!: L.TileLayer;
   markersClusterGroup!: L.MarkerClusterGroup;
   mapMarkers: MapMarker[] = [];
   stateAbbreviations!: StateAbbreviation;
   formattedDate!: string;
+  userData!: User;
 
   constructor(
     private streetSheetService: StreetSheetService, 
@@ -36,7 +40,26 @@ export class StreetSheetMapComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.loadStreetSheets();
+    this.loadUserProfile();
     this.initMap();
+  }
+
+  loadUserProfile(): void {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const userObj = JSON.parse(userString);
+
+      this.userData = new User(
+        userObj.id,
+        userObj.name,
+        userObj.email,
+        userObj.password,
+        userObj.role,
+        userObj.market,
+        userObj.company,
+        new Date(userObj.createdDate)  
+      );
+    }
   }
 
   public loadStreetSheets(): void {
@@ -58,7 +81,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
   getReversedAddress(marker: MapMarker): Promise<any> {
     return new Promise((resolve, reject) => {
       this.geocodingService.reverseGeocode(marker.latitude, marker.longitude).subscribe(suggestion => {
-        console.log('Geocode suggestion:', suggestion);
+        
         const address = suggestion.address || {};  
         const streetAddress = address.house_number && address.road 
           ? `${address.house_number} ${address.road}` 
@@ -84,11 +107,12 @@ export class StreetSheetMapComponent implements AfterViewInit {
         this.formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
         const newMarker = L.marker([marker.latitude, marker.longitude]).bindPopup(`
           <b>${streetSheet.vendorName}</b><br>
-          Segment ID: ${streetSheet.segmentId}<br>
-          Street: ${address.street}<br>
-          City: ${address.city}<br>
-          State: ${address.state}<br>
+          <b>Segment ID:</b> ${streetSheet.segmentId}<br>
+          <b>Street:</b> ${address.street}<br>
+          <b>City:</b> ${address.city}<br>
+          <b>State:</b> ${address.state}<br>
           Date Added: <b>${this.formattedDate}</b><br>
+          Created By: ${streetSheet.createdBy}<br>
           <b>Marker ID:</b> ${marker.id}
         `).openPopup();
         this.markersClusterGroup.addLayer(newMarker); 
@@ -115,11 +139,12 @@ export class StreetSheetMapComponent implements AfterViewInit {
                 .addTo(this.map)
                 .bindPopup(`
                     <b>${streetSheet.vendorName}</b><br>
-                    Segment ID: ${streetSheet.segmentId}<br>
-                    Street: ${reversedAddress.street}<br>
-                    City: ${reversedAddress.city}<br>
-                    State: ${reversedAddress.state}<br>
-                    Date Added: <b>${formattedDate}</b><br>
+                    <b>Segment ID:</b> ${streetSheet.segmentId}<br>
+                    <b>Street:</b> ${reversedAddress.street}<br>
+                    <b>City:</b> ${reversedAddress.city}<br>
+                    <b>State:</b> ${reversedAddress.state}<br>
+                    Date Added: <b>${this.formattedDate}</b><br>
+                    Created By: ${streetSheet.createdBy}<br>
                     <b>Marker ID:</b> ${marker.id}
                 `);
         }
@@ -152,8 +177,24 @@ export class StreetSheetMapComponent implements AfterViewInit {
     }
   }
 
+  goToLocation(location: string): void {
+    if(location !== ''){
+      const stateCoordinates = StateLocation[location as keyof typeof StateLocation] || '';
+      this.map.flyTo([stateCoordinates.latitude, stateCoordinates.longitude], 10, { animate: true, duration: 1 }); 
+    }else{
+      //utah
+      this.map.flyTo([40.7608, -111.8910], 10, { animate: true, duration: 1 }); 
+    }
+  }
+
   private initMap(): void {
-    this.map = L.map('map').setView([37.138556308643494, -92.26058157648076], 13); 
+    if(this.userData.market !== 'RG'){
+      const stateCoordinates = StateLocation[this.userData.market as keyof typeof StateLocation] || '';
+      this.map = L.map('map').setView([stateCoordinates.latitude, stateCoordinates.longitude], 10); 
+    }else{
+      //utah
+      this.map = L.map('map').setView([40.7608, -111.8910], 10); 
+    }
 
     this.osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: ''
@@ -165,6 +206,5 @@ export class StreetSheetMapComponent implements AfterViewInit {
       'OpenStreetMap': this.osmLayer
     }).addTo(this.map);
 
-    this.markersClusterGroup = L.markerClusterGroup().addTo(this.map);
   }
 }

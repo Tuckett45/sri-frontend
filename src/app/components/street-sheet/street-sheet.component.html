@@ -36,15 +36,15 @@
           </mat-form-field>
         
           <button mat-raised-button style="background-color: #144f80" (click)="applyDateFilter()">Apply Filter</button>
-          <button mat-raised-button style="align-self: flex-end; background-color: #a50000" (click)="removeDateFilter()">Remove Filter</button>
+          <button mat-raised-button style="align-self: flex-end; background-color: #a50000" (click)="removeFilter()">Remove Filter</button>
         </div>
         <div class="filter-section" *ngIf="userSearchOpen">
           <mat-form-field appearance="fill" class="filter-input">
             <mat-label>Filter by Created By</mat-label>
-            <mat-select placeholder="Select User" [(ngModel)]="filterUser">
-              <mat-option value="">-- Clear Filter --</mat-option>
-              <mat-option *ngFor="let streetSheet of filteredStreetSheets" [value]="streetSheet.createdBy" (onSelectionChange)="applyUserFilter()">
-                {{ streetSheet.createdBy }}
+            <mat-select placeholder="Select User" [(ngModel)]="filterUser" (selectionChange)="applyUserFilter()">
+              <mat-option value="" (click)="removeFilter()">-- Clear Filter --</mat-option>
+              <mat-option *ngFor="let user of uniqueCreatedByUsers" [value]="user">
+                {{ user }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -87,8 +87,19 @@
     </mat-sidenav>
 
     <mat-sidenav-content>
-      <div class="header-section">
-        <div row class="header-title">
+      <div row class="header-section">
+        <div class="col-lg-3 location-filter">
+          <mat-form-field appearance="outline" class="filter-input">
+            <mat-label>Go to Location</mat-label>
+            <mat-select placeholder="Select a Location" [(ngModel)]="filterLocation" (selectionChange)="goToLocation($event.value)">
+              <mat-option value="">-- Clear Filter --</mat-option>
+              <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
+                {{ location }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="col-lg-9 header-title">
           <h2>Street Sheets</h2>
         </div>
       </div>

@@ -61,6 +61,9 @@ import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { StyleClassModule } from 'primeng/styleclass';
+import { Select } from 'primeng/select';
+import { FloatLabel } from "primeng/floatlabel"
+import { DropdownModule } from 'primeng/dropdown';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import 'leaflet-search'
@@ -102,6 +105,9 @@ import 'leaflet-search'
     ImageModule,
     MenuModule,
     StyleClassModule,
+    Select,
+    FloatLabel,
+    DropdownModule,
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule, 
