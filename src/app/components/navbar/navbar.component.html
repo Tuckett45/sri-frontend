@@ -18,7 +18,7 @@
     <button mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">
       Prelim Punch List Tracker
     </button>
-    <button *ngIf="authService.isCM()" mat-button routerLink="/street-sheet" routerLinkActive="active-link">
+    <button *ngIf="this.userData.id === '9d02b71c-3a15-45d3-81b6-20ca63183b0c'" mat-button routerLink="/street-sheet" routerLinkActive="active-link">
       Street Sheet Tracker
     </button>
     <button *ngIf="authService.isCM()" mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
