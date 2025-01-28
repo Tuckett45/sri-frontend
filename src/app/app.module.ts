@@ -57,7 +57,6 @@ import { PreliminaryPunchListModule } from './components/preliminary-punch-list/
 import { StatsComponent } from './components/overview/stats/stats.component';
 import { GoalsComponent } from './components/overview/goals/goals.component';
 
-import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { StyleClassModule } from 'primeng/styleclass';
