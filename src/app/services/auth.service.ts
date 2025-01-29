@@ -75,6 +75,10 @@ export class AuthService {
       return this.userRole.getValue() === 'CM';
   }
 
+  isAdmin() {
+    return this.userRole.getValue() === 'Admin';
+}
+
   isLoggedIn(): boolean {
     return localStorage.getItem('loggedIn') === 'true';
   }
