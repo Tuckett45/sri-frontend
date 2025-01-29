@@ -62,13 +62,13 @@
           <li *ngFor="let streetSheet of filteredStreetSheets">
             <a pRipple class="flex align-items-center cursor-pointer p-1 border-round transition-colors transition-duration-150"
             pStyleClass="@next" enterClass="hidden" enterActiveClass="slidedown" leaveToClass="hidden" leaveActiveClass="slideup" style="background-color: #144f80; color: azure;">
-            <i class="pi pi-chevron-down text-500"></i>
+            <i class="pi pi-chevron-down text-500 pl-2"></i>
               <div class="flex-grow" (click)="selectStreetSheet(streetSheet)">
                 <h5><b style="font-weight: 400;">{{ streetSheet.segmentId }}</b></h5>
               </div>
               <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="editStreetSheet(streetSheet)" class="edit-icon ml-2">edit</mat-icon>
               <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialog(streetSheet)" class="delete-icon ml-2">delete</mat-icon>
-              <span *ngIf="this.user.role !== 'CM'" class="ml-6"></span>
+              <span *ngIf="this.user.role !== 'CM'" class="ml-3"></span>
             </a>
             <ul style="align-items: start; display: flex; flex-direction: column; background-color: lightgray;" 
                 class="list-none py-0 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out">
@@ -78,6 +78,7 @@
                   <span class="font-medium text-700">
                     {{ reversedAddresses[marker.id].street }}
                   </span>
+                  <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialogMapMarker(marker)" class="delete-icon ml-2">delete</mat-icon>
                 </a>
               </li>
             </ul>

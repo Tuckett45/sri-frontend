@@ -8,14 +8,14 @@ import { Observable } from 'rxjs';
 export class GeocodingService {
   constructor(private http: HttpClient) {}
 
-  // Function to get coordinates using Nominatim API
+  // Function to get coordinates using the proxy for Nominatim API
   geocodeAddress(query: string): Observable<any> {
-    const url = `https://nominatim.openstreetmap.org/search?addressdetails=1&format=jsonv2&q=${query}&countrycodes=US&layer=address&limit=5`;
+    const url = `http://localhost:5000/proxy/geocode?query=${query}`;
     return this.http.get<any[]>(url);
   }
 
-  reverseGeocode(latitude: number, longitude: number){
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`;
+  reverseGeocode(latitude: number, longitude: number): Observable<any> {
+    const url = `http://localhost:5000/proxy/reverse-geocode?lat=${latitude}&lon=${longitude}`;
     return this.http.get<any>(url);
   }
 }

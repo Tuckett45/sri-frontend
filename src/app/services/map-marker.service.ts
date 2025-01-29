@@ -24,7 +24,7 @@ export class MapMarkerService {
   }
 
   addMapMarker(mapMarker: MapMarker): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/MapMarker/MapMarker`, mapMarker);
+    return this.http.post<any>(`${environment.apiUrl}/MapMarker`, mapMarker);
   }
 
   getMapMarkersForStreetSheet(segmentId: string): Observable<MapMarker[]> {
@@ -36,7 +36,7 @@ export class MapMarkerService {
   }
 
   deleteMapMarker(mapMarker: MapMarker): Observable<any> {
-    return this.http.delete<any>(`${environment.apiUrl}/MapMarker/delete/${mapMarker}`);
+    return this.http.delete<any>(`${environment.apiUrl}/MapMarker/delete/${mapMarker.id}`);
   }
 
   getSegmentIds(){

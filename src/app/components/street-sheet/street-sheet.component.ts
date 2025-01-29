@@ -25,7 +25,7 @@ import { StateLocation } from 'src/app/models/state-location.enum';
   styleUrls: ['./street-sheet.component.scss'],
   standalone: false
 })
-export class StreetSheetComponent implements OnInit {
+export class StreetSheetComponent implements OnInit, AfterViewInit {
   streetMarkers: any[] = []; 
   mapMarkers: MapMarker[] = [];
   streetSheets!: StreetSheet[];
@@ -69,6 +69,10 @@ export class StreetSheetComponent implements OnInit {
     this.getStreetSheets();
   }
 
+  ngAfterViewInit() {
+    this.streetSheetMapComponent;
+  }
+
   getStreetSheets(){
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
       forkJoin(
@@ -106,9 +110,9 @@ export class StreetSheetComponent implements OnInit {
       dialogRef.afterClosed().subscribe((result: StreetSheet) => {
         if (result) {
           this.mapMarker = result.marker[result.marker.length - 1]; 
-          this.streetSheetMap.addMarker(this.mapMarker, result);
-          this.streetSheetMapComponent.centerMapOnMarker(result.marker[0], result);
+          this.streetSheetMapComponent.addMarker(this.mapMarker, result);
           this.getStreetSheets();
+          this.streetSheetMapComponent.centerMapOnMarker(result.marker[0], result);
         }
       });
   }
@@ -129,7 +133,7 @@ export class StreetSheetComponent implements OnInit {
 
   updateStreetSheet(updatedStreetSheet: StreetSheet): void {
     this.streetSheetService.updateStreetSheet(updatedStreetSheet).subscribe(result => {
-      this.streetSheetMap.loadStreetSheets(); 
+      this.streetSheetMapComponent.loadStreetSheets(); 
     });
   }
 
@@ -155,7 +159,7 @@ export class StreetSheetComponent implements OnInit {
   
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.streetSheetMap.addMarker(result.marker, result);
+        this.streetSheetMapComponent.addMarker(result.marker, result);
         this.getStreetSheets();
       }
     });
@@ -170,8 +174,8 @@ export class StreetSheetComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {    
         const streetSheet = this.streetSheets.find(sheet => sheet.segmentId === result.segmentId);
-        if (streetSheet) { 
-          this.streetSheetMap.addMarker(result, streetSheet);
+        if (streetSheet) {
+          this.streetSheetMapComponent.addMarker(result, streetSheet);
           this.streetSheetMapComponent.centerMapOnMarker(result, streetSheet);
           this.getStreetSheets();
         } else {
@@ -195,6 +199,7 @@ export class StreetSheetComponent implements OnInit {
     this.streetSheetService.deleteStreetSheet(streetSheet).subscribe(() => {
       this.streetSheets = this.streetSheets.filter(sheet => sheet.id !== streetSheet.id);
       this.toastr.success('Street sheet entry deleted');
+      this.getStreetSheets();
     },
     (error) => {
       this.toastr.error(error.error, 'Error');
@@ -204,9 +209,24 @@ export class StreetSheetComponent implements OnInit {
   editMarker(marker: MapMarker): void {
   }
 
+  openDeleteConfirmationDialogMapMarker(marker: MapMarker): void {
+    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
+    
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.deleteMarker(marker);
+      }
+    });
+  }
+
   deleteMarker(marker: MapMarker): void {
     this.mapMarkerService.deleteMapMarker(marker).subscribe(() => {
       this.mapMarkers = this.mapMarkers.filter(marker => marker.id !== marker.id);
+      this.toastr.success('Map Marker deleted');
+      this.getStreetSheets();
+    },
+    (error) => {
+      this.toastr.error(error.error, 'Error');
     });
   }
 
@@ -273,20 +293,10 @@ export class StreetSheetComponent implements OnInit {
 
   getUniqueCreatedByUsers(): void {
     const usersSet = new Set<string>();
-
-    // Add 'createdBy' from street sheets
     this.streetSheets.forEach(streetSheet => {
       if (streetSheet.createdBy) {
         usersSet.add(streetSheet.createdBy);
       }
-    });
-
-    this.streetSheets.forEach(streetSheet => {
-      streetSheet.marker.forEach(marker => {
-        if (marker.createdBy) {
-          usersSet.add(marker.createdBy);
-        }
-      });
     });
 
     this.uniqueCreatedByUsers = Array.from(usersSet); 
