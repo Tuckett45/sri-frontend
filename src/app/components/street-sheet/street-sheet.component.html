@@ -66,8 +66,8 @@
               <div class="flex-grow" (click)="selectStreetSheet(streetSheet)">
                 <h5><b style="font-weight: 400;">{{ streetSheet.segmentId }}</b></h5>
               </div>
-              <mat-icon *ngIf="this.user.role === 'CM'" (click)="editStreetSheet(streetSheet)" class="edit-icon ml-2">edit</mat-icon>
-              <mat-icon *ngIf="this.user.role === 'CM'" (click)="openDeleteConfirmationDialog(streetSheet)" class="delete-icon ml-2">delete</mat-icon>
+              <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="editStreetSheet(streetSheet)" class="edit-icon ml-2">edit</mat-icon>
+              <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialog(streetSheet)" class="delete-icon ml-2">delete</mat-icon>
               <span *ngIf="this.user.role !== 'CM'" class="ml-6"></span>
             </a>
             <ul style="align-items: start; display: flex; flex-direction: column; background-color: lightgray;" 
@@ -109,11 +109,11 @@
           <mat-icon> list_alt</mat-icon> 
           Show Markers
         </button>
-        <button *ngIf="this.user.role === 'CM'" mat-raised-button (click)="addMapMarker()">
+        <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" mat-raised-button (click)="addMapMarker()">
           <mat-icon>add_location</mat-icon> 
           Add Map Marker
         </button>
-        <button *ngIf="this.user.role === 'CM'" (click)="createStreetSheet()" mat-raised-button>
+        <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="createStreetSheet()" mat-raised-button>
           <mat-icon>note_add</mat-icon> 
           New Street Sheet
         </button>
