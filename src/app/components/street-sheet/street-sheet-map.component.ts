@@ -106,14 +106,17 @@ export class StreetSheetMapComponent implements AfterViewInit {
       if (marker.latitude && marker.longitude) {
         this.formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
 
-        // const customIcon = L.icon({
-        //   iconUrl: 'assets/images/SRI_IntegrationServices-logo-white-small-2.png',
-        //   iconSize: [32, 32],
-        //   iconAnchor: [16, 32],
-        //   popupAnchor: [0, -32]
-        // });
+        const customIcon = L.icon({
+          iconUrl: 'assets/images/marker-icon-2x.png',
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          shadowUrl: 'assets/images/marker-shadow.png',
+          popupAnchor: [0, -32],
+          shadowSize: [41, 41],
+          shadowAnchor: [12, 41]
+        });
 
-        const newMarker = L.marker([marker.latitude, marker.longitude]).addTo(this.map)
+        const newMarker = L.marker([marker.latitude, marker.longitude], { icon: customIcon }).addTo(this.map)
         .bindPopup(`
           <b>${streetSheet.vendorName}</b><br>
           <b>Segment ID:</b> ${streetSheet.segmentId}<br>
@@ -143,7 +146,6 @@ export class StreetSheetMapComponent implements AfterViewInit {
           const formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
   
           L.marker(latLng)
-            .addTo(this.map)
             .bindPopup(`
               <b>${streetSheet.vendorName}</b><br>
               <b>Segment ID:</b> ${streetSheet.segmentId}<br>
@@ -170,7 +172,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
       this.formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
       this.map.flyTo(latLng, 15, { animate: true, duration: 1 });
       
-      L.marker(latLng).addTo(this.map).bindPopup(`
+      L.marker(latLng).bindPopup(`
         <b>${streetSheet.vendorName}</b><br>
         <b>Segment ID:</b> ${streetSheet.segmentId}<br>
         <b>Street:</b> ${reversedAddress.street}<br>
