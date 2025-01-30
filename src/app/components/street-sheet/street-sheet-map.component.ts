@@ -105,17 +105,25 @@ export class StreetSheetMapComponent implements AfterViewInit {
     this.getReversedAddress(marker).then(address => {
       if (marker.latitude && marker.longitude) {
         this.formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
-        const newMarker = L.marker([marker.latitude, marker.longitude]).bindPopup(`
-          <b>${streetSheet.vendorName}</b><br>
-          <b>Segment ID:</b> ${streetSheet.segmentId}<br>
-          <b>Street:</b> ${address.street}<br>
-          <b>City:</b> ${address.city}<br>
-          <b>State:</b> ${address.state}<br>
-          Date Added: <b>${this.formattedDate}</b><br>
-          Created By: ${streetSheet.createdBy}<br>
-          <b>Marker ID:</b> ${marker.id}
-        `).openPopup();
-        this.markersClusterGroup.addLayer(newMarker); 
+
+        // const customIcon = L.icon({
+        //   iconUrl: 'assets/images/SRI_IntegrationServices-logo-white-small-2.png',
+        //   iconSize: [32, 32],
+        //   iconAnchor: [16, 32],
+        //   popupAnchor: [0, -32]
+        // });
+
+        const newMarker = L.marker([marker.latitude, marker.longitude]).addTo(this.map);
+        // .bindPopup(`
+        //   <b>${streetSheet.vendorName}</b><br>
+        //   <b>Segment ID:</b> ${streetSheet.segmentId}<br>
+        //   <b>Street:</b> ${address.street}<br>
+        //   <b>City:</b> ${address.city}<br>
+        //   <b>State:</b> ${address.state}<br>
+        //   Date Added: <b>${this.formattedDate}</b><br>
+        //   Created By: ${streetSheet.createdBy}<br>
+        //   <b>Marker ID:</b> ${marker.id}
+        // `).openPopup();
       }
     });
   }
@@ -151,7 +159,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
   
       this.map.fitBounds(bounds);
       const center = bounds.getCenter();
-      this.map.flyTo(center, 12, { animate: true, duration: 1 });
+      this.map.flyTo(center, 13, { animate: true, duration: 1 });
     }
   }
   
