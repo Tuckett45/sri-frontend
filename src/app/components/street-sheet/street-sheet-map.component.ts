@@ -113,17 +113,17 @@ export class StreetSheetMapComponent implements AfterViewInit {
         //   popupAnchor: [0, -32]
         // });
 
-        const newMarker = L.marker([marker.latitude, marker.longitude]).addTo(this.map);
-        // .bindPopup(`
-        //   <b>${streetSheet.vendorName}</b><br>
-        //   <b>Segment ID:</b> ${streetSheet.segmentId}<br>
-        //   <b>Street:</b> ${address.street}<br>
-        //   <b>City:</b> ${address.city}<br>
-        //   <b>State:</b> ${address.state}<br>
-        //   Date Added: <b>${this.formattedDate}</b><br>
-        //   Created By: ${streetSheet.createdBy}<br>
-        //   <b>Marker ID:</b> ${marker.id}
-        // `).openPopup();
+        const newMarker = L.marker([marker.latitude, marker.longitude]).addTo(this.map)
+        .bindPopup(`
+          <b>${streetSheet.vendorName}</b><br>
+          <b>Segment ID:</b> ${streetSheet.segmentId}<br>
+          <b>Street:</b> ${address.street}<br>
+          <b>City:</b> ${address.city}<br>
+          <b>State:</b> ${address.state}<br>
+          Date Added: <b>${this.formattedDate}</b><br>
+          Created By: ${streetSheet.createdBy}<br>
+          <b>Marker ID:</b> ${marker.id}
+        `);
       }
     });
   }
