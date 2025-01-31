@@ -44,7 +44,7 @@ export class StreetSheetModalComponent implements OnInit {
                                 'Fiber Install',
                                 'Mastic'];
 
-  vendors: string[] = ['Conguex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
+  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
 
   stateAbbreviations!: StateAbbreviation;
 

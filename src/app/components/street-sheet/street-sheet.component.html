@@ -76,7 +76,7 @@
                 <a pRipple class="flex align-items-center cursor-pointer p-1 hover:surface-100 border-round transition-colors transition-duration-150">
                   <i class="pi pi-map-marker mr-2 text-700"></i>
                   <span class="font-medium text-700">
-                    {{ reversedAddresses[marker.id]?.street || marker.longitude + marker.longitude}}
+                    {{ reversedAddresses[marker.id]?.street || marker.longitude + '-' + marker.longitude}}
                   </span>
                   <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialogMapMarker(marker)" class="delete-icon ml-2">delete</mat-icon>
                 </a>

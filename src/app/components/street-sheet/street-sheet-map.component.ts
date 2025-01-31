@@ -26,7 +26,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
   streetSheets: StreetSheet[] = [];
   osmLayer!: L.TileLayer;
   markersClusterGroup!: L.MarkerClusterGroup;
-  mapMarkers: MapMarker[] = [];
+  mapMarkers: { id: string, marker: L.Marker }[] = []; 
   stateAbbreviations!: StateAbbreviation;
   formattedDate!: string;
   userData!: User;
@@ -127,6 +127,8 @@ export class StreetSheetMapComponent implements AfterViewInit {
           Created By: ${streetSheet.createdBy}<br>
           <b>Marker ID:</b> ${marker.id}
         `);
+
+        this.mapMarkers.push({ id: marker.id, marker: newMarker });
       }
     });
   }
@@ -167,21 +169,13 @@ export class StreetSheetMapComponent implements AfterViewInit {
   
   async centerMapOnMarker(marker: MapMarker, streetSheet: StreetSheet): Promise<void> {
     if (this.map) {
-      const latLng = new L.LatLng(marker.latitude, marker.longitude);      
-      const reversedAddress = await this.getReversedAddress(marker);  
-      this.formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
+      const latLng = new L.LatLng(marker.latitude, marker.longitude);
       this.map.flyTo(latLng, 15, { animate: true, duration: 1 });
-      
-      L.marker(latLng).bindPopup(`
-        <b>${streetSheet.vendorName}</b><br>
-        <b>Segment ID:</b> ${streetSheet.segmentId}<br>
-        <b>Street:</b> ${reversedAddress.street}<br>
-        <b>City:</b> ${reversedAddress.city}<br>
-        <b>State:</b> ${reversedAddress.state}<br>
-        Date Added: <b>${this.formattedDate}</b><br>
-        Created By: ${streetSheet.createdBy}<br>
-        <b>Marker ID:</b> ${marker.id}
-      `).openPopup();
+      const existingMarker = this.mapMarkers.find(m => m.id === marker.id);
+
+      if (existingMarker) {
+        existingMarker.marker.openPopup(); 
+      }
     }
   }
 

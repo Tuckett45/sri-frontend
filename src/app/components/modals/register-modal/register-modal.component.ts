@@ -15,7 +15,7 @@ import { ToastrService } from 'ngx-toastr';
 export class RegisterModalComponent {
   registerForm!: FormGroup;
   roles: string[] = ['CM', 'PM', 'Client'];
-  companys: string[] = ['Conguex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
+  companys: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
   markets: { name: string, abbreviation: string }[] = [
     { name: 'Arizona', abbreviation: 'AZ' },
     { name: 'Colorado', abbreviation: 'CO' },
