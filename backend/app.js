@@ -6,7 +6,13 @@ const port = process.env.PORT || 5000;
 
 // Middleware to handle CORS
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*'); // Allow all domains (consider restricting to your frontend's domain)
+  const allowedOrigins = ['http://localhost:4200', 'https://ark-sri.com']; // Add any other origins here as needed
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin); // Allow the origin dynamically
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
@@ -14,7 +20,7 @@ app.use((req, res, next) => {
 
 // Proxy Route for Geocode Address
 app.get('/proxy/geocode', async (req, res) => {
-  const { query } = req.query; // Get the query parameter from the frontend request
+  const { query } = req.query;
   const geocodeUrl = `https://nominatim.openstreetmap.org/search?addressdetails=1&format=jsonv2&q=${query}&countrycodes=US&layer=address&limit=5`;
 
   try {
@@ -27,7 +33,7 @@ app.get('/proxy/geocode', async (req, res) => {
 
 // Proxy Route for Reverse Geocode
 app.get('/proxy/reverse-geocode', async (req, res) => {
-  const { lat, lon } = req.query; // Get the lat and lon parameters from the frontend request
+  const { lat, lon } = req.query;
   const reverseGeocodeUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`;
 
   try {

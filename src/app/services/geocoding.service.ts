@@ -6,16 +6,21 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class GeocodingService {
-  constructor(private http: HttpClient) {}
+  private proxyUrl: string;
 
-  // Function to get coordinates using the proxy for Nominatim API
+  constructor(private http: HttpClient) {
+    this.proxyUrl = 'http://localhost:5000/proxy';
+    //'http://localhost:5000/proxy'; --LOCAL PROXY SERVER
+    //'https://proxy-server-c4andmbdb5fpaqht.centralus-01.azurewebsites.net/proxy'; -- PROD PROXY SERVER
+  }
+
   geocodeAddress(query: string): Observable<any> {
-    const url = `http://localhost:5000/proxy/geocode?query=${query}`;
+    const url = `${this.proxyUrl}/geocode?query=${query}`;
     return this.http.get<any[]>(url);
   }
 
   reverseGeocode(latitude: number, longitude: number): Observable<any> {
-    const url = `http://localhost:5000/proxy/reverse-geocode?lat=${latitude}&lon=${longitude}`;
+    const url = `${this.proxyUrl}/reverse-geocode?lat=${latitude}&lon=${longitude}`;
     return this.http.get<any>(url);
   }
 }
