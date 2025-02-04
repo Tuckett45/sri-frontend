@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read  # This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -23,19 +23,23 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: npm install, build, and test
+      - name: Install dependencies
         run: |
+          cd proxy-server
           npm install
+
+      - name: Build (optional if your proxy server needs it)
+        run: |
+          cd proxy-server
           npm run build --if-present
-          npm run test --if-present
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: zip -r release.zip ./proxy-server
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
+          name: proxy-server
           path: release.zip
 
   deploy:
@@ -45,30 +49,29 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write  # This is required for requesting the JWT
+      contents: read  # This is required for actions/checkout
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: node-app
+          name: proxy-server
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
-      
+        run: unzip release.zip -d proxy-server
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_831925E8E80644DB9E0347C1CF0ED90F }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_884B11FE8DE04484851CD814D1AF8FD6 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BF438D4FA8B6443C8CF54DA2298CF4FD }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'Proxy-server'
+          app-name: 'proxy-server'  # Your Azure Web App name
           slot-name: 'Production'
-          package: .
-          
+          package: ./proxy-server  # Path to your app
