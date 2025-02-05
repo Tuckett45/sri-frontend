@@ -33,16 +33,9 @@ export class StreetSheetModalComponent implements OnInit {
 
   streetSheet: StreetSheet | null = null;
   pmOptions: User[] = [];
-  deploymentOptions: string[] = ['Micro tench', 'Mastic', 'Fiber'];
+  deploymentOptions: string[] = ['Micro-trench', 'Mastic/Sealant', 'Bore', 'Vault Installation', 'DB Installation', 'Other'];
 
-  equipmentOptions: string[] = ['Prelim',
-                                'CRO (Pre-con)', 
-                                'City walk',
-                                'QC inspection',
-                                'Micro trench',
-                                'Bore',
-                                'Fiber Install',
-                                'Mastic'];
+  equipmentOptions: string[] = ['Saws', 'Bore Rigs', 'Splicing equipment', 'Mini Excavators', 'Dump Trailers', 'TCP Equipment', 'Box Crew Equipment', 'Other'];
 
   vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
 
