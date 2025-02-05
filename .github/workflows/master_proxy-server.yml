@@ -25,10 +25,10 @@ jobs:
           cd backend
           npm i
 
-      - name: Build (optional if your proxy server needs it)
+      - name: Start proxy server
         run: |
           cd backend
-          npm run build
+          node app.js
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
