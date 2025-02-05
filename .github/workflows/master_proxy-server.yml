@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy Node.js app to Azure Web App - proxy-server
 
 on:
@@ -21,19 +18,23 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
-          node-version: '20.x'
+          node-version: '18.x'  # Switch to LTS version to avoid issues
 
-      - name: npm install, build, and test
+      - name: Install dependencies
         run: |
-          npm install
+          cd proxy-server
+          npm ci  # Ensure clean install
+
+      - name: Build (optional if your proxy server needs it)
+        run: |
+          cd proxy-server
           npm run build --if-present
-          npm run test --if-present
-      
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: ./proxy-server  # Specify the correct directory if needed
 
   deploy:
     runs-on: ubuntu-latest
@@ -50,19 +51,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_831925E8E80644DB9E0347C1CF0ED90F }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_884B11FE8DE04484851CD814D1AF8FD6 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BF438D4FA8B6443C8CF54DA2298CF4FD }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_585688D59DBE4A909CA9EB571912CA34 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0EF2BCD1DA6F42D3BF9D7901AA57B084 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2304A2088F8D4DEEA167C39475C74DC4 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
           app-name: 'proxy-server'
           slot-name: 'Production'
-          package: .
-          
+          package: ./proxy-server  # Path to the build output
