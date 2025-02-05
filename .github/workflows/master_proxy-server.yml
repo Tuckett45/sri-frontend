@@ -24,10 +24,9 @@ jobs:
         run: |
           npm i
 
-      - name: Start proxy server
+      - name: Build proxy server
         run: |
-          cd backend
-          node app.js
+          npm build
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
