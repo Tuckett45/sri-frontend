@@ -43,3 +43,4 @@ Thumbs.db
 
 .env
 src/environments/environments.ts
+backend/app.js
