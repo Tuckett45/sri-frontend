@@ -9,7 +9,7 @@ export class GeocodingService {
   private proxyUrl: string;
 
   constructor(private http: HttpClient) {
-    this.proxyUrl = 'http://localhost:5000/proxy';
+    this.proxyUrl = 'https://proxy-server-c4andmbdb5fpaqht.centralus-01.azurewebsites.net/proxy';
     //'http://localhost:5000/proxy'; --LOCAL PROXY SERVER
     //'https://proxy-server-c4andmbdb5fpaqht.centralus-01.azurewebsites.net/proxy'; -- PROD PROXY SERVER
   }
