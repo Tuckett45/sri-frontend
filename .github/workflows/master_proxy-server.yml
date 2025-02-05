@@ -23,12 +23,12 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          npm ci  # Ensure clean install
+          npm i
 
       - name: Build (optional if your proxy server needs it)
         run: |
           cd backend
-          npm run build --if-present
+          npm run build
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
