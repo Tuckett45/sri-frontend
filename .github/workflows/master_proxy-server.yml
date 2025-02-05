@@ -18,23 +18,23 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'  # Switch to LTS version to avoid issues
+          node-version: '20.x'  # Switch to LTS version to avoid issues
 
       - name: Install dependencies
         run: |
-          cd proxy-server
+          cd backend
           npm ci  # Ensure clean install
 
       - name: Build (optional if your proxy server needs it)
         run: |
-          cd proxy-server
+          cd backend
           npm run build --if-present
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./proxy-server  # Specify the correct directory if needed
+          path: ./backend  # Specify the correct directory if needed
 
   deploy:
     runs-on: ubuntu-latest
@@ -64,4 +64,4 @@ jobs:
         with:
           app-name: 'proxy-server'
           slot-name: 'Production'
-          package: ./proxy-server  # Path to the build output
+          package: ./backend  # Path to the build output
