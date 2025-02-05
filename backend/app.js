@@ -4,16 +4,27 @@ const axios = require('axios');
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Middleware to handle CORS
 app.use((req, res, next) => {
-  const allowedOrigins = ['http://localhost:4200', 'https://ark-sri.com']; // Add any other origins here as needed
-  const origin = req.headers.origin;
+  const allowedOrigins = ['https://www.ark-sri.com']; 
+  //https://www.ark-sri.com for PROD
+  //http://localhost:4200 for LOCAL
+  const origin = req.headers.origin; 
 
-  res.header('Access-Control-Allow-Origin', 'https://www.ark-sri.com');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);  
+    res.header('Access-Control-Allow-Credentials', 'true'); 
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   next();
 });
+
 
 // Proxy Route for Geocode Address
 app.get('/proxy/geocode', async (req, res) => {
