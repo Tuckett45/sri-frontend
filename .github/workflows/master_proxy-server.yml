@@ -50,7 +50,7 @@ jobs:
         with:
           name: node-app
 
-      - name: Login to Azure
+      - name: Login to Azure using Service Principal with Client Secret
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_585688D59DBE4A909CA9EB571912CA34 }}
