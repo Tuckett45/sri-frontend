@@ -24,10 +24,9 @@ jobs:
         run: |
           npm i
 
-      - name: Start proxy server
+      - name: Build proxy server
         run: |
-          cd backend
-          node app.js
+          npm run build 
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -51,16 +50,14 @@ jobs:
         with:
           name: node-app
 
-      - name: Login to Azure
+      - name: Login to Azure using Service Principal with Client Secret
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_585688D59DBE4A909CA9EB571912CA34 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0EF2BCD1DA6F42D3BF9D7901AA57B084 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2304A2088F8D4DEEA167C39475C74DC4 }}
+           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'proxy-server'
           slot-name: 'Production'
-          package: ./backend  # Path to the build output
+          package: .  # Path to the build output
