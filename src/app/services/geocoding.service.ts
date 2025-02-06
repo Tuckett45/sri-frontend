@@ -15,14 +15,12 @@ export class GeocodingService {
   }
 
   geocodeAddress(query: string): Observable<any> {
-    // const url = `${this.proxyUrl}/proxy/geocode?query=${query}`;
-    const url = `https://nominatim.openstreetmap.org/search?addressdetails=1&format=jsonv2&q=${query}&countrycodes=US&layer=address&limit=5`;
+    const url = `${this.proxyUrl}/proxy/geocode?query=${query}`;
     return this.http.get<any[]>(url);
   }
 
   reverseGeocode(latitude: number, longitude: number): Observable<any> {
-    // const url = `${this.proxyUrl}/proxy/reverse-geocode?lat=${latitude}&lon=${longitude}`;
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`;
+    const url = `${this.proxyUrl}/proxy/reverse-geocode?lat=${latitude}&lon=${longitude}`;
     return this.http.get<any>(url);
   }
 }
