@@ -27,7 +27,6 @@ jobs:
 
       - name: Build proxy server
         run: |
-          cd backend 
           node app.js
 
       - name: Upload artifact for deployment job
