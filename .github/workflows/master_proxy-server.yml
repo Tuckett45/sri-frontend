@@ -22,10 +22,12 @@ jobs:
 
       - name: Install dependencies
         run: |
+          cd backend 
           npm i
 
       - name: Build proxy server
         run: |
+          cd backend 
           npm run build 
 
       - name: Upload artifact for deployment job
@@ -60,4 +62,4 @@ jobs:
         with:
           app-name: 'proxy-server'
           slot-name: 'Production'
-          package: ./backend/  # Path to the build output
+          package: ./backend  # Path to the build output
