@@ -60,4 +60,4 @@ jobs:
         with:
           app-name: 'proxy-server'
           slot-name: 'Production'
-          package: ./backend  # Path to the build output
+          package: ./backend/  # Path to the build output
