@@ -15,12 +15,12 @@ export class GeocodingService {
   }
 
   geocodeAddress(query: string): Observable<any> {
-    const url = `${this.proxyUrl}/api/geocode?query=${query}`;
+    const url = `${this.proxyUrl}/proxy/geocode?query=${query}`;
     return this.http.get<any[]>(url);
   }
 
   reverseGeocode(latitude: number, longitude: number): Observable<any> {
-    const url = `${this.proxyUrl}/api/reverse-geocode?lat=${latitude}&lon=${longitude}`;
+    const url = `${this.proxyUrl}/proxy/reverse-geocode?lat=${latitude}&lon=${longitude}`;
     return this.http.get<any>(url);
   }
 }
