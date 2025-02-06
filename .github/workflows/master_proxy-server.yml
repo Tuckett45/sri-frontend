@@ -28,7 +28,7 @@ jobs:
       - name: Build proxy server
         run: |
           cd backend 
-          npm run build 
+          npm build 
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
