@@ -20,7 +20,7 @@ export class GeocodingService {
   }
 
   reverseGeocode(latitude: number, longitude: number): Observable<any> {
-    const url = `${this.proxyUrl}/proxy/reverse-geocode?lat=${latitude}&lon=${longitude}`;
+    const url = `${this.proxyUrl}/api/reverse-geocode?lat=${latitude}&lon=${longitude}`;
     return this.http.get<any>(url);
   }
 }
