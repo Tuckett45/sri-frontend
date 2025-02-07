@@ -6,6 +6,7 @@ import { RegisterModalComponent } from '../modals/register-modal/register-modal.
 import { MatDialog } from '@angular/material/dialog';
 import { ForgotPasswordModalComponent } from '../modals/forgot-password-modal/forgot-password-modal.component';
 import { ToastrService } from 'ngx-toastr';
+import { User } from 'src/app/models/user.model';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
+  userData!: User;
 
   constructor(private fb: FormBuilder, 
               private router: Router, 
@@ -39,14 +41,38 @@ export class LoginComponent implements OnInit {
     if (this.loginForm.valid) {
       this.authService.login(this.loginForm.value).subscribe({
         next: (response) => {
+          this.loadUserProfile();
           localStorage.setItem('loggedIn', 'true');
           this.toastr.success('Login successful!', 'Success');
-          this.router.navigate(['/preliminary-punch-list']);
+          if(this.userData.role == 'Temp'){
+            this.router.navigate(['/street-sheet']);
+          }
+          else{
+            this.router.navigate(['/preliminary-punch-list']);
+          }
         },
         error: (error) => {
           this.toastr.error(error.error, 'error');
         }
       });
+    }
+  }
+
+  loadUserProfile(): void {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const userObj = JSON.parse(userString);
+
+      this.userData = new User(
+        userObj.id,
+        userObj.name,
+        userObj.email,
+        userObj.password,
+        userObj.role,
+        userObj.market,
+        userObj.company,
+        new Date(userObj.createdDate)  
+      );
     }
   }
 

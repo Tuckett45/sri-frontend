@@ -67,6 +67,10 @@ export class AuthService {
       return this.userRole.getValue() === 'Client';
   }
 
+  isTemp(){
+    return this.userRole.getValue() === 'Temp';
+  }
+
   isPM() {
       return this.userRole.getValue() === 'PM';
   }

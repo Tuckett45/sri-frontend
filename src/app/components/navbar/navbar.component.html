@@ -15,10 +15,10 @@
     <button *ngIf="authService.isCM() || authService.isAdmin()" mat-button routerLink="/overview" routerLinkActive="active-link">
       Overview
     </button>
-    <button mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">
+    <button *ngIf="!authService.isTemp()"  mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">
       Prelim Punch List Tracker
     </button>
-    <button *ngIf="authService.isCM() || authService.isAdmin()"  mat-button routerLink="/street-sheet" routerLinkActive="active-link">
+    <button *ngIf="authService.isCM() || authService.isAdmin() || authService.isTemp()"  mat-button routerLink="/street-sheet" routerLinkActive="active-link">
       Street Sheet Tracker
     </button>
     <button mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
