@@ -8,10 +8,11 @@ import { AuthService } from 'src/app/services/auth.service';
 import { v4 as uuidv4 } from 'uuid';
 import { DeleteConfirmationModalComponent } from '../delete-confirmation-modal/delete-confirmation-modal.component';
 import { HttpClient } from '@angular/common/http';
-import { debounceTime, distinctUntilChanged, of, catchError, switchMap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, of, catchError, switchMap, Observable } from 'rxjs';
 import { Image, ModalGalleryService } from '@ks89/angular-modal-gallery';
 import { User } from 'src/app/models/user.model';
 import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
+import { GeocodingService } from 'src/app/services/geocoding.service';
 // import { GeocodingService } from 'src/app/services/geocoding.service';
 
 @Component({
@@ -172,7 +173,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     private toastr: ToastrService,
     public authService: AuthService,
     private modalGalleryService: ModalGalleryService,
-    // private geocodingService: GeocodingService,
+    private geocodingService: GeocodingService,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
   ) {}
 
@@ -205,7 +206,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.preliminaryPunchListForm.get('streetAddress')?.valueChanges.pipe(
       debounceTime(1000),
       switchMap((value) => this.getAddressSuggestions(value))
-    ).subscribe(suggestions => {
+    ).subscribe((suggestions: any[]) => {
       this.filteredAddresses = suggestions;
     });
 
@@ -250,57 +251,58 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     const query = event.target.value;
     if (query && query.length > 2) {
       this.isAddressLoading = true;
-      this.getAddressSuggestions(query)
-        .pipe(
-          debounceTime(1000),
-          distinctUntilChanged(),
-          catchError(() => {
-            this.isAddressLoading = false;
-            return of([]); 
-          })
-        )
-        .subscribe(suggestions => {
-          
-          this.filteredAddresses = suggestions.filter(suggestion => {
-            const address = suggestion.address || {};
-            const streetAddress = address.house_number && address.road 
-              ? `${address.house_number} ${address.road}` 
-              : address.road || '';
-  
-            const city = address.city || address.town || '';
-            const state = address.state || '';
-            const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
-  
-            const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
-            return {
-              formattedAddress: formattedAddress,  
-              original: suggestion
-            };
-          });
-  
+      this.geocodingService.geocodeAddress(query).pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        catchError(() => {
           this.isAddressLoading = false;
+          return of([]);
+        })
+      ).subscribe(suggestions => {
+        this.filteredAddresses = suggestions.results.map((result: { address_components: any[]; geometry: { location: { lat: any; lng: any; }; }; }) => {
+          
+          const address = result.address_components || [];
+          const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name 
+                                + ' ' + 
+                                address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
+          
+          const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
+          const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
+          const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
+          
+          const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
+          
+          return {
+            formattedAddress: formattedAddress,
+            original: result
+          };
         });
+  
+        this.isAddressLoading = false;
+      });
     } else {
       this.filteredAddresses = [];
     }
   }
 
-  getAddressSuggestions(query: string) {
-    const url = `https://nominatim.openstreetmap.org/search?addressdetails=1&format=jsonv2&q=${query}&countrycodes=US&layer=address&limit=5`;
-    return this.http.get<any[]>(url); 
+  getAddressSuggestions(query: string): Observable<any[]> {
+    if (!query) return of([]);
+    
+    return this.geocodingService.geocodeAddress(query);
   }
 
   selectAddress(suggestion: any): void {
-    const streetAddress = suggestion.address.house_number
-      ? suggestion.address.house_number + ' ' + suggestion.address.road
-      : suggestion.address.road || suggestion.address.residential;
+    const address = suggestion.original.address_components || [];
+    const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name
+                          + ' ' + 
+                          address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
   
-    const city = suggestion.address.city || suggestion.address.town || suggestion.address.village || suggestion.address.municipality;
-    const state = suggestion.address.state;
+    const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
+    const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
     const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
   
     this.preliminaryPunchListForm.patchValue({
-      streetAddress: streetAddress,
+      streetAddress: streetAddress.trim(),
       city: city,
       state: abbreviatedState
     });

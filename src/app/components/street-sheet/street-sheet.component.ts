@@ -18,6 +18,7 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { GeocodingService } from 'src/app/services/geocoding.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { StateLocation } from 'src/app/models/state-location.enum';
+import { marker } from 'leaflet';
 
 @Component({
   selector: 'app-street-sheet',
@@ -198,6 +199,9 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   deleteStreetSheet(streetSheet: StreetSheet): void {
     this.streetSheetService.deleteStreetSheet(streetSheet).subscribe(() => {
       this.streetSheets = this.streetSheets.filter(sheet => sheet.id !== streetSheet.id);
+      streetSheet.marker.forEach(marker => {
+        this.streetSheetMapComponent.removeMarker(marker);
+      })
       this.toastr.success('Street sheet entry deleted');
       this.getStreetSheets();
     },
@@ -222,8 +226,8 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   deleteMarker(marker: MapMarker): void {
     this.mapMarkerService.deleteMapMarker(marker).subscribe(() => {
       this.mapMarkers = this.mapMarkers.filter(marker => marker.id !== marker.id);
+      this.streetSheetMapComponent.removeMarker(marker);
       this.toastr.success('Map Marker deleted');
-      this.getStreetSheets();
     },
     (error) => {
       this.toastr.error(error.error, 'Error');
@@ -333,19 +337,30 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   getReversedAddress(marker: MapMarker): Promise<any> {
     return new Promise((resolve, reject) => {
       this.geocodingService.reverseGeocode(marker.latitude, marker.longitude).subscribe(suggestion => {
-        const address = suggestion.address || {};  
-        const streetAddress = address.house_number && address.road 
-          ? `${address.house_number} ${address.road}` 
-          : address.road || '';
   
-        const city = address.city || address.town || ''; 
-        const state = address.state || '';  
+        let bestResult = suggestion.results[0];
+        for (let result of suggestion.results) {
+          if (result.geometry.location_type === 'ROOFTOP') {
+            bestResult = result;
+            break;
+          }
+        }
+  
+        const address = bestResult.address_components || [];
+        const formattedAddress = bestResult.formatted_address;
+  
+        const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name 
+                              + ' ' + 
+                              address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
+  
+        const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
+        const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
         const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
-        
+  
         this.reversedAddresses[marker.id] = {
           street: streetAddress.trim(),
           city: city,
-          state: abbreviatedState
+          state: abbreviatedState,
         };
   
         resolve(this.reversedAddresses[marker.id]);
@@ -353,5 +368,6 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
         reject(error);
       });
     });
-  }  
+  }
+  
 }

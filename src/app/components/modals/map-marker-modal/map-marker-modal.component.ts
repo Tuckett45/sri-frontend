@@ -12,7 +12,6 @@ import { debounceTime, distinctUntilChanged, catchError, of, Observable, switchM
 import { MapMarkerService } from 'src/app/services/map-marker.service';
 import { StreetSheet } from 'src/app/models/street-sheet.model';
 import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
-// import { GeocodingService } from 'src/app/services/geocoding.service';
 
 @Component({
   selector: 'map-marker-modal',
@@ -60,16 +59,7 @@ export class MapMarkerModalComponent implements OnInit {
       longitude: ['', Validators.required], 
       streetAddress: ['', Validators.required], 
       city: ['', Validators.required],  
-      state: ['', Validators.required],  
-      isActive: [true, Validators.required],
-      dateCreated: [new Date().toISOString()],
-    });
-
-    this.mapMarkerForm.get('streetAddress')?.valueChanges.pipe(
-      debounceTime(1000),
-      switchMap((value) => this.getAddressSuggestions(value))
-    ).subscribe(suggestions => {
-      this.filteredAddresses = suggestions;
+      state: ['', Validators.required]
     });
 
     if (this.data.latitude !== undefined) {
@@ -128,56 +118,58 @@ export class MapMarkerModalComponent implements OnInit {
     const query = event.target.value;
     if (query && query.length > 2) {
       this.isAddressLoading = true;
-      this.getAddressSuggestions(query)
-        .pipe(
-          debounceTime(1000),
-          distinctUntilChanged(),
-          catchError(() => {
-            this.isAddressLoading = false;
-            return of([]); 
-          })
-        )
-        .subscribe(suggestions => {
-          
-          this.filteredAddresses = suggestions.filter(suggestion => {
-            const address = suggestion.address || {};
-            const streetAddress = address.house_number && address.road 
-              ? `${address.house_number} ${address.road}` 
-              : address.road || '';
-  
-            const city = address.city || address.town || '';
-            const state = address.state || '';
-            const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
-  
-            const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
-            return {
-              formattedAddress: formattedAddress,  
-              original: suggestion
-            };
-          });
-  
+      this.geocodingService.geocodeAddress(query).pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        catchError(() => {
           this.isAddressLoading = false;
+          return of([]);
+        })
+      ).subscribe(suggestions => {
+        this.filteredAddresses = suggestions.results.map((result: { address_components: any[]; geometry: { location: { lat: any; lng: any; }; }; }) => {
+          const address = result.address_components || [];
+          const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name 
+                                + ' ' + 
+                                address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
+  
+          const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
+          const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
+          const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
+  
+          const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
+  
+          return {
+            formattedAddress: formattedAddress,
+            original: result,
+            lat: result.geometry.location.lat,
+            lon: result.geometry.location.lng
+          };
         });
+  
+        this.isAddressLoading = false;
+      });
     } else {
       this.filteredAddresses = [];
     }
   }
   
-  trackByFn(index: number, item: any): any {
-    return item.formattedAddress;
+  
+  trackByAddressId(index: number, suggestion: any): string {
+    return suggestion.formattedAddress;
   }
 
   selectAddress(suggestion: any): void {
-    const streetAddress = suggestion.address.house_number
-      ? suggestion.address.house_number + ' ' + suggestion.address.road
-      : suggestion.address.road || suggestion.address.residential;
+    const address = suggestion.original.address_components || [];
+    const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name
+                          + ' ' + 
+                          address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
   
-    const city = suggestion.address.city || suggestion.address.town || suggestion.address.village || suggestion.address.municipality;
-    const state = suggestion.address.state;
+    const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
+    const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
     const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
   
     this.mapMarkerForm.patchValue({
-      streetAddress: streetAddress,
+      streetAddress: streetAddress.trim(),
       city: city,
       state: abbreviatedState,
       latitude: suggestion.lat,
@@ -193,11 +185,11 @@ export class MapMarkerModalComponent implements OnInit {
       new Date(),
       this.userData.id
     );
-
+  
     this.mapMarker = mapMarker;
-
     this.filteredAddresses = [];
   }
+  
   
 
   getAddressSuggestions(query: string): Observable<any[]> {
@@ -210,30 +202,63 @@ export class MapMarkerModalComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  save(): void {
-    if (this.mapMarkerForm.valid) {
-        const formData = this.mapMarkerForm.value;
-    
-        if(!this.mapMarker || this.mapMarker == null){
-          this.mapMarker = new MapMarker(
-            formData.id || uuidv4(),
-            formData.segmentId,    
-            formData.latitude,    
-            formData.longitude,  
-            formData.isActive,  
-            new Date(formData.dateCreated)),
-            this.userData.id; 
-        }
+  checkValidForm(): void {
+    if(this.mapMarkerForm.controls["latitude"].value == '' || this.mapMarkerForm.controls["longitude"].value == ''){
+      this.geocodingService.geocodeAddress(this.mapMarkerForm.controls["streetAddress"].value + this.mapMarkerForm.controls["city"].value + this.mapMarkerForm.controls["state"].value)
+      .subscribe(suggestions => {
+        this.filteredAddresses = suggestions.results.map((result: { address_components: any[]; geometry: { location: { lat: any; lng: any; }; }; }) => {
+          
+          const address = result.address_components || [];
+          const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name 
+                                + ' ' + 
+                                address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
+          
+          const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
+          const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
+          const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
+          
+          const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
 
-        this.mapMarkerService.addMapMarker(this.mapMarker).subscribe(
-          () => {
-            this.toastr.success('Map Marker Added');
-            this.dialogRef.close(this.mapMarker);
-          },
-          (error) => {
-            this.toastr.error('Error adding Map Marker');
-          }
-        )
+          this.mapMarkerForm.patchValue({
+            streetAddress: formattedAddress,
+            city: city,
+            state: abbreviatedState,
+            latitude: result.geometry.location.lat,
+            longitude: result.geometry.location.lng,
+          });
+        
+          const mapMarker = new MapMarker(
+            uuidv4(),
+            this.mapMarkerForm.controls["segmentId"].value,
+            result.geometry.location.lat,
+            result.geometry.location.lng,
+            true,
+            new Date(),
+            this.userData.id
+          );
+        
+          this.mapMarker = mapMarker;          
+        });        
+      });
+    }
+  }
+
+  save(): void {
+    this.checkValidForm();
+    if (this.mapMarkerForm.valid) {
+      if(this.mapMarker.createdBy == '' || this.mapMarker.createdBy == null){
+        this.mapMarker.createdBy = this.userData.id;
+      }
+
+      this.mapMarkerService.addMapMarker(this.mapMarker).subscribe(
+        () => {
+          this.toastr.success('Map Marker Added');
+          this.dialogRef.close(this.mapMarker);
+        },
+        (error) => {
+          this.toastr.error('Error adding Map Marker');
+        }
+      )
     } else {
       this.toastr.error('Form is invalid');
     }

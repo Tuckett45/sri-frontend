@@ -6,21 +6,20 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class GeocodingService {
-  private proxyUrl: string;
+  private apiKey: string;
 
   constructor(private http: HttpClient) {
-    this.proxyUrl = 'https://proxy-server-c4andmbdb5fpaqht.centralus-01.azurewebsites.net';
-    //'http://localhost:5000/proxy'; --LOCAL PROXY SERVER
-    //'https://proxy-server-c4andmbdb5fpaqht.centralus-01.azurewebsites.net/proxy'; -- PROD PROXY SERVER
+    this.apiKey = 'AIzaSyArUJ7zFSO2eI-Prkkvkr_3kNZdDebmVt4';
   }
 
   geocodeAddress(query: string): Observable<any> {
-    const url = `${this.proxyUrl}/proxy/geocode?query=${query}`;
-    return this.http.get<any[]>(url);
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${this.apiKey}`;
+    return this.http.get<any>(url);
   }
 
   reverseGeocode(latitude: number, longitude: number): Observable<any> {
-    const url = `${this.proxyUrl}/proxy/reverse-geocode?lat=${latitude}&lon=${longitude}`;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${this.apiKey}`;
+
     return this.http.get<any>(url);
   }
 }

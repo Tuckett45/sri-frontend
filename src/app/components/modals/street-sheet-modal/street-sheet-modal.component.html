@@ -69,7 +69,7 @@
         
           <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)" class="autocomplete-suggestions">
             <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
-              {{ suggestion.display_name }}
+              {{ suggestion.formattedAddress }}
             </mat-option>
           </mat-autocomplete>
         </mat-form-field>       

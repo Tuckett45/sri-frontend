@@ -23,35 +23,24 @@
         </mat-grid-tile>
 
         <mat-grid-tile colspan="2">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Street Address</mat-label>
-              <input
-                matInput
-                formControlName="streetAddress"
-                [matAutocomplete]="auto"
-                (input)="onAddressInput($event)"
-                placeholder="Enter Street Address"
-                required
-              />
-              <mat-error *ngIf="mapMarkerForm.get('streetAddress')?.hasError('required')">
-                Street address is required.
-              </mat-error>
-            
-              <mat-spinner *ngIf="isAddressLoading" diameter="24" class="loading-spinner"></mat-spinner>
-            
-              <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)" class="autocomplete-suggestions">
-                <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
-                  {{ suggestion.display_name }}
-                </mat-option>
-              </mat-autocomplete>
-            </mat-form-field>       
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Street Address</mat-label>
+            <input matInput formControlName="streetAddress" [matAutocomplete]="auto" (input)="onAddressInput($event)" placeholder="Enter Street Address" required />            
+            <mat-error *ngIf="mapMarkerForm.get('streetAddress')?.hasError('required')">Street address is required.</mat-error>            
+            <mat-spinner *ngIf="isAddressLoading" diameter="24" class="loading-spinner"></mat-spinner>            
+            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)" class="autocomplete-suggestions">
+              <mat-option *ngFor="let suggestion of filteredAddresses; trackBy: trackByAddressId" [value]="suggestion">
+                {{ suggestion.formattedAddress }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>       
           </mat-grid-tile>
           <!-- City -->
           <mat-grid-tile colspan="2">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>City</mat-label>
               <input matInput formControlName="city" placeholder="Enter City">
-              <mat-error *ngIf="mapMarkerForm.get('city')?.hasError('required') || mapMarkerForm.get('city')?.dirty">
+              <mat-error *ngIf="mapMarkerForm.get('city')?.hasError('required')">
                 City is required.
               </mat-error>
               <mat-error *ngIf="mapMarkerForm.get('city')?.hasError('pattern')">
@@ -65,7 +54,7 @@
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>State</mat-label>
               <input matInput formControlName="state" oninput="this.value = this.value.toUpperCase()" placeholder="Enter State" required>
-              <mat-error *ngIf="mapMarkerForm.get('state')?.hasError('required') || mapMarkerForm.get('state')?.dirty">
+              <mat-error *ngIf="mapMarkerForm.get('state')?.hasError('required')">
                 State is required.
               </mat-error>
               <mat-error *ngIf="mapMarkerForm.get('state')?.hasError('pattern')">

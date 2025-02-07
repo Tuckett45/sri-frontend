@@ -1,9 +1,0 @@
-{
-    "/api": {
-      "target": "https://proxy-server-c4andmbdb5fpaqht.centralus-01.azurewebsites.net",
-      "secure": false,
-      "changeOrigin": true,
-      "logLevel": "debug"
-    }
-}
-  
