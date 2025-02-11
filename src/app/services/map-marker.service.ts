@@ -24,7 +24,7 @@ export class MapMarkerService {
   }
 
   addMapMarker(mapMarker: MapMarker): Observable<any> {
-    return this.http.post<any>(`https://localhost:44376/api/MapMarker`, mapMarker);
+    return this.http.post<any>(`${environment.apiUrl}/MapMarker`, mapMarker);
   }
 
   getMapMarkersForStreetSheet(segmentId: string): Observable<MapMarker[]> {
