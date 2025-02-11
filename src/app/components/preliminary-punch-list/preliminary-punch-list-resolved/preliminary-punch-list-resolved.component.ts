@@ -1,37 +1,31 @@
 import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
-import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
+import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { Observable, of } from 'rxjs';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { AuthService } from 'src/app/services/auth.service';
-import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { User } from 'src/app/models/user.model';
+import { MatIcon } from '@angular/material/icon';
+import { GalleriaModule } from 'primeng/galleria';
 
 @Component({
-  selector: 'app-preliminary-punch-list',
-  templateUrl: './preliminary-punch-list.component.html',
-  styleUrls: ['./preliminary-punch-list.component.scss'],
-  standalone: false
+  selector: 'preliminary-punch-list-resolved',
+  templateUrl: './preliminary-punch-list-resolved.component.html',
+  styleUrls: ['./preliminary-punch-list-resolved.component.scss'],
+  standalone: true,
+  imports: [MatTable, MatIcon, GalleriaModule, MatPaginatorModule]
 })
-export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
+export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewInit {
   preliminaryPunchList$!: Observable<PreliminaryPunchList[]>;
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
   user!: User;
-
-  selectedFilters: string[] = [];
-  selectedFilter!: string;
-
-  filterOptions = [
-    { name: 'Filter 1', value: 'filter1' },
-    { name: 'Filter 2', value: 'filter2' },
-    { name: 'Filter 3', value: 'filter3' },
-  ];
 
   displayedColumns: string[] = [
     'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
@@ -86,21 +80,6 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
     }
 
     return filteredData;
-  }
-
-  addFilter() {
-    if (this.selectedFilter && !this.selectedFilters.includes(this.selectedFilter)) {
-      this.selectedFilters.push(this.selectedFilter);
-      this.selectedFilter = '';
-    }
-  }
-
-  removeChip(filter: string) {
-    this.selectedFilters = this.selectedFilters.filter(f => f !== filter);
-  }
-
-  clearAll() {
-    this.selectedFilters = [];
   }
   
 

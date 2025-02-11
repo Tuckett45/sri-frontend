@@ -22,18 +22,28 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSortModule } from '@angular/material/sort';
 import { GalleriaModule } from 'primeng/galleria';
 import { ButtonModule } from 'primeng/button';
+import { ChipModule } from 'primeng/chip';
 import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
+import { TabsModule } from 'primeng/tabs'
+import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
+import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 
 @NgModule({
   declarations: [PreliminaryPunchListComponent],
   imports: [
     CommonModule,
     PreliminaryPunchListRoutingModule,
+    PreliminaryPunchListUnresolvedComponent,
+    PreliminaryPunchListResolvedComponent,
     FormsModule,
     ButtonModule,
+    ChipModule,
     DialogModule,
+    DropdownModule,
     GalleriaModule,
     ReactiveFormsModule,
+    TabsModule,
     MatAutocompleteModule,
     MatToolbarModule,
     MatIconModule,
