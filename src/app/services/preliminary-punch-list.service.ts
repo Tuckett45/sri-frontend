@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
 import { environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
@@ -34,6 +34,11 @@ export class PreliminaryPunchListService {
       }),
       catchError(this.handleError)
     );
+  }
+
+  getUnresolvedPunchLists(state: string): Observable<any> {
+    const params = new HttpParams().set('state', state);
+    return this.http.get<any>(`https://localhost:44376/api/PunchList/pm-unresolved`, { params });
   }
 
   addEntry(punchList: PreliminaryPunchList): Observable<any> {  

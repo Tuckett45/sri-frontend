@@ -15,10 +15,12 @@
       </mat-form-field>
     </div>
     <div class="chip-filter">
-      <div class="flex align-items-center flex-wrap gap-1">
-        <p-chip *ngFor="let filter of selectedFilters" [label]="filter" [removable]="true" styleClass="mr-3 h-auto lg:h-full px-4 mt-3 lg:mt-0" removeIcon="pi pi-times" [style]="{'border-radius':'50px'}" (onRemove)="removeChip(filter)"></p-chip>
-        <a pRipple *ngIf="selectedFilters.length > 0" tabindex="0" class="text-900 cursor-pointer text-center px-3 py-2 mt-3 lg:mt-0 border-1 border-200 lg:border-none inline-block hover:bg-primary hover:border-primary transition-duration-150" style="border-radius:50px; max-width: 7rem;" (click)="clearAll()">Clear All</a>
-      </div>
+      <div class="grid flex-column lg:flex-row w-full h-full">
+        <div class="col-12 lg:col flex align-items-center flex-wrap gap-1">
+            <p-chip *ngFor="let filter of selectedFilters" [label]="filter" [removable]="true" styleClass="mr-3 h-auto lg:h-full px-4 mt-3 lg:mt-0" removeIcon="pi pi-times" [style]="{'border-radius':'50px'}" (onRemove)="removeChip(filter)"></p-chip>
+            <a pRipple *ngIf="selectedFilters.length > 0" tabindex="0" class="text-900 cursor-pointer text-center px-3 py-2 mt-3 lg:mt-0 border-1 border-200 lg:border-none inline-block hover:bg-primary hover:border-primary transition-duration-150" style="border-radius:50px; max-width: 7rem;" (click)="clearAll()">Clear All</a>
+        </div>
+    </div>
       <div class="flex align-items-center flex-wrap gap-1">
         <p-dropdown [options]="filterOptions" [(ngModel)]="selectedFilter" placeholder="Select Filter" (onChange)="addFilter()" optionLabel="name"></p-dropdown>
       </div>

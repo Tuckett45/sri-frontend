@@ -54,12 +54,25 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
-    this.loadPunchLists();
+    this.loadUnresolvedPunchLists('UT');
+    // this.loadPunchLists();
   }
 
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+  }
+
+  loadUnresolvedPunchLists(state: string): void {
+    this.punchListService.getUnresolvedPunchLists(state).subscribe(
+      (response) => {
+        this.preliminaryPunchList$ = response;  // Store the response
+        console.log(this.preliminaryPunchList$); // Log the response for debugging
+      },
+      (error) => {
+        console.error('Error fetching unresolved punch lists', error);  // Handle error
+      }
+    );
   }
 
   loadPunchLists(): void {
