@@ -203,13 +203,6 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       resolvedBy: [this.data?.resolvedBy || null]
     });
 
-    this.preliminaryPunchListForm.get('streetAddress')?.valueChanges.pipe(
-      debounceTime(1000),
-      switchMap((value) => this.getAddressSuggestions(value))
-    ).subscribe((suggestions: any[]) => {
-      this.filteredAddresses = suggestions;
-    });
-
     if (this.isDisabled) {
       this.preliminaryPunchListForm.get('segmentId')?.disable();
       this.preliminaryPunchListForm.get('vendorName')?.disable();
