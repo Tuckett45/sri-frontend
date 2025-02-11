@@ -3,7 +3,7 @@ import { MapMarker } from "./map-marker.model";
 export class StreetSheet {
     id: string;
     segmentId: string;
-    pm: string;
+    pm?: string;
     vendorName: string;
     streetAddress: string;
     city: string;
