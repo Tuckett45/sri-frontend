@@ -67,7 +67,7 @@ export class StreetSheetModalComponent implements OnInit {
     this.streetSheetForm = this.fb.group({
       id: [this.data?.streetSheet?.id || uuidv4()],
       segmentId: [this.data?.streetSheet?.segmentId || '', Validators.required],
-      pm: [this.data?.streetSheet?.pm || this.data.pmOptions, Validators.required],
+      pm: [this.data?.streetSheet?.pm || this.data.pmOptions],
       vendorName: [this.data?.streetSheet?.vendorName || '', Validators.required],
       streetAddress: [this.data?.streetSheet?.streetAddress || '', Validators.required],
       city: [this.data?.streetSheet?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
@@ -266,6 +266,10 @@ export class StreetSheetModalComponent implements OnInit {
         ...this.streetSheetForm.value,
         equipment: this.streetSheetForm.value.equipment.join(', ')
       };
+
+      if(Array.isArray(streetSheet.pm)){
+        streetSheet.pm = null;
+      }
 
       if(this.isEditMode || streetSheet.updatedBy == null){
         streetSheet.updatedBy = this.userData.id

@@ -29,7 +29,7 @@
             <mat-error *ngIf="mapMarkerForm.get('streetAddress')?.hasError('required')">Street address is required.</mat-error>            
             <mat-spinner *ngIf="isAddressLoading" diameter="24" class="loading-spinner"></mat-spinner>            
             <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)" class="autocomplete-suggestions">
-              <mat-option *ngFor="let suggestion of filteredAddresses; trackBy: trackByAddressId" [value]="suggestion">
+              <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
                 {{ suggestion.formattedAddress }}
               </mat-option>
             </mat-autocomplete>
@@ -68,5 +68,5 @@
   
   <div mat-dialog-actions class="modal-footer">
     <button mat-raised-button class="cancel-btn" (click)="close()">Cancel</button>
-    <button mat-raised-button class="save-btn" (click)="save()">Save</button>
+    <button mat-raised-button class="save-btn" (click)="checkValidForm()">Save</button>
   </div>

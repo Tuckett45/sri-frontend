@@ -152,11 +152,6 @@ export class MapMarkerModalComponent implements OnInit {
       this.filteredAddresses = [];
     }
   }
-  
-  
-  trackByAddressId(index: number, suggestion: any): string {
-    return suggestion.formattedAddress;
-  }
 
   selectAddress(suggestion: any): void {
     const address = suggestion.original.address_components || [];
@@ -203,24 +198,23 @@ export class MapMarkerModalComponent implements OnInit {
   }
 
   checkValidForm(): void {
-    if(this.mapMarkerForm.controls["latitude"].value == '' || this.mapMarkerForm.controls["longitude"].value == ''){
+    if(this.mapMarker == undefined){
       this.geocodingService.geocodeAddress(this.mapMarkerForm.controls["streetAddress"].value + this.mapMarkerForm.controls["city"].value + this.mapMarkerForm.controls["state"].value)
       .subscribe(suggestions => {
         this.filteredAddresses = suggestions.results.map((result: { address_components: any[]; geometry: { location: { lat: any; lng: any; }; }; }) => {
-          
           const address = result.address_components || [];
           const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name 
                                 + ' ' + 
                                 address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
-          
+  
           const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
           const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
           const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
-          
+  
           const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
-
+          
           this.mapMarkerForm.patchValue({
-            streetAddress: formattedAddress,
+            streetAddress: formattedAddress.trim(),
             city: city,
             state: abbreviatedState,
             latitude: result.geometry.location.lat,
@@ -236,15 +230,19 @@ export class MapMarkerModalComponent implements OnInit {
             new Date(),
             this.userData.id
           );
-        
-          this.mapMarker = mapMarker;          
-        });        
+
+          this.mapMarker = mapMarker;
+
+          this.save();
+        });
       });
+    }
+    else{
+      this.save();
     }
   }
 
   save(): void {
-    this.checkValidForm();
     if (this.mapMarkerForm.valid) {
       if(this.mapMarker.createdBy == '' || this.mapMarker.createdBy == null){
         this.mapMarker.createdBy = this.userData.id;
