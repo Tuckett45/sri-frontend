@@ -68,7 +68,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
       this.streetSheets = streetSheets;
       streetSheets.forEach((sheet: StreetSheet) => {
-        this.mapMarkerService.getMapMarkersForStreetSheet(sheet.segmentId).subscribe(mapMarkers => {
+        this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe(mapMarkers => {
           sheet.marker = mapMarkers;
           mapMarkers.forEach(marker => {
             if (marker.latitude && marker.longitude) {

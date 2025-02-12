@@ -24,6 +24,28 @@
 
         <mat-grid-tile colspan="2">
           <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Vendor</mat-label>
+            <mat-select formControlName="vendor" placeholder="Select a Vendor">
+              <mat-option *ngFor="let vendor of this.vendors" [value]="vendor">
+                {{ vendor }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </mat-grid-tile>
+
+        <mat-grid-tile colspan="2">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Created By</mat-label>
+            <mat-select formControlName="createdBy" placeholder="Who created the Street Sheet">
+              <mat-option *ngFor="let createdBy of this.createdByUsers" [value]="createdBy">
+                {{ createdBy }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </mat-grid-tile>
+
+        <mat-grid-tile colspan="2">
+          <mat-form-field appearance="outline" class="full-width">
             <mat-label>Street Address</mat-label>
             <input matInput formControlName="streetAddress" [matAutocomplete]="auto" (input)="onAddressInput($event)" placeholder="Enter Street Address" required />            
             <mat-error *ngIf="mapMarkerForm.get('streetAddress')?.hasError('required')">Street address is required.</mat-error>            

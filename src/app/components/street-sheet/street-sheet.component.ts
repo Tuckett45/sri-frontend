@@ -78,7 +78,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
       forkJoin(
         streetSheets.map((sheet: StreetSheet) =>
-          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.segmentId).pipe(
+          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).pipe(
             map((mapMarkers: MapMarker[]) => ({ sheet, mapMarkers })) 
           )
         )

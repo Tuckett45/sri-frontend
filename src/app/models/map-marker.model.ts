@@ -1,5 +1,6 @@
 export class MapMarker {
     id: string;
+    streetSheetId: string;
     segmentId: string;
     latitude: number;
     longitude: number;
@@ -8,6 +9,7 @@ export class MapMarker {
     createdBy?: string;
     constructor(
         id: string,
+        streetSheetId: string,
         segmentId: string,
         latitude: number,
         longitude: number,
@@ -16,6 +18,7 @@ export class MapMarker {
         createdBy?: string
       ) {
         this.id = id;
+        this.streetSheetId = streetSheetId;
         this.segmentId = segmentId;
         this.latitude = latitude;
         this.longitude = longitude;

@@ -29,8 +29,14 @@ export class MapMarkerModalComponent implements OnInit {
   filteredAddresses: any[] = [];
   isAddressLoading: boolean = false;
   segmentIds: string[] = [];
+  vendors: string[] = [];
+  createdByUsers: string[] = [];
+  streetSheetId!: string;
   reversedAddress: any;
 
+  selectedSegmentId!: string;
+  selectedVendor!: string;
+  selectedCreatedBy!: string;
   stateAbbreviations!: StateAbbreviation;
   
   constructor(
@@ -48,18 +54,38 @@ export class MapMarkerModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserProfile();
-    this.segmentIds = this.streetSheets.map(sheet => sheet.segmentId);
+    this.segmentIds = [...new Set(this.streetSheets.map(sheet => sheet.segmentId))].sort();
+    this.vendors = this.streetSheets.map(sheet => sheet.vendorName);
+    this.createdByUsers = this.streetSheets.map(sheet => sheet.createdBy).filter((createdBy): createdBy is string => createdBy !== undefined);
     this.isEditMode = !!this.data;
     this.isDisabled = !this.authService.isCM();
 
     this.mapMarkerForm = this.fb.group({
       id: [''],
       segmentId: ['', Validators.required],
+      streetSheetId: [''],
+      vendor: [''],
+      createdBy: [''],
       latitude: ['', Validators.required],  
       longitude: ['', Validators.required], 
       streetAddress: ['', Validators.required], 
       city: ['', Validators.required],  
       state: ['', Validators.required]
+    });
+
+    this.mapMarkerForm.get('segmentId')?.valueChanges.subscribe(segmentId => {
+      this.selectedSegmentId = segmentId;
+      this.updateVendorsAndUsers(); 
+    });
+
+    this.mapMarkerForm.get('vendor')?.valueChanges.subscribe(vendor => {
+      this.selectedVendor = vendor;
+      this.updateStreetSheetId();
+    });
+
+    this.mapMarkerForm.get('createdBy')?.valueChanges.subscribe(createdBy => {
+      this.selectedCreatedBy = createdBy;
+      this.updateStreetSheetId();
     });
 
     if (this.data.latitude !== undefined) {
@@ -78,6 +104,28 @@ export class MapMarkerModalComponent implements OnInit {
   //   });    
   //   this.reverseGeocode(mapMarker.latitude, mapMarker.longitude);
   // }
+
+  updateVendorsAndUsers(): void {
+    const filteredStreetSheets = this.streetSheets.filter(sheet => sheet.segmentId === this.selectedSegmentId);
+
+    this.vendors = filteredStreetSheets.map(sheet => sheet.vendorName);
+    this.createdByUsers = filteredStreetSheets
+      .map(sheet => sheet.createdBy)
+      .filter((createdBy): createdBy is string => createdBy !== undefined);
+  }
+
+  updateStreetSheetId(): void {
+    if (this.selectedSegmentId && this.selectedVendor && this.selectedCreatedBy) {
+      const matchingSheet = this.streetSheets.find(sheet =>
+        sheet.segmentId === this.selectedSegmentId &&
+        sheet.vendorName === this.selectedVendor &&
+        sheet.createdBy === this.selectedCreatedBy
+      );
+      this.streetSheetId = matchingSheet ? matchingSheet.id : '';
+    } else {
+      this.streetSheetId = '';
+    }
+  }
 
   loadUserProfile(): void {
     const userString = localStorage.getItem('user');
@@ -173,6 +221,7 @@ export class MapMarkerModalComponent implements OnInit {
   
     const mapMarker = new MapMarker(
       uuidv4(),
+      this.streetSheetId,
       this.mapMarkerForm.controls["segmentId"].value,
       suggestion.lat,
       suggestion.lon,
@@ -223,6 +272,7 @@ export class MapMarkerModalComponent implements OnInit {
         
           const mapMarker = new MapMarker(
             uuidv4(),
+            this.streetSheetId,
             this.mapMarkerForm.controls["segmentId"].value,
             result.geometry.location.lat,
             result.geometry.location.lng,
