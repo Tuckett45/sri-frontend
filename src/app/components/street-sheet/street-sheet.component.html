@@ -18,6 +18,9 @@
           <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleDateRange()">
             <mat-icon>calendar_today</mat-icon>
           </button>
+          <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleLocation()">
+            <mat-icon>location_on</mat-icon>
+          </button>
         </div>
         <div class="filter-section" *ngIf="dateRangeOpen">
           
@@ -53,6 +56,18 @@
           <mat-form-field appearance="fill" class="filter-input">
             <mat-label>Search by Segment ID</mat-label>
             <input matInput [(ngModel)]="filterText" (keyup)="applyFilter()" placeholder="Search...">
+          </mat-form-field>
+        </div>
+
+        <div class="filter-section" *ngIf="locationOpen">
+          <mat-form-field appearance="fill" class="filter-input">
+            <mat-label>Filter Location</mat-label>
+            <mat-select placeholder="Select a Location" [(ngModel)]="filterLocation" (selectionChange)="applyLocationFilter()">
+              <mat-option value="">-- Clear Filter --</mat-option>
+              <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
+                {{ location }}
+              </mat-option>
+            </mat-select>
           </mat-form-field>
         </div>
       </div>

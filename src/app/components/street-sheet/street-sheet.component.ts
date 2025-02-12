@@ -39,6 +39,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   searchBarOpen: boolean = false;
   userSearchOpen: boolean = false;
   dateRangeOpen: boolean = false;
+  locationOpen: boolean = false;
   user!: User;
   startDate!: Date;
   endDate!: Date;
@@ -239,6 +240,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     if (this.searchBarOpen) {
       this.dateRangeOpen = false;
       this.userSearchOpen = false;
+      this.locationOpen = false;
     }
   }
   
@@ -247,6 +249,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     if (this.userSearchOpen) {
       this.searchBarOpen = false; 
       this.dateRangeOpen = false;
+      this.locationOpen = false;
     }
   }
   
@@ -255,6 +258,16 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     if (this.dateRangeOpen) {
       this.searchBarOpen = false;  
       this.userSearchOpen = false; 
+      this.locationOpen = false;
+    }
+  }
+
+  toggleLocation(): void {
+    this.locationOpen = !this.locationOpen;
+    if (this.locationOpen) {
+      this.searchBarOpen = false;  
+      this.userSearchOpen = false; 
+      this.dateRangeOpen = false;
     }
   }
 
@@ -319,7 +332,15 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     }
   }
   
-  
+  applyLocationFilter(): void {
+    if (this.filterLocation === '') {
+      this.filteredStreetSheets = this.streetSheets; 
+    } else {
+      this.filteredStreetSheets = this.streetSheets.filter(streetSheet =>
+        streetSheet.state.toLowerCase().includes(this.filterLocation.toLowerCase())
+      );
+    }
+  }
 
   applyFilter() {
     if (this.filterText.trim() === '') {
