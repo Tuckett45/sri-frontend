@@ -1,19 +1,19 @@
 export class User {
-    id?: string;
-    name?: string;         
-    email?: string;  
-    password?: string;         
-    role?: string;    
-    market?: string;
+    id: string;
+    name: string;         
+    email: string;  
+    password: string;         
+    role: string;    
+    market: string;
     company?: string;
     createdDate: Date;
     constructor(
-      id?: string,
-      name?: string,
-      email?: string,
-      password?: string,
-      role?: string,
-      market?: string,
+      id: string,
+      name: string,
+      email: string,
+      password: string,
+      role: string,
+      market: string,
       company?: string,
       createdDate: Date = new Date()
     ) {

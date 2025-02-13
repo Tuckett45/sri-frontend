@@ -54,7 +54,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
-    this.loadUnresolvedPunchLists('UT');
+    this.loadUnresolvedPunchLists(this.user);
     // this.loadPunchLists();
   }
 
@@ -63,8 +63,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.dataSource.sort = this.sort;
   }
 
-  loadUnresolvedPunchLists(state: string): void {
-    this.punchListService.getUnresolvedPunchLists(state).subscribe(
+  loadUnresolvedPunchLists(user: User): void {
+    this.punchListService.getUnresolvedPunchLists(user).subscribe(
       (response) => {
         this.preliminaryPunchList$ = response;  // Store the response
         console.log(this.preliminaryPunchList$); // Log the response for debugging
