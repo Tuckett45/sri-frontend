@@ -27,8 +27,8 @@ export class MapMarkerService {
     return this.http.post<any>(`${environment.apiUrl}/MapMarker`, mapMarker);
   }
 
-  getMapMarkersForStreetSheet(segmentId: string): Observable<MapMarker[]> {
-    return this.http.get<MapMarker[]>(`${environment.apiUrl}/MapMarker/${segmentId}`);
+  getMapMarkersForStreetSheet(streetSheetId: string): Observable<MapMarker[]> {
+    return this.http.get<MapMarker[]>(`${environment.apiUrl}/MapMarker/${streetSheetId}`);
   }
 
   editMapMarker(mapMarker: MapMarker): Observable<any> {

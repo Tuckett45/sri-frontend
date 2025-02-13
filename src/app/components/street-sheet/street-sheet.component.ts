@@ -39,6 +39,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   searchBarOpen: boolean = false;
   userSearchOpen: boolean = false;
   dateRangeOpen: boolean = false;
+  locationOpen: boolean = false;
   user!: User;
   startDate!: Date;
   endDate!: Date;
@@ -49,6 +50,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   filterText: string = '';
   filterUser: string = '';
   filterLocation: string = '';
+  filterSheetsByLocation: string = ';'
   filteredLocations: string[] = [];
   uniqueCreatedByUsers: string[] = [];
 
@@ -78,7 +80,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
       forkJoin(
         streetSheets.map((sheet: StreetSheet) =>
-          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.segmentId).pipe(
+          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).pipe(
             map((mapMarkers: MapMarker[]) => ({ sheet, mapMarkers })) 
           )
         )
@@ -239,6 +241,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     if (this.searchBarOpen) {
       this.dateRangeOpen = false;
       this.userSearchOpen = false;
+      this.locationOpen = false;
     }
   }
   
@@ -247,6 +250,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     if (this.userSearchOpen) {
       this.searchBarOpen = false; 
       this.dateRangeOpen = false;
+      this.locationOpen = false;
     }
   }
   
@@ -255,6 +259,16 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     if (this.dateRangeOpen) {
       this.searchBarOpen = false;  
       this.userSearchOpen = false; 
+      this.locationOpen = false;
+    }
+  }
+
+  toggleLocation(): void {
+    this.locationOpen = !this.locationOpen;
+    if (this.locationOpen) {
+      this.searchBarOpen = false;  
+      this.userSearchOpen = false; 
+      this.dateRangeOpen = false;
     }
   }
 
@@ -319,7 +333,15 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     }
   }
   
-  
+  applyLocationFilter(): void {
+    if (this.filterSheetsByLocation === '') {
+      this.filteredStreetSheets = this.streetSheets; 
+    } else {
+      this.filteredStreetSheets = this.streetSheets.filter(streetSheet =>
+        streetSheet.state.toLowerCase().includes(this.filterSheetsByLocation.toLowerCase())
+      );
+    }
+  }
 
   applyFilter() {
     if (this.filterText.trim() === '') {

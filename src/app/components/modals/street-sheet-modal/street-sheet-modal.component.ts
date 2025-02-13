@@ -199,6 +199,7 @@ export class StreetSheetModalComponent implements OnInit {
   
     const mapMarker = new MapMarker(
       uuidv4(),
+      this.streetSheetForm.controls["id"].value,
       this.streetSheetForm.controls["segmentId"].value,
       suggestion.lat,
       suggestion.lon,
