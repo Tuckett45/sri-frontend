@@ -50,6 +50,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   filterText: string = '';
   filterUser: string = '';
   filterLocation: string = '';
+  filterSheetsByLocation: string = ';'
   filteredLocations: string[] = [];
   uniqueCreatedByUsers: string[] = [];
 
@@ -333,11 +334,11 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   }
   
   applyLocationFilter(): void {
-    if (this.filterLocation === '') {
+    if (this.filterSheetsByLocation === '') {
       this.filteredStreetSheets = this.streetSheets; 
     } else {
       this.filteredStreetSheets = this.streetSheets.filter(streetSheet =>
-        streetSheet.state.toLowerCase().includes(this.filterLocation.toLowerCase())
+        streetSheet.state.toLowerCase().includes(this.filterSheetsByLocation.toLowerCase())
       );
     }
   }

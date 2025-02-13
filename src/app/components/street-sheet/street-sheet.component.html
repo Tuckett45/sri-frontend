@@ -62,7 +62,7 @@
         <div class="filter-section" *ngIf="locationOpen">
           <mat-form-field appearance="fill" class="filter-input">
             <mat-label>Filter Location</mat-label>
-            <mat-select placeholder="Select a Location" [(ngModel)]="filterLocation" (selectionChange)="applyLocationFilter()">
+            <mat-select placeholder="Select a Location" [(ngModel)]="filterSheetsByLocation" (selectionChange)="applyLocationFilter()">
               <mat-option value="">-- Clear Filter --</mat-option>
               <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
                 {{ location }}
