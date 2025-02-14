@@ -27,17 +27,17 @@
     </div>
   </div>
 
-  <div class="card">
-    <p-tabs value="0">
+  <div class="card table-wrapper">
+    <p-tabs [(value)]="activeTab">
       <p-tablist>
-        <p-tab value="0">Resolved Gigs</p-tab>
-        <p-tab value="1">Unresolved Gigs</p-tab>
+        <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">Resolved Gigs</p-tab>
+        <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">Unresolved Gigs</p-tab>
       </p-tablist>
       <p-tabpanels>
-        <p-tabpanel value="0">
+        <p-tabpanel [value]="0">
           <preliminary-punch-list-resolved/>
         </p-tabpanel>
-        <p-tabpanel value="1">
+        <p-tabpanel [value]="1">
           <preliminary-punch-list-unresolved/>
         </p-tabpanel>
       </p-tabpanels>

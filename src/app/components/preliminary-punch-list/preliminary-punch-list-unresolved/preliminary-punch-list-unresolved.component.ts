@@ -4,7 +4,7 @@ import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -18,11 +18,10 @@ import { GalleriaModule } from 'primeng/galleria';
   selector: 'preliminary-punch-list-unresolved',
   templateUrl: './preliminary-punch-list-unresolved.component.html',
   styleUrls: ['./preliminary-punch-list-unresolved.component.scss'],
-  standalone: true,
-  imports: [MatTable, MatIcon, GalleriaModule, MatPaginatorModule]
+  standalone: false
 })
 export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterViewInit {
-  preliminaryPunchList$!: Observable<PreliminaryPunchList[]>;
+  public unresolvedPreliminaryPunchList$: BehaviorSubject<PreliminaryPunchList[]> = new BehaviorSubject<PreliminaryPunchList[]>([]);
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
   user!: User;
@@ -66,20 +65,13 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   loadUnresolvedPunchLists(user: User): void {
     this.punchListService.getUnresolvedPunchLists(user).subscribe(
       (response) => {
-        this.preliminaryPunchList$ = response;  // Store the response
-        console.log(this.preliminaryPunchList$); // Log the response for debugging
+        this.unresolvedPreliminaryPunchList$.next(response);
+        this.dataSource.data = response;
       },
       (error) => {
-        console.error('Error fetching unresolved punch lists', error);  // Handle error
+        this.toastr.error('Error fetching unresolved punch lists', error); 
       }
     );
-  }
-
-  loadPunchLists(): void {
-    this.preliminaryPunchList$ = this.punchListService.getEntries(); 
-    this.preliminaryPunchList$.subscribe(data => {
-      this.dataSource.data = this.filterData(data);
-    });
   }
   
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
@@ -115,7 +107,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     
         action$.subscribe({
           next: () => {
-            this.loadPunchLists(); 
+            this.loadUnresolvedPunchLists(this.user); 
             this.toastr.success('Punch List saved');
           },
           error: (err) => {
@@ -158,7 +150,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   refreshTable(): void {    
-    const filteredEntries = this.preliminaryPunchList$; 
+    const filteredEntries = this.unresolvedPreliminaryPunchList$; 
     filteredEntries?.subscribe(entries => {
       let updatedData = entries;
   

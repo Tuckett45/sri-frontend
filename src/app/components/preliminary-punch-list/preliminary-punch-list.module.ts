@@ -30,12 +30,14 @@ import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-lis
 import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 
 @NgModule({
-  declarations: [PreliminaryPunchListComponent],
+  declarations: [
+    PreliminaryPunchListComponent,
+    PreliminaryPunchListUnresolvedComponent,
+    PreliminaryPunchListResolvedComponent
+  ],
   imports: [
     CommonModule,
     PreliminaryPunchListRoutingModule,
-    PreliminaryPunchListUnresolvedComponent,
-    PreliminaryPunchListResolvedComponent,
     FormsModule,
     ButtonModule,
     ChipModule,

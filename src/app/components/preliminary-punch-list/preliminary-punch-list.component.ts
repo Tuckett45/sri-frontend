@@ -23,6 +23,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
   user!: User;
+  activeTab: number = 0;
 
   selectedFilters: string[] = [];
   selectedFilter!: string;

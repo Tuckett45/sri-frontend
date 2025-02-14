@@ -58,9 +58,14 @@
       }
     }
   }
+  .active-tab {
+    background-color: #e18a25 !important;
+  }
 
   .chip-filter {
     display: flex;
+    border: #144f80 2px;
+    border-radius: 3px;
     justify-content: space-between;
     width: 75%;
 
@@ -77,16 +82,74 @@
     }
   }
 
+  .ng-deep .p-chips .p-chips-multiple-container {
+    padding: 0.25rem 0.5rem;
+    gap: 0.5rem;
+  }
+  
+  :ng-deep .p-chips .p-chips-multiple-container:not(.p-disabled):hover {
+    border-color: #FFD54F;
+  }
+
+  :ng-deep .p-chips .p-chips-multiple-container:not(.p-disabled).p-focus {
+    outline: 0 none;
+    outline-offset: 0;
+    box-shadow: 0 0 0 1px #ffe284;
+    border-color: #FFD54F;
+  }
+
+  :ng-deep .p-chips .p-chips-multiple-container .p-chips-token {
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 213, 79, 0.16);
+    color: rgba(255, 255, 255, 0.87);
+    border-radius: 3px;
+  }
+
+  :ng-deep .p-chips .p-chips-multiple-container .p-chips-token .p-chips-token-icon {
+    margin-left: 0.5rem;
+  }
+
+  :ng-deep .p-chips .p-chips-multiple-container .p-chips-input-token {
+    padding: 0.25rem 0;
+  }
+
+  :ng-deep .p-chips .p-chips-multiple-container .p-chips-input-token input {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.87);
+    padding: 0;
+    margin: 0;
+  }
+  
+  :ng-deep p-chips.ng-dirty.ng-invalid > .p-chips > .p-inputtext {
+    border-color: #ef9a9a;
+  }
+  
+  :ng-deep p-chips.p-chips-clearable .p-inputtext {
+    padding-right: 1.5rem;
+  }
+
+  :ng-deep p-chips.p-chips-clearable .p-chips-clear-icon {
+    color: rgba(255, 255, 255, 0.6);
+    right: 0.5rem;
+  }
+
   .chip-filter .p-chip {
     margin: 0 5px 5px 0;
+    border: #144f80 2px;
+    border-radius: 3px;
   }
   
   .chip-filter .p-dropdown {
     margin-top: 10px;
+    border: #144f80 2px;
+    border-radius: 3px;
   }
   
   .chip-filter .clear-all {
     margin-top: 10px;
+    border: #144f80 2px;
+    border-radius: 3px;
   }
 
   .table-wrapper {
