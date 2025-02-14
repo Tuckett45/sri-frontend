@@ -32,7 +32,7 @@ export class StreetSheetService {
   }
 
   deleteStreetSheet(streetSheet: StreetSheet): Observable<any> {
-    return this.http.delete<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.segmentId}`, this.httpOptions);
+    return this.http.delete<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.id}`, this.httpOptions);
   }
 
   isSegmentIdUnique(segmentId: string): Observable<boolean> {
