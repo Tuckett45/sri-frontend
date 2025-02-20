@@ -13,32 +13,78 @@
           <mat-icon>search</mat-icon>
         </button>
       </mat-form-field>
-    </div>
-    <div class="chip-filter">
-      <div class="grid flex-column lg:flex-row w-full h-full">
-        <div class="col-12 lg:col flex align-items-center flex-wrap gap-1">
-            <p-chip *ngFor="let filter of selectedFilters" [label]="filter" [removable]="true" styleClass="mr-3 h-auto lg:h-full px-4 mt-3 lg:mt-0" removeIcon="pi pi-times" [style]="{'border-radius':'50px'}" (onRemove)="removeChip(filter)"></p-chip>
-            <a pRipple *ngIf="selectedFilters.length > 0" tabindex="0" class="text-900 cursor-pointer text-center px-3 py-2 mt-3 lg:mt-0 border-1 border-200 lg:border-none inline-block hover:bg-primary hover:border-primary transition-duration-150" style="border-radius:50px; max-width: 7rem;" (click)="clearAll()">Clear All</a>
-        </div>
-    </div>
-      <div class="flex align-items-center flex-wrap gap-1">
-        <p-dropdown [options]="filterOptions" [(ngModel)]="selectedFilter" placeholder="Select Filter" (onChange)="addFilter()" optionLabel="name"></p-dropdown>
+    </div>   
+  </div>
+
+  <div class="chip-filter">
+    <div class="grid flex-column lg:flex-row w-full h-full">
+      <div class="col-12 lg:col flex align-items-center flex-nowrap gap-1" *ngFor="let filter of selectedFilters">
+        <p-chip *ngFor="let chip of filter.values" 
+                [label]="chip" 
+                [removable]="true"
+                styleClass="mr-3 h-auto lg:h-full px-4 mt-3 lg:mt-0" 
+                removeIcon="pi pi-times"
+                [style]="{'border-radius':'50px'}" 
+                (onRemove)="removeChip({column: filter.column, value: chip})">
+        </p-chip>
       </div>
+      <a pRipple *ngIf="selectedFilters.length > 0" tabindex="0" class="clear-all"
+         style="border-radius:50px; max-width: 7rem;" (click)="clearAll()">Clear All</a>
+    </div>
+    
+    <div class="filter-selections flex align-items-center gap-1">
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Filter by Segment ID</mat-label>
+        <mat-select [multiple]="true" [(ngModel)]="this.selectedSegmentIds"
+                    (selectionChange)="onFilterChange({ column: 'segmentId', values: selectedSegmentIds })">
+          <mat-option *ngFor="let option of filterOptions.segmentId" [value]="option">{{ option }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Filter by Vendor</mat-label>
+        <mat-select [multiple]="true" [(ngModel)]="this.selectedVendors"
+                    (selectionChange)="onFilterChange({ column: 'vendorName', values: selectedVendors })">
+          <mat-option *ngFor="let option of filterOptions.vendorName" [value]="option">{{ option }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Filter by State</mat-label>
+        <mat-select [multiple]="true" [(ngModel)]="this.selectedStates"
+                    (selectionChange)="onFilterChange({ column: 'state', values: selectedStates })">
+          <mat-option *ngFor="let option of filterOptions.state" [value]="option">{{ option }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
     </div>
   </div>
+  
 
   <div class="card table-wrapper">
     <p-tabs [(value)]="activeTab">
       <p-tablist>
-        <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">Resolved Gigs</p-tab>
-        <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">Unresolved Gigs</p-tab>
+        <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">
+          Resolved Gigs 
+          <p-overlaybadge [value]="resolvedPunchListCount">
+            <i class="pi pi-check"></i>
+          </p-overlaybadge>
+        </p-tab>
+        <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">
+          Unresolved Gigs 
+          <p-overlaybadge [value]="unresolvedPunchListCount">
+            <i class="pi pi-wrench"></i>
+          </p-overlaybadge>
+        </p-tab>
       </p-tablist>
       <p-tabpanels>
         <p-tabpanel [value]="0">
-          <preliminary-punch-list-resolved/>
+          <preliminary-punch-list-resolved [selectedFilters]="selectedFilters" 
+          (resolvedCountChange)="onResolvedCountChange($event)"/>
         </p-tabpanel>
         <p-tabpanel [value]="1">
-          <preliminary-punch-list-unresolved/>
+          <preliminary-punch-list-unresolved [selectedFilters]="selectedFilters" 
+          (unresolvedCountChange)="onUnresolvedCountChange($event)"/>
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>

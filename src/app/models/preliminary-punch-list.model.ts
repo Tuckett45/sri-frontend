@@ -34,6 +34,8 @@ export class PreliminaryPunchList {
   updatedDate: Date | null;
   resolvedBy?: string;
 
+  [key: string]: any;
+
   constructor(
     id: string,
     segmentId: string,

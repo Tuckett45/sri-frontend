@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
@@ -13,6 +13,7 @@ import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmati
 import { User } from 'src/app/models/user.model';
 import { MatIcon } from '@angular/material/icon';
 import { GalleriaModule } from 'primeng/galleria';
+import { DropdownChangeEvent } from 'primeng/dropdown';
 
 @Component({
   selector: 'preliminary-punch-list-resolved',
@@ -22,9 +23,11 @@ import { GalleriaModule } from 'primeng/galleria';
 })
 export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewInit {
   public resolvedPreliminaryPunchList$: BehaviorSubject<PreliminaryPunchList[]> = new BehaviorSubject<PreliminaryPunchList[]>([]);
+  resolvedPreliminaryPunchLists: PreliminaryPunchList[] = [];
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
   user!: User;
+  filteredData: PreliminaryPunchList[] = [];
 
   displayedColumns: string[] = [
     'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
@@ -41,6 +44,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @Input() selectedFilters: { column: string, values: string[] }[] = [];
+  @Output() resolvedCountChange = new EventEmitter<number>();
 
   galleryImages: any[] = [];
   
@@ -62,32 +67,31 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     this.dataSource.sort = this.sort;
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedFilters']) {
+      this.applyFilters();
+    }
+  }
+  
+
   loadResolvedPunchLists(user: User): void {
     this.punchListService.getResolvedPunchLists(user).subscribe(
       (response) => {
         this.resolvedPreliminaryPunchList$.next(response);
         this.dataSource.data = response;
+        this.resolvedPreliminaryPunchLists = this.dataSource.data;
+        this.updateResolvedCount();
       },
       (error) => {
         this.toastr.error('Error fetching unresolved punch lists', error); 
       }
     );
+  }  
+
+  updateResolvedCount(): void {
+    const resolvedCount = this.dataSource.data.length; 
+    this.resolvedCountChange.emit(resolvedCount);
   }
-
-  
-  filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
-    let filteredData = data;
-
-    if (this.user.role === 'PM') {
-      filteredData = filteredData.filter(punchList =>
-        punchList.vendorName === this.user.company && punchList.state.toUpperCase() === this.user.market);
-    } else if (this.user.market && this.user.market !== 'RG') {
-      filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
-    }
-
-    return filteredData;
-  }
-  
 
   openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
@@ -184,8 +188,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     this.isIssueGalleryVisible = false;
     this.isResolutionGalleryVisible = false;
   }
-  
-  applyFilter(event: Event): void {
+
+  searchFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
   
     this.dataSource.filterPredicate = (data: any, filter: string) => {
@@ -195,5 +199,46 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     };
   
     this.dataSource.filter = filterValue;
+    this.updateResolvedCount();
+  }
+  
+  applyFilters(): void {
+    const filteredEntries = this.resolvedPreliminaryPunchList$;
+  
+    filteredEntries?.subscribe(entries => {
+      let updatedData = entries;
+  
+      this.selectedFilters.forEach(filter => {
+        if (filter.column && filter.values) {
+          if (Array.isArray(filter.values)) {
+            updatedData = updatedData.filter(punchList => 
+              filter.values.some(val => 
+                punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(val.toLowerCase())
+              )
+            );
+          } else {
+            updatedData = updatedData.filter(punchList => 
+              punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(filter.values)
+            );
+          }
+        }
+      });
+  
+      this.filteredData = updatedData;
+      this.dataSource.data = this.filteredData;
+      this.updateResolvedCount();
+    });
+  }
+  
+
+  clearAll() {
+    this.selectedFilters = [];
+    const unresolvedEntries = this.resolvedPreliminaryPunchList$; 
+    unresolvedEntries?.subscribe(entries => {
+      let updatedData = entries;
+  
+      this.dataSource.data = updatedData;
+      this.updateResolvedCount();
+    });
   }
 }

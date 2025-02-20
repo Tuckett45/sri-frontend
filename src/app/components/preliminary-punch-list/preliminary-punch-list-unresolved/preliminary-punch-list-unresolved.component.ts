@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
@@ -13,6 +13,7 @@ import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmati
 import { User } from 'src/app/models/user.model';
 import { MatIcon } from '@angular/material/icon';
 import { GalleriaModule } from 'primeng/galleria';
+import { DropdownChangeEvent } from 'primeng/dropdown';
 
 @Component({
   selector: 'preliminary-punch-list-unresolved',
@@ -22,9 +23,11 @@ import { GalleriaModule } from 'primeng/galleria';
 })
 export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterViewInit {
   public unresolvedPreliminaryPunchList$: BehaviorSubject<PreliminaryPunchList[]> = new BehaviorSubject<PreliminaryPunchList[]>([]);
+  unresolvedPreliminaryPunchLists: PreliminaryPunchList[] = [];
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
   user!: User;
+  filteredData: PreliminaryPunchList[] = [];
 
   displayedColumns: string[] = [
     'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
@@ -41,6 +44,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @Input() selectedFilters: { column: string, values: string[] }[] = [];
+  @Output() unresolvedCountChange = new EventEmitter<number>();
 
   galleryImages: any[] = [];
   
@@ -57,6 +62,12 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     // this.loadPunchLists();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedFilter']) {
+      this.applyFilters();
+    }
+  }
+
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
@@ -67,11 +78,18 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       (response) => {
         this.unresolvedPreliminaryPunchList$.next(response);
         this.dataSource.data = response;
+        this.unresolvedPreliminaryPunchLists = this.dataSource.data;
+        this.updateUnresolvedCount();
       },
       (error) => {
         this.toastr.error('Error fetching unresolved punch lists', error); 
       }
     );
+  }
+
+  updateUnresolvedCount(): void {
+    const resolvedCount = this.dataSource.data.length; 
+    this.unresolvedCountChange.emit(resolvedCount);
   }
   
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
@@ -141,6 +159,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         this.punchListService.removeEntry(report.id).subscribe(
           () => {
               this.toastr.success('Punch List entry deleted');
+              this.updateUnresolvedCount();
           },
           (error) => {
             this.toastr.error(error.error, 'Error');
@@ -163,6 +182,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       }
   
       this.dataSource.data = updatedData;
+      this.updateUnresolvedCount();
     });
   }
 
@@ -183,8 +203,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.isIssueGalleryVisible = false;
     this.isResolutionGalleryVisible = false;
   }
-  
-  applyFilter(event: Event): void {
+
+  searchFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
   
     this.dataSource.filterPredicate = (data: any, filter: string) => {
@@ -194,5 +214,44 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     };
   
     this.dataSource.filter = filterValue;
+  }
+  
+  applyFilters(): void {
+    const filteredEntries = this.unresolvedPreliminaryPunchList$;
+  
+    filteredEntries?.subscribe(entries => {
+      let updatedData = entries;
+  
+      this.selectedFilters.forEach(filter => {
+        if (filter.column && filter.values) {
+          if (Array.isArray(filter.values)) {
+            updatedData = updatedData.filter(punchList => 
+              filter.values.some(val => 
+                punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(val.toLowerCase())
+              )
+            );
+          } else {
+            updatedData = updatedData.filter(punchList => 
+              punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(filter.values)
+            );
+          }
+        }
+      });
+  
+      this.filteredData = updatedData;
+      this.dataSource.data = this.filteredData;
+      this.updateUnresolvedCount();
+    });
+  }
+
+  clearAll() {
+    this.selectedFilters = [];
+    const unresolvedEntries = this.unresolvedPreliminaryPunchList$; 
+    unresolvedEntries?.subscribe(entries => {
+      let updatedData = entries;
+  
+      this.dataSource.data = updatedData;
+      this.updateUnresolvedCount();
+    });
   }
 }
