@@ -1,0 +1,138 @@
+<div class="table-wrapper">
+    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+      <ng-container matColumnDef="segmentId">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Segment ID </th>
+        <td mat-cell *matCellDef="let report" data-label="Segment ID"> {{ report.segmentId }} </td>
+      </ng-container>
+      <ng-container matColumnDef="vendorName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Vendor </th>
+        <td mat-cell *matCellDef="let report" data-label="Vendor"> {{ report.vendorName }} </td>
+      </ng-container>
+      <ng-container matColumnDef="streetAddress">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Street Address </th>
+        <td mat-cell *matCellDef="let report" data-label="Street Address"> {{ report.streetAddress }} </td>
+      </ng-container>
+      <ng-container matColumnDef="city">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> City </th>
+        <td mat-cell *matCellDef="let report" data-label="City"> {{ report.city }} </td>
+      </ng-container>
+      <ng-container matColumnDef="state">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> State </th>
+        <td mat-cell *matCellDef="let report" data-label="State"> {{ report.state }} </td>
+      </ng-container>
+      <ng-container matColumnDef="issues">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Issues </th>
+        <td mat-cell *matCellDef="let report" data-label="Issues">
+          <div *ngFor="let issue of report.issues">
+            <b style="color: #e18a25; font-weight: 570;">{{ issue.area }}</b>: {{ issue.qualityIssues }}
+          </div>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="additionalConcerns">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Additional Concerns </th>
+        <td mat-cell *matCellDef="let report" data-label="Additional Concerns"> {{ report.additionalConcerns }} </td>
+      </ng-container>
+      <ng-container matColumnDef="createdBy">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Created By </th>
+        <td mat-cell *matCellDef="let report" data-label="Created By"> {{ report.createdBy}} </td>
+      </ng-container>
+      <ng-container matColumnDef="dateReported">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Date Reported </th>
+        <td mat-cell *matCellDef="let report" data-label="Date Reported"> {{ report.dateReported.toLocaleString() | date: 'short' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="issueImageId">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Issue Image </th>
+        <td mat-cell *matCellDef="let report" data-label="Issue Image">
+          <button mat-raised-button class="image-btn" *ngIf="report.issueImages?.length"
+            (click)="openGallery('issueImages', report.issueImages)">
+            Issue Images
+            <mat-icon>photo_library</mat-icon>
+          </button>
+          <p-galleria 
+            [value]="this.galleryImages" 
+            [(visible)]="isIssueGalleryVisible" 
+            [responsiveOptions]="responsiveOptions" 
+            [containerStyle]="{ 'max-width': '80%' }"
+            [circular]="true" 
+            [fullScreen]="true" 
+            [transitionInterval]="1500" 
+            [showItemNavigators]="true"
+            [showThumbnails]="true">
+            
+            <ng-template pTemplate="item" let-item>
+              <div style="display: flex; justify-content: center; align-items: center;">
+                <img [src]="item.itemImageSrc" 
+                    style="max-width: 80%; max-height: 1000px; object-fit: contain; display: block; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);" />
+              </div>
+            </ng-template>
+
+            <ng-template pTemplate="thumbnail" let-item>
+              <div style="display: flex; justify-content: center; align-items: center;">
+                <img [src]="item.itemImageSrc" 
+                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer; border: 2px solid #ddd;" />
+              </div>
+            </ng-template>
+          </p-galleria>
+
+        </td>
+      </ng-container>
+      
+      <ng-container matColumnDef="pmResolved">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> PM Resolved </th>
+        <td mat-cell *matCellDef="let report" data-label="PM Resolved"> {{ report.pmResolved ? "True" : "False"}} </td>
+      </ng-container>
+      <ng-container matColumnDef="resolutionImageId">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Resolution Image </th>
+        <td mat-cell *matCellDef="let report" data-label="Resolution Image">
+          <button mat-raised-button class="image-btn" *ngIf="report.resolutionImages?.length"
+            (click)="openGallery('resolutionImages', report.resolutionImages)">
+            Resolution Images
+            <mat-icon>photo_library</mat-icon>
+          </button>
+          <p-galleria [value]="this.galleryImages" 
+                      [(visible)]="isResolutionGalleryVisible" 
+                      [responsiveOptions]="responsiveOptions" 
+                      [containerStyle]="{ 'max-width': '80%' }"
+                      [circular]="true" 
+                      [fullScreen]="true" 
+                      [transitionInterval]="1500" 
+                      [showItemNavigators]="true"
+                      [showThumbnails]="true">
+            
+            <ng-template pTemplate="item" let-item>
+              <div style="display: flex; justify-content: center; align-items: center;">
+                <img [src]="item.itemImageSrc" 
+                    style="max-width: 80%; max-height: 1000px; object-fit: contain; display: block; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);" />
+              </div>
+            </ng-template>
+            <ng-template pTemplate="thumbnail" let-item>
+              <div style="display: flex; justify-content: center; align-items: center;">
+                <img [src]="item.itemImageSrc" 
+                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer; border: 2px solid #ddd;" />
+              </div>
+            </ng-template>
+          </p-galleria>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="resolvedDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>PM Resolved Date</th>
+        <td mat-cell *matCellDef="let report" data-label="Date Resolved"> {{ report.resolvedDate | date: 'short' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="cmResolved">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> CM Resolved </th>
+        <td mat-cell *matCellDef="let report" data-label="CM Resolved"> {{ report.cmResolved ? "True" : "False"  }} </td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef style="padding-right: 10px;"> Actions </th>
+        <td mat-cell *matCellDef="let report; let i = index" data-label="Actions">
+          <div class="actions-container">
+            <mat-icon *ngIf="this.user.role === 'PM' || this.user.role === 'CM' || this.user.role === 'Admin'" (click)="editReport(report)" class="edit-icon">edit</mat-icon>
+            <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialog(report)" class="delete-icon" color="warn">delete</mat-icon>
+          </div>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+    <mat-paginator [pageSizeOptions]="[25, 10, 5]" showFirstLastButtons></mat-paginator>
+  </div>

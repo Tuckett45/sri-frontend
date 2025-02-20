@@ -12,7 +12,7 @@ import { UserRole } from '../models/role.enum';
   providedIn: 'root'
 })
 export class AuthService {
-  currentUser: User = new User();
+  currentUser: User | null = null;
   private loggedInStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
   private userRole: BehaviorSubject<UserRole> = new BehaviorSubject<UserRole>(UserRole.CM);
 
@@ -127,14 +127,44 @@ export class AuthService {
   }
 
   logout(): void {
+    this.clearStorage();
+    this.resetCurrentUser();
+    this.loggedInStatus.next(false);
+    this.router.navigate(['/login']);
+}
+
+private clearStorage(): void {
     localStorage.removeItem('loggedIn');
     sessionStorage.removeItem('authToken');
     localStorage.removeItem('user');
+}
 
-    this.currentUser = new User();
+private resetCurrentUser(): void {
+    const userString = localStorage.getItem('user');
 
-    this.loggedInStatus.next(false);
-    
-    this.router.navigate(['/login']);
-  }
+    if (userString) {
+        try {
+            const userObj = JSON.parse(userString);
+
+            if (userObj && userObj.id) {
+                this.currentUser = new User(
+                    userObj.id,
+                    userObj.name,
+                    userObj.email,
+                    userObj.password,
+                    userObj.role,
+                    userObj.market,
+                    userObj.company,
+                    new Date(userObj.createdDate)
+                );
+            }
+        } catch (error) {
+            console.error("Error parsing user data from localStorage:", error);
+            this.currentUser = null;
+        }
+    } else {
+        this.currentUser = null;
+    }
+}
+
 }

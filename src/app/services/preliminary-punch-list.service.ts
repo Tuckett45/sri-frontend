@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
 import { environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
+import { User } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -34,6 +35,28 @@ export class PreliminaryPunchListService {
       }),
       catchError(this.handleError)
     );
+  }
+
+  getUnresolvedPunchLists(user: User): Observable<any> {
+    const params = new HttpParams().set('state', user.market);
+    if(user.role == 'PM'){
+      return this.http.get<any>(`https://localhost:44376/api/PunchList/pm-unresolved`, { params });
+    }else if(user.role == 'CM'){
+      return this.http.get<any>(`https://localhost:44376/api/PunchList/cm-unresolved`, { params });
+    }else{
+      return this.http.get<any>(`https://localhost:44376/api/PunchList/unresolved`);
+    }
+  }
+
+  getResolvedPunchLists(user: User): Observable<any> {
+    const params = new HttpParams().set('state', user.market);
+    if(user.role == 'PM'){
+      return this.http.get<any>(`https://localhost:44376/api/PunchList/pm-resolved`, { params });
+    }else if(user.role == 'CM'){
+      return this.http.get<any>(`https://localhost:44376/api/PunchList/cm-resolved`, { params });
+    }else{
+      return this.http.get<any>(`https://localhost:44376/api/PunchList/resolved`);
+    }
   }
 
   addEntry(punchList: PreliminaryPunchList): Observable<any> {  
