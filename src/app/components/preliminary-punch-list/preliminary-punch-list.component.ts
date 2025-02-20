@@ -48,8 +48,8 @@ export class PreliminaryPunchListComponent implements OnInit {
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource();
   @ViewChild(PreliminaryPunchListUnresolvedComponent) unresolvedPunchListComponent!: PreliminaryPunchListUnresolvedComponent;
   @ViewChild(PreliminaryPunchListResolvedComponent) resolvedPunchListComponent!: PreliminaryPunchListResolvedComponent;
-  @Input() unresolvedPunchListCount!: number;
-  @Input() resolvedPunchListCount!: number;
+  @Input() unresolvedPunchListCount: number = 0;
+  @Input() resolvedPunchListCount: number = 0;
 
   galleryImages: any[] = [];
 
