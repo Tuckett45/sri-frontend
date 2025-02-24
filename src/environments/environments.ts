@@ -4,10 +4,16 @@ export const environment = {
   apiSubscriptionKey: 'ffd675634ab645d7845640bb88d672d8'
 };
 
+//Staging
+export const staging_environment = {
+  production: false,
+  apiUrl: 'https://sri-api-staging-b0amh5fpbjbtchf5.centralus-01.azurewebsites.net',
+  apiSubscriptionKey: 'ffd675634ab645d7845640bb88d672d8'
+};
 
 // Local server
-// export const environment = {
-//   production: false,
-//   apiUrl: 'https://localhost:44376/api',
-//   apiSubscriptionKey: 'ffd675634ab645d7845640bb88d672d8'
-// };
+export const local_environment = {
+  production: false,
+  apiUrl: 'https://localhost:44376/api',
+  apiSubscriptionKey: 'ffd675634ab645d7845640bb88d672d8'
+};
