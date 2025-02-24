@@ -78,7 +78,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     this.punchListService.getResolvedPunchLists(user).subscribe(
       (response) => {
         this.resolvedPreliminaryPunchList$.next(response);
-        this.dataSource.data = response;
+        this.dataSource.data = this.filterData(response);
         this.resolvedPreliminaryPunchLists = this.dataSource.data;
         this.updateResolvedCount();
       },
@@ -87,6 +87,18 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       }
     );
   }  
+
+  filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
+    let filteredData = data;
+
+    if (this.user.role === 'PM') {
+      filteredData = filteredData.filter(punchList =>
+        punchList.vendorName === this.user.company && punchList.state.toUpperCase() === this.user.market);
+    } else if (this.user.market && this.user.market !== 'RG') {
+      filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
+    }
+    return filteredData;
+  }
 
   updateResolvedCount(): void {
     const resolvedCount = this.dataSource.data.length; 
