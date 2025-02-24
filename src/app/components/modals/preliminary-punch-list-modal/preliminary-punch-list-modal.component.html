@@ -107,7 +107,7 @@
                 <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
               </mat-select>
             </mat-form-field>
-            <button [disabled]="!authService.isCM()" mat-icon-button class="delete-icon" >
+            <button [disabled]="!authService.isCM() || !authService.isAdmin()" mat-icon-button class="delete-icon" >
               <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
             </button>
           </mat-grid-tile>
@@ -116,7 +116,7 @@
       
       <!-- Button to Add Another Issue Area -->
       <mat-grid-tile colspan="4" class="half-width">
-        <button [disabled]="!authService.isCM()" mat-stroked-button class="issue-btn" (click)="addIssueArea()">Add Issue</button>
+        <button [disabled]="this.isDisabled" mat-stroked-button class="issue-btn" (click)="addIssueArea()">Add Issue</button>
       </mat-grid-tile>
 
       <!-- Additional Concerns -->
@@ -142,7 +142,7 @@
       <!-- Add Issue Image Button -->
       <mat-grid-tile colspan="4" class="half-width">
         <div>
-          <button mat-raised-button [disabled]="!authService.isCM()" class="upload-btn" (click)="triggerImageUpload('issueImages')">
+          <button mat-raised-button [disabled]="this.isDisabled" class="upload-btn" (click)="triggerImageUpload('issueImages')">
             Add Issue Image
             <mat-icon>add_a_photo</mat-icon>
           </button>
@@ -190,7 +190,7 @@
               </div>
             </ng-template>
           </p-galleria>
-          <button [disabled]="!authService.isCM()" *ngIf="this.issueImagesFormArray && this.issueImagesFormArray.length > 0" mat-icon-button class="delete-icon" >
+          <button [disabled]="!authService.isCM() || !authService.isAdmin()" *ngIf="this.issueImagesFormArray && this.issueImagesFormArray.length > 0" mat-icon-button class="delete-icon" >
             <mat-icon (click)="openDeleteConfirmationDialogImages(this.issueImagesFormArray.value, 'issueImages')" class="delete-icon">delete</mat-icon>
           </button>
       </div>
