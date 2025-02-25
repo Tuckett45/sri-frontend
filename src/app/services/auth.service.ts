@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { User } from '../models/user.model';
 import { LoginModel } from '../models/login-model.model';
 import { environment } from '../../environments/environments';
+import { staging_environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../models/role.enum';
 
@@ -19,7 +20,7 @@ export class AuthService {
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Ocp-Apim-Subscription-Key': staging_environment.apiSubscriptionKey
     })
   };
   
@@ -32,15 +33,15 @@ export class AuthService {
       user.id = uuidv4();
       user.createdDate.toISOString();
     }
-    return this.http.post<User>(`${environment.apiUrl}/auth/register`, user, this.httpOptions);
+    return this.http.post<User>(`${staging_environment.apiUrl}/auth/register`, user, this.httpOptions);
   }
 
   getUserById(userId: string){
-    return this.http.get<User>(`${environment.apiUrl}/auth/user-${userId}`, this.httpOptions);
+    return this.http.get<User>(`${staging_environment.apiUrl}/auth/user-${userId}`, this.httpOptions);
   }
 
   getUserByRole(role: string): Observable<User[]>{
-    return this.http.get<User[]>(`${environment.apiUrl}/auth/users/${role}`, this.httpOptions);
+    return this.http.get<User[]>(`${staging_environment.apiUrl}/auth/users/${role}`, this.httpOptions);
   }
 
   setUserRole(role: string) {
@@ -92,7 +93,8 @@ export class AuthService {
   }
 
   login(credentials: LoginModel): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/auth/login`, credentials, this.httpOptions).pipe(
+    debugger;
+    return this.http.post<any>(`${staging_environment.apiUrl}/auth/login`, credentials, this.httpOptions).pipe(
       tap(user => {
         if (user) {
           localStorage.setItem('loggedIn', 'true');
@@ -117,13 +119,13 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/auth/forgot-password/${email}`, this.httpOptions);
+    return this.http.post<any>(`${staging_environment.apiUrl}/auth/forgot-password/${email}`, this.httpOptions);
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {
     const payload = { token, newPassword }
 
-    return this.http.post(`${environment.apiUrl}/auth/reset-password`, payload, this.httpOptions);
+    return this.http.post(`${staging_environment.apiUrl}/auth/reset-password`, payload, this.httpOptions);
   }
 
   logout(): void {
@@ -165,6 +167,5 @@ private resetCurrentUser(): void {
     } else {
         this.currentUser = null;
     }
-}
-
+  }
 }

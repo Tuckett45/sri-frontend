@@ -7,8 +7,8 @@ export const environment = {
 //Staging
 export const staging_environment = {
   production: false,
-  apiUrl: 'https://sri-api-staging-b0amh5fpbjbtchf5.centralus-01.azurewebsites.net',
-  apiSubscriptionKey: 'ffd675634ab645d7845640bb88d672d8'
+  apiUrl: 'https://sri-api-staging-b0amh5fpbjbtchf5.centralus-01.azurewebsites.net/api',
+  apiSubscriptionKey: '757b2517d82042b5b93ea2a083e69fc7'
 };
 
 // Local server
