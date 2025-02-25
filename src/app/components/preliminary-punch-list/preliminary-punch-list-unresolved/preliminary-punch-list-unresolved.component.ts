@@ -77,7 +77,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.punchListService.getUnresolvedPunchLists(user).subscribe(
       (response) => {
         this.unresolvedPreliminaryPunchList$.next(response);
-        this.dataSource.data = response;
+        this.dataSource.data = this.filterData(response);;
         this.unresolvedPreliminaryPunchLists = this.dataSource.data;
         this.updateUnresolvedCount();
       },

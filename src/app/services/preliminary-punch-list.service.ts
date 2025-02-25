@@ -41,7 +41,7 @@ export class PreliminaryPunchListService {
     const params = new HttpParams().set('state', user.market);
     if(user.role == 'PM'){
       return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params });
-    }else if(user.role == 'CM'){
+    }else if(user.role == 'CM' && user.market !== 'RG'){
       return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params });
     }else{
       return this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`);
@@ -52,7 +52,7 @@ export class PreliminaryPunchListService {
     const params = new HttpParams().set('state', user.market);
     if(user.role == 'PM'){
       return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-resolved`, { params });
-    }else if(user.role == 'CM'){
+    }else if(user.role == 'CM' && user.market !== 'RG'){
       return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-resolved`, { params });
     }else{
       return this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`);

@@ -180,7 +180,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   ngOnInit(): void {
     this.loadUserProfile();
     this.isEditMode = !!this.data;
-    this.isDisabled = !this.authService.isCM();
+    this.isDisabled = this.isModalDisabled();
 
     this.preliminaryPunchListForm = this.fb.group({
       id: [this.data?.id || ''],
@@ -230,6 +230,14 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       this.preliminaryPunchListForm.get('resolutionImages')?.updateValueAndValidity();
     });
 
+  }
+
+  isModalDisabled() {
+    if(this.userData.role === 'PM' || this.userData.role === 'Client'){
+      return this.isDisabled = true;
+    }else{
+      return this.isDisabled = false;
+    }
   }
 
   initializeImages(imageIds: PunchListImages[], formArrayName: 'issueImages' | 'resolutionImages') {
