@@ -1,0 +1,30 @@
+<div class="surface-ground px-4 py-5 md:px-6 lg:px-8">
+    <div class="grid">
+        <div class="col-4">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <p-chart type="bar" [data]="basicData" [options]="basicOptions" class="w-full md:w-[30rem]" />
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <p-chart type="pie" [data]="basicData" [options]="basicOptions" class="w-full md:w-[30rem]" />
+            </div>
+        </div>
+
+        <div class="col-4">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <p-chart type="polarArea" [data]="basicData" [options]="basicOptions" class="h-[30rem]" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="surface-ground px-4 py-5 md:px-6 lg:px-8">
+    <div class="grid">
+        <div class="col-12">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <p-chart type="line" [data]="data" [options]="options" class="h-[30rem]" />
+            </div>
+        </div>
+    </div>
+</div>

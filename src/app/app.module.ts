@@ -56,6 +56,7 @@ import { DeleteConfirmationModalComponent } from './components/modals/delete-con
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
 import { StatsComponent } from './components/overview/stats/stats.component';
 import { GoalsComponent } from './components/overview/goals/goals.component';
+import { VendorDashboardComponent } from './components/overview/dashboard/vendor-dashboard/vendor-dashboard.component'
 
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
@@ -63,9 +64,12 @@ import { StyleClassModule } from 'primeng/styleclass';
 import { Select } from 'primeng/select';
 import { FloatLabel } from "primeng/floatlabel"
 import { DropdownModule } from 'primeng/dropdown';
+import { TabsModule } from 'primeng/tabs'
 import { MatNativeDateModule } from '@angular/material/core';
 
 import 'leaflet-search'
+import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashboard/sri-dashboard.component';
+import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
 
 
 @NgModule({
@@ -104,6 +108,7 @@ import 'leaflet-search'
     ImageModule,
     MenuModule,
     StyleClassModule,
+    TabsModule,
     Select,
     FloatLabel,
     DropdownModule,
@@ -134,6 +139,9 @@ import 'leaflet-search'
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    ClientDashboardComponent,
+    VendorDashboardComponent,
+    SRIDashboardComponent,
     PreliminaryPunchListModule,
     GoalsComponent,
     ChartComponent

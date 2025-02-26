@@ -8,6 +8,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.active-tab {
+  background-color: #e18a25 !important;
+}
+
 .dashboard-card {
   height: 100%;
   display: flex;

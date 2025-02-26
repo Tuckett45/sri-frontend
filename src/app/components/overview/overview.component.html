@@ -1,4 +1,20 @@
-<div>
-    <stats-comp></stats-comp>
-    <goals-comp></goals-comp>
-</div>
+<div class="dashboard-tabs">
+    <p-tabs [(value)]="activeTab">
+      <p-tablist>
+        <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">Client Dashboard</p-tab>
+        <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">Vendor Dashboard</p-tab>
+        <p-tab [value]="2" [ngClass]="{ 'active-tab': activeTab === 2 }">SRI Dashboard</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel [value]="0">
+          <client-dashboard></client-dashboard>
+        </p-tabpanel>
+        <p-tabpanel [value]="1">
+          <vendor-dashboard></vendor-dashboard>
+        </p-tabpanel>
+        <p-tabpanel [value]="2">
+          <sri-dashboard></sri-dashboard>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
