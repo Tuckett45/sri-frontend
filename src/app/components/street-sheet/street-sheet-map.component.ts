@@ -119,7 +119,8 @@ export class StreetSheetMapComponent implements AfterViewInit {
   public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
     this.getReversedAddress(marker).then(address => {
       if (marker.latitude && marker.longitude) {
-        this.formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
+        const date = new Date(streetSheet.date + "Z")
+        this.formattedDate = this.datePipe.transform(date, 'MMMM d, yyyy hh:mm a', 'America/Denver') || '';
 
         const customIcon = L.icon({
           iconUrl: 'assets/images/marker-icon-2x.png',
@@ -138,7 +139,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
           <b>Street:</b> ${address.street}<br>
           <b>City:</b> ${address.city}<br>
           <b>State:</b> ${address.state}<br>
-          Date Added: <b>${this.formattedDate}</b><br>
+          Date Added: <b>${this.formattedDate} MST</b><br>
           Created By: ${streetSheet.createdBy}<br>
           <b>Marker ID:</b> ${marker.id}
         `);
@@ -160,7 +161,8 @@ export class StreetSheetMapComponent implements AfterViewInit {
           bounds.extend(latLng);
   
           const reversedAddress = await this.getReversedAddress(marker);  
-          const formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
+          const date = new Date(streetSheet.date + "Z")
+          this.formattedDate = this.datePipe.transform(date, 'MMMM d, yyyy hh:mm a', 'America/Denver') || '';
   
           L.marker(latLng)
             .bindPopup(`
@@ -169,7 +171,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
               <b>Street:</b> ${reversedAddress.street}<br>
               <b>City:</b> ${reversedAddress.city}<br>
               <b>State:</b> ${reversedAddress.state}<br>
-              Date Added: <b>${formattedDate}</b><br>
+              Date Added: <b>${this.formattedDate} MST</b><br>
               Created By: ${streetSheet.createdBy}<br>
               <b>Marker ID:</b> ${marker.id}
             `);
