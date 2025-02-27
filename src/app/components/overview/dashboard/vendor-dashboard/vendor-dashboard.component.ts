@@ -1,12 +1,13 @@
 import { isPlatformBrowser } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { ChartModule } from 'primeng/chart';
+import { StatsComponent } from '../../stats/stats.component';
 
 @Component({
     selector: 'vendor-dashboard',
     templateUrl: './vendor-dashboard.component.html',
     standalone: true,
-    imports: [ChartModule]
+    imports: [ChartModule, StatsComponent]
 })
 export class VendorDashboardComponent implements OnInit {
     data: any;

@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ChartModule } from 'primeng/chart';
+import { StatsComponent } from '../../stats/stats.component';
 
 @Component({
   selector: 'sri-dashboard',
   templateUrl: './sri-dashboard.component.html',
   styleUrls: ['./sri-dashboard.component.scss'],
   standalone: true,
-  imports: [ChartModule]
+  imports: [ChartModule, StatsComponent]
 })
 export class SRIDashboardComponent implements OnInit {
   sriData: any;

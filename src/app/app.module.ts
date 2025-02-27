@@ -65,6 +65,8 @@ import { Select } from 'primeng/select';
 import { FloatLabel } from "primeng/floatlabel"
 import { DropdownModule } from 'primeng/dropdown';
 import { TabsModule } from 'primeng/tabs'
+import { DividerModule } from 'primeng/divider';
+import { MeterGroupModule } from 'primeng/metergroup';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import 'leaflet-search'
@@ -86,7 +88,6 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     OverviewComponent,
     PreliminaryPunchListModalComponent,
     // SidebarComponent,
-    StatsComponent,
     StreetSheetComponent,
     StreetSheetModalComponent,
     StreetSheetMapComponent,
@@ -144,6 +145,9 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     SRIDashboardComponent,
     PreliminaryPunchListModule,
     GoalsComponent,
+    StatsComponent,
+    MeterGroupModule,
+    DividerModule,
     ChartComponent
   ],
   providers: [provideCharts(withDefaultRegisterables())],

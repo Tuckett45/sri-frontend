@@ -4,7 +4,7 @@ import { Component, OnInit } from '@angular/core';
   selector: 'stats-comp',
   templateUrl: './stats.component.html',
   styleUrls: ['./stats.component.scss'],
-  standalone: false
+  standalone: true
 })
 export class StatsComponent implements OnInit {
   constructor() {}

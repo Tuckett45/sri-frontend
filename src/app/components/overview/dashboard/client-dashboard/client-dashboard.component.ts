@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ChartModule } from 'primeng/chart';
+import { StatsComponent } from '../../stats/stats.component';
 
 @Component({
   selector: 'client-dashboard',
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss'],
   standalone: true,
-  imports: [ChartModule]
+  imports: [ChartModule, StatsComponent]
 })
 export class ClientDashboardComponent implements OnInit {
   // Add Client-specific dashboard data and options
