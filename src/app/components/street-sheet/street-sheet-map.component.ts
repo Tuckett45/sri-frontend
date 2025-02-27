@@ -119,7 +119,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
   public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
     this.getReversedAddress(marker).then(address => {
       if (marker.latitude && marker.longitude) {
-        const date = new Date(streetSheet.date + "Z")
+        const date = new Date(marker.dateCreated + "Z")
         this.formattedDate = this.datePipe.transform(date, 'MMMM d, yyyy hh:mm a', 'America/Denver') || '';
 
         const customIcon = L.icon({
@@ -161,7 +161,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
           bounds.extend(latLng);
   
           const reversedAddress = await this.getReversedAddress(marker);  
-          const date = new Date(streetSheet.date + "Z")
+          const date = new Date(marker.dateCreated + "Z")
           this.formattedDate = this.datePipe.transform(date, 'MMMM d, yyyy hh:mm a', 'America/Denver') || '';
   
           L.marker(latLng)
