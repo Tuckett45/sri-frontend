@@ -15,6 +15,7 @@ import { MatIcon } from '@angular/material/icon';
 import { GalleriaModule } from 'primeng/galleria';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { DatePipe } from '@angular/common';
+import { PreliminaryPunchListUnresolvedComponent } from '../preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
 
 @Component({
   selector: 'preliminary-punch-list-resolved',
@@ -45,6 +46,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @Input('PreliminaryPunchListUnresolvedComponent') unresolvedPunchListComponent!: PreliminaryPunchListUnresolvedComponent;
   @Input() selectedFilters: { column: string, values: string[] }[] = [];
   @Output() resolvedCountChange = new EventEmitter<number>();
 
@@ -55,16 +57,28 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
     public authService: AuthService,
-    public datePipe: DatePipe
+    public datePipe: DatePipe,
+    private cdRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
     this.loadResolvedPunchLists(this.user);
+
+    this.punchListService.refresh$.subscribe(() => {
+      this.loadResolvedPunchLists(this.user);
+    });
     // this.loadPunchLists();
   }
 
   ngAfterViewInit(): void {
+    this.cdRef.detectChanges();
+    this.loadResolvedPunchLists(this.user);
+  
+    if (this.unresolvedPunchListComponent) {
+      this.unresolvedPunchListComponent.loadUnresolvedPunchLists(this.user);
+    }
+  
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
@@ -142,8 +156,9 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     
         action$.subscribe({
           next: () => {
-            this.loadResolvedPunchLists(this.user); 
             this.toastr.success('Punch List saved');
+            this.clearAll();
+            this.punchListService.triggerRefresh();
           },
           error: (err) => {
             this.toastr.error('Error saving Punch List.');
@@ -152,6 +167,11 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       }
     });
     
+  }
+
+  refreshPunchLists(): void {
+    this.loadResolvedPunchLists(this.user);
+    this.punchListService.getUnresolvedPunchLists(this.user);
   }
 
   editReport(report: PreliminaryPunchList): void {

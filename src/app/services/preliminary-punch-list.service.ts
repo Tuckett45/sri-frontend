@@ -12,6 +12,8 @@ import { User } from '../models/user.model';
 })
 export class PreliminaryPunchListService {
 
+  private refreshSubject = new BehaviorSubject<void>(undefined);
+
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
@@ -20,6 +22,12 @@ export class PreliminaryPunchListService {
   };
   
   constructor(private http: HttpClient) {}
+
+  refresh$ = this.refreshSubject.asObservable();
+
+  triggerRefresh(): void {
+    this.refreshSubject.next();
+  }
 
   getEntries(): Observable<PreliminaryPunchList[]> {
     return this.http.get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions).pipe(

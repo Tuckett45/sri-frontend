@@ -166,10 +166,8 @@ export class PreliminaryPunchListComponent implements OnInit {
     
         action$.subscribe({
           next: () => {
-            this.loadPunchLists(); 
-            this.unresolvedPunchListComponent.loadUnresolvedPunchLists(this.user);
-            this.resolvedPunchListComponent.loadResolvedPunchLists(this.user);
             this.toastr.success('Punch List saved');
+            this.clearAll();
           },
           error: (err) => {
             this.toastr.error('Error saving Punch List.');
