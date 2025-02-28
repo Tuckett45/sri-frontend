@@ -14,6 +14,7 @@ import { User } from 'src/app/models/user.model';
 import { MatIcon } from '@angular/material/icon';
 import { GalleriaModule } from 'primeng/galleria';
 import { DropdownChangeEvent } from 'primeng/dropdown';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'preliminary-punch-list-resolved',
@@ -53,7 +54,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
-    public authService: AuthService
+    public authService: AuthService,
+    public datePipe: DatePipe
   ) {}
 
   ngOnInit(): void {
@@ -79,14 +81,30 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       (response) => {
         this.resolvedPreliminaryPunchList$.next(response);
         this.dataSource.data = this.filterData(response);
+  
+        for (const punchList of response) {
+          const reportedDate = new Date(punchList.dateReported + "Z");
+          punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+          if(punchList.resolvedDate){
+            const resolvedDate = new Date(punchList.resolvedDate + "Z");
+            punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+          }
+        }
+  
+        this.resolvedPreliminaryPunchLists = response.map((punchList: PreliminaryPunchList) => ({
+          ...punchList,
+          dateReported: punchList.dateReported,
+          resolvedDate: punchList.resolvedDate
+        }));
+  
         this.resolvedPreliminaryPunchLists = this.dataSource.data;
         this.updateResolvedCount();
       },
       (error) => {
-        this.toastr.error('Error fetching unresolved punch lists', error); 
+        this.toastr.error('Error fetching unresolved punch lists', error);
       }
     );
-  }  
+  }
 
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
     let filteredData = data;

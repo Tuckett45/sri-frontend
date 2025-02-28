@@ -38,7 +38,7 @@
       </ng-container>
       <ng-container matColumnDef="dateReported">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Date Reported </th>
-        <td mat-cell *matCellDef="let report" data-label="Date Reported"> {{ report.dateReported.toLocaleString() | date: 'short' }} </td>
+        <td mat-cell *matCellDef="let report" data-label="Date Reported"> {{ report.dateReported | date: 'short' }} <span *ngIf="report.dateReported">MST</span> </td>
       </ng-container>
       <ng-container matColumnDef="issueImageId">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Issue Image </th>
@@ -115,7 +115,7 @@
       </ng-container>
       <ng-container matColumnDef="resolvedDate">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>PM Resolved Date</th>
-        <td mat-cell *matCellDef="let report" data-label="Date Resolved"> {{ report.resolvedDate | date: 'short' }} </td>
+        <td mat-cell *matCellDef="let report" data-label="Date Resolved"> {{ report.resolvedDate | date: 'short' }} <span *ngIf="report.resolvedDate">MST</span></td>
       </ng-container>
       <ng-container matColumnDef="cmResolved">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> CM Resolved </th>
