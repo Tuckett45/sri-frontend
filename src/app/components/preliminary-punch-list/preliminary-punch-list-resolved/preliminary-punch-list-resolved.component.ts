@@ -63,12 +63,10 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
-    this.loadResolvedPunchLists(this.user);
 
     this.punchListService.refresh$.subscribe(() => {
       this.loadResolvedPunchLists(this.user);
     });
-    // this.loadPunchLists();
   }
 
   ngAfterViewInit(): void {
@@ -133,8 +131,13 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
 
   updateResolvedCount(): void {
-    const resolvedCount = this.dataSource.data.length; 
-    this.resolvedCountChange.emit(resolvedCount);
+    if(this.dataSource.filter != ''){
+      const resolvedCount = this.dataSource.filteredData.length; 
+      this.resolvedCountChange.emit(resolvedCount);
+    }else{
+      const resolvedCount = this.dataSource.data.length; 
+      this.resolvedCountChange.emit(resolvedCount);
+    }
   }
 
   openModal(data?: PreliminaryPunchList): void {
@@ -157,7 +160,6 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         action$.subscribe({
           next: () => {
             this.toastr.success('Punch List saved');
-            this.clearAll();
             this.punchListService.triggerRefresh();
           },
           error: (err) => {

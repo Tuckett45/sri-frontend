@@ -63,7 +63,6 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
-    this.loadUnresolvedPunchLists(this.user);
     this.punchListService.refresh$.subscribe(() => {
       this.loadUnresolvedPunchLists(this.user);
     });
@@ -116,8 +115,13 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   updateUnresolvedCount(): void {
-    const resolvedCount = this.dataSource.data.length; 
-    this.unresolvedCountChange.emit(resolvedCount);
+    if(this.dataSource.filter != ''){
+      const unresolvedCount = this.dataSource.filteredData.length; 
+      this.unresolvedCountChange.emit(unresolvedCount);
+    }else{
+      const unresolvedCount = this.dataSource.data.length; 
+      this.unresolvedCountChange.emit(unresolvedCount);
+    }
   }
   
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
@@ -154,7 +158,6 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         action$.subscribe({
           next: () => {
             this.toastr.success('Punch List saved');
-            this.clearAll();
             this.punchListService.triggerRefresh();
           },
           error: (err) => {
@@ -248,6 +251,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     };
   
     this.dataSource.filter = filterValue;
+    this.updateUnresolvedCount();
   }
   
   applyFilters(): void {

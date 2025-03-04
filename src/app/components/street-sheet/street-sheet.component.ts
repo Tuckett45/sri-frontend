@@ -76,33 +76,65 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.streetSheetMapComponent;
   }
 
-  getStreetSheets(){
-    this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
-      forkJoin(
-        streetSheets.map((sheet: StreetSheet) =>
-          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).pipe(
-            map((mapMarkers: MapMarker[]) => ({ sheet, mapMarkers })) 
-          )
-        )
-      ).subscribe(results => {
-        const filteredStreetSheets = results.filter((result: any) => result.mapMarkers.length > 0)
-          .map((result: any) => {
-            result.sheet.marker = result.mapMarkers;
-            result.sheet.marker.forEach((marker: MapMarker) => {
-              this.getReversedAddress(marker).then((reversedAddress) => {
-                this.reversedAddresses[marker.id] = reversedAddress;
-              });
-            }) 
-            return result.sheet;
-          });
-        
-        this.streetSheets = filteredStreetSheets;
-        this.filteredStreetSheets = this.streetSheets;
-        this.getLocationFilter();
-        this.getUniqueCreatedByUsers();
-      });
+  getStreetSheets() {
+    this.streetSheetService.getStreetSheets(this.user).subscribe(streetSheets => {
+        forkJoin(
+            streetSheets.map((sheet: StreetSheet) =>
+                this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).pipe(
+                    map((mapMarkers: MapMarker[]) => ({ sheet, mapMarkers }))
+                )
+            )
+        ).subscribe(results => {
+            const filteredStreetSheets = results.filter((result: any) => result.mapMarkers.length > 0)
+                .map((result: any) => {
+                    result.sheet.marker = result.mapMarkers;
+                    result.sheet.marker.forEach((marker: MapMarker) => {
+                        this.getReversedAddress(marker).then((reversedAddress) => {
+                            this.reversedAddresses[marker.id] = reversedAddress;
+                        });
+                    })
+                    return result.sheet;
+                });
+
+            this.streetSheets = filteredStreetSheets;
+            this.filteredStreetSheets = this.streetSheets;
+            this.getLocationFilter();
+            this.getUniqueCreatedByUsers();
+        });
     });
   }
+  
+  getReversedAddress(marker: MapMarker): Promise<any> {
+    return this.geocodingService.reverseGeocode(marker.latitude, marker.longitude).toPromise()
+        .then(suggestion => {
+            let bestResult = suggestion.results[0];
+            for (let result of suggestion.results) {
+                if (result.geometry.location_type === 'ROOFTOP') {
+                    bestResult = result;
+                    break;
+                }
+            }
+
+            const address = bestResult.address_components || [];
+            const formattedAddress = bestResult.formatted_address;
+
+            const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name
+                + ' ' +
+                address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
+
+            const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || '';
+            const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';
+            const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || '';
+
+            this.reversedAddresses[marker.id] = {
+                street: streetAddress.trim(),
+                city: city,
+                state: abbreviatedState,
+            };
+
+            return this.reversedAddresses[marker.id];
+        });
+}
 
   createStreetSheet(): void {
       const dialogRef = this.dialog.open(StreetSheetModalComponent, {
@@ -148,10 +180,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   selectMarker(marker: MapMarker, streetSheet: StreetSheet, sidenav: any): void {
     this.toggleSidePanel(sidenav);
     this.selectedMarker = marker;
-    this.getReversedAddress(marker).then((reversedAddress) => {
-      this.reversedAddresses[marker.id] = reversedAddress;
-      this.streetSheetMapComponent.centerMapOnMarker(marker, streetSheet);
-    });
+    this.streetSheetMapComponent.centerMapOnMarker(marker, streetSheet);
   }
 
   editStreetSheet(streetSheet: StreetSheet): void {
@@ -354,42 +383,5 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
         streetSheet.state.toLowerCase().includes(this.filterText.toLowerCase())
       );
     }
-  }
-
-  getReversedAddress(marker: MapMarker): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.geocodingService.reverseGeocode(marker.latitude, marker.longitude).subscribe(suggestion => {
-  
-        let bestResult = suggestion.results[0];
-        for (let result of suggestion.results) {
-          if (result.geometry.location_type === 'ROOFTOP') {
-            bestResult = result;
-            break;
-          }
-        }
-  
-        const address = bestResult.address_components || [];
-        const formattedAddress = bestResult.formatted_address;
-  
-        const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name 
-                              + ' ' + 
-                              address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
-  
-        const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
-        const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
-        const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
-  
-        this.reversedAddresses[marker.id] = {
-          street: streetAddress.trim(),
-          city: city,
-          state: abbreviatedState,
-        };
-  
-        resolve(this.reversedAddresses[marker.id]);
-      }, error => {
-        reject(error);
-      });
-    });
-  }
-  
+  }  
 }
