@@ -23,46 +23,48 @@
           </button>
         </div>
         <div class="filter-section" *ngIf="dateRangeOpen">
-          
           <mat-form-field appearance="fill" class="w-full">
             <mat-label>Start Date</mat-label>
-            <input matInput [matDatepicker]="startDatePicker" [(ngModel)]="startDate">
+            <input matInput [matDatepicker]="startDatePicker" [(ngModel)]="startDate" (change)="applyFilters()">
             <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
             <mat-datepicker #startDatePicker></mat-datepicker>
           </mat-form-field>
-        
+          
+          <!-- End Date Filter -->
           <mat-form-field appearance="fill" class="w-full">
             <mat-label>End Date</mat-label>
-            <input matInput [matDatepicker]="endDatePicker" [(ngModel)]="endDate">
+            <input matInput [matDatepicker]="endDatePicker" [(ngModel)]="endDate" (change)="applyFilters()">
             <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
             <mat-datepicker #endDatePicker></mat-datepicker>
           </mat-form-field>
         
-          <button mat-raised-button style="background-color: #144f80" (click)="applyDateFilter()">Apply Filter</button>
+          <button mat-raised-button style="background-color: #144f80" (click)="applyFilters()">Apply Filter</button>
           <button mat-raised-button style="align-self: flex-end; background-color: #a50000" (click)="removeFilter()">Remove Filter</button>
         </div>
+        
         <div class="filter-section" *ngIf="userSearchOpen">
           <mat-form-field appearance="fill" class="filter-input">
             <mat-label>Filter by Created By</mat-label>
-            <mat-select placeholder="Select User" [(ngModel)]="filterUser" (selectionChange)="applyUserFilter()">
-              <mat-option value="" (click)="removeFilter()">-- Clear Filter --</mat-option>
+            <mat-select placeholder="Select User" [(ngModel)]="filterUser" (selectionChange)="applyFilters()">
+              <mat-option value="">-- Clear Filter --</mat-option>
               <mat-option *ngFor="let user of uniqueCreatedByUsers" [value]="user">
                 {{ user }}
               </mat-option>
             </mat-select>
           </mat-form-field>
         </div>
+        
         <div class="filter-section" *ngIf="searchBarOpen">
           <mat-form-field appearance="fill" class="filter-input">
             <mat-label>Search by Segment ID</mat-label>
-            <input matInput [(ngModel)]="filterText" (keyup)="applyFilter()" placeholder="Search...">
+            <input matInput [(ngModel)]="filterText" (keyup)="applyFilters()" placeholder="Search...">
           </mat-form-field>
         </div>
-
+        
         <div class="filter-section" *ngIf="locationOpen">
           <mat-form-field appearance="fill" class="filter-input">
             <mat-label>Filter Location</mat-label>
-            <mat-select placeholder="Select a Location" [(ngModel)]="filterSheetsByLocation" (selectionChange)="applyLocationFilter()">
+            <mat-select placeholder="Select a Location" [(ngModel)]="filterSheetsByLocation" (selectionChange)="applyFilters()">
               <mat-option value="">-- Clear Filter --</mat-option>
               <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
                 {{ location }}
@@ -71,6 +73,7 @@
           </mat-form-field>
         </div>
       </div>
+        
 
       <div class="border-round select-none">
         <ul class="list-none p-2 m-0">

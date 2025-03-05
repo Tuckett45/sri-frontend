@@ -50,7 +50,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   filterText: string = '';
   filterUser: string = '';
   filterLocation: string = '';
-  filterSheetsByLocation: string = ';'
+  filterSheetsByLocation: string = '';
   filteredLocations: string[] = [];
   uniqueCreatedByUsers: string[] = [];
 
@@ -322,18 +322,6 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.streetSheetMapComponent.goToLocation(location);
   }
 
-  applyDateFilter(): void {
-      let filtered = this.streetSheets;
-
-    if (this.startDate && this.endDate) {
-      filtered = filtered.filter(streetSheet => {
-        const streetSheetDate = new Date(streetSheet.date);
-        return streetSheetDate >= this.startDate && streetSheetDate <= this.endDate;
-      });
-    }
-    this.filteredStreetSheets = filtered;
-  }
-
   removeFilter(): void {
     this.filteredStreetSheets = this.streetSheets;
   }
@@ -349,39 +337,65 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.uniqueCreatedByUsers = Array.from(usersSet); 
   }
 
-  applyUserFilter(): void {
-    if (this.filterUser === '') {
-      this.filteredStreetSheets = this.streetSheets; 
-    } else {
-      this.filteredStreetSheets = this.streetSheets.filter(streetSheet =>
+  onDateChange(startDate: Date, endDate: Date): void {
+    this.startDate = startDate;
+    this.endDate = endDate;
+    this.applyFilters();  
+  }
+  
+  onUserChange(user: string): void {
+    this.filterUser = user;
+    this.applyFilters(); 
+  }
+  
+  onLocationChange(location: string): void {
+    this.filterSheetsByLocation = location;
+    this.applyFilters(); 
+  }
+  
+  onTextChange(event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    if (inputElement) {
+      this.filterText = inputElement.value;
+      this.applyFilters();  
+    }
+  }
+
+  applyFilters(): void {
+    let filteredStreetSheets = this.streetSheets;
+  
+    if (this.startDate && this.endDate) {
+      filteredStreetSheets = filteredStreetSheets.filter(streetSheet => {
+        const streetSheetDate = new Date(streetSheet.date);
+        return streetSheetDate >= this.startDate && streetSheetDate <= this.endDate;
+      });
+    }
+  
+    if (this.filterUser) {
+      filteredStreetSheets = filteredStreetSheets.filter(streetSheet =>
         streetSheet.createdBy?.toLowerCase().includes(this.filterUser.toLowerCase()) ||
         streetSheet.marker.some((marker: MapMarker) => 
           marker.createdBy?.toLowerCase().includes(this.filterUser.toLowerCase())
         )
       );
     }
-  }
   
-  applyLocationFilter(): void {
-    if (this.filterSheetsByLocation === '') {
-      this.filteredStreetSheets = this.streetSheets; 
-    } else {
-      this.filteredStreetSheets = this.streetSheets.filter(streetSheet =>
+    if (this.filterSheetsByLocation) {
+      filteredStreetSheets = filteredStreetSheets.filter(streetSheet =>
         streetSheet.state.toLowerCase().includes(this.filterSheetsByLocation.toLowerCase())
       );
     }
-  }
-
-  applyFilter() {
-    if (this.filterText.trim() === '') {
-      this.filteredStreetSheets = this.streetSheets;
-    } else {
-      this.filteredStreetSheets = this.streetSheets.filter(streetSheet =>
+  
+    if (this.filterText.trim() !== '') {
+      filteredStreetSheets = filteredStreetSheets.filter(streetSheet =>
         streetSheet.segmentId.toLowerCase().includes(this.filterText.toLowerCase()) ||
         streetSheet.streetAddress.toLowerCase().includes(this.filterText.toLowerCase()) ||
         streetSheet.city.toLowerCase().includes(this.filterText.toLowerCase()) ||
         streetSheet.state.toLowerCase().includes(this.filterText.toLowerCase())
       );
     }
-  }  
+
+    this.filteredStreetSheets = filteredStreetSheets;
+  }
+  
 }
