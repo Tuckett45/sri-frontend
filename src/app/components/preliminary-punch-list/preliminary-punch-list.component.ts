@@ -11,6 +11,7 @@ import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-
 import { User } from 'src/app/models/user.model';
 import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
+import * as Papa from 'papaparse';
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -24,12 +25,16 @@ export class PreliminaryPunchListComponent implements OnInit {
   isResolutionGalleryVisible: boolean = false;
   user!: User;
   activeTab: number = 0;
+  filtersOpen: boolean = false;
 
   selectedFilters: { column: string, values: string[] }[] = [];
   selectedFilter: { column: string, value: string[] } = { column: '', value: [] };
   selectedSegmentIds: string[] = [];
   selectedVendors: string[] = [];
   selectedStates: string[] = [];
+  selectedDates: string[] = [];
+  startDate!: Date;
+  endDate!: Date;
   filteredData: PreliminaryPunchList[] = [];
   allData: PreliminaryPunchList[] = [];
 
@@ -92,6 +97,10 @@ export class PreliminaryPunchListComponent implements OnInit {
     return filteredData;
   }
 
+  toggleFilters(): void {
+    this.filtersOpen = !this.filtersOpen;
+  }
+
   populateFilterOptions(data: PreliminaryPunchList[]): void {
     this.filterOptions = {
       segmentId: [...new Set(data.map(item => item.segmentId))],
@@ -103,12 +112,12 @@ export class PreliminaryPunchListComponent implements OnInit {
   removeChip(filter: { column: string, value: string }): void {
     if (filter.column === 'segmentId') {
       this.selectedSegmentIds = this.selectedSegmentIds.filter(id => id !== filter.value);
-    }
-    else if (filter.column === 'vendorName') {
+    } else if (filter.column === 'vendorName') {
       this.selectedVendors = this.selectedVendors.filter(vendor => vendor !== filter.value);
-    }
-    else if (filter.column === 'state') {
+    } else if (filter.column === 'state') {
       this.selectedStates = this.selectedStates.filter(state => state !== filter.value);
+    } else if (filter.column === 'dateReported') {
+      this.selectedDates = this.selectedDates.filter(date => date !== filter.value);
     }
   
     this.selectedFilters = this.selectedFilters.map(f => {
@@ -260,14 +269,19 @@ export class PreliminaryPunchListComponent implements OnInit {
       } else if (filter.column === 'state') {
         this.selectedStates = filter.values;
         this.addOrUpdateFilter(filter);
+      } else if (filter.column === 'dateReported') {
+        this.selectedDates = filter.values;  
+        this.addOrUpdateFilter(filter);
+      } else {
+        this.selectedFilters = this.selectedFilters.filter(f => f.column !== filter.column);
+        this.clearSelectedValues(filter.column);
       }
-    } else {
-      this.selectedFilters = this.selectedFilters.filter(f => f.column !== filter.column);
-      this.clearSelectedValues(filter.column);
-    }
   
-    this.updateChildFilters();
+      // Update child filters
+      this.updateChildFilters();
+    }
   }
+  
   
   addOrUpdateFilter(filter: { column: string, values: string[] }) {
     const existingFilterIndex = this.selectedFilters.findIndex(f => f.column === filter.column);
@@ -286,6 +300,8 @@ export class PreliminaryPunchListComponent implements OnInit {
       this.selectedVendors = [];
     } else if (column === 'state') {
       this.selectedStates = [];
+    }else if (column === 'dateReported') {
+      this.selectedDates = [];
     }
   }
   
@@ -299,5 +315,53 @@ export class PreliminaryPunchListComponent implements OnInit {
   updateChildFilters() {
     this.resolvedPunchListComponent.applyFilters();
     this.unresolvedPunchListComponent.applyFilters();
+  }
+
+  exportToCSV(): void {
+    if(this.activeTab === 0){
+      this.dataSource.data = this.resolvedPunchListComponent.dataSource.data;
+      const csvData = this.dataSource.data.map((entry: PreliminaryPunchList) => ({
+        SegmentID: entry.segmentId,
+        VendorName: entry.vendorName,
+        StreetAddress: entry.streetAddress,
+        City: entry.city,
+        State: entry.state,
+        Issues: entry.issues,
+        AdditionalConcerns: entry.additionalConcerns,
+        CreatedBy: entry.createdBy,
+        DateReported: entry.dateReported,
+        PMResolved: entry.pmResolved ? 'Yes' : 'No',
+        Actions: 'View/Edit/Delete',
+      }));
+    
+      const csv = Papa.unparse(csvData);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'preliminary-punch-list.csv';
+      link.click();
+    }else{
+      this.dataSource.data = this.unresolvedPunchListComponent.dataSource.data;
+      const csvData = this.dataSource.data.map((entry: PreliminaryPunchList) => ({
+        SegmentID: entry.segmentId,
+        VendorName: entry.vendorName,
+        StreetAddress: entry.streetAddress,
+        City: entry.city,
+        State: entry.state,
+        Issues: entry.issues,
+        AdditionalConcerns: entry.additionalConcerns,
+        CreatedBy: entry.createdBy,
+        DateReported: entry.dateReported,
+        PMResolved: entry.pmResolved ? 'Yes' : 'No',
+        Actions: 'View/Edit/Delete',
+      }));
+    
+      const csv = Papa.unparse(csvData);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'preliminary-punch-list.csv';
+      link.click();
+    }
   }
 }

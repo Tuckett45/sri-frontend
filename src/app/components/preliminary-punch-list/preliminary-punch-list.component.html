@@ -1,7 +1,10 @@
 <div class="preliminary-punch-list-page surface-card shadow-4 p-3 border-round">
   <div class="header-section">
     <h2>Preliminary Punch List</h2>
-    <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" mat-raised-button color="primary" class="header-btn" (click)="openModal()">Add New Entry</button>
+    <div class="header-btns">
+      <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" mat-raised-button class="export-btn" (click)="exportToCSV()">Export to CSV</button>
+      <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" mat-raised-button color="primary" class="header-btn" (click)="openModal()">Add Entry</button>
+    </div>
   </div>
 
   <div class="filter-section">
@@ -16,7 +19,19 @@
     </div>   
   </div>
 
-  <div class="chip-filter">
+  <div>
+    <button mat-raised-button color="primary" class="filters-btn" (click)="toggleFilters()">
+      <span *ngIf="!filtersOpen">
+        View Filters
+      </span>
+      <span *ngIf="filtersOpen">
+        Close Filters
+      </span>
+      <mat-icon>filter_list</mat-icon>
+    </button>
+  </div>
+
+  <div class="chip-filter" *ngIf="filtersOpen">
     <div class="grid flex-column lg:flex-row w-full h-full">
       <div class="col-12 lg:col flex align-items-center flex-nowrap gap-1" *ngFor="let filter of selectedFilters">
         <p-chip *ngFor="let chip of filter.values" 
@@ -55,8 +70,22 @@
                     (selectionChange)="onFilterChange({ column: 'state', values: selectedStates })">
           <mat-option *ngFor="let option of filterOptions.state" [value]="option">{{ option }}</mat-option>
         </mat-select>
+      </mat-form-field>      
+    </div>
+    <div class="filter-selections flex align-items-center gap-1">
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="startDatePicker" [(ngModel)]="startDate" (dateChange)="onFilterChange({ column: 'dateReported', values: [startDate.toString(), endDate.toString()] })">
+        <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #startDatePicker></mat-datepicker>
       </mat-form-field>
-      
+    
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="endDatePicker" [(ngModel)]="endDate" (dateChange)="onFilterChange({ column: 'dateReported', values: [startDate.toString(), endDate.toString()] })">
+        <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #endDatePicker></mat-datepicker>
+      </mat-form-field>
     </div>
   </div>
   
