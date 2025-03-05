@@ -164,10 +164,10 @@ export class MapMarkerModalComponent implements OnInit {
 
   onAddressInput(event: any): void {
     const query = event.target.value;
-    if (query && query.length > 2) {
+    if (query && query.length > 14) {
       this.isAddressLoading = true;
       this.geocodingService.geocodeAddress(query).pipe(
-        debounceTime(300),
+        debounceTime(4000),
         distinctUntilChanged(),
         catchError(() => {
           this.isAddressLoading = false;

@@ -41,8 +41,8 @@ export class StreetSheetMapComponent implements AfterViewInit {
   ) {}
 
   ngAfterViewInit() {
-    this.loadStreetSheets();
     this.loadUserProfile();
+    this.loadStreetSheets();
     this.initMap();
   }
 
@@ -65,17 +65,17 @@ export class StreetSheetMapComponent implements AfterViewInit {
   }
 
   public loadStreetSheets(): void {
-    this.streetSheetService.getStreetSheets().subscribe(streetSheets => {
+    this.streetSheetService.getStreetSheets(this.userData).subscribe(streetSheets => {
       this.streetSheets = streetSheets;
       streetSheets.forEach((sheet: StreetSheet) => {
-        this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe(mapMarkers => {
-          sheet.marker = mapMarkers;
-          mapMarkers.forEach(marker => {
-            if (marker.latitude && marker.longitude) {
-              this.addMarker(marker, sheet);
-            }
+          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe(mapMarkers => {
+            sheet.marker = mapMarkers;
+            mapMarkers.forEach(marker => {
+              if (marker.latitude && marker.longitude) {
+                this.addMarker(marker, sheet);
+              }
+            });
           });
-        });
       });
     });
   }
@@ -117,35 +117,36 @@ export class StreetSheetMapComponent implements AfterViewInit {
   }
 
   public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
-    this.getReversedAddress(marker).then(address => {
-      if (marker.latitude && marker.longitude) {
-        this.formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
-
-        const customIcon = L.icon({
-          iconUrl: 'assets/images/marker-icon-2x.png',
-          iconSize: [32, 32],
-          iconAnchor: [16, 32],
-          shadowUrl: 'assets/images/marker-shadow.png',
-          popupAnchor: [0, -32],
-          shadowSize: [41, 41],
-          shadowAnchor: [12, 41]
-        });
-
-        const newMarker = L.marker([marker.latitude, marker.longitude], { icon: customIcon }).addTo(this.map)
-        .bindPopup(`
-          <b>${streetSheet.vendorName}</b><br>
-          <b>Segment ID:</b> ${streetSheet.segmentId}<br>
-          <b>Street:</b> ${address.street}<br>
-          <b>City:</b> ${address.city}<br>
-          <b>State:</b> ${address.state}<br>
-          Date Added: <b>${this.formattedDate}</b><br>
-          Created By: ${streetSheet.createdBy}<br>
-          <b>Marker ID:</b> ${marker.id}
-        `);
-
-        this.mapMarkers.push({ id: marker.id, marker: newMarker });
-      }
-    });
+      this.getReversedAddress(marker).then(address => {
+        if (marker.latitude && marker.longitude) {
+          const date = new Date(marker.dateCreated + "Z")
+          this.formattedDate = this.datePipe.transform(date, 'MMMM d, yyyy hh:mm a', 'America/Denver') || '';
+  
+          const customIcon = L.icon({
+            iconUrl: 'assets/images/marker-icon-2x.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            shadowUrl: 'assets/images/marker-shadow.png',
+            popupAnchor: [0, -32],
+            shadowSize: [41, 41],
+            shadowAnchor: [12, 41]
+          });
+  
+          const newMarker = L.marker([marker.latitude, marker.longitude], { icon: customIcon }).addTo(this.map)
+          .bindPopup(`
+            <b>${streetSheet.vendorName}</b><br>
+            <b>Segment ID:</b> ${streetSheet.segmentId}<br>
+            <b>Street:</b> ${address.street}<br>
+            <b>City:</b> ${address.city}<br>
+            <b>State:</b> ${address.state}<br>
+            Date Added: <b>${this.formattedDate} MST</b><br>
+            Created By: ${streetSheet.createdBy}<br>
+            <b>Marker ID:</b> ${marker.id}
+          `);
+  
+          this.mapMarkers.push({ id: marker.id, marker: newMarker });
+        }
+      });
   }
 
   async centerMapOnStreetSheet(streetSheet: StreetSheet): Promise<void> {
@@ -160,7 +161,8 @@ export class StreetSheetMapComponent implements AfterViewInit {
           bounds.extend(latLng);
   
           const reversedAddress = await this.getReversedAddress(marker);  
-          const formattedDate = this.datePipe.transform(streetSheet.date, 'MMMM d, yyyy hh:mm') || '';
+          const date = new Date(marker.dateCreated + "Z")
+          this.formattedDate = this.datePipe.transform(date, 'MMMM d, yyyy hh:mm a', 'America/Denver') || '';
   
           L.marker(latLng)
             .bindPopup(`
@@ -169,7 +171,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
               <b>Street:</b> ${reversedAddress.street}<br>
               <b>City:</b> ${reversedAddress.city}<br>
               <b>State:</b> ${reversedAddress.state}<br>
-              Date Added: <b>${formattedDate}</b><br>
+              Date Added: <b>${this.formattedDate} MST</b><br>
               Created By: ${streetSheet.createdBy}<br>
               <b>Marker ID:</b> ${marker.id}
             `);
@@ -207,7 +209,6 @@ export class StreetSheetMapComponent implements AfterViewInit {
       const stateCoordinates = StateLocation[location as keyof typeof StateLocation] || '';
       this.map.flyTo([stateCoordinates.latitude, stateCoordinates.longitude], 10, { animate: true, duration: 1 }); 
     }else{
-      //utah
       this.map.flyTo([40.7608, -111.8910], 10, { animate: true, duration: 1 }); 
     }
   }

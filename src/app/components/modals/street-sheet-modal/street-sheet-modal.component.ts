@@ -34,7 +34,7 @@ export class StreetSheetModalComponent implements OnInit {
   streetSheet: StreetSheet | null = null;
   pmOptions: User[] = [];
 
-  deploymentOptions: string[] = ['Fiber Installation', 'Micro-trench', 'Mastic/Sealant', 'Bore', 'Vault Installation', 'DB Installation', 'Other'];
+  deploymentOptions: string[] = ['Fiber Installation', 'Prelim Walk', 'Micro-trench', 'Mastic/Sealant', 'Bore', 'Vault Installation', 'DB Installation', 'Other'];
 
   equipmentOptions: string[] = ['Saws', 'Bore Rigs', 'Splicing equipment', 'Mini Excavators', 'Dump Trailers', 'TCP Equipment', 'Box Crew Equipment', 'Other'];
 
@@ -138,10 +138,10 @@ export class StreetSheetModalComponent implements OnInit {
 
   onAddressInput(event: any): void {
     const query = event.target.value;
-    if (query && query.length > 2) {
+    if (query && query.length > 14) {
       this.isAddressLoading = true;
       this.geocodingService.geocodeAddress(query).pipe(
-        debounceTime(300),
+        debounceTime(4000),
         distinctUntilChanged(),
         catchError(() => {
           this.isAddressLoading = false;

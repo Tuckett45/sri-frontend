@@ -5,6 +5,7 @@ import { environment } from 'src/environments/environments';
 import { staging_environment } from 'src/environments/environments';
 import { StreetSheet } from '../models/street-sheet.model';
 import { MapMarker } from '../models/map-marker.model';
+import { User } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -20,8 +21,12 @@ export class StreetSheetService {
 
   constructor(private http: HttpClient) {}
 
-  getStreetSheets(): Observable<StreetSheet[]> {
-    return this.http.get<StreetSheet[]>(`${staging_environment.apiUrl}/StreetSheet`);
+  getStreetSheets(user: User): Observable<StreetSheet[]> {
+    if(user.market !== 'RG' && user.role === 'CM'){
+      return this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet/${user.market}`);
+    }else{
+      return this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet`);
+    }
   }
 
   saveStreetSheet(streetSheet: StreetSheet): Observable<any> {
