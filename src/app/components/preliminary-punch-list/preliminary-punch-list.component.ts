@@ -331,7 +331,8 @@ export class PreliminaryPunchListComponent implements OnInit {
         CreatedBy: entry.createdBy,
         DateReported: entry.dateReported,
         PMResolved: entry.pmResolved ? 'Yes' : 'No',
-        Actions: 'View/Edit/Delete',
+        PMResolvedDate: entry.resolvedDate,
+        CMResolved: entry.cmResolved ? 'Yes' : 'No',
       }));
     
       const csv = Papa.unparse(csvData);
@@ -353,7 +354,8 @@ export class PreliminaryPunchListComponent implements OnInit {
         CreatedBy: entry.createdBy,
         DateReported: entry.dateReported,
         PMResolved: entry.pmResolved ? 'Yes' : 'No',
-        Actions: 'View/Edit/Delete',
+        PMResolvedDate: entry.resolvedDate,
+        CMResolved: entry.cmResolved ? 'Yes' : 'No',
       }));
     
       const csv = Papa.unparse(csvData);
