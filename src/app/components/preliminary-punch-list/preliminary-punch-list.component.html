@@ -72,7 +72,7 @@
             PM Resolved Gigs 
           </span>
           <span *ngIf="user.role === 'Admin' || user.role === 'Client'">
-            Resolved Gigs 
+            All Resolved Gigs 
           </span>
           <p-overlaybadge [value]="resolvedPunchListCount">
             <i class="pi pi-check"></i>
@@ -86,7 +86,7 @@
             PM Unresolved Gigs 
           </span>
           <span *ngIf="user.role === 'Admin' || user.role === 'Client'">
-            Unresolved Gigs 
+            All Unresolved Gigs 
           </span>
           <p-overlaybadge [value]="unresolvedPunchListCount">
             <i class="pi pi-wrench"></i>
