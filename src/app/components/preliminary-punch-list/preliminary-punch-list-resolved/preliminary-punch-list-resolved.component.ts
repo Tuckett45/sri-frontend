@@ -261,17 +261,35 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       let updatedData = entries;
   
       this.selectedFilters.forEach(filter => {
-        if (filter.column && filter.values) {
-          if (Array.isArray(filter.values)) {
-            updatedData = updatedData.filter(punchList => 
-              filter.values.some(val => 
-                punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(val.toLowerCase())
-              )
-            );
-          } else {
-            updatedData = updatedData.filter(punchList => 
-              punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(filter.values)
-            );
+        if (filter.column == 'dateReported') {
+          const startDateObj = new Date(filter.values[0]);
+          const endDateObj = new Date(filter.values[1]);
+          
+          updatedData = updatedData.filter(punchList => {
+            const punchListDate = new Date(punchList.dateReported);
+            return punchListDate >= startDateObj && punchListDate <= endDateObj;
+          });
+        } else if (filter.column == 'resolvedDate') {
+          const startDateObj = new Date(filter.values[0]);
+          const endDateObj = new Date(filter.values[1]);
+          
+          updatedData = updatedData.filter(punchList => {
+            const punchListDate = new Date(punchList.resolvedDate);
+            return punchListDate >= startDateObj && punchListDate <= endDateObj;
+          });
+        }else {
+          if (filter.column && filter.values) {
+            if (Array.isArray(filter.values)) {
+              updatedData = updatedData.filter(punchList => 
+                filter.values.some(val => 
+                  punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(val.toLowerCase())
+                )
+              );
+            } else {
+              updatedData = updatedData.filter(punchList => 
+                punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(filter.values)
+              );
+            }
           }
         }
       });

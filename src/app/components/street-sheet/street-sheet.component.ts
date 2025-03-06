@@ -336,31 +336,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
 
     this.uniqueCreatedByUsers = Array.from(usersSet); 
   }
-
-  onDateChange(startDate: Date, endDate: Date): void {
-    this.startDate = startDate;
-    this.endDate = endDate;
-    this.applyFilters();  
-  }
   
-  onUserChange(user: string): void {
-    this.filterUser = user;
-    this.applyFilters(); 
-  }
-  
-  onLocationChange(location: string): void {
-    this.filterSheetsByLocation = location;
-    this.applyFilters(); 
-  }
-  
-  onTextChange(event: Event): void {
-    const inputElement = event.target as HTMLInputElement;
-    if (inputElement) {
-      this.filterText = inputElement.value;
-      this.applyFilters();  
-    }
-  }
-
   applyFilters(): void {
     let filteredStreetSheets = this.streetSheets;
   
