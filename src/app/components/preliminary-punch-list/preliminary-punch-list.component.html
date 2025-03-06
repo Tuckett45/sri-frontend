@@ -35,7 +35,7 @@
     <div class="grid flex-column lg:flex-row w-full h-full">
       <div class="col-12 lg:col flex align-items-center flex-nowrap gap-1" *ngFor="let filter of selectedFilters">
         <p-chip *ngFor="let chip of filter.values" 
-                [label]="chip" 
+                [label]="formatDate(chip)" 
                 [removable]="true"
                 styleClass="mr-3 h-auto lg:h-full px-4 mt-3 lg:mt-0" 
                 removeIcon="pi pi-times"
@@ -72,19 +72,36 @@
         </mat-select>
       </mat-form-field>      
     </div>
+    <span>Date Reported Range Filter</span>
     <div class="filter-selections flex align-items-center gap-1">
       <mat-form-field appearance="fill" class="half-width">
         <mat-label>Start Date</mat-label>
-        <input matInput [matDatepicker]="startDatePicker" [(ngModel)]="startDate" (dateChange)="onFilterChange({ column: 'dateReported', values: [startDate.toString(), endDate.toString()] })">
+        <input matInput [matDatepicker]="startDatePicker" [(ngModel)]="dateReportedStartDate" (dateChange)="onFilterChange({ column: 'dateReported', values: [dateReportedStartDate.toString(), dateReportedEndDate.toString()] })">
         <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
         <mat-datepicker #startDatePicker></mat-datepicker>
       </mat-form-field>
     
       <mat-form-field appearance="fill" class="half-width">
         <mat-label>End Date</mat-label>
-        <input matInput [matDatepicker]="endDatePicker" [(ngModel)]="endDate" (dateChange)="onFilterChange({ column: 'dateReported', values: [startDate.toString(), endDate.toString()] })">
+        <input matInput [matDatepicker]="endDatePicker" [(ngModel)]="dateReportedEndDate" (dateChange)="onFilterChange({ column: 'dateReported', values: [dateReportedStartDate.toString(), dateReportedEndDate.toString()] })">
         <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
         <mat-datepicker #endDatePicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+    <span>Resolved Date Range Filter</span>
+    <div class="filter-selections flex align-items-center gap-1">
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="resolvedDateStartDatePicker" [(ngModel)]="resolvedDateStartDate" (dateChange)="onFilterChange({ column: 'resolvedDate', values: [resolvedDateStartDate.toString(), resolvedDateEndDate.toString()] })">
+        <mat-datepicker-toggle matSuffix [for]="resolvedDateStartDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #resolvedDateStartDatePicker></mat-datepicker>
+      </mat-form-field>
+    
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="resolvedDateEndDatePicker" [(ngModel)]="resolvedDateEndDate" (dateChange)="onFilterChange({ column: 'resolvedDate', values: [resolvedDateStartDate.toString(), resolvedDateEndDate.toString()] })">
+        <mat-datepicker-toggle matSuffix [for]="resolvedDateEndDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #resolvedDateEndDatePicker></mat-datepicker>
       </mat-form-field>
     </div>
   </div>

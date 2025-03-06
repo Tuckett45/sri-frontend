@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
-import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
+import { IssueArea, PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { Observable } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
@@ -12,6 +12,7 @@ import { User } from 'src/app/models/user.model';
 import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
 import * as Papa from 'papaparse';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -32,9 +33,13 @@ export class PreliminaryPunchListComponent implements OnInit {
   selectedSegmentIds: string[] = [];
   selectedVendors: string[] = [];
   selectedStates: string[] = [];
-  selectedDates: string[] = [];
-  startDate!: Date;
-  endDate!: Date;
+  dateReportedSelectedDates: string[] = [];
+  dateReportedStartDate: Date | string = '';
+  dateReportedEndDate: Date | string = '';
+  resolvedDateSelectedDates: string[] = [];
+  resolvedDateStartDate: Date | string = '';
+  resolvedDateEndDate: Date | string = '';
+
   filteredData: PreliminaryPunchList[] = [];
   allData: PreliminaryPunchList[] = [];
 
@@ -68,7 +73,8 @@ export class PreliminaryPunchListComponent implements OnInit {
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
-    public authService: AuthService
+    public authService: AuthService,
+    public datePipe: DatePipe,
   ) {}
 
   ngOnInit(): void {
@@ -117,8 +123,15 @@ export class PreliminaryPunchListComponent implements OnInit {
     } else if (filter.column === 'state') {
       this.selectedStates = this.selectedStates.filter(state => state !== filter.value);
     } else if (filter.column === 'dateReported') {
-      this.selectedDates = this.selectedDates.filter(date => date !== filter.value);
+      this.dateReportedSelectedDates = this.dateReportedSelectedDates.filter(date => date !== filter.value);
+      this.dateReportedStartDate = '';
+      this.dateReportedEndDate = '';
+    } else if (filter.column === 'resolvedDate') {
+      this.resolvedDateSelectedDates = this.resolvedDateSelectedDates.filter(date => date !== filter.value);
+      this.resolvedDateStartDate = '';
+      this.resolvedDateEndDate = '';
     }
+
   
     this.selectedFilters = this.selectedFilters.map(f => {
       if (f.column === filter.column) {
@@ -270,7 +283,10 @@ export class PreliminaryPunchListComponent implements OnInit {
         this.selectedStates = filter.values;
         this.addOrUpdateFilter(filter);
       } else if (filter.column === 'dateReported') {
-        this.selectedDates = filter.values;  
+        this.dateReportedSelectedDates = filter.values;  
+        this.addOrUpdateFilter(filter);
+      } else if (filter.column === 'resolvedDate') {
+        this.resolvedDateSelectedDates = filter.values;  
         this.addOrUpdateFilter(filter);
       } else {
         this.selectedFilters = this.selectedFilters.filter(f => f.column !== filter.column);
@@ -300,8 +316,10 @@ export class PreliminaryPunchListComponent implements OnInit {
       this.selectedVendors = [];
     } else if (column === 'state') {
       this.selectedStates = [];
-    }else if (column === 'dateReported') {
-      this.selectedDates = [];
+    } else if (column === 'dateReported') {
+      this.dateReportedSelectedDates = [];
+    } else if (column === 'resolvedDate') {
+      this.resolvedDateSelectedDates = [];
     }
   }
   
@@ -310,6 +328,13 @@ export class PreliminaryPunchListComponent implements OnInit {
       return filter.value.join(', ');
     }
     return filter.value || '';
+  }
+
+  formatDate(chip: any): string {
+    if (chip instanceof Date || !isNaN(Date.parse(chip))) {
+      return this.datePipe.transform(chip, 'MM/dd/yyyy') || '';
+    }
+    return chip;
   }
 
   updateChildFilters() {
@@ -326,7 +351,8 @@ export class PreliminaryPunchListComponent implements OnInit {
         StreetAddress: entry.streetAddress,
         City: entry.city,
         State: entry.state,
-        Issues: entry.issues,
+        IssueArea: entry.issues.filter(issue => issue.area).map(issue => issue.area).join(', '),
+        QualityIssue: entry.issues.filter(issue => issue.qualityIssues).map(issue => issue.qualityIssues).join(', '),
         AdditionalConcerns: entry.additionalConcerns,
         CreatedBy: entry.createdBy,
         DateReported: entry.dateReported,
@@ -339,7 +365,7 @@ export class PreliminaryPunchListComponent implements OnInit {
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'preliminary-punch-list.csv';
+      link.download = 'resolved-preliminary-punch-list.csv';
       link.click();
     }else{
       this.dataSource.data = this.unresolvedPunchListComponent.dataSource.data;
@@ -349,7 +375,8 @@ export class PreliminaryPunchListComponent implements OnInit {
         StreetAddress: entry.streetAddress,
         City: entry.city,
         State: entry.state,
-        Issues: entry.issues,
+        IssueArea: entry.issues.filter(issue => issue.area).map(issue => issue.area).join(', '),
+        QualityIssue: entry.issues.filter(issue => issue.qualityIssues).map(issue => issue.qualityIssues).join(', '),
         AdditionalConcerns: entry.additionalConcerns,
         CreatedBy: entry.createdBy,
         DateReported: entry.dateReported,
@@ -362,7 +389,7 @@ export class PreliminaryPunchListComponent implements OnInit {
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'preliminary-punch-list.csv';
+      link.download = 'unresolved-preliminary-punch-list.csv';
       link.click();
     }
   }
