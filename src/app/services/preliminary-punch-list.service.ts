@@ -48,10 +48,10 @@ export class PreliminaryPunchListService {
 
   getUnresolvedPunchLists(user: User): Observable<any> {
     const params = new HttpParams().set('state', user.market);
-    if(user.role == 'PM'){
-      return this.http.get<any>(`${staging_environment.apiUrl}/PunchList/pm-unresolved`, { params });
-    }else if(user.role == 'CM' && user.market !== 'RG'){
-      return this.http.get<any>(`${staging_environment.apiUrl}/PunchList/cm-unresolved`, { params });
+    if(user.role === 'PM'){
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params });
+    }else if(user.role === 'CM'){
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params });
     }else{
       return this.http.get<any>(`${staging_environment.apiUrl}/PunchList/unresolved`);
     }
@@ -59,10 +59,10 @@ export class PreliminaryPunchListService {
 
   getResolvedPunchLists(user: User): Observable<any> {
     const params = new HttpParams().set('state', user.market);
-    if(user.role == 'PM'){
-      return this.http.get<any>(`${staging_environment.apiUrl}/PunchList/pm-resolved`, { params });
-    }else if(user.role == 'CM' && user.market !== 'RG'){
-      return this.http.get<any>(`${staging_environment.apiUrl}/PunchList/cm-resolved`, { params });
+    if(user.role === 'PM'){
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-resolved`, { params });
+    }else if(user.role === 'CM'){
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-resolved`, { params });
     }else{
       return this.http.get<any>(`${staging_environment.apiUrl}/PunchList/resolved`);
     }

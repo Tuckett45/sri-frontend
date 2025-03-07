@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
-import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
+import { IssueArea, PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { Observable } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
@@ -11,6 +11,8 @@ import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-
 import { User } from 'src/app/models/user.model';
 import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
+import * as Papa from 'papaparse';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -24,12 +26,20 @@ export class PreliminaryPunchListComponent implements OnInit {
   isResolutionGalleryVisible: boolean = false;
   user!: User;
   activeTab: number = 0;
+  filtersOpen: boolean = false;
 
   selectedFilters: { column: string, values: string[] }[] = [];
   selectedFilter: { column: string, value: string[] } = { column: '', value: [] };
   selectedSegmentIds: string[] = [];
   selectedVendors: string[] = [];
   selectedStates: string[] = [];
+  dateReportedSelectedDates: string[] = [];
+  dateReportedStartDate: Date | string = '';
+  dateReportedEndDate: Date | string = '';
+  resolvedDateSelectedDates: string[] = [];
+  resolvedDateStartDate: Date | string = '';
+  resolvedDateEndDate: Date | string = '';
+
   filteredData: PreliminaryPunchList[] = [];
   allData: PreliminaryPunchList[] = [];
 
@@ -63,7 +73,8 @@ export class PreliminaryPunchListComponent implements OnInit {
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
-    public authService: AuthService
+    public authService: AuthService,
+    public datePipe: DatePipe,
   ) {}
 
   ngOnInit(): void {
@@ -92,6 +103,10 @@ export class PreliminaryPunchListComponent implements OnInit {
     return filteredData;
   }
 
+  toggleFilters(): void {
+    this.filtersOpen = !this.filtersOpen;
+  }
+
   populateFilterOptions(data: PreliminaryPunchList[]): void {
     this.filterOptions = {
       segmentId: [...new Set(data.map(item => item.segmentId))],
@@ -103,13 +118,20 @@ export class PreliminaryPunchListComponent implements OnInit {
   removeChip(filter: { column: string, value: string }): void {
     if (filter.column === 'segmentId') {
       this.selectedSegmentIds = this.selectedSegmentIds.filter(id => id !== filter.value);
-    }
-    else if (filter.column === 'vendorName') {
+    } else if (filter.column === 'vendorName') {
       this.selectedVendors = this.selectedVendors.filter(vendor => vendor !== filter.value);
-    }
-    else if (filter.column === 'state') {
+    } else if (filter.column === 'state') {
       this.selectedStates = this.selectedStates.filter(state => state !== filter.value);
+    } else if (filter.column === 'dateReported') {
+      this.dateReportedSelectedDates = this.dateReportedSelectedDates.filter(date => date !== filter.value);
+      this.dateReportedStartDate = '';
+      this.dateReportedEndDate = '';
+    } else if (filter.column === 'resolvedDate') {
+      this.resolvedDateSelectedDates = this.resolvedDateSelectedDates.filter(date => date !== filter.value);
+      this.resolvedDateStartDate = '';
+      this.resolvedDateEndDate = '';
     }
+
   
     this.selectedFilters = this.selectedFilters.map(f => {
       if (f.column === filter.column) {
@@ -260,14 +282,22 @@ export class PreliminaryPunchListComponent implements OnInit {
       } else if (filter.column === 'state') {
         this.selectedStates = filter.values;
         this.addOrUpdateFilter(filter);
+      } else if (filter.column === 'dateReported') {
+        this.dateReportedSelectedDates = filter.values;  
+        this.addOrUpdateFilter(filter);
+      } else if (filter.column === 'resolvedDate') {
+        this.resolvedDateSelectedDates = filter.values;  
+        this.addOrUpdateFilter(filter);
+      } else {
+        this.selectedFilters = this.selectedFilters.filter(f => f.column !== filter.column);
+        this.clearSelectedValues(filter.column);
       }
-    } else {
-      this.selectedFilters = this.selectedFilters.filter(f => f.column !== filter.column);
-      this.clearSelectedValues(filter.column);
-    }
   
-    this.updateChildFilters();
+      // Update child filters
+      this.updateChildFilters();
+    }
   }
+  
   
   addOrUpdateFilter(filter: { column: string, values: string[] }) {
     const existingFilterIndex = this.selectedFilters.findIndex(f => f.column === filter.column);
@@ -286,6 +316,10 @@ export class PreliminaryPunchListComponent implements OnInit {
       this.selectedVendors = [];
     } else if (column === 'state') {
       this.selectedStates = [];
+    } else if (column === 'dateReported') {
+      this.dateReportedSelectedDates = [];
+    } else if (column === 'resolvedDate') {
+      this.resolvedDateSelectedDates = [];
     }
   }
   
@@ -296,8 +330,67 @@ export class PreliminaryPunchListComponent implements OnInit {
     return filter.value || '';
   }
 
+  formatDate(chip: any): string {
+    if (chip instanceof Date || !isNaN(Date.parse(chip))) {
+      return this.datePipe.transform(chip, 'MM/dd/yyyy') || '';
+    }
+    return chip;
+  }
+
   updateChildFilters() {
     this.resolvedPunchListComponent.applyFilters();
     this.unresolvedPunchListComponent.applyFilters();
+  }
+
+  exportToCSV(): void {
+    if(this.activeTab === 0){
+      this.dataSource.data = this.resolvedPunchListComponent.dataSource.data;
+      const csvData = this.dataSource.data.map((entry: PreliminaryPunchList) => ({
+        SegmentID: entry.segmentId,
+        VendorName: entry.vendorName,
+        StreetAddress: entry.streetAddress,
+        City: entry.city,
+        State: entry.state,
+        IssueArea: entry.issues.filter(issue => issue.area).map(issue => issue.area).join(', '),
+        QualityIssue: entry.issues.filter(issue => issue.qualityIssues).map(issue => issue.qualityIssues).join(', '),
+        AdditionalConcerns: entry.additionalConcerns,
+        CreatedBy: entry.createdBy,
+        DateReported: entry.dateReported,
+        PMResolved: entry.pmResolved ? 'Yes' : 'No',
+        PMResolvedDate: entry.resolvedDate,
+        CMResolved: entry.cmResolved ? 'Yes' : 'No',
+      }));
+    
+      const csv = Papa.unparse(csvData);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'resolved-preliminary-punch-list.csv';
+      link.click();
+    }else{
+      this.dataSource.data = this.unresolvedPunchListComponent.dataSource.data;
+      const csvData = this.dataSource.data.map((entry: PreliminaryPunchList) => ({
+        SegmentID: entry.segmentId,
+        VendorName: entry.vendorName,
+        StreetAddress: entry.streetAddress,
+        City: entry.city,
+        State: entry.state,
+        IssueArea: entry.issues.filter(issue => issue.area).map(issue => issue.area).join(', '),
+        QualityIssue: entry.issues.filter(issue => issue.qualityIssues).map(issue => issue.qualityIssues).join(', '),
+        AdditionalConcerns: entry.additionalConcerns,
+        CreatedBy: entry.createdBy,
+        DateReported: entry.dateReported,
+        PMResolved: entry.pmResolved ? 'Yes' : 'No',
+        PMResolvedDate: entry.resolvedDate,
+        CMResolved: entry.cmResolved ? 'Yes' : 'No',
+      }));
+    
+      const csv = Papa.unparse(csvData);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'unresolved-preliminary-punch-list.csv';
+      link.click();
+    }
   }
 }
