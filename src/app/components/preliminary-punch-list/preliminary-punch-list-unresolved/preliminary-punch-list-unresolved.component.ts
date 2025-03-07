@@ -14,6 +14,8 @@ import { User } from 'src/app/models/user.model';
 import { MatIcon } from '@angular/material/icon';
 import { GalleriaModule } from 'primeng/galleria';
 import { DropdownChangeEvent } from 'primeng/dropdown';
+import { DatePipe } from '@angular/common';
+import { PreliminaryPunchListResolvedComponent } from '../preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 
 @Component({
   selector: 'preliminary-punch-list-unresolved',
@@ -44,6 +46,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @Input('PreliminaryPunchListResolvedComponent') resolvedPunchListComponent!: PreliminaryPunchListResolvedComponent;
   @Input() selectedFilters: { column: string, values: string[] }[] = [];
   @Output() unresolvedCountChange = new EventEmitter<number>();
 
@@ -53,13 +56,16 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
-    public authService: AuthService
+    public authService: AuthService,
+    public datePipe: DatePipe,
+    private cdRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
-    this.loadUnresolvedPunchLists(this.user);
-    // this.loadPunchLists();
+    this.punchListService.refresh$.subscribe(() => {
+      this.loadUnresolvedPunchLists(this.user);
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -69,6 +75,11 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   ngAfterViewInit(): void {
+    this.cdRef.detectChanges();
+    this.loadUnresolvedPunchLists(this.user);
+    if (this.resolvedPunchListComponent) {
+      this.resolvedPunchListComponent.loadResolvedPunchLists(this.user);
+    }
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
@@ -77,19 +88,40 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.punchListService.getUnresolvedPunchLists(user).subscribe(
       (response) => {
         this.unresolvedPreliminaryPunchList$.next(response);
-        this.dataSource.data = this.filterData(response);;
+        this.dataSource.data = this.filterData(response);
+  
+        for (const punchList of response) {
+          const reportedDate = new Date(punchList.dateReported + "Z");
+          punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+          if(punchList.resolvedDate){
+            const resolvedDate = new Date(punchList.resolvedDate + "Z");
+            punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+          }
+        }
+  
+        this.unresolvedPreliminaryPunchLists = response.map((punchList: PreliminaryPunchList) => ({
+          ...punchList,
+          dateReported: punchList.dateReported,
+          resolvedDate: punchList.resolvedDate
+        }));
+  
         this.unresolvedPreliminaryPunchLists = this.dataSource.data;
         this.updateUnresolvedCount();
       },
       (error) => {
-        this.toastr.error('Error fetching unresolved punch lists', error); 
+        this.toastr.error('Error fetching unresolved punch lists', error);
       }
     );
   }
 
   updateUnresolvedCount(): void {
-    const resolvedCount = this.dataSource.data.length; 
-    this.unresolvedCountChange.emit(resolvedCount);
+    if(this.dataSource.filter != ''){
+      const unresolvedCount = this.dataSource.filteredData.length; 
+      this.unresolvedCountChange.emit(unresolvedCount);
+    }else{
+      const unresolvedCount = this.dataSource.data.length; 
+      this.unresolvedCountChange.emit(unresolvedCount);
+    }
   }
   
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
@@ -125,8 +157,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     
         action$.subscribe({
           next: () => {
-            this.loadUnresolvedPunchLists(this.user); 
             this.toastr.success('Punch List saved');
+            this.punchListService.triggerRefresh();
           },
           error: (err) => {
             this.toastr.error('Error saving Punch List.');
@@ -135,6 +167,11 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       }
     });
     
+  }
+
+  refreshPunchLists(): void {
+    this.loadUnresolvedPunchLists(this.user);
+    this.punchListService.getResolvedPunchLists(this.user);
   }
 
   editReport(report: PreliminaryPunchList): void {
@@ -214,6 +251,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     };
   
     this.dataSource.filter = filterValue;
+    this.updateUnresolvedCount();
   }
   
   applyFilters(): void {
@@ -223,17 +261,35 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       let updatedData = entries;
   
       this.selectedFilters.forEach(filter => {
-        if (filter.column && filter.values) {
-          if (Array.isArray(filter.values)) {
-            updatedData = updatedData.filter(punchList => 
-              filter.values.some(val => 
-                punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(val.toLowerCase())
-              )
-            );
-          } else {
-            updatedData = updatedData.filter(punchList => 
-              punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(filter.values)
-            );
+        if (filter.column == 'dateReported') {
+          const startDateObj = new Date(filter.values[0]);
+          const endDateObj = new Date(filter.values[1]);
+          
+          updatedData = updatedData.filter(punchList => {
+            const punchListDate = new Date(punchList.dateReported);
+            return punchListDate >= startDateObj && punchListDate <= endDateObj;
+          });
+        } else if (filter.column == 'resolvedDate') {
+          const startDateObj = new Date(filter.values[0]);
+          const endDateObj = new Date(filter.values[1]);
+          
+          updatedData = updatedData.filter(punchList => {
+            const punchListDate = new Date(punchList.resolvedDate);
+            return punchListDate >= startDateObj && punchListDate <= endDateObj;
+          });
+        } else {
+          if (filter.column && filter.values) {
+            if (Array.isArray(filter.values)) {
+              updatedData = updatedData.filter(punchList => 
+                filter.values.some(val => 
+                  punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(val.toLowerCase())
+                )
+              );
+            } else {
+              updatedData = updatedData.filter(punchList => 
+                punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(filter.values)
+              );
+            }
           }
         }
       });
@@ -243,6 +299,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       this.updateUnresolvedCount();
     });
   }
+  
+  
 
   clearAll() {
     this.selectedFilters = [];

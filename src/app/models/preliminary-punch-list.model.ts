@@ -26,7 +26,7 @@ export class PreliminaryPunchList {
   dateReported: Date;
   pmResolved: boolean;
   cmResolved: boolean;
-  resolvedDate: Date | null;
+  resolvedDate: Date;
   issueImages: PunchListImages[]; 
   resolutionImages?: PunchListImages[];
   createdBy?: string;
@@ -48,7 +48,7 @@ export class PreliminaryPunchList {
     dateReported: Date = new Date(),
     pmResolved: boolean = false,
     cmResolved: boolean = false,
-    resolvedDate: Date | null = null,
+    resolvedDate: Date,
     issueImages: PunchListImages[] = [],
     resolutionImages: PunchListImages[] = [], 
     createdBy?: string,

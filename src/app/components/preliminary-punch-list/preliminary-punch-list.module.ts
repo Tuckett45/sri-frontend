@@ -30,6 +30,9 @@ import { OverlayBadgeModule } from 'primeng/overlaybadge';
 import { TabsModule } from 'primeng/tabs'
 import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
 import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
+import { DatePipe } from '@angular/common';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+
 
 @NgModule({
   declarations: [
@@ -68,8 +71,10 @@ import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-
     MatDialogTitle,
     MatCheckboxModule,
     MatPaginatorModule,
-    MatSortModule
+    MatSortModule,
+    MatDatepickerModule
   ],
+  providers: [DatePipe],
   exports: [PreliminaryPunchListComponent]
 })
 export class PreliminaryPunchListModule { }

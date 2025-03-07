@@ -250,10 +250,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   onAddressInput(event: any): void {
     const query = event.target.value;
-    if (query && query.length > 2) {
+    if (query && query.length > 14) {
       this.isAddressLoading = true;
       this.geocodingService.geocodeAddress(query).pipe(
-        debounceTime(300),
+        debounceTime(4000),
         distinctUntilChanged(),
         catchError(() => {
           this.isAddressLoading = false;
@@ -456,6 +456,17 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   save(): void {
     if (this.preliminaryPunchListForm.valid) {
       const punchList = this.preliminaryPunchListForm.getRawValue();
+      if (typeof punchList.dateReported === 'string') {
+        punchList.dateReported = new Date(punchList.dateReported);
+      }
+
+      if (typeof punchList.updatedDate === 'string') {
+        punchList.updatedDate = new Date(punchList.updatedDate);
+      }
+
+      if (typeof punchList.resolvedDate === 'string') {
+        punchList.resolvedDate = new Date(punchList.resolvedDate);
+      }
   
       punchList.issues = punchList.issues.map((issue: any) => ({
         ...issue,

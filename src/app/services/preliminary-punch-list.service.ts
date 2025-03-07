@@ -12,6 +12,8 @@ import { User } from '../models/user.model';
 })
 export class PreliminaryPunchListService {
 
+  private refreshSubject = new BehaviorSubject<void>(undefined);
+
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
@@ -20,6 +22,12 @@ export class PreliminaryPunchListService {
   };
   
   constructor(private http: HttpClient) {}
+
+  refresh$ = this.refreshSubject.asObservable();
+
+  triggerRefresh(): void {
+    this.refreshSubject.next();
+  }
 
   getEntries(): Observable<PreliminaryPunchList[]> {
     return this.http.get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions).pipe(
@@ -39,9 +47,9 @@ export class PreliminaryPunchListService {
 
   getUnresolvedPunchLists(user: User): Observable<any> {
     const params = new HttpParams().set('state', user.market);
-    if(user.role == 'PM'){
+    if(user.role === 'PM'){
       return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params });
-    }else if(user.role == 'CM' && user.market !== 'RG'){
+    }else if(user.role === 'CM'){
       return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params });
     }else{
       return this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`);
@@ -50,9 +58,9 @@ export class PreliminaryPunchListService {
 
   getResolvedPunchLists(user: User): Observable<any> {
     const params = new HttpParams().set('state', user.market);
-    if(user.role == 'PM'){
+    if(user.role === 'PM'){
       return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-resolved`, { params });
-    }else if(user.role == 'CM' && user.market !== 'RG'){
+    }else if(user.role === 'CM'){
       return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-resolved`, { params });
     }else{
       return this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`);
