@@ -6,13 +6,13 @@
   <div class="dashboard-tabs">
     <p-tabs [(value)]="activeTab">
       <p-tablist>
-        <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">
+        <p-tab *ngIf="user.role === 'Client' || user.role === 'Admin'" [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">
           Client Dashboard
         </p-tab>
-        <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">
+        <p-tab *ngIf="user.role === 'PM' || user.role === 'Admin'" [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">
           Vendor Dashboard
         </p-tab>
-        <p-tab [value]="2" [ngClass]="{ 'active-tab': activeTab === 2 }">
+        <p-tab *ngIf="user.role === 'CM' || user.role === 'Admin'" [value]="2" [ngClass]="{ 'active-tab': activeTab === 2 }">
           SRI Dashboard
         </p-tab>
       </p-tablist>
