@@ -107,7 +107,7 @@
                 <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
               </mat-select>
             </mat-form-field>
-            <button [disabled]="!authService.isCM() || !authService.isAdmin()" mat-icon-button class="delete-icon" >
+            <button [disabled]="this.isDisabled" mat-icon-button class="delete-icon" >
               <mat-icon (click)="openDeleteConfirmationDialog(i)" class="delete-icon">delete</mat-icon>
             </button>
           </mat-grid-tile>
@@ -190,7 +190,7 @@
               </div>
             </ng-template>
           </p-galleria>
-          <button [disabled]="!authService.isCM() || !authService.isAdmin()" *ngIf="this.issueImagesFormArray && this.issueImagesFormArray.length > 0" mat-icon-button class="delete-icon" >
+          <button [disabled]="this.isDisabled" *ngIf="this.issueImagesFormArray && this.issueImagesFormArray.length > 0" mat-icon-button class="delete-icon" >
             <mat-icon (click)="openDeleteConfirmationDialogImages(this.issueImagesFormArray.value, 'issueImages')" class="delete-icon">delete</mat-icon>
           </button>
       </div>
