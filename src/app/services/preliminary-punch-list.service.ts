@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
-import { environment, local_environment } from '../../environments/environments';
+import { environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../models/user.model';
 
@@ -48,22 +48,22 @@ export class PreliminaryPunchListService {
   getUnresolvedPunchLists(user: User): Observable<any> {
     const params = new HttpParams().set('state', user.market);
     if(user.role === 'PM'){
-      return this.http.get<any>(`${local_environment.apiUrl}/PunchList/pm-unresolved`, { params });
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params });
     }else if(user.role === 'CM'){
-      return this.http.get<any>(`${local_environment.apiUrl}/PunchList/cm-unresolved`, { params });
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params });
     }else{
-      return this.http.get<any>(`${local_environment.apiUrl}/PunchList/unresolved`);
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`);
     }
   }
 
   getResolvedPunchLists(user: User): Observable<any> {
     const params = new HttpParams().set('state', user.market);
     if(user.role === 'PM'){
-      return this.http.get<any>(`${local_environment.apiUrl}/PunchList/pm-resolved`, { params });
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-resolved`, { params });
     }else if(user.role === 'CM'){
-      return this.http.get<any>(`${local_environment.apiUrl}/PunchList/cm-resolved`, { params });
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-resolved`, { params });
     }else{
-      return this.http.get<any>(`${local_environment.apiUrl}/PunchList/resolved`);
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`);
     }
   }
 
