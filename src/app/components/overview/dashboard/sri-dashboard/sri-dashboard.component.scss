@@ -1,0 +1,28 @@
+/* Style for the dashboard */
+.surface-ground {
+    background: #f4f7fa;
+    border-radius: 8px;
+  }
+  
+  .surface-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  h1 {
+    font-size: 2rem;
+    color: #144f80;
+  }
+  
+  .grid {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  .p-chart {
+    margin: 0 auto;
+  }
+  

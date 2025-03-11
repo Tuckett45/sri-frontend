@@ -2,6 +2,7 @@ import { HttpHeaders, HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { environment } from 'src/environments/environments';
+import { local_environment } from 'src/environments/environments';
 
 @Injectable({
     providedIn: 'root'
@@ -16,12 +17,28 @@ import { environment } from 'src/environments/environments';
   
     constructor(private http: HttpClient) {}
   
-    getDashboardData(startDate?: Date, endDate?: Date, userRole?: string): Observable<any> {
-      const params = new HttpParams()
-        .set('startDate', startDate?.toISOString() || '')
-        .set('endDate', endDate?.toISOString() || '')
-        .set('userRole', userRole || '');
+    getClientDashboardData(): Observable<any> {
   
-      return this.http.get(`${environment.apiUrl}/dashboard/getDashboardData`, { params });
+      return this.http.get(`${local_environment.apiUrl}/dashboard/client-dashboard`);
+    }
+
+    getSRIDashboardData(): Observable<any> {
+        return this.http.get(`${local_environment.apiUrl}/dashboard/sri-dashboard`);
+    }
+
+    getPMDashboardData(): Observable<any> {
+        return this.http.get(`${local_environment.apiUrl}/dashboard/pm-dashboard`);
+    }
+
+    getClientStats(): Observable<any> {
+        return this.http.get(`${local_environment.apiUrl}/dashboard/client-stats`);
+    }
+
+    getSRIStats(): Observable<any> {
+        return this.http.get(`${local_environment.apiUrl}/dashboard/sri-stats`);
+    }
+
+    getPMStats(): Observable<any> {
+        return this.http.get(`${local_environment.apiUrl}/dashboard/pm-stats`);
     }
   }
