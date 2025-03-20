@@ -54,7 +54,6 @@ import { StreetSheetComponent } from './components/street-sheet/street-sheet.com
 import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
-import { StatsComponent } from './components/overview/stats/stats.component';
 import { GoalsComponent } from './components/overview/goals/goals.component';
 import { VendorDashboardComponent } from './components/overview/dashboard/vendor-dashboard/vendor-dashboard.component'
 
@@ -145,7 +144,6 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     SRIDashboardComponent,
     PreliminaryPunchListModule,
     GoalsComponent,
-    StatsComponent,
     MeterGroupModule,
     DividerModule,
     ChartComponent

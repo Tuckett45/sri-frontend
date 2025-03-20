@@ -1,87 +1,256 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { DashboardService } from 'src/app/services/dashboard.service';
 import { ChartModule } from 'primeng/chart';
-import { StatsComponent } from "../../stats/stats.component";
+import { DividerModule } from 'primeng/divider';
+import { DashboardData } from 'src/app/models/dashboard.model';
+import { AuthService } from 'src/app/services/auth.service';
+import { User } from 'src/app/models/user.model';
+import { VendorIssueStats } from 'src/app/models/vendor-issue-stats.model';
 
 @Component({
   selector: 'sri-dashboard',
   templateUrl: './sri-dashboard.component.html',
   styleUrls: ['./sri-dashboard.component.scss'],
   standalone: true,
-  imports: [ChartModule, StatsComponent]
+  imports: [ChartModule, CommonModule, DividerModule]
 })
 export class SRIDashboardComponent implements OnInit {
-  sriData: any;
+  dashboardData!: DashboardData;
+  user!: User;
+  totalVendorIssueChartData: any;
+  vendorIssueChartData: any;
+  vendorPunchListChartData: any;
+  userPunchListChartData: any;
+  segmentIdPunchListChartData: any;
+  monthlyPunchListChartData: any;
+  streetSheetStats: any;
   sriOptions: any;
 
-  // Date range for filtering data
-  startDate!: Date;
-  endDate!: Date;
+  unresolvedTotalCount!: number;
 
-  // User role, which might be fetched from authentication
-  userRole: string = 'PM'; // This is an example, replace with actual logic to fetch role
-
-  constructor(private dashboardService: DashboardService) {}
+  constructor(private dashboardService: DashboardService,
+              private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
+    this.user = this.authService.getUser();
     this.fetchDashboardData();
   }
 
+  ngAfterInIt(): void {
+    
+  }
+
   fetchDashboardData(): void {
-    // Fetch data for the dashboard with optional parameters (e.g., startDate, endDate, userRole)
-    this.dashboardService.getSRIDashboardData().subscribe(
-      (data: { TotalCount: any; ResolvedCount: any; UnresolvedCount: any; }) => {
-        // Assuming the response contains the following fields for the dashboard data
-        this.sriData = {
-          labels: ['Total Punch Lists', 'Resolved Punch Lists', 'Unresolved Punch Lists'],  // Modify based on your API's structure
-          datasets: [
-            {
-              label: 'Punch List Status',
-              data: [
-                data.TotalCount,      // Total count from backend response
-                data.ResolvedCount,   // Resolved count from backend response
-                data.UnresolvedCount, // Unresolved count from backend response
-              ],
-              backgroundColor: ['#FF2D2D', '#4CAF50', '#FFD700'],
-              hoverBackgroundColor: ['#FF6F6F', '#66BB6A', '#FFEB3B'],
-              borderColor: '#000000',
-              borderWidth: 1,
-            },
-          ],
-        };
-
-        this.sriOptions = {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            },
-            tooltip: {
-              callbacks: {
-                label: (tooltipItem: { label: any; raw: any; }) => {
-                  return `${tooltipItem.label}: ${tooltipItem.raw}`;  // Display number along with label
-                },
+    if(this.user.role === 'CM' || this.user.role === 'Admin'){
+      this.dashboardService.getSRIStats().subscribe(
+        (data: DashboardData) => {
+          this.dashboardData = data;
+          this.getUnresolvedTotal();
+          this.totalVendorIssueChartData = {
+            
+            labels: data.totalVendorIssueStats.map(stat => stat.area),
+            datasets: [
+              {
+                type: 'bar',
+                label: 'Blue Edge',
+                data: data.totalVendorIssueStats.map(stat => stat.blueEdgeIssues),
+                backgroundColor: '#207bc5',
+                borderColor: '#000000',
+                borderWidth: 1
               },
+              {
+                type: 'bar',
+                label: 'Congruex',
+                data: data.totalVendorIssueStats.map(stat => stat.congruexIssues),
+                backgroundColor: '#4CAF50',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                type: 'bar',
+                label: 'Ervin',
+                data: data.totalVendorIssueStats.map(stat => stat.ervinIssues),
+                backgroundColor: '#FF2D2D',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                type: 'bar',
+                label: 'North Star',
+                data: data.totalVendorIssueStats.map(stat => stat.northStarIssues),
+                backgroundColor: '#FFD700',
+                borderColor: '#000000',
+                borderWidth: 1
+              }
+            ]
+          };
+  
+          this.vendorPunchListChartData = {
+            labels: data.vendorPunchListStats.map(stat => stat.vendorName),
+            datasets: [
+              {
+                label: 'Total Punch Lists',
+                data: data.vendorPunchListStats.map(stat => stat.totalCount),
+                backgroundColor: '#4CAF50',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                label: 'Resolved Punch Lists',
+                data: data.vendorPunchListStats.map(stat => stat.resolvedCount),
+                backgroundColor: '#FFD700',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                label: 'Unresolved Punch Lists',
+                data: data.vendorPunchListStats.map(stat => stat.unresolvedCount),
+                backgroundColor: '#FF2D2D',
+                borderColor: '#000000',
+                borderWidth: 1
+              }
+            ]
+          };
+  
+          this.userPunchListChartData = {
+            labels: data.userPunchListStats.map(stat => stat.name),
+            datasets: [
+              {
+                label: 'Total Punch Lists',
+                data: data.userPunchListStats.map(stat => stat.totalCountByUser),
+                backgroundColor: '#207bc5',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                label: 'Resolved Punch Lists',
+                data: data.userPunchListStats.map(stat => stat.resolvedCountByUser),
+                backgroundColor: '#4CAF50',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                label: 'Unresolved Punch Lists',
+                data: data.userPunchListStats.map(stat => stat.unresolvedCountByUser),
+                backgroundColor: '#FF2D2D',
+                borderColor: '#000000',
+                borderWidth: 1
+              }
+            ]
+          };
+
+          this.segmentIdPunchListChartData = {
+            labels: data.statePunchListStats.map(stat => stat.state),
+            datasets: [
+              {
+                label: 'Total Punch Lists',
+                data: data.statePunchListStats.map(stat => stat.totalCountByState),
+                backgroundColor: '#207bc5',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                label: 'Resolved Punch Lists',
+                data: data.statePunchListStats.map(stat => stat.resolvedCountByState),
+                backgroundColor: '#4CAF50',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                label: 'Unresolved Punch Lists',
+                data: data.statePunchListStats.map(stat => stat.unresolvedCountByState),
+                backgroundColor: '#FF2D2D',
+                borderColor: '#000000',
+                borderWidth: 1
+              }
+            ]
+          };
+  
+          this.monthlyPunchListChartData = {
+            labels: ['Monthly Punch List Count'],
+            datasets: [
+              {
+                label: 'Monthly Punch List Count',
+                data: [data.monthlyPunchListCount],
+                backgroundColor: '#FFB200',
+                borderColor: '#000000',
+                borderWidth: 1
+              }
+            ]
+          };
+
+          this.streetSheetStats = {
+            labels: data.streetSheetStats.map(stat => stat.name),
+            datasets: [
+              {
+                label: 'Total Punch Lists',
+                data: data.streetSheetStats.map(stat => stat.streetSheetCount),
+                backgroundColor: '#e18a25',
+                borderColor: '#000000',
+                borderWidth: 1
+              }
+            ]
+          };
+
+          this.sriOptions = {
+            maintainAspectRatio: false,
+            aspectRatio: 0.8,
+            plugins: {
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                  label: (tooltipItem: any) => {
+                    return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`; // Display value along with label
+                  }
+                }
+              },
+              legend: {
+                labels: {
+                  color: '#000000', // Set legend text color to black
+                }
+              }
             },
-          },
-        };
-      },
-      (error: any) => {
-        console.error('Error fetching dashboard data:', error);
-      }
-    );
+            scales: {
+              x: {
+                stacked: true, // Enable stacking on the x-axis
+                ticks: {
+                  color: '#000000', // Set x-axis ticks color to black
+                },
+                grid: {
+                  color: '#000000', // Set grid color to black
+                  drawBorder: true, // Ensure border is drawn on the x-axis grid
+                }
+              },
+              y: {
+                stacked: true, // Enable stacking on the y-axis
+                ticks: {
+                  color: '#000000', // Set y-axis ticks color to black
+                },
+                grid: {
+                  color: '#000000', // Set grid color to black
+                  drawBorder: true, // Ensure border is drawn on the y-axis grid
+                }
+              }
+            },
+            borderColor: '#000000', // Set chart border color to black
+            borderWidth: 1, // Optional: Set chart border width if needed
+          };
+          
+          
+        },
+        (error) => {
+          console.error('Error fetching dashboard data:', error);
+        }
+      );
+    }
   }
 
-  // Method to apply filters based on date range change
-  onDateChange(startDate: Date, endDate: Date): void {
-    this.startDate = startDate;
-    this.endDate = endDate;
-    this.fetchDashboardData(); // Fetch updated data with new date range
-  }
-
-  // Method to change role and re-fetch data based on new role
-  onRoleChange(role: string): void {
-    this.userRole = role;
-    this.fetchDashboardData(); // Fetch updated data with new role
+  getUnresolvedTotal() {
+    return this.dashboardData.vendorPunchListStats.reduce((total, vendorStat) => {
+      return total + vendorStat.unresolvedCount;
+    }, 0);
   }
 }

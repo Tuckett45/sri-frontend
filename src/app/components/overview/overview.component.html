@@ -9,22 +9,22 @@
         <p-tab *ngIf="user.role === 'Client' || user.role === 'Admin'" [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">
           Client Dashboard
         </p-tab>
-        <p-tab *ngIf="user.role === 'PM' || user.role === 'Admin'" [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">
-          Vendor Dashboard
-        </p-tab>
-        <p-tab *ngIf="user.role === 'CM' || user.role === 'Admin'" [value]="2" [ngClass]="{ 'active-tab': activeTab === 2 }">
+        <p-tab *ngIf="user.role === 'CM' || user.role === 'Admin'" [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">
           SRI Dashboard
+        </p-tab>
+        <p-tab *ngIf="user.role === 'PM'" [value]="2" [ngClass]="{ 'active-tab': activeTab === 2 }">
+          Vendor Dashboard
         </p-tab>
       </p-tablist>
       <p-tabpanels>
         <p-tabpanel [value]="0">
-          <client-dashboard></client-dashboard>
+          <client-dashboard *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'"></client-dashboard>
         </p-tabpanel>
         <p-tabpanel [value]="1">
-          <vendor-dashboard></vendor-dashboard>
+          <sri-dashboard *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'"></sri-dashboard>
         </p-tabpanel>
         <p-tabpanel [value]="2">
-          <sri-dashboard></sri-dashboard>
+          <vendor-dashboard *ngIf="user.role === 'PM'"></vendor-dashboard>
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>

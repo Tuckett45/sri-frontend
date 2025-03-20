@@ -27,14 +27,14 @@ export class OverviewComponent implements OnInit {
       case 'Client':
         this.activeTab = 0;
         break;
-      case 'Vendor':
-        this.activeTab = 1;
+      case 'PM':
+        this.activeTab = 2;
         break;
       case 'CM':
-        this.activeTab = 2;
+        this.activeTab = 1;
         break;
       case 'Admin':
-        this.activeTab = 2;
+        this.activeTab = 1;
         break;
       default:
         this.activeTab = 0;
@@ -48,11 +48,14 @@ export class OverviewComponent implements OnInit {
       case 'Client':
         this.activeTab = 0;
         break;
-      case 'Vendor':
+      case 'PM':
+        this.activeTab = 2;
+        break;
+      case 'CM':
         this.activeTab = 1;
         break;
-      case 'SRI':
-        this.activeTab = 2;
+      case 'Admin':
+        this.activeTab = 1;
         break;
       default:
         this.activeTab = 0;

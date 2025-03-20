@@ -3,6 +3,11 @@ import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { environment } from 'src/environments/environments';
 import { local_environment } from 'src/environments/environments';
+import { DashboardData } from '../models/dashboard.model'; 
+import { VendorIssueStats } from '../models/vendor-issue-stats.model';
+import { VendorPunchListStats } from '../models/vendor-punchlist-stats.model';
+import { UserPunchListStats } from '../models/user-punchlist-stats.model';
+import { User } from '../models/user.model';
 
 @Injectable({
     providedIn: 'root'
@@ -16,19 +21,6 @@ import { local_environment } from 'src/environments/environments';
       };
   
     constructor(private http: HttpClient) {}
-  
-    getClientDashboardData(): Observable<any> {
-  
-      return this.http.get(`${local_environment.apiUrl}/dashboard/client-dashboard`);
-    }
-
-    getSRIDashboardData(): Observable<any> {
-        return this.http.get(`${local_environment.apiUrl}/dashboard/sri-dashboard`);
-    }
-
-    getPMDashboardData(): Observable<any> {
-        return this.http.get(`${local_environment.apiUrl}/dashboard/pm-dashboard`);
-    }
 
     getClientStats(): Observable<any> {
         return this.http.get(`${local_environment.apiUrl}/dashboard/client-stats`);
@@ -38,7 +30,7 @@ import { local_environment } from 'src/environments/environments';
         return this.http.get(`${local_environment.apiUrl}/dashboard/sri-stats`);
     }
 
-    getPMStats(): Observable<any> {
-        return this.http.get(`${local_environment.apiUrl}/dashboard/pm-stats`);
+    getPMStats(user: User): Observable<any> {
+        return this.http.get(`${local_environment.apiUrl}/dashboard/pm-stats/${user.company}-${user.market}`);
     }
   }
