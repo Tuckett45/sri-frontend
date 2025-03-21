@@ -26,6 +26,7 @@ export class VendorDashboardComponent implements OnInit {
   monthlyPunchListChartData: any;
   streetSheetStats: any;
   vendorOptions: any;
+  issuesOptions: any;
 
   unresolvedTotalCount!: number;
 

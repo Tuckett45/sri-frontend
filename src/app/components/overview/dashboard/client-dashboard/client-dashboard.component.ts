@@ -26,6 +26,7 @@ export class ClientDashboardComponent implements OnInit {
   monthlyPunchListChartData: any;
   streetSheetStats: any;
   clientOptions: any;
+  issuesOptions: any;
 
   unresolvedTotalCount!: number;
 
@@ -210,6 +211,51 @@ export class ClientDashboardComponent implements OnInit {
                 }
               }
             },
+            // scales: {
+            //   x: {
+            //     stacked: true, // Enable stacking on the x-axis
+            //     ticks: {
+            //       color: '#000000', // Set x-axis ticks color to black
+            //     },
+            //     grid: {
+            //       color: '#000000', // Set grid color to black
+            //       drawBorder: true, // Ensure border is drawn on the x-axis grid
+            //     }
+            //   },
+            //   y: {
+            //     stacked: true, // Enable stacking on the y-axis
+            //     ticks: {
+            //       color: '#000000', // Set y-axis ticks color to black
+            //     },
+            //     grid: {
+            //       color: '#000000', // Set grid color to black
+            //       drawBorder: true, // Ensure border is drawn on the y-axis grid
+            //     }
+            //   }
+            // },
+            borderColor: '#000000', // Set chart border color to black
+            borderWidth: 1, // Optional: Set chart border width if needed
+          };
+          
+          this.issuesOptions = {
+            maintainAspectRatio: false,
+            aspectRatio: 0.8,
+            plugins: {
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                  label: (tooltipItem: any) => {
+                    return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`; // Display value along with label
+                  }
+                }
+              },
+              legend: {
+                labels: {
+                  color: '#000000', // Set legend text color to black
+                }
+              }
+            },
             scales: {
               x: {
                 stacked: true, // Enable stacking on the x-axis
@@ -235,7 +281,6 @@ export class ClientDashboardComponent implements OnInit {
             borderColor: '#000000', // Set chart border color to black
             borderWidth: 1, // Optional: Set chart border width if needed
           };
-          
           
         },
         (error) => {
