@@ -78,7 +78,9 @@ export class RegisterModalComponent {
       formValues.role,
       formValues.market,
       formValues.company,
-      formValues.createdDate.toISOString()
+      formValues.createdDate.toISOString(),
+      formValues.isApproved,
+      formValues.approvalToken
     );
 
     if (this.registerForm.valid) {

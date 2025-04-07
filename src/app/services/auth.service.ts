@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { User } from '../models/user.model';
 import { LoginModel } from '../models/login-model.model';
-import { environment } from '../../environments/environments';
+import { environment, local_environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../models/role.enum';
 
@@ -32,7 +32,7 @@ export class AuthService {
       user.id = uuidv4();
       user.createdDate.toISOString();
     }
-    return this.http.post<User>(`${environment.apiUrl}/auth/register`, user, this.httpOptions);
+    return this.http.post<User>(`${local_environment.apiUrl}/auth/register`, user, this.httpOptions);
   }
 
   getUserById(userId: string){
@@ -148,14 +148,16 @@ private resetCurrentUser(): void {
 
             if (userObj && userObj.id) {
                 this.currentUser = new User(
-                    userObj.id,
-                    userObj.name,
-                    userObj.email,
-                    userObj.password,
-                    userObj.role,
-                    userObj.market,
-                    userObj.company,
-                    new Date(userObj.createdDate)
+                  userObj.id,
+                  userObj.name,
+                  userObj.email,
+                  userObj.password,
+                  userObj.role,
+                  userObj.market,
+                  userObj.company,
+                  new Date(userObj.createdDate),
+                  userObj.isApproved,
+                  userObj.approvalToken
                 );
             }
         } catch (error) {

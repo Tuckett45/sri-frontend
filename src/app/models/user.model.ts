@@ -5,8 +5,10 @@ export class User {
     password: string;         
     role: string;    
     market: string;
-    company?: string;
+    company: string;
     createdDate: Date;
+    isApproved: boolean;
+    approvalToken?: string;
     constructor(
       id: string,
       name: string,
@@ -14,8 +16,10 @@ export class User {
       password: string,
       role: string,
       market: string,
-      company?: string,
-      createdDate: Date = new Date()
+      company: string,
+      createdDate: Date = new Date(),
+      isApproved: boolean,
+      approvalToken?: string
     ) {
       this.id =  id;
       this.name = name;
@@ -25,6 +29,8 @@ export class User {
       this.market = market;
       this.company = company;
       this.createdDate = createdDate;
+      this.isApproved = isApproved;
+      this.approvalToken = approvalToken;
     }
   }
 
@@ -41,7 +47,9 @@ export class User {
           userObj.role,
           userObj.market,
           userObj.company,
-          new Date(userObj.createdDate)
+          new Date(userObj.createdDate),
+          userObj.isApproved,
+          userObj.approvalToken
       );
 
   }
