@@ -24,7 +24,7 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Issues </th>
         <td mat-cell *matCellDef="let report" data-label="Issues">
           <div *ngFor="let issue of report.issues">
-            <b style="color: #e18a25; font-weight: 570;">{{ issue.area }}</b>: {{ issue.qualityIssues }}
+            <b style="color: #e18a25; font-weight: 570;">{{ issue.area }}</b>: {{ issue.subCategory }}
           </div>
         </td>
       </ng-container>
