@@ -78,7 +78,6 @@ export class PreliminaryPunchListService {
   }
 
   updateEntry(punchList: PreliminaryPunchList): Observable<any> {
-    debugger;
     return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );

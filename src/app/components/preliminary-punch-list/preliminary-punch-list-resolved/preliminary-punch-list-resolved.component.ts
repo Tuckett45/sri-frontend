@@ -110,6 +110,9 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         }));
   
         this.resolvedPreliminaryPunchLists = this.dataSource.data;
+        if(this.selectedFilters){
+          this.applyFilters();
+        }
         this.updateResolvedCount();
       },
       (error) => {
