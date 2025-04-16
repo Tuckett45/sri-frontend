@@ -13,6 +13,8 @@ import { Image, ModalGalleryService } from '@ks89/angular-modal-gallery';
 import { User } from 'src/app/models/user.model';
 import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { GeocodingService } from 'src/app/services/geocoding.service';
+import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
+import { ErrorCodes } from 'src/app/models/error-codes.model';
 // import { GeocodingService } from 'src/app/services/geocoding.service';
 
 @Component({
@@ -118,6 +120,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     ]
   };
 
+  errorCodes: ErrorCodes[] = [];
+
   stateAbbreviations!: StateAbbreviation;
 
   vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
@@ -174,6 +178,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     public authService: AuthService,
     private modalGalleryService: ModalGalleryService,
     private geocodingService: GeocodingService,
+    private punchListService: PreliminaryPunchListService,
     @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
   ) {}
 
@@ -181,6 +186,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.loadUserProfile();
     this.isEditMode = !!this.data;
     this.isDisabled = this.isModalDisabled();
+    this.getErrorCodes();
 
     this.preliminaryPunchListForm = this.fb.group({
       id: [this.data?.id || ''],
@@ -238,6 +244,12 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     }else{
       return this.isDisabled = false;
     }
+  }
+
+  getErrorCodes(){
+    this.punchListService.getErrorCodes().subscribe((errorCodes: ErrorCodes[]) => {
+      this.errorCodes = errorCodes;
+    })
   }
 
   initializeImages(imageIds: PunchListImages[], formArrayName: 'issueImages' | 'resolutionImages') {
@@ -317,8 +329,12 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     return data.issues.map(issueArea => this.fb.group({
       id: [issueArea.id],
       area: [issueArea.area, Validators.required],
-      qualityIssues: [Array.isArray(issueArea.qualityIssues) ? issueArea.qualityIssues : issueArea.qualityIssues.split(',').map(q => q.trim()) || []],
-      preliminaryPunchListId: [issueArea.preliminaryPunchListId]
+      category: [issueArea.category, Validators.required],
+      subCategory: [Array.isArray(issueArea.subCategory)
+        ? issueArea.subCategory 
+        : (issueArea.subCategory ? issueArea.subCategory.split(',').map(q => q.trim()) : [])],
+      preliminaryPunchListId: [issueArea.preliminaryPunchListId],
+      errorCodeId: [issueArea.errorCodeId]
     }));
   }
 
@@ -330,8 +346,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.issueAreasFormArray.push(this.fb.group({
       id: [uuidv4()],
       area: ['', Validators.required],
-      qualityIssues: [[]],
-      preliminaryPunchListId: [this.preliminaryPunchListForm.get('id')?.value]
+      category: [[]],
+      subCategory: [[]],
+      preliminaryPunchListId: [this.preliminaryPunchListForm.get('id')?.value],
+      errorCodeId: ['']
     }));
   }
 
@@ -350,8 +368,11 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   }
 
   onIssueAreaChange(index: number): void {
-    if(this.issueAreasFormArray.at(index).get('qualityIssues')?.value){
+    if(this.issueAreasFormArray.at(index).get('category')?.value){
       this.issueAreasFormArray.at(index).reset;
+      if(this.issueAreasFormArray.at(index).get('subCategory')?.value){
+        this.issueAreasFormArray.at(index).reset;
+      }
     }
     const issueArea = this.issueAreasFormArray.at(index).get('area')?.value;
     this.filterQualityIssues(index, issueArea);
@@ -365,9 +386,25 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     }
   }
 
-  getQualityIssues(index: number): string[] {
-    const selectedArea = this.issueAreasFormArray.at(index).get('area')?.value;
-    return this.qualityIssuesMap[selectedArea] || [];
+  getDistinctAreas(): string[] {
+    return this.errorCodes
+      .map(ec => ec.area)
+      .filter((area, index, self) => self.indexOf(area) === index);
+  }
+  
+
+  getDistinctCategories(selectedArea: string): string[] {
+    return this.errorCodes
+      .filter(ec => ec.area === selectedArea)
+      .map(ec => ec.category)
+      .filter((cat, index, self) => self.indexOf(cat) === index);
+  }
+
+  getDistinctSubCategories(selectedCategory: string): string[] {
+    return this.errorCodes
+      .filter(ec => ec.category === selectedCategory)
+      .map(ec => ec.subCategory)
+      .filter((sub, index, self) => self.indexOf(sub) === index);
   }
 
   triggerImageUpload(imageType: 'issueImages' | 'resolutionImages'): void {
@@ -472,7 +509,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   
       punchList.issues = punchList.issues.map((issue: any) => ({
         ...issue,
-        qualityIssues: Array.isArray(issue.qualityIssues) ? issue.qualityIssues.join(',') : issue.qualityIssues
+        area: issue.area,
+        category: issue.category,
+        subCategory: Array.isArray(issue.subCategory) ? issue.subCategory.join(',') : issue.subCategory,
+        errorCodeId: this.errorCodes.find(errorCode => issue.subCategory == errorCode.subCategory)?.id
       }));
   
       if (this.isEditMode) {

@@ -3,14 +3,18 @@ import { PunchListImages } from "./punch-list-images.model";
 export class IssueArea {
   id: string; 
   area: string;
-  qualityIssues: string;
+  category: string;
+  subCategory: string;
   preliminaryPunchListId: string; 
+  errorCodeId: string;
 
-  constructor(area: string, qualityIssues: string, id: string, preliminaryPunchListId: string) {
+  constructor(id: string, area: string, category: string, subCategory: string, preliminaryPunchListId: string, errorCodeId: string) {
+    this.id = id;
     this.area = area;
-    this.qualityIssues = qualityIssues;
-    this.id = id; 
+    this.category = category;
+    this.subCategory = subCategory; 
     this.preliminaryPunchListId = preliminaryPunchListId; 
+    this.errorCodeId = errorCodeId;
   }
 }
 

@@ -106,6 +106,9 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         }));
   
         this.unresolvedPreliminaryPunchLists = this.dataSource.data;
+        if(this.selectedFilters){
+          this.applyFilters();
+        }
         this.updateUnresolvedCount();
       },
       (error) => {

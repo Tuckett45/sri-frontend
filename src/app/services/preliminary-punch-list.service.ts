@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
-import { environment } from '../../environments/environments';
+import { local_environment, environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../models/user.model';
 
@@ -34,8 +34,8 @@ export class PreliminaryPunchListService {
       map(punchLists => {
         return punchLists.map(punchList => {
           punchList.issues.forEach(issueArea => {
-            if (typeof issueArea.qualityIssues === 'string') {
-              issueArea.qualityIssues = issueArea.qualityIssues;
+            if (typeof issueArea.category === 'string') {
+              issueArea.category = issueArea.category;
             }
           });
           return punchList;
@@ -65,6 +65,10 @@ export class PreliminaryPunchListService {
     }else{
       return this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`);
     }
+  }
+
+  getErrorCodes(): Observable<any> {
+      return this.http.get<any>(`${environment.apiUrl}/PunchList/error-codes`);
   }
 
   addEntry(punchList: PreliminaryPunchList): Observable<any> {  
