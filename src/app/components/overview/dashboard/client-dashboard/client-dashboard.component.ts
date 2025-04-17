@@ -200,8 +200,20 @@ export class ClientDashboardComponent implements OnInit {
                 mode: 'index',
                 intersect: false,
                 callbacks: {
-                  label: (tooltipItem: any) => {
-                    return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`; // Display value along with label
+                  label: (ctx: any) => {
+                    const { datasetIndex, dataIndex, dataset, raw } = ctx;
+                    const label = dataset.label;
+                    const value = raw;
+                    const total = ctx.chart.data.datasets[0].data[dataIndex];
+          
+                    if (datasetIndex === 0) {
+                      return `${label}: ${value} (100%)`;
+                    }
+
+                    const pct = total
+                      ? ((value / total) * 100).toFixed(1)
+                      : '0';
+                    return `${label}: ${value} (${pct}%)`;
                   }
                 }
               },
@@ -245,8 +257,20 @@ export class ClientDashboardComponent implements OnInit {
                 mode: 'index',
                 intersect: false,
                 callbacks: {
-                  label: (tooltipItem: any) => {
-                    return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`; // Display value along with label
+                  label: (ctx: any) => {
+                    const { datasetIndex, dataIndex, dataset, raw } = ctx;
+                    const label = dataset.label;
+                    const value = raw;
+                    const total = ctx.chart.data.datasets[0].data[dataIndex];
+          
+                    if (datasetIndex === 0) {
+                      return `${label}: ${value} (100%)`;
+                    }
+
+                    const pct = total
+                      ? ((value / total) * 100).toFixed(1)
+                      : '0';
+                    return `${label}: ${value} (${pct}%)`;
                   }
                 }
               },
