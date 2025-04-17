@@ -94,7 +94,7 @@
             <mat-form-field appearance="outline" class="half-width">
               <mat-label>Issue Area</mat-label>
               <mat-select formControlName="area" placeholder="Select Issue Area" (selectionChange)="onIssueAreaChange(i)">
-                <mat-option *ngFor="let area of issueAreaList" [value]="area">{{ area }}</mat-option>
+                <mat-option *ngFor="let area of getDistinctAreas()" [value]="area">{{ area }}</mat-option>
               </mat-select>
             </mat-form-field>
           </mat-grid-tile>
@@ -102,9 +102,18 @@
           <!-- Quality Issues for Selected Area -->
           <mat-grid-tile colspan="2">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Quality Issues</mat-label>
-              <mat-select formControlName="qualityIssues" multiple placeholder="Select Quality Issues">
-                <mat-option *ngFor="let issue of getQualityIssues(i)" [value]="issue">{{ issue }}</mat-option>
+              <mat-label>Issue Category</mat-label>
+              <mat-select formControlName="category" placeholder="Select Category of Issue">
+                <mat-option *ngFor="let category of getDistinctCategories(issueAreasFormArray.at(i).get('area')?.value)" [value]="category">{{ category }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-grid-tile>
+
+          <mat-grid-tile colspan="4">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Issue Sub Category</mat-label>
+              <mat-select formControlName="subCategory" multiple placeholder="Select Sub Category">
+                <mat-option *ngFor="let subCategory of getDistinctSubCategories(issueAreasFormArray.at(i).get('category')?.value)" [value]="subCategory">{{ subCategory }}</mat-option>
               </mat-select>
             </mat-form-field>
             <button [disabled]="this.isDisabled" mat-icon-button class="delete-icon" >

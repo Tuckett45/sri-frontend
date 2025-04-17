@@ -106,6 +106,9 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         }));
   
         this.unresolvedPreliminaryPunchLists = this.dataSource.data;
+        if(this.selectedFilters){
+          this.applyFilters();
+        }
         this.updateUnresolvedCount();
       },
       (error) => {
@@ -129,8 +132,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
     if (this.user.role === 'PM') {
       filteredData = filteredData.filter(punchList =>
-        punchList.vendorName === this.user.company && punchList.state.toUpperCase() === this.user.market);
-    } else if (this.user.market && this.user.market !== 'RG') {
+        punchList.vendorName === this.user.company);
+    } else if (this.user.role === 'CM' && this.user.market !== 'RG') {
       filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
     }
 
