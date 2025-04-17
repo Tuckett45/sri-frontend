@@ -111,13 +111,13 @@ export class AuthService {
     if (user) {
       const parsedUser = JSON.parse(user);
       this.setUserRole(parsedUser.role);
-      this.currentUser = parsedUser; // Set role from local storage
+      this.currentUser = parsedUser; 
       this.loggedInStatus.next(true);
     }
   }
 
   forgotPassword(email: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/auth/forgot-password/${email}`, this.httpOptions);
+    return this.http.post<any>(`${local_environment.apiUrl}/auth/forgot-password/${email}`, this.httpOptions);
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {
