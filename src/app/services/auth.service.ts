@@ -32,7 +32,7 @@ export class AuthService {
       user.id = uuidv4();
       user.createdDate.toISOString();
     }
-    return this.http.post<User>(`${local_environment.apiUrl}/auth/register`, user, this.httpOptions);
+    return this.http.post<User>(`${environment.apiUrl}/auth/register`, user, this.httpOptions);
   }
 
   getUserById(userId: string){
@@ -117,7 +117,7 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<any> {
-    return this.http.post<any>(`${local_environment.apiUrl}/auth/forgot-password/${email}`, this.httpOptions);
+    return this.http.post<any>(`${environment.apiUrl}/auth/forgot-password/${email}`, this.httpOptions);
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {

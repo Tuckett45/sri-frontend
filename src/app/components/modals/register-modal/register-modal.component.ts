@@ -86,7 +86,7 @@ export class RegisterModalComponent {
     if (this.registerForm.valid) {
       this.authService.register(newUser).subscribe({
         next: (response) => {
-          this.toastr.success('Registration successful!', 'Success');
+          this.toastr.success('Registration successful! Waiting for Approval....', 'Success');
           this.dialogRef.close();
         },
         error: (error) => {
