@@ -78,13 +78,15 @@ export class RegisterModalComponent {
       formValues.role,
       formValues.market,
       formValues.company,
-      formValues.createdDate.toISOString()
+      formValues.createdDate.toISOString(),
+      formValues.isApproved,
+      formValues.approvalToken
     );
 
     if (this.registerForm.valid) {
       this.authService.register(newUser).subscribe({
         next: (response) => {
-          this.toastr.success('Registration successful!', 'Success');
+          this.toastr.success('Registration successful! Waiting for Approval....', 'Success');
           this.dialogRef.close();
         },
         error: (error) => {
