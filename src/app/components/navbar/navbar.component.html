@@ -12,7 +12,7 @@
 
   <!-- Navigation Links -->
   <div class="nav-links" [ngClass]="{ 'open': isMenuOpen, 'closed': !isMenuOpen }">
-    <button *ngIf="authService.isCM() || authService.isAdmin()" mat-button routerLink="/overview" routerLinkActive="active-link">
+    <button *ngIf="!authService.isTemp()" mat-button routerLink="/overview" routerLinkActive="active-link">
       Overview
     </button>
     <button *ngIf="!authService.isTemp()"  mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">

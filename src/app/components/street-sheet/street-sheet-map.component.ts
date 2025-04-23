@@ -59,7 +59,9 @@ export class StreetSheetMapComponent implements AfterViewInit {
         userObj.role,
         userObj.market,
         userObj.company,
-        new Date(userObj.createdDate)  
+        new Date(userObj.createdDate),
+        userObj.isApproved,
+        userObj.approvalToken  
       );
     }
   }

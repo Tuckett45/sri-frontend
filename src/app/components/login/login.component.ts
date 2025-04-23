@@ -64,14 +64,16 @@ export class LoginComponent implements OnInit {
       const userObj = JSON.parse(userString);
 
       this.userData = new User(
-        userObj.id,
-        userObj.name,
-        userObj.email,
-        userObj.password,
-        userObj.role,
-        userObj.market,
-        userObj.company,
-        new Date(userObj.createdDate)  
+          userObj.id,
+          userObj.name,
+          userObj.email,
+          userObj.password,
+          userObj.role,
+          userObj.market,
+          userObj.company,
+          new Date(userObj.createdDate),
+          userObj.isApproved,
+          userObj.approvalToken
       );
     }
   }

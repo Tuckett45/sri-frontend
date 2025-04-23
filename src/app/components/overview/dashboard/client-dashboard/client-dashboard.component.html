@@ -1,0 +1,115 @@
+
+<div>
+    <div class="surface-ground px-4 py-5 md:px-6 lg:px-8">
+      <div class="grid">
+          <div class="col-12 md:col-6 lg:col-3">
+              <div class="surface-card shadow-2 p-3 border-round">
+                  <div class="flex justify-content-between mb-3">
+                      <div>
+                          <span class="block text-500 font-medium mb-3">Total Gigs</span>
+                          <div class="text-900 font-medium text-xl">{{this.dashboardData.totalPunchLists}}</div>
+                      </div>
+                      <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width:2.5rem;height:2.5rem">
+                          <i class="pi pi-wrench text-blue-500 text-xl"></i>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+              <div class="surface-card shadow-2 p-3 border-round">
+                  <div class="flex justify-content-between mb-3">
+                      <div>
+                          <span class="block text-500 font-medium mb-3">Monthly Reported Gigs</span>
+                          <div class="text-900 font-medium text-xl">{{this.dashboardData.monthlyPunchListCount}}</div>
+                      </div>
+                      <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width:2.5rem;height:2.5rem">
+                          <i class="pi pi-calendar-clock text-orange-500 text-xl"></i>
+                      </div>
+                  </div>
+                  <span class="text-500">last 30 days</span>
+              </div>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+              <div class="surface-card shadow-2 p-3 border-round">
+                  <div class="flex justify-content-between mb-3">
+                      <div>
+                          <span class="block text-500 font-medium mb-3">Weekly Reported Gigs</span>
+                          <div class="text-900 font-medium text-xl">{{this.dashboardData.weeklyPunchListCount}}</div>
+                      </div>
+                      <div class="flex align-items-center justify-content-center bg-cyan-100 border-round" style="width:2.5rem;height:2.5rem">
+                          <i class="pi pi-calendar-plus text-cyan-500 text-xl"></i>
+                      </div>
+                  </div>
+                  <span class="text-500">last 7 days</span>
+              </div>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+              <div class="surface-card shadow-2 p-3 border-round">
+                  <div class="flex justify-content-between mb-3">
+                      <div>
+                          <span class="block text-500 font-medium mb-3">Total Unresolved Gigs</span>
+                          <div class="text-900 font-medium text-xl">{{this.getUnresolvedTotal()}}</div>
+                      </div>
+                      <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width:2.5rem;height:2.5rem">
+                          <i class="pi pi-exclamation-triangle text-purple-500 text-xl"></i>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="grid">
+    <!-- Vendor Issue Stats Chart -->
+    <div class="col-12 sm:col-12 md:col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Total reported issues by Area per Vendor</span>
+        <p-divider />
+        <p-chart type="bar" [data]="totalVendorIssueChartData" [options]="issuesOptions"></p-chart>
+        <span class="block text-500 font-small"></span>
+        <span class="block text-500 font-small"></span>
+      </div>
+    </div>
+  
+    <!-- Vendor Punch List Stats Chart -->
+    <div class="col-12 sm:col-12 md:col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Reported punch lists per Vendor (Total, Resolved, Unresolved)</span>
+        <p-divider />
+        <p-chart type="bar" [data]="vendorPunchListChartData" [options]="clientOptions"></p-chart>
+        <span class="block text-500 font-small">* Resolved = Both PM and CM resolved</span>
+        <span class="block text-500 font-small">* Unresolved = Either PM or CM unresolved</span>
+      </div>
+    </div>
+  
+    <!-- User Punch List Stats Chart -->
+    <div class="col-12 sm:col-12 md:col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Reported punch lists per User (Total, Resolved, Unresolved)</span>
+        <p-divider />
+        <p-chart type="bar" [data]="userPunchListChartData" [options]="clientOptions"></p-chart>
+        <span class="block text-500 font-small">* Resolved = Both PM and CM resolved</span>
+        <span class="block text-500 font-small">* Unresolved = Either PM or CM unresolved</span>
+      </div>
+    </div>
+  
+    <div class="col-12 sm:col-12 md:col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Reported punch lists per State (Total, Resolved, Unresolved)</span>
+        <p-divider />
+        <p-chart type="bar" [data]="segmentIdPunchListChartData" [options]="clientOptions"></p-chart>
+        <span class="block text-500 font-small">* Resolved = Both PM and CM resolved</span>
+        <span class="block text-500 font-small">* Unresolved = Either PM or CM unresolved</span>
+      </div>
+    </div>
+  
+    <div class="col-12 sm:col-12 md:col-12 lg:col-12">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Street Sheets Entered</span>
+        <p-divider />
+        <p-chart type="bar" [data]="streetSheetStats" [options]="clientOptions"></p-chart>
+      </div>
+    </div>
+  </div>
+  

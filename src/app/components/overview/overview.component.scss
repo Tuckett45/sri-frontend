@@ -8,6 +8,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+::ng-deep .p-tab{
+  flex-shrink: 2 !important;
+  white-space: pre-wrap !important;
+  padding: .5rem !important;
+}
+
+::ng-deep .p-tablist-tab-list {
+  position: relative;
+  display: flex;
+  border-style: none !important;
+}
+
+.active-tab {
+  background-color: #e18a25 !important;
+}
+
 .dashboard-card {
   height: 100%;
   display: flex;
