@@ -23,14 +23,14 @@ import { User } from '../models/user.model';
     constructor(private http: HttpClient) {}
 
     getClientStats(): Observable<any> {
-        return this.http.get(`${local_environment.apiUrl}/dashboard/client-stats`);
+        return this.http.get(`${environment.apiUrl}/dashboard/client-stats`);
     }
 
     getSRIStats(): Observable<any> {
-        return this.http.get(`${local_environment.apiUrl}/dashboard/sri-stats`);
+        return this.http.get(`${environment.apiUrl}/dashboard/sri-stats`);
     }
 
     getPMStats(user: User): Observable<any> {
-        return this.http.get(`${local_environment.apiUrl}/dashboard/pm-stats/${user.company}-${user.market}`);
+        return this.http.get(`${environment.apiUrl}/dashboard/pm-stats/${user.company}-${user.market}`);
     }
   }
