@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { MenuItem } from 'primeng/api';
+import { User } from 'src/app/models/user.model';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-overview',
@@ -7,7 +10,56 @@ import { Component, OnInit } from '@angular/core';
   standalone: false
 })
 export class OverviewComponent implements OnInit {
-  constructor() {}
+  userRole: string = ''; // Store the user role here
+  activeTab: number = 0;
+  user!: User;
 
-  ngOnInit(): void {}
+  constructor(private authService: AuthService) {}
+
+  ngOnInit() {
+    this.userRole = this.authService.getUserRole(); 
+    this.user = this.authService.getUser();
+    this.setTab(this.user.role);
+  }
+
+  setTab(role:string){
+    switch (role) {
+      case 'Client':
+        this.activeTab = 0;
+        break;
+      case 'PM':
+        this.activeTab = 2;
+        break;
+      case 'CM':
+        this.activeTab = 1;
+        break;
+      case 'Admin':
+        this.activeTab = 1;
+        break;
+      default:
+        this.activeTab = 0;
+        break;
+    }
+  }
+
+  // Logic to switch between tabs based on role
+  switchTab(role: string) {
+    switch (role) {
+      case 'Client':
+        this.activeTab = 0;
+        break;
+      case 'PM':
+        this.activeTab = 2;
+        break;
+      case 'CM':
+        this.activeTab = 1;
+        break;
+      case 'Admin':
+        this.activeTab = 1;
+        break;
+      default:
+        this.activeTab = 0;
+        break;
+    }
+  }
 }
