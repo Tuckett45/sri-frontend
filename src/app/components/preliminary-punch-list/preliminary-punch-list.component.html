@@ -2,7 +2,7 @@
   <div class="header-section">
     <h2>Preliminary Punch List</h2>
     <div class="header-btns">
-      <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" mat-raised-button class="export-btn" (click)="exportToCSV()">Export to CSV</button>
+      <button mat-raised-button class="export-btn" (click)="exportToCSV()">Export to CSV</button>
       <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" mat-raised-button color="primary" class="header-btn" (click)="openModal()">Add Entry</button>
     </div>
   </div>
