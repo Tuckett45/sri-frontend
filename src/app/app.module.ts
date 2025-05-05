@@ -71,6 +71,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import 'leaflet-search'
 import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashboard/sri-dashboard.component';
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
+import { TpsComponent } from './components/tps/tps-home-page.component';
 
 
 @NgModule({
@@ -91,6 +92,7 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     StreetSheetModalComponent,
     StreetSheetMapComponent,
     TableComponent,
+    TpsComponent,
     UserProfileComponent,
     UserProfileModalComponent,
     WidgetComponent    

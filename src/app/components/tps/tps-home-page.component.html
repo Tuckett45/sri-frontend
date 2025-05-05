@@ -1,0 +1,43 @@
+<div>
+    <!-- File Upload Section -->
+    <mat-grid-tile colspan="2">
+    <mat-label>Upload CSV</mat-label>
+    <!-- Regular file input without mat-form-field -->
+    <input type="file" (change)="onFileChange($event)" accept=".csv" />
+    </mat-grid-tile>
+
+    <!-- Manual Data Entry Button -->
+    <mat-grid-tile colspan="2">
+    <button mat-raised-button (click)="openManualEntryModal()">Add New TPS Entry</button>
+    </mat-grid-tile>
+
+    <!-- Table to display the CSV Data -->
+    <mat-grid-tile colspan="2">
+    <table mat-table [dataSource]="csvData">
+        <ng-container matColumnDef="Month">
+        <th mat-header-cell *matHeaderCellDef> Month </th>
+        <td mat-cell *matCellDef="let row"> {{row.month}} </td>
+        </ng-container>
+        <ng-container matColumnDef="SegmentCount">
+        <th mat-header-cell *matHeaderCellDef> Segment Count </th>
+        <td mat-cell *matCellDef="let row"> {{row.segmentCount}} </td>
+        </ng-container>
+        <ng-container matColumnDef="EngCosts">
+        <th mat-header-cell *matHeaderCellDef> Engineering Costs </th>
+        <td mat-cell *matCellDef="let row"> {{row.engCosts}} </td>
+        </ng-container>
+        <ng-container matColumnDef="PermitCosts">
+        <th mat-header-cell *matHeaderCellDef> Permit Count </th>
+        <td mat-cell *matCellDef="let row"> {{row.permitCosts}} </td>
+        </ng-container>
+        <ng-container matColumnDef="MaterialCosts">
+        <th mat-header-cell *matHeaderCellDef> Material Count </th>
+        <td mat-cell *matCellDef="let row"> {{row.materialCosts}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+    </mat-grid-tile>
+</div>
+  
