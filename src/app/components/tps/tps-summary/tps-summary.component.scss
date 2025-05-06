@@ -1,0 +1,40 @@
+.header-btns {
+    display: flex;
+    justify-content:flex-end;
+    align-items: center;
+    padding-bottom: 10px;
+  }
+
+.upload-btn {
+    align-items: center;
+    background-color: #078d03;
+    color: #fff;
+
+    &:hover {
+      background-color: #066303;
+    }
+  
+    &:disabled{
+      background-color: #88827a;
+    }
+  }
+
+  .manual-btn {
+    background-color: #e18a25;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #fff;
+
+    &:hover {
+      background-color: #b86404;
+    }
+  }
+
+  .cancel-btn {
+    background-color: #f44336;
+
+    &:hover {
+      background-color: #e53935;
+    }
+  }

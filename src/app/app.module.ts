@@ -72,6 +72,7 @@ import 'leaflet-search'
 import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashboard/sri-dashboard.component';
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
 import { TpsComponent } from './components/tps/tps-home-page.component';
+import { TpsSummaryComponent } from './components/tps/tps-summary/tps-summary.component';
 
 
 @NgModule({
@@ -93,6 +94,7 @@ import { TpsComponent } from './components/tps/tps-home-page.component';
     StreetSheetMapComponent,
     TableComponent,
     TpsComponent,
+    TpsSummaryComponent,
     UserProfileComponent,
     UserProfileModalComponent,
     WidgetComponent    

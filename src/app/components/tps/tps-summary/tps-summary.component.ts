@@ -7,11 +7,11 @@ import { AuthService } from 'src/app/services/auth.service';
 // import { TpsService } from 'src/app/services/tps.service'; // Assuming you have a service for handling data upload
 
 @Component({
-  selector: 'app-tps',
-  templateUrl: './tps-home-page.component.html',
-  styleUrls: ['./tps-home-page.component.scss']
+  selector: 'tps-summary',
+  templateUrl: './tps-summary.component.html',
+  styleUrls: ['./tps-summary.component.scss']
 })
-export class TpsComponent {
+export class TpsSummaryComponent {
   csvData: any[] = [];
   displayedColumns: string[] = ['Month', 'SegmentCount', 'EngCosts', 'PermitCosts', 'MaterialCosts']; // Adjust columns as needed
   tpsForm: FormGroup;
@@ -34,30 +34,9 @@ export class TpsComponent {
     });
   }
 
-  setTab(role:string){
-    switch (role) {
-      case 'Client':
-        this.activeTab = 0;
-        break;
-      case 'PM':
-        this.activeTab = 2;
-        break;
-      case 'CM':
-        this.activeTab = 0;
-        break;
-      case 'Admin':
-        this.activeTab = 0;
-        break;
-      default:
-        this.activeTab = 0;
-        break;
-    }
-  }
-
   ngOnInit() {
     this.userRole = this.authService.getUserRole(); 
     this.user = this.authService.getUser();
-    this.setTab(this.user.role);
   }
 
 
@@ -84,7 +63,15 @@ export class TpsComponent {
 
   // Method to open the manual entry modal
   openManualEntryModal(): void {
-    // this.dialog.open(this.manualEntryModal);
+    // const dialogRef = this.dialog.open({
+    //     width: '400px'
+    //   });
+  
+    //   dialogRef.afterClosed().subscribe(result => {
+    //     if (result) {
+    //     //   this.profileData = result;
+    //     }
+    //   });
   }
 
   // Submit manual form data
