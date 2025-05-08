@@ -31,9 +31,9 @@ export class StreetSheetService {
     const end = endDate.toISOString();
   
     if (user.market !== 'RG' && user.role === 'CM') {
-      return this.http.get<StreetSheet[]>(`${local_environment.apiUrl}/StreetSheet/${user.market}?startDate=${start}&endDate=${end}`);
+      return this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet/${user.market}?startDate=${start}&endDate=${end}`);
     } else {
-      return this.http.get<StreetSheet[]>(`${local_environment.apiUrl}/StreetSheet?startDate=${start}&endDate=${end}`);
+      return this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet?startDate=${start}&endDate=${end}`);
     }
   }
 
@@ -42,11 +42,11 @@ export class StreetSheetService {
       'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
     });
 
-    return this.http.post<any>(`${local_environment.apiUrl}/StreetSheet`, formData, { headers });
+    return this.http.post<any>(`${environment.apiUrl}/StreetSheet`, formData, { headers });
   }
 
   updateStreetSheet(streetSheet: StreetSheet): Observable<any> {
-    return this.http.put<any>(`${local_environment.apiUrl}/StreetSheet/${streetSheet.segmentId}`, streetSheet, this.httpOptions);
+    return this.http.put<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.segmentId}`, streetSheet, this.httpOptions);
   }
 
   deleteStreetSheet(streetSheet: StreetSheet): Observable<any> {
