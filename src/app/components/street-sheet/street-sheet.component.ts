@@ -91,6 +91,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
                     result.sheet.marker.forEach((marker: MapMarker) => {
                         this.getReversedAddress(marker).then((reversedAddress) => {
                             this.reversedAddresses[marker.id] = reversedAddress;
+                            this.streetSheetMapComponent.addMarker(marker, result.sheet)
                         });
                     })
                     return result.sheet;
@@ -336,21 +337,48 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
 
     this.uniqueCreatedByUsers = Array.from(usersSet); 
   }
-  
+
   applyFilters(): void {
-    let filteredStreetSheets = this.streetSheets;
-  
     if (this.startDate && this.endDate) {
-      filteredStreetSheets = filteredStreetSheets.filter(streetSheet => {
-        const streetSheetDate = new Date(streetSheet.date);
-        return streetSheetDate >= this.startDate && streetSheetDate <= this.endDate;
-      });
+      this.streetSheetMapComponent.clearAllMapMarkers();
+      this.streetSheetService.getStreetSheets(this.user, this.startDate, this.endDate).subscribe(streetSheets => {
+        forkJoin(
+            streetSheets.map((sheet: StreetSheet) =>
+                this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).pipe(
+                    map((mapMarkers: MapMarker[]) => ({ sheet, mapMarkers }))
+                )
+            )
+        ).subscribe(results => {
+            const filteredStreetSheets = results.filter((result: any) => result.mapMarkers.length > 0)
+                .map((result: any) => {
+                    result.sheet.marker = result.mapMarkers;
+                    result.sheet.marker.forEach((marker: MapMarker) => {
+                        this.getReversedAddress(marker).then((reversedAddress) => {
+                            this.reversedAddresses[marker.id] = reversedAddress;
+                            this.streetSheetMapComponent.addMarker(marker, result.sheet)
+                        });
+                    })
+                    return result.sheet;
+                });
+
+            this.streetSheets = filteredStreetSheets;
+            this.filteredStreetSheets = this.streetSheets;
+            this.getLocationFilter();
+            this.getUniqueCreatedByUsers();
+        });
+    });
+    } else {
+      this.applyLocalFilters();
     }
+  }
+  
+  applyLocalFilters(): void {
+    let filteredStreetSheets = this.streetSheets;
   
     if (this.filterUser) {
       filteredStreetSheets = filteredStreetSheets.filter(streetSheet =>
         streetSheet.createdBy?.toLowerCase().includes(this.filterUser.toLowerCase()) ||
-        streetSheet.marker.some((marker: MapMarker) => 
+        streetSheet.marker?.some((marker: MapMarker) =>
           marker.createdBy?.toLowerCase().includes(this.filterUser.toLowerCase())
         )
       );
@@ -370,8 +398,9 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
         streetSheet.state.toLowerCase().includes(this.filterText.toLowerCase())
       );
     }
-
+  
     this.filteredStreetSheets = filteredStreetSheets;
   }
+  
   
 }

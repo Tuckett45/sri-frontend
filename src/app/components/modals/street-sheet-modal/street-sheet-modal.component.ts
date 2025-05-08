@@ -29,6 +29,8 @@ export class StreetSheetModalComponent implements OnInit {
   isDisabled: boolean = false;
 
   galleryImages: Image[] = [];
+  imageFiles: { [key: string]: File } = {};               // actual files for submission
+  imagePreviews: { [key: string]: string } = {}; 
   userData!: User;
 
   streetSheet: StreetSheet | null = null;
@@ -74,7 +76,7 @@ export class StreetSheetModalComponent implements OnInit {
       state: [this.data?.streetSheet?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       deployment: [this.data?.streetSheet?.deployment || '', Validators.required],
       equipment: [this.data?.streetSheet?.equipment ? this.data.streetSheet.equipment.split(',').map((e: string) => e.trim()) : [], Validators.required],
-      date: [this.data?.streetSheet?.date || new Date().toISOString(), Validators.required],
+      date: [this.data?.streetSheet?.date ? new Date(this.data.streetSheet.date) : new Date(), Validators.required],
       additionalConcerns: [this.data?.streetSheet?.additionalConcerns || '', [Validators.maxLength(65)]],
       swpppImage: [this.data?.streetSheet?.swpppImage || ''],
       ppeImage: [this.data?.streetSheet?.ppeImage || ''],
@@ -107,32 +109,31 @@ export class StreetSheetModalComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input?.files && input.files.length > 0) {
       const file = input.files[0];
-      const reader = new FileReader();
-
+  
       const maxFileSizeInMB = 15;
       const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
-
+  
       if (file.size > maxFileSizeInBytes) {
         this.toastr.error(`File size should not exceed ${maxFileSizeInMB} MB`);
         return;
       }
-
+  
+      this.imageFiles[field] = file;
+  
+      const reader = new FileReader();
       reader.onload = () => {
-        const base64String = reader.result as string;
-        this.streetSheetForm.patchValue({ [field]: base64String });
-        this.toastr.success(`${field.replace(/([A-Z])/g, ' $1')} uploaded`);
+        this.imagePreviews[field] = reader.result as string; 
       };
-
-      reader.onerror = (error) => {
-        this.toastr.error('Error converting image');
-      };
-
       reader.readAsDataURL(file);
+  
+      this.toastr.success(`${field.replace(/([A-Z])/g, ' $1')} uploaded`);
     }
   }
-
+  
   removeImage(field: string): void {
     this.streetSheetForm.patchValue({ [field]: null });
+    delete this.imagePreviews[field];
+    delete this.imageFiles[field];
     this.toastr.warning(`${field.replace(/([A-Z])/g, ' $1')} removed`);
   }
 
@@ -265,6 +266,7 @@ export class StreetSheetModalComponent implements OnInit {
 
   save(): void {
     if (this.streetSheetForm.valid) {
+
       const streetSheet = {
         ...this.streetSheetForm.value,
         equipment: this.streetSheetForm.value.equipment.join(', ')
@@ -281,10 +283,34 @@ export class StreetSheetModalComponent implements OnInit {
         streetSheet.createdBy = this.userData.id
       }
   
-      this.streetSheetService.saveStreetSheet(streetSheet).subscribe(
+      const formData = new FormData();
+  
+      const formValue = streetSheet;
+      // Append text fields
+      formData.append('Id', formValue.id);
+      formData.append('SegmentId', formValue.segmentId);
+      formData.append('VendorName', formValue.vendorName);
+      formData.append('StreetAddress', formValue.streetAddress);
+      formData.append('City', formValue.city);
+      formData.append('State', formValue.state);
+      formData.append('Deployment', formValue.deployment);
+      formData.append('Equipment', formValue.equipment);
+      formData.append('date', formValue.date.toISOString());
+      formData.append('AdditionalConcerns', formValue.additionalConcerns || '');
+      formData.append('CreatedBy', formValue.createdBy || this.userData.id);
+      formData.append('UpdatedBy', formValue.updatedBy || null);
+      formData.append('updatedDate', formValue.updatedDate || new Date().toISOString());
+      formData.append('MarkerJson', JSON.stringify(formValue.marker));
+      // Append files if selected
+      formData.append('SWPPPImage', this.imageFiles['SWPPPImage']);
+      formData.append('PPEImage', this.imageFiles['PPEImage']);
+      formData.append('TrafficControlImage', this.imageFiles['TrafficControlImage']);
+      formData.append('SignageImage', this.imageFiles['SignageImage']);
+  
+      this.streetSheetService.saveStreetSheet(formData).subscribe(
         (response) => {
           this.toastr.success('Street Sheet Saved');
-          this.dialogRef.close(streetSheet); 
+          this.dialogRef.close(response); 
         },
         (error) => {
           this.toastr.error('Error saving Street Sheet');
@@ -294,6 +320,7 @@ export class StreetSheetModalComponent implements OnInit {
       this.toastr.error('Form is invalid');
     }
   }
+  
   
 
   closeModal(): void {

@@ -42,7 +42,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.loadUserProfile();
-    this.loadStreetSheets();
+    // this.loadStreetSheets();
     this.initMap();
   }
 
@@ -196,6 +196,17 @@ export class StreetSheetMapComponent implements AfterViewInit {
         existingMarker.marker.openPopup(); 
       }
     }
+  }
+
+  public clearAllMapMarkers(): void {
+    this.mapMarkers.forEach(entry => {
+      if (entry.marker) {
+        entry.marker.closePopup();
+        this.map.removeLayer(entry.marker);
+      }
+    });
+    this.mapMarkers = [];
+    this.reversedAddresses = {};
   }
 
   removeMarker(marker: MapMarker){
