@@ -289,6 +289,7 @@ export class StreetSheetModalComponent implements OnInit {
       // Append text fields
       formData.append('Id', formValue.id);
       formData.append('SegmentId', formValue.segmentId);
+      formData.append('PM', formValue.pm);
       formData.append('VendorName', formValue.vendorName);
       formData.append('StreetAddress', formValue.streetAddress);
       formData.append('City', formValue.city);
