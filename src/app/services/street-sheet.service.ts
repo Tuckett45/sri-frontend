@@ -42,7 +42,7 @@ export class StreetSheetService {
       'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
     });
 
-    return this.http.post<any>(`${environment.apiUrl}/StreetSheet`, formData, { headers });
+    return this.http.post<any>(`${local_environment.apiUrl}/StreetSheet`, formData, { headers });
   }
 
   updateStreetSheet(streetSheet: StreetSheet): Observable<any> {

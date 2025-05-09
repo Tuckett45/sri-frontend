@@ -146,9 +146,10 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
       dialogRef.afterClosed().subscribe((result: StreetSheet) => {
         if (result) {
           this.mapMarker = result.marker[result.marker.length - 1]; 
-          this.streetSheetMapComponent.addMarker(this.mapMarker, result);
-          this.getStreetSheets();
-          this.streetSheetMapComponent.centerMapOnMarker(result.marker[0], result);
+          this.streetSheetMapComponent.addMarker(this.mapMarker, result).then(() => {
+            this.streetSheetMapComponent.centerMapOnMarker(this.mapMarker, result);
+          });
+      
         }
       });
   }

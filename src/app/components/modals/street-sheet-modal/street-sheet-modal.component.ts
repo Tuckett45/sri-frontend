@@ -309,7 +309,7 @@ export class StreetSheetModalComponent implements OnInit {
       formData.append('SignageImage', this.imageFiles['SignageImage']);
   
       this.streetSheetService.saveStreetSheet(formData).subscribe(
-        (response) => {
+        (response: StreetSheet) => {
           this.toastr.success('Street Sheet Saved');
           this.dialogRef.close(response); 
         },
