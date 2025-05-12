@@ -419,17 +419,52 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input?.files && input.files.length > 0) {
       const file = input.files[0];
+  
+      const maxFileSizeInMB = 15;
+      const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
+  
+      if (file.size > maxFileSizeInBytes) {
+        this.toastr.error(`File size should not exceed ${maxFileSizeInMB} MB`);
+        return;
+      }
+  
       const reader = new FileReader();
-
       reader.onload = () => {
-        const formArray = imageType === 'issueImages' ? this.issueImagesFormArray : this.resolutionImagesFormArray;
-        formArray.push(this.fb.control(reader.result as string));
-        this.toastr.success('Image uploaded');
+        const img = new window.Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxWidth = 1000;
+          const scale = maxWidth / img.width;
+          canvas.width = maxWidth;
+          canvas.height = img.height * scale;
+  
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+  
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedReader = new FileReader();
+              compressedReader.onloadend = () => {
+                const compressedBase64 = compressedReader.result as string;
+                const formArray = imageType === 'issueImages' ? this.issueImagesFormArray : this.resolutionImagesFormArray;
+                formArray.push(this.fb.control(compressedBase64));
+                this.toastr.success('Image uploaded and compressed');
+              };
+              compressedReader.readAsDataURL(blob);
+            } else {
+              this.toastr.error('Image compression failed');
+            }
+          }, 'image/jpeg', 0.6); // 60% quality
+        };
+        img.onerror = () => this.toastr.error('Invalid image file');
+        img.src = reader.result as string;
       };
-
+  
+      reader.onerror = () => this.toastr.error('Error reading image file');
       reader.readAsDataURL(file);
     }
   }
+  
   
   openGallery(imageType: 'issueImages' | 'resolutionImages', images: any[]): void {
     this.galleryImages = images.map(img => ({

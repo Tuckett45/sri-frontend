@@ -21,16 +21,28 @@ export class StreetSheetService {
 
   constructor(private http: HttpClient) {}
 
-  getStreetSheets(user: User): Observable<StreetSheet[]> {
-    if(user.market !== 'RG' && user.role === 'CM'){
-      return this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet/${user.market}`);
-    }else{
-      return this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet`);
+  getStreetSheets(user: User, startDate?: Date, endDate?: Date): Observable<StreetSheet[]> {
+    if (!startDate || !endDate) {
+      endDate = new Date(); 
+      startDate = new Date(endDate.getTime() - 10 * 24 * 60 * 60 * 1000);
+    }
+  
+    const start = startDate.toISOString();
+    const end = endDate.toISOString();
+  
+    if (user.market !== 'RG' && user.role === 'CM') {
+      return this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet/${user.market}?startDate=${start}&endDate=${end}`);
+    } else {
+      return this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet?startDate=${start}&endDate=${end}`);
     }
   }
 
-  saveStreetSheet(streetSheet: StreetSheet): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/StreetSheet`, streetSheet, this.httpOptions);
+  saveStreetSheet(formData: FormData): Observable<any> {
+    const headers = new HttpHeaders({
+      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+    });
+
+    return this.http.post<any>(`${environment.apiUrl}/StreetSheet`, formData, { headers });
   }
 
   updateStreetSheet(streetSheet: StreetSheet): Observable<any> {

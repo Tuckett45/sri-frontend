@@ -45,7 +45,7 @@
         <div class="filter-section" *ngIf="userSearchOpen">
           <mat-form-field appearance="fill" class="filter-input">
             <mat-label>Filter by Created By</mat-label>
-            <mat-select placeholder="Select User" [(ngModel)]="filterUser" (selectionChange)="applyFilters()">
+            <mat-select placeholder="Select User" [(ngModel)]="filterUser" (selectionChange)="applyLocalFilters()">
               <mat-option value="">-- Clear Filter --</mat-option>
               <mat-option *ngFor="let user of uniqueCreatedByUsers" [value]="user">
                 {{ user }}
@@ -57,14 +57,14 @@
         <div class="filter-section" *ngIf="searchBarOpen">
           <mat-form-field appearance="fill" class="filter-input">
             <mat-label>Search by Segment ID</mat-label>
-            <input matInput [(ngModel)]="filterText" (keyup)="applyFilters()" placeholder="Search...">
+            <input matInput [(ngModel)]="filterText" (keyup)="applyLocalFilters()" placeholder="Search...">
           </mat-form-field>
         </div>
         
         <div class="filter-section" *ngIf="locationOpen">
           <mat-form-field appearance="fill" class="filter-input">
             <mat-label>Filter Location</mat-label>
-            <mat-select placeholder="Select a Location" [(ngModel)]="filterSheetsByLocation" (selectionChange)="applyFilters()">
+            <mat-select placeholder="Select a Location" [(ngModel)]="filterSheetsByLocation" (selectionChange)="applyLocalFilters()">
               <mat-option value="">-- Clear Filter --</mat-option>
               <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
                 {{ location }}

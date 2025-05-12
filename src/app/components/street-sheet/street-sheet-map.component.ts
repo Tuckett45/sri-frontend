@@ -42,7 +42,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.loadUserProfile();
-    this.loadStreetSheets();
+    // this.loadStreetSheets();
     this.initMap();
   }
 
@@ -118,7 +118,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
     });
   }
 
-  public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
+  public async addMarker(marker: MapMarker, streetSheet: StreetSheet) {
       this.getReversedAddress(marker).then(address => {
         if (marker.latitude && marker.longitude) {
           const date = new Date(marker.dateCreated + "Z")
@@ -145,7 +145,6 @@ export class StreetSheetMapComponent implements AfterViewInit {
             Created By: ${streetSheet.createdBy}<br>
             <b>Marker ID:</b> ${marker.id}
           `);
-  
           this.mapMarkers.push({ id: marker.id, marker: newMarker });
         }
       });
@@ -190,12 +189,23 @@ export class StreetSheetMapComponent implements AfterViewInit {
     if (this.map) {
       const latLng = new L.LatLng(marker.latitude, marker.longitude);
       this.map.flyTo(latLng, 15, { animate: true, duration: 1 });
-      const existingMarker = this.mapMarkers.find(m => m.id === marker.id);
-
+      const existingMarker = this.mapMarkers.find(m => m.id == marker.id);
+      
       if (existingMarker) {
-        existingMarker.marker.openPopup(); 
+        existingMarker.marker.openPopup();
       }
     }
+  }
+
+  public clearAllMapMarkers(): void {
+    this.mapMarkers.forEach(entry => {
+      if (entry.marker) {
+        entry.marker.closePopup();
+        this.map.removeLayer(entry.marker);
+      }
+    });
+    this.mapMarkers = [];
+    this.reversedAddresses = {};
   }
 
   removeMarker(marker: MapMarker){

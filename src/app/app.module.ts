@@ -30,6 +30,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { ImageModule } from 'primeng/image';
 import { GalleriaModule } from 'primeng/galleria';
+import { NgxImageCompressService } from 'ngx-image-compress';
 
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { ToastrModule } from 'ngx-toastr';
@@ -152,7 +153,7 @@ import { TpsSummaryComponent } from './components/tps/tps-summary/tps-summary.co
     DividerModule,
     ChartComponent
   ],
-  providers: [provideCharts(withDefaultRegisterables())],
+  providers: [provideCharts(withDefaultRegisterables()), NgxImageCompressService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
