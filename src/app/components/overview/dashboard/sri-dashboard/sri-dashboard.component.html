@@ -13,6 +13,7 @@
                         <i class="pi pi-wrench text-blue-500 text-xl"></i>
                     </div>
                 </div>
+                <br>
             </div>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
@@ -54,6 +55,7 @@
                         <i class="pi pi-exclamation-triangle text-purple-500 text-xl"></i>
                     </div>
                 </div>
+                <br>
             </div>
         </div>
     </div>
@@ -65,10 +67,59 @@
   <div class="col-12 sm:col-12 md:col-12 lg:col-6">
     <div class="surface-card shadow-2 p-3 border-round">
       <span class="block text-500 font-medium mb-3">Total reported issues by Area per Vendor</span>
+      <p-dropdown 
+          [options]="vendorIssueFilterOptions" 
+          [(ngModel)]="vendorIssueSelectedFilter" 
+          (onChange)="filterVendorIssueChart()" 
+          placeholder="Filter by Vendor"
+          styleClass="solid-dropdown">
+        </p-dropdown>
       <p-divider />
       <p-chart type="bar" [data]="totalVendorIssueChartData" [options]="issuesOptions"></p-chart>
-      <span class="block text-500 font-small"></span>
-      <span class="block text-500 font-small"></span>
+      <br>
+      <br>
+    </div>
+  </div>
+
+  <div class="col-12 sm:col-12 md:col-12 lg:col-6">
+    <div class="surface-card shadow-2 p-3 border-round">
+      <span class="block text-500 font-medium mb-3">Error Codes Reported</span>
+      <p-dropdown 
+        class="mr-5"
+        [options]="errorCodeFilterOptions" 
+        [(ngModel)]="selectedErrorCodeFilter" 
+        (onChange)="filterErrorCodeChart()" 
+        placeholder="Filter by Error Code"
+        styleClass="solid-dropdown">
+      </p-dropdown>
+      <p-dropdown 
+        class="mr-3"
+        [options]="areaFilterOptions" 
+        [(ngModel)]="selectedAreaFilter" 
+        (onChange)="filterErrorCodeChart()" 
+        placeholder="Filter by Area"
+        styleClass="solid-dropdown">
+      </p-dropdown>
+      <p-dropdown 
+        class="mr-3"
+        [options]="vendorFilterOptions" 
+        [(ngModel)]="selectedVendorFilter" 
+        (onChange)="filterErrorCodeChart()" 
+        placeholder="Filter by Vednor"
+        styleClass="solid-dropdown">
+      </p-dropdown>
+      <p-dropdown 
+        class="mr-3"
+        [options]="subCategoryFilterOptions" 
+        [(ngModel)]="selectedSubCategoryFilter" 
+        (onChange)="filterErrorCodeChart()" 
+        placeholder="Filter by Category"
+        styleClass="solid-dropdown">
+      </p-dropdown>
+      <p-divider />
+      <p-chart type="bar" [data]="errorCodeChartData" [options]="errorCodeOptions" ></p-chart>
+      <br>
+      <br>
     </div>
   </div>
 
@@ -76,6 +127,13 @@
   <div class="col-12 sm:col-12 md:col-12 lg:col-6">
     <div class="surface-card shadow-2 p-3 border-round">
       <span class="block text-500 font-medium mb-3">Reported punch lists per Vendor (Total, Resolved, Unresolved)</span>
+      <p-dropdown 
+          [options]="vendorPunchListFilterOptions" 
+          [(ngModel)]="vendorPunchListSelectedFilter" 
+          (onChange)="filterVendorPunchListChart()" 
+          placeholder="Filter by Market"
+          styleClass="solid-dropdown">
+        </p-dropdown>
       <p-divider />
       <p-chart type="bar" [data]="vendorPunchListChartData" [options]="sriOptions"></p-chart>
       <span class="block text-500 font-small">* Resolved = Both PM and CM resolved</span>
@@ -97,6 +155,13 @@
   <div class="col-12 sm:col-12 md:col-12 lg:col-6">
     <div class="surface-card shadow-2 p-3 border-round">
       <span class="block text-500 font-medium mb-3">Reported punch lists per State (Total, Resolved, Unresolved)</span>
+      <p-dropdown 
+          [options]="segmentIdPunchListFilterOptions" 
+          [(ngModel)]="segmentIdPunchListSelectedFilter" 
+          (onChange)="filterStatePunchListChart()" 
+          placeholder="Filter by Vendor"
+          styleClass="solid-dropdown">
+        </p-dropdown>
       <p-divider />
       <p-chart type="bar" [data]="segmentIdPunchListChartData" [options]="sriOptions"></p-chart>
       <span class="block text-500 font-small">* Resolved = Both PM and CM resolved</span>
