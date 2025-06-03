@@ -148,6 +148,13 @@
         </div>
       </mat-grid-tile>
 
+      <mat-grid-tile colspan="4" *ngIf="isEditMode && this.preliminaryPunchListForm.controls['pmResolved'].value == 1">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>PM Concerns</mat-label>
+          <textarea matInput formControlName="pmConcerns" placeholder="Enter PM Concerns"></textarea>
+        </mat-form-field>
+      </mat-grid-tile>
+
       <!-- Add Issue Image Button -->
       <mat-grid-tile colspan="4" class="half-width">
         <div>

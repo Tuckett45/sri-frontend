@@ -208,6 +208,28 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     }
   }
 
+  rejectResolution(punchList: PreliminaryPunchList): void {
+    const updatedPunchList = {
+      ...punchList,
+      dateReported: punchList.dateReported instanceof Date
+        ? punchList.dateReported
+        : new Date(punchList.dateReported)
+    };
+    updatedPunchList.pmResolved = false;
+    updatedPunchList.resolvedDate = null;
+  
+    this.punchListService.updateEntry(updatedPunchList).subscribe({
+      next: () => {
+        this.refreshPunchLists()
+        this.toastr.success(`Resolution Rejected. Sent back to ${punchList.vendorName}`);
+      },
+      error: (err) => {
+        console.error('Reject resolution failed:', err);
+        this.toastr.error('Failed to reject resolution');
+      }
+    });
+  }
+
   refreshTable(): void {    
     const filteredEntries = this.unresolvedPreliminaryPunchList$; 
     filteredEntries?.subscribe(entries => {
@@ -275,10 +297,15 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         } else if (filter.column == 'resolvedDate') {
           const startDateObj = new Date(filter.values[0]);
           const endDateObj = new Date(filter.values[1]);
-          
+
           updatedData = updatedData.filter(punchList => {
-            const punchListDate = new Date(punchList.resolvedDate);
-            return punchListDate >= startDateObj && punchListDate <= endDateObj;
+            if(punchList.resolvedDate != null){
+              const punchListDate = new Date(punchList.resolvedDate);
+              return punchListDate >= startDateObj && punchListDate <= endDateObj;
+            }else{
+              return;
+            }
+          
           });
         } else {
           if (filter.column && filter.values) {

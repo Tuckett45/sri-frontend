@@ -202,6 +202,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       issueImages: this.fb.array(this.data?.issueImages || []),
       resolutionImages: this.fb.array(this.data?.resolutionImages || []), 
       pmResolved: [this.data?.pmResolved || false],
+      pmConcerns: [this.data?.pmConcerns || ''],
       resolvedDate: [this.data?.resolvedDate || null],
       cmResolved: [this.data?.cmResolved || false],
       updatedBy: [this.data?.updatedBy || null],
