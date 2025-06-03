@@ -29,8 +29,9 @@ export class PreliminaryPunchList {
   additionalConcerns: string;
   dateReported: Date;
   pmResolved: boolean;
+  pmConcerns?: string;
   cmResolved: boolean;
-  resolvedDate: Date;
+  resolvedDate?: Date | null;
   issueImages: PunchListImages[]; 
   resolutionImages?: PunchListImages[];
   createdBy?: string;
@@ -51,6 +52,7 @@ export class PreliminaryPunchList {
     additionalConcerns: string = '',
     dateReported: Date = new Date(),
     pmResolved: boolean = false,
+    pmConcerns: string = '',
     cmResolved: boolean = false,
     resolvedDate: Date,
     issueImages: PunchListImages[] = [],
@@ -70,6 +72,7 @@ export class PreliminaryPunchList {
     this.additionalConcerns = additionalConcerns;
     this.dateReported = dateReported;
     this.pmResolved = pmResolved;
+    this.pmConcerns = pmConcerns;
     this.cmResolved = cmResolved;
     this.resolvedDate = resolvedDate;
     this.issueImages = issueImages;

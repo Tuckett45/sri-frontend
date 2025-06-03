@@ -278,8 +278,12 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
           const endDateObj = new Date(filter.values[1]);
           
           updatedData = updatedData.filter(punchList => {
-            const punchListDate = new Date(punchList.resolvedDate);
-            return punchListDate >= startDateObj && punchListDate <= endDateObj;
+            if(punchList.resolvedDate != null){
+              const punchListDate = new Date(punchList.resolvedDate);
+              return punchListDate >= startDateObj && punchListDate <= endDateObj;
+            }else{
+              return;
+            }
           });
         }else {
           if (filter.column && filter.values) {

@@ -111,13 +111,13 @@
     <p-tabs [(value)]="activeTab">
       <p-tablist>
         <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">
-          <span *ngIf="user.role === 'CM'">
+          <span class="tabs-class" *ngIf="user.role === 'CM'">
             CM Resolved Gigs 
           </span>
-          <span *ngIf="user.role === 'PM'">
+          <span class="tabs-class" *ngIf="user.role === 'PM'">
             PM Resolved Gigs 
           </span>
-          <span *ngIf="user.role === 'Admin' || user.role === 'Client'">
+          <span class="tabs-class" *ngIf="user.role === 'Admin' || user.role === 'Client'">
             All Resolved Gigs 
           </span>
           <p-overlaybadge [value]="resolvedPunchListCount">
@@ -125,13 +125,13 @@
           </p-overlaybadge>
         </p-tab>
         <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">
-          <span *ngIf="user.role === 'CM'">
+          <span class="tabs-class" *ngIf="user.role === 'CM'">
             CM Unresolved Gigs 
           </span>
-          <span *ngIf="user.role === 'PM'">
+          <span class="tabs-class" *ngIf="user.role === 'PM'">
             PM Unresolved Gigs 
           </span>
-          <span *ngIf="user.role === 'Admin' || user.role === 'Client'">
+          <span class="tabs-class" *ngIf="user.role === 'Admin' || user.role === 'Client'">
             All Unresolved Gigs 
           </span>
           <p-overlaybadge [value]="unresolvedPunchListCount">

@@ -1,3 +1,4 @@
+
   
     .header-section {
       display: flex;
@@ -30,10 +31,34 @@
       }
     }
   
+    .filter-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  
     .search-bar {
       display: flex;
       justify-content: flex-start;
       width: 100%;
+  
+      mat-form-field {
+        width: 50%;
+  
+        input {
+          padding-left: 2px;
+        }
+  
+        mat-icon {
+          color: #e18a25;
+        }
+      }
+    }
+  
+    .chip-filter {
+      display: flex;
+      justify-content: space-between;
+      width: 75%;
   
       mat-form-field {
         width: 25%;
@@ -46,6 +71,24 @@
           color: #e18a25;
         }
       }
+    }
+  
+    .chip-filter .p-chip {
+      margin: 0 5px 5px 0;
+    }
+    
+    .chip-filter .p-dropdown {
+      margin-top: 10px;
+    }
+    
+    .chip-filter .clear-all {
+      margin-top: 10px;
+    }
+
+    .mat-header-row th {
+      position: sticky;
+      top: 0; /* Adjust based on your layout or header height */
+      z-index: 1; /* Ensure it is above the table rows */
     }
   
     .table-wrapper {
@@ -61,6 +104,7 @@
           background-color: #e18a25;
           color: white;
           padding: 10px 0px 10px 10px;
+          position: sticky;
         }
   
         td {
@@ -75,18 +119,6 @@
         tr:nth-child(even) {
           background-color: #525252; 
         }
-      }
-
-      .mat-header-row th {
-        position: sticky;
-        top: 0;
-        background-color: #fff; /* Ensure the background color is set to avoid transparency */
-        z-index: 1; /* Ensure it stays above table rows */
-      }
-      
-      /* Optional: Add box shadow for a nicer effect when scrolling */
-      .mat-header-row {
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
     
   
@@ -103,6 +135,18 @@
         &:hover {
           color: #b86404;
         }
+      }
+
+      .mat-header-row th {
+        position: sticky;
+        top: 0;
+        background-color: #fff; /* Ensure the background color is set to avoid transparency */
+        z-index: 1; /* Ensure it stays above table rows */
+      }
+      
+      /* Optional: Add box shadow for a nicer effect when scrolling */
+      .mat-header-row {
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
     
       .delete-icon {
@@ -127,6 +171,23 @@
       .mat-row {
         border-bottom: 1px solid rgba(0, 0, 0, 0.1);
       }
+
+      .reject-btn {
+        font-size: small;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        color: #fff;
+        background-color: #f44336;
+      
+        &:hover {
+          background-color: #e53935;
+        }
+      
+        &:disabled{
+          background-color: #696969;
+        }
+      }
     
       .image-btn {
         font-size: small;
@@ -146,10 +207,7 @@
       }
     
       /* Responsive design */
-      @media (max-width: 767px) {
-        padding: 10px;
-        margin: 10px;
-    
+      @media (max-width: 767px) {    
         .header-section {
           flex-direction: column;
           align-items: flex-start;
@@ -163,6 +221,11 @@
             width: 70%;
             margin-bottom: 10px;
           }
+        }
+    
+        .filter-section {
+          flex-direction: column;
+          align-items: flex-start;
         }
     
         .search-bar {
@@ -182,6 +245,13 @@
             }
           }
         }
+    
+        .chip-filter {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          margin-bottom: 20px;
+        }
       }
     
       @media (min-width: 768px) and (max-width: 1024px) {
@@ -196,6 +266,11 @@
           button {
             margin-left: auto;
           }
+        }
+    
+        .filter-section {
+          flex-direction: column;
+          align-items: flex-start;
         }
     
         .search-bar {
@@ -215,6 +290,13 @@
               color: #e18a25;
             }
           }
+        }
+    
+        .chip-filter {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          margin-bottom: 20px;
         }
     
         .table-wrapper {
@@ -255,6 +337,11 @@
     
     ::ng-deep .mat-mdc-cell{
       justify-content: center !important;
+    }
+    
+    ::ng-deep .p-tab{
+      flex-shrink: 2 !important;
+      white-space: pre-wrap !important;
     }
     
     :ng-deep .p-galleria-mask {
