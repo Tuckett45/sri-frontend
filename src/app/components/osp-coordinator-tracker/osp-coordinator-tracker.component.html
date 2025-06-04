@@ -2,6 +2,26 @@
   <app-widget *ngFor="let card of statCards" [title]="card.description" [data]="card.value"></app-widget>
 </div>
 
+<div class="header-actions">
+  <input type="file" accept=".csv" #csvInput (change)="importFromCSV($event)" style="display:none" />
+  <button mat-raised-button class="action-btn" (click)="csvInput.click()">Import CSV</button>
+  <button mat-raised-button class="action-btn" (click)="toggleAddForm()">Add Entry</button>
+</div>
+
+<div class="add-form" *ngIf="showAddForm">
+  <form [formGroup]="addForm" (ngSubmit)="onAddSubmit()">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Description</mat-label>
+      <input matInput formControlName="description" />
+    </mat-form-field>
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Value</mat-label>
+      <input matInput type="number" formControlName="value" />
+    </mat-form-field>
+    <button mat-raised-button class="action-btn" type="submit">Save</button>
+  </form>
+</div>
+
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="description">
     <th mat-header-cell *matHeaderCellDef> Metric </th>

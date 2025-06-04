@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, BehaviorSubject, of } from 'rxjs';
 
 export interface CoordinatorStat {
   description: string;
@@ -10,6 +10,12 @@ export interface CoordinatorStat {
   providedIn: 'root'
 })
 export class OspCoordinatorService {
+  private metricsSubject = new BehaviorSubject<CoordinatorStat[]>([
+    { description: 'Inspections Completed', value: 12 },
+    { description: 'Permits Awaiting Approval', value: 3 },
+    { description: 'Field Visits Scheduled', value: 10 }
+  ]);
+
   constructor() {}
 
   getStats(): Observable<CoordinatorStat[]> {
@@ -23,12 +29,12 @@ export class OspCoordinatorService {
   }
 
   getMetrics(): Observable<CoordinatorStat[]> {
-    // Reusing the same interface for simplicity
-    const metrics: CoordinatorStat[] = [
-      { description: 'Inspections Completed', value: 12 },
-      { description: 'Permits Awaiting Approval', value: 3 },
-      { description: 'Field Visits Scheduled', value: 10 }
-    ];
-    return of(metrics);
+    return this.metricsSubject.asObservable();
+  }
+
+  addMetric(metric: CoordinatorStat): Observable<void> {
+    const current = this.metricsSubject.getValue();
+    this.metricsSubject.next([...current, metric]);
+    return of();
   }
 }
