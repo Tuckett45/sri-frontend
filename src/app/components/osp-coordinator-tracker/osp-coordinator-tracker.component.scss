@@ -7,3 +7,22 @@
 table {
   width: 100%;
 }
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.action-btn {
+  background-color: #e18a25;
+  color: #fff;
+
+  &:hover {
+    background-color: #b86404;
+  }
+}
+
+.add-form {
+  margin-bottom: 1rem;
+}
