@@ -56,7 +56,8 @@ import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
 import { GoalsComponent } from './components/overview/goals/goals.component';
-import { VendorDashboardComponent } from './components/overview/dashboard/vendor-dashboard/vendor-dashboard.component'
+import { VendorDashboardComponent } from './components/overview/dashboard/vendor-dashboard/vendor-dashboard.component';
+import { OspCoordinatorTrackerComponent } from './components/osp-coordinator-tracker/osp-coordinator-tracker.component';
 
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
@@ -94,7 +95,8 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     TableComponent,
     UserProfileComponent,
     UserProfileModalComponent,
-    WidgetComponent    
+    WidgetComponent,
+    OspCoordinatorTrackerComponent
   ],
   imports: [
     BrowserModule,
