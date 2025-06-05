@@ -68,7 +68,8 @@ export class OspCoordinatorTrackerComponent implements OnInit {
           rows.forEach(row => {
             const metric: CoordinatorStat = {
               description: row['description'] || row['Description'] || '',
-              value: Number(row['value'] || row['Value'] || 0)
+              value: Number(row['value'] || row['Value'] || 0),
+              id: 0
             };
             this.coordinatorService.addMetric(metric).subscribe();
           });

@@ -21,6 +21,9 @@
     <button *ngIf="authService.isCM() || authService.isAdmin() || authService.isTemp()"  mat-button routerLink="/street-sheet" routerLinkActive="active-link">
       Street Sheet Tracker
     </button>
+    <button *ngIf="authService.isCM() || authService.isAdmin()"  mat-button routerLink="/osp-coordinator-tracker" routerLinkActive="active-link">
+      OSP Coordinator
+    </button>
     <button mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
       Profile
     </button>
