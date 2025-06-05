@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatDialog } from '@angular/material/dialog';
 import { OspCoordinatorService, CoordinatorStat } from 'src/app/services/osp-coordinator.service';
 import * as Papa from 'papaparse';
+import { OspCoordinatorModalComponent } from '../modals/osp-coordinator-modal/osp-coordinator-modal.component';
+import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 
 @Component({
   selector: 'app-osp-coordinator-tracker',
@@ -11,35 +13,47 @@ import * as Papa from 'papaparse';
 })
 export class OspCoordinatorTrackerComponent implements OnInit {
   statCards: CoordinatorStat[] = [];
-  displayedColumns: string[] = ['description', 'value'];
+  displayedColumns: string[] = ['description', 'value', 'actions'];
   dataSource = new MatTableDataSource<CoordinatorStat>();
-  showAddForm = false;
-  addForm: FormGroup;
 
-  constructor(private coordinatorService: OspCoordinatorService,
-              private fb: FormBuilder) {
-    this.addForm = this.fb.group({
-      description: ['', Validators.required],
-      value: [0, [Validators.required, Validators.min(0)]]
-    });
-  }
+  constructor(
+    private coordinatorService: OspCoordinatorService,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit(): void {
     this.coordinatorService.getStats().subscribe(stats => this.statCards = stats);
     this.coordinatorService.getMetrics().subscribe(metrics => this.dataSource.data = metrics);
   }
 
-  toggleAddForm(): void {
-    this.showAddForm = !this.showAddForm;
+  openAddEditModal(metric?: CoordinatorStat): void {
+    const dialogRef = this.dialog.open(OspCoordinatorModalComponent, {
+      width: '400px',
+      data: metric || null
+    });
+
+    dialogRef.afterClosed().subscribe((result: CoordinatorStat) => {
+      if (result) {
+        if (metric) {
+          this.coordinatorService.updateMetric(result).subscribe();
+        } else {
+          this.coordinatorService.addMetric(result).subscribe();
+        }
+      }
+    });
   }
 
-  onAddSubmit(): void {
-    if (this.addForm.valid) {
-      this.coordinatorService.addMetric(this.addForm.value).subscribe(() => {
-        this.addForm.reset({ description: '', value: 0 });
-        this.showAddForm = false;
-      });
-    }
+  editMetric(metric: CoordinatorStat): void {
+    this.openAddEditModal(metric);
+  }
+
+  openDeleteConfirmationDialog(metric: CoordinatorStat): void {
+    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.coordinatorService.deleteMetric(metric.id).subscribe();
+      }
+    });
   }
 
   importFromCSV(event: Event): void {
