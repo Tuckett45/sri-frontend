@@ -6,21 +6,137 @@
 </div>
 
 <mat-dialog-content class="modal-body">
-  <form [formGroup]="statForm">
+  <form [formGroup]="statForm" class="modal-form">
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Description</mat-label>
-      <input matInput formControlName="description" />
-      <mat-error *ngIf="statForm.get('description')?.invalid && statForm.get('description')?.touched">
-        Description is required.
-      </mat-error>
+      <mat-label>Segment ID</mat-label>
+      <input matInput formControlName="segmentId" />
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Value</mat-label>
-      <input matInput type="number" formControlName="value" />
-      <mat-error *ngIf="statForm.get('value')?.invalid && statForm.get('value')?.touched">
-        Value must be 0 or greater.
-      </mat-error>
+      <mat-label>Vendor</mat-label>
+      <mat-select formControlName="vendor">
+        <mat-option *ngFor="let vendor of vendors" [value]="vendor">{{vendor}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Crew</mat-label>
+      <input matInput formControlName="crew" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Material Order</mat-label>
+      <input matInput [matDatepicker]="matOrder" formControlName="materialOrder" />
+      <mat-datepicker-toggle matSuffix [for]="matOrder"></mat-datepicker-toggle>
+      <mat-datepicker #matOrder></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Date</mat-label>
+      <input matInput [matDatepicker]="datePicker" formControlName="date" />
+      <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+      <mat-datepicker #datePicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Work Package Created</mat-label>
+      <input matInput [matDatepicker]="wpCreated" formControlName="workPackageCreated" />
+      <mat-datepicker-toggle matSuffix [for]="wpCreated"></mat-datepicker-toggle>
+      <mat-datepicker #wpCreated></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Amount</mat-label>
+      <input matInput type="number" formControlName="amount" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Work Package Amount</mat-label>
+      <input matInput type="number" formControlName="workPackageAmount" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Original Continuing Cost</mat-label>
+      <input matInput type="number" formControlName="originalContinuingCost" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>High Cost Analysis</mat-label>
+      <input matInput [matDatepicker]="hcAnalysis" formControlName="highCostAnalysis" />
+      <mat-datepicker-toggle matSuffix [for]="hcAnalysis"></mat-datepicker-toggle>
+      <mat-datepicker #hcAnalysis></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>NTP</mat-label>
+      <input matInput [matDatepicker]="ntp" formControlName="ntp" />
+      <mat-datepicker-toggle matSuffix [for]="ntp"></mat-datepicker-toggle>
+      <mat-datepicker #ntp></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Asbuilt Submitted</mat-label>
+      <input matInput [matDatepicker]="asbuilt" formControlName="asbuiltSubmitted" />
+      <mat-datepicker-toggle matSuffix [for]="asbuilt"></mat-datepicker-toggle>
+      <mat-datepicker #asbuilt></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Coordinator Closeout</mat-label>
+      <input matInput [matDatepicker]="coClose" formControlName="coordinatorCloseout" />
+      <mat-datepicker-toggle matSuffix [for]="coClose"></mat-datepicker-toggle>
+      <mat-datepicker #coClose></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Amendment Version</mat-label>
+      <mat-select formControlName="amendmentVersion">
+        <mat-option *ngFor="let ver of amendmentVersions" [value]="ver">{{ver}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Amendment Amount</mat-label>
+      <input matInput type="number" formControlName="amendmentAmount" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Continuing Amount</mat-label>
+      <input matInput type="number" formControlName="continuingAmount" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Reason</mat-label>
+      <mat-select formControlName="amendmentReason">
+        <mat-option *ngFor="let r of amendmentReasons" [value]="r">{{r}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Admin Audit</mat-label>
+      <mat-select formControlName="adminAudit">
+        <mat-option *ngFor="let a of adminAuditOptions" [value]="a">{{a}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Audit Date</mat-label>
+      <input matInput [matDatepicker]="adDate" formControlName="adminAuditDate" />
+      <mat-datepicker-toggle matSuffix [for]="adDate"></mat-datepicker-toggle>
+      <mat-datepicker #adDate></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Pass / Fail</mat-label>
+      <mat-select formControlName="pass">
+        <mat-option [value]="true">Pass</mat-option>
+        <mat-option [value]="false">Fail</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Reason</mat-label>
+      <input matInput formControlName="passFailReason" />
     </mat-form-field>
   </form>
 </mat-dialog-content>
