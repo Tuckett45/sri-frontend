@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { CoordinatorStat } from 'src/app/services/osp-coordinator.service';
+import { OspCoordinatorItem } from 'src/app/models/osp-coordinator-item.model';
 
 @Component({
   selector: 'app-osp-coordinator-modal',
@@ -10,15 +10,38 @@ import { CoordinatorStat } from 'src/app/services/osp-coordinator.service';
 })
 export class OspCoordinatorModalComponent {
   statForm: FormGroup;
+  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
+  amendmentVersions: number[] = [0,1,2,3,4,5];
+  amendmentReasons: string[] = ['Scope Add','Scope Delete','Change Order','Other'];
+  adminAuditOptions: number[] = [0,1,2,3,4,5];
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<OspCoordinatorModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: CoordinatorStat | null
+    @Inject(MAT_DIALOG_DATA) public data: OspCoordinatorItem | null
   ) {
     this.statForm = this.fb.group({
       id: [data?.id],
-      description: [data?.description || '', Validators.required],
-      value: [data?.value ?? 0, [Validators.required, Validators.min(0)]]
+      segmentId: [data?.segmentId || '', Validators.required],
+      vendor: [data?.vendor || '', Validators.required],
+      crew: [data?.crew || ''],
+      materialOrder: [data?.materialOrder || ''],
+      date: [data?.date || ''],
+      workPackageCreated: [data?.workPackageCreated || ''],
+      amount: [data?.amount],
+      workPackageAmount: [data?.workPackageAmount],
+      originalContinuingCost: [data?.originalContinuingCost],
+      highCostAnalysis: [data?.highCostAnalysis || ''],
+      ntp: [data?.ntp || ''],
+      asbuiltSubmitted: [data?.asbuiltSubmitted || ''],
+      coordinatorCloseout: [data?.coordinatorCloseout || ''],
+      amendmentVersion: [data?.amendmentVersion],
+      amendmentAmount: [data?.amendmentAmount],
+      continuingAmount: [data?.continuingAmount],
+      amendmentReason: [data?.amendmentReason || ''],
+      adminAudit: [data?.adminAudit],
+      adminAuditDate: [data?.adminAuditDate || ''],
+      pass: [data?.pass ?? true],
+      passFailReason: [data?.passFailReason || '']
     });
   }
 
