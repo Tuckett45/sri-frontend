@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { OspCoordinatorItem } from '../models/osp-coordinator-item.model';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +9,7 @@ import { OspCoordinatorItem } from '../models/osp-coordinator-item.model';
 export class OspCoordinatorService {
   private nextId = 1;
   private entriesSubject = new BehaviorSubject<OspCoordinatorItem[]>([{
-    id: this.nextId++,
+    id: uuidv4(),
     segmentId: 'SEG-001',
     vendor: 'Congruex (SCI)',
     crew: '',
@@ -44,7 +45,7 @@ export class OspCoordinatorService {
   }
 
   addEntry(entry: OspCoordinatorItem): Observable<void> {
-    entry.id = this.nextId++;
+    entry.id = uuidv4();
     const current = this.entriesSubject.getValue();
     this.entriesSubject.next([...current, entry]);
     return of();
@@ -60,7 +61,7 @@ export class OspCoordinatorService {
     return of();
   }
 
-  deleteEntry(id: number): Observable<void> {
+  deleteEntry(id: string): Observable<void> {
     const current = this.entriesSubject.getValue();
     this.entriesSubject.next(current.filter(m => m.id !== id));
     return of();

@@ -1,5 +1,5 @@
 export interface OspCoordinatorItem {
-  id: number;
+  id: string;
   segmentId: string;
   vendor: string;
   crew: string;

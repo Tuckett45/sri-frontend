@@ -80,7 +80,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
           const rows = results.data as any[];
           rows.forEach(row => {
             const entry: OspCoordinatorItem = {
-              id: 0,
+              id: row['id'] || '',
               segmentId: row['segmentId'] || '',
               vendor: row['vendor'] || '',
               crew: row['crew'] || '',
