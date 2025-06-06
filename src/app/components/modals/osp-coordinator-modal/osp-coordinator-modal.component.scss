@@ -7,6 +7,25 @@
   overflow-y: auto;
 }
 
+/* Layout the form as a responsive grid */
+.modal-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+/* Ensure mat-form-field takes the full width of its grid cell */
+mat-form-field {
+  width: 100%;
+}
+
+/* Make input text color consistently black */
+::ng-deep .mat-mdc-input-element,
+::ng-deep .mat-mdc-select,
+::ng-deep .mat-mdc-select .mdc-label {
+  color: #000000 !important;
+}
+
 .modal-header {
   background-color: #144f80;
   padding: 15px 25px;
