@@ -24,6 +24,10 @@ export class OspCoordinatorTrackerComponent implements OnInit {
 
   ngOnInit(): void {
     this.coordinatorService.getStats().subscribe(stats => this.statCards = stats);
+    this.loadEntries();
+  }
+
+  loadEntries(): void {
     this.coordinatorService.getEntries().subscribe(entries => this.dataSource.data = entries);
   }
 
@@ -36,9 +40,9 @@ export class OspCoordinatorTrackerComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result: OspCoordinatorItem) => {
       if (result) {
         if (entry) {
-          this.coordinatorService.updateEntry(result).subscribe();
+          this.coordinatorService.updateEntry(result).subscribe(() => this.loadEntries());
         } else {
-          this.coordinatorService.addEntry(result).subscribe();
+          this.coordinatorService.addEntry(result).subscribe(() => this.loadEntries());
         }
       }
     });
@@ -52,7 +56,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
     const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.coordinatorService.deleteEntry(entry.id).subscribe();
+        this.coordinatorService.deleteEntry(entry.id).subscribe(() => this.loadEntries());
       }
     });
   }
@@ -105,6 +109,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
             };
             this.coordinatorService.addEntry(entry).subscribe();
           });
+          this.loadEntries();
         }
       });
     }
