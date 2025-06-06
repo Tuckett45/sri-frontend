@@ -57,6 +57,18 @@ export class OspCoordinatorTrackerComponent implements OnInit {
     });
   }
 
+  searchFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
+  
+    this.dataSource.filterPredicate = (data: any, filter: string) => {
+      const transformedFilter = filter.trim().toLowerCase();
+      const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.createdBy} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
+      return dataStr.includes(transformedFilter);
+    };
+  
+    this.dataSource.filter = filterValue;
+  }
+
   importFromCSV(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length) {
