@@ -1,39 +1,21 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { OspCoordinatorItem } from '../models/osp-coordinator-item.model';
-import { v4 as uuidv4 } from 'uuid';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from 'src/environments/environments';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OspCoordinatorService {
-  private nextId = 1;
-  private entriesSubject = new BehaviorSubject<OspCoordinatorItem[]>([{
-    id: uuidv4(),
-    segmentId: 'SEG-001',
-    vendor: 'Congruex (SCI)',
-    crew: '',
-    materialOrder: '',
-    date: '',
-    workPackageCreated: '',
-    amount: undefined,
-    workPackageAmount: undefined,
-    originalContinuingCost: undefined,
-    highCostAnalysis: '',
-    ntp: '',
-    asbuiltSubmitted: '',
-    coordinatorCloseout: '',
-    amendmentVersion: undefined,
-    amendmentAmount: undefined,
-    continuingAmount: undefined,
-    amendmentReason: '',
-    adminAudit: undefined,
-    adminAuditDate: '',
-    pass: true,
-    passFailReason: ''
-  }]);
+  private httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+    })
+  };
 
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
   getStats(): Observable<any[]> {
     // Placeholder for potential dashboard metrics
@@ -41,29 +23,22 @@ export class OspCoordinatorService {
   }
 
   getEntries(): Observable<OspCoordinatorItem[]> {
-    return this.entriesSubject.asObservable();
+    return this.http.get<OspCoordinatorItem[]>(`${environment.apiUrl}/osp-coordinators`, this.httpOptions);
   }
 
-  addEntry(entry: OspCoordinatorItem): Observable<void> {
-    entry.id = uuidv4();
-    const current = this.entriesSubject.getValue();
-    this.entriesSubject.next([...current, entry]);
-    return of();
+  getEntry(id: string): Observable<OspCoordinatorItem> {
+    return this.http.get<OspCoordinatorItem>(`${environment.apiUrl}/osp-coordinators/${id}`, this.httpOptions);
   }
 
-  updateEntry(entry: OspCoordinatorItem): Observable<void> {
-    const current = this.entriesSubject.getValue();
-    const index = current.findIndex(m => m.id === entry.id);
-    if (index !== -1) {
-      current[index] = entry;
-      this.entriesSubject.next([...current]);
-    }
-    return of();
+  addEntry(entry: OspCoordinatorItem): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/osp-coordinators`, entry, this.httpOptions);
   }
 
-  deleteEntry(id: string): Observable<void> {
-    const current = this.entriesSubject.getValue();
-    this.entriesSubject.next(current.filter(m => m.id !== id));
-    return of();
+  updateEntry(entry: OspCoordinatorItem): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/osp-coordinators/${entry.id}`, entry, this.httpOptions);
+  }
+
+  deleteEntry(id: string): Observable<any> {
+    return this.http.delete(`${environment.apiUrl}/osp-coordinators/${id}`, this.httpOptions);
   }
 }
