@@ -27,122 +27,123 @@
   <div class="table-wrapper">
     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
       <ng-container matColumnDef="segmentId">
-        <th mat-header-cell *matHeaderCellDef> Segment ID </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Segment ID </th>
         <td mat-cell *matCellDef="let element"> {{element.segmentId}} </td>
       </ng-container>
     
       <ng-container matColumnDef="vendor">
-        <th mat-header-cell *matHeaderCellDef> Vendor </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Vendor </th>
         <td mat-cell *matCellDef="let element"> {{element.vendor}} </td>
       </ng-container>
     
       <ng-container matColumnDef="crew">
-        <th mat-header-cell *matHeaderCellDef> Crew </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Crew </th>
         <td mat-cell *matCellDef="let element"> {{element.crew}} </td>
       </ng-container>
     
       <ng-container matColumnDef="materialOrder">
-        <th mat-header-cell *matHeaderCellDef> Material Order </th>
-        <td mat-cell *matCellDef="let element"> {{element.materialOrder}} </td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Material Order </th>
+        <td mat-cell *matCellDef="let element"> {{element.materialOrder | date: 'shortDate'}} </td>
       </ng-container>
     
       <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef> Date </th>
-        <td mat-cell *matCellDef="let element"> {{element.date}} </td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Date </th>
+        <td mat-cell *matCellDef="let element"> {{element.date | date: 'shortDate'}} </td>
       </ng-container>
     
       <ng-container matColumnDef="workPackageCreated">
-        <th mat-header-cell *matHeaderCellDef> Work Package Created </th>
-        <td mat-cell *matCellDef="let element"> {{element.workPackageCreated}} </td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Work Package Created </th>
+        <td mat-cell *matCellDef="let element"> {{element.workPackageCreated | date: 'shortDate'}} </td>
       </ng-container>
     
       <ng-container matColumnDef="amount">
-        <th mat-header-cell *matHeaderCellDef> Amount </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Amount </th>
         <td mat-cell *matCellDef="let element"> {{element.amount}} </td>
       </ng-container>
     
       <ng-container matColumnDef="workPackageAmount">
-        <th mat-header-cell *matHeaderCellDef> WP Amount </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> WP Amount </th>
         <td mat-cell *matCellDef="let element"> {{element.workPackageAmount}} </td>
       </ng-container>
     
       <ng-container matColumnDef="originalContinuingCost">
-        <th mat-header-cell *matHeaderCellDef> Orig Cont Cost </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Orig Cont Cost </th>
         <td mat-cell *matCellDef="let element"> {{element.originalContinuingCost}} </td>
       </ng-container>
     
       <ng-container matColumnDef="highCostAnalysis">
-        <th mat-header-cell *matHeaderCellDef> High Cost Analysis </th>
-        <td mat-cell *matCellDef="let element"> {{element.highCostAnalysis}} </td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> High Cost Analysis </th>
+        <td mat-cell *matCellDef="let element"> {{element.highCostAnalysis | date: 'shortDate'}} </td>
       </ng-container>
     
       <ng-container matColumnDef="ntp">
-        <th mat-header-cell *matHeaderCellDef> NTP </th>
-        <td mat-cell *matCellDef="let element"> {{element.ntp}} </td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> NTP </th>
+        <td mat-cell *matCellDef="let element"> {{element.ntp | date: 'shortDate'}} </td>
       </ng-container>
     
       <ng-container matColumnDef="asbuiltSubmitted">
-        <th mat-header-cell *matHeaderCellDef> Asbuilt Submitted </th>
-        <td mat-cell *matCellDef="let element"> {{element.asbuiltSubmitted}} </td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Asbuilt Submitted </th>
+        <td mat-cell *matCellDef="let element"> {{element.asbuiltSubmitted | date: 'shortDate'}} </td>
       </ng-container>
     
       <ng-container matColumnDef="coordinatorCloseout">
-        <th mat-header-cell *matHeaderCellDef> Coordinator Closeout </th>
-        <td mat-cell *matCellDef="let element"> {{element.coordinatorCloseout}} </td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Coordinator Closeout </th>
+        <td mat-cell *matCellDef="let element"> {{element.coordinatorCloseout | date: 'shortDate'}} </td>
       </ng-container>
     
       <ng-container matColumnDef="amendmentVersion">
-        <th mat-header-cell *matHeaderCellDef> Amendment Ver </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Amendment Version </th>
         <td mat-cell *matCellDef="let element"> {{element.amendmentVersion}} </td>
       </ng-container>
     
       <ng-container matColumnDef="amendmentAmount">
-        <th mat-header-cell *matHeaderCellDef> Amendment Amount </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Amendment Amount </th>
         <td mat-cell *matCellDef="let element"> {{element.amendmentAmount}} </td>
       </ng-container>
     
       <ng-container matColumnDef="continuingAmount">
-        <th mat-header-cell *matHeaderCellDef> Continuing Amount </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Continuing Amount </th>
         <td mat-cell *matCellDef="let element"> {{element.continuingAmount}} </td>
       </ng-container>
     
       <ng-container matColumnDef="amendmentReason">
-        <th mat-header-cell *matHeaderCellDef> Reason </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Reason </th>
         <td mat-cell *matCellDef="let element"> {{element.amendmentReason}} </td>
       </ng-container>
     
       <ng-container matColumnDef="adminAudit">
-        <th mat-header-cell *matHeaderCellDef> Admin Audit </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Admin Audit </th>
         <td mat-cell *matCellDef="let element"> {{element.adminAudit}} </td>
       </ng-container>
     
       <ng-container matColumnDef="adminAuditDate">
-        <th mat-header-cell *matHeaderCellDef> Audit Date </th>
-        <td mat-cell *matCellDef="let element"> {{element.adminAuditDate}} </td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Audit Date </th>
+        <td mat-cell *matCellDef="let element"> {{element.adminAuditDate | date: 'shortDate'}} </td>
       </ng-container>
     
       <ng-container matColumnDef="pass">
-        <th mat-header-cell *matHeaderCellDef> Pass/Fail </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Pass/Fail </th>
         <td mat-cell *matCellDef="let element">
           <span [ngClass]="element.pass ? 'pass' : 'fail'">{{ element.pass ? 'Pass' : 'Fail' }}</span>
         </td>
       </ng-container>
     
       <ng-container matColumnDef="passFailReason">
-        <th mat-header-cell *matHeaderCellDef> Reason </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Reason </th>
         <td mat-cell *matCellDef="let element"> {{element.passFailReason}} </td>
       </ng-container>
     
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef> Actions </th>
         <td mat-cell *matCellDef="let element" class="actions-cell">
-          <mat-icon (click)="editMetric(element)" class="edit-icon">edit</mat-icon>
-          <mat-icon (click)="openDeleteConfirmationDialog(element)" class="delete-icon" color="warn">delete</mat-icon>
+          <mat-icon *ngIf="this.user.role === 'PM' || this.user.role === 'CM' || this.user.role === 'Admin'" (click)="editMetric(element)" class="edit-icon">edit</mat-icon>
+          <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialog(element)" class="delete-icon" color="warn">delete</mat-icon>
         </td>
       </ng-container>
     
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
+    <mat-paginator [pageSizeOptions]="[25, 10, 5]" showFirstLastButtons></mat-paginator>
   </div>  
 </div>

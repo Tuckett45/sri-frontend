@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { OspCoordinatorService } from 'src/app/services/osp-coordinator.service';
@@ -6,6 +6,11 @@ import { OspCoordinatorItem } from 'src/app/models/osp-coordinator-item.model';
 import * as Papa from 'papaparse';
 import { OspCoordinatorModalComponent } from '../modals/osp-coordinator-modal/osp-coordinator-modal.component';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { ToastrService } from 'ngx-toastr';
+import { AuthService } from 'src/app/services/auth.service';
+import { User } from 'src/app/models/user.model';
 
 @Component({
   selector: 'app-osp-coordinator-tracker',
@@ -14,21 +19,34 @@ import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-
 })
 export class OspCoordinatorTrackerComponent implements OnInit {
   statCards: any[] = [];
+  user!: User;
   displayedColumns: string[] = ['segmentId','vendor','crew','materialOrder','date','workPackageCreated','amount','workPackageAmount','originalContinuingCost','highCostAnalysis','ntp','asbuiltSubmitted','coordinatorCloseout','amendmentVersion','amendmentAmount','continuingAmount','amendmentReason','adminAudit','adminAuditDate','pass','passFailReason','actions'];
   dataSource = new MatTableDataSource<OspCoordinatorItem>();
 
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
   constructor(
+    public authService: AuthService,
+    private toastr: ToastrService,
     private coordinatorService: OspCoordinatorService,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
-    this.coordinatorService.getStats().subscribe(stats => this.statCards = stats);
+    this.user = this.authService.getUser();
+    this.coordinatorService.getStats().subscribe(stats => 
+      this.statCards = stats
+    );
     this.loadEntries();
   }
 
   loadEntries(): void {
-    this.coordinatorService.getEntries().subscribe(entries => this.dataSource.data = entries);
+    this.coordinatorService.getEntries().subscribe(entries => 
+      this.dataSource.data = entries
+    );
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
   }
 
   openAddEditModal(entry?: OspCoordinatorItem): void {
@@ -40,11 +58,20 @@ export class OspCoordinatorTrackerComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result: OspCoordinatorItem) => {
       if (result) {
         if (entry) {
-          this.coordinatorService.updateEntry(result).subscribe(() => this.loadEntries());
+          this.coordinatorService.updateEntry(result).subscribe(() => {
+            this.toastr.success('OSP Entry updated');
+            this.loadEntries();
+          });
         } else {
-          this.coordinatorService.addEntry(result).subscribe(() => this.loadEntries());
+          this.coordinatorService.addEntry(result).subscribe(() => {
+            this.toastr.success('OSP Entry added');
+            this.loadEntries()
+          });
         }
       }
+    },
+    (error) => {
+      this.toastr.error('Error saving OSP Entry');
     });
   }
 
@@ -56,7 +83,13 @@ export class OspCoordinatorTrackerComponent implements OnInit {
     const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.coordinatorService.deleteEntry(entry.id).subscribe(() => this.loadEntries());
+        this.coordinatorService.deleteEntry(entry.id).subscribe(() => {
+          this.toastr.success('OSP Entry deleted');
+          this.loadEntries()
+      },
+      (error) => {
+        this.toastr.error('Error deleting OSP Entry');
+      });
       }
     });
   }
@@ -66,7 +99,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
   
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.createdBy} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
+      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.originalContinuingCost} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.amendmentAmount} ${data.continuingAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass} ${data.passFailReason}`.toLowerCase();
       return dataStr.includes(transformedFilter);
     };
   

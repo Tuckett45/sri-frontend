@@ -1,7 +1,10 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { ToastrService } from 'ngx-toastr';
+import { v4 as uuidv4 } from 'uuid';
 import { OspCoordinatorItem } from 'src/app/models/osp-coordinator-item.model';
+import { OspCoordinatorService } from 'src/app/services/osp-coordinator.service';
 
 @Component({
   selector: 'app-osp-coordinator-modal',
@@ -16,6 +19,8 @@ export class OspCoordinatorModalComponent {
   adminAuditOptions: number[] = [0,1,2,3,4,5];
   constructor(
     private fb: FormBuilder,
+    private toastr: ToastrService,
+    private ospService: OspCoordinatorService,
     private dialogRef: MatDialogRef<OspCoordinatorModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: OspCoordinatorItem | null
   ) {
@@ -47,7 +52,16 @@ export class OspCoordinatorModalComponent {
 
   save(): void {
     if (this.statForm.valid) {
-      this.dialogRef.close(this.statForm.value);
+      const ospEntry: OspCoordinatorItem = this.statForm.getRawValue();
+      
+      if(ospEntry.id == null){
+        ospEntry.id = uuidv4();
+      }
+      
+      this.dialogRef.close(ospEntry);
+    }
+    else{
+      this.toastr.error('Form is invalid. Check all form fields');
     }
   }
 
