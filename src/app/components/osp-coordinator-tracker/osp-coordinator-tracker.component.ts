@@ -106,7 +106,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
   
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.originalContinuingCost} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.amendmentAmount} ${data.continuingAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass} ${data.passFailReason}`.toLowerCase();
+      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.originalContinuingCost} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.amendmentAmount} ${data.continuingAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass ? 'Pass' : 'Fall'} ${data.passFailReason}`.toLowerCase();
       return dataStr.includes(transformedFilter);
     };
   
