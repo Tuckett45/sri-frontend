@@ -70,6 +70,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { TabsModule } from 'primeng/tabs'
 import { DividerModule } from 'primeng/divider';
 import { MeterGroupModule } from 'primeng/metergroup';
+import { TagModule } from 'primeng/tag';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import 'leaflet-search'
@@ -118,6 +119,7 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     Select,
     FloatLabel,
     DropdownModule,
+    TagModule,
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule, 

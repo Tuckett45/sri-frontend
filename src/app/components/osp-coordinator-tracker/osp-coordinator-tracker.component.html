@@ -124,7 +124,7 @@
       <ng-container matColumnDef="pass">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Pass/Fail </th>
         <td mat-cell *matCellDef="let element">
-          <span [ngClass]="element.pass ? 'pass' : 'fail'">{{ element.pass ? 'Pass' : 'Fail' }}</span>
+          <p-tag [value]="element.pass ? 'Pass' : 'Fail'" [severity]="getSeverity(element.pass)" />
         </td>
       </ng-container>
     
