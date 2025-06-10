@@ -26,6 +26,7 @@ import { MatDialogActions, MatDialogContent, MatDialogModule, MatDialogTitle } f
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatSortModule } from '@angular/material/sort';
 
 import { DialogModule } from 'primeng/dialog';
 import { ImageModule } from 'primeng/image';
@@ -144,6 +145,7 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatSortModule,
     ClientDashboardComponent,
     VendorDashboardComponent,
     SRIDashboardComponent,

@@ -43,11 +43,17 @@ export class OspCoordinatorTrackerComponent implements OnInit {
   }
 
   loadEntries(): void {
-    this.coordinatorService.getEntries().subscribe(entries => 
-      this.dataSource.data = entries
-    );
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+    this.coordinatorService.getEntries().subscribe({
+      next: entries => {
+        this.dataSource = new MatTableDataSource(entries);
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+      },
+      error: err => {
+        this.toastr.error('Failed to load OSP entries');
+        console.error(err);
+      }
+    });
   }
 
   openAddEditModal(entry?: OspCoordinatorItem): void {

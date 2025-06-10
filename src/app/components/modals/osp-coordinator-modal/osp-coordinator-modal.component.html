@@ -141,7 +141,7 @@
 
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: black;">Reason</mat-label>
+          <mat-label style="color: black;">Amendment Reason</mat-label>
           <mat-select formControlName="amendmentReason">
             <mat-option *ngFor="let r of amendmentReasons" [value]="r">{{r}}</mat-option>
           </mat-select>
@@ -176,12 +176,14 @@
         </mat-form-field>
       </mat-grid-tile>
 
-      <mat-grid-tile colspan="6">
+      <mat-grid-tile colspan="6" *ngIf="this.statForm.controls['pass'].value === false">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: black;">Reason</mat-label>
-          <input matInput formControlName="passFailReason" />
+          <mat-label style="color: black;">Failed Reason</mat-label>
+          <mat-select formControlName="amendmentReason">
+            <mat-option *ngFor="let r of failedReasons" [value]="r">{{r}}</mat-option>
+          </mat-select>
         </mat-form-field>
-      </mat-grid-tile>      
+      </mat-grid-tile>
     </mat-grid-list>
   </form>
 </mat-dialog-content>
