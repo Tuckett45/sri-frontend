@@ -1,10 +1,11 @@
-import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, OnDestroy, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -21,9 +22,10 @@ import { PreliminaryPunchListResolvedComponent } from '../preliminary-punch-list
   selector: 'preliminary-punch-list-unresolved',
   templateUrl: './preliminary-punch-list-unresolved.component.html',
   styleUrls: ['./preliminary-punch-list-unresolved.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false
 })
-export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterViewInit {
+export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterViewInit, OnDestroy {
   public unresolvedPreliminaryPunchList$: BehaviorSubject<PreliminaryPunchList[]> = new BehaviorSubject<PreliminaryPunchList[]>([]);
   unresolvedPreliminaryPunchLists: PreliminaryPunchList[] = [];
   isIssueGalleryVisible: boolean = false;
@@ -51,6 +53,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   @Output() unresolvedCountChange = new EventEmitter<number>();
 
   galleryImages: any[] = [];
+  private destroy$ = new Subject<void>();
   
   constructor(
     private dialog: MatDialog,
@@ -63,9 +66,11 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
-    this.punchListService.refresh$.subscribe(() => {
-      this.loadUnresolvedPunchLists(this.user);
-    });
+    this.punchListService.refresh$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadUnresolvedPunchLists(this.user);
+      });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -231,8 +236,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   refreshTable(): void {    
-    const filteredEntries = this.unresolvedPreliminaryPunchList$; 
-    filteredEntries?.subscribe(entries => {
+    const filteredEntries = this.unresolvedPreliminaryPunchList$;
+    filteredEntries?.pipe(take(1)).subscribe(entries => {
       let updatedData = entries;
   
       if (this.user.role === 'PM') {
@@ -281,8 +286,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   
   applyFilters(): void {
     const filteredEntries = this.unresolvedPreliminaryPunchList$;
-  
-    filteredEntries?.subscribe(entries => {
+
+    filteredEntries?.pipe(take(1)).subscribe(entries => {
       let updatedData = entries;
   
       this.selectedFilters.forEach(filter => {
@@ -324,22 +329,31 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         }
       });
   
-      this.filteredData = updatedData;
-      this.dataSource.data = this.filteredData;
-      this.updateUnresolvedCount();
-    });
+    this.filteredData = updatedData;
+    this.dataSource.data = this.filteredData;
+    this.updateUnresolvedCount();
+  });
+ }
+
+  trackByIssue(index: number, issue: any): any {
+    return issue.id || index;
   }
   
   
 
   clearAll() {
     this.selectedFilters = [];
-    const unresolvedEntries = this.unresolvedPreliminaryPunchList$; 
-    unresolvedEntries?.subscribe(entries => {
+    const unresolvedEntries = this.unresolvedPreliminaryPunchList$;
+    unresolvedEntries?.pipe(take(1)).subscribe(entries => {
       let updatedData = entries;
-  
+
       this.dataSource.data = updatedData;
       this.updateUnresolvedCount();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

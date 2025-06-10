@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { IssueArea, PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
@@ -18,6 +18,7 @@ import { DatePipe } from '@angular/common';
   selector: 'app-preliminary-punch-list',
   templateUrl: './preliminary-punch-list.component.html',
   styleUrls: ['./preliminary-punch-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false
 })
 export class PreliminaryPunchListComponent implements OnInit {
@@ -394,5 +395,17 @@ export class PreliminaryPunchListComponent implements OnInit {
       link.download = 'unresolved-preliminary-punch-list.csv';
       link.click();
     }
+  }
+
+  trackByOption(index: number, option: string): string {
+    return option;
+  }
+
+  trackByFilter(index: number, filter: { column: string }): string {
+    return filter.column;
+  }
+
+  trackByValue(index: number, value: string): string {
+    return value;
   }
 }

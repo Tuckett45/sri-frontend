@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, shareReplay } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
 import { local_environment, environment } from '../../environments/environments';
@@ -13,6 +13,8 @@ import { User } from '../models/user.model';
 export class PreliminaryPunchListService {
 
   private refreshSubject = new BehaviorSubject<void>(undefined);
+
+  private entriesCache$?: Observable<PreliminaryPunchList[]>;
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -30,40 +32,59 @@ export class PreliminaryPunchListService {
   }
 
   getEntries(): Observable<PreliminaryPunchList[]> {
-    return this.http.get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions).pipe(
-      map(punchLists => {
-        return punchLists.map(punchList => {
-          punchList.issues.forEach(issueArea => {
-            if (typeof issueArea.category === 'string') {
-              issueArea.category = issueArea.category;
-            }
-          });
-          return punchList;
-        });
-      }),
-      catchError(this.handleError)
-    );
+    if (!this.entriesCache$) {
+      this.entriesCache$ = this.http
+        .get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
+        .pipe(
+          map(punchLists =>
+            punchLists.map(punchList => {
+              punchList.issues.forEach(issueArea => {
+                if (typeof issueArea.category === 'string') {
+                  issueArea.category = issueArea.category;
+                }
+              });
+              return punchList;
+            })
+          ),
+          catchError(this.handleError),
+          shareReplay(1)
+        );
+    }
+
+    return this.entriesCache$;
   }
 
   getUnresolvedPunchLists(user: User): Observable<any> {
     const params = new HttpParams().set('state', user.market);
-    if(user.role === 'PM' && user.market !== 'RG'){
-      return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params });
-    }else if(user.role === 'CM' && user.market !== 'RG'){
-      return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params });
-    }else{
-      return this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`);
+    if (user.role === 'PM' && user.market !== 'RG') {
+      return this.http
+        .get<any>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params })
+        .pipe(shareReplay(1));
+    } else if (user.role === 'CM' && user.market !== 'RG') {
+      return this.http
+        .get<any>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params })
+        .pipe(shareReplay(1));
+    } else {
+      return this.http
+        .get<any>(`${environment.apiUrl}/PunchList/unresolved`)
+        .pipe(shareReplay(1));
     }
   }
 
   getResolvedPunchLists(user: User): Observable<any> {
     const params = new HttpParams().set('state', user.market);
-    if(user.role === 'PM' && user.market !== 'RG'){
-      return this.http.get<any>(`${environment.apiUrl}/PunchList/pm-resolved`, { params });
-    }else if(user.role === 'CM' && user.market !== 'RG'){
-      return this.http.get<any>(`${environment.apiUrl}/PunchList/cm-resolved`, { params });
-    }else{
-      return this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`);
+    if (user.role === 'PM' && user.market !== 'RG') {
+      return this.http
+        .get<any>(`${environment.apiUrl}/PunchList/pm-resolved`, { params })
+        .pipe(shareReplay(1));
+    } else if (user.role === 'CM' && user.market !== 'RG') {
+      return this.http
+        .get<any>(`${environment.apiUrl}/PunchList/cm-resolved`, { params })
+        .pipe(shareReplay(1));
+    } else {
+      return this.http
+        .get<any>(`${environment.apiUrl}/PunchList/resolved`)
+        .pipe(shareReplay(1));
     }
   }
 

@@ -33,13 +33,13 @@
 
   <div class="chip-filter" *ngIf="filtersOpen">
     <div class="grid flex-column lg:flex-row w-full h-full">
-      <div class="col-12 lg:col flex align-items-center flex-nowrap gap-1" *ngFor="let filter of selectedFilters">
-        <p-chip *ngFor="let chip of filter.values" 
-                [label]="formatDate(chip)" 
+      <div class="col-12 lg:col flex align-items-center flex-nowrap gap-1" *ngFor="let filter of selectedFilters; trackBy: trackByFilter">
+        <p-chip *ngFor="let chip of filter.values; trackBy: trackByValue"
+                [label]="formatDate(chip)"
                 [removable]="true"
-                styleClass="mr-3 h-auto lg:h-full px-4 mt-3 lg:mt-0" 
+                styleClass="mr-3 h-auto lg:h-full px-4 mt-3 lg:mt-0"
                 removeIcon="pi pi-times"
-                [style]="{'border-radius':'50px'}" 
+                [style]="{'border-radius':'50px'}"
                 (onRemove)="removeChip({column: filter.column, value: chip})">
         </p-chip>
       </div>
@@ -52,7 +52,7 @@
         <mat-label>Filter by Segment ID</mat-label>
         <mat-select [multiple]="true" [(ngModel)]="this.selectedSegmentIds"
                     (selectionChange)="onFilterChange({ column: 'segmentId', values: selectedSegmentIds })">
-          <mat-option *ngFor="let option of filterOptions.segmentId" [value]="option">{{ option }}</mat-option>
+          <mat-option *ngFor="let option of filterOptions.segmentId; trackBy: trackByOption" [value]="option">{{ option }}</mat-option>
         </mat-select>
       </mat-form-field>
       
@@ -60,7 +60,7 @@
         <mat-label>Filter by Vendor</mat-label>
         <mat-select [multiple]="true" [(ngModel)]="this.selectedVendors"
                     (selectionChange)="onFilterChange({ column: 'vendorName', values: selectedVendors })">
-          <mat-option *ngFor="let option of filterOptions.vendorName" [value]="option">{{ option }}</mat-option>
+          <mat-option *ngFor="let option of filterOptions.vendorName; trackBy: trackByOption" [value]="option">{{ option }}</mat-option>
         </mat-select>
       </mat-form-field>
       
@@ -68,7 +68,7 @@
         <mat-label>Filter by State</mat-label>
         <mat-select [multiple]="true" [(ngModel)]="this.selectedStates"
                     (selectionChange)="onFilterChange({ column: 'state', values: selectedStates })">
-          <mat-option *ngFor="let option of filterOptions.state" [value]="option">{{ option }}</mat-option>
+          <mat-option *ngFor="let option of filterOptions.state; trackBy: trackByOption" [value]="option">{{ option }}</mat-option>
         </mat-select>
       </mat-form-field>      
     </div>
