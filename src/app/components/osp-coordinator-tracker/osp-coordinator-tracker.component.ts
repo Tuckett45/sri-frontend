@@ -6,11 +6,12 @@ import { OspCoordinatorItem } from 'src/app/models/osp-coordinator-item.model';
 import * as Papa from 'papaparse';
 import { OspCoordinatorModalComponent } from '../modals/osp-coordinator-modal/osp-coordinator-modal.component';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { ToastrService } from 'ngx-toastr';
-import { AuthService } from 'src/app/services/auth.service';
-import { User } from 'src/app/models/user.model';
+  import { MatPaginator } from '@angular/material/paginator';
+  import { MatSort } from '@angular/material/sort';
+  import { ToastrService } from 'ngx-toastr';
+  import { AuthService } from 'src/app/services/auth.service';
+  import { User } from 'src/app/models/user.model';
+  import { ParseResult } from 'papaparse';
 
 @Component({
   selector: 'app-osp-coordinator-tracker',
@@ -113,8 +114,40 @@ export class OspCoordinatorTrackerComponent implements OnInit {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        complete: (results) => {
+        complete: (results: ParseResult<any>) => {
           const rows = results.data as any[];
+          const parsedHeaders = results.meta.fields ?? [];
+          const expectedHeaders = [
+            'id',
+            'segmentId',
+            'vendor',
+            'crew',
+            'materialOrder',
+            'date',
+            'workPackageCreated',
+            'amount',
+            'workPackageAmount',
+            'originalContinuingCost',
+            'highCostAnalysis',
+            'ntp',
+            'asbuiltSubmitted',
+            'coordinatorCloseout',
+            'amendmentVersion',
+            'amendmentAmount',
+            'continuingAmount',
+            'amendmentReason',
+            'adminAudit',
+            'adminAuditDate',
+            'pass',
+            'passFailReason'
+          ];
+
+          const missingHeaders = expectedHeaders.filter(h => !parsedHeaders.includes(h));
+          if (missingHeaders.length) {
+            this.toastr.error(`Missing headers: ${missingHeaders.join(', ')}`);
+            return;
+          }
+
           rows.forEach(row => {
             const entry: OspCoordinatorItem = {
               id: row['id'] || '',
