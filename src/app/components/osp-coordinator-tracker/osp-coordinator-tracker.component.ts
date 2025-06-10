@@ -186,4 +186,8 @@ export class OspCoordinatorTrackerComponent implements OnInit {
       });
     }
   }
+
+  getSeverity(pass: boolean): string {
+    return pass ? 'success' : 'danger';
+  }
 }
