@@ -73,10 +73,23 @@ import { MeterGroupModule } from 'primeng/metergroup';
 import { TagModule } from 'primeng/tag';
 import { MatNativeDateModule } from '@angular/material/core';
 
+import { NgxCurrencyDirective } from "ngx-currency";
+import { provideEnvironmentNgxCurrency, NgxCurrencyInputMode } from 'ngx-currency';
 import 'leaflet-search'
 import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashboard/sri-dashboard.component';
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
 
+export const customCurrencyMaskConfig = {
+  align: "right",
+  allowNegative: true,
+  allowZero: true,
+  decimal: ",",
+  precision: 2,
+  prefix: "R$ ",
+  suffix: "",
+  thousands: ".",
+  nullable: true
+};
 
 @NgModule({
   declarations: [
@@ -103,6 +116,7 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     OspCoordinatorTrackerComponent
   ],
   imports: [
+    NgxCurrencyDirective,
     BrowserModule,
     BrowserAnimationsModule,
     ToastrModule.forRoot({
@@ -157,7 +171,21 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     DividerModule,
     ChartComponent
   ],
-  providers: [provideCharts(withDefaultRegisterables()), NgxImageCompressService],
+  providers: [provideCharts(withDefaultRegisterables()),
+    provideEnvironmentNgxCurrency({
+      align: "right",
+      allowNegative: true,
+      allowZero: true,
+      decimal: ",",
+      precision: 2,
+      prefix: "R$ ",
+      suffix: "",
+      thousands: ".",
+      nullable: true,
+      min: null,
+      max: null,
+      inputMode: NgxCurrencyInputMode.Financial,
+    }), NgxImageCompressService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

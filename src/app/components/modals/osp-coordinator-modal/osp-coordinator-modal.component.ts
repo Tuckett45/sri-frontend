@@ -13,6 +13,7 @@ import { OspCoordinatorService } from 'src/app/services/osp-coordinator.service'
 })
 export class OspCoordinatorModalComponent {
   statForm: FormGroup;
+  crews: number[] = [1,2,3,4,5,6,7,8,9,10];
   vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
   amendmentVersions: number[] = [1,2,3,4,5,6,7,8,9,10];
   amendmentReasons: string[] = ['Version Error','Final True Up to Conlog','Engineered Units differ from Field','City Change Request/Need', 'Date Change', 'PO Change', 'Other'];
@@ -61,19 +62,19 @@ export class OspCoordinatorModalComponent {
       workPackageCreated: [data?.workPackageCreated || '', Validators.required],
       amount: [data?.amount, Validators.required],
       workPackageAmount: [data?.workPackageAmount, Validators.required],
-      originalContinuingCost: [data?.originalContinuingCost, Validators.required],
+      workPackageContingency: [data?.workPackageContingency, Validators.required],
       highCostAnalysis: [data?.highCostAnalysis || '', Validators.required],
       ntp: [data?.ntp || '', Validators.required],
       asbuiltSubmitted: [data?.asbuiltSubmitted || '', Validators.required],
       coordinatorCloseout: [data?.coordinatorCloseout || '', Validators.required],
       amendmentVersion: [data?.amendmentVersion, Validators.required],
-      amendmentAmount: [data?.amendmentAmount, Validators.required],
-      continuingAmount: [data?.continuingAmount, Validators.required],
+      newWPLaborAmount: [data?.newWPLaborAmount, Validators.required],
+      contingencyAmount: [data?.contingencyAmount, Validators.required],
       amendmentReason: [data?.amendmentReason || '', Validators.required],
       adminAudit: [data?.adminAudit, Validators.required],
       adminAuditDate: [data?.adminAuditDate || '', Validators.required],
       pass: [data?.pass ?? true, Validators.required],
-      passFailReason: [Array.isArray(data?.passFailReason) ? data?.passFailReason : (data?.passFailReason ? [data.passFailReason] : [])]
+      passFailReason: [Array.isArray(data?.passFailReason) ? data?.passFailReason : (data?.passFailReason ? data?.passFailReason.split(',').map(q => q.trim()) : [])]
     });
   }
 
@@ -83,6 +84,7 @@ export class OspCoordinatorModalComponent {
       
       if(ospEntry.id == null){
         ospEntry.id = uuidv4();
+        ospEntry.date = new Date().toISOString();
       }
       
       this.dialogRef.close(ospEntry);

@@ -40,6 +40,7 @@
     "leaflet.markercluster": "^1.5.3",
     "leaflet.pinsearch": "^1.0.5",
     "ng2-charts": "^6.0.1",
+    "ngx-currency": "^18.0.0",
     "ngx-image-compress": "^18.1.5",
     "ngx-toastr": "^19.0.0",
     "papaparse": "^5.5.2",

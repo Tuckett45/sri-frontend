@@ -22,7 +22,7 @@ import { ParseResult } from 'papaparse';
 export class OspCoordinatorTrackerComponent implements OnInit {
   statCards: any[] = [];
   user!: User;
-  displayedColumns: string[] = ['segmentId','vendor','crew','materialOrder','date','workPackageCreated','amount','workPackageAmount','originalContinuingCost','highCostAnalysis','ntp','asbuiltSubmitted','coordinatorCloseout','amendmentVersion','amendmentAmount','continuingAmount','amendmentReason','adminAudit','adminAuditDate','pass','passFailReason','actions'];
+  displayedColumns: string[] = ['segmentId','vendor','crew','materialOrder','workPackageCreated','amount','workPackageAmount','workPackageContingency','highCostAnalysis','ntp','asbuiltSubmitted','coordinatorCloseout','amendmentVersion','newWPLaborAmount','contingencyAmount','amendmentReason','adminAudit','adminAuditDate','pass','passFailReason','actions'];
   dataSource = new MatTableDataSource<OspCoordinatorItem>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -107,7 +107,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
   
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.originalContinuingCost} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.amendmentAmount} ${data.continuingAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass ? 'Pass' : 'Fall'} ${(data.passFailReason || []).join(' ')}`.toLowerCase();
+      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.workPackageContingency} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.newWPLaborAmount} ${data.contingencyAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass ? 'Pass' : 'Fall'} ${(data.passFailReason || []).join(' ')}`.toLowerCase();
       return dataStr.includes(transformedFilter);
     };
   
@@ -130,18 +130,17 @@ export class OspCoordinatorTrackerComponent implements OnInit {
             'vendor',
             'crew',
             'materialOrder',
-            'date',
             'workPackageCreated',
             'amount',
             'workPackageAmount',
-            'originalContinuingCost',
+            'workPackageContingency',
             'highCostAnalysis',
             'ntp',
             'asbuiltSubmitted',
             'coordinatorCloseout',
             'amendmentVersion',
-            'amendmentAmount',
-            'continuingAmount',
+            'newWPLaborAmount',
+            'contingencyAmount',
             'amendmentReason',
             'adminAudit',
             'adminAuditDate',
@@ -162,18 +161,17 @@ export class OspCoordinatorTrackerComponent implements OnInit {
               vendor: row['vendor'] || '',
               crew: row['crew'] || '',
               materialOrder: row['materialOrder'] || '',
-              date: row['date'] || '',
               workPackageCreated: row['workPackageCreated'] || '',
               amount: row['amount'] ? Number(row['amount']) : undefined,
               workPackageAmount: row['workPackageAmount'] ? Number(row['workPackageAmount']) : undefined,
-              originalContinuingCost: row['originalContinuingCost'] ? Number(row['originalContinuingCost']) : undefined,
+              workPackageContingency: row['workPackageContingency'] ? Number(row['workPackageContingency']) : undefined,
               highCostAnalysis: row['highCostAnalysis'] || '',
               ntp: row['ntp'] || '',
               asbuiltSubmitted: row['asbuiltSubmitted'] || '',
               coordinatorCloseout: row['coordinatorCloseout'] || '',
               amendmentVersion: row['amendmentVersion'] ? Number(row['amendmentVersion']) : undefined,
-              amendmentAmount: row['amendmentAmount'] ? Number(row['amendmentAmount']) : undefined,
-              continuingAmount: row['continuingAmount'] ? Number(row['continuingAmount']) : undefined,
+              newWPLaborAmount: row['newWPLaborAmount'] ? Number(row['newWPLaborAmount']) : undefined,
+              contingencyAmount: row['contingencyAmount'] ? Number(row['contingencyAmount']) : undefined,
               amendmentReason: row['amendmentReason'] || '',
               adminAudit: row['adminAudit'] ? Number(row['adminAudit']) : undefined,
               adminAuditDate: row['adminAuditDate'] || '',
