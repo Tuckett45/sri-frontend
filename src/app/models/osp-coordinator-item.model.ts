@@ -2,7 +2,7 @@ export interface OspCoordinatorItem {
   id: string;
   segmentId: string;
   vendor: string;
-  crew: string;
+  crew: number;
   materialOrder?: string;
   date?: string;
   workPackageCreated?: string;

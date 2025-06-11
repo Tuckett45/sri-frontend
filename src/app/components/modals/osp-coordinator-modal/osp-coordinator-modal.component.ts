@@ -86,6 +86,10 @@ export class OspCoordinatorModalComponent {
         ospEntry.id = uuidv4();
         ospEntry.date = new Date().toISOString();
       }
+
+      if (Array.isArray(ospEntry.passFailReason)) {
+        ospEntry.passFailReason = ospEntry.passFailReason.join(', ');
+      }
       
       this.dialogRef.close(ospEntry);
     }
