@@ -12,7 +12,6 @@ import { ToastrService } from 'ngx-toastr';
 import { AuthService } from 'src/app/services/auth.service';
 import { User } from 'src/app/models/user.model';
 import { ParseResult } from 'papaparse';
-import { BaseStyle } from 'primeng/base';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
