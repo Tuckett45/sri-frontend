@@ -20,5 +20,5 @@ export interface OspCoordinatorItem {
   adminAudit?: number;
   adminAuditDate?: string;
   pass?: boolean;
-  passFailReason?: string;
+  passFailReason?: string[];
 }

@@ -73,7 +73,7 @@ export class OspCoordinatorModalComponent {
       adminAudit: [data?.adminAudit, Validators.required],
       adminAuditDate: [data?.adminAuditDate || '', Validators.required],
       pass: [data?.pass ?? true, Validators.required],
-      passFailReason: [data?.passFailReason || '']
+      passFailReason: [Array.isArray(data?.passFailReason) ? data?.passFailReason : (data?.passFailReason ? [data.passFailReason] : [])]
     });
   }
 
