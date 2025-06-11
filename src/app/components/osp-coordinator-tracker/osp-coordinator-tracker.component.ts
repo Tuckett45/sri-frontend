@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { OspCoordinatorService } from 'src/app/services/osp-coordinator.service';
@@ -6,14 +6,16 @@ import { OspCoordinatorItem } from 'src/app/models/osp-coordinator-item.model';
 import * as Papa from 'papaparse';
 import { OspCoordinatorModalComponent } from '../modals/osp-coordinator-modal/osp-coordinator-modal.component';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
-  import { MatPaginator } from '@angular/material/paginator';
-  import { MatSort } from '@angular/material/sort';
-  import { ToastrService } from 'ngx-toastr';
-  import { AuthService } from 'src/app/services/auth.service';
-  import { User } from 'src/app/models/user.model';
-  import { ParseResult } from 'papaparse';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { ToastrService } from 'ngx-toastr';
+import { AuthService } from 'src/app/services/auth.service';
+import { User } from 'src/app/models/user.model';
+import { ParseResult } from 'papaparse';
+import { BaseStyle } from 'primeng/base';
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'app-osp-coordinator-tracker',
   templateUrl: './osp-coordinator-tracker.component.html',
   styleUrls: ['./osp-coordinator-tracker.component.scss']
@@ -187,7 +189,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
     }
   }
 
-  getSeverity(pass: boolean): string {
+  getSeverity(pass: boolean): 'success' | 'danger' {
     return pass ? 'success' : 'danger';
   }
 }

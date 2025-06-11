@@ -14,7 +14,7 @@ import { OspCoordinatorService } from 'src/app/services/osp-coordinator.service'
 export class OspCoordinatorModalComponent {
   statForm: FormGroup;
   vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
-  amendmentVersions: number[] = [0,1,2,3,4,5];
+  amendmentVersions: number[] = [1,2,3,4,5,6,7,8,9,10];
   amendmentReasons: string[] = ['Version Error','Final True Up to Conlog','Engineered Units differ from Field','City Change Request/Need', 'Date Change', 'PO Change', 'Other'];
   failedReasons: string[] = [
     'No Splicing Schematic',
@@ -43,7 +43,7 @@ export class OspCoordinatorModalComponent {
     'WP Dates do not Match Conlog and SLCW.  EXECUTED WP PO Value do not match',
     'No Final Certificate of Completion'
     ]
-  adminAuditOptions: number[] = [0,1,2,3,4,5];
+  adminAuditOptions: number[] = [1,2,3,4,5,6,7,8,9,10];
   constructor(
     private fb: FormBuilder,
     private toastr: ToastrService,

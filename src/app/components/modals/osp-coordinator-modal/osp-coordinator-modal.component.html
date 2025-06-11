@@ -42,11 +42,9 @@
 
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: black;">Date</mat-label>
-          <input matInput [matDatepicker]="datePicker" formControlName="date" />
-          <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
-          <mat-datepicker #datePicker></mat-datepicker>
-        </mat-form-field>
+          <mat-label style="color: black;">Material Order Amount</mat-label>
+          <input matInput type="number" formControlName="amount" />
+        </mat-form-field>  
       </mat-grid-tile>
 
       <mat-grid-tile colspan="6">
@@ -60,22 +58,14 @@
 
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: black;">Amount</mat-label>
-          <input matInput type="number" formControlName="amount" />
-        </mat-form-field>
-  
-      </mat-grid-tile>
-
-      <mat-grid-tile colspan="6">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: black;">Work Package Amount</mat-label>
+          <mat-label style="color: black;">Work Package Labor Cost</mat-label>
           <input matInput type="number" formControlName="workPackageAmount" />
         </mat-form-field>
       </mat-grid-tile>
 
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: black;">Original Continuing Cost</mat-label>
+          <mat-label style="color: black;">Work Package Contingency</mat-label>
           <input matInput type="number" formControlName="originalContinuingCost" />
         </mat-form-field>
       </mat-grid-tile>
@@ -127,14 +117,14 @@
 
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: black;">Amendment Amount</mat-label>
+          <mat-label style="color: black;">New WP Labor Amount</mat-label>
           <input matInput type="number" formControlName="amendmentAmount" />
         </mat-form-field>
       </mat-grid-tile>
 
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label style="color: black;">Continuing Amount</mat-label>
+          <mat-label style="color: black;">Contingency Amount</mat-label>
           <input matInput type="number" formControlName="continuingAmount" />
         </mat-form-field>
       </mat-grid-tile>
