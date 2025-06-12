@@ -1,0 +1,106 @@
+::ng-deep .mat-mdc-dialog-surface {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 175%;
+  height: 100%;
+  position: relative;
+  overflow-y: auto;
+  outline: 0;
+  transform: scale(0.8);
+  transition: transform var(--mat-dialog-transition-duration, 0ms) cubic-bezier(0, 0, 0.2, 1);
+  max-height: inherit;
+  min-height: inherit;
+  min-width: inherit;
+  box-shadow: var(--mat-dialog-container-elevation-shadow, 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12));
+  border-radius: var(--mdc-dialog-container-shape, var(--mat-app-corner-extra-large, 4px));
+  background-color: var(--mdc-dialog-container-color, var(--mat-app-surface, white));
+}
+
+.modal-body {
+  background-color: #fff;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  color: #000;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Layout the form as a responsive grid */
+.modal-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+/* Ensure mat-form-field takes the full width of its grid cell */
+mat-form-field {
+  width: 100%;
+}
+
+/* Make input text color consistently black */
+::ng-deep .mat-mdc-input-element,
+::ng-deep .mat-mdc-select,
+::ng-deep .mat-mdc-select .mdc-label,
+::ng-deep .mat-mdc-icon-button svg {
+  color: #000000 !important;
+}
+
+.modal-header {
+  background-color: #144f80;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .modal-title {
+    font-size: 1.5rem;
+    color: #fff;
+  }
+
+  button {
+    color: #fff;
+
+    &:hover {
+      color: #000;
+    }
+  }
+}
+
+.modal-footer {
+  background-color: #144f80;
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 25px;
+
+  .save-btn,
+  .cancel-btn {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #fff;
+  }
+
+  .save-btn {
+    background-color: #e18a25;
+    margin-right: 15px;
+
+    &:hover {
+      background-color: #b86404;
+    }
+    &:disabled {
+      background-color: #88827a;
+    }
+  }
+
+  .cancel-btn {
+    background-color: #f44336;
+
+    &:hover {
+      background-color: #e53935;
+    }
+  }
+}

@@ -1,0 +1,186 @@
+<div mat-dialog-title class="modal-header">
+  <h3 class="modal-title">{{ data ? 'Edit Entry' : 'Add Entry' }}</h3>
+  <button mat-icon-button (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="modal-body">
+  <form [formGroup]="statForm" class="modal-form">
+    <mat-grid-list cols="12" rowHeight="115px" gutterSize="2px">
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Segment ID</mat-label>
+          <input matInput formControlName="segmentId" />
+        </mat-form-field>
+      </mat-grid-tile>
+  
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Vendor</mat-label>
+          <mat-select formControlName="vendor">
+            <mat-option *ngFor="let vendor of vendors" [value]="vendor">{{vendor}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Crew</mat-label>
+          <mat-select formControlName="crew">
+            <mat-option *ngFor="let crew of crews" [value]="crew">{{crew}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Material Order</mat-label>
+          <input matInput [matDatepicker]="matOrder" formControlName="materialOrder" />
+          <mat-datepicker-toggle matSuffix [for]="matOrder"></mat-datepicker-toggle>
+          <mat-datepicker #matOrder style="color: black;"></mat-datepicker>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Material Order Amount</mat-label>
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }"  formControlName="amount" />
+        </mat-form-field>  
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Work Package Created</mat-label>
+          <input matInput [matDatepicker]="wpCreated" formControlName="workPackageCreated" />
+          <mat-datepicker-toggle matSuffix [for]="wpCreated"></mat-datepicker-toggle>
+          <mat-datepicker #wpCreated></mat-datepicker>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Work Package Labor Cost</mat-label>
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }" formControlName="workPackageAmount" />
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Work Package Contingency</mat-label>
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }" formControlName="workPackageContingency" />
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">High Cost Analysis</mat-label>
+          <input matInput [matDatepicker]="hcAnalysis" formControlName="highCostAnalysis" />
+          <mat-datepicker-toggle matSuffix [for]="hcAnalysis"></mat-datepicker-toggle>
+          <mat-datepicker #hcAnalysis></mat-datepicker>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">NTP</mat-label>
+          <input matInput [matDatepicker]="ntp" formControlName="ntp" />
+          <mat-datepicker-toggle matSuffix [for]="ntp"></mat-datepicker-toggle>
+          <mat-datepicker #ntp></mat-datepicker>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Asbuilt Submitted</mat-label>
+          <input matInput [matDatepicker]="asbuilt" formControlName="asbuiltSubmitted" />
+          <mat-datepicker-toggle matSuffix [for]="asbuilt"></mat-datepicker-toggle>
+          <mat-datepicker #asbuilt></mat-datepicker>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Coordinator Closeout</mat-label>
+          <input matInput [matDatepicker]="coClose" formControlName="coordinatorCloseout" />
+          <mat-datepicker-toggle matSuffix [for]="coClose"></mat-datepicker-toggle>
+          <mat-datepicker #coClose></mat-datepicker>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Amendment Version</mat-label>
+          <mat-select formControlName="amendmentVersion">
+            <mat-option *ngFor="let ver of amendmentVersions" [value]="ver">{{ver}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">New WP Labor Amount</mat-label>
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }" formControlName="newWPLaborAmount" />
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Contingency Amount</mat-label>
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }" formControlName="contingencyAmount" />
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Amendment Reason</mat-label>
+          <mat-select formControlName="amendmentReason">
+            <mat-option *ngFor="let r of amendmentReasons" [value]="r">{{r}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Admin Audit</mat-label>
+          <mat-select formControlName="adminAudit">
+            <mat-option *ngFor="let a of adminAuditOptions" [value]="a">{{a}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Audit Date</mat-label>
+          <input matInput [matDatepicker]="adDate" formControlName="adminAuditDate" />
+          <mat-datepicker-toggle matSuffix [for]="adDate"></mat-datepicker-toggle>
+          <mat-datepicker #adDate></mat-datepicker>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Pass / Fail</mat-label>
+          <mat-select formControlName="pass">
+            <mat-option [value]="true">Pass</mat-option>
+            <mat-option [value]="false">Fail</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6" *ngIf="this.statForm.controls['pass'].value === false">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">Failed Reason</mat-label>
+          <mat-select formControlName="passFailReason" multiple>
+            <mat-option *ngFor="let r of failedReasons" [value]="r">{{r}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+    </mat-grid-list>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions class="modal-footer">
+  <button mat-raised-button class="cancel-btn" (click)="close()">Cancel</button>
+  <button mat-raised-button class="save-btn" (click)="save()" [disabled]="statForm.invalid">Save</button>
+</mat-dialog-actions>

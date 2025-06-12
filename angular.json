@@ -105,7 +105,7 @@
               "@angular/material/prebuilt-themes/cyan-orange.css",
               "src/styles.scss",
               "node_modules/leaflet/dist/leaflet.css",
-              "node_modules/leaflet-search/dist/leaflet-search.css"
+              "node_modules/leaflet-search/dist/leaflet-search.min.css"
             ],
             "scripts": [
               "node_modules/leaflet/dist/leaflet.js"

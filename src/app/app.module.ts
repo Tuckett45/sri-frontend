@@ -26,6 +26,7 @@ import { MatDialogActions, MatDialogContent, MatDialogModule, MatDialogTitle } f
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatSortModule } from '@angular/material/sort';
 
 import { DialogModule } from 'primeng/dialog';
 import { ImageModule } from 'primeng/image';
@@ -54,9 +55,11 @@ import { StreetSheetModalComponent } from './components/modals/street-sheet-moda
 import { StreetSheetComponent } from './components/street-sheet/street-sheet.component';
 import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { OspCoordinatorModalComponent } from './components/modals/osp-coordinator-modal/osp-coordinator-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
 import { GoalsComponent } from './components/overview/goals/goals.component';
-import { VendorDashboardComponent } from './components/overview/dashboard/vendor-dashboard/vendor-dashboard.component'
+import { VendorDashboardComponent } from './components/overview/dashboard/vendor-dashboard/vendor-dashboard.component';
+import { OspCoordinatorTrackerComponent } from './components/osp-coordinator-tracker/osp-coordinator-tracker.component';
 
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
@@ -67,12 +70,26 @@ import { DropdownModule } from 'primeng/dropdown';
 import { TabsModule } from 'primeng/tabs'
 import { DividerModule } from 'primeng/divider';
 import { MeterGroupModule } from 'primeng/metergroup';
+import { TagModule } from 'primeng/tag';
 import { MatNativeDateModule } from '@angular/material/core';
 
+import { NgxCurrencyDirective } from "ngx-currency";
+import { provideEnvironmentNgxCurrency, NgxCurrencyInputMode } from 'ngx-currency';
 import 'leaflet-search'
 import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashboard/sri-dashboard.component';
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
 
+export const customCurrencyMaskConfig = {
+  align: "right",
+  allowNegative: true,
+  allowZero: true,
+  decimal: ",",
+  precision: 2,
+  prefix: "R$ ",
+  suffix: "",
+  thousands: ".",
+  nullable: true
+};
 
 @NgModule({
   declarations: [
@@ -94,9 +111,12 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     TableComponent,
     UserProfileComponent,
     UserProfileModalComponent,
-    WidgetComponent    
+    OspCoordinatorModalComponent,
+    WidgetComponent,
+    OspCoordinatorTrackerComponent
   ],
   imports: [
+    NgxCurrencyDirective,
     BrowserModule,
     BrowserAnimationsModule,
     ToastrModule.forRoot({
@@ -113,6 +133,7 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     Select,
     FloatLabel,
     DropdownModule,
+    TagModule,
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule, 
@@ -140,6 +161,7 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatSortModule,
     ClientDashboardComponent,
     VendorDashboardComponent,
     SRIDashboardComponent,
@@ -149,7 +171,21 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
     DividerModule,
     ChartComponent
   ],
-  providers: [provideCharts(withDefaultRegisterables()), NgxImageCompressService],
+  providers: [provideCharts(withDefaultRegisterables()),
+    provideEnvironmentNgxCurrency({
+      align: "right",
+      allowNegative: true,
+      allowZero: true,
+      decimal: ",",
+      precision: 2,
+      prefix: "R$ ",
+      suffix: "",
+      thousands: ".",
+      nullable: true,
+      min: null,
+      max: null,
+      inputMode: NgxCurrencyInputMode.Financial,
+    }), NgxImageCompressService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,0 +1,146 @@
+<div class="osp-coordinator-page surface-card shadow-4 p-3 border-round">
+  <div class="header-section">
+    <h2>OSP Coordinator</h2>
+  </div>
+
+  <div class="header-actions">
+    <input type="file" accept=".csv" #csvInput (change)="importFromCSV($event)" style="display:none" />
+    <button mat-raised-button class="action-btn" (click)="csvInput.click()">Import CSV</button>
+    <button mat-raised-button class="action-btn" (click)="openAddEditModal()">Add Entry</button>
+  </div>
+
+  <div class="filter-section">
+    <div class="search-bar">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Search</mat-label>
+        <input matInput (keyup)="searchFilter($event)" placeholder="Search by Segment ID, Address, City, State">
+        <button mat-icon-button matSuffix>
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>   
+  </div>
+
+  <div class="stats">
+    <app-widget *ngFor="let card of statCards" [title]="card.description" [data]="card.value"></app-widget>
+  </div>
+
+  <div class="table-wrapper">
+    <table mat-table matSort [dataSource]="dataSource" class="mat-elevation-z8">
+      <ng-container matColumnDef="segmentId">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Segment ID </th>
+        <td mat-cell *matCellDef="let element"> {{element.segmentId}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="vendor">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Vendor </th>
+        <td mat-cell *matCellDef="let element"> {{element.vendor}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="crew">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Crew </th>
+        <td mat-cell *matCellDef="let element"> {{element.crew}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="materialOrder">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Material Order </th>
+        <td mat-cell *matCellDef="let element"> {{element.materialOrder | date: 'shortDate'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="workPackageCreated">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Work Package Created </th>
+        <td mat-cell *matCellDef="let element"> {{element.workPackageCreated | date: 'shortDate'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="amount">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Amount </th>
+        <td mat-cell *matCellDef="let element"> {{element.amount | currency:'USD':'symbol':'1.2-2'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="workPackageAmount">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> WP Amount </th>
+        <td mat-cell *matCellDef="let element"> {{element.workPackageAmount | currency:'USD':'symbol':'1.2-2'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="workPackageContingency">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> WP Contingency </th>
+        <td mat-cell *matCellDef="let element"> {{element.workPackageContingency | currency:'USD':'symbol':'1.2-2'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="highCostAnalysis">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> High Cost Analysis </th>
+        <td mat-cell *matCellDef="let element"> {{element.highCostAnalysis | date: 'shortDate'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="ntp">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> NTP </th>
+        <td mat-cell *matCellDef="let element"> {{element.ntp | date: 'shortDate'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="asbuiltSubmitted">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Asbuilt Submitted </th>
+        <td mat-cell *matCellDef="let element"> {{element.asbuiltSubmitted | date: 'shortDate'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="coordinatorCloseout">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Coordinator Closeout </th>
+        <td mat-cell *matCellDef="let element"> {{element.coordinatorCloseout | date: 'shortDate'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="amendmentVersion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Amendment Version </th>
+        <td mat-cell *matCellDef="let element"> {{element.amendmentVersion}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="newWPLaborAmount">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> WP Labor Amount </th>
+        <td mat-cell *matCellDef="let element"> {{element.newWPLaborAmount | currency:'USD':'symbol':'1.2-2'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="contingencyAmount">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Contingency Amount </th>
+        <td mat-cell *matCellDef="let element"> {{element.contingencyAmount | currency:'USD':'symbol':'1.2-2'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="amendmentReason">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Amendment Reason </th>
+        <td mat-cell *matCellDef="let element"> {{element.amendmentReason}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="adminAudit">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Admin Audit </th>
+        <td mat-cell *matCellDef="let element"> {{element.adminAudit}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="adminAuditDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Audit Date </th>
+        <td mat-cell *matCellDef="let element"> {{element.adminAuditDate | date: 'shortDate'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="pass">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Pass/Fail </th>
+        <td mat-cell *matCellDef="let element">
+          <p-tag [value]="element.pass ? 'Pass' : 'Fail'" [severity]="getSeverity(element.pass)" />
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="passFailReason">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Pass/Fail Reason </th>
+        <td mat-cell *matCellDef="let element"> {{element.passFailReason}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef> Actions </th>
+        <td mat-cell *matCellDef="let element" class="actions-cell">
+          <mat-icon *ngIf="this.user.role === 'PM' || this.user.role === 'CM' || this.user.role === 'Admin'" (click)="editMetric(element)" class="edit-icon">edit</mat-icon>
+          <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialog(element)" class="delete-icon" color="warn">delete</mat-icon>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[25, 10, 5]" showFirstLastButtons></mat-paginator>
+  </div>
+</div>
