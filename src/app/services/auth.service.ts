@@ -79,6 +79,10 @@ export class AuthService {
       return this.userRole.getValue() === 'CM';
   }
 
+  isCoordinator() {
+    return this.userRole.getValue() === 'OSP Coordinator';
+}
+
   isAdmin() {
     return this.userRole.getValue() === 'Admin';
 }

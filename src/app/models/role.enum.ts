@@ -3,5 +3,6 @@ export enum UserRole {
     PM = 'PM',
     Client = 'Client',
     Admin = 'Admin',
-    Temp = 'Temp'
+    Temp = 'Temp',
+    OSPCoordinator = 'OSP Coordinator'
 }

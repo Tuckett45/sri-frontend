@@ -132,8 +132,8 @@
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef> Actions </th>
         <td mat-cell *matCellDef="let element" class="actions-cell">
-          <mat-icon *ngIf="this.user.role === 'PM' || this.user.role === 'CM' || this.user.role === 'Admin'" (click)="editMetric(element)" class="edit-icon">edit</mat-icon>
-          <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialog(element)" class="delete-icon" color="warn">delete</mat-icon>
+          <mat-icon (click)="editMetric(element)" class="edit-icon">edit</mat-icon>
+          <mat-icon (click)="openDeleteConfirmationDialog(element)" class="delete-icon" color="warn">delete</mat-icon>
         </td>
       </ng-container>
 
