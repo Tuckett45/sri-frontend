@@ -63,7 +63,7 @@ export class RegisterModalComponent {
   onSubmit(): void {
     const formValues = this.registerForm.value;
 
-    if (formValues.role == 'CM') {
+    if (formValues.role == 'CM' || formValues.role == 'OSP Coordinator') {
       formValues.company = 'SRI';
     }else if(formValues.role == 'Client'){
       formValues.company = 'Google'; 
