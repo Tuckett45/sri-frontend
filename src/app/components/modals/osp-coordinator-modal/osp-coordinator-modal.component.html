@@ -45,7 +45,7 @@
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label style="color: black;">Material Order Amount</mat-label>
-          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }"  formControlName="amount" />
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }"  formControlName="amount" />
         </mat-form-field>  
       </mat-grid-tile>
 
@@ -61,14 +61,14 @@
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label style="color: black;">Work Package Labor Cost</mat-label>
-          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }" formControlName="workPackageAmount" />
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }" formControlName="workPackageAmount" />
         </mat-form-field>
       </mat-grid-tile>
 
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label style="color: black;">Work Package Contingency</mat-label>
-          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }" formControlName="workPackageContingency" />
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }" formControlName="workPackageContingency" />
         </mat-form-field>
       </mat-grid-tile>
 
@@ -120,14 +120,14 @@
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label style="color: black;">New WP Labor Amount</mat-label>
-          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }" formControlName="newWPLaborAmount" />
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }" formControlName="newWPLaborAmount" />
         </mat-form-field>
       </mat-grid-tile>
 
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label style="color: black;">Contingency Amount</mat-label>
-          <input matInput [currencyMask]="{ prefix: '$ ', thousands: '.', decimal: '.', align: 'left' }" formControlName="contingencyAmount" />
+          <input matInput [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }" formControlName="contingencyAmount" />
         </mat-form-field>
       </mat-grid-tile>
 

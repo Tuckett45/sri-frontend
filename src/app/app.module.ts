@@ -80,14 +80,14 @@ import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashb
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
 
 export const customCurrencyMaskConfig = {
-  align: "right",
+  align: "left",
   allowNegative: true,
   allowZero: true,
   decimal: ",",
   precision: 2,
-  prefix: "R$ ",
+  prefix: "$",
   suffix: "",
-  thousands: ".",
+  thousands: ",",
   nullable: true
 };
 
