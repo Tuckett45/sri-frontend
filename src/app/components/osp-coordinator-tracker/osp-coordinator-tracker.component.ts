@@ -22,7 +22,7 @@ import { ParseResult } from 'papaparse';
 export class OspCoordinatorTrackerComponent implements OnInit {
   statCards: any[] = [];
   user!: User;
-  displayedColumns: string[] = ['segmentId','vendor','crew','materialOrder','workPackageCreated','amount','workPackageAmount','workPackageContingency','highCostAnalysis','ntp','asbuiltSubmitted','coordinatorCloseout','amendmentVersion','newWPLaborAmount','contingencyAmount','amendmentReason','adminAudit','adminAuditDate','pass','passFailReason','actions'];
+  displayedColumns: string[] = ['segmentId','vendor','crew', 'ospType', 'materialOrder','workPackageCreated','amount','workPackageAmount','workPackageContingency','highCostAnalysis','ntp','asbuiltSubmitted','coordinatorCloseout','amendmentVersion','newWPLaborAmount','contingencyAmount','amendmentReason','adminAudit','adminAuditDate','pass','passFailReason','actions'];
   dataSource = new MatTableDataSource<OspCoordinatorItem>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -107,7 +107,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
   
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.workPackageContingency} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.newWPLaborAmount} ${data.contingencyAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass ? 'Pass' : 'Fall'} ${(data.passFailReason || []).join(' ')}`.toLowerCase();
+      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.ospType} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.workPackageContingency} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.newWPLaborAmount} ${data.contingencyAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass ? 'Pass' : 'Fall'} ${(data.passFailReason || []).join(' ')}`.toLowerCase();
       return dataStr.includes(transformedFilter);
     };
   
@@ -129,6 +129,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
             'segmentId',
             'vendor',
             'crew',
+            'ospType',
             'materialOrder',
             'workPackageCreated',
             'amount',
@@ -160,6 +161,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
               segmentId: row['segmentId'] || '',
               vendor: row['vendor'] || '',
               crew: row['crew'] || '',
+              ospType: row['ospType'] || '',
               materialOrder: row['materialOrder'] || '',
               workPackageCreated: row['workPackageCreated'] || '',
               amount: row['amount'] ? Number(row['amount']) : undefined,

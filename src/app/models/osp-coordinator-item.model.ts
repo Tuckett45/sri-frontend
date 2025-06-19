@@ -3,6 +3,7 @@ export interface OspCoordinatorItem {
   segmentId: string;
   vendor: string;
   crew: number;
+  ospType?: string;
   materialOrder?: string;
   date?: string;
   workPackageCreated?: string;

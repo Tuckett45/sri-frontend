@@ -15,6 +15,7 @@ export class OspCoordinatorModalComponent {
   statForm: FormGroup;
   crews: number[] = [1,2,3,4,5,6,7,8,9,10];
   vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
+  ospTypes: string[] = ['OSP', 'RELO', 'ROE', 'Fiber Extension', 'Greenfield'];
   amendmentVersions: number[] = [1,2,3,4,5,6,7,8,9,10];
   amendmentReasons: string[] = ['Version Error','Final True Up to Conlog','Engineered Units differ from Field','City Change Request/Need', 'Date Change', 'PO Change', 'Other'];
   failedReasons: string[] = [
@@ -57,6 +58,7 @@ export class OspCoordinatorModalComponent {
       segmentId: [data?.segmentId || '', Validators.required],
       vendor: [data?.vendor || '', Validators.required],
       crew: [data?.crew || '', Validators.required],
+      ospType: [data?.ospType || ''],
       materialOrder: [data?.materialOrder || null],
       date: [data?.date || null],
       workPackageCreated: [data?.workPackageCreated || null],

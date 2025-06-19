@@ -35,6 +35,15 @@
 
       <mat-grid-tile colspan="6">
         <mat-form-field appearance="outline" class="full-width">
+          <mat-label style="color: black;">OSP Type</mat-label>
+          <mat-select formControlName="ospType">
+            <mat-option *ngFor="let osp of ospTypes" [value]="osp">{{osp}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="6">
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label style="color: black;">Material Order</mat-label>
           <input matInput [matDatepicker]="matOrder" formControlName="materialOrder" />
           <mat-datepicker-toggle matSuffix [for]="matOrder"></mat-datepicker-toggle>

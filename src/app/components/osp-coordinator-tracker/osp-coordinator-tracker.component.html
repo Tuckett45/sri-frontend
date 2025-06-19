@@ -42,6 +42,11 @@
         <td mat-cell *matCellDef="let element"> {{element.crew}} </td>
       </ng-container>
 
+      <ng-container matColumnDef="ospType">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> OSP Type </th>
+        <td mat-cell *matCellDef="let element"> {{element.ospType}} </td>
+      </ng-container>
+
       <ng-container matColumnDef="materialOrder">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Material Order </th>
         <td mat-cell *matCellDef="let element"> {{element.materialOrder | date: 'shortDate'}} </td>
