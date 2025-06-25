@@ -171,6 +171,7 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label style="color: black;">Pass / Fail</mat-label>
           <mat-select formControlName="pass">
+            <mat-option [value]="undefined">N/A</mat-option>
             <mat-option [value]="true">Pass</mat-option>
             <mat-option [value]="false">Fail</mat-option>
           </mat-select>

@@ -75,7 +75,7 @@ export class OspCoordinatorModalComponent {
       amendmentReason: [data?.amendmentReason || ''],
       adminAudit: [data?.adminAudit || null],
       adminAuditDate: [data?.adminAuditDate || null],
-      pass: [data?.pass ?? true],
+      pass: [typeof data?.pass === 'boolean' ? data.pass : undefined],
       passFailReason: [Array.isArray(data?.passFailReason) ? data?.passFailReason : (data?.passFailReason ? data?.passFailReason.split(',').map(q => q.trim()) : [])]
     });
   }

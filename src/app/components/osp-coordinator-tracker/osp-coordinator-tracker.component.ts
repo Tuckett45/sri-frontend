@@ -12,6 +12,7 @@ import { ToastrService } from 'ngx-toastr';
 import { AuthService } from 'src/app/services/auth.service';
 import { User } from 'src/app/models/user.model';
 import { ParseResult } from 'papaparse';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
@@ -107,7 +108,7 @@ export class OspCoordinatorTrackerComponent implements OnInit {
   
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.ospType} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.workPackageContingency} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.newWPLaborAmount} ${data.contingencyAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass ? 'Pass' : 'Fall'} ${(data.passFailReason || []).join(' ')}`.toLowerCase();
+      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.ospType} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.workPackageContingency} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.newWPLaborAmount} ${data.contingencyAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass ? 'Pass' : 'Fall'} ${data.passFailReason}`.toLowerCase();
       return dataStr.includes(transformedFilter);
     };
   
@@ -125,28 +126,27 @@ export class OspCoordinatorTrackerComponent implements OnInit {
           const rows = results.data as any[];
           const parsedHeaders = results.meta.fields ?? [];
           const expectedHeaders = [
-            'id',
-            'segmentId',
-            'vendor',
-            'crew',
-            'ospType',
-            'materialOrder',
-            'workPackageCreated',
-            'amount',
-            'workPackageAmount',
-            'workPackageContingency',
-            'highCostAnalysis',
-            'ntp',
-            'asbuiltSubmitted',
-            'coordinatorCloseout',
-            'amendmentVersion',
-            'newWPLaborAmount',
-            'contingencyAmount',
-            'amendmentReason',
-            'adminAudit',
-            'adminAuditDate',
-            'pass',
-            'passFailReason'
+            'Segment ID',
+            'Vendor',
+            'Crew',
+            'OSP Type',
+            'Material Order',
+            'Work Package Created',
+            'Amount',
+            'WP Amount',
+            'WP Contingency',
+            'High Cost Analysis',
+            'NTP',
+            'Asbuilt Submitted',
+            'Coordinator Closeout',
+            'Amendment Version',
+            'WP Labor Amount',
+            'Contingency Amount',
+            'Amendment Reason',
+            'Admin Audit',
+            'Audit Date',
+            'Pass/Fail',
+            'Pass/Fail Reason'
           ];
 
           const missingHeaders = expectedHeaders.filter(h => !parsedHeaders.includes(h));
@@ -155,33 +155,59 @@ export class OspCoordinatorTrackerComponent implements OnInit {
             return;
           }
 
+          const parseDateToISOString = (value: any): string | undefined => {
+            if (!value) return undefined;
+          
+            const date = new Date(value);
+            return isNaN(date.getTime()) ? undefined : date.toISOString();
+          };
+
+          const parseNumber = (val: any): number | undefined => {
+            if (!val) return undefined;
+            const cleaned = val.toString().replace(/[^0-9.-]+/g, '');
+            const num = Number(cleaned);
+            return isNaN(num) ? undefined : num;
+          };
+
           rows.forEach(row => {
             const entry: OspCoordinatorItem = {
-              id: row['id'] || '',
-              segmentId: row['segmentId'] || '',
-              vendor: row['vendor'] || '',
-              crew: row['crew'] || '',
-              ospType: row['ospType'] || '',
-              materialOrder: row['materialOrder'] || '',
-              workPackageCreated: row['workPackageCreated'] || '',
-              amount: row['amount'] ? Number(row['amount']) : undefined,
-              workPackageAmount: row['workPackageAmount'] ? Number(row['workPackageAmount']) : undefined,
-              workPackageContingency: row['workPackageContingency'] ? Number(row['workPackageContingency']) : undefined,
-              highCostAnalysis: row['highCostAnalysis'] || '',
-              ntp: row['ntp'] || '',
-              asbuiltSubmitted: row['asbuiltSubmitted'] || '',
-              coordinatorCloseout: row['coordinatorCloseout'] || '',
-              amendmentVersion: row['amendmentVersion'] ? Number(row['amendmentVersion']) : undefined,
-              newWPLaborAmount: row['newWPLaborAmount'] ? Number(row['newWPLaborAmount']) : undefined,
-              contingencyAmount: row['contingencyAmount'] ? Number(row['contingencyAmount']) : undefined,
-              amendmentReason: row['amendmentReason'] || '',
-              adminAudit: row['adminAudit'] ? Number(row['adminAudit']) : undefined,
-              adminAuditDate: row['adminAuditDate'] || '',
-              pass: row['pass'] ? row['pass'].toString().toLowerCase() === 'true' : true,
-              passFailReason: row['passFailReason'] ? row['passFailReason'].split(';').map((s: string) => s.trim()).filter((s: string) => s) : []
+              id: uuidv4(),
+              segmentId: row['Segment ID'] || '',
+              vendor: row['Vendor'] || '',
+              crew: row['Crew'] || '',
+              ospType: row['OSP Type'] || '',
+              materialOrder: parseDateToISOString(row['Material Order']),
+              date: new Date().toISOString(),
+              workPackageCreated: parseDateToISOString(row['Work Package Created']),
+              amount: parseNumber(row['Amount']),
+              workPackageAmount: parseNumber(row['WP Amount']),
+              workPackageContingency: parseNumber(row['WP Contingency']),
+              highCostAnalysis: parseDateToISOString(row['High Cost Analysis']),
+              ntp: parseDateToISOString(row['NTP']),
+              asbuiltSubmitted: parseDateToISOString(row['Asbuilt Submitted']),
+              coordinatorCloseout: parseDateToISOString(row['Coordinator Closeout']),
+              amendmentVersion: parseNumber(row['Amendment Version']),
+              newWPLaborAmount: parseNumber(row['WP Labor Amount']),
+              contingencyAmount: parseNumber(row['Contingency Amount']),
+              amendmentReason: row['Amendment Reason'] || '',
+              adminAudit: parseNumber(row['Admin Audit']),
+              adminAuditDate: parseDateToISOString(row['Audit Date']),
+              pass: (() => {
+                const value = row['Pass/Fail']?.toString().toLowerCase();
+                if (value === 'pass' || value === 'Pass') return true;
+                if (value === 'fail' || value === 'Fail') return false;
+                return undefined;
+              })(),
+              passFailReason: row['Pass/Fail Reason'] || ''
             };
-            this.coordinatorService.addEntry(entry).subscribe();
+          
+            this.coordinatorService.addEntry(entry).subscribe({
+              next: () => this.toastr.success('OSP Entry added'),
+              error: () => this.toastr.error('Error adding OSP Entry')
+            });
           });
+          
+
           this.loadEntries();
         }
       });
@@ -192,3 +218,4 @@ export class OspCoordinatorTrackerComponent implements OnInit {
     return pass ? 'success' : 'danger';
   }
 }
+
