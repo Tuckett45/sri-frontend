@@ -366,6 +366,16 @@
   overflow-y: auto;
 }
 
+::ng-deep .mat-mdc-paginator-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start !important;
+  padding: 0 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  min-height: var(--mat-paginator-container-size);
+}
+
 ::ng-deep .mat-mdc-raised-button .mat-icon {
   display: inline-block;
   position: relative;

@@ -277,3 +277,14 @@
   }
 
 }
+
+::ng-deep .mat-mdc-paginator .mat-mdc-paginator-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start !important;
+  padding: 0 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  min-height: var(--mat-paginator-container-size);
+}
+

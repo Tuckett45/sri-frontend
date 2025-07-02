@@ -15,7 +15,6 @@ import { ParseResult } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 
 @Component({
-  encapsulation: ViewEncapsulation.None,
   selector: 'app-osp-coordinator-tracker',
   templateUrl: './osp-coordinator-tracker.component.html',
   styleUrls: ['./osp-coordinator-tracker.component.scss']
