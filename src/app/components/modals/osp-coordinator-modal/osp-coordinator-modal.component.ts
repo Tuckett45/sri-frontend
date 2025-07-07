@@ -17,7 +17,7 @@ export class OspCoordinatorModalComponent {
   vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
   ospTypes: string[] = ['OSP', 'RELO', 'ROE', 'Fiber Extension', 'Greenfield'];
   amendmentVersions: number[] = [1,2,3,4,5,6,7,8,9,10];
-  amendmentReasons: string[] = ['Version Error','Final True Up to Conlog','Engineered Units differ from Field','City Change Request/Need', 'Date Change', 'PO Change', 'Other'];
+  amendmentReasons: string[] = ['Version Error','Final True Up to Conlog','Engineered Units differ from Field','City Change Request/Need', 'Date Change', 'PO Change', '50% True Up','Other'];
   failedReasons: string[] = [
     'No Splicing Schematic',
     'No Fiber Design',
