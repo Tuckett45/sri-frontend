@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { OspCoordinatorItem } from '../models/osp-coordinator-item.model';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environments';
@@ -15,7 +16,11 @@ export class OspCoordinatorService {
     })
   };
 
-  constructor(private http: HttpClient) {}
+  private entriesCache$!: Observable<OspCoordinatorItem[]> | null;
+
+  constructor(private http: HttpClient) {
+    this.entriesCache$ = null;
+  }
 
   getStats(): Observable<any[]> {
     // Placeholder for potential dashboard metrics
@@ -23,7 +28,12 @@ export class OspCoordinatorService {
   }
 
   getEntries(): Observable<OspCoordinatorItem[]> {
-    return this.http.get<OspCoordinatorItem[]>(`${environment.apiUrl}/osp-coordinators`, this.httpOptions);
+    if (!this.entriesCache$) {
+      this.entriesCache$ = this.http
+        .get<OspCoordinatorItem[]>(`${environment.apiUrl}/osp-coordinators`, this.httpOptions)
+        .pipe(shareReplay(1));
+    }
+    return this.entriesCache$;
   }
 
   getEntry(id: string): Observable<OspCoordinatorItem> {
@@ -31,14 +41,17 @@ export class OspCoordinatorService {
   }
 
   addEntry(entry: OspCoordinatorItem): Observable<any> {
+    this.entriesCache$ = null;
     return this.http.post(`${environment.apiUrl}/osp-coordinators`, entry, this.httpOptions);
   }
 
   updateEntry(entry: OspCoordinatorItem): Observable<any> {
+    this.entriesCache$ = null;
     return this.http.put(`${environment.apiUrl}/osp-coordinators/${entry.id}`, entry, this.httpOptions);
   }
 
   deleteEntry(id: string): Observable<any> {
+    this.entriesCache$ = null;
     return this.http.delete(`${environment.apiUrl}/osp-coordinators/${id}`, this.httpOptions);
   }
 }

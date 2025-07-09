@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { catchError, map, shareReplay } from 'rxjs/operators';
+import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
 import { local_environment, environment } from '../../environments/environments';
@@ -15,6 +15,9 @@ export class PreliminaryPunchListService {
   private entriesCache$!: Observable<PreliminaryPunchList[]> | null;
   private unresolvedCache$!: Observable<any> | null;
   private resolvedCache$!: Observable<any> | null;
+  private entriesCacheData: PreliminaryPunchList[] | null = null;
+  private unresolvedCacheData: PreliminaryPunchList[] | null = null;
+  private resolvedCacheData: PreliminaryPunchList[] | null = null;
 
   private refreshSubject = new BehaviorSubject<void>(undefined);
 
@@ -29,6 +32,9 @@ export class PreliminaryPunchListService {
     this.entriesCache$ = null;
     this.unresolvedCache$ = null;
     this.resolvedCache$ = null;
+    this.entriesCacheData = null;
+    this.unresolvedCacheData = null;
+    this.resolvedCacheData = null;
   }
 
   refresh$ = this.refreshSubject.asObservable();
@@ -52,6 +58,7 @@ export class PreliminaryPunchListService {
               return punchList;
             })
           ),
+          tap(data => (this.entriesCacheData = data)),
           catchError(this.handleError),
           shareReplay(1)
         );
@@ -70,7 +77,10 @@ export class PreliminaryPunchListService {
       } else {
         request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`);
       }
-      this.unresolvedCache$ = request$.pipe(shareReplay(1));
+      this.unresolvedCache$ = request$.pipe(
+        tap(data => (this.unresolvedCacheData = data)),
+        shareReplay(1)
+      );
     }
     return this.unresolvedCache$;
   }
@@ -86,7 +96,10 @@ export class PreliminaryPunchListService {
       } else {
         request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`);
       }
-      this.resolvedCache$ = request$.pipe(shareReplay(1));
+      this.resolvedCache$ = request$.pipe(
+        tap(data => (this.resolvedCacheData = data)),
+        shareReplay(1)
+      );
     }
     return this.resolvedCache$;
   }
@@ -99,6 +112,9 @@ export class PreliminaryPunchListService {
     this.entriesCache$ = null;
     this.unresolvedCache$ = null;
     this.resolvedCache$ = null;
+    this.entriesCacheData = null;
+    this.unresolvedCacheData = null;
+    this.resolvedCacheData = null;
     return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );
@@ -108,6 +124,9 @@ export class PreliminaryPunchListService {
     this.entriesCache$ = null;
     this.unresolvedCache$ = null;
     this.resolvedCache$ = null;
+    this.entriesCacheData = null;
+    this.unresolvedCacheData = null;
+    this.resolvedCacheData = null;
     return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );
@@ -117,9 +136,20 @@ export class PreliminaryPunchListService {
     this.entriesCache$ = null;
     this.unresolvedCache$ = null;
     this.resolvedCache$ = null;
+    this.entriesCacheData = null;
+    this.unresolvedCacheData = null;
+    this.resolvedCacheData = null;
     return this.http.delete<void>(`${environment.apiUrl}/PunchList/${id}`, this.httpOptions).pipe(
       catchError(this.handleError)
     );
+  }
+
+  getCachedUnresolvedCount(): number {
+    return this.unresolvedCacheData ? this.unresolvedCacheData.length : 0;
+  }
+
+  getCachedResolvedCount(): number {
+    return this.resolvedCacheData ? this.resolvedCacheData.length : 0;
   }
 
   private handleError(error: HttpErrorResponse) {
@@ -129,5 +159,4 @@ export class PreliminaryPunchListService {
     } else {
       errorMessage = `Server-side error: ${error.status} ${error.message}`;
     }
-    return throwError(errorMessage);
-  }}
+    return throwError(errorMessage);  }}
