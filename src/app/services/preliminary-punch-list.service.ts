@@ -58,7 +58,7 @@ export class PreliminaryPunchListService {
               return punchList;
             })
           ),
-          tap(data => (this.entriesCacheData = data)),
+          tap(data => (this.entriesCacheData = JSON.parse(JSON.stringify(data)))),
           catchError(this.handleError),
           shareReplay(1)
         );
@@ -78,7 +78,7 @@ export class PreliminaryPunchListService {
         request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`);
       }
       this.unresolvedCache$ = request$.pipe(
-        tap(data => (this.unresolvedCacheData = data)),
+        tap(data => (this.unresolvedCacheData = JSON.parse(JSON.stringify(data)))),
         shareReplay(1)
       );
     }
@@ -97,7 +97,7 @@ export class PreliminaryPunchListService {
         request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`);
       }
       this.resolvedCache$ = request$.pipe(
-        tap(data => (this.resolvedCacheData = data)),
+        tap(data => (this.resolvedCacheData = JSON.parse(JSON.stringify(data)))),
         shareReplay(1)
       );
     }

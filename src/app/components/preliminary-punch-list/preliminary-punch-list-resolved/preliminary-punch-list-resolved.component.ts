@@ -91,25 +91,23 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   loadResolvedPunchLists(user: User): void {
     this.punchListService.getResolvedPunchLists(user).subscribe(
       (response) => {
-        this.resolvedPreliminaryPunchList$.next(response);
-        this.dataSource.data = this.filterData(response);
-  
-        for (const punchList of response) {
-          const reportedDate = new Date(punchList.dateReported + "Z");
+        const results = response.map(p => ({
+          ...p,
+          issues: p.issues.map(issue => ({ ...issue }))
+        }));
+
+        for (const punchList of results) {
+          const reportedDate = new Date(punchList.dateReported + 'Z');
           punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
-          if(punchList.resolvedDate){
-            const resolvedDate = new Date(punchList.resolvedDate + "Z");
+          if (punchList.resolvedDate) {
+            const resolvedDate = new Date(punchList.resolvedDate + 'Z');
             punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
           }
         }
-  
-        this.resolvedPreliminaryPunchLists = response.map((punchList: PreliminaryPunchList) => ({
-          ...punchList,
-          dateReported: punchList.dateReported,
-          resolvedDate: punchList.resolvedDate
-        }));
-  
-        this.resolvedPreliminaryPunchLists = this.dataSource.data;
+
+        this.resolvedPreliminaryPunchList$.next(results);
+        this.dataSource.data = this.filterData(results);
+        this.resolvedPreliminaryPunchLists = results;
         if(this.selectedFilters){
           this.applyFilters();
         }
