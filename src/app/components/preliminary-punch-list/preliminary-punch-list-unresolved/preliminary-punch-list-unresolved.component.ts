@@ -87,9 +87,9 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   loadUnresolvedPunchLists(user: User): void {
     this.punchListService.getUnresolvedPunchLists(user).subscribe(
       (response) => {
-        const results = response.map(p => ({
+        const results = response.map((p: { issues: any[]; }) => ({
           ...p,
-          issues: p.issues.map(issue => ({ ...issue }))
+          issues: p.issues.map((issue: any) => ({ ...issue }))
         }));
 
         for (const punchList of results) {

@@ -91,9 +91,9 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   loadResolvedPunchLists(user: User): void {
     this.punchListService.getResolvedPunchLists(user).subscribe(
       (response) => {
-        const results = response.map(p => ({
+        const results = response.map((p: { issues: any[]; }) => ({
           ...p,
-          issues: p.issues.map(issue => ({ ...issue }))
+          issues: p.issues.map((issue: any) => ({ ...issue }))
         }));
 
         for (const punchList of results) {
