@@ -144,7 +144,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       width: '600px',
       data: {
         punchList: data || null,
-        segmentIds: [...new Set(this.unresolvedPreliminaryPunchLists.map(p => p.segmentId))]
+        segmentIds: Array.from(new Set(this.unresolvedPreliminaryPunchLists.map(p => p.segmentId?.toString().trim().toUpperCase())))
       }
     });
   

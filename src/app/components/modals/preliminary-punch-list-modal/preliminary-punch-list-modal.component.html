@@ -14,6 +14,7 @@
       <mat-grid-tile colspan="2">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Segment ID</mat-label>
+          <input matInput formControlName="segmentId" [matAutocomplete]="segmentAuto" placeholder="Enter Segment ID">
           <input matInput formControlName="segmentId" [matAutocomplete]="segmentAuto" placeholder="Enter Segment ID" oninput="this.value = this.value.toUpperCase()">
           <mat-autocomplete #segmentAuto="matAutocomplete">
             <mat-option *ngFor="let id of filteredSegmentIds" [value]="id">{{ id }}</mat-option>

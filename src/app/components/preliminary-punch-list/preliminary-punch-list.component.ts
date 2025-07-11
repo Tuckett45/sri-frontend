@@ -110,10 +110,12 @@ export class PreliminaryPunchListComponent implements OnInit {
   }
 
   populateFilterOptions(data: PreliminaryPunchList[]): void {
+    const normalize = (val: any) => val?.toString().trim().toUpperCase();
+
     this.filterOptions = {
-      segmentId: [...new Set(data.map(item => item.segmentId))],
-      vendorName: [...new Set(data.map(item => item.vendorName))],
-      state: [...new Set(data.map(item => item.state))],
+      segmentId: Array.from(new Set(data.map(item => normalize(item.segmentId)))),
+      vendorName: Array.from(new Set(data.map(item => item.vendorName?.toString().trim()))),
+      state: Array.from(new Set(data.map(item => normalize(item.state)))),
     };
   }
 
@@ -176,6 +178,7 @@ export class PreliminaryPunchListComponent implements OnInit {
       width: '600px',
       data: {
         punchList: data || null,
+        segmentIds: Array.from(new Set(this.filterOptions.segmentId.map(id => id.toString().trim().toUpperCase())))
         segmentIds: this.filterOptions.segmentId
       }
     });
