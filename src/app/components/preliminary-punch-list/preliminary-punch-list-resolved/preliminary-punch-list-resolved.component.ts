@@ -148,6 +148,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       data: {
         punchList: data || null,
         segmentIds: Array.from(new Set(this.resolvedPreliminaryPunchLists.map(p => p.segmentId?.toString().trim().toUpperCase())))
+        segmentIds: [...new Set(this.resolvedPreliminaryPunchLists.map(p => p.segmentId))]
       }
     });
   
