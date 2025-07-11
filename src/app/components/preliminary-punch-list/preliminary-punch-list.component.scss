@@ -98,6 +98,10 @@
     gap: 10px;
     width: 100%;
   }
+
+  .chip-container {
+    flex-wrap: wrap;
+  }
   
   .chip-filter .p-chip {
     background-color: #e18a25; /* Use accent color for the chip background */

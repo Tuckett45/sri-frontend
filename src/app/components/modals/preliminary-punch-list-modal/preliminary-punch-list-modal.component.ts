@@ -15,6 +15,11 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { GeocodingService } from 'src/app/services/geocoding.service';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { ErrorCodes } from 'src/app/models/error-codes.model';
+
+export interface PreliminaryPunchListModalData {
+  punchList: PreliminaryPunchList | null;
+  segmentIds: string[];
+}
 // import { GeocodingService } from 'src/app/services/geocoding.service';
 
 @Component({
@@ -30,6 +35,9 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   displayModal: boolean = false;
   currentImage: string = '';
   currentImageIndex: number = 0;
+
+  segmentIds: string[] = [];
+  filteredSegmentIds: string[] = [];
 
   @ViewChild('issueImageInput') issueImageInput!: ElementRef;
   @ViewChild('resolutionImageInput') resolutionImageInput!: ElementRef;
@@ -179,35 +187,47 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     private modalGalleryService: ModalGalleryService,
     private geocodingService: GeocodingService,
     private punchListService: PreliminaryPunchListService,
-    @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchList
+    @Inject(MAT_DIALOG_DATA) public data: PreliminaryPunchListModalData
   ) {}
 
   ngOnInit(): void {
     this.loadUserProfile();
-    this.isEditMode = !!this.data;
+    this.segmentIds = this.data.segmentIds || [];
+    this.filteredSegmentIds = this.segmentIds;
+    this.isEditMode = !!this.data.punchList;
     this.isDisabled = this.isModalDisabled();
     this.getErrorCodes();
 
     this.preliminaryPunchListForm = this.fb.group({
-      id: [this.data?.id || ''],
-      segmentId: [this.data?.segmentId || '', Validators.required],
-      vendorName: [this.data?.vendorName || '', Validators.required],
-      streetAddress: [this.data?.streetAddress || '', Validators.required],
-      city: [this.data?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
-      state: [this.data?.state.toUpperCase() || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
-      issues: this.fb.array(this.getInitialIssueAreas(this.data)),
-      additionalConcerns: [this.data?.additionalConcerns || ''],
-      createdBy: [this.data?.createdBy || null],
-      dateReported: [this.data?.dateReported ||  new Date().toISOString()],
-      issueImages: this.fb.array(this.data?.issueImages || []),
-      resolutionImages: this.fb.array(this.data?.resolutionImages || []), 
-      pmResolved: [this.data?.pmResolved || false],
-      pmConcerns: [this.data?.pmConcerns || ''],
-      resolvedDate: [this.data?.resolvedDate || null],
-      cmResolved: [this.data?.cmResolved || false],
-      updatedBy: [this.data?.updatedBy || null],
-      updatedDate: [this.data?.updatedDate || null],
-      resolvedBy: [this.data?.resolvedBy || null]
+      id: [this.data.punchList?.id || ''],
+      segmentId: [this.data.punchList?.segmentId || '', Validators.required],
+      vendorName: [this.data.punchList?.vendorName || '', Validators.required],
+      streetAddress: [this.data.punchList?.streetAddress || '', Validators.required],
+      city: [this.data.punchList?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]],
+      state: [this.data.punchList?.state?.toUpperCase() || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]],
+      issues: this.fb.array(this.getInitialIssueAreas(this.data.punchList)),
+      additionalConcerns: [this.data.punchList?.additionalConcerns || ''],
+      createdBy: [this.data.punchList?.createdBy || null],
+      dateReported: [this.data.punchList?.dateReported ||  new Date().toISOString()],
+      issueImages: this.fb.array(this.data.punchList?.issueImages || []),
+      resolutionImages: this.fb.array(this.data.punchList?.resolutionImages || []),
+      pmResolved: [this.data.punchList?.pmResolved || false],
+      pmConcerns: [this.data.punchList?.pmConcerns || ''],
+      resolvedDate: [this.data.punchList?.resolvedDate || null],
+      cmResolved: [this.data.punchList?.cmResolved || false],
+      updatedBy: [this.data.punchList?.updatedBy || null],
+      updatedDate: [this.data.punchList?.updatedDate || null],
+      resolvedBy: [this.data.punchList?.resolvedBy || null]
+    });
+
+    this.preliminaryPunchListForm.get('segmentId')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(value => {
+      const query = (value || '').toLowerCase();
+      this.filteredSegmentIds = this.segmentIds.filter(id =>
+        id.toLowerCase().includes(query)
+      );
     });
 
     if (this.isDisabled) {
@@ -222,8 +242,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     }
 
     if (this.isEditMode) {
-      this.initializeImages(this.data.issueImages || [], 'issueImages');
-      this.initializeImages(this.data.resolutionImages || [], 'resolutionImages');
+      this.initializeImages(this.data.punchList?.issueImages || [], 'issueImages');
+      this.initializeImages(this.data.punchList?.resolutionImages || [], 'resolutionImages');
     }
 
     this.preliminaryPunchListForm.get('pmResolved')?.valueChanges.subscribe((pmResolved: boolean) => {

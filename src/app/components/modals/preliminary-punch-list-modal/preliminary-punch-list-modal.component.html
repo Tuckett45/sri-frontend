@@ -14,7 +14,10 @@
       <mat-grid-tile colspan="2">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Segment ID</mat-label>
-          <input matInput formControlName="segmentId" placeholder="Enter Segment ID">
+          <input matInput formControlName="segmentId" [matAutocomplete]="segmentAuto" placeholder="Enter Segment ID">
+          <mat-autocomplete #segmentAuto="matAutocomplete">
+            <mat-option *ngFor="let id of filteredSegmentIds" [value]="id">{{ id }}</mat-option>
+          </mat-autocomplete>
           <mat-error *ngIf="preliminaryPunchListForm.get('segmentId')?.hasError('required') || preliminaryPunchListForm.get('segmentId')?.dirty">
             Segment ID is required.
           </mat-error>

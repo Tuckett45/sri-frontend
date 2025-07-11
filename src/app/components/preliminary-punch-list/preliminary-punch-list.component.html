@@ -33,7 +33,7 @@
 
   <div class="chip-filter" *ngIf="filtersOpen">
     <div class="grid flex-column lg:flex-row w-full h-full">
-      <div class="col-12 lg:col flex align-items-center flex-nowrap gap-1" *ngFor="let filter of selectedFilters">
+      <div class="col-12 lg:col flex align-items-center flex-wrap gap-1 chip-container" *ngFor="let filter of selectedFilters">
         <p-chip *ngFor="let chip of filter.values" 
                 [label]="formatDate(chip)" 
                 [removable]="true"
