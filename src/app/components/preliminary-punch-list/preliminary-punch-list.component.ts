@@ -179,7 +179,6 @@ export class PreliminaryPunchListComponent implements OnInit {
       data: {
         punchList: data || null,
         segmentIds: Array.from(new Set(this.filterOptions.segmentId.map(id => id.toString().trim().toUpperCase())))
-        segmentIds: this.filterOptions.segmentId
       }
     });
   
