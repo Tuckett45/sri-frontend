@@ -142,7 +142,10 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
       width: '600px',
-      data: data || null
+      data: {
+        punchList: data || null,
+        segmentIds: [...new Set(this.unresolvedPreliminaryPunchLists.map(p => p.segmentId))]
+      }
     });
   
     dialogRef.afterClosed().subscribe((result: PreliminaryPunchList) => {

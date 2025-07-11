@@ -174,7 +174,10 @@ export class PreliminaryPunchListComponent implements OnInit {
   openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
       width: '600px',
-      data: data || null
+      data: {
+        punchList: data || null,
+        segmentIds: this.filterOptions.segmentId
+      }
     });
   
     dialogRef.afterClosed().subscribe((result: PreliminaryPunchList) => {
