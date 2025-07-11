@@ -24,6 +24,10 @@ export class OspCoordinatorTrackerComponent implements OnInit {
   user!: User;
   displayedColumns: string[] = ['segmentId','vendor','crew', 'ospType', 'materialOrder','workPackageCreated','amount','workPackageAmount','workPackageContingency','highCostAnalysis','ntp','asbuiltSubmitted','coordinatorCloseout','amendmentVersion','newWPLaborAmount','contingencyAmount','amendmentReason','adminAudit','adminAuditDate','pass','passFailReason','actions'];
   dataSource = new MatTableDataSource<OspCoordinatorItem>();
+  totalItems = 0;
+  pageSize = 25;
+  pageIndex = 0;
+  searchTerm = '';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -43,10 +47,14 @@ export class OspCoordinatorTrackerComponent implements OnInit {
     this.loadEntries();
   }
 
-  loadEntries(): void {
-    this.coordinatorService.getEntries().subscribe({
-      next: entries => {
-        this.dataSource = new MatTableDataSource(entries);
+  loadEntries(pageIndex: number = this.pageIndex, pageSize: number = this.pageSize): void {
+    this.searchTerm = '';
+    this.coordinatorService.getEntriesPaged(pageIndex + 1, pageSize).subscribe({
+      next: result => {
+        this.dataSource = new MatTableDataSource(result.items);
+        this.totalItems = result.totalCount;
+        this.pageIndex = pageIndex;
+        this.pageSize = pageSize;
         this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.sort;
       },
@@ -102,16 +110,38 @@ export class OspCoordinatorTrackerComponent implements OnInit {
     });
   }
 
+  onPageChange(event: any): void {
+    if (this.searchTerm) {
+      this.pageIndex = event.pageIndex;
+      this.pageSize = event.pageSize;
+    } else {
+      this.loadEntries(event.pageIndex, event.pageSize);
+    }
+  }
+
   searchFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
-  
-    this.dataSource.filterPredicate = (data: any, filter: string) => {
-      const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.ospType} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.workPackageContingency} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.newWPLaborAmount} ${data.contingencyAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass ? 'Pass' : 'Fall'} ${data.passFailReason}`.toLowerCase();
-      return dataStr.includes(transformedFilter);
-    };
-  
-    this.dataSource.filter = filterValue;
+    this.searchTerm = filterValue;
+
+    if (!filterValue) {
+      this.loadEntries();
+      return;
+    }
+
+    this.coordinatorService.getAllEntries().subscribe(entries => {
+      this.dataSource = new MatTableDataSource(entries);
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+      this.dataSource.filterPredicate = (data: any, filter: string) => {
+        const transformedFilter = filter.trim().toLowerCase();
+        const dataStr = `${data.segmentId} ${data.vendor} ${data.crew} ${data.ospType} ${data.materialOrder} ${data.date} ${data.workPackageCreated} ${data.amount} ${data.workPackageAmount} ${data.crew} ${data.materialOrder} ${data.workPackageContingency} ${data.highCostAnalysis} ${data.ntp} ${data.asbuiltSubmitted} ${data.coordinatorCloseout} ${data.amendmentVersion} ${data.newWPLaborAmount} ${data.contingencyAmount} ${data.amendmentReason} ${data.adminAudit} ${data.adminAuditDate} ${data.pass ? 'Pass' : 'Fall'} ${data.passFailReason}`.toLowerCase();
+        return dataStr.includes(transformedFilter);
+      };
+
+      this.dataSource.filter = filterValue;
+      this.totalItems = this.dataSource.filteredData.length;
+      this.pageIndex = 0;
+    });
   }
 
   importFromCSV(event: Event): void {

@@ -44,6 +44,10 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   ];
 
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource();
+  totalItems = 0;
+  pageSize = 25;
+  pageIndex = 0;
+  searchTerm = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
   @Input('PreliminaryPunchListUnresolvedComponent') unresolvedPunchListComponent!: PreliminaryPunchListUnresolvedComponent;
@@ -88,10 +92,11 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
   
 
-  loadResolvedPunchLists(user: User): void {
-    this.punchListService.getResolvedPunchLists(user).subscribe(
+  loadResolvedPunchLists(user: User, pageIndex: number = this.pageIndex, pageSize: number = this.pageSize): void {
+    this.searchTerm = '';
+    this.punchListService.getResolvedPunchLists(user, pageIndex + 1, pageSize).subscribe(
       (response) => {
-        const results = response.map((p: { issues: any[]; }) => ({
+        const results = response.items.map((p: { issues: any[]; }) => ({
           ...p,
           issues: p.issues.map((issue: any) => ({ ...issue }))
         }));
@@ -108,6 +113,9 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         this.resolvedPreliminaryPunchList$.next(results);
         this.dataSource.data = this.filterData(results);
         this.resolvedPreliminaryPunchLists = results;
+        this.totalItems = response.totalCount ?? this.totalItems;
+        this.pageIndex = pageIndex;
+        this.pageSize = pageSize;
         if(this.selectedFilters){
           this.applyFilters();
         }
@@ -245,15 +253,40 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
 
   searchFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
-  
-    this.dataSource.filterPredicate = (data: any, filter: string) => {
-      const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.createdBy} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
-      return dataStr.includes(transformedFilter);
-    };
-  
-    this.dataSource.filter = filterValue;
-    this.updateResolvedCount();
+    this.searchTerm = filterValue;
+
+    if (!filterValue) {
+      this.loadResolvedPunchLists(this.user);
+      return;
+    }
+
+    this.punchListService.getAllEntries().subscribe(all => {
+      const resolved = all.filter(pl => pl.cmResolved && pl.pmResolved);
+      const mapped = resolved.map(p => ({ ...p, issues: p.issues.map(i => ({ ...i })) }));
+
+      for (const punchList of mapped) {
+        const reportedDate = new Date(punchList.dateReported + 'Z');
+        punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+        if (punchList.resolvedDate) {
+          const resolvedDate = new Date(punchList.resolvedDate + 'Z');
+          punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+        }
+      }
+
+      this.resolvedPreliminaryPunchList$.next(mapped);
+      this.dataSource = new MatTableDataSource(this.filterData(mapped));
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+      this.dataSource.filterPredicate = (data: any, filter: string) => {
+        const transformedFilter = filter.trim().toLowerCase();
+        const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.createdBy} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
+        return dataStr.includes(transformedFilter);
+      };
+      this.dataSource.filter = filterValue;
+      this.totalItems = this.dataSource.filteredData.length;
+      this.pageIndex = 0;
+      this.updateResolvedCount();
+    });
   }
   
   applyFilters(): void {
@@ -316,5 +349,14 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       this.dataSource.data = updatedData;
       this.updateResolvedCount();
     });
+  }
+
+  onPageChange(event: any): void {
+    if (this.searchTerm) {
+      this.pageIndex = event.pageIndex;
+      this.pageSize = event.pageSize;
+    } else {
+      this.loadResolvedPunchLists(this.user, event.pageIndex, event.pageSize);
+    }
   }
 }
