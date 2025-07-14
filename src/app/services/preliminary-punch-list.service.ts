@@ -68,81 +68,84 @@ export class PreliminaryPunchListService {
   }
 
   getAllEntries(): Observable<PreliminaryPunchList[]> {
-    if (!this.allCache$) {
-      this.allCache$ = this.http
-        .get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
-        .pipe(
-          map(punchLists =>
-            punchLists.map(punchList => {
-              punchList.issues.forEach(issueArea => {
-                if (typeof issueArea.category === 'string') {
-                  issueArea.category = issueArea.category;
-                }
-              });
-              return punchList;
-            })
-          ),
-          shareReplay(1)
-        );
-    }
-    return this.allCache$;
+    return this.http
+      .get<{ items: PreliminaryPunchList[]; totalCount: number }>(`${local_environment.apiUrl}/PunchList/all`, this.httpOptions)
+      .pipe(
+        map(response => response.items.map(punchList => {
+          punchList.issues.forEach(issueArea => {
+            if (typeof issueArea.category === 'string') {
+              issueArea.category = issueArea.category;
+            }
+          });
+          return punchList;
+        })),
+        shareReplay(1)
+      );
   }
+  
 
   getEntriesPaged(page: number = 1, pageSize: number = 25): Observable<PagedResult<PreliminaryPunchList>> {
     if (!this.pagedCache$) {
       const params = new HttpParams().set('page', page).set('pageSize', pageSize);
       this.pagedCache$ = this.http
-        .get<PagedResult<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/all-paged`, { params, headers: this.httpOptions.headers })
+        .get<PagedResult<PreliminaryPunchList>>(`${local_environment.apiUrl}/PunchList/all-paged`, { params, headers: this.httpOptions.headers })
         .pipe(catchError(this.handleError), shareReplay(1));
     }
     return this.pagedCache$;
   }
 
-  getUnresolvedPunchLists(user: User, page: number = 1, pageSize: number = 25): Observable<PagedResult<PreliminaryPunchList>> {
-    if (!this.unresolvedCache$) {
-      let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-      if (user.market) {
-        params = params.set('state', user.market);
-      }
-
-      let request$;
-      if (user.role === 'PM' && user.market !== 'RG') {
-        request$ = this.http.get<PagedResult<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params });
-      } else if (user.role === 'CM' && user.market !== 'RG') {
-        request$ = this.http.get<PagedResult<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params });
-      } else {
-        request$ = this.http.get<PagedResult<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/unresolved`, { params });
-      }
-      this.unresolvedCache$ = request$.pipe(
-        tap(data => (this.unresolvedCacheData = JSON.parse(JSON.stringify(data.items)))),
-        shareReplay(1)
-      );
-    }
-    return this.unresolvedCache$;
-  }
-
   getResolvedPunchLists(user: User, page: number = 1, pageSize: number = 25): Observable<PagedResult<PreliminaryPunchList>> {
-    if (!this.resolvedCache$) {
-      let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-      if (user.market) {
-        params = params.set('state', user.market);
-      }
-
-      let request$;
-      if (user.role === 'PM' && user.market !== 'RG') {
-        request$ = this.http.get<PagedResult<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/pm-resolved`, { params });
-      } else if (user.role === 'CM' && user.market !== 'RG') {
-        request$ = this.http.get<PagedResult<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/cm-resolved`, { params });
-      } else {
-        request$ = this.http.get<PagedResult<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/resolved`, { params });
-      }
-      this.resolvedCache$ = request$.pipe(
-        tap(data => (this.resolvedCacheData = JSON.parse(JSON.stringify(data.items)))),
-        shareReplay(1)
-      );
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+  
+    if (user.market) {
+      params = params.set('state', user.market);
     }
-    return this.resolvedCache$;
+  
+    let url = '';
+  
+    if (user.role === 'PM' && user.market !== 'RG') {
+      url = `${local_environment.apiUrl}/PunchList/pm-resolved`;
+    } else if (user.role === 'CM' && user.market !== 'RG') {
+      url = `${local_environment.apiUrl}/PunchList/cm-resolved/${page}`;
+      // NOTE: cm-resolved expects page in the route, not query
+      params = params.set('pageSize', pageSize.toString()); // only pass pageSize
+    } else {
+      url = `${local_environment.apiUrl}/PunchList/resolved/${page}`;
+      params = params.set('pageSize', pageSize.toString());
+    }
+  
+    return this.http.get<PagedResult<PreliminaryPunchList>>(url, { params });
   }
+  
+  
+
+  getUnresolvedPunchLists(user: User, page: number = 1, pageSize: number = 25): Observable<PagedResult<PreliminaryPunchList>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+  
+    if (user.market) {
+      params = params.set('state', user.market);
+    }
+  
+    let url = '';
+  
+    if (user.role === 'PM' && user.market !== 'RG') {
+      url = `${local_environment.apiUrl}/PunchList/pm-unresolved`;
+    } else if (user.role === 'CM' && user.market !== 'RG') {
+      url = `${local_environment.apiUrl}/PunchList/cm-unresolved/${page}`;
+      params = params.set('pageSize', pageSize.toString());
+    } else {
+      url = `${local_environment.apiUrl}/PunchList/unresolved/${page}`;
+      params = params.set('pageSize', pageSize.toString());
+    }
+  
+    return this.http.get<PagedResult<PreliminaryPunchList>>(url, { params });
+  }
+  
+  
 
   getErrorCodes(): Observable<any> {
       return this.http.get<any>(`${environment.apiUrl}/PunchList/error-codes`);
@@ -207,4 +210,16 @@ export class PreliminaryPunchListService {
     }
     return throwError(errorMessage);
   }
+
+  clearCache(): void {
+    this.entriesCache$ = null;
+    this.pagedCache$ = null;
+    this.unresolvedCache$ = null;
+    this.resolvedCache$ = null;
+    this.allCache$ = null;
+    this.entriesCacheData = null;
+    this.unresolvedCacheData = null;
+    this.resolvedCacheData = null;
+  }
+
 }

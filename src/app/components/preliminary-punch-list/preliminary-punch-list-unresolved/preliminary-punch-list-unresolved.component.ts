@@ -92,17 +92,18 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.searchTerm = '';
     this.punchListService.getUnresolvedPunchLists(user, pageIndex + 1, pageSize).subscribe(
       (response) => {
-        const results = response.items.map((p: { issues: any[]; }) => ({
+        const results = response.items.map(p => ({
           ...p,
-          issues: p.issues.map((issue: any) => ({ ...issue }))
+          issues: p.issues.map(issue => ({ ...issue }))
         }));
-
+  
         for (const punchList of results) {
-          const reportedDate = new Date(punchList.dateReported + 'Z');
-          punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+          const reportedDate = new Date(punchList.dateReported);
+          (punchList as any).formattedDateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+        
           if (punchList.resolvedDate) {
-            const resolvedDate = new Date(punchList.resolvedDate + 'Z');
-            punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+            const resolvedDate = new Date(punchList.resolvedDate);
+            (punchList as any).formattedResolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
           }
         }
 
@@ -281,19 +282,30 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       return;
     }
 
-    this.punchListService.getAllEntries().subscribe(all => {
+    this.punchListService.getUnresolvedPunchLists(this.user).subscribe(response  => {
+      const all = response.items; // get the list of punch lists
+      const totalCount = response.totalCount;
       const unresolved = all.filter(pl => !pl.cmResolved || !pl.pmResolved);
-      const mapped = unresolved.map(p => ({ ...p, issues: p.issues.map(i => ({ ...i })) }));
-
-      for (const punchList of mapped) {
-        const reportedDate = new Date(punchList.dateReported + 'Z');
-        punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+      const mapped = unresolved.map(p => ({
+        ...p,
+        issues: p.issues.map(i => ({ ...i })),
+        formattedDateReported: this.datePipe.transform(new Date(p.dateReported), 'MM/dd/yy hh:mm a', 'America/Denver') || '',
+        formattedResolvedDate: p.resolvedDate
+          ? this.datePipe.transform(new Date(p.resolvedDate), 'MM/dd/yy hh:mm a', 'America/Denver') || ''
+          : ''
+      }));
+    
+      for (const punchList of all) {
+        const reportedDate = new Date(punchList.dateReported);
+        (punchList as any).formattedDateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+      
         if (punchList.resolvedDate) {
-          const resolvedDate = new Date(punchList.resolvedDate + 'Z');
-          punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+          const resolvedDate = new Date(punchList.resolvedDate);
+          (punchList as any).formattedResolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
         }
       }
-
+      
+    
       this.unresolvedPreliminaryPunchList$.next(mapped);
       this.dataSource = new MatTableDataSource(this.filterData(mapped));
       this.dataSource.paginator = this.paginator;
@@ -303,11 +315,15 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.createdBy} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
         return dataStr.includes(transformedFilter);
       };
+    
       this.dataSource.filter = filterValue;
-      this.totalItems = this.dataSource.filteredData.length;
+      this.totalItems = totalCount;
       this.pageIndex = 0;
       this.updateUnresolvedCount();
     });
+    
+    
+    
   }
   
   applyFilters(): void {

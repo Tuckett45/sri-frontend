@@ -77,9 +77,9 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     this.cdRef.detectChanges();
     this.loadResolvedPunchLists(this.user);
   
-    if (this.unresolvedPunchListComponent) {
-      this.unresolvedPunchListComponent.loadUnresolvedPunchLists(this.user);
-    }
+    // if (this.resolvedPunchListComponent) {
+    //   this.resolvedPunchListComponent.loadResolvedPunchLists(this.user);
+    // }
   
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
@@ -92,40 +92,50 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
   
 
-  loadResolvedPunchLists(user: User, pageIndex: number = this.pageIndex, pageSize: number = this.pageSize): void {
+  loadResolvedPunchLists(
+    user: User,
+    pageIndex: number = this.pageIndex,
+    pageSize: number = this.pageSize
+  ): void {
     this.searchTerm = '';
-    this.punchListService.getResolvedPunchLists(user, pageIndex + 1, pageSize).subscribe(
-      (response) => {
-        const results = response.items.map((p: { issues: any[]; }) => ({
+  
+    this.punchListService.getResolvedPunchLists(user, pageIndex + 1, pageSize).subscribe({
+      next: (response) => {
+        const results = response.items.map(p => ({
           ...p,
-          issues: p.issues.map((issue: any) => ({ ...issue }))
+          issues: p.issues.map(issue => ({ ...issue }))
         }));
-
+  
         for (const punchList of results) {
-          const reportedDate = new Date(punchList.dateReported + 'Z');
-          punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+          const reportedDate = new Date(punchList.dateReported);
+          (punchList as any).formattedDateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+        
           if (punchList.resolvedDate) {
-            const resolvedDate = new Date(punchList.resolvedDate + 'Z');
-            punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+            const resolvedDate = new Date(punchList.resolvedDate);
+            (punchList as any).formattedResolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
           }
         }
-
+        
+  
         this.resolvedPreliminaryPunchList$.next(results);
         this.dataSource.data = this.filterData(results);
         this.resolvedPreliminaryPunchLists = results;
         this.totalItems = response.totalCount ?? this.totalItems;
         this.pageIndex = pageIndex;
         this.pageSize = pageSize;
-        if(this.selectedFilters){
+  
+        if (this.selectedFilters) {
           this.applyFilters();
         }
+  
         this.updateResolvedCount();
       },
-      (error) => {
-        this.toastr.error('Error fetching unresolved punch lists', error);
+      error: (error) => {
+        this.toastr.error('Error fetching resolved punch lists', error.message || error);
       }
-    );
+    });
   }
+  
 
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
     let filteredData = data;
@@ -142,10 +152,10 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
 
   updateResolvedCount(): void {
     if(this.dataSource.filter != ''){
-      const resolvedCount = this.dataSource.filteredData.length; 
+      const resolvedCount = this.totalItems; 
       this.resolvedCountChange.emit(resolvedCount);
     }else{
-      const resolvedCount = this.dataSource.data.length; 
+      const resolvedCount = this.totalItems; 
       this.resolvedCountChange.emit(resolvedCount);
     }
   }
@@ -260,33 +270,38 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       return;
     }
 
-    this.punchListService.getAllEntries().subscribe(all => {
+    this.punchListService.getResolvedPunchLists(this.user).subscribe(response => {
+      const all = response.items;
+      const totalCount = response.totalCount;
+    
       const resolved = all.filter(pl => pl.cmResolved && pl.pmResolved);
-      const mapped = resolved.map(p => ({ ...p, issues: p.issues.map(i => ({ ...i })) }));
-
-      for (const punchList of mapped) {
-        const reportedDate = new Date(punchList.dateReported + 'Z');
-        punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
-        if (punchList.resolvedDate) {
-          const resolvedDate = new Date(punchList.resolvedDate + 'Z');
-          punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
-        }
-      }
-
+    
+      const mapped = resolved.map(p => ({
+        ...p,
+        issues: p.issues.map(i => ({ ...i })),
+        formattedDateReported: this.datePipe.transform(new Date(p.dateReported), 'MM/dd/yy hh:mm a', 'America/Denver') || '',
+        formattedResolvedDate: p.resolvedDate
+          ? this.datePipe.transform(new Date(p.resolvedDate), 'MM/dd/yy hh:mm a', 'America/Denver') || ''
+          : ''
+      }));
+    
       this.resolvedPreliminaryPunchList$.next(mapped);
       this.dataSource = new MatTableDataSource(this.filterData(mapped));
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;
+    
       this.dataSource.filterPredicate = (data: any, filter: string) => {
         const transformedFilter = filter.trim().toLowerCase();
         const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.createdBy} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
         return dataStr.includes(transformedFilter);
       };
+    
       this.dataSource.filter = filterValue;
-      this.totalItems = this.dataSource.filteredData.length;
+      this.totalItems = totalCount;
       this.pageIndex = 0;
       this.updateResolvedCount();
     });
+    
   }
   
   applyFilters(): void {

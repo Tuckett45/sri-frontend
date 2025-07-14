@@ -57,4 +57,11 @@ export class DashboardService {
                 .pipe(shareReplay(1));
         }
         return this.pmStatsCache$[key];
-    }  }
+    }  
+
+    clearCache(): void {
+        this.clientStatsCache$ = null;
+        this.sriStatsCache$ = null;
+        this.pmStatsCache$ = {};
+    }
+}

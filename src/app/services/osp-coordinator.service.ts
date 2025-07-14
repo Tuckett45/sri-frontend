@@ -82,4 +82,10 @@ export class OspCoordinatorService {
     this.allCache$ = null;
     return this.http.delete(`${environment.apiUrl}/osp-coordinators/${id}`, this.httpOptions);
   }
+
+  clearCache(): void {
+    this.entriesCache$ = null;
+    this.pagedCache$ = null;
+    this.allCache$ = null;
+  }
 }

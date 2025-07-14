@@ -7,6 +7,9 @@ import { LoginModel } from '../models/login-model.model';
 import { environment, local_environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../models/role.enum';
+import { PreliminaryPunchListService } from './preliminary-punch-list.service';
+import { DashboardService } from './dashboard.service';
+import { OspCoordinatorService } from './osp-coordinator.service';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +26,13 @@ export class AuthService {
     })
   };
   
-  constructor(private router: Router, private http: HttpClient) {
+  constructor(
+    private router: Router, 
+    private http: HttpClient, 
+    private prelimPunchListService: PreliminaryPunchListService,
+    private ospCoordinatorService: OspCoordinatorService,
+    private dashboardService: DashboardService
+  ) {
     this.loadUserFromLocalStorage();
    }
 
@@ -132,9 +141,16 @@ export class AuthService {
 
   logout(): void {
     this.clearStorage();
+    this.clearCaches();
     this.resetCurrentUser();
     this.loggedInStatus.next(false);
     this.router.navigate(['/login']);
+}
+
+private clearCaches(): void {
+    this.prelimPunchListService.clearCache();
+    this.ospCoordinatorService.clearCache();
+    this.dashboardService.clearCache();
 }
 
 private clearStorage(): void {
