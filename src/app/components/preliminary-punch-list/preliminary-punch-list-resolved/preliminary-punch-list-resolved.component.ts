@@ -51,6 +51,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   @Output() resolvedCountChange = new EventEmitter<number>();
 
   galleryImages: any[] = [];
+  private isInitialized = false;
   
   constructor(
     private dialog: MatDialog,
@@ -70,11 +71,9 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
 
   ngAfterViewInit(): void {
-    this.cdRef.detectChanges();
-    this.loadResolvedPunchLists(this.user);
-  
-    if (this.unresolvedPunchListComponent) {
-      this.unresolvedPunchListComponent.loadUnresolvedPunchLists(this.user);
+    if (!this.isInitialized) {
+      this.loadResolvedPunchLists(this.user);
+      this.isInitialized = true;
     }
   
     this.dataSource.paginator = this.paginator;
@@ -95,7 +94,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
           ...p,
           issues: p.issues.map((issue: any) => ({ ...issue }))
         }));
-
+  
         for (const punchList of results) {
           const reportedDate = new Date(punchList.dateReported + 'Z');
           punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
@@ -104,20 +103,34 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
             punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
           }
         }
-
-        this.resolvedPreliminaryPunchList$.next(results);
-        this.dataSource.data = this.filterData(results);
-        this.resolvedPreliminaryPunchLists = results;
-        if(this.selectedFilters){
+  
+        // ✅ Deduplicate by ID
+        const dedupedResults = results.filter((item: { id: any; }, index: any, self: any[]) =>
+          index === self.findIndex((t: { id: any; }) => t.id === item.id)
+        );
+  
+        // ✅ Clear previous data
+        this.resolvedPreliminaryPunchList$.next([]);
+        this.resolvedPreliminaryPunchLists = [];
+        this.dataSource.data = [];
+  
+        // ✅ Set deduped data
+        this.resolvedPreliminaryPunchList$.next(dedupedResults);
+        this.dataSource.data = this.filterData(dedupedResults);
+        this.resolvedPreliminaryPunchLists = dedupedResults;
+  
+        if (this.selectedFilters) {
           this.applyFilters();
         }
+  
         this.updateResolvedCount();
       },
       (error) => {
-        this.toastr.error('Error fetching unresolved punch lists', error);
+        this.toastr.error('Error fetching resolved punch lists', error);
       }
     );
   }
+  
 
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
     let filteredData = data;

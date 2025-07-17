@@ -51,6 +51,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   @Output() unresolvedCountChange = new EventEmitter<number>();
 
   galleryImages: any[] = [];
+  private isInitialized = false;
   
   constructor(
     private dialog: MatDialog,
@@ -75,11 +76,11 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   ngAfterViewInit(): void {
-    this.cdRef.detectChanges();
-    this.loadUnresolvedPunchLists(this.user);
-    // if (this.resolvedPunchListComponent) {
-    //   this.resolvedPunchListComponent.loadResolvedPunchLists(this.user);
-    // }
+    if (!this.isInitialized) {
+      this.loadUnresolvedPunchLists(this.user);
+      this.isInitialized = true;
+    }
+  
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
@@ -91,7 +92,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
           ...p,
           issues: p.issues.map((issue: any) => ({ ...issue }))
         }));
-
+  
+        // Format dates
         for (const punchList of results) {
           const reportedDate = new Date(punchList.dateReported + 'Z');
           punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
@@ -100,13 +102,26 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
             punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
           }
         }
-
-        this.unresolvedPreliminaryPunchList$.next(results);
-        this.dataSource.data = this.filterData(results);
-        this.unresolvedPreliminaryPunchLists = results;
-        if(this.selectedFilters){
+  
+        // ✅ Deduplicate by ID here
+        const dedupedResults = results.filter((item: { id: any; }, index: any, self: any[]) =>
+          index === self.findIndex((t: { id: any; }) => t.id === item.id)
+        );
+  
+        // ✅ Clear previous data
+        this.unresolvedPreliminaryPunchList$.next([]);
+        this.unresolvedPreliminaryPunchLists = [];
+        this.dataSource.data = [];
+  
+        // ✅ Set new data
+        this.unresolvedPreliminaryPunchList$.next(dedupedResults);
+        this.dataSource.data = this.filterData(dedupedResults);
+        this.unresolvedPreliminaryPunchLists = dedupedResults;
+  
+        if (this.selectedFilters) {
           this.applyFilters();
         }
+  
         this.updateUnresolvedCount();
       },
       (error) => {
@@ -114,6 +129,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       }
     );
   }
+  
 
   updateUnresolvedCount(): void {
     if(this.dataSource.filter != ''){
