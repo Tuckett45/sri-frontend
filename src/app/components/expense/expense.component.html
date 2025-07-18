@@ -1,0 +1,29 @@
+<div class="p-mb-3">
+  <app-expense-form (submitted)="onExpenseSubmit($event)"></app-expense-form>
+</div>
+<p-table [value]="expenses" [paginator]="true" [rows]="10" [loading]="loading">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Date</th>
+      <th>Category</th>
+      <th>Amount</th>
+      <th>Description</th>
+      <th>Receipt</th>
+      <th>Status</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-expense>
+    <tr>
+      <td>{{ expense.date | date:'shortDate' }}</td>
+      <td>{{ expense.category }}</td>
+      <td>{{ expense.amount | currency }}</td>
+      <td>{{ expense.description }}</td>
+      <td>
+        <a *ngIf="expense.receiptUrl" [href]="expense.receiptUrl" target="_blank">View</a>
+      </td>
+      <td>
+        <p-tag [value]="expense.status"></p-tag>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
