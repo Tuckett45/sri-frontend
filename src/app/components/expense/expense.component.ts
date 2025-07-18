@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ExpenseApiService } from 'src/app/services/expense-api.service';
 import { Expense } from 'src/app/models/expense.model';
 import { ToastrService } from 'ngx-toastr';
+import { MatDialog } from '@angular/material/dialog';
+import { ExpenseReportModalComponent } from '../modals/expense-report-modal/expense-report-modal.component';
 
 @Component({
   selector: 'app-expense',
@@ -14,7 +16,8 @@ export class ExpenseComponent implements OnInit {
 
   constructor(
     private expenseApi: ExpenseApiService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -42,6 +45,19 @@ export class ExpenseComponent implements OnInit {
         this.loadExpenses();
       },
       error: () => this.toastr.error('Submission failed')
+    });
+  }
+
+  openAddExpense() {
+    const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
+      width: '500px',
+      data: null
+    });
+
+    dialogRef.afterClosed().subscribe((formData: FormData | undefined) => {
+      if (formData) {
+        this.onExpenseSubmit(formData);
+      }
     });
   }
 }

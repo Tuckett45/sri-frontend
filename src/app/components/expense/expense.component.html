@@ -1,5 +1,5 @@
-<div class="p-mb-3">
-  <app-expense-form (submitted)="onExpenseSubmit($event)"></app-expense-form>
+<div class="p-mb-3 text-right">
+  <button pButton type="button" label="Add Expenses" icon="pi pi-plus" (click)="openAddExpense()"></button>
 </div>
 <p-table [value]="expenses" [paginator]="true" [rows]="10" [loading]="loading">
   <ng-template pTemplate="header">

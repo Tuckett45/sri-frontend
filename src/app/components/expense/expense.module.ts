@@ -10,6 +10,7 @@ import { Textarea } from 'primeng/inputtextarea';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @NgModule({
   declarations: [ExpenseComponent, ExpenseFormComponent],
@@ -23,7 +24,8 @@ import { TagModule } from 'primeng/tag';
     Textarea,
     TableModule,
     ButtonModule,
-    TagModule
+    TagModule,
+    MatDialogModule
   ]
 })
 export class ExpenseModule {}
