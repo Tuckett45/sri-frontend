@@ -1,0 +1,42 @@
+<div mat-dialog-title class="modal-header">
+  <h3 class="modal-title">Add Expense</h3>
+  <button mat-icon-button (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div mat-dialog-content class="modal-body">
+  <form [formGroup]="expenseForm">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Date</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="date">
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Category</mat-label>
+      <input matInput formControlName="category" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Amount</mat-label>
+      <input matInput type="number" formControlName="amount" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description"></textarea>
+    </mat-form-field>
+
+    <div class="file-input-wrapper">
+      <label class="custom-label">Receipt</label>
+      <input type="file" (change)="onFileChange($event)">
+    </div>
+  </form>
+</div>
+
+<div mat-dialog-actions class="modal-footer">
+  <button mat-raised-button class="cancel-btn" (click)="close()">Cancel</button>
+  <button mat-raised-button class="save-btn" (click)="save()" [disabled]="expenseForm.invalid">Save</button>
+</div>
