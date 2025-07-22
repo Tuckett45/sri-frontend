@@ -331,9 +331,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       id: [issueArea.id],
       area: [issueArea.area, Validators.required],
       category: [issueArea.category, Validators.required],
-      subCategory: [Array.isArray(issueArea.subCategory)
-        ? issueArea.subCategory 
-        : (issueArea.subCategory ? issueArea.subCategory.split(',').map(q => q.trim()) : [])],
+      subCategory: [issueArea.subCategory
+      ],
       preliminaryPunchListId: [issueArea.preliminaryPunchListId],
       errorCodeId: [issueArea.errorCodeId]
     }));
@@ -542,14 +541,22 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       if (typeof punchList.resolvedDate === 'string') {
         punchList.resolvedDate = new Date(punchList.resolvedDate);
       }
+
+      
   
-      punchList.issues = punchList.issues.map((issue: any) => ({
-        ...issue,
-        area: issue.area,
-        category: issue.category,
-        subCategory: Array.isArray(issue.subCategory) ? issue.subCategory.join(',') : issue.subCategory,
-        errorCodeId: this.errorCodes.find(errorCode => issue.subCategory == errorCode.subCategory)?.id
-      }));
+      punchList.issues = punchList.issues.map((issue: any) => {
+        const resolvedSub = Array.isArray(issue.subCategory)
+          ? issue.subCategory.join(',')
+          : issue.subCategory ?? '';
+      
+        return {
+          ...issue,
+          area: issue.area,
+          category: issue.category,
+          subCategory: resolvedSub,
+          errorCodeId: this.errorCodes.find(errorCode => issue.subCategory?.includes(errorCode.subCategory))?.id
+        };
+      });
   
       if (this.isEditMode) {
         punchList.updatedBy = this.userData.id;
