@@ -18,6 +18,47 @@ mat-form-field {
   flex-direction: column;
 }
 
+.file-preview {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.image-label {
+  font-size: medium;
+  color: #0c0c0c;
+}
+
+.preview-image {
+  width: 100px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.image-btn {
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #fff;
+  background-color: #144f80;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+}
+
+.delete-icon {
+  cursor: pointer;
+  color: #f44336;
+
+  &:hover {
+    color: #e53935;
+  }
+}
+
 .modal-header {
   background-color: #144f80;
   padding: 15px 25px;

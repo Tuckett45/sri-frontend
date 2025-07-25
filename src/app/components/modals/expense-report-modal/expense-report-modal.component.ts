@@ -14,6 +14,8 @@ export class ExpenseReportModalComponent {
   expenseForm: FormGroup;
   receiptFile?: File;
   receiptBase64?: string;
+  isGalleryVisible = false;
+  galleryImages: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -35,9 +37,27 @@ export class ExpenseReportModalComponent {
       const reader = new FileReader();
       reader.onload = () => {
         this.receiptBase64 = reader.result as string;
+        this.galleryImages = [{ itemImageSrc: this.receiptBase64 }];
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  removeImage() {
+    this.receiptFile = undefined;
+    this.receiptBase64 = undefined;
+    this.galleryImages = [];
+  }
+
+  openGallery() {
+    if (this.receiptBase64) {
+      this.galleryImages = [{ itemImageSrc: this.receiptBase64 }];
+      this.isGalleryVisible = true;
+    }
+  }
+
+  closeImageModal() {
+    this.isGalleryVisible = false;
   }
 
   save() {

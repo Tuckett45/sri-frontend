@@ -14,6 +14,8 @@ import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-
 export class ExpenseComponent implements OnInit {
   expenses: Expense[] = [];
   loading = false;
+  isReceiptGalleryVisible = false;
+  galleryImages: any[] = [];
 
   constructor(
     private expenseApi: ExpenseApiService,
@@ -100,5 +102,14 @@ export class ExpenseComponent implements OnInit {
       },
       error: () => this.toastr.error('Deletion failed')
     });
+  }
+
+  openGallery(image: string) {
+    this.galleryImages = [{ itemImageSrc: image }];
+    this.isReceiptGalleryVisible = true;
+  }
+
+  closeImageModal() {
+    this.isReceiptGalleryVisible = false;
   }
 }
