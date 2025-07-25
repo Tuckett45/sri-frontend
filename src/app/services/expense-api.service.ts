@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environments';
 import { Expense } from '../models/expense.model';
@@ -8,13 +8,21 @@ import { Expense } from '../models/expense.model';
   providedIn: 'root'
 })
 export class ExpenseApiService {
+  private httpOptions = {
+    headers: new HttpHeaders({
+      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+    })
+  };
+
+  private baseUrl = `${environment.apiUrl}/expenses`;
+
   constructor(private http: HttpClient) {}
 
-  submitExpense(formData: FormData): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/expenses`, formData);
+  submitExpense(expense: FormData): Observable<Expense> {
+    return this.http.post<Expense>(this.baseUrl, expense, this.httpOptions);
   }
 
-  getMyExpenses(): Observable<Expense[]> {
-    return this.http.get<Expense[]>(`${environment.apiUrl}/expenses/my`);
+  getExpenses(): Observable<Expense[]> {
+    return this.http.get<Expense[]>(this.baseUrl, this.httpOptions);
   }
 }

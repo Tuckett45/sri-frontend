@@ -26,7 +26,7 @@ export class ExpenseComponent implements OnInit {
 
   loadExpenses() {
     this.loading = true;
-    this.expenseApi.getMyExpenses().subscribe({
+    this.expenseApi.getExpenses().subscribe({
       next: (res) => {
         this.expenses = res;
         this.loading = false;
