@@ -30,4 +30,16 @@ export class ExpenseApiService {
   getExpenses(): Observable<Expense[]> {
     return this.http.get<Expense[]>(this.baseUrl, this.httpOptions);
   }
+
+  updateExpense(expense: Expense): Observable<void> {
+    const payload = {
+      ...expense,
+      date: expense.date instanceof Date ? expense.date.toISOString() : expense.date
+    };
+    return this.http.put<void>(`${this.baseUrl}/${expense.id}`, payload, this.httpOptions);
+  }
+
+  deleteExpense(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`, this.httpOptions);
+  }
 }

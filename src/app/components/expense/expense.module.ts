@@ -11,6 +11,8 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [ExpenseComponent, ExpenseFormComponent],
@@ -25,7 +27,9 @@ import { MatDialogModule } from '@angular/material/dialog';
     TableModule,
     ButtonModule,
     TagModule,
-    MatDialogModule
+    MatDialogModule,
+    MatIconModule,
+    MatButtonModule
   ]
 })
 export class ExpenseModule {}

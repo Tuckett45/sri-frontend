@@ -1,1 +1,57 @@
 /* Style adjustments for expense page */
+
+.table-wrapper {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    margin-top: 20px;
+    min-width: 600px;
+
+    th {
+      background-color: #e18a25;
+      color: white;
+      padding: 10px 0 10px 10px;
+    }
+
+    td {
+      text-align: center;
+      padding: 10px;
+    }
+
+    tr:nth-child(odd) {
+      background-color: #000000;
+    }
+
+    tr:nth-child(even) {
+      background-color: #525252;
+    }
+  }
+}
+
+.actions-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-icon {
+  cursor: pointer;
+  font-size: 20px;
+  color: #e18a25;
+
+  &:hover {
+    color: #b86404;
+  }
+}
+
+.delete-icon {
+  cursor: pointer;
+  font-size: 20px;
+  color: #f44336;
+
+  &:hover {
+    color: #e53935;
+  }
+}

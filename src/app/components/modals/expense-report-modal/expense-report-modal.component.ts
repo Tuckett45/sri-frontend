@@ -48,13 +48,13 @@ export class ExpenseReportModalComponent {
 
     const value = this.expenseForm.value;
     const expense = new Expense({
-      id: uuidv4(),
+      id: this.data?.id || uuidv4(),
       date: value.date,
       category: value.category!,
       amount: value.amount!,
       description: value.description || '',
       receiptUrl: this.receiptBase64,
-      status: ExpenseStatus.Pending
+      status: this.data?.status || ExpenseStatus.Pending
     });
 
     this.dialogRef.close(expense);
