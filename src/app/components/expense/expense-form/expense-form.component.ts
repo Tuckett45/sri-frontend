@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { Expense } from 'src/app/models/expense.model';
+import { Expense, ExpenseStatus } from 'src/app/models/expense.model';
 import { v4 as uuidv4 } from 'uuid';
 
 @Component({
@@ -44,15 +44,15 @@ export class ExpenseFormComponent {
     }
 
     const value = this.form.value;
-    const expense = new Expense(
-      value.date!,
-      value.category!,
-      value.amount!,
-      value.description || '',
-      this.receiptBase64
-    );
-
-    expense.id = uuidv4();
+    const expense = new Expense({
+      id: uuidv4(),
+      date: value.date!,
+      category: value.category!,
+      amount: value.amount!,
+      description: value.description || '',
+      receiptUrl: this.receiptBase64,
+      status: ExpenseStatus.Pending
+    });
 
     this.submitted.emit(expense);
   }

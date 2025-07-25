@@ -1,27 +1,23 @@
-export type ExpenseStatus = 'submitted' | 'approved' | 'rejected' | 'reimbursed';
+export enum ExpenseStatus {
+  Pending = 'Pending',
+  Approved = 'Approved',
+  Rejected = 'Rejected'
+}
 
 export class Expense {
   id?: string;
-  date: Date;
-  category: string;
-  amount: number;
+  date!: Date;
+  category!: string;
+  amount!: number;
   description?: string;
   receiptUrl?: string;
-  status: ExpenseStatus;
+  status!: ExpenseStatus;
+  createdBy?: string;
+  createdDate?: Date;
+  updatedBy?: string;
+  updatedDate?: Date;
 
-  constructor(
-    date: Date = new Date(),
-    category: string = '',
-    amount: number = 0,
-    description?: string,
-    receiptUrl?: string,
-    status: ExpenseStatus = 'submitted'
-  ) {
-    this.date = date;
-    this.category = category;
-    this.amount = amount;
-    this.description = description;
-    this.receiptUrl = receiptUrl;
-    this.status = status;
+  constructor(init?: Partial<Expense>) {
+    Object.assign(this, init);
   }
 }

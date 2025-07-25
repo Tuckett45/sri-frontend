@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Expense } from 'src/app/models/expense.model';
+import { Expense, ExpenseStatus } from 'src/app/models/expense.model';
 import { v4 as uuidv4 } from 'uuid';
 
 @Component({
@@ -47,15 +47,15 @@ export class ExpenseReportModalComponent {
     }
 
     const value = this.expenseForm.value;
-    const expense = new Expense(
-      value.date,
-      value.category!,
-      value.amount!,
-      value.description || '',
-      this.receiptBase64
-    );
-
-    expense.id = uuidv4();
+    const expense = new Expense({
+      id: uuidv4(),
+      date: value.date,
+      category: value.category!,
+      amount: value.amount!,
+      description: value.description || '',
+      receiptUrl: this.receiptBase64,
+      status: ExpenseStatus.Pending
+    });
 
     this.dialogRef.close(expense);
   }
