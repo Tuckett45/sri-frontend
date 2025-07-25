@@ -12,6 +12,7 @@ import { Expense } from 'src/app/models/expense.model';
 export class ExpenseReportModalComponent {
   expenseForm: FormGroup;
   receiptFile?: File;
+  receiptBase64?: string;
 
   constructor(
     private fb: FormBuilder,
@@ -30,6 +31,11 @@ export class ExpenseReportModalComponent {
     const file = event.target.files && event.target.files[0];
     if (file) {
       this.receiptFile = file;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.receiptBase64 = reader.result as string;
+      };
+      reader.readAsDataURL(file);
     }
   }
 
@@ -39,24 +45,16 @@ export class ExpenseReportModalComponent {
       return;
     }
 
-    const formData = new FormData();
     const value = this.expenseForm.value;
-    Object.keys(value).forEach(key => {
-      const val = value[key as keyof typeof value];
-      if (val !== null && val !== undefined) {
-        if (key === 'date' && val) {
-          formData.append(key, (val as Date).toISOString());
-        } else {
-          formData.append(key, val as any);
-        }
-      }
-    });
+    const expense = new Expense(
+      value.date,
+      value.category!,
+      value.amount!,
+      value.description || '',
+      this.receiptBase64
+    );
 
-    if (this.receiptFile) {
-      formData.append('receipt', this.receiptFile);
-    }
-
-    this.dialogRef.close(formData);
+    this.dialogRef.close(expense);
   }
 
   close() {

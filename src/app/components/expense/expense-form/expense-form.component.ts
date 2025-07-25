@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { Expense } from 'src/app/models/expense.model';
 
 @Component({
   selector: 'app-expense-form',
@@ -8,7 +9,7 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: ['./expense-form.component.scss']
 })
 export class ExpenseFormComponent {
-  @Output() submitted = new EventEmitter<FormData>();
+  @Output() submitted = new EventEmitter<Expense>();
 
   form = this.fb.group({
     date: [new Date(), Validators.required],
@@ -19,6 +20,7 @@ export class ExpenseFormComponent {
   });
 
   receiptFile?: File;
+  receiptBase64?: string;
 
   constructor(private fb: FormBuilder, private toastr: ToastrService) {}
 
@@ -26,6 +28,11 @@ export class ExpenseFormComponent {
     const file = event.target.files && event.target.files[0];
     if (file) {
       this.receiptFile = file;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.receiptBase64 = reader.result as string;
+      };
+      reader.readAsDataURL(file);
     }
   }
 
@@ -35,21 +42,15 @@ export class ExpenseFormComponent {
       return;
     }
 
-    const formData = new FormData();
-    Object.entries(this.form.value).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        if (key === 'date' && value) {
-          formData.append(key, (value as Date).toISOString());
-        } else if (key !== 'receipt') {
-          formData.append(key, value as any);
-        }
-      }
-    });
+    const value = this.form.value;
+    const expense = new Expense(
+      value.date!,
+      value.category!,
+      value.amount!,
+      value.description || '',
+      this.receiptBase64
+    );
 
-    if (this.receiptFile) {
-      formData.append('receipt', this.receiptFile);
-    }
-
-    this.submitted.emit(formData);
+    this.submitted.emit(expense);
   }
 }

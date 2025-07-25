@@ -10,6 +10,7 @@ import { Expense } from '../models/expense.model';
 export class ExpenseApiService {
   private httpOptions = {
     headers: new HttpHeaders({
+      'Content-Type': 'application/json',
       'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
     })
   };
@@ -18,8 +19,12 @@ export class ExpenseApiService {
 
   constructor(private http: HttpClient) {}
 
-  submitExpense(expense: FormData): Observable<Expense> {
-    return this.http.post<Expense>(this.baseUrl, expense, this.httpOptions);
+  submitExpense(expense: Expense): Observable<Expense> {
+    const payload = {
+      ...expense,
+      date: expense.date instanceof Date ? expense.date.toISOString() : expense.date
+    };
+    return this.http.post<Expense>(this.baseUrl, payload, this.httpOptions);
   }
 
   getExpenses(): Observable<Expense[]> {

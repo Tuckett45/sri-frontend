@@ -38,8 +38,8 @@ export class ExpenseComponent implements OnInit {
     });
   }
 
-  onExpenseSubmit(formData: FormData) {
-    this.expenseApi.submitExpense(formData).subscribe({
+  onExpenseSubmit(expense: Expense) {
+    this.expenseApi.submitExpense(expense).subscribe({
       next: () => {
         this.toastr.success('Expense submitted');
         this.loadExpenses();
@@ -54,9 +54,9 @@ export class ExpenseComponent implements OnInit {
       data: null
     });
 
-    dialogRef.afterClosed().subscribe((formData: FormData | undefined) => {
-      if (formData) {
-        this.onExpenseSubmit(formData);
+    dialogRef.afterClosed().subscribe((expense: Expense | undefined) => {
+      if (expense) {
+        this.onExpenseSubmit(expense);
       }
     });
   }
