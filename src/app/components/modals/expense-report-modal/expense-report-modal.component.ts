@@ -2,6 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Expense } from 'src/app/models/expense.model';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-expense-report-modal',
@@ -53,6 +54,8 @@ export class ExpenseReportModalComponent {
       value.description || '',
       this.receiptBase64
     );
+
+    expense.id = uuidv4();
 
     this.dialogRef.close(expense);
   }

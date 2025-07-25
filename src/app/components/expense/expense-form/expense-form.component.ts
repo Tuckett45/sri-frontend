@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { Expense } from 'src/app/models/expense.model';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-expense-form',
@@ -50,6 +51,8 @@ export class ExpenseFormComponent {
       value.description || '',
       this.receiptBase64
     );
+
+    expense.id = uuidv4();
 
     this.submitted.emit(expense);
   }
