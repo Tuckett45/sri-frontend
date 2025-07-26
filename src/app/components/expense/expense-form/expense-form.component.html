@@ -1,0 +1,48 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="p-fluid grid expense-form">
+  <div class="col-12 md:col-6">
+    <label for="date">Date</label>
+    <p-calendar id="date" formControlName="date" dateFormat="mm/dd/yy"></p-calendar>
+  </div>
+  <div class="col-12 md:col-6">
+    <label for="category">Category</label>
+    <p-autoComplete
+      inputId="category"
+      formControlName="category"
+      [suggestions]="filteredCategories"
+      (completeMethod)="searchCategory($event)"
+      [dropdown]="true"
+    ></p-autoComplete>
+  </div>
+  <div class="col-12 md:col-6">
+    <label for="amount">Amount</label>
+    <input pInputText type="number" id="amount" formControlName="amount" />
+    <small class="hint" *ngIf="(form.get('amount')?.value || 0) > 500">
+      Please upload a receipt for expenses over $500
+    </small>
+  </div>
+  <div class="col-12">
+    <label for="description">Description</label>
+    <textarea
+      #descriptionInput
+      pInputTextarea
+      id="description"
+      formControlName="description"
+    ></textarea>
+  </div>
+  <div class="col-12">
+    <label for="receipt">Receipt</label>
+    <input type="file" id="receipt" (change)="onFileChange($event)" />
+    <div *ngIf="receiptBase64" class="preview-wrapper">
+      <img *ngIf="isImage()" [src]="receiptBase64" class="preview" />
+      <embed
+        *ngIf="!isImage()"
+        [src]="receiptBase64"
+        type="application/pdf"
+        class="preview"
+      />
+    </div>
+  </div>
+  <div class="col-12">
+    <button pButton type="submit" label="Submit" class="w-full" [disabled]="form.invalid"></button>
+  </div>
+</form>
