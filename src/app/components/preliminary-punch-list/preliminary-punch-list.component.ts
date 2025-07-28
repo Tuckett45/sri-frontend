@@ -110,10 +110,20 @@ export class PreliminaryPunchListComponent implements OnInit {
   }
 
   populateFilterOptions(data: PreliminaryPunchList[]): void {
+    const segmentIds = data
+      .map(item => (item.segmentId || '').trim().toUpperCase())
+      .filter(id => id);                                         
+    const vendorNames = data
+      .map(item => (item.vendorName || '').trim())
+      .filter(name => name);
+    const states = data
+      .map(item => (item.state || '').trim().toUpperCase())
+      .filter(st => st);
+  
     this.filterOptions = {
-      segmentId: [...new Set(data.map(item => item.segmentId))],
-      vendorName: [...new Set(data.map(item => item.vendorName))],
-      state: [...new Set(data.map(item => item.state))],
+      segmentId: Array.from(new Set(segmentIds)).sort(),
+      vendorName: Array.from(new Set(vendorNames)).sort(),
+      state: Array.from(new Set(states)).sort(),
     };
   }
 
