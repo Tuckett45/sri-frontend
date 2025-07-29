@@ -159,6 +159,14 @@
   color: #ffffff;
 }
 
+.expense-tabs {
+  margin-top: 1rem;
+}
+
+.active-tab {
+  background-color: #e18a25 !important;
+}
+
 ::ng-deep .p-galleria-close-button:focus-visible {
   box-shadow: none;
   outline: 1px solid #020617;

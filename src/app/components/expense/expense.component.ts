@@ -16,6 +16,7 @@ export class ExpenseComponent implements OnInit {
   loading = false;
   isReceiptGalleryVisible = false;
   galleryImages: any[] = [];
+  activeTab = 0;
 
   constructor(
     private expenseApi: ExpenseApiService,

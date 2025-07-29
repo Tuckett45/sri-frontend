@@ -16,6 +16,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { GalleriaModule } from 'primeng/galleria';
+import { TabsModule } from 'primeng/tabs';
 
 @NgModule({
   declarations: [ExpenseComponent, ExpenseFormComponent, MyExpensesComponent],
@@ -31,6 +32,7 @@ import { GalleriaModule } from 'primeng/galleria';
     ButtonModule,
     TagModule,
     DropdownModule,
+    TabsModule,
     GalleriaModule,
     MatDialogModule,
     MatIconModule,

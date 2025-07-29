@@ -1,62 +1,77 @@
-<div class="p-mb-3 text-right">
-  <button pButton type="button" label="Add Expenses" icon="pi pi-plus" (click)="openAddExpense()"></button>
-</div>
-<div class="table-wrapper">
-<p-table [value]="expenses" [paginator]="true" [rows]="10" [loading]="loading">
-  <ng-template pTemplate="header">
-    <tr>
-      <th>Date</th>
-      <th>Category</th>
-      <th>Amount</th>
-      <th>Description</th>
-      <th>Receipt</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </ng-template>
-  <ng-template pTemplate="body" let-expense>
-    <tr>
-      <td>{{ expense.date | date:'shortDate' }}</td>
-      <td>{{ expense.category }}</td>
-      <td>{{ expense.amount | currency }}</td>
-      <td>{{ expense.description }}</td>
-      <td>
-        <button mat-raised-button class="image-btn" *ngIf="expense.receiptUrl" (click)="openGallery(expense.receiptUrl)">
-          Receipt
-          <mat-icon>photo_library</mat-icon>
-        </button>
-        <p-galleria *ngIf="isReceiptGalleryVisible"
-                    [value]="galleryImages"
-                    [(visible)]="isReceiptGalleryVisible"
-                    [responsiveOptions]="[{ breakpoint: '1024px', numVisible: 3 }, { breakpoint: '768px', numVisible: 2 }, { breakpoint: '560px', numVisible: 1 }]"
-                    [containerStyle]="{ 'max-width': '80%' }"
-                    [circular]="true"
-                    [fullScreen]="true"
-                    [transitionInterval]="1500"
-                    [showItemNavigators]="true"
-                    [showThumbnails]="true">
-          <ng-template pTemplate="item" let-item>
-            <div style="display: flex; justify-content: center; align-items: center;">
-              <img [src]="item.itemImageSrc"
-                   style="max-width: 80%; max-height: 1000px; object-fit: contain; display: block; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);" />
-            </div>
-          </ng-template>
-          <ng-template pTemplate="thumbnail" let-item>
-            <div style="display: flex; justify-content: center; align-items: center;">
-              <img [src]="item.itemImageSrc"
-                   style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer; border: 2px solid #ddd;" />
-            </div>
-          </ng-template>
-        </p-galleria>
-      </td>
-      <td>
-        <p-tag [value]="expense.status"></p-tag>
-      </td>
-      <td class="actions-container">
-        <mat-icon class="edit-icon" (click)="openEditExpense(expense)">edit</mat-icon>
-        <mat-icon class="delete-icon" (click)="openDeleteConfirmationDialog(expense)">delete</mat-icon>
-      </td>
-    </tr>
-  </ng-template>
-</p-table>
+<div class="expense-tabs">
+  <p-tabs [(value)]="activeTab">
+    <p-tablist>
+      <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">Expense List</p-tab>
+      <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">My Expenses</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel [value]="0">
+        <div class="p-mb-3 text-right">
+          <button pButton type="button" label="Add Expenses" icon="pi pi-plus" (click)="openAddExpense()"></button>
+        </div>
+        <div class="table-wrapper">
+          <p-table [value]="expenses" [paginator]="true" [rows]="10" [loading]="loading">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Receipt</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-expense>
+              <tr>
+                <td>{{ expense.date | date:'shortDate' }}</td>
+                <td>{{ expense.category }}</td>
+                <td>{{ expense.amount | currency }}</td>
+                <td>{{ expense.description }}</td>
+                <td>
+                  <button mat-raised-button class="image-btn" *ngIf="expense.receiptUrl" (click)="openGallery(expense.receiptUrl)">
+                    Receipt
+                    <mat-icon>photo_library</mat-icon>
+                  </button>
+                  <p-galleria *ngIf="isReceiptGalleryVisible"
+                              [value]="galleryImages"
+                              [(visible)]="isReceiptGalleryVisible"
+                              [responsiveOptions]="[{ breakpoint: '1024px', numVisible: 3 }, { breakpoint: '768px', numVisible: 2 }, { breakpoint: '560px', numVisible: 1 }]"
+                              [containerStyle]="{ 'max-width': '80%' }"
+                              [circular]="true"
+                              [fullScreen]="true"
+                              [transitionInterval]="1500"
+                              [showItemNavigators]="true"
+                              [showThumbnails]="true">
+                    <ng-template pTemplate="item" let-item>
+                      <div style="display: flex; justify-content: center; align-items: center;">
+                        <img [src]="item.itemImageSrc"
+                             style="max-width: 80%; max-height: 1000px; object-fit: contain; display: block; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);" />
+                      </div>
+                    </ng-template>
+                    <ng-template pTemplate="thumbnail" let-item>
+                      <div style="display: flex; justify-content: center; align-items: center;">
+                        <img [src]="item.itemImageSrc"
+                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer; border: 2px solid #ddd;" />
+                      </div>
+                    </ng-template>
+                  </p-galleria>
+                </td>
+                <td>
+                  <p-tag [value]="expense.status"></p-tag>
+                </td>
+                <td class="actions-container">
+                  <mat-icon class="edit-icon" (click)="openEditExpense(expense)">edit</mat-icon>
+                  <mat-icon class="delete-icon" (click)="openDeleteConfirmationDialog(expense)">delete</mat-icon>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabpanel>
+      <p-tabpanel [value]="1">
+        <app-my-expenses></app-my-expenses>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
 </div>
