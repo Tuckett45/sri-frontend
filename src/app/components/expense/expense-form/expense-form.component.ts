@@ -1,8 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { Expense, ExpenseStatus } from 'src/app/models/expense.model';
+import { ExpenseApiService } from 'src/app/services/expense-api.service';
 import { v4 as uuidv4 } from 'uuid';
+import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 
 @Component({
   selector: 'app-expense-form',
@@ -10,50 +14,105 @@ import { v4 as uuidv4 } from 'uuid';
   styleUrls: ['./expense-form.component.scss']
 })
 export class ExpenseFormComponent {
-  @Output() submitted = new EventEmitter<Expense>();
+  expenses: Expense[] = [];
+  loading = false;
+  isReceiptGalleryVisible = false;
+  galleryImages: any[] = [];
 
-  form = this.fb.group({
-    date: [new Date(), Validators.required],
-    category: ['', Validators.required],
-    amount: [null, Validators.required],
-    description: [''],
-    receipt: [null]
-  });
+  constructor(
+    private fb: FormBuilder, 
+    private toastr: ToastrService,
+    private expenseApi: ExpenseApiService,
+    private dialog: MatDialog
+  ) {}
 
-  receiptFile?: File;
-  receiptBase64?: string;
-
-  constructor(private fb: FormBuilder, private toastr: ToastrService) {}
-
-  onFileChange(event: any) {
-    const file = event.target.files && event.target.files[0];
-    if (file) {
-      this.receiptFile = file;
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.receiptBase64 = reader.result as string;
-      };
-      reader.readAsDataURL(file);
-    }
+  ngOnInit() {
+    this.loadExpenses();
   }
 
-  submit() {
-    if (this.form.invalid) {
-      this.toastr.error('Please fill all required fields');
-      return;
-    }
-
-    const value = this.form.value;
-    const expense = new Expense({
-      id: uuidv4(),
-      date: value.date!,
-      category: value.category!,
-      amount: value.amount!,
-      description: value.description || '',
-      receiptUrl: this.receiptBase64,
-      status: ExpenseStatus.Pending
+  openAddExpense() {
+    const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
+      width: '500px',
+      data: null
     });
 
-    this.submitted.emit(expense);
+    dialogRef.afterClosed().subscribe((expense: Expense | undefined) => {
+      if (expense) {
+        this.onExpenseSubmit(expense);
+      }
+    });
+  }
+
+  openEditExpense(expense: Expense) {
+    const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
+      width: '500px',
+      data: expense
+    });
+
+    dialogRef.afterClosed().subscribe((updated: Expense | undefined) => {
+      if (updated) {
+        this.expenseApi.updateExpense(updated).subscribe({
+          next: () => {
+            this.toastr.success('Expense updated');
+            this.loadExpenses();
+          },
+          error: () => this.toastr.error('Update failed')
+        });
+      }
+    });
+  }
+
+  loadExpenses() {
+    this.loading = true;
+    this.expenseApi.getExpenses().subscribe({
+      next: (res) => {
+        this.expenses = res;
+        this.loading = false;
+      },
+      error: () => {
+        this.toastr.error('Failed to load expenses');
+        this.loading = false;
+      }
+    });
+  }
+
+  onExpenseSubmit(expense: Expense) {
+    this.expenseApi.submitExpense(expense).subscribe({
+      next: () => {
+        this.toastr.success('Expense submitted');
+        this.loadExpenses();
+      },
+      error: () => this.toastr.error('Submission failed')
+    });
+  }
+
+  openDeleteConfirmationDialog(expense: Expense) {
+    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.deleteExpense(expense);
+      }
+    });
+  }
+
+  deleteExpense(expense: Expense) {
+    if (!expense.id) return;
+    this.expenseApi.deleteExpense(expense.id).subscribe({
+      next: () => {
+        this.toastr.success('Expense deleted');
+        this.loadExpenses();
+      },
+      error: () => this.toastr.error('Deletion failed')
+    });
+  }
+
+  openGallery(image: string) {
+    this.galleryImages = [{ itemImageSrc: image }];
+    this.isReceiptGalleryVisible = true;
+  }
+
+  closeImageModal() {
+    this.isReceiptGalleryVisible = false;
   }
 }

@@ -17,6 +17,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { GalleriaModule } from 'primeng/galleria';
 import { TabsModule } from 'primeng/tabs';
+import { MatPaginator } from "@angular/material/paginator";
+import { MatAutocompleteModule } from "@angular/material/autocomplete";
+import { MatLabel, MatFormField } from "@angular/material/form-field";
+
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
 
 @NgModule({
   declarations: [ExpenseComponent, ExpenseFormComponent, MyExpensesComponent],
@@ -36,7 +48,21 @@ import { TabsModule } from 'primeng/tabs';
     GalleriaModule,
     MatDialogModule,
     MatIconModule,
-    MatButtonModule
-  ]
+    MatButtonModule,
+    MatPaginator,
+    MatAutocompleteModule,
+    MatLabel,
+    MatFormField,
+    MatSortModule,
+    MatAutocompleteModule,
+    MatButtonModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatPaginatorModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatTableModule
+]
 })
 export class ExpenseModule {}

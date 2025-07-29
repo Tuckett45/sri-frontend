@@ -8,6 +8,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 
 @Component({
   selector: 'app-my-expenses',
@@ -18,6 +22,15 @@ export class MyExpensesComponent implements OnInit {
   expenses: Expense[] = [];
   filteredExpenses: Expense[] = [];
   statusOptions = Object.values(ExpenseStatus);
+
+  displayedColumns: string[] = ['date', 'category', 'amount', 'description', 'status', 'actions'];
+  dataSource = new MatTableDataSource<Expense>(this.filteredExpenses);
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  isReceiptGalleryVisible = false;
+  galleryImages: any[] = [];
 
   filterForm = this.fb.group({
     startDate: [null],
@@ -40,10 +53,16 @@ export class MyExpensesComponent implements OnInit {
     this.filterForm.valueChanges.subscribe(() => this.applyFilters());
   }
 
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+
   loadExpenses() {
     this.expenseApi.getExpenses().subscribe({
       next: res => {
         this.expenses = res;
+        this.dataSource.data = this.expenses;
         this.applyFilters();
       },
       error: () => this.toastr.error('Failed to load expenses')
@@ -79,22 +98,75 @@ export class MyExpensesComponent implements OnInit {
     doc.save('expenses.pdf');
   }
 
-  cloneExpense(expense: Expense) {
+  openAddExpense() {
     const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
       width: '500px',
-      data: { ...expense, id: undefined }
+      data: null
     });
 
-    dialogRef.afterClosed().subscribe((cloned: Expense | undefined) => {
-      if (cloned) {
-        this.expenseApi.submitExpense(cloned).subscribe({
+    dialogRef.afterClosed().subscribe((expense: Expense | undefined) => {
+      if (expense) {
+        this.onExpenseSubmit(expense);
+      }
+    });
+  }
+
+  openEditExpense(expense: Expense) {
+    const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
+      width: '500px',
+      data: expense
+    });
+
+    dialogRef.afterClosed().subscribe((updated: Expense | undefined) => {
+      if (updated) {
+        this.expenseApi.updateExpense(updated).subscribe({
           next: () => {
-            this.toastr.success('Expense cloned');
+            this.toastr.success('Expense updated');
             this.loadExpenses();
           },
-          error: () => this.toastr.error('Clone failed')
+          error: () => this.toastr.error('Update failed')
         });
       }
     });
+  }
+
+  onExpenseSubmit(expense: Expense) {
+    this.expenseApi.submitExpense(expense).subscribe({
+      next: () => {
+        this.toastr.success('Expense submitted');
+        this.loadExpenses();
+      },
+      error: () => this.toastr.error('Submission failed')
+    });
+  }
+
+  openDeleteConfirmationDialog(expense: Expense) {
+    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.deleteExpense(expense);
+      }
+    });
+  }
+
+  deleteExpense(expense: Expense) {
+    if (!expense.id) return;
+    this.expenseApi.deleteExpense(expense.id).subscribe({
+      next: () => {
+        this.toastr.success('Expense deleted');
+        this.loadExpenses();
+      },
+      error: () => this.toastr.error('Deletion failed')
+    });
+  }
+
+  openGallery(image: string) {
+    this.galleryImages = [{ itemImageSrc: image }];
+    this.isReceiptGalleryVisible = true;
+  }
+
+  closeImageModal() {
+    this.isReceiptGalleryVisible = false;
   }
 }

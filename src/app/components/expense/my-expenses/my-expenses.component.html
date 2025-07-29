@@ -1,46 +1,99 @@
-<div class="filters grid p-fluid">
-  <div class="col-12 md:col-3">
-    <label for="startDate">Start Date</label>
-    <p-calendar formControlName="startDate" id="startDate" dateFormat="mm/dd/yy"></p-calendar>
+<div class="text-right export-buttons mb-4">
+  <button mat-raised-button class="header-btn" (click)="exportPdf()">
+    <mat-icon>picture_as_pdf</mat-icon> Export to PDF
+  </button>
+  <button mat-raised-button class="export-btn ml-2" (click)="exportCsv()">
+    <mat-icon>table_view</mat-icon> Export to CSV
+  </button>
+</div>
+
+<div class="filter-selections flex align-items-center gap-1">
+  <div class="mat-grid-tile col-3 md:col-3">
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Start Date</mat-label>
+      <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+      <mat-datepicker #startPicker></mat-datepicker>
+    </mat-form-field>
   </div>
-  <div class="col-12 md:col-3">
-    <label for="endDate">End Date</label>
-    <p-calendar formControlName="endDate" id="endDate" dateFormat="mm/dd/yy"></p-calendar>
+
+  <div class="mat-grid-tile col-3 md:col-3">
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>End Date</mat-label>
+      <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+      <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+      <mat-datepicker #endPicker></mat-datepicker>
+    </mat-form-field>
   </div>
-  <div class="col-12 md:col-3">
-    <label for="category">Category</label>
-    <input pInputText id="category" formControlName="category" />
+
+  <div class="mat-grid-tile col-3 md:col-3">
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Category</mat-label>
+      <input matInput formControlName="category">
+    </mat-form-field>
   </div>
-  <div class="col-12 md:col-3">
-    <label for="status">Status</label>
-    <p-dropdown [options]="statusOptions" formControlName="status" [showClear]="true"></p-dropdown>
+
+  <div class="mat-grid-tile col-3 md:col-3">
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status">
+        <mat-option *ngFor="let status of statusOptions" [value]="status">{{ status }}</mat-option>
+        <mat-option [value]="null">Clear</mat-option>
+      </mat-select>
+    </mat-form-field>
   </div>
 </div>
-<div class="text-right export-buttons">
-  <button pButton type="button" icon="pi pi-file-pdf" label="PDF" class="p-button-text" (click)="exportPdf()"></button>
-  <button pButton type="button" icon="pi pi-file-excel" label="CSV" class="p-button-text" (click)="exportCsv()"></button>
-</div>
-<p-table #dt [value]="filteredExpenses" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]">
-  <ng-template pTemplate="header">
-    <tr>
-      <th>Date</th>
-      <th>Category</th>
-      <th>Amount</th>
-      <th>Description</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </ng-template>
-  <ng-template pTemplate="body" let-expense>
-    <tr>
-      <td>{{ expense.date | date:'shortDate' }}</td>
-      <td>{{ expense.category }}</td>
-      <td>{{ expense.amount | currency }}</td>
-      <td>{{ expense.description }}</td>
-      <td>{{ expense.status }}</td>
-      <td>
-        <button pButton type="button" icon="pi pi-copy" class="p-button-text" (click)="cloneExpense(expense)"></button>
+
+<div class="table-wrapper">
+  
+  <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+  
+    <!-- Date Column -->
+    <ng-container matColumnDef="date">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+      <td mat-cell *matCellDef="let expense">{{ expense.date | date: 'shortDate' }}</td>
+    </ng-container>
+  
+    <!-- Category Column -->
+    <ng-container matColumnDef="category">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+      <td mat-cell *matCellDef="let expense">{{ expense.category }}</td>
+    </ng-container>
+  
+    <!-- Amount Column -->
+    <ng-container matColumnDef="amount">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
+      <td mat-cell *matCellDef="let expense">{{ expense.amount | currency }}</td>
+    </ng-container>
+  
+    <!-- Description Column -->
+    <ng-container matColumnDef="description">
+      <th mat-header-cell *matHeaderCellDef>Description</th>
+      <td mat-cell *matCellDef="let expense">{{ expense.description }}</td>
+    </ng-container>
+  
+    <!-- Status Column -->
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let expense">{{ expense.status }}</td>
+    </ng-container>
+  
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Actions</th>
+      <td class="actions-container" *matCellDef="let expense">
+        <mat-icon class="edit-icon" (click)="openEditExpense(expense)">edit</mat-icon>
+        <mat-icon class="delete-icon" (click)="openDeleteConfirmationDialog(expense)">delete</mat-icon>
       </td>
-    </tr>
-  </ng-template>
-</p-table>
+    </ng-container>
+  
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+  
+  <mat-paginator [length]="filteredExpenses.length"
+                 [pageSize]="10"
+                 [pageSizeOptions]="[5, 10, 20]">
+  </mat-paginator>
+  
+</div>

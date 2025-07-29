@@ -25,7 +25,7 @@ export class ExpenseComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadExpenses();
+    // this.loadExpenses();
   }
 
   loadExpenses() {
@@ -40,77 +40,5 @@ export class ExpenseComponent implements OnInit {
         this.loading = false;
       }
     });
-  }
-
-  onExpenseSubmit(expense: Expense) {
-    this.expenseApi.submitExpense(expense).subscribe({
-      next: () => {
-        this.toastr.success('Expense submitted');
-        this.loadExpenses();
-      },
-      error: () => this.toastr.error('Submission failed')
-    });
-  }
-
-  openAddExpense() {
-    const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
-      width: '500px',
-      data: null
-    });
-
-    dialogRef.afterClosed().subscribe((expense: Expense | undefined) => {
-      if (expense) {
-        this.onExpenseSubmit(expense);
-      }
-    });
-  }
-
-  openEditExpense(expense: Expense) {
-    const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
-      width: '500px',
-      data: expense
-    });
-
-    dialogRef.afterClosed().subscribe((updated: Expense | undefined) => {
-      if (updated) {
-        this.expenseApi.updateExpense(updated).subscribe({
-          next: () => {
-            this.toastr.success('Expense updated');
-            this.loadExpenses();
-          },
-          error: () => this.toastr.error('Update failed')
-        });
-      }
-    });
-  }
-
-  openDeleteConfirmationDialog(expense: Expense) {
-    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.deleteExpense(expense);
-      }
-    });
-  }
-
-  deleteExpense(expense: Expense) {
-    if (!expense.id) return;
-    this.expenseApi.deleteExpense(expense.id).subscribe({
-      next: () => {
-        this.toastr.success('Expense deleted');
-        this.loadExpenses();
-      },
-      error: () => this.toastr.error('Deletion failed')
-    });
-  }
-
-  openGallery(image: string) {
-    this.galleryImages = [{ itemImageSrc: image }];
-    this.isReceiptGalleryVisible = true;
-  }
-
-  closeImageModal() {
-    this.isReceiptGalleryVisible = false;
   }
 }
