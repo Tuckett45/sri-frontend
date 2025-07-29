@@ -56,6 +56,7 @@ import { StreetSheetComponent } from './components/street-sheet/street-sheet.com
 import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { OspCoordinatorModalComponent } from './components/modals/osp-coordinator-modal/osp-coordinator-modal.component';
+import { ExpenseReportModalComponent } from './components/modals/expense-report-modal/expense-report-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
 import { GoalsComponent } from './components/overview/goals/goals.component';
 import { VendorDashboardComponent } from './components/overview/dashboard/vendor-dashboard/vendor-dashboard.component';
@@ -112,6 +113,7 @@ export const customCurrencyMaskConfig = {
     UserProfileComponent,
     UserProfileModalComponent,
     OspCoordinatorModalComponent,
+    ExpenseReportModalComponent,
     WidgetComponent,
     OspCoordinatorTrackerComponent
   ],

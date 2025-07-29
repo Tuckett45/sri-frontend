@@ -1,0 +1,46 @@
+<div class="filters grid p-fluid">
+  <div class="col-12 md:col-3">
+    <label for="startDate">Start Date</label>
+    <p-calendar formControlName="startDate" id="startDate" dateFormat="mm/dd/yy"></p-calendar>
+  </div>
+  <div class="col-12 md:col-3">
+    <label for="endDate">End Date</label>
+    <p-calendar formControlName="endDate" id="endDate" dateFormat="mm/dd/yy"></p-calendar>
+  </div>
+  <div class="col-12 md:col-3">
+    <label for="category">Category</label>
+    <input pInputText id="category" formControlName="category" />
+  </div>
+  <div class="col-12 md:col-3">
+    <label for="status">Status</label>
+    <p-dropdown [options]="statusOptions" formControlName="status" [showClear]="true"></p-dropdown>
+  </div>
+</div>
+<div class="text-right export-buttons">
+  <button pButton type="button" icon="pi pi-file-pdf" label="PDF" class="p-button-text" (click)="exportPdf()"></button>
+  <button pButton type="button" icon="pi pi-file-excel" label="CSV" class="p-button-text" (click)="exportCsv()"></button>
+</div>
+<p-table #dt [value]="filteredExpenses" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Date</th>
+      <th>Category</th>
+      <th>Amount</th>
+      <th>Description</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-expense>
+    <tr>
+      <td>{{ expense.date | date:'shortDate' }}</td>
+      <td>{{ expense.category }}</td>
+      <td>{{ expense.amount | currency }}</td>
+      <td>{{ expense.description }}</td>
+      <td>{{ expense.status }}</td>
+      <td>
+        <button pButton type="button" icon="pi pi-copy" class="p-button-text" (click)="cloneExpense(expense)"></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

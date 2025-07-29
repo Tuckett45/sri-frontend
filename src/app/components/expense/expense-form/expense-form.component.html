@@ -1,0 +1,25 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="p-fluid grid">
+  <div class="col-12 md:col-6">
+    <label for="date">Date</label>
+    <p-calendar id="date" formControlName="date" dateFormat="mm/dd/yy"></p-calendar>
+  </div>
+  <div class="col-12 md:col-6">
+    <label for="category">Category</label>
+    <input pInputText id="category" formControlName="category" />
+  </div>
+  <div class="col-12 md:col-6">
+    <label for="amount">Amount</label>
+    <input pInputText type="number" id="amount" formControlName="amount" />
+  </div>
+  <div class="col-12">
+    <label for="description">Description</label>
+    <textarea pInputTextarea id="description" formControlName="description"></textarea>
+  </div>
+  <div class="col-12">
+    <label for="receipt">Receipt</label>
+    <input type="file" id="receipt" (change)="onFileChange($event)" />
+  </div>
+  <div class="col-12">
+    <button pButton type="submit" label="Submit" class="w-full"></button>
+  </div>
+</form>
