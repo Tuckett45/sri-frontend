@@ -112,7 +112,7 @@
           <mat-grid-tile colspan="4">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Issue Sub Category</mat-label>
-              <mat-select formControlName="subCategory" required multiple placeholder="Select Sub Category">
+              <mat-select formControlName="subCategory" required placeholder="Select Sub Category">
                 <mat-option *ngFor="let subCategory of getDistinctSubCategories(issueAreasFormArray.at(i).get('category')?.value)" [value]="subCategory">{{ subCategory }}</mat-option>
               </mat-select>
             </mat-form-field>
