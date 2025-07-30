@@ -1,0 +1,26 @@
+<div class="preliminary-punch-list-page surface-card shadow-4 p-3 border-round">
+  <div class="header-section">
+    <h2>Expenses</h2>
+  </div>
+  <div class="card table-wrapper">
+    <p-tabs [(value)]="activeTab">
+      <p-tablist>
+        <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">
+          Expense List
+        </p-tab>
+        <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">
+          My Expenses
+        </p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel [value]="0">
+          <app-expense-form></app-expense-form>
+        </p-tabpanel>
+        <p-tabpanel [value]="1">
+          <app-my-expenses></app-my-expenses>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+  
+</div>

@@ -1,0 +1,491 @@
+.modal-body {
+  background-color: #fff;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  color: #000000;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+mat-form-field {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.file-input-wrapper {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-preview {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.image-label {
+  font-size: medium;
+  color: #0c0c0c;
+}
+
+.preview-image {
+  width: 100px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.image-btn {
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #fff;
+  background-color: #144f80;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+}
+
+.delete-icon {
+  cursor: pointer;
+  color: #f44336;
+
+  &:hover {
+    color: #e53935;
+  }
+}
+
+.modal-header {
+  background-color: #144f80;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .modal-title {
+    font-size: 1.5rem;
+    color: #fff;
+  }
+
+  button {
+    color: #ffffff;
+
+    &:hover {
+      color: #000;
+    }
+  }
+}
+
+.modal-footer {
+  background-color: #144f80;
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 25px;
+
+  .save-btn,
+  .cancel-btn {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #fff;
+  }
+
+  .save-btn {
+    background-color: #e18a25;
+    margin-right: 15px;
+
+    &:hover {
+      background-color: #b86404;
+    }
+    &:disabled {
+      background-color: #88827a;
+    }
+  }
+
+  .cancel-btn {
+    background-color: #f44336;
+
+    &:hover {
+      background-color: #e53935;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-body,
+  .modal-header,
+  .modal-footer {
+    padding: 15px;
+  }
+
+  .save-btn,
+  .cancel-btn {
+    padding: 8px 15px;
+  }
+}
+
+
+/* Ensure text field colors are properly set */
+::ng-deep .mat-mdc-input-element {
+  color: #000000 !important; /* Set the input text color */
+}
+
+::ng-deep .mat-mdc-icon-button svg {
+  color: #000000 !important; /* Set the input text color */
+  &:hover {
+    background-color: #797777;
+  }
+}
+
+::ng-deep .mat-mdc-icon-button {
+  color: #000000 !important; /* Set the input text color */
+}
+
+/* Ensure select input label color is set properly */
+::ng-deep .mat-mdc-select .mdc-label {
+  color: #000000 !important; /* Set the label text color */
+}
+
+::ng-deep .mat-mdc-checkbox .mat-internal-form-field {
+  color: #000000 !important; /* Set the label text color */
+}
+
+::ng-deep .mat-mdc-select {
+  color: #000000 !important;
+}
+
+/* Style the checkbox */
+::ng-deep .mat-checkbox-inner-container {
+  background-color: rgba(20, 79, 128, 0.2) !important; /* Light version of the primary color for the unchecked state */
+}
+
+::ng-deep .mat-checkbox-checked .mat-checkbox-background {
+  background-color: #144f80 !important; /* Checked state matches the primary color */
+}
+
+/* Checkbox border on hover */
+::ng-deep .mat-checkbox:not(.mat-checkbox-checked):hover .mat-checkbox-frame {
+  border-color: #b86404 !important; /* Border color on hover */
+}
+
+/* Style the label for the checkbox */
+::ng-deep .mat-checkbox-label {
+  color: #144f80 !important; /* Label text color */
+}
+
+::ng-deep .mat-sort-header-container {
+  justify-content: center !important;
+}
+
+::ng-deep .mat-mdc-cell{
+  justify-content: center !important;
+}
+
+:ng-deep .p-galleria-mask {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+::ng-deep .p-overlay-mask {
+  background: rgba(0,0,0,0.4) !important;
+  color: #e2e8f0 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:ng-deep .p-galleria-content {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+::ng-deep .p-galleria {
+  overflow: hidden !important;
+  border-style: solid !important;
+  border-color: white !important;
+  border-radius: 5px !important;
+}
+
+::ng-deep .p-galleria-thumbnails-content {
+  display: flex !important;
+  flex-direction: row !important;
+  border-color: white !important;
+  padding: 1rem 0.25rem !important;
+}
+
+::ng-deep .p-galleria-item {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100% !important;
+  width: 100% !important;
+  background-color: white !important;
+}
+
+::ng-deep .p-galleria-thumbnails-viewport {
+  overflow: hidden !important;
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+
+mat-form-field {
+  width: 100%;
+  margin-bottom: 10px;
+  margin-top: 10px;
+
+  mat-form-field-wrapper {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    padding: 5px;
+  }
+
+  mat-label {
+    color: #525252;
+  }
+}
+
+/* Modal header styles */
+.modal-header {
+  background-color: #144f80;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .modal-title {
+    font-size: 1.2rem;
+    color: #fff;
+  }
+
+  button {
+    color: #ffffff;
+
+    &:hover {
+      color: #000;
+    }
+  }
+}
+
+/* Modal footer styles */
+.modal-footer {
+  background-color: #144f80;
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 25px;
+
+  .save-btn,
+  .cancel-btn {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #fff;
+  }
+
+  .save-btn {
+    background-color: #e18a25;
+    margin-right: 15px;
+
+    &:hover {
+      background-color: #b86404;
+    }
+  }
+
+  .cancel-btn {
+    background-color: #f44336;
+
+    &:hover {
+      background-color: #e53935;
+    }
+  }
+}
+
+/* Button styling */
+button.mat-raised-button {
+  color: #fff;
+
+  &.mat-primary {
+    background-color: #144f80;
+  }
+
+  &.mat-accent {
+    background-color: #ff4081;
+  }
+
+  &.mat-warn {
+    background-color: #f44336;
+  }
+}
+
+.file-preview {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.preview-image {
+  width: 100px;   // Set the desired width
+  height: auto;   // Keep the aspect ratio
+  border: 1px solid #ddd;   // Optional: add a border around the image
+  border-radius: 4px;       // Optional: make the edges rounded
+  object-fit: cover;        // Ensures the image fits nicely within the set width
+}
+
+.image-btn {
+  font-size: small;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #fff;
+  background-color: #144f80;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+
+  &:disabled{
+    background-color: #88827a;
+  }
+}
+
+.upload-btn {
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #fff;
+  background-color: #144f80;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+
+  &:disabled{
+    background-color: #88827a;
+  }
+}
+
+
+/* File input styling */
+.file-input-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+
+  .custom-label {
+    margin-bottom: 5px;
+  }
+
+  .file-input {
+    padding: 8px;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+}
+
+::ng-deep .mat-autocomplete-panel {
+  z-index: 9999 !important; /* Ensure it's on top */
+  position: relative;
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  background-color: white;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  max-height: 150px;
+  overflow-y: auto;
+  width: 100%;
+  z-index: 9999;
+}
+
+::ng-deep .mat-mdc-option .mdc-list-item__primary-text{
+  padding-top: 10px !important;
+}
+
+.autocomplete-suggestions mat-option {
+  cursor: pointer;
+  padding: 10px;
+  color: #000 !important;
+}
+
+.autocomplete-suggestions mat-option:hover {
+  padding-top: 10px;
+  background-color: #f5f5f5;
+}
+
+.loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999; /* Ensure spinner is on top */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .modal-body,
+  .modal-header,
+  .modal-footer {
+    padding: 15px;
+  }
+
+  /* Adjust font size in the modal */
+  .modal-title {
+    font-size: 1.1rem;  /* Smaller font size for mobile */
+  }
+
+  /* Button size adjustments */
+  .save-btn,
+  .cancel-btn {
+    padding: 8px 15px;
+    font-size: 1rem;  /* Smaller font size for mobile */
+  }
+
+  /* Image preview adjustments */
+  .preview-image {
+    width: 80px;  /* Adjust image size for mobile */
+  }
+
+  /* File input adjustment */
+  .file-input-wrapper {
+    width: 100%;
+  }
+
+  .file-input {
+    padding: 10px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .modal-body {
+    max-height: 60vh;  /* Adjust max height for very small screens */
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 10px 15px;
+  }
+
+  .save-btn,
+  .cancel-btn {
+    padding: 8px 12px;  /* Further decrease padding for smaller screens */
+    font-size: 0.9rem;  /* Reduce font size */
+  }
+}
