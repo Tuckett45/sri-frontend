@@ -9,7 +9,18 @@ import { WPViolation } from 'src/app/models/wp-violation.model';
   styleUrls: ['./violations.component.scss']
 })
 export class ViolationsComponent implements OnInit {
-  displayedColumns: string[] = ['workPackage', 'city', 'violation', 'date'];
+  displayedColumns: string[] = [
+    'id',
+    'monthYear',
+    'vendor',
+    'segment',
+    'conlogPlannedAmount',
+    'contingency',
+    'planWithContingency',
+    'atCompleteCost',
+    'actualCost',
+    'overspentBy'
+  ];
   dataSource = new MatTableDataSource<WPViolation>();
 
   constructor(private tpsService: TpsService) {}
@@ -23,10 +34,33 @@ export class ViolationsComponent implements OnInit {
   }
 
   exportCsv() {
+    const headers = [
+      'Id',
+      'MonthYear',
+      'Vendor',
+      'Segment',
+      'ConlogPlannedAmount',
+      'Contingency',
+      'PlanWithContingency',
+      'AtCompleteCost',
+      'ActualCost',
+      'OverspentBy'
+    ];
     const rows = this.dataSource.data.map(v =>
-      [v.workPackage, v.city, v.violation, v.date].join(',')
+      [
+        v.id,
+        v.monthYear,
+        v.vendor,
+        v.segment,
+        v.conlogPlannedAmount,
+        v.contingency,
+        v.planWithContingency,
+        v.atCompleteCost,
+        v.actualCost,
+        v.overspentBy
+      ].join(',')
     );
-    const csv = ['Work Package,City,Violation,Date', ...rows].join('\n');
+    const csv = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = window.URL.createObjectURL(blob);

@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environments';
+import { WPViolation } from '../models/wp-violation.model';
+import { CityScorecard } from '../models/city-scorecard.model';
 
 @Injectable({ providedIn: 'root' })
 export class TpsService {
@@ -16,16 +18,16 @@ export class TpsService {
 
   constructor(private http: HttpClient) {}
 
-  getViolations(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/violations`, this.httpOptions);
+  getViolations(): Observable<WPViolation[]> {
+    return this.http.get<WPViolation[]>(`${this.baseUrl}/violations`, this.httpOptions);
   }
 
   importViolations(): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/violations/import`, {}, this.httpOptions);
   }
 
-  getCityScorecard(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/city-scorecard`, this.httpOptions);
+  getCityScorecard(): Observable<CityScorecard[]> {
+    return this.http.get<CityScorecard[]>(`${this.baseUrl}/city-scorecard`, this.httpOptions);
   }
 
   importCityScorecard(): Observable<void> {

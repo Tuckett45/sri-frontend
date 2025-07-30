@@ -1,7 +1,12 @@
 export interface WPViolation {
-  id?: string;
-  workPackage?: string;
-  city?: string;
-  violation?: string;
-  date?: string;
+  id?: number;
+  monthYear?: string;
+  vendor?: string;
+  segment?: string;
+  conlogPlannedAmount?: number;
+  contingency?: number;
+  planWithContingency?: number;
+  atCompleteCost?: number;
+  actualCost?: number;
+  overspentBy?: number;
 }
