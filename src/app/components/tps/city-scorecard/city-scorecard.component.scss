@@ -1,0 +1,46 @@
+.table-wrapper {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    margin-top: 20px;
+    min-width: 600px;
+
+    th {
+      background-color: #e18a25;
+      color: white;
+      padding: 10px 0 10px 10px;
+    }
+
+    td {
+      text-align: center;
+      padding: 10px;
+    }
+
+    tr:nth-child(odd) {
+      background-color: #000000;
+    }
+
+    tr:nth-child(even) {
+      background-color: #525252;
+    }
+  }
+}
+
+.mat-header-cell {
+  background-color: #e18a25;
+  color: white;
+}
+
+.mat-cell {
+  padding: 16px;
+}
+
+.export-btn {
+  background-color: #0baa06;
+  color: #fff;
+
+  &:hover {
+    background-color: #066303;
+  }
+}

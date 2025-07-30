@@ -1,0 +1,79 @@
+<div class="text-right mb-2">
+  <button mat-raised-button (click)="exportCsv()" class="export-btn">
+    <mat-icon>table_view</mat-icon> Export CSV
+  </button>
+</div>
+<div class="table-wrapper">
+<table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+  <ng-container matColumnDef="id">
+    <th mat-header-cell *matHeaderCellDef>Id</th>
+    <td mat-cell *matCellDef="let c">{{ c.id }}</td>
+  </ng-container>
+  <ng-container matColumnDef="city">
+    <th mat-header-cell *matHeaderCellDef>City</th>
+    <td mat-cell *matCellDef="let c">{{ c.city }}</td>
+  </ng-container>
+  <ng-container matColumnDef="forecastedHHP">
+    <th mat-header-cell *matHeaderCellDef>Forecasted HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.forecastedHHP }}</td>
+  </ng-container>
+  <ng-container matColumnDef="actualHHP">
+    <th mat-header-cell *matHeaderCellDef>Actual HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.actualHHP }}</td>
+  </ng-container>
+  <ng-container matColumnDef="percentChangeHHP">
+    <th mat-header-cell *matHeaderCellDef>% Change HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.percentChangeHHP }}</td>
+  </ng-container>
+  <ng-container matColumnDef="forecastedDollarPerHHP">
+    <th mat-header-cell *matHeaderCellDef>Forecasted $/HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.forecastedDollarPerHHP }}</td>
+  </ng-container>
+  <ng-container matColumnDef="actualDollarPerHHP">
+    <th mat-header-cell *matHeaderCellDef>Actual $/HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.actualDollarPerHHP }}</td>
+  </ng-container>
+  <ng-container matColumnDef="percentChangeDollarPerHHP">
+    <th mat-header-cell *matHeaderCellDef>% Change $/HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.percentChangeDollarPerHHP }}</td>
+  </ng-container>
+  <ng-container matColumnDef="forecastedDollarPerLFT">
+    <th mat-header-cell *matHeaderCellDef>Forecasted $/LFT</th>
+    <td mat-cell *matCellDef="let c">{{ c.forecastedDollarPerLFT }}</td>
+  </ng-container>
+  <ng-container matColumnDef="actualDollarPerLFT">
+    <th mat-header-cell *matHeaderCellDef>Actual $/LFT</th>
+    <td mat-cell *matCellDef="let c">{{ c.actualDollarPerLFT }}</td>
+  </ng-container>
+  <ng-container matColumnDef="percentChangeDollarPerLFT">
+    <th mat-header-cell *matHeaderCellDef>% Change $/LFT</th>
+    <td mat-cell *matCellDef="let c">{{ c.percentChangeDollarPerLFT }}</td>
+  </ng-container>
+  <ng-container matColumnDef="forecastedAllIn">
+    <th mat-header-cell *matHeaderCellDef>Forecasted All-In</th>
+    <td mat-cell *matCellDef="let c">{{ c.forecastedAllIn }}</td>
+  </ng-container>
+  <ng-container matColumnDef="actualAllIn">
+    <th mat-header-cell *matHeaderCellDef>Actual All-In</th>
+    <td mat-cell *matCellDef="let c">{{ c.actualAllIn }}</td>
+  </ng-container>
+  <ng-container matColumnDef="percentChangeAllIn">
+    <th mat-header-cell *matHeaderCellDef>% Change All-In</th>
+    <td mat-cell *matCellDef="let c">{{ c.percentChangeAllIn }}</td>
+  </ng-container>
+  <ng-container matColumnDef="ta_Date">
+    <th mat-header-cell *matHeaderCellDef>TA Date</th>
+    <td mat-cell *matCellDef="let c">{{ c.ta_Date }}</td>
+  </ng-container>
+  <ng-container matColumnDef="compDate">
+    <th mat-header-cell *matHeaderCellDef>Comp Date</th>
+    <td mat-cell *matCellDef="let c">{{ c.compDate }}</td>
+  </ng-container>
+  <ng-container matColumnDef="closedDate">
+    <th mat-header-cell *matHeaderCellDef>Closed Date</th>
+    <td mat-cell *matCellDef="let c">{{ c.closedDate }}</td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
+</div>

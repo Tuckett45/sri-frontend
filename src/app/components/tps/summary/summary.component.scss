@@ -1,0 +1,10 @@
+.summary-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  .summary-items {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+}
