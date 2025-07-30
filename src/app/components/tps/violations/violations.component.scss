@@ -4,6 +4,12 @@
   z-index: 1; /* Ensure it is above the table rows */
 }
 
+.header-section {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .mat-mdc-header-cell {
   border-bottom-color: var(--mat-table-row-item-outline-color, var(--mat-app-outline, rgba(0, 0, 0, 0.12)));
   border-bottom-width: var(--mat-table-row-item-outline-width, 1px);

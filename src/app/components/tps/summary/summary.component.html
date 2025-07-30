@@ -1,5 +1,4 @@
 <div class="summary-dashboard surface-ground px-4 py-5 md:px-6 lg:px-8">
-  <h3>TPS Dashboard</h3>
   <div class="summary-items">
     <div class="summary-item surface-card shadow-2 p-3 border-round">
       Violations: {{ violationsCount }}
@@ -18,29 +17,22 @@
     </div>
   </div>
 
-  <div class="chart-section grid">
+  <div class="grid">
     <div class="chart-wrapper col-12 md:col-6">
       <div class="surface-card shadow-2 p-3 border-round h-full">
-        <span class="block text-500 font-medium mb-3">Overspent by Vendor</span>
+        <div>
+          <span class="block text-500 font-medium mb-3">Overspent by Vendor</span>
         <p-chart type="bar" [data]="violationsChartData" [options]="chartOptions"></p-chart>
+        </div>
       </div>
     </div>
     <div class="chart-wrapper col-12 md:col-6">
       <div class="surface-card shadow-2 p-3 border-round h-full">
-        <span class="block text-500 font-medium mb-3">Forecasted vs Actual All-In</span>
+        <div >
+          <span class="block text-500 font-medium mb-3">Forecasted vs Actual All-In</span>
         <p-chart type="bar" [data]="cityAllInChartData" [options]="chartOptions"></p-chart>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <div class="chart-section">
-    <div class="chart-wrapper">
-      <span class="block text-500 font-medium mb-3">Overspent by Vendor</span>
-      <p-chart type="bar" [data]="violationsChartData" [options]="chartOptions"></p-chart>
-    </div>
-    <div class="chart-wrapper">
-      <span class="block text-500 font-medium mb-3">Forecasted vs Actual All-In</span>
-      <p-chart type="bar" [data]="cityAllInChartData" [options]="chartOptions"></p-chart>
     </div>
   </div>
 </div>

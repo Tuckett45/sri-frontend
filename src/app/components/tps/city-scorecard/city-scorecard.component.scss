@@ -27,6 +27,12 @@
   }
 }
 
+.header-section {
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
 .mat-header-cell {
   background-color: #e18a25;
   color: white;
