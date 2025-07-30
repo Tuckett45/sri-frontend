@@ -23,6 +23,15 @@ export class SummaryComponent implements OnInit {
         labels: {
           color: '#000'
         }
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => {
+            const label = ctx.dataset.label || '';
+            const value = ctx.parsed.y ?? ctx.parsed;
+            return `${label}: $${value.toLocaleString()}`;
+          }
+        }
       }
     },
     scales: {
@@ -31,7 +40,10 @@ export class SummaryComponent implements OnInit {
         grid: { color: '#ebedef' }
       },
       y: {
-        ticks: { color: '#000' },
+        ticks: {
+          color: '#000',
+          callback: (val: number | string) => '$' + Number(val).toLocaleString()
+        },
         grid: { color: '#ebedef' }
       }
     }
