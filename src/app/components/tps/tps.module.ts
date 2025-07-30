@@ -10,6 +10,7 @@ import { TabsModule } from 'primeng/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { ChartModule } from 'primeng/chart';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { MatIconModule } from '@angular/material/icon';
     TabsModule,
     MatTableModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    ChartModule
   ]
 })
 export class TpsModule {}

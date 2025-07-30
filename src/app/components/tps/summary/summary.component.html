@@ -7,4 +7,15 @@
     <div class="summary-item">Forecasted All-In: {{ forecastedAllInTotal | number:'1.0-2' }}</div>
     <div class="summary-item">Actual All-In: {{ actualAllInTotal | number:'1.0-2' }}</div>
   </div>
+
+  <div class="chart-section">
+    <div class="chart-wrapper">
+      <span class="block text-500 font-medium mb-3">Overspent by Vendor</span>
+      <p-chart type="bar" [data]="violationsChartData" [options]="chartOptions"></p-chart>
+    </div>
+    <div class="chart-wrapper">
+      <span class="block text-500 font-medium mb-3">Forecasted vs Actual All-In</span>
+      <p-chart type="bar" [data]="cityAllInChartData" [options]="chartOptions"></p-chart>
+    </div>
+  </div>
 </div>

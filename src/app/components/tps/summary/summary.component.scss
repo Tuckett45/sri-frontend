@@ -7,4 +7,15 @@
     gap: 2rem;
     flex-wrap: wrap;
   }
+
+  .chart-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+
+    .chart-wrapper {
+      flex: 1 1 300px;
+      height: 300px;
+    }
+  }
 }
