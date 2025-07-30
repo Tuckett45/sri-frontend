@@ -1,5 +1,30 @@
 .tps-page {
+  background-color: #e7e5e5 !important;
+  padding: 20px;
+  margin: 20px;
+  box-sizing: border-box;
+
+  .header-section {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
   h2 {
     margin-bottom: 1rem;
   }
+}
+
+.active-tab {
+  background-color: #e18a25 !important;
+}
+
+::ng-deep .p-tab {
+  flex-shrink: 2 !important;
+  white-space: pre-wrap !important;
+}
+
+::ng-deep .p-tablist-tab-list {
+  display: flex;
+  border-style: none !important;
 }

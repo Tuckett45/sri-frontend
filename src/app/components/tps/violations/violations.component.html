@@ -1,8 +1,9 @@
 <div class="text-right mb-2">
-  <button mat-raised-button (click)="exportCsv()">
+  <button mat-raised-button (click)="exportCsv()" class="export-btn">
     <mat-icon>table_view</mat-icon> Export CSV
   </button>
 </div>
+<div class="table-wrapper">
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="workPackage">
     <th mat-header-cell *matHeaderCellDef>Work Package</th>
@@ -23,3 +24,4 @@
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 </table>
+</div>
