@@ -1,5 +1,5 @@
 export interface WPViolation {
-  id?: number;
+  id?: string;
   monthYear?: string;
   vendor?: string;
   segment?: string;

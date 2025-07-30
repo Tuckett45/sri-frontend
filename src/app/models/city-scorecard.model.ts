@@ -1,5 +1,5 @@
 export interface CityScorecard {
-  id?: number;
+  id?: string;
   city?: string;
   forecastedHHP?: number;
   actualHHP?: number;

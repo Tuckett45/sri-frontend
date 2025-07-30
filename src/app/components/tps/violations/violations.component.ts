@@ -10,7 +10,6 @@ import { WPViolation } from 'src/app/models/wp-violation.model';
 })
 export class ViolationsComponent implements OnInit {
   displayedColumns: string[] = [
-    'id',
     'monthYear',
     'vendor',
     'segment',
@@ -35,7 +34,6 @@ export class ViolationsComponent implements OnInit {
 
   exportCsv() {
     const headers = [
-      'Id',
       'MonthYear',
       'Vendor',
       'Segment',

@@ -10,7 +10,6 @@ import { TpsService } from 'src/app/services/tps.service';
 })
 export class CityScorecardComponent implements OnInit {
   displayedColumns: string[] = [
-    'id',
     'city',
     'forecastedHHP',
     'actualHHP',
@@ -42,7 +41,6 @@ export class CityScorecardComponent implements OnInit {
 
   exportCsv() {
     const headers = [
-      'Id',
       'City',
       'ForecastedHHP',
       'ActualHHP',
@@ -62,7 +60,6 @@ export class CityScorecardComponent implements OnInit {
     ];
     const rows = this.dataSource.data.map(c =>
       [
-        c.id,
         c.city,
         c.forecastedHHP,
         c.actualHHP,

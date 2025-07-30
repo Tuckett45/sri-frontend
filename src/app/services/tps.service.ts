@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environments';
+import { environment, local_environment } from 'src/environments/environments';
 import { WPViolation } from '../models/wp-violation.model';
 import { CityScorecard } from '../models/city-scorecard.model';
 
@@ -14,7 +14,7 @@ export class TpsService {
     })
   };
 
-  private baseUrl = `${environment.apiUrl}/tps`;
+  private baseUrl = `${local_environment.apiUrl}/tps`;
 
   constructor(private http: HttpClient) {}
 
