@@ -18,6 +18,7 @@ const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'preliminary-punch-list', loadChildren: () => import('./components/preliminary-punch-list/preliminary-punch-list.module').then(m => m.PreliminaryPunchListModule), canActivate: [AuthGuard] },
   { path: 'expenses', loadChildren: () => import('./components/expense/expense.module').then(m => m.ExpenseModule), canActivate: [AuthGuard] },
+  { path: 'tps', loadChildren: () => import('./components/tps/tps.module').then(m => m.TpsModule), canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/login' }
 ];
 

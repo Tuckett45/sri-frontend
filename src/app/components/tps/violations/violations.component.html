@@ -1,0 +1,25 @@
+<div class="text-right mb-2">
+  <button mat-raised-button (click)="exportCsv()">
+    <mat-icon>table_view</mat-icon> Export CSV
+  </button>
+</div>
+<table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+  <ng-container matColumnDef="workPackage">
+    <th mat-header-cell *matHeaderCellDef>Work Package</th>
+    <td mat-cell *matCellDef="let v">{{ v.workPackage }}</td>
+  </ng-container>
+  <ng-container matColumnDef="city">
+    <th mat-header-cell *matHeaderCellDef>City</th>
+    <td mat-cell *matCellDef="let v">{{ v.city }}</td>
+  </ng-container>
+  <ng-container matColumnDef="violation">
+    <th mat-header-cell *matHeaderCellDef>Violation</th>
+    <td mat-cell *matCellDef="let v">{{ v.violation }}</td>
+  </ng-container>
+  <ng-container matColumnDef="date">
+    <th mat-header-cell *matHeaderCellDef>Date</th>
+    <td mat-cell *matCellDef="let v">{{ v.date }}</td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
