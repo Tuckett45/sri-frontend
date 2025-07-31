@@ -16,6 +16,7 @@ import { GalleriaModule } from 'primeng/galleria';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { DatePipe } from '@angular/common';
 import { PreliminaryPunchListUnresolvedComponent } from '../preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
+import { PunchListStateService } from 'src/app/services/punch-list-state.service';
 
 @Component({
   selector: 'preliminary-punch-list-resolved',
@@ -24,7 +25,10 @@ import { PreliminaryPunchListUnresolvedComponent } from '../preliminary-punch-li
   standalone: false
 })
 export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewInit {
-  public resolvedPreliminaryPunchList$: BehaviorSubject<PreliminaryPunchList[]> = new BehaviorSubject<PreliminaryPunchList[]>([]);
+  isLoading = false;
+  pageSize = 10;
+  pageIndex = 0;
+  public resolvedPreliminaryPunchList$ = this.state.resolved$;
   resolvedPreliminaryPunchLists: PreliminaryPunchList[] = [];
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
@@ -71,11 +75,24 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      this.loadResolvedPunchLists(this.user);
+      if (this.state.resolved$.value.length) {
+        this.pageIndex = this.state.resolvedPage;
+        this.pageSize = this.state.pageSize;
+        this.paginator.pageIndex = this.pageIndex;
+        this.dataSource.data = this.filterData(this.state.resolved$.value);
+        this.resolvedPreliminaryPunchLists = this.state.resolved$.value;
+        this.isLoading = false;
+      } else {
+        this.loadResolvedPunchLists(this.user);
+      }
       this.isInitialized = true;
     }
-  
-    this.dataSource.paginator = this.paginator;
+    this.paginator.page.subscribe(event => {
+      this.pageIndex = event.pageIndex;
+      this.pageSize = event.pageSize;
+      this.loadResolvedPunchLists(this.user);
+    });
+
     this.dataSource.sort = this.sort;
   }
 
@@ -87,7 +104,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   
 
   loadResolvedPunchLists(user: User): void {
-    this.punchListService.getResolvedPunchLists(user).subscribe(
+    this.isLoading = true;
+    this.punchListService.getResolvedPunchLists(user, this.pageIndex, this.pageSize).subscribe(
       (response) => {
         const results = response.map((p: { issues: any[]; }) => ({
           ...p,
@@ -109,12 +127,12 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         );
   
         // ✅ Clear previous data
-        this.resolvedPreliminaryPunchList$.next([]);
+        this.state.setResolved([]);
         this.resolvedPreliminaryPunchLists = [];
         this.dataSource.data = [];
-  
+
         // ✅ Set deduped data
-        this.resolvedPreliminaryPunchList$.next(dedupedResults);
+        this.state.setResolved(dedupedResults, this.pageIndex, this.pageSize);
         this.dataSource.data = this.filterData(dedupedResults);
         this.resolvedPreliminaryPunchLists = dedupedResults;
   
@@ -123,9 +141,11 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         }
   
         this.updateResolvedCount();
+        this.isLoading = false;
       },
       (error) => {
         this.toastr.error('Error fetching resolved punch lists', error);
+        this.isLoading = false;
       }
     );
   }
@@ -196,7 +216,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
 
   refreshPunchLists(): void {
     this.loadResolvedPunchLists(this.user);
-    this.punchListService.getUnresolvedPunchLists(this.user);
+    this.punchListService.getUnresolvedPunchLists(this.user, 0, this.pageSize).subscribe();
   }
 
   editReport(report: PreliminaryPunchList): void {
