@@ -47,6 +47,9 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     { breakpoint: '560px', numVisible: 1 }
   ];
 
+  totalCount = 0;
+  pageSize = 25;
+
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -106,7 +109,9 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.isLoading = true;
     this.punchListService.getUnresolvedPunchLists(user, this.pageIndex, this.pageSize).subscribe(
       (response) => {
-        const results = response.map((p: { issues: any[]; }) => ({
+        this.totalCount = response.totalCount ?? response.length ?? 0;
+        const entries = response.items ?? response;
+        const results = entries.map((p: { issues: any[]; }) => ({
           ...p,
           issues: p.issues.map((issue: any) => ({ ...issue }))
         }));
