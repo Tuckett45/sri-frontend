@@ -154,16 +154,25 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   
 
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
-    let filteredData = data;
-
-    if (this.user.role === 'PM') {
-      filteredData = filteredData.filter(punchList =>
-        punchList.vendorName === this.user.company);
-    } else if (this.user.role === 'CM' && this.user.market !== 'RG') {
-      filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
-    }
-    
-    return filteredData;
+    const userVendor = this.user.company?.trim().toLowerCase();
+    const userMarket = this.user.market?.trim().toLowerCase();
+  
+    return data.filter(punchList => {
+      const listVendor = punchList.vendorName?.trim().toLowerCase();
+      const listMarket = punchList.state?.trim().toLowerCase();
+  
+      if (this.user.role === 'PM') {
+        const matches = listVendor === userVendor && listMarket === userMarket;
+        return matches;
+      }
+  
+      if (this.user.role === 'CM' && userMarket !== 'rg') {
+        const matches = listMarket === userMarket;
+        return matches;
+      }
+  
+      return true;
+    });
   }
 
   updateResolvedCount(): void {
@@ -245,7 +254,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   refreshTable(): void {    
     const filteredEntries = this.resolvedPreliminaryPunchList$; 
     filteredEntries?.subscribe(entries => {
-      let updatedData = entries;
+      let updatedData = this.filterData(entries);  
   
       if (this.user.role === 'PM') {
         updatedData = updatedData.filter(punchList =>
@@ -294,7 +303,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     const filteredEntries = this.resolvedPreliminaryPunchList$;
   
     filteredEntries?.subscribe(entries => {
-      let updatedData = entries;
+      let updatedData = this.filterData(entries);
   
       this.selectedFilters.forEach(filter => {
         if (filter.column == 'dateReported') {
@@ -345,7 +354,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     this.selectedFilters = [];
     const unresolvedEntries = this.resolvedPreliminaryPunchList$; 
     unresolvedEntries?.subscribe(entries => {
-      let updatedData = entries;
+      let updatedData = this.filterData(entries);
   
       this.dataSource.data = updatedData;
       this.updateResolvedCount();
