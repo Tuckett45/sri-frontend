@@ -170,24 +170,7 @@ export class PreliminaryPunchListService {
     );
   }
 
-  reset(): void {
-    this.entriesCache$ = null;
-    this.unresolvedCache$ = null;
-    this.resolvedCache$ = null;
-    this.entriesCacheData = null;
-    this.unresolvedCacheData = null;
-    this.resolvedCacheData = null;
-    this.unresolvedPageCache.clear();
-    this.resolvedPageCache.clear();
-  }
 
-  getCachedUnresolvedCount(): number {
-    return this.unresolvedCacheData ? this.unresolvedCacheData.length : 0;
-  }
-
-  getCachedResolvedCount(): number {
-    return this.resolvedCacheData ? this.resolvedCacheData.length : 0;
-  }
 
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Unknown error!';
