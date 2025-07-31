@@ -1,0 +1,32 @@
+<p-dialog [header]="type" [(visible)]="visible" [modal]="true" [style]="{width: '400px'}" (onHide)="onCancel()">
+  <form [formGroup]="entryForm" class="p-fluid">
+    <div class="p-field">
+      <label for="poNumber">PO Number</label>
+      <input id="poNumber" type="text" pInputText formControlName="poNumber" />
+    </div>
+    <div class="p-field">
+      <label for="vendor">Vendor</label>
+      <input id="vendor" type="text" pInputText formControlName="vendor" />
+    </div>
+    <div class="p-field">
+      <label for="segmentReason">Segment / Reason</label>
+      <input id="segmentReason" type="text" pInputText formControlName="segmentReason" />
+    </div>
+    <div class="p-field">
+      <label for="date">Date</label>
+      <p-calendar id="date" formControlName="date"></p-calendar>
+    </div>
+    <div class="p-field">
+      <label for="amount">Amount</label>
+      <p-inputNumber id="amount" formControlName="amount" mode="currency" currency="USD" [useGrouping]="false"></p-inputNumber>
+    </div>
+    <div class="p-field">
+      <label for="notes">Notes</label>
+      <textarea id="notes" pInputTextarea formControlName="notes"></textarea>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
+    <button pButton type="button" label="Submit" (click)="submit()" [disabled]="entryForm.invalid"></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,41 @@
+<h2>Market Controller</h2>
+<div class="button-bar">
+  <button *ngFor="let cat of categories" pButton type="button" class="p-button-sm" label="{{cat.label}}" (click)="openModal(cat)"></button>
+</div>
+<app-market-controller-modal
+  *ngIf="showModal"
+  [type]="activeType?.label"
+  [(visible)]="showModal"
+  (save)="addEntry($event)"
+  (cancel)="closeModal()">
+</app-market-controller-modal>
+
+<div *ngFor="let cat of categories" class="category-section">
+  <h3>{{cat.label}}</h3>
+  <p-table [value]="entries[cat.key]" *ngIf="entries[cat.key].length">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>PO Number</th>
+        <th>Vendor</th>
+        <th>Segment / Reason</th>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Notes</th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-entry let-rowIndex="rowIndex">
+      <tr>
+        <td>{{entry.poNumber}}</td>
+        <td>{{entry.vendor}}</td>
+        <td>{{entry.segmentReason}}</td>
+        <td>{{entry.date | date:'shortDate'}}</td>
+        <td>{{entry.amount | currency}}</td>
+        <td>{{entry.notes}}</td>
+        <td>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm" (click)="removeEntry(cat.key, rowIndex)"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
