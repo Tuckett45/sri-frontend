@@ -144,13 +144,6 @@ export class PreliminaryPunchListService {
     );
   }
 
-  getCachedUnresolvedCount(): number {
-    return this.unresolvedCacheData ? this.unresolvedCacheData.length : 0;
-  }
-
-  getCachedResolvedCount(): number {
-    return this.resolvedCacheData ? this.resolvedCacheData.length : 0;
-  }
 
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Unknown error!';
