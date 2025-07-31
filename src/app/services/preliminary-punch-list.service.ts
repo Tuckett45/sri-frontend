@@ -18,8 +18,8 @@ export class PreliminaryPunchListService {
   private entriesCacheData: PreliminaryPunchList[] | null = null;
   private unresolvedCacheData: PreliminaryPunchList[] | null = null;
   private resolvedCacheData: PreliminaryPunchList[] | null = null;
-  private unresolvedPageCache = new Map<string, PreliminaryPunchList[]>();
-  private resolvedPageCache = new Map<string, PreliminaryPunchList[]>();
+  private unresolvedPageCache: Map<string, PreliminaryPunchList[]> = new Map();
+  private resolvedPageCache: Map<string, PreliminaryPunchList[]> = new Map();
 
   private refreshSubject = new BehaviorSubject<void>(undefined);
 
@@ -141,6 +141,8 @@ export class PreliminaryPunchListService {
     this.entriesCacheData = null;
     this.unresolvedCacheData = null;
     this.resolvedCacheData = null;
+    this.unresolvedPageCache.clear();
+    this.resolvedPageCache.clear();
     return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );
@@ -153,6 +155,8 @@ export class PreliminaryPunchListService {
     this.entriesCacheData = null;
     this.unresolvedCacheData = null;
     this.resolvedCacheData = null;
+    this.unresolvedPageCache.clear();
+    this.resolvedPageCache.clear();
     return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions).pipe(
       catchError(this.handleError)
     );
@@ -165,6 +169,8 @@ export class PreliminaryPunchListService {
     this.entriesCacheData = null;
     this.unresolvedCacheData = null;
     this.resolvedCacheData = null;
+    this.unresolvedPageCache.clear();
+    this.resolvedPageCache.clear();
     return this.http.delete<void>(`${environment.apiUrl}/PunchList/${id}`, this.httpOptions).pipe(
       catchError(this.handleError)
     );
