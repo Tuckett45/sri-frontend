@@ -26,9 +26,8 @@ import { PunchListStateService } from 'src/app/services/punch-list-state.service
 })
 export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewInit {
   isLoading = false;
-  pageSize = 10;
   pageIndex = 0;
-  public resolvedPreliminaryPunchList$ = this.state.resolved$;
+  public resolvedPreliminaryPunchList$ = this.punchListStateService.resolved$;
   resolvedPreliminaryPunchLists: PreliminaryPunchList[] = [];
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
@@ -63,6 +62,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   constructor(
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
+    private punchListStateService: PunchListStateService,
     private toastr: ToastrService,
     public authService: AuthService,
     public datePipe: DatePipe
@@ -78,12 +78,12 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      if (this.state.resolved$.value.length) {
-        this.pageIndex = this.state.resolvedPage;
-        this.pageSize = this.state.pageSize;
+      if (this.punchListStateService.resolved$.value.length) {
+        this.pageIndex = this.punchListStateService.resolvedPage;
+        this.pageSize = this.punchListStateService.pageSize;
         this.paginator.pageIndex = this.pageIndex;
-        this.dataSource.data = this.filterData(this.state.resolved$.value);
-        this.resolvedPreliminaryPunchLists = this.state.resolved$.value;
+        this.dataSource.data = this.filterData(this.punchListStateService.resolved$.value);
+        this.resolvedPreliminaryPunchLists = this.punchListStateService.resolved$.value;
         this.isLoading = false;
       } else {
         this.loadResolvedPunchLists(this.user);
@@ -132,12 +132,12 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         );
   
         // ✅ Clear previous data
-        this.state.setResolved([]);
+        this.punchListStateService.setResolved([]);
         this.resolvedPreliminaryPunchLists = [];
         this.dataSource.data = [];
 
         // ✅ Set deduped data
-        this.state.setResolved(dedupedResults, this.pageIndex, this.pageSize);
+        this.punchListStateService.setResolved(dedupedResults, this.pageIndex, this.pageSize);
         this.dataSource.data = this.filterData(dedupedResults);
         this.resolvedPreliminaryPunchLists = dedupedResults;
   
@@ -256,7 +256,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
 
   refreshTable(): void {    
     const filteredEntries = this.resolvedPreliminaryPunchList$; 
-    filteredEntries?.subscribe(entries => {
+    filteredEntries?.subscribe((entries: PreliminaryPunchList[]) => {
       let updatedData = this.filterData(entries);  
   
       if (this.user.role === 'PM') {
@@ -305,7 +305,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   applyFilters(): void {
     const filteredEntries = this.resolvedPreliminaryPunchList$;
   
-    filteredEntries?.subscribe(entries => {
+    filteredEntries?.subscribe((entries: PreliminaryPunchList[]) => {
       let updatedData = this.filterData(entries);
   
       this.selectedFilters.forEach(filter => {
@@ -356,7 +356,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   clearAll() {
     this.selectedFilters = [];
     const unresolvedEntries = this.resolvedPreliminaryPunchList$; 
-    unresolvedEntries?.subscribe(entries => {
+    unresolvedEntries?.subscribe((entries: PreliminaryPunchList[]) => {
       let updatedData = this.filterData(entries);
   
       this.dataSource.data = updatedData;

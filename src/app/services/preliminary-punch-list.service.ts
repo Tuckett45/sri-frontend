@@ -50,7 +50,7 @@ export class PreliminaryPunchListService {
   getEntries(): Observable<PreliminaryPunchList[]> {
     if (!this.entriesCache$) {
       this.entriesCache$ = this.http
-        .get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
+        .get<PreliminaryPunchList[]>(`${local_environment.apiUrl}/PunchList/all`, this.httpOptions)
         .pipe(
           map(punchLists =>
             punchLists.map(punchList => {
@@ -87,11 +87,11 @@ export class PreliminaryPunchListService {
 
     let request$;
     if (user.role === 'PM' && user.market !== 'RG') {
-      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params });
+      request$ = this.http.get<any>(`${local_environment.apiUrl}/PunchList/pm-unresolved`, { params });
     } else if (user.role === 'CM' && user.market !== 'RG') {
-      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params });
+      request$ = this.http.get<any>(`${local_environment.apiUrl}/PunchList/cm-unresolved`, { params });
     } else {
-      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`, { params });
+      request$ = this.http.get<any>(`${local_environment.apiUrl}/PunchList/unresolved`, { params });
     }
 
     return request$.pipe(
@@ -117,11 +117,11 @@ export class PreliminaryPunchListService {
 
     let request$;
     if (user.role === 'PM' && user.market !== 'RG') {
-      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/pm-resolved`, { params });
+      request$ = this.http.get<any>(`${local_environment.apiUrl}/PunchList/pm-resolved`, { params });
     } else if (user.role === 'CM' && user.market !== 'RG') {
-      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/cm-resolved`, { params });
+      request$ = this.http.get<any>(`${local_environment.apiUrl}/PunchList/cm-resolved`, { params });
     } else {
-      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`, { params });
+      request$ = this.http.get<any>(`${local_environment.apiUrl}/PunchList/resolved`, { params });
     }
 
     return request$.pipe(

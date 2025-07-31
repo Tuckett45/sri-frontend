@@ -26,9 +26,8 @@ import { PunchListStateService } from 'src/app/services/punch-list-state.service
 })
 export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterViewInit {
   isLoading = false;
-  pageSize = 10;
   pageIndex = 0;
-  public unresolvedPreliminaryPunchList$ = this.state.unresolved$;
+  public unresolvedPreliminaryPunchList$ = this.punchListStateService.unresolved$;
   unresolvedPreliminaryPunchLists: PreliminaryPunchList[] = [];
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
@@ -63,6 +62,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   constructor(
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
+    private punchListStateService: PunchListStateService,
     private toastr: ToastrService,
     public authService: AuthService,
     public datePipe: DatePipe
@@ -83,12 +83,12 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      if (this.state.unresolved$.value.length) {
-        this.pageIndex = this.state.unresolvedPage;
-        this.pageSize = this.state.pageSize;
+      if (this.punchListStateService.unresolved$.value.length) {
+        this.pageIndex = this.punchListStateService.unresolvedPage;
+        this.pageSize = this.punchListStateService.pageSize;
         this.paginator.pageIndex = this.pageIndex;
-        this.dataSource.data = this.filterData(this.state.unresolved$.value);
-        this.unresolvedPreliminaryPunchLists = this.state.unresolved$.value;
+        this.dataSource.data = this.filterData(this.punchListStateService.unresolved$.value);
+        this.unresolvedPreliminaryPunchLists = this.punchListStateService.unresolved$.value;
         this.isLoading = false;
       } else {
         this.loadUnresolvedPunchLists(this.user);
@@ -132,12 +132,12 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         );
   
         // ✅ Clear previous data
-        this.state.setUnresolved([]);
+        this.punchListStateService.setUnresolved([]);
         this.unresolvedPreliminaryPunchLists = [];
         this.dataSource.data = [];
 
         // ✅ Set new data
-        this.state.setUnresolved(dedupedResults, this.pageIndex, this.pageSize);
+        this.punchListStateService.setUnresolved(dedupedResults, this.pageIndex, this.pageSize);
         this.dataSource.data = this.filterData(dedupedResults);
         this.unresolvedPreliminaryPunchLists = dedupedResults;
   

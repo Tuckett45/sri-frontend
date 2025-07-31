@@ -140,8 +140,6 @@ export class AuthService {
   logout(): void {
     this.clearStorage();
     this.resetCurrentUser();
-    this.punchListService.reset();
-    this.punchListState.reset();
     this.loggedInStatus.next(false);
     this.router.navigate(['/login']);
 }

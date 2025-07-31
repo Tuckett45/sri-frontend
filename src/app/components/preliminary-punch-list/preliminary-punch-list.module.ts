@@ -32,6 +32,7 @@ import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-lis
 import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 import { DatePipe } from '@angular/common';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatProgressSpinner } from "@angular/material/progress-spinner";
 
 
 @NgModule({
@@ -72,8 +73,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
     MatCheckboxModule,
     MatPaginatorModule,
     MatSortModule,
-    MatDatepickerModule
-  ],
+    MatDatepickerModule,
+    MatProgressSpinner
+],
   providers: [DatePipe],
   exports: [PreliminaryPunchListComponent]
 })
