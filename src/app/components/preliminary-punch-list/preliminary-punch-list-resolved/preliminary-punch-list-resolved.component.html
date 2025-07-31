@@ -1,4 +1,5 @@
 <div class="table-wrapper">
+    <mat-spinner *ngIf="isLoading" diameter="48" class="loading-spinner"></mat-spinner>
     <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
       <ng-container matColumnDef="segmentId">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Segment ID </th>

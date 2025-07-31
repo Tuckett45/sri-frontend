@@ -66,42 +66,46 @@ export class PreliminaryPunchListService {
     return this.entriesCache$;
   }
 
-  getUnresolvedPunchLists(user: User): Observable<any> {
-    if (!this.unresolvedCache$) {
-      const params = new HttpParams().set('state', user.market);
-      let request$;
-      if (user.role === 'PM' && user.market !== 'RG') {
-        request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params });
-      } else if (user.role === 'CM' && user.market !== 'RG') {
-        request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params });
-      } else {
-        request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`);
-      }
-      this.unresolvedCache$ = request$.pipe(
-        tap(data => (this.unresolvedCacheData = JSON.parse(JSON.stringify(data)))),
-        shareReplay(1)
-      );
+  getUnresolvedPunchLists(user: User, page: number, pageSize: number): Observable<any> {
+    let params = new HttpParams()
+      .set('page', page)
+      .set('pageSize', pageSize);
+
+    if (user.market) {
+      params = params.set('state', user.market);
     }
-    return this.unresolvedCache$;
+
+    let request$;
+    if (user.role === 'PM' && user.market !== 'RG') {
+      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/pm-unresolved`, { params });
+    } else if (user.role === 'CM' && user.market !== 'RG') {
+      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/cm-unresolved`, { params });
+    } else {
+      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`, { params });
+    }
+
+    return request$.pipe(catchError(this.handleError));
   }
 
-  getResolvedPunchLists(user: User): Observable<any> {
-    if (!this.resolvedCache$) {
-      const params = new HttpParams().set('state', user.market);
-      let request$;
-      if (user.role === 'PM' && user.market !== 'RG') {
-        request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/pm-resolved`, { params });
-      } else if (user.role === 'CM' && user.market !== 'RG') {
-        request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/cm-resolved`, { params });
-      } else {
-        request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`);
-      }
-      this.resolvedCache$ = request$.pipe(
-        tap(data => (this.resolvedCacheData = JSON.parse(JSON.stringify(data)))),
-        shareReplay(1)
-      );
+  getResolvedPunchLists(user: User, page: number, pageSize: number): Observable<any> {
+    let params = new HttpParams()
+      .set('page', page)
+      .set('pageSize', pageSize);
+
+    if (user.market) {
+      params = params.set('state', user.market);
     }
-    return this.resolvedCache$;
+
+    let request$;
+    if (user.role === 'PM' && user.market !== 'RG') {
+      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/pm-resolved`, { params });
+    } else if (user.role === 'CM' && user.market !== 'RG') {
+      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/cm-resolved`, { params });
+    } else {
+      request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`, { params });
+    }
+
+    return request$.pipe(catchError(this.handleError));
   }
 
   getErrorCodes(): Observable<any> {
@@ -144,6 +148,15 @@ export class PreliminaryPunchListService {
     );
   }
 
+  reset(): void {
+    this.entriesCache$ = null;
+    this.unresolvedCache$ = null;
+    this.resolvedCache$ = null;
+    this.entriesCacheData = null;
+    this.unresolvedCacheData = null;
+    this.resolvedCacheData = null;
+  }
+
   getCachedUnresolvedCount(): number {
     return this.unresolvedCacheData ? this.unresolvedCacheData.length : 0;
   }
@@ -159,4 +172,6 @@ export class PreliminaryPunchListService {
     } else {
       errorMessage = `Server-side error: ${error.status} ${error.message}`;
     }
-    return throwError(errorMessage);  }}
+    return throwError(errorMessage);
+  }
+}
