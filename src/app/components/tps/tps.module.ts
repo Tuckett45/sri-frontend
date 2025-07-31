@@ -11,6 +11,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ChartModule } from 'primeng/chart';
+import { BadgeModule } from 'primeng/badge';
+import { OverlayBadgeModule } from 'primeng/overlaybadge';
 
 @NgModule({
   declarations: [
@@ -27,7 +29,9 @@ import { ChartModule } from 'primeng/chart';
     MatTableModule,
     MatButtonModule,
     MatIconModule,
-    ChartModule
+    ChartModule,
+    BadgeModule,
+    OverlayBadgeModule
   ]
 })
 export class TpsModule {}
