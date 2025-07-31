@@ -82,7 +82,16 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      this.loadUnresolvedPunchLists(this.user);
+      if (this.state.unresolved$.value.length) {
+        this.pageIndex = this.state.unresolvedPage;
+        this.pageSize = this.state.pageSize;
+        this.paginator.pageIndex = this.pageIndex;
+        this.dataSource.data = this.filterData(this.state.unresolved$.value);
+        this.unresolvedPreliminaryPunchLists = this.state.unresolved$.value;
+        this.isLoading = false;
+      } else {
+        this.loadUnresolvedPunchLists(this.user);
+      }
       this.isInitialized = true;
     }
 
@@ -125,7 +134,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         this.dataSource.data = [];
 
         // ✅ Set new data
-        this.state.setUnresolved(dedupedResults);
+        this.state.setUnresolved(dedupedResults, this.pageIndex, this.pageSize);
         this.dataSource.data = this.filterData(dedupedResults);
         this.unresolvedPreliminaryPunchLists = dedupedResults;
   

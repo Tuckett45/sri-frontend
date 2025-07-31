@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
@@ -18,6 +18,8 @@ export class PreliminaryPunchListService {
   private entriesCacheData: PreliminaryPunchList[] | null = null;
   private unresolvedCacheData: PreliminaryPunchList[] | null = null;
   private resolvedCacheData: PreliminaryPunchList[] | null = null;
+  private unresolvedPageCache = new Map<string, PreliminaryPunchList[]>();
+  private resolvedPageCache = new Map<string, PreliminaryPunchList[]>();
 
   private refreshSubject = new BehaviorSubject<void>(undefined);
 
@@ -35,6 +37,8 @@ export class PreliminaryPunchListService {
     this.entriesCacheData = null;
     this.unresolvedCacheData = null;
     this.resolvedCacheData = null;
+    this.unresolvedPageCache.clear();
+    this.resolvedPageCache.clear();
   }
 
   refresh$ = this.refreshSubject.asObservable();
@@ -67,6 +71,12 @@ export class PreliminaryPunchListService {
   }
 
   getUnresolvedPunchLists(user: User, page: number, pageSize: number): Observable<any> {
+    const key = `${page}-${pageSize}-${user.role}-${user.market}`;
+    const cached = this.unresolvedPageCache.get(key);
+    if (cached) {
+      return of(cached);
+    }
+
     let params = new HttpParams()
       .set('page', page)
       .set('pageSize', pageSize);
@@ -84,10 +94,19 @@ export class PreliminaryPunchListService {
       request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/unresolved`, { params });
     }
 
-    return request$.pipe(catchError(this.handleError));
+    return request$.pipe(
+      tap(data => this.unresolvedPageCache.set(key, data)),
+      catchError(this.handleError)
+    );
   }
 
   getResolvedPunchLists(user: User, page: number, pageSize: number): Observable<any> {
+    const key = `${page}-${pageSize}-${user.role}-${user.market}`;
+    const cached = this.resolvedPageCache.get(key);
+    if (cached) {
+      return of(cached);
+    }
+
     let params = new HttpParams()
       .set('page', page)
       .set('pageSize', pageSize);
@@ -105,7 +124,10 @@ export class PreliminaryPunchListService {
       request$ = this.http.get<any>(`${environment.apiUrl}/PunchList/resolved`, { params });
     }
 
-    return request$.pipe(catchError(this.handleError));
+    return request$.pipe(
+      tap(data => this.resolvedPageCache.set(key, data)),
+      catchError(this.handleError)
+    );
   }
 
   getErrorCodes(): Observable<any> {
@@ -155,6 +177,8 @@ export class PreliminaryPunchListService {
     this.entriesCacheData = null;
     this.unresolvedCacheData = null;
     this.resolvedCacheData = null;
+    this.unresolvedPageCache.clear();
+    this.resolvedPageCache.clear();
   }
 
   getCachedUnresolvedCount(): number {

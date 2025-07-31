@@ -77,7 +77,16 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      this.loadResolvedPunchLists(this.user);
+      if (this.state.resolved$.value.length) {
+        this.pageIndex = this.state.resolvedPage;
+        this.pageSize = this.state.pageSize;
+        this.paginator.pageIndex = this.pageIndex;
+        this.dataSource.data = this.filterData(this.state.resolved$.value);
+        this.resolvedPreliminaryPunchLists = this.state.resolved$.value;
+        this.isLoading = false;
+      } else {
+        this.loadResolvedPunchLists(this.user);
+      }
       this.isInitialized = true;
     }
     this.paginator.page.subscribe(event => {
@@ -125,7 +134,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         this.dataSource.data = [];
 
         // ✅ Set deduped data
-        this.state.setResolved(dedupedResults);
+        this.state.setResolved(dedupedResults, this.pageIndex, this.pageSize);
         this.dataSource.data = this.filterData(dedupedResults);
         this.resolvedPreliminaryPunchLists = dedupedResults;
   
