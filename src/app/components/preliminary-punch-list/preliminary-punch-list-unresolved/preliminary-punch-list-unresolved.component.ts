@@ -1,10 +1,10 @@
-import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -62,9 +62,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
     public authService: AuthService,
-    public datePipe: DatePipe,
-    private cdRef: ChangeDetectorRef,
-    private state: PunchListStateService
+    public datePipe: DatePipe
   ) {}
 
   ngOnInit(): void {
