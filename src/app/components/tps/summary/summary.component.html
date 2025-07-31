@@ -2,19 +2,59 @@
   <h3>TPS Dashboard</h3>
   <div class="summary-items">
     <div class="summary-item surface-card shadow-2 p-3 border-round">
-      Violations: {{ violationsCount }}
+      <div>
+        <span class="block text-500 font-medium mb-1">Violations</span>
+        <div class="text-900 font-medium text-xl">{{ violationsCount }}</div>
+      </div>
+      <p-overlaybadge [value]="violationsCount">
+        <span class="icon-wrapper bg-orange-100 border-round">
+          <i class="pi pi-exclamation-triangle text-orange-500 text-xl"></i>
+        </span>
+      </p-overlaybadge>
     </div>
     <div class="summary-item surface-card shadow-2 p-3 border-round">
-      Cities: {{ cityCount }}
+      <div>
+        <span class="block text-500 font-medium mb-1">Cities</span>
+        <div class="text-900 font-medium text-xl">{{ cityCount }}</div>
+      </div>
+      <p-overlaybadge [value]="cityCount">
+        <span class="icon-wrapper bg-blue-100 border-round">
+          <i class="pi pi-map-marker text-blue-500 text-xl"></i>
+        </span>
+      </p-overlaybadge>
     </div>
     <div class="summary-item surface-card shadow-2 p-3 border-round">
-      Total Overspent: {{ totalOverspent | currency:'USD':'symbol':'1.0-2' }}
+      <div>
+        <span class="block text-500 font-medium mb-1">Total Overspent</span>
+        <div class="text-900 font-medium text-xl">{{ totalOverspent | currency:'USD':'symbol':'1.0-2' }}</div>
+      </div>
+      <p-overlaybadge [value]="totalOverspent | number:'1.0-0'">
+        <span class="icon-wrapper bg-red-100 border-round">
+          <i class="pi pi-dollar text-red-500 text-xl"></i>
+        </span>
+      </p-overlaybadge>
     </div>
     <div class="summary-item surface-card shadow-2 p-3 border-round">
-      Forecasted All-In: {{ forecastedAllInTotal | currency:'USD':'symbol':'1.0-2' }}
+      <div>
+        <span class="block text-500 font-medium mb-1">Forecasted All-In</span>
+        <div class="text-900 font-medium text-xl">{{ forecastedAllInTotal | currency:'USD':'symbol':'1.0-2' }}</div>
+      </div>
+      <p-overlaybadge [value]="forecastedAllInTotal | number:'1.0-0'">
+        <span class="icon-wrapper bg-cyan-100 border-round">
+          <i class="pi pi-chart-line text-cyan-500 text-xl"></i>
+        </span>
+      </p-overlaybadge>
     </div>
     <div class="summary-item surface-card shadow-2 p-3 border-round">
-      Actual All-In: {{ actualAllInTotal | currency:'USD':'symbol':'1.0-2' }}
+      <div>
+        <span class="block text-500 font-medium mb-1">Actual All-In</span>
+        <div class="text-900 font-medium text-xl">{{ actualAllInTotal | currency:'USD':'symbol':'1.0-2' }}</div>
+      </div>
+      <p-overlaybadge [value]="actualAllInTotal | number:'1.0-0'">
+        <span class="icon-wrapper bg-green-100 border-round">
+          <i class="pi pi-chart-bar text-green-500 text-xl"></i>
+        </span>
+      </p-overlaybadge>
     </div>
   </div>
 
