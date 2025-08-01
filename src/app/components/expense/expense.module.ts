@@ -29,6 +29,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
+import { Divider } from "primeng/divider";
 
 @NgModule({
   declarations: [ExpenseComponent, ExpenseFormComponent, MyExpensesComponent],
@@ -62,7 +63,8 @@ import { MatSortModule } from '@angular/material/sort';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatTableModule
+    MatTableModule,
+    Divider
 ]
 })
 export class ExpenseModule {}
