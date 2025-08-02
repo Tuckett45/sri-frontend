@@ -1,4 +1,23 @@
 
+<form [formGroup]="filterForm" class="filter-section mb-2">
+  <mat-form-field appearance="fill">
+    <mat-label>Start Date</mat-label>
+    <input matInput [matDatepicker]="cstart" formControlName="startDate">
+    <mat-datepicker-toggle matSuffix [for]="cstart"></mat-datepicker-toggle>
+    <mat-datepicker #cstart></mat-datepicker>
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>End Date</mat-label>
+    <input matInput [matDatepicker]="cend" formControlName="endDate">
+    <mat-datepicker-toggle matSuffix [for]="cend"></mat-datepicker-toggle>
+    <mat-datepicker #cend></mat-datepicker>
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>City</mat-label>
+    <input matInput formControlName="city">
+  </mat-form-field>
+  <button mat-raised-button color="primary" type="button" (click)="applyFilters()">Apply</button>
+</form>
 <div class="text-right mb-2">
   <button mat-raised-button (click)="exportCsv()" class="export-btn">
     <mat-icon>table_view</mat-icon> Export CSV

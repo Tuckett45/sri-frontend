@@ -1,5 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
+import { FormBuilder } from '@angular/forms';
 import { TpsService } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
 
@@ -22,14 +23,39 @@ export class ViolationsComponent implements OnInit {
   ];
   dataSource = new MatTableDataSource<WPViolation>();
 
-  constructor(private tpsService: TpsService) {}
+  violations: WPViolation[] = [];
+  filteredViolations: WPViolation[] = [];
+
+  filterForm = this.fb.group({
+    startDate: [null],
+    endDate: [null],
+    vendor: ['']
+  });
+
+  constructor(private tpsService: TpsService, private fb: FormBuilder) {}
 
   ngOnInit(): void {
     this.loadViolations();
+    this.filterForm.valueChanges.subscribe(() => this.applyFilters());
   }
 
   loadViolations() {
-    this.tpsService.getViolations().subscribe(res => this.dataSource.data = res);
+    this.tpsService.getViolations().subscribe(res => {
+      this.violations = res;
+      this.applyFilters();
+    });
+  }
+
+  applyFilters() {
+    const { startDate, endDate, vendor } = this.filterForm.value;
+    this.filteredViolations = this.violations.filter(v => {
+      const date = v.monthYear ? new Date(v.monthYear) : null;
+      const matchesStart = startDate ? (date ? date >= startDate : false) : true;
+      const matchesEnd = endDate ? (date ? date <= endDate : false) : true;
+      const matchesVendor = vendor ? v.vendor?.toLowerCase().includes(vendor.toLowerCase()) : true;
+      return matchesStart && matchesEnd && matchesVendor;
+    });
+    this.dataSource.data = this.filteredViolations;
   }
 
   exportCsv() {

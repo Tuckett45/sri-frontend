@@ -1,3 +1,22 @@
+<form [formGroup]="filterForm" class="filter-section mb-2">
+  <mat-form-field appearance="fill">
+    <mat-label>Start Date</mat-label>
+    <input matInput [matDatepicker]="vstart" formControlName="startDate">
+    <mat-datepicker-toggle matSuffix [for]="vstart"></mat-datepicker-toggle>
+    <mat-datepicker #vstart></mat-datepicker>
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>End Date</mat-label>
+    <input matInput [matDatepicker]="vend" formControlName="endDate">
+    <mat-datepicker-toggle matSuffix [for]="vend"></mat-datepicker-toggle>
+    <mat-datepicker #vend></mat-datepicker>
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Vendor</mat-label>
+    <input matInput formControlName="vendor">
+  </mat-form-field>
+  <button mat-raised-button color="primary" type="button" (click)="applyFilters()">Apply</button>
+</form>
 <div class="text-right mb-2">
   <button mat-raised-button (click)="exportCsv()" class="export-btn">
     <mat-icon>table_view</mat-icon> Export CSV
