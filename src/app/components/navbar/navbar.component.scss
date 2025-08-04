@@ -58,6 +58,16 @@ mat-toolbar {
         color: white;
       }
     }
+
+    a {
+      text-decoration: none;
+      color: white;
+      padding: 10px;
+
+      &:hover {
+        background-color: #207bc5;
+      }
+    }
   }
 
   /* Hamburger Menu (hidden by default) */
