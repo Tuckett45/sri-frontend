@@ -103,7 +103,14 @@ export class ViolationsComponent implements OnInit {
 
   calculateOverspent(v: WPViolation): number {
     const plan = v.planWithContingency ?? 0;
-    const cost = v.atCompleteCost ?? v.actualCost ?? 0;
+    const cost = v.actualCost ?? 0;
     return Math.max(0, cost - plan);
+  }
+
+  calculateOverspentPercent(v: WPViolation): number {
+    const plan = v.planWithContingency ?? 0;
+    const cost = v.actualCost ?? 0;
+    const percentage = plan ? (cost - plan) / plan : 0;
+    return Math.max(0, percentage);
   }
 }
