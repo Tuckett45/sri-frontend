@@ -28,6 +28,11 @@ export class ExpenseReportModalComponent {
       amount: [data?.amount || null, Validators.required],
       description: [data?.description || '']
     });
+
+    if (data?.receiptUrl) {
+      this.receiptBase64 = data.receiptUrl;
+      this.galleryImages = [{ itemImageSrc: data.receiptUrl }];
+    }
   }
 
   onFileChange(event: any) {
