@@ -8,5 +8,4 @@ export interface WPViolation {
   planWithContingency?: number;
   atCompleteCost?: number;
   actualCost?: number;
-  overspentBy?: number;
 }

@@ -91,15 +91,15 @@ export class SummaryComponent implements OnInit {
     });
 
     this.violationsCount = filteredViolations.length;
-    this.totalOverspent = filteredViolations.reduce((sum, v) => sum + (v.overspentBy ?? 0), 0);
-    const overspentValues = filteredViolations.map(v => v.overspentBy ?? 0);
+    this.totalOverspent = filteredViolations.reduce((sum, v) => sum + this.calculateOverspent(v), 0);
+    const overspentValues = filteredViolations.map(v => this.calculateOverspent(v));
     this.minOverspent = overspentValues.length ? Math.min(...overspentValues) : 0;
     this.maxOverspent = overspentValues.length ? Math.max(...overspentValues) : 0;
 
     const vendorMap = new Map<string, number>();
     filteredViolations.forEach(v => {
       const vendor = v.vendor ?? 'Unknown';
-      vendorMap.set(vendor, (vendorMap.get(vendor) ?? 0) + (v.overspentBy ?? 0));
+      vendorMap.set(vendor, (vendorMap.get(vendor) ?? 0) + this.calculateOverspent(v));
     });
     this.violationsChartData = {
       labels: Array.from(vendorMap.keys()),
@@ -149,5 +149,11 @@ export class SummaryComponent implements OnInit {
         }
       ]
     };
+  }
+
+  private calculateOverspent(v: WPViolation): number {
+    const plan = v.planWithContingency ?? 0;
+    const cost = v.atCompleteCost ?? v.actualCost ?? 0;
+    return Math.max(0, cost - plan);
   }
 }

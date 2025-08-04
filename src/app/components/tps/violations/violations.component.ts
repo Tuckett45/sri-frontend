@@ -37,6 +37,12 @@ export class ViolationsComponent implements OnInit {
   constructor(private tpsService: TpsService, private fb: FormBuilder) {}
 
   ngOnInit(): void {
+    this.dataSource.sortingDataAccessor = (item: WPViolation, property: string) => {
+      if (property === 'overspentBy') {
+        return this.calculateOverspent(item);
+      }
+      return (item as any)[property];
+    };
     this.loadViolations();
     this.filterForm.valueChanges.subscribe(() => this.applyFilters());
   }
@@ -84,7 +90,7 @@ export class ViolationsComponent implements OnInit {
         v.planWithContingency,
         v.atCompleteCost,
         v.actualCost,
-        v.overspentBy
+        this.calculateOverspent(v)
       ].join(',')
     );
     const csv = [headers.join(','), ...rows].join('\n');
@@ -93,5 +99,11 @@ export class ViolationsComponent implements OnInit {
     a.href = window.URL.createObjectURL(blob);
     a.download = 'violations.csv';
     a.click();
+  }
+
+  calculateOverspent(v: WPViolation): number {
+    const plan = v.planWithContingency ?? 0;
+    const cost = v.atCompleteCost ?? v.actualCost ?? 0;
+    return Math.max(0, cost - plan);
   }
 }
