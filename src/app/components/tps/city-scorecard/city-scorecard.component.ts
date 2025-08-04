@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder } from '@angular/forms';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
 import { TpsService } from 'src/app/services/tps.service';
+import { MatSort } from '@angular/material/sort';
 
 @Component({
   selector: 'app-city-scorecard',
@@ -32,6 +33,7 @@ export class CityScorecardComponent implements OnInit {
     'notes'
   ];
   dataSource = new MatTableDataSource<CityScorecard>();
+  @ViewChild(MatSort) sort!: MatSort;
 
   scorecards: CityScorecard[] = [];
   filteredScorecards: CityScorecard[] = [];
@@ -66,6 +68,7 @@ export class CityScorecardComponent implements OnInit {
       return matchesStart && matchesEnd && matchesCity;
     });
     this.dataSource.data = this.filteredScorecards;
+    this.dataSource.sort = this.sort;
   }
 
   exportCsv() {

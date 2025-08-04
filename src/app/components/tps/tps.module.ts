@@ -16,6 +16,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ChartModule } from 'primeng/chart';
 import { DividerModule } from "primeng/divider";
+import { MatSortModule } from '@angular/material/sort';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { DividerModule } from "primeng/divider";
     TpsRoutingModule,
     TabsModule,
     MatTableModule,
+    MatSortModule,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,

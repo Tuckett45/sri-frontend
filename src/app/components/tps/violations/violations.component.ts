@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder } from '@angular/forms';
 import { TpsService } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
+import { MatSort } from '@angular/material/sort';
 
 @Component({
   selector: 'app-violations',
@@ -25,6 +26,7 @@ export class ViolationsComponent implements OnInit {
 
   violations: WPViolation[] = [];
   filteredViolations: WPViolation[] = [];
+  @ViewChild(MatSort) sort!: MatSort;
 
   filterForm = this.fb.group({
     startDate: [null as Date | null],
@@ -56,6 +58,7 @@ export class ViolationsComponent implements OnInit {
       return matchesStart && matchesEnd && matchesVendor;
     });
     this.dataSource.data = this.filteredViolations;
+    this.dataSource.sort = this.sort;
   }
 
   exportCsv() {
