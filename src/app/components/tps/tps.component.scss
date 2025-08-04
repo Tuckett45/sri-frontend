@@ -28,3 +28,30 @@
   display: flex;
   border-style: none !important;
 }
+
+
+@media (max-width: 768px) {
+  .header-section {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+}
+
+::ng-deep .p-tab{
+  flex-shrink: 2 !important;
+  white-space: pre-wrap !important;
+  padding: .5rem !important;
+}
+
+::ng-deep .p-tablist-tab-list {
+  position: relative;
+  display: flex;
+  border-style: none !important;
+}
+
+::ng-deep .p-ripple {
+    overflow: visible !important;
+    position: relative;
+}
