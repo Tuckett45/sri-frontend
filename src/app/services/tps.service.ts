@@ -14,7 +14,7 @@ export class TpsService {
     })
   };
 
-  private baseUrl = `${local_environment.apiUrl}/tps`;
+  private baseUrl = `${environment.apiUrl}/tps`;
 
   constructor(private http: HttpClient) {}
 
