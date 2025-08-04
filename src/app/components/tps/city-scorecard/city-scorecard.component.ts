@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatTableDataSource } from '@angular/material/table';
+import { FormBuilder } from '@angular/forms';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
 import { TpsService } from 'src/app/services/tps.service';
 
@@ -25,18 +27,45 @@ export class CityScorecardComponent implements OnInit {
     'percentChangeAllIn',
     'ta_Date',
     'compDate',
-    'closedDate'
+    'closedDate',
+    'score',
+    'notes'
   ];
   dataSource = new MatTableDataSource<CityScorecard>();
 
-  constructor(private tpsService: TpsService) {}
+  scorecards: CityScorecard[] = [];
+  filteredScorecards: CityScorecard[] = [];
+
+  filterForm = this.fb.group({
+    startDate: [null as Date | null],
+    endDate: [null as Date | null],
+    city: ['']
+  });
+
+  constructor(private tpsService: TpsService, private fb: FormBuilder) {}
 
   ngOnInit(): void {
     this.loadScorecard();
+    this.filterForm.valueChanges.subscribe(() => this.applyFilters());
   }
 
   loadScorecard() {
-    this.tpsService.getCityScorecard().subscribe(res => this.dataSource.data = res);
+    this.tpsService.getCityScorecard().subscribe(res => {
+      this.scorecards = res;
+      this.applyFilters();
+    });
+  }
+
+  applyFilters() {
+    const { startDate, endDate, city } = this.filterForm.value;
+    this.filteredScorecards = this.scorecards.filter(c => {
+      const date = c.ta_Date ? new Date(c.ta_Date) : null;
+      const matchesStart = startDate ? (date ? date >= startDate : false) : true;
+      const matchesEnd = endDate ? (date ? date <= endDate : false) : true;
+      const matchesCity = city ? c.city?.toLowerCase().includes(city.toLowerCase()) : true;
+      return matchesStart && matchesEnd && matchesCity;
+    });
+    this.dataSource.data = this.filteredScorecards;
   }
 
   exportCsv() {
