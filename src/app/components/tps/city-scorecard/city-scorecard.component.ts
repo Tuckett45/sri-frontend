@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder } from '@angular/forms';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
@@ -26,7 +27,9 @@ export class CityScorecardComponent implements OnInit {
     'percentChangeAllIn',
     'ta_Date',
     'compDate',
-    'closedDate'
+    'closedDate',
+    'score',
+    'notes'
   ];
   dataSource = new MatTableDataSource<CityScorecard>();
 
@@ -34,8 +37,8 @@ export class CityScorecardComponent implements OnInit {
   filteredScorecards: CityScorecard[] = [];
 
   filterForm = this.fb.group({
-    startDate: [null],
-    endDate: [null],
+    startDate: [null as Date | null],
+    endDate: [null as Date | null],
     city: ['']
   });
 

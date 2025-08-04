@@ -27,8 +27,8 @@ export class ViolationsComponent implements OnInit {
   filteredViolations: WPViolation[] = [];
 
   filterForm = this.fb.group({
-    startDate: [null],
-    endDate: [null],
+    startDate: [null as Date | null],
+    endDate: [null as Date | null],
     vendor: ['']
   });
 
