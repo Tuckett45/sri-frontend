@@ -23,44 +23,44 @@
   </button>
 </div>
 <div class="table-wrapper">
-<table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
-  <ng-container matColumnDef="monthYear">
-    <th mat-header-cell mat-sort-header *matHeaderCellDef>Month/Year</th>
-    <td mat-cell *matCellDef="let v">{{ v.monthYear }}</td>
-  </ng-container>
-  <ng-container matColumnDef="vendor">
-    <th mat-header-cell mat-sort-header *matHeaderCellDef>Vendor</th>
-    <td mat-cell *matCellDef="let v">{{ v.vendor }}</td>
-  </ng-container>
-  <ng-container matColumnDef="segment">
-    <th mat-header-cell mat-sort-header *matHeaderCellDef>Segment</th>
-    <td mat-cell *matCellDef="let v">{{ v.segment }}</td>
-  </ng-container>
-  <ng-container matColumnDef="conlogPlannedAmount">
-    <th mat-header-cell mat-sort-header *matHeaderCellDef>Conlog Planned</th>
-    <td mat-cell *matCellDef="let v">{{ v.conlogPlannedAmount | currency:'USD':'symbol':'1.2-2'}}</td>
-  </ng-container>
-  <ng-container matColumnDef="contingency">
-    <th mat-header-cell mat-sort-header *matHeaderCellDef>Contingency</th>
-    <td mat-cell *matCellDef="let v">{{ v.contingency | currency:'USD':'symbol':'1.2-2'}}</td>
-  </ng-container>
-  <ng-container matColumnDef="planWithContingency">
-    <th mat-header-cell mat-sort-header *matHeaderCellDef>Plan With Contingency</th>
-    <td mat-cell *matCellDef="let v">{{ v.planWithContingency | currency:'USD':'symbol':'1.2-2'}}</td>
-  </ng-container>
-  <ng-container matColumnDef="atCompleteCost">
-    <th mat-header-cell mat-sort-header *matHeaderCellDef>At Complete Cost</th>
-    <td mat-cell *matCellDef="let v">{{ v.atCompleteCost | currency:'USD':'symbol':'1.2-2'}}</td>
-  </ng-container>
-  <ng-container matColumnDef="actualCost">
-    <th mat-header-cell mat-sort-header *matHeaderCellDef>Actual Cost</th>
-    <td mat-cell *matCellDef="let v">{{ v.actualCost | currency:'USD':'symbol':'1.2-2'}}</td>
-  </ng-container>
-  <ng-container matColumnDef="overspentBy">
-    <th mat-header-cell mat-sort-header *matHeaderCellDef>Overspent By</th>
-    <td mat-cell *matCellDef="let v">{{ calculateOverspentPercent(v) | percent:'0.2':'en-US' }}; ({{ calculateOverspent(v) | currency:'USD':'symbol':'1.2-2'}})</td>
-  </ng-container>
-  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-</table>
+  <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+    <ng-container matColumnDef="monthYear">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Month/Year</th>
+      <td mat-cell *matCellDef="let v">{{ v.monthYear }}</td>
+    </ng-container>
+    <ng-container matColumnDef="vendor">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Vendor</th>
+      <td mat-cell *matCellDef="let v">{{ v.vendor }}</td>
+    </ng-container>
+    <ng-container matColumnDef="segment">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Segment</th>
+      <td mat-cell *matCellDef="let v">{{ v.segment }}</td>
+    </ng-container>
+    <ng-container matColumnDef="conlogPlannedAmount">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Conlog Planned</th>
+      <td mat-cell *matCellDef="let v">{{ v.conlogPlannedAmount | currency:'USD':'symbol':'1.2-2'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="contingency">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Contingency</th>
+      <td mat-cell *matCellDef="let v">{{ v.contingency | currency:'USD':'symbol':'1.2-2'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="planWithContingency">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Plan With Contingency</th>
+      <td mat-cell *matCellDef="let v">{{ v.planWithContingency | currency:'USD':'symbol':'1.2-2'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="atCompleteCost">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>At Complete Cost</th>
+      <td mat-cell *matCellDef="let v">{{ v.atCompleteCost | currency:'USD':'symbol':'1.2-2'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="actualCost">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Actual Cost</th>
+      <td mat-cell *matCellDef="let v">{{ v.actualCost | currency:'USD':'symbol':'1.2-2'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="overspentBy">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Overspent By</th>
+      <td mat-cell *matCellDef="let v">{{ calculateOverspentPercent(v) | percent:'0.2':'en-US' }}; ({{ calculateOverspent(v) | currency:'USD':'symbol':'1.2-2'}})</td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
 </div>
