@@ -78,7 +78,7 @@ import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import { NgxCurrencyDirective } from "ngx-currency";
@@ -149,7 +149,7 @@ export const customCurrencyMaskConfig = {
     InputTextModule,
     CalendarModule,
     InputNumberModule,
-    InputTextareaModule,
+    InputTextModule,
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule, 

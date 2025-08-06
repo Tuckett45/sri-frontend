@@ -1,32 +1,62 @@
-<p-dialog [header]="type" [(visible)]="visible" [modal]="true" [style]="{width: '400px'}" (onHide)="onCancel()">
-  <form [formGroup]="entryForm" class="p-fluid">
-    <div class="p-field">
-      <label for="poNumber">PO Number</label>
-      <input id="poNumber" type="text" pInputText formControlName="poNumber" />
-    </div>
-    <div class="p-field">
-      <label for="vendor">Vendor</label>
-      <input id="vendor" type="text" pInputText formControlName="vendor" />
-    </div>
-    <div class="p-field">
-      <label for="segmentReason">Segment / Reason</label>
-      <input id="segmentReason" type="text" pInputText formControlName="segmentReason" />
-    </div>
-    <div class="p-field">
-      <label for="date">Date</label>
-      <p-calendar id="date" formControlName="date"></p-calendar>
-    </div>
-    <div class="p-field">
-      <label for="amount">Amount</label>
-      <p-inputNumber id="amount" formControlName="amount" mode="currency" currency="USD" [useGrouping]="false"></p-inputNumber>
-    </div>
-    <div class="p-field">
-      <label for="notes">Notes</label>
-      <textarea id="notes" pInputTextarea formControlName="notes"></textarea>
-    </div>
+<div mat-dialog-title class="modal-header">
+  <h5 class="modal-title">{{ type }} Form</h5>
+  <button mat-icon-button (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+<div mat-dialog-content class="modal-body">
+  <form [formGroup]="entryForm" class="entry-form">
+    <mat-grid-list cols="4" rowHeight="115px" gutterSize="2px">
+      
+      <!-- Segment ID -->
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline">
+          <mat-label>PO Number</mat-label>
+          <input matInput formControlName="poNumber" />
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline">
+          <mat-label>Vendor</mat-label>
+          <input matInput formControlName="vendor" />
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline">
+          <mat-label>Segment / Reason</mat-label>
+          <input matInput formControlName="segmentReason" />
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="date" />
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="2">
+        <mat-form-field appearance="outline">
+          <mat-label>Amount</mat-label>
+          <input matInput type="number" formControlName="amount" />
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <mat-grid-tile colspan="4">
+        <mat-form-field appearance="outline">
+          <mat-label>Notes</mat-label>
+          <textarea matInput rows="3" formControlName="notes"></textarea>
+        </mat-form-field>
+      </mat-grid-tile>
+    </mat-grid-list>
   </form>
-  <ng-template pTemplate="footer">
-    <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-    <button pButton type="button" label="Submit" (click)="submit()" [disabled]="entryForm.invalid"></button>
-  </ng-template>
-</p-dialog>
+</div>
+
+<div mat-dialog-actions class="modal-footer">
+  <button mat-raised-button class="cancel-btn" (click)="close()">Cancel</button>
+  <button mat-raised-button class="save-btn" (click)="save()">Save</button>
+</div>

@@ -1,5 +1,9 @@
 import { Component } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MarketControllerEntry } from 'src/app/models/market-controller-entry.model';
+import { MarketControllerModalComponent } from '../modals/market-controller-modal/market-controller-modal.component';
+import { ToastrService } from 'ngx-toastr';
+import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 
 interface Category {
   key: keyof EntryMap;
@@ -34,6 +38,16 @@ export class MarketControllerComponent {
     { key: 'directedWork', label: 'Directed Work' }
   ];
 
+  displayedColumns: string[] = [
+    'poNumber',
+    'vendor',
+    'segmentReason',
+    'date',
+    'amount',
+    'notes',
+    'actions'
+  ];
+
   entries: EntryMap = {
     poco: [],
     newPo: [],
@@ -45,26 +59,49 @@ export class MarketControllerComponent {
     directedWork: []
   };
 
-  showModal = false;
-  activeType: Category | null = null;
+  constructor(
+    private dialog: MatDialog, 
+    private toastr: ToastrService
+  ) {}
 
   openModal(cat: Category) {
-    this.activeType = cat;
-    this.showModal = true;
+    const dialogRef = this.dialog.open(MarketControllerModalComponent, {
+      width: '500px',
+      data: { type: cat.label, entry: null }
+    });
+
+    dialogRef.afterClosed().subscribe((result: MarketControllerEntry | null) => {
+      if (result) {
+        this.entries[cat.key].push(result);
+      }
+    });
   }
 
-  closeModal() {
-    this.showModal = false;
+  editEntry(cat: Category, index: number) {
+    const existingEntry = this.entries[cat.key][index];
+    const dialogRef = this.dialog.open(MarketControllerModalComponent, {
+      width: '500px',
+      data: { type: cat.label, entry: { ...existingEntry } }
+    });
+
+    dialogRef.afterClosed().subscribe((result: MarketControllerEntry | null) => {
+      if (result) {
+        this.entries[cat.key][index] = result;
+      }
+    });
   }
 
-  addEntry(entry: MarketControllerEntry) {
-    if (this.activeType) {
-      this.entries[this.activeType.key].push(entry);
-    }
-    this.closeModal();
+  openDeleteConfirmationDialog(catKey: keyof EntryMap, index: number) {
+    const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.removeEntry(catKey, index);
+      }
+    });
   }
 
-  removeEntry(type: keyof EntryMap, idx: number) {
-    this.entries[type].splice(idx, 1);
+  removeEntry(catKey: keyof EntryMap, index: number): void {
+    this.entries[catKey].splice(index, 1);
+    this.toastr.success('Entry deleted');
   }
 }

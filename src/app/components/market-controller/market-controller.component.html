@@ -1,41 +1,85 @@
-<h2>Market Controller</h2>
-<div class="button-bar">
-  <button *ngFor="let cat of categories" pButton type="button" class="p-button-sm" label="{{cat.label}}" (click)="openModal(cat)"></button>
-</div>
-<app-market-controller-modal
-  *ngIf="showModal"
-  [type]="activeType?.label"
-  [(visible)]="showModal"
-  (save)="addEntry($event)"
-  (cancel)="closeModal()">
-</app-market-controller-modal>
+<div class="market-controller">
+  <h2>Market Controller</h2>
 
-<div *ngFor="let cat of categories" class="category-section">
-  <h3>{{cat.label}}</h3>
-  <p-table [value]="entries[cat.key]" *ngIf="entries[cat.key].length">
-    <ng-template pTemplate="header">
-      <tr>
-        <th>PO Number</th>
-        <th>Vendor</th>
-        <th>Segment / Reason</th>
-        <th>Date</th>
-        <th>Amount</th>
-        <th>Notes</th>
-        <th></th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-entry let-rowIndex="rowIndex">
-      <tr>
-        <td>{{entry.poNumber}}</td>
-        <td>{{entry.vendor}}</td>
-        <td>{{entry.segmentReason}}</td>
-        <td>{{entry.date | date:'shortDate'}}</td>
-        <td>{{entry.amount | currency}}</td>
-        <td>{{entry.notes}}</td>
-        <td>
-          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm" (click)="removeEntry(cat.key, rowIndex)"></button>
+  <!-- Button bar for adding entries -->
+  <div class="button-bar">
+    <button class="nav-button"
+      *ngFor="let cat of categories"
+      mat-raised-button
+      color="primary"
+      (click)="openModal(cat)">
+      Add {{ cat.label }}
+    </button>
+  </div>
+
+  <!-- Table for each category -->
+  <div class="table-wrapper" *ngFor="let cat of categories">
+    <h3>{{ cat.label }}</h3>
+
+    <table
+      mat-table
+      [dataSource]="entries[cat.key]"
+      class="mat-elevation-z2"
+      *ngIf="entries[cat.key]?.length"
+    >
+      <!-- PO Number Column -->
+      <ng-container matColumnDef="poNumber">
+        <th mat-header-cell *matHeaderCellDef>PO Number</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.poNumber }}</td>
+      </ng-container>
+
+      <!-- Vendor Column -->
+      <ng-container matColumnDef="vendor">
+        <th mat-header-cell *matHeaderCellDef>Vendor</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.vendor }}</td>
+      </ng-container>
+
+      <!-- Segment / Reason Column -->
+      <ng-container matColumnDef="segmentReason">
+        <th mat-header-cell *matHeaderCellDef>Segment / Reason</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.segmentReason }}</td>
+      </ng-container>
+
+      <!-- Date Column -->
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef>Date</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.date | date: 'shortDate' }}</td>
+      </ng-container>
+
+      <!-- Amount Column -->
+      <ng-container matColumnDef="amount">
+        <th mat-header-cell *matHeaderCellDef>Amount</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.amount | currency }}</td>
+      </ng-container>
+
+      <!-- Notes Column -->
+      <ng-container matColumnDef="notes">
+        <th mat-header-cell *matHeaderCellDef>Notes</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.notes }}</td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let entry; let i = index">
+          <!-- Edit button -->
+          <button
+            mat-icon-button
+            color="accent"
+            (click)="editEntry(cat, i)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <!-- Delete button -->
+          <button mat-icon-button color="warn" (click)="removeEntry(cat.key, i)">
+            <mat-icon>delete</mat-icon>
+          </button>
         </td>
-      </tr>
-    </ng-template>
-  </p-table>
+      </ng-container>
+
+      <!-- Header Row -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <!-- Data Rows -->
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
 </div>

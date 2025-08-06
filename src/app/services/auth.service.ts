@@ -81,11 +81,15 @@ export class AuthService {
 
   isCoordinator() {
     return this.userRole.getValue() === 'OSP Coordinator';
-}
+  }
+
+  isMarketController() {
+    return this.userRole.getValue() === 'Controller';
+  }
 
   isAdmin() {
     return this.userRole.getValue() === 'Admin';
-}
+  }
 
   isLoggedIn(): boolean {
     return localStorage.getItem('loggedIn') === 'true';

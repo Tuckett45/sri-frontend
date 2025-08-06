@@ -7,6 +7,7 @@ import { AuthGuard } from 'src/auth.guard';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
 import { StreetSheetComponent } from './components/street-sheet/street-sheet.component';
 import { OspCoordinatorTrackerComponent } from './components/osp-coordinator-tracker/osp-coordinator-tracker.component';
+import { MarketControllerComponent } from './components/market-controller/market-controller.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -15,6 +16,7 @@ const routes: Routes = [
   { path: 'street-sheet', component: StreetSheetComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: UserProfileComponent, canActivate: [AuthGuard] },
   { path: 'osp-coordinator-tracker', component: OspCoordinatorTrackerComponent, canActivate: [AuthGuard] },
+  { path: 'market-controller-tracker', component: MarketControllerComponent, canActivate: [AuthGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'preliminary-punch-list', loadChildren: () => import('./components/preliminary-punch-list/preliminary-punch-list.module').then(m => m.PreliminaryPunchListModule), canActivate: [AuthGuard] },
   { path: 'expenses', loadChildren: () => import('./components/expense/expense.module').then(m => m.ExpenseModule), canActivate: [AuthGuard] },
