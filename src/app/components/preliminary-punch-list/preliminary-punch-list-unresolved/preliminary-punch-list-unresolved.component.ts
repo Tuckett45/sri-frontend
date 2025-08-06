@@ -142,17 +142,29 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
   
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
-    let filteredData = data;
-
-    if (this.user.role === 'PM') {
-      filteredData = filteredData.filter(punchList =>
-        punchList.vendorName === this.user.company);
-    } else if (this.user.role === 'CM' && this.user.market !== 'RG') {
-      filteredData = filteredData.filter(punchList => punchList.state === this.user.market);
-    }
-
-    return filteredData;
+    const userVendor = this.user.company?.trim().toLowerCase();
+    const userMarket = this.user.market?.trim().toLowerCase();
+  
+    return data.filter(punchList => {
+      const listVendor = punchList.vendorName?.trim().toLowerCase();
+      const listMarket = punchList.state?.trim().toLowerCase();
+  
+      if (this.user.role === 'PM') {
+        const matches = listVendor === userVendor && listMarket === userMarket;
+        return matches;
+      }
+  
+      if (this.user.role === 'CM' && userMarket !== 'rg') {
+        const matches = listMarket === userMarket;
+        return matches;
+      }
+  
+      return true;
+    });
   }
+  
+  
+  
   
 
   openModal(data?: PreliminaryPunchList): void {
@@ -247,16 +259,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   refreshTable(): void {    
     const filteredEntries = this.unresolvedPreliminaryPunchList$; 
     filteredEntries?.subscribe(entries => {
-      let updatedData = entries;
-  
-      if (this.user.role === 'PM') {
-        updatedData = updatedData.filter(punchList =>
-          punchList.vendorName === this.user.company && punchList.state === this.user.market
-        );
-      } else if (this.user.market !== 'RG') {
-        updatedData = updatedData.filter(punchList => punchList.state === this.user.market);
-      }
-  
+      let updatedData = this.filterData(entries);  
+
       this.dataSource.data = updatedData;
       this.updateUnresolvedCount();
     });
@@ -297,7 +301,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     const filteredEntries = this.unresolvedPreliminaryPunchList$;
   
     filteredEntries?.subscribe(entries => {
-      let updatedData = entries;
+      let updatedData = this.filterData(entries);
   
       this.selectedFilters.forEach(filter => {
         if (filter.column == 'dateReported') {
@@ -347,13 +351,12 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   
 
   clearAll() {
-    this.selectedFilters = [];
-    const unresolvedEntries = this.unresolvedPreliminaryPunchList$; 
-    unresolvedEntries?.subscribe(entries => {
-      let updatedData = entries;
-  
-      this.dataSource.data = updatedData;
-      this.updateUnresolvedCount();
-    });
-  }
+  this.selectedFilters = [];
+  const unresolvedEntries = this.unresolvedPreliminaryPunchList$; 
+  unresolvedEntries?.subscribe(entries => {
+    const updatedData = this.filterData(entries); 
+    this.dataSource.data = updatedData;
+    this.updateUnresolvedCount();
+  });
+}
 }
