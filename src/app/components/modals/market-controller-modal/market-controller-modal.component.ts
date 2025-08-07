@@ -2,6 +2,17 @@ import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
+export enum UserRole {
+    poco = 'POCO Entry',
+    newPo = 'New PO Entry',
+    closePo = 'Close PO Entry',
+    budgetUpdate = 'Budget Update',
+    contractUpdate = 'Contract Update',
+    poScrub = 'PO Scrub',
+    invoiceScrub = 'Invoice Scrub',
+    directedWork = 'Directed Work'
+}
+
 @Component({
   selector: 'app-market-controller-modal',
   templateUrl: './market-controller-modal.component.html',
@@ -18,8 +29,8 @@ export class MarketControllerModalComponent {
     private dialogRef: MatDialogRef<MarketControllerModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { type: string; entry: any }
   ) {
-    this.type = data.type;
-    this.entryForm = this.fb.group(this.getFormControls(this.type, data.entry));
+    this.type = UserRole[data.type as keyof typeof UserRole];
+    this.entryForm = this.fb.group(this.getFormControls(data.type, data.entry));
   }
 
   getFormControls(type: string, entry: any): { [key: string]: any } {
