@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChildren, QueryList } from '@angular/core';
+import { Component, AfterViewInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -85,13 +85,25 @@ interface Category {
   label: string;
 }
 
+interface UnifiedEntry {
+  type: string;
+  catKey: keyof EntryMap;
+  index: number;
+  poNumber?: string;
+  vendor?: string;
+  segmentReason?: string;
+  date?: Date;
+  amount?: number;
+  notes?: string;
+}
+
 @Component({
   selector: 'app-market-controller',
   templateUrl: './market-controller.component.html',
   styleUrls: ['./market-controller.component.scss']
 })
 export class MarketControllerComponent implements AfterViewInit {
-  @ViewChildren(MatPaginator) paginators!: QueryList<MatPaginator>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   categories: Category[] = [
     { key: 'poco', label: 'POCO' },
@@ -115,34 +127,23 @@ export class MarketControllerComponent implements AfterViewInit {
     directedWork: new MatTableDataSource<DirectedWorkEntry>([])
   };
 
-  expandedCategories: Record<keyof EntryMap, boolean> = {
-    poco: true,
-    newPo: true,
-    closePo: true,
-    budgetUpdate: true,
-    contractUpdate: true,
-    poScrub: true,
-    invoiceScrub: true,
-    directedWork: true
-  };
+  displayedColumns: string[] = [
+    'type',
+    'poNumber',
+    'vendor',
+    'segmentReason',
+    'date',
+    'amount',
+    'notes',
+    'actions'
+  ];
+
+  allDataSource = new MatTableDataSource<UnifiedEntry>([]);
 
   constructor(private dialog: MatDialog, private toastr: ToastrService) {}
 
   ngAfterViewInit(): void {
-    this.setPaginators();
-    this.paginators.changes.subscribe(() => this.setPaginators());
-  }
-
-  private setPaginators(): void {
-    this.paginators.forEach((paginator, index) => {
-      const key = this.categories[index].key;
-      this.dataSources[key].paginator = paginator;
-      paginator.pageSize = 5;
-    });
-  }
-
-  toggleCategory(catKey: keyof EntryMap): void {
-    this.expandedCategories[catKey] = !this.expandedCategories[catKey];
+    this.allDataSource.paginator = this.paginator;
   }
 
   openModal(cat: Category): void {
@@ -155,6 +156,7 @@ export class MarketControllerComponent implements AfterViewInit {
       if (result) {
         const data = this.dataSources[cat.key].data;
         this.dataSources[cat.key].data = [...data, result];
+        this.updateAllEntries();
       }
     });
   }
@@ -170,6 +172,7 @@ export class MarketControllerComponent implements AfterViewInit {
         const data = this.dataSources[cat.key].data;
         data[index] = result;
         this.dataSources[cat.key].data = [...data];
+        this.updateAllEntries();
       }
     });
   }
@@ -188,41 +191,25 @@ export class MarketControllerComponent implements AfterViewInit {
     data.splice(index, 1);
     this.dataSources[catKey].data = [...data];
     this.toastr.success('Entry deleted');
+    this.updateAllEntries();
   }
 
-  getColumnsForCategory(catKey: keyof EntryMap): string[] {
-    switch (catKey) {
-      case 'poco':
-        return ['poNumber', 'vendor', 'segmentReason', 'date', 'amount', 'notes', 'actions'];
-      case 'newPo':
-        return ['poNumber', 'vendor', 'date', 'amount', 'notes', 'actions'];
-      case 'closePo':
-        return ['poNumber', 'vendor', 'date', 'notes', 'actions'];
-      case 'budgetUpdate':
-        return ['date', 'notes', 'actions'];
-      case 'contractUpdate':
-        return ['date', 'notes', 'actions'];
-      case 'directedWork':
-        return ['date', 'notes', 'actions'];
-      case 'poScrub':
-        return ['poNumber', 'date', 'notes', 'actions'];
-      case 'invoiceScrub':
-        return ['poNumber', 'segmentReason', 'date', 'notes', 'actions'];
-      default:
-        return ['date', 'notes', 'actions'];
-    }
+  private updateAllEntries(): void {
+    const all: UnifiedEntry[] = [];
+    this.categories.forEach(cat => {
+      this.dataSources[cat.key].data.forEach((entry, index) => {
+        all.push({ ...entry, type: cat.label, catKey: cat.key, index });
+      });
+    });
+    this.allDataSource.data = all;
   }
 
-  getColumnLabel(column: string): string {
-  switch (column) {
-    case 'poNumber': return 'PO Number';
-    case 'segmentReason': return 'Segment / Reason';
-    case 'date': return 'Date';
-    case 'amount': return 'Amount';
-    case 'notes': return 'Notes';
-    case 'vendor': return 'Vendor';
-    case 'actions': return '';
-    default: return column.charAt(0).toUpperCase() + column.slice(1);
+  editUnifiedEntry(entry: UnifiedEntry): void {
+    const cat = this.categories.find(c => c.key === entry.catKey)!;
+    this.editEntry(cat, entry.index);
   }
-}
+
+  removeUnifiedEntry(entry: UnifiedEntry): void {
+    this.openDeleteConfirmationDialog(entry.catKey, entry.index);
+  }
 }
