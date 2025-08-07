@@ -13,56 +13,71 @@
     </button>
   </div>
 
-  <!-- Table for each category -->
-  <div class="table-wrapper" *ngFor="let cat of categories">
-    <h3 (click)="toggleCategory(cat.key)" class="category-header">
-      {{ cat.label }}
-      <mat-icon>{{ expandedCategories[cat.key] ? 'expand_less' : 'expand_more' }}</mat-icon>
-    </h3>
+  <div class="table-wrapper">
+    <table
+      mat-table
+      [dataSource]="allDataSource"
+      class="mat-elevation-z2"
+      *ngIf="allDataSource.data.length"
+    >
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef> Type </th>
+        <td mat-cell *matCellDef="let entry"> {{ entry.type }} </td>
+      </ng-container>
 
-    <div *ngIf="expandedCategories[cat.key]">
-      <table
-        mat-table
-        [dataSource]="dataSources[cat.key]"
-        class="mat-elevation-z2"
-        *ngIf="dataSources[cat.key].data.length"
-      >
-        <!-- Dynamically define columns -->
-        <ng-container
-          *ngFor="let col of getColumnsForCategory(cat.key)"
-          [matColumnDef]="col"
-        >
-          <th mat-header-cell *matHeaderCellDef>
-            {{ getColumnLabel(col) }}
-          </th>
-          <td mat-cell *matCellDef="let entry; let i = index">
-            <ng-container [ngSwitch]="col">
-              <span *ngSwitchCase="'actions'">
-                <button
-                  mat-icon-button
-                  color="accent"
-                  (click)="editEntry(cat, i)">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  color="warn"
-                  (click)="openDeleteConfirmationDialog(cat.key, i)">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </span>
-              <span *ngSwitchCase="'date'">{{ entry.date | date: 'shortDate' }}</span>
-              <span *ngSwitchCase="'amount'">{{ entry.amount | currency }}</span>
-              <span *ngSwitchDefault>{{ entry[col] }}</span>
-            </ng-container>
-          </td>
-        </ng-container>
+      <ng-container matColumnDef="poNumber">
+        <th mat-header-cell *matHeaderCellDef> PO Number </th>
+        <td mat-cell *matCellDef="let entry"> {{ entry.poNumber }} </td>
+      </ng-container>
 
-        <!-- Header and Row Definitions -->
-        <tr mat-header-row *matHeaderRowDef="getColumnsForCategory(cat.key)"></tr>
-        <tr mat-row *matRowDef="let row; columns: getColumnsForCategory(cat.key)"></tr>
-      </table>
-      <mat-paginator [pageSize]="5" [pageSizeOptions]="[5]" showFirstLastButtons></mat-paginator>
-    </div>
+      <ng-container matColumnDef="vendor">
+        <th mat-header-cell *matHeaderCellDef> Vendor </th>
+        <td mat-cell *matCellDef="let entry"> {{ entry.vendor }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="segmentReason">
+        <th mat-header-cell *matHeaderCellDef> Segment / Reason </th>
+        <td mat-cell *matCellDef="let entry"> {{ entry.segmentReason }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef> Date </th>
+        <td mat-cell *matCellDef="let entry"> {{ entry.date | date: 'shortDate' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="amount">
+        <th mat-header-cell *matHeaderCellDef> Amount </th>
+        <td mat-cell *matCellDef="let entry"> {{ entry.amount | currency }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="notes">
+        <th mat-header-cell *matHeaderCellDef> Notes </th>
+        <td mat-cell *matCellDef="let entry"> {{ entry.notes }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let entry">
+          <button
+            mat-icon-button
+            color="accent"
+            (click)="editUnifiedEntry(entry)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="removeUnifiedEntry(entry)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+    <mat-paginator [pageSize]="5" [pageSizeOptions]="[5]" showFirstLastButtons></mat-paginator>
   </div>
 </div>
