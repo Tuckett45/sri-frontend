@@ -54,17 +54,6 @@ button.mat-raised-button {
       overflow-x: auto;
       overflow: auto;
 
-      .category-header {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        user-select: none;
-
-        mat-icon {
-          margin-left: 0.5rem;
-        }
-      }
-
       table {
         width: 100%;
         margin-top: 20px;
@@ -92,20 +81,6 @@ button.mat-raised-button {
       }
     
   
-      .actions-container {
-        align-items: center;
-        gap: 8px;
-      }
-    
-      .edit-icon {
-        cursor: pointer;
-        font-size: 20px;
-        color: #e18a25;
-    
-        &:hover {
-          color: #b86404;
-        }
-      }
 
       .mat-header-row th {
         position: sticky;
@@ -119,15 +94,6 @@ button.mat-raised-button {
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
     
-      .delete-icon {
-        cursor: pointer;
-        font-size: 20px;
-        color: #f44336;
-    
-        &:hover {
-          color: #e53935;
-        }
-      }
     
       .mat-cell {
         padding: 16px;
@@ -142,22 +108,7 @@ button.mat-raised-button {
         border-bottom: 1px solid rgba(0, 0, 0, 0.1);
       }
 
-      .reject-btn {
-        font-size: small;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        color: #fff;
-        background-color: #f44336;
       
-        &:hover {
-          background-color: #e53935;
-        }
-      
-        &:disabled{
-          background-color: #696969;
-        }
-      }
     
       .image-btn {
         font-size: small;
