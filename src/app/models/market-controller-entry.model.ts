@@ -7,4 +7,8 @@ export interface MarketControllerEntry {
   date?: Date;
   amount?: number;
   notes?: string;
+  createdBy?: string;
+  createdDate?: Date;
+  updatedBy?: string;
+  updatedDate?: Date;
 }

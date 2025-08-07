@@ -1,24 +1,23 @@
 <div class="market-controller">
   <h2>Market Controller</h2>
 
-  <!-- Button bar for adding entries -->
   <div class="button-bar">
     <button
       class="nav-button"
-      *ngFor="let cat of categories"
       mat-flat-button
       color="primary"
-      (click)="openModal(cat)">
-      Add {{ cat.label }}
+      (click)="openModal()">
+      Add Entry
     </button>
   </div>
 
   <div class="table-wrapper" *ngIf="allDataSource.data.length">
     <table
       mat-table
-      [dataSource]="allDataSource"
+      [dataSource]="dataSource"
       class="mat-elevation-z2"
-      *ngIf="allDataSource.data.length">
+      *ngIf="dataSource.data.length"
+    >
       <ng-container matColumnDef="type">
         <th mat-header-cell *matHeaderCellDef> Type </th>
         <td mat-cell *matCellDef="let entry"> {{ entry.type }} </td>
@@ -60,14 +59,14 @@
           <button
             mat-icon-button
             color="accent"
-            (click)="editUnifiedEntry(entry)"
+            (click)="openModal(entry)"
           >
             <mat-icon>edit</mat-icon>
           </button>
           <button
             mat-icon-button
             color="warn"
-            (click)="removeUnifiedEntry(entry)"
+            (click)="openDeleteConfirmationDialog(entry)"
           >
             <mat-icon>delete</mat-icon>
           </button>
