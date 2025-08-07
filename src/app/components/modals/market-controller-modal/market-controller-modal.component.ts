@@ -1,17 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-
-export enum UserRole {
-    poco = 'POCO Entry',
-    newPo = 'New PO Entry',
-    closePo = 'Close PO Entry',
-    budgetUpdate = 'Budget Update',
-    contractUpdate = 'Contract Update',
-    poScrub = 'PO Scrub',
-    invoiceScrub = 'Invoice Scrub',
-    directedWork = 'Directed Work'
-}
+import { MarketControllerEntry } from '../../../models/market-controller-entry.model';
 
 @Component({
   selector: 'app-market-controller-modal',
@@ -19,98 +9,34 @@ export enum UserRole {
   styleUrls: ['./market-controller-modal.component.scss']
 })
 export class MarketControllerModalComponent {
-[x: string]: any;
   entryForm: FormGroup;
-  type: string;
+  types: string[] = [
+    'POCO',
+    'New PO',
+    'Close PO',
+    'Budget Update',
+    'Contract Update',
+    'PO Scrub',
+    'Invoice Scrub',
+    'Directed Work'
+  ];
   vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<MarketControllerModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { type: string; entry: any }
+    @Inject(MAT_DIALOG_DATA) public data: { entry: MarketControllerEntry | null }
   ) {
-    this.type = UserRole[data.type as keyof typeof UserRole];
-    this.entryForm = this.fb.group(this.getFormControls(data.type, data.entry));
-  }
-
-  getFormControls(type: string, entry: any): { [key: string]: any } {
-    switch (type) {
-      case 'poco':
-        return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          vendor: [entry?.vendor || '', Validators.required],
-          segmentReason: [entry?.segmentReason || '', Validators.required],
-          date: [entry?.date || new Date(), Validators.required],
-          amount: [entry?.amount ?? 0, Validators.required],
-          notes: [entry?.notes || '']
-        };
-      case 'newPo':
-        return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          vendor: [entry?.vendor || '', Validators.required],
-          date: [entry?.date || new Date(), Validators.required],
-          amount: [entry?.amount ?? 0],
-          notes: [entry?.notes || '']
-        };
-      case 'closePo':
-        return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          vendor: [entry?.vendor || '', Validators.required],
-          date: [entry?.date || new Date(), Validators.required],
-          notes: [entry?.notes || '']
-        };
-      case 'budgetUpdate':
-        return {
-          date: [entry?.date || new Date(), Validators.required],
-          notes: [entry?.notes || '']
-        };
-      case 'contractUpdate':
-        return {
-          date: [entry?.date || new Date(), Validators.required],
-          notes: [entry?.notes || '']
-        };
-      case 'directedWork':
-        return {
-          date: [entry?.date || new Date(), Validators.required],
-          notes: [entry?.notes || '']
-        };
-      case 'poScrub':
-        return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          date: [entry?.date || new Date(), Validators.required],
-          notes: [entry?.notes || '']
-        };
-      case 'invoiceScrub':
-        return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          segmentReason: [entry?.segmentReason || '', Validators.required],
-          date: [entry?.date || new Date(), Validators.required],
-          notes: [entry?.notes || '']
-        };
-      default:
-        return {};
-    }
-  }
-
-  getLabel(key: string): string {
-    const map: Record<string, string> = {
-      poNumber: 'PO Number',
-      vendor: 'Vendor',
-      segmentReason: 'Segment / Reason',
-      date: 'Date',
-      amount: 'Amount',
-      notes: 'Notes'
-    };
-    return map[key] || (key.charAt(0).toUpperCase() + key.slice(1));
-  }
-
-  getColSpan(field: string): number {
-    switch (field) {
-      case 'notes':
-        return 4;
-      default:
-        return 2;
-    }
+    const entry = data.entry;
+    this.entryForm = this.fb.group({
+      type: [entry?.type || '', Validators.required],
+      poNumber: [entry?.poNumber || ''],
+      vendor: [entry?.vendor || ''],
+      segmentReason: [entry?.segmentReason || ''],
+      date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
+      amount: [entry?.amount],
+      notes: [entry?.notes || '']
+    });
   }
 
   close(): void {
