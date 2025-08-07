@@ -1,7 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MarketControllerEntry } from 'src/app/models/market-controller-entry.model';
 
 @Component({
   selector: 'app-market-controller-modal',
@@ -9,25 +8,98 @@ import { MarketControllerEntry } from 'src/app/models/market-controller-entry.mo
   styleUrls: ['./market-controller-modal.component.scss']
 })
 export class MarketControllerModalComponent {
+[x: string]: any;
   entryForm: FormGroup;
   type: string;
+  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<MarketControllerModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { type: string; entry: MarketControllerEntry | null }
+    @Inject(MAT_DIALOG_DATA) public data: { type: string; entry: any }
   ) {
     this.type = data.type;
+    this.entryForm = this.fb.group(this.getFormControls(this.type, data.entry));
+  }
 
-    this.entryForm = this.fb.group({
-      poNumber: [data.entry?.poNumber || '', Validators.required],
-      type: [data.entry?.type, Validators.required],
-      vendor: [data.entry?.vendor || '', Validators.required],
-      segmentReason: [data.entry?.segmentReason || '', Validators.required],
-      date: [data.entry?.date || new Date(), Validators.required],
-      amount: [data.entry?.amount ?? null, Validators.required],
-      notes: [data.entry?.notes || '']
-    });
+  getFormControls(type: string, entry: any): { [key: string]: any } {
+    switch (type) {
+      case 'poco':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          vendor: [entry?.vendor || '', Validators.required],
+          segmentReason: [entry?.segmentReason || '', Validators.required],
+          date: [entry?.date || new Date(), Validators.required],
+          amount: [entry?.amount ?? 0, Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'newPo':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          vendor: [entry?.vendor || '', Validators.required],
+          date: [entry?.date || new Date(), Validators.required],
+          amount: [entry?.amount ?? 0],
+          notes: [entry?.notes || '']
+        };
+      case 'closePo':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          vendor: [entry?.vendor || '', Validators.required],
+          date: [entry?.date || new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'budgetUpdate':
+        return {
+          date: [entry?.date || new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'contractUpdate':
+        return {
+          date: [entry?.date || new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'directedWork':
+        return {
+          date: [entry?.date || new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'poScrub':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          date: [entry?.date || new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'invoiceScrub':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          segmentReason: [entry?.segmentReason || '', Validators.required],
+          date: [entry?.date || new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      default:
+        return {};
+    }
+  }
+
+  getLabel(key: string): string {
+    const map: Record<string, string> = {
+      poNumber: 'PO Number',
+      vendor: 'Vendor',
+      segmentReason: 'Segment / Reason',
+      date: 'Date',
+      amount: 'Amount',
+      notes: 'Notes'
+    };
+    return map[key] || (key.charAt(0).toUpperCase() + key.slice(1));
+  }
+
+  getColSpan(field: string): number {
+    switch (field) {
+      case 'notes':
+        return 4;
+      default:
+        return 2;
+    }
   }
 
   close(): void {
