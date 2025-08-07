@@ -36,6 +36,25 @@ export class MarketControllerComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
+    this.marketControllerService.getEntries().subscribe(entries => {
+      entries.forEach(entry => {
+        const catKey = entry.type as keyof EntryMap;
+        if (this.dataSources[catKey]) {
+          const formatted: any = {
+            ...entry,
+            date: entry.date ? new Date(entry.date) : undefined
+          };
+          this.dataSources[catKey].data = [
+            ...this.dataSources[catKey].data,
+            formatted
+          ];
+        }
+      });
+      this.updateAllEntries();
+    }, () => this.toastr.error('Failed to load entries'));
+  }
+
+  ngOnInit(): void {
     this.loadEntries();
   }
 
