@@ -11,7 +11,7 @@
     </button>
   </div>
 
-  <div class="table-wrapper" *ngIf="allDataSource.data.length">
+  <div class="table-wrapper" *ngIf="dataSource.data.length">
     <table
       mat-table
       [dataSource]="dataSource"
@@ -79,7 +79,7 @@
     <mat-paginator [pageSize]="5" [pageSizeOptions]="[5]" showFirstLastButtons></mat-paginator>
   </div>
 
-  <div *ngIf="allDataSource.data.length < 1" class="no-data">
+  <div *ngIf="dataSource.data.length < 1" class="no-data">
     <p>No entries found. Please add a new entry.</p>
 
   </div>

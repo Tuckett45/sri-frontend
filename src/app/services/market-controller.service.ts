@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environments';
+import { environment, local_environment } from 'src/environments/environments';
 import { MarketControllerEntry } from '../models/market-controller-entry.model';
 
 @Injectable({
@@ -15,7 +15,7 @@ export class MarketControllerService {
     })
   };
 
-  private baseUrl = `${environment.apiUrl}/MarketController`;
+  private baseUrl = `${local_environment.apiUrl}/MarketController`;
 
   constructor(private http: HttpClient) {}
 
