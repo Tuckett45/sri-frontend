@@ -15,48 +15,54 @@
 
   <!-- Table for each category -->
   <div class="table-wrapper" *ngFor="let cat of categories">
-    <h3>{{ cat.label }}</h3>
+    <h3 (click)="toggleCategory(cat.key)" class="category-header">
+      {{ cat.label }}
+      <mat-icon>{{ expandedCategories[cat.key] ? 'expand_less' : 'expand_more' }}</mat-icon>
+    </h3>
 
-    <table
-      mat-table
-      [dataSource]="entries[cat.key]"
-      class="mat-elevation-z2"
-      *ngIf="entries[cat.key]?.length"
-    >
-      <!-- Dynamically define columns -->
-      <ng-container
-        *ngFor="let col of getColumnsForCategory(cat.key)"
-        [matColumnDef]="col"
+    <div *ngIf="expandedCategories[cat.key]">
+      <table
+        mat-table
+        [dataSource]="dataSources[cat.key]"
+        class="mat-elevation-z2"
+        *ngIf="dataSources[cat.key].data.length"
       >
-        <th mat-header-cell *matHeaderCellDef>
-          {{ getColumnLabel(col) }}
-        </th>
-        <td mat-cell *matCellDef="let entry; let i = index">
-          <ng-container [ngSwitch]="col">
-            <span *ngSwitchCase="'actions'">
-              <button
-                mat-icon-button
-                color="accent"
-                (click)="editEntry(cat, i)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="openDeleteConfirmationDialog(cat.key, i)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </span>
-            <span *ngSwitchCase="'date'">{{ entry.date | date: 'shortDate' }}</span>
-            <span *ngSwitchCase="'amount'">{{ entry.amount | currency }}</span>
-            <span *ngSwitchDefault>{{ entry[col] }}</span>
-          </ng-container>
-        </td>
-      </ng-container>
+        <!-- Dynamically define columns -->
+        <ng-container
+          *ngFor="let col of getColumnsForCategory(cat.key)"
+          [matColumnDef]="col"
+        >
+          <th mat-header-cell *matHeaderCellDef>
+            {{ getColumnLabel(col) }}
+          </th>
+          <td mat-cell *matCellDef="let entry; let i = index">
+            <ng-container [ngSwitch]="col">
+              <span *ngSwitchCase="'actions'">
+                <button
+                  mat-icon-button
+                  color="accent"
+                  (click)="editEntry(cat, i)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="openDeleteConfirmationDialog(cat.key, i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </span>
+              <span *ngSwitchCase="'date'">{{ entry.date | date: 'shortDate' }}</span>
+              <span *ngSwitchCase="'amount'">{{ entry.amount | currency }}</span>
+              <span *ngSwitchDefault>{{ entry[col] }}</span>
+            </ng-container>
+          </td>
+        </ng-container>
 
-      <!-- Header and Row Definitions -->
-      <tr mat-header-row *matHeaderRowDef="getColumnsForCategory(cat.key)"></tr>
-      <tr mat-row *matRowDef="let row; columns: getColumnsForCategory(cat.key)"></tr>
-    </table>
+        <!-- Header and Row Definitions -->
+        <tr mat-header-row *matHeaderRowDef="getColumnsForCategory(cat.key)"></tr>
+        <tr mat-row *matRowDef="let row; columns: getColumnsForCategory(cat.key)"></tr>
+      </table>
+      <mat-paginator [pageSize]="5" [pageSizeOptions]="[5]" showFirstLastButtons></mat-paginator>
+    </div>
   </div>
 </div>

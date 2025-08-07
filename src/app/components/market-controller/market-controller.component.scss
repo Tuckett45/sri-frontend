@@ -53,7 +53,18 @@ button.mat-raised-button {
 .table-wrapper {
       overflow-x: auto;
       overflow: auto;
-  
+
+      .category-header {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+
+        mat-icon {
+          margin-left: 0.5rem;
+        }
+      }
+
       table {
         width: 100%;
         margin-top: 20px;

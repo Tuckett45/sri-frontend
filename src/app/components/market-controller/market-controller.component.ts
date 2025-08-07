@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, AfterViewInit, ViewChildren, QueryList } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MarketControllerModalComponent } from '../modals/market-controller-modal/market-controller-modal.component';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
@@ -67,6 +69,17 @@ interface EntryMap {
   directedWork: DirectedWorkEntry[];
 }
 
+interface DataSourceMap {
+  poco: MatTableDataSource<PocoEntry>;
+  newPo: MatTableDataSource<NewPoEntry>;
+  closePo: MatTableDataSource<ClosePoEntry>;
+  budgetUpdate: MatTableDataSource<BudgetUpdateEntry>;
+  contractUpdate: MatTableDataSource<ContractUpdateEntry>;
+  poScrub: MatTableDataSource<PoScrubEntry>;
+  invoiceScrub: MatTableDataSource<InvoiceScrubEntry>;
+  directedWork: MatTableDataSource<DirectedWorkEntry>;
+}
+
 interface Category {
   key: keyof EntryMap;
   label: string;
@@ -77,7 +90,9 @@ interface Category {
   templateUrl: './market-controller.component.html',
   styleUrls: ['./market-controller.component.scss']
 })
-export class MarketControllerComponent {
+export class MarketControllerComponent implements AfterViewInit {
+  @ViewChildren(MatPaginator) paginators!: QueryList<MatPaginator>;
+
   categories: Category[] = [
     { key: 'poco', label: 'POCO' },
     { key: 'newPo', label: 'New PO' },
@@ -89,18 +104,46 @@ export class MarketControllerComponent {
     { key: 'directedWork', label: 'Directed Work' }
   ];
 
-  entries: EntryMap = {
-    poco: [],
-    newPo: [],
-    closePo: [],
-    budgetUpdate: [],
-    contractUpdate: [],
-    poScrub: [],
-    invoiceScrub: [],
-    directedWork: []
+  dataSources: DataSourceMap = {
+    poco: new MatTableDataSource<PocoEntry>([]),
+    newPo: new MatTableDataSource<NewPoEntry>([]),
+    closePo: new MatTableDataSource<ClosePoEntry>([]),
+    budgetUpdate: new MatTableDataSource<BudgetUpdateEntry>([]),
+    contractUpdate: new MatTableDataSource<ContractUpdateEntry>([]),
+    poScrub: new MatTableDataSource<PoScrubEntry>([]),
+    invoiceScrub: new MatTableDataSource<InvoiceScrubEntry>([]),
+    directedWork: new MatTableDataSource<DirectedWorkEntry>([])
+  };
+
+  expandedCategories: Record<keyof EntryMap, boolean> = {
+    poco: true,
+    newPo: true,
+    closePo: true,
+    budgetUpdate: true,
+    contractUpdate: true,
+    poScrub: true,
+    invoiceScrub: true,
+    directedWork: true
   };
 
   constructor(private dialog: MatDialog, private toastr: ToastrService) {}
+
+  ngAfterViewInit(): void {
+    this.setPaginators();
+    this.paginators.changes.subscribe(() => this.setPaginators());
+  }
+
+  private setPaginators(): void {
+    this.paginators.forEach((paginator, index) => {
+      const key = this.categories[index].key;
+      this.dataSources[key].paginator = paginator;
+      paginator.pageSize = 5;
+    });
+  }
+
+  toggleCategory(catKey: keyof EntryMap): void {
+    this.expandedCategories[catKey] = !this.expandedCategories[catKey];
+  }
 
   openModal(cat: Category): void {
     const dialogRef = this.dialog.open(MarketControllerModalComponent, {
@@ -110,7 +153,8 @@ export class MarketControllerComponent {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.entries[cat.key].push(result);
+        const data = this.dataSources[cat.key].data;
+        this.dataSources[cat.key].data = [...data, result];
       }
     });
   }
@@ -118,12 +162,14 @@ export class MarketControllerComponent {
   editEntry(cat: Category, index: number): void {
     const dialogRef = this.dialog.open(MarketControllerModalComponent, {
       width: '500px',
-      data: { type: cat.key, entry: { ...this.entries[cat.key][index] } }
+      data: { type: cat.key, entry: { ...this.dataSources[cat.key].data[index] } }
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.entries[cat.key][index] = result;
+        const data = this.dataSources[cat.key].data;
+        data[index] = result;
+        this.dataSources[cat.key].data = [...data];
       }
     });
   }
@@ -138,7 +184,9 @@ export class MarketControllerComponent {
   }
 
   removeEntry(catKey: keyof EntryMap, index: number): void {
-    this.entries[catKey].splice(index, 1);
+    const data = this.dataSources[catKey].data;
+    data.splice(index, 1);
+    this.dataSources[catKey].data = [...data];
     this.toastr.success('Entry deleted');
   }
 
