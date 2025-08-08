@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MarketControllerEntry } from '../../../models/market-controller-entry.model';
 
@@ -50,56 +50,56 @@ export class MarketControllerModalComponent {
     });
 
     const controls = this.getFormControls(type, entry);
-    Object.keys(controls).forEach(key => {
-      this.entryForm.addControl(key, controls[key]);
+    Object.entries(controls).forEach(([key, control]) => {
+      this.entryForm.addControl(key, control);
     });
   }
 
-  private getFormControls(type: string, entry: MarketControllerEntry | null): { [key: string]: any } {
+  private getFormControls(type: string, entry: MarketControllerEntry | null): { [key: string]: FormControl } {
     switch (type) {
       case 'POCO':
         return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          vendor: [entry?.vendor || '', Validators.required],
-          segmentReason: [entry?.segmentReason || '', Validators.required],
-          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
-          amount: [entry?.amount ?? 0, Validators.required],
-          notes: [entry?.notes || '']
+          poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
+          vendor: this.fb.control(entry?.vendor || '', Validators.required),
+          segmentReason: this.fb.control(entry?.segmentReason || '', Validators.required),
+          date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
+          amount: this.fb.control(entry?.amount ?? 0, Validators.required),
+          notes: this.fb.control(entry?.notes || '')
         };
       case 'New PO':
         return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          vendor: [entry?.vendor || '', Validators.required],
-          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
-          amount: [entry?.amount ?? 0],
-          notes: [entry?.notes || '']
+          poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
+          vendor: this.fb.control(entry?.vendor || '', Validators.required),
+          date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
+          amount: this.fb.control(entry?.amount ?? 0),
+          notes: this.fb.control(entry?.notes || '')
         };
       case 'Close PO':
         return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          vendor: [entry?.vendor || '', Validators.required],
-          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
-          notes: [entry?.notes || '']
+          poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
+          vendor: this.fb.control(entry?.vendor || '', Validators.required),
+          date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
+          notes: this.fb.control(entry?.notes || '')
         };
       case 'Budget Update':
       case 'Contract Update':
       case 'Directed Work':
         return {
-          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
-          notes: [entry?.notes || '']
+          date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
+          notes: this.fb.control(entry?.notes || '')
         };
       case 'PO Scrub':
         return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
-          notes: [entry?.notes || '']
+          poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
+          date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
+          notes: this.fb.control(entry?.notes || '')
         };
       case 'Invoice Scrub':
         return {
-          poNumber: [entry?.poNumber || '', Validators.required],
-          segmentReason: [entry?.segmentReason || '', Validators.required],
-          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
-          notes: [entry?.notes || '']
+          poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
+          segmentReason: this.fb.control(entry?.segmentReason || '', Validators.required),
+          date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
+          notes: this.fb.control(entry?.notes || '')
         };
       default:
         return {};
