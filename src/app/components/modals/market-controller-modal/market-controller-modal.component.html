@@ -17,46 +17,50 @@
       </mat-error>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>PO Number</mat-label>
-      <input matInput formControlName="poNumber" />
-    </mat-form-field>
+    <mat-grid-list cols="4" rowHeight="115px" gutterSize="2px">
+      <ng-container *ngFor="let field of entryForm.controls | keyvalue">
+        <mat-grid-tile *ngIf="field.key !== 'type'" [colspan]="getColSpan(field.key)">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ getLabel(field.key) }}</mat-label>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Vendor</mat-label>
-      <mat-select formControlName="vendor" placeholder="Select a Vendor">
-        <mat-option *ngFor="let vendor of vendors" [value]="vendor">{{ vendor }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+            <input
+              *ngIf="field.key !== 'date' && field.key !== 'notes' && field.key !== 'amount' && field.key !== 'vendor'"
+              matInput
+              [formControlName]="field.key"
+            />
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Segment / Reason</mat-label>
-      <input matInput formControlName="segmentReason" />
-    </mat-form-field>
+            <mat-select *ngIf="field.key === 'vendor'" formControlName="vendor" placeholder="Select a Vendor">
+              <mat-option *ngFor="let vendor of vendors" [value]="vendor">{{ vendor }}</mat-option>
+            </mat-select>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Date</mat-label>
-      <input matInput [matDatepicker]="picker" formControlName="date" />
-      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
-      <mat-error *ngIf="entryForm.get('date')?.invalid && entryForm.get('date')?.touched">
-        Date is required
-      </mat-error>
-    </mat-form-field>
+            <input
+              *ngIf="field.key === 'amount'"
+              matInput
+              [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }"
+              [formControlName]="field.key"
+            />
+            <input
+              *ngIf="field.key === 'date'"
+              matInput
+              [matDatepicker]="picker"
+              [formControlName]="field.key"
+            />
+            <mat-datepicker-toggle *ngIf="field.key === 'date'" matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <textarea
+              *ngIf="field.key === 'notes'"
+              matInput
+              [formControlName]="field.key"
+              rows="3"
+            ></textarea>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Amount</mat-label>
-      <input
-        matInput
-        [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }"
-        formControlName="amount"
-      />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Notes</mat-label>
-      <textarea matInput formControlName="notes" rows="3"></textarea>
-    </mat-form-field>
+            <mat-error *ngIf="entryForm.get(field.key)?.invalid && entryForm.get(field.key)?.touched">
+              {{ getLabel(field.key) }} is required
+            </mat-error>
+          </mat-form-field>
+        </mat-grid-tile>
+      </ng-container>
+    </mat-grid-list>
   </form>
 </div>
 

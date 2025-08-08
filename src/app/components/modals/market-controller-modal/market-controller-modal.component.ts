@@ -29,14 +29,102 @@ export class MarketControllerModalComponent {
   ) {
     const entry = data.entry;
     this.entryForm = this.fb.group({
-      type: [entry?.type || '', Validators.required],
-      poNumber: [entry?.poNumber || ''],
-      vendor: [entry?.vendor || ''],
-      segmentReason: [entry?.segmentReason || ''],
-      date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
-      amount: [entry?.amount],
-      notes: [entry?.notes || '']
+      type: [entry?.type || '', Validators.required]
     });
+
+    if (entry?.type) {
+      this.updateFormFields(entry.type, entry);
+    }
+
+    this.entryForm.get('type')!.valueChanges.subscribe((selected: string) => {
+      this.updateFormFields(selected, null);
+    });
+  }
+
+  private updateFormFields(type: string, entry: MarketControllerEntry | null): void {
+    // remove existing dynamic controls
+    Object.keys(this.entryForm.controls).forEach(key => {
+      if (key !== 'type') {
+        this.entryForm.removeControl(key);
+      }
+    });
+
+    const controls = this.getFormControls(type, entry);
+    Object.keys(controls).forEach(key => {
+      this.entryForm.addControl(key, controls[key]);
+    });
+  }
+
+  private getFormControls(type: string, entry: MarketControllerEntry | null): { [key: string]: any } {
+    switch (type) {
+      case 'POCO':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          vendor: [entry?.vendor || '', Validators.required],
+          segmentReason: [entry?.segmentReason || '', Validators.required],
+          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
+          amount: [entry?.amount ?? 0, Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'New PO':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          vendor: [entry?.vendor || '', Validators.required],
+          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
+          amount: [entry?.amount ?? 0],
+          notes: [entry?.notes || '']
+        };
+      case 'Close PO':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          vendor: [entry?.vendor || '', Validators.required],
+          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'Budget Update':
+      case 'Contract Update':
+      case 'Directed Work':
+        return {
+          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'PO Scrub':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      case 'Invoice Scrub':
+        return {
+          poNumber: [entry?.poNumber || '', Validators.required],
+          segmentReason: [entry?.segmentReason || '', Validators.required],
+          date: [entry?.date ? new Date(entry.date) : new Date(), Validators.required],
+          notes: [entry?.notes || '']
+        };
+      default:
+        return {};
+    }
+  }
+
+  getLabel(key: string): string {
+    const map: Record<string, string> = {
+      poNumber: 'PO Number',
+      vendor: 'Vendor',
+      segmentReason: 'Segment / Reason',
+      date: 'Date',
+      amount: 'Amount',
+      notes: 'Notes'
+    };
+    return map[key] || key;
+  }
+
+  getColSpan(field: string): number {
+    switch (field) {
+      case 'notes':
+        return 4;
+      default:
+        return 2;
+    }
   }
 
   close(): void {

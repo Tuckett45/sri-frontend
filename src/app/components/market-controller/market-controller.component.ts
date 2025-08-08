@@ -63,7 +63,7 @@ export class MarketControllerComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         if (entry && entry.id) {
-          const payload: MarketControllerEntry = { ...entry, ...result };
+          const payload: MarketControllerEntry = { id: entry.id, ...result };
           this.marketControllerService.updateEntry(payload).subscribe(() => {
             const index = this.dataSource.data.findIndex(e => e.id === entry.id);
             if (index > -1) {
