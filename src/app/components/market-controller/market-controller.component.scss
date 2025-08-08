@@ -11,28 +11,7 @@
     padding: 10px
   }
 
-  .button-bar {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: center;
-    align-items: center;
-    background-color: #144f80; 
-    color: white;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    flex-wrap: wrap; 
-  }
-
-.nav-button {
-  padding: 10px;
-  border-radius: 0.5rem;
-  transition: transform 0.5s ease;
-  background-color: #144f80;
-  color: #fff;
-  &:hover {
-      background-color: #e18a25;
-  }
-}
+  /* former button-bar styles removed after simplifying to a single action button */
 
 button.mat-raised-button {
   color: #fff;
@@ -242,19 +221,8 @@ button.mat-raised-button {
       overflow-y: auto;
     }
 
-.nav-button:hover {
-  background-color: #cf7c1f; /* slightly darker accent */
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-}
-
-.nav-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(225,138,37,0.4);
-}
-
-
   .header-section {
+    display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
@@ -859,13 +827,4 @@ button.mat-raised-button {
 }
 
 
-.button-bar {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
 
-.category-section {
-  margin-top: 2rem;
-}
