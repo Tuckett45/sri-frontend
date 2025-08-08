@@ -24,9 +24,9 @@
     <button *ngIf="authService.isCoordinator() || authService.isAdmin()"  mat-button routerLink="/osp-coordinator-tracker" routerLinkActive="active-link">
       OSP Coordinator
     </button>
-    <!-- <button mat-button *ngIf="authService.isAdmin()"  routerLink="/expenses" routerLinkActive="active-link">
+    <button mat-button *ngIf="authService.isAdmin()"  routerLink="/expenses" routerLinkActive="active-link">
       Expenses
-    </button> -->
+    </button>
     <button mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
       Profile
     </button>
