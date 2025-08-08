@@ -15,7 +15,7 @@ export class MarketControllerService {
     })
   };
 
-  private baseUrl = `${local_environment.apiUrl}/MarketController`;
+  private baseUrl = `${environment.apiUrl}/MarketController`;
 
   constructor(private http: HttpClient) {}
 

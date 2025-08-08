@@ -7,6 +7,9 @@ import { MarketControllerModalComponent } from '../modals/market-controller-moda
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { MarketControllerService } from '../../services/market-controller.service';
 import { MarketControllerEntry } from '../../models/market-controller-entry.model';
+import { MatSort } from '@angular/material/sort';
+import { AuthService } from 'src/app/services/auth.service';
+import { User } from 'src/app/models/user.model';
 
 @Component({
   selector: 'app-market-controller',
@@ -14,8 +17,7 @@ import { MarketControllerEntry } from '../../models/market-controller-entry.mode
   styleUrls: ['./market-controller.component.scss']
 })
 export class MarketControllerComponent implements OnInit, AfterViewInit {
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-
+  user!: User;
   displayedColumns: string[] = [
     'type',
     'poNumber',
@@ -26,33 +28,35 @@ export class MarketControllerComponent implements OnInit, AfterViewInit {
     'notes',
     'actions'
   ];
-
-  dataSource = new MatTableDataSource<MarketControllerEntry>([]);
+  private viewInitialized = false;
+  dataSource = new MatTableDataSource<MarketControllerEntry>();
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
+    public authService: AuthService,
     private dialog: MatDialog,
     private toastr: ToastrService,
     private marketControllerService: MarketControllerService
   ) {}
 
   ngOnInit(): void {
+    this.user = this.authService.getUser();
     this.loadEntries();
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
+   ngAfterViewInit(): void {
+    this.viewInitialized = true;
   }
 
+
   private loadEntries(): void {
-    this.marketControllerService.getEntries().subscribe(entries => {
-      this.dataSource.data = entries.map(e => ({
-        ...e,
-        date: e.date ? new Date(e.date) : undefined,
-        createdDate: e.createdDate ? new Date(e.createdDate) : undefined,
-        updatedDate: e.updatedDate ? new Date(e.updatedDate) : undefined
-      }));
-    }, () => this.toastr.error('Failed to load entries'));
-  }
+  this.marketControllerService.getEntries().subscribe(entries => {
+    this.dataSource = new MatTableDataSource(entries);
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }, () => this.toastr.error('Failed to load entries'));
+}
 
   openModal(entry?: MarketControllerEntry): void {
     const dialogRef = this.dialog.open(MarketControllerModalComponent, {

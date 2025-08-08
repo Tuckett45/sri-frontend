@@ -11,7 +11,56 @@
     padding: 10px
   }
 
-  /* former button-bar styles removed after simplifying to a single action button */
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+      font-size: 2rem;
+    }
+  }
+
+  .header-btns {
+    display: flex;
+    justify-content:flex-end;
+    align-items: center;
+  }
+
+  .nav-button{
+    background-color: #e18a25;
+    color: #fff;
+
+    &:hover {
+      background-color: #b86404;
+    }
+  }
+
+   .actions-container {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .edit-icon {
+    cursor: pointer;
+    font-size: 20px;
+    color: #e18a25;
+
+    &:hover {
+      color: #b86404;
+    }
+  }
+
+  .delete-icon {
+    cursor: pointer;
+    font-size: 20px;
+    color: #f44336;
+
+    &:hover {
+      color: #e53935;
+    }
+  }
 
 button.mat-raised-button {
   color: #fff;
