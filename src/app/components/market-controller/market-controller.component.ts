@@ -22,6 +22,7 @@ export class MarketControllerComponent implements OnInit, AfterViewInit {
     'type',
     'poNumber',
     'vendor',
+    'market',
     'segmentReason',
     'date',
     'amount',

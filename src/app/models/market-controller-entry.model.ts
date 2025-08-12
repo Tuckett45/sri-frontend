@@ -1,6 +1,7 @@
 export interface MarketControllerEntry {
   id?: string;
   type: string;
+  market: string;
   poNumber?: string;
   vendor?: string;
   segmentReason?: string;

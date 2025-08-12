@@ -28,6 +28,11 @@
         <td mat-cell *matCellDef="let entry"> {{ entry.vendor }} </td>
       </ng-container>
 
+      <ng-container matColumnDef="market">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Market </th>
+        <td mat-cell *matCellDef="let entry"> {{ entry.market }} </td>
+      </ng-container>
+
       <ng-container matColumnDef="segmentReason">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Segment / Reason </th>
         <td mat-cell *matCellDef="let entry"> {{ entry.segmentReason }} </td>

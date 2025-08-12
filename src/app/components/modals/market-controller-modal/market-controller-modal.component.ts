@@ -61,6 +61,7 @@ export class MarketControllerModalComponent {
         return {
           poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
           vendor: this.fb.control(entry?.vendor || '', Validators.required),
+          market: this.fb.control(entry?.market || '', Validators.required),
           segmentReason: this.fb.control(entry?.segmentReason || '', Validators.required),
           date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
           amount: this.fb.control(entry?.amount ?? 0, Validators.required),
@@ -70,6 +71,7 @@ export class MarketControllerModalComponent {
         return {
           poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
           vendor: this.fb.control(entry?.vendor || '', Validators.required),
+          market: this.fb.control(entry?.market || '', Validators.required),
           date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
           amount: this.fb.control(entry?.amount ?? 0),
           notes: this.fb.control(entry?.notes || '')
@@ -78,6 +80,7 @@ export class MarketControllerModalComponent {
         return {
           poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
           vendor: this.fb.control(entry?.vendor || '', Validators.required),
+          market: this.fb.control(entry?.market || '', Validators.required),
           date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
           notes: this.fb.control(entry?.notes || '')
         };
@@ -85,18 +88,21 @@ export class MarketControllerModalComponent {
       case 'Contract Update':
       case 'Directed Work':
         return {
+          market: this.fb.control(entry?.market || '', Validators.required),
           date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
           notes: this.fb.control(entry?.notes || '')
         };
       case 'PO Scrub':
         return {
           poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
+          market: this.fb.control(entry?.market || '', Validators.required),
           date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
           notes: this.fb.control(entry?.notes || '')
         };
       case 'Invoice Scrub':
         return {
           poNumber: this.fb.control(entry?.poNumber || '', Validators.required),
+          market: this.fb.control(entry?.market || '', Validators.required),
           segmentReason: this.fb.control(entry?.segmentReason || '', Validators.required),
           date: this.fb.control(entry?.date ? new Date(entry.date) : new Date(), Validators.required),
           notes: this.fb.control(entry?.notes || '')
@@ -110,6 +116,7 @@ export class MarketControllerModalComponent {
     const map: Record<string, string> = {
       poNumber: 'PO Number',
       vendor: 'Vendor',
+      market: 'Market',
       segmentReason: 'Segment / Reason',
       date: 'Date',
       amount: 'Amount',
