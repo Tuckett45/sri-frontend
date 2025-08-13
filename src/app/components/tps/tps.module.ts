@@ -17,13 +17,18 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { ChartModule } from 'primeng/chart';
 import { DividerModule } from "primeng/divider";
 import { MatSortModule } from '@angular/material/sort';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { BudgetTrackerComponent } from './budget-tracker/budget-tracker.component';
+import { MatPaginator } from '@angular/material/paginator';
 
 @NgModule({
   declarations: [
     TpsComponent,
     SummaryComponent,
     ViolationsComponent,
-    CityScorecardComponent
+    CityScorecardComponent,
+    BudgetTrackerComponent
   ],
   imports: [
     CommonModule,
@@ -36,9 +41,14 @@ import { MatSortModule } from '@angular/material/sort';
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
-    MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatDatepickerModule,
+    MatProgressSpinnerModule,
+    MatProgressBarModule,
+    MatPaginator,
+    MatFormFieldModule,
+    MatInputModule,
     ChartModule,
     DividerModule
   ]
