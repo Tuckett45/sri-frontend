@@ -57,6 +57,8 @@ import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { OspCoordinatorModalComponent } from './components/modals/osp-coordinator-modal/osp-coordinator-modal.component';
 import { ExpenseReportModalComponent } from './components/modals/expense-report-modal/expense-report-modal.component';
+import { MarketControllerComponent } from './components/market-controller/market-controller.component';
+import { MarketControllerModalComponent } from './components/modals/market-controller-modal/market-controller-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
 import { GoalsComponent } from './components/overview/goals/goals.component';
 import { VendorDashboardComponent } from './components/overview/dashboard/vendor-dashboard/vendor-dashboard.component';
@@ -72,6 +74,11 @@ import { TabsModule } from 'primeng/tabs'
 import { DividerModule } from 'primeng/divider';
 import { MeterGroupModule } from 'primeng/metergroup';
 import { TagModule } from 'primeng/tag';
+import { TableModule } from 'primeng/table';
+import { InputTextModule } from 'primeng/inputtext';
+import { CalendarModule } from 'primeng/calendar';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import { NgxCurrencyDirective } from "ngx-currency";
@@ -115,7 +122,9 @@ export const customCurrencyMaskConfig = {
     OspCoordinatorModalComponent,
     ExpenseReportModalComponent,
     WidgetComponent,
-    OspCoordinatorTrackerComponent
+    OspCoordinatorTrackerComponent,
+    MarketControllerComponent,
+    MarketControllerModalComponent
   ],
   imports: [
     NgxCurrencyDirective,
@@ -136,6 +145,11 @@ export const customCurrencyMaskConfig = {
     FloatLabel,
     DropdownModule,
     TagModule,
+    TableModule,
+    InputTextModule,
+    CalendarModule,
+    InputNumberModule,
+    InputTextModule,
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule, 
