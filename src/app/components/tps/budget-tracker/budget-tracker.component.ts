@@ -112,6 +112,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     return Object.keys(row).filter(k => !this.displayedFields.includes(k));
   }
 
+  isExpandedRow = (_: number, row: BudgetTrackerRow) => this.expandedRow === row;
+
   asDate(v?: string | null): string {
     if (!v) return '';
     const d = new Date(v);

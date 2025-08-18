@@ -96,6 +96,14 @@ mat-form-field {
   text-align: left;
   background-color: #525252;
   color: #fff;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.detail-item {
+  display: flex;
+  gap: 0.25rem;
 }
 
 @media (max-width: 768px) {
