@@ -2,12 +2,11 @@
   <div class="p-3">
     <div class="header-section">
       <h2>OSP Coordinator</h2>
-    </div>
-  
-    <div class="header-actions">
-      <input type="file" accept=".csv" #csvInput (change)="importFromCSV($event)" style="display:none" />
-      <button mat-raised-button class="action-btn" (click)="csvInput.click()">Import CSV</button>
-      <button mat-raised-button class="action-btn" (click)="openAddEditModal()">Add Entry</button>
+      <div class="header-btns">
+        <input type="file" accept=".csv" #csvInput (change)="importFromCSV($event)" style="display:none" />
+        <button mat-raised-button class="action-btn" (click)="csvInput.click()">Import CSV</button>
+        <button mat-raised-button class="action-btn" (click)="openAddEditModal()">Add Entry</button>
+      </div>
     </div>
   
     <div class="filter-section">
@@ -21,6 +20,8 @@
         </mat-form-field>
       </div>   
     </div>
+
+    <p-divider />
   
     <div class="stats">
       <app-widget *ngFor="let card of statCards" [title]="card.description" [data]="card.value"></app-widget>
