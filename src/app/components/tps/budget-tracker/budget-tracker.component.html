@@ -26,7 +26,7 @@
     </mat-form-field>
 
     <div class="actions">
-      <button mat-raised-button color="primary" type="submit">Apply</button>
+      <button mat-raised-button class="filters-btn" type="submit">Apply</button>
       <button mat-button type="button" (click)="clearFilters()">Clear</button>
     </div>
   </form>
@@ -34,7 +34,7 @@
   <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
 
   <div class="table-wrapper" *ngIf="rows.length; else empty">
-    <table mat-table [dataSource]="rows" class="mat-elevation-z8">
+    <table mat-table [dataSource]="rows" class="mat-elevation-z8" multiTemplateDataRows>
 
       <ng-container matColumnDef="claim_month_year">
         <th mat-header-cell *matHeaderCellDef>Claim Month</th>
@@ -68,12 +68,12 @@
 
       <ng-container matColumnDef="final_cost">
         <th mat-header-cell *matHeaderCellDef>Final Cost</th>
-        <td mat-cell *matCellDef="let r">{{ r.final_cost | currency }}</td>
+        <td mat-cell *matCellDef="let r">{{ r.FinalCost | currency }}</td>
       </ng-container>
 
       <ng-container matColumnDef="total_dollars_all_in">
         <th mat-header-cell *matHeaderCellDef>Total $ All In</th>
-        <td mat-cell *matCellDef="let r">{{ r.total_dollars_all_in | currency }}</td>
+        <td mat-cell *matCellDef="let r">{{ r.TotalDollarsAllIn | currency }}</td>
       </ng-container>
 
       <ng-container matColumnDef="conlog_link">
@@ -83,8 +83,19 @@
         </td>
       </ng-container>
 
+      <ng-container matColumnDef="expandedDetail">
+        <td mat-cell *matCellDef="let r" [attr.colspan]="displayedColumns.length">
+          <div class="detail-container" *ngIf="expandedRow === r">
+            <div class="detail-item" *ngFor="let item of detailKeys(r)">
+              <strong>{{ item }}:</strong> {{ ($any(r))[item] }}
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let r; columns: displayedColumns"></tr>
+      <tr mat-row *matRowDef="let r; columns: displayedColumns" class="element-row" (click)="toggleRow(r)"></tr>
+      <tr mat-row *matRowDef="let r; columns: ['expandedDetail']; when: isExpandedRow" class="detail-row"></tr>
     </table>
 
     <mat-paginator [length]="total"
