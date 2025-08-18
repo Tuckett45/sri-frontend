@@ -17,8 +17,23 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   loading = false;
   rows: BudgetTrackerRow[] = [];
   total = 0;
+  expandedRow: BudgetTrackerRow | null = null;
+
+  private readonly displayedFields = [
+    'ClaimMonthYear',
+    'Segment',
+    'City',
+    'Vendor',
+    'Market',
+    'Status',
+    'FinalCost',
+    'TotalDollarsAllIn',
+    'ConlogLink',
+    'RowId'
+  ];
 
   displayedColumns = [
+    'expand',
     'claim_month_year',
     'segment',
     'city',
@@ -89,6 +104,16 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     this.pageSize = e.pageSize;
     this.reload$.next();
   }
+
+  toggleRow(row: BudgetTrackerRow): void {
+    this.expandedRow = this.expandedRow === row ? null : row;
+  }
+
+  detailKeys(row: BudgetTrackerRow): string[] {
+    return Object.keys(row).filter(k => !this.displayedFields.includes(k));
+  }
+
+  isExpandedRow = (_: number, row: BudgetTrackerRow) => this.expandedRow === row;
 
   asDate(v?: string | null): string {
     if (!v) return '';

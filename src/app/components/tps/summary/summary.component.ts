@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChildren, QueryList } from '@angular/core';
+import { UIChart } from 'primeng/chart';
 import { TpsService } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
@@ -8,7 +9,7 @@ import { CityScorecard } from 'src/app/models/city-scorecard.model';
   templateUrl: './summary.component.html',
   styleUrls: ['./summary.component.scss']
 })
-export class SummaryComponent implements OnInit {
+export class SummaryComponent implements OnInit, AfterViewInit {
   violationsCount = 0;
   cityCount = 0;
   totalOverspent = 0;
@@ -36,6 +37,8 @@ export class SummaryComponent implements OnInit {
   hhChartData: any;
   dollarPerHhpChartData: any;
   linearFootChartData: any;
+
+  @ViewChildren(UIChart) charts!: QueryList<UIChart>;
 
   violationChartOptions = {
   responsive: true,
@@ -147,6 +150,10 @@ export class SummaryComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.charts.forEach(c => c.reinit()));
   }
 
   loadData() {
@@ -318,6 +325,8 @@ export class SummaryComponent implements OnInit {
         }
       ]
     };
+
+    setTimeout(() => this.charts.forEach(c => c.reinit()));
   }
 
   private getPercentChange(forecasted: number, actual: number): number {
