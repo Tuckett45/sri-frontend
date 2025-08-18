@@ -132,13 +132,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   
 
   updateUnresolvedCount(): void {
-    if(this.dataSource.filter != ''){
-      const unresolvedCount = this.dataSource.filteredData.length; 
-      this.unresolvedCountChange.emit(unresolvedCount);
-    }else{
-      const unresolvedCount = this.dataSource.data.length; 
-      this.unresolvedCountChange.emit(unresolvedCount);
-    }
+    const unresolvedCount = this.dataSource.filteredData.length;
+    this.unresolvedCountChange.emit(unresolvedCount);
   }
   
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {

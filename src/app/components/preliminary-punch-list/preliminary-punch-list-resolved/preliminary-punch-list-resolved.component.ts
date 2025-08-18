@@ -155,13 +155,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
 
   updateResolvedCount(): void {
-    if(this.dataSource.filter != ''){
-      const resolvedCount = this.dataSource.filteredData.length; 
-      this.resolvedCountChange.emit(resolvedCount);
-    }else{
-      const resolvedCount = this.dataSource.data.length; 
-      this.resolvedCountChange.emit(resolvedCount);
-    }
+    const resolvedCount = this.dataSource.filteredData.length;
+    this.resolvedCountChange.emit(resolvedCount);
   }
 
   openModal(data?: PreliminaryPunchList): void {
