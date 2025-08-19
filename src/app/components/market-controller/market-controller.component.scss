@@ -11,6 +11,15 @@
     padding: 10px
   }
 
+  .export-btn {
+    align-items: center;
+    background-color: #0baa06;
+    color: #fff;
+
+    &:hover {
+      background-color: #066303;
+    }
+  }
   .header-section {
     display: flex;
     justify-content: space-between;

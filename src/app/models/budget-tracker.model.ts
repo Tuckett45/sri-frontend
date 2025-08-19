@@ -1,3 +1,4 @@
+
 export interface BudgetTrackerHeader {
   RowId: string;
   ConlogLink?: string | null;
@@ -482,4 +483,3 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   items: T[];
 }
-
