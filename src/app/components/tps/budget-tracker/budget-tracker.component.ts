@@ -1,6 +1,7 @@
 // src/app/pages/budget-tracker/budget-tracker.component.ts
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { Sort } from '@angular/material/sort';
 import { FormBuilder } from '@angular/forms';
 import { Subject, switchMap, startWith, takeUntil, tap } from 'rxjs';
 import { BudgetTrackerRow } from '../../../models/budget-tracker.model';
@@ -17,8 +18,23 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   loading = false;
   rows: BudgetTrackerRow[] = [];
   total = 0;
+  expandedRowId: string | null = null;
+
+  private readonly displayedFields = [
+    'ClaimMonthYear',
+    'Segment',
+    'City',
+    'Vendor',
+    'Market',
+    'Status',
+    'FinalCost',
+    'TotalDollarsAllIn',
+    'ConlogLink',
+    'RowId'
+  ];
 
   displayedColumns = [
+    'expand',
     'claim_month_year',
     'segment',
     'city',
@@ -88,6 +104,37 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     this.page = e.pageIndex + 1;
     this.pageSize = e.pageSize;
     this.reload$.next();
+  }
+
+  toggleRow(row: BudgetTrackerRow): void {
+    this.expandedRowId = this.expandedRowId === row.RowId ? null : row.RowId;
+  }
+
+  detailKeys(row: BudgetTrackerRow): string[] {
+    return Object.keys(row).filter(k => !this.displayedFields.includes(k));
+  }
+
+  isExpandedRow = (_: number, row: BudgetTrackerRow) => this.expandedRowId === row.RowId;
+
+  onSort(sort: Sort): void {
+    const data = this.rows.slice();
+    if (!sort.active || sort.direction === '') {
+      this.rows = data;
+      return;
+    }
+
+    this.rows = data.sort((a, b) => {
+      const valueA = this.getSortValue(a, sort.active);
+      const valueB = this.getSortValue(b, sort.active);
+      const comparator = valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+      return sort.direction === 'asc' ? comparator : -comparator;
+    });
+  }
+
+  private getSortValue(row: BudgetTrackerRow, column: string): any {
+    const val = (row as any)[column];
+    if (val == null) return '';
+    return typeof val === 'string' ? val.toLowerCase() : val;
   }
 
   asDate(v?: string | null): string {
