@@ -33,6 +33,8 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   selectedSegmentOverspent: string | null = null;
   selectedVendorSegmentChart: string | null = null;
   selectedSegmentSegmentChart: string | null = null;
+  selectedVendorAllIn: string | null = null;
+  selectedSegmentAllIn: string | null = null;
   vendorOptions: SelectItem[] = [];
   segmentOptions: SelectItem[] = [];
 
@@ -257,11 +259,15 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       ]
     };
 
+    const cityFilterViolations = filterViolations(this.selectedVendorAllIn, this.selectedSegmentAllIn);
+    const allowedCities = new Set(cityFilterViolations.map(v => v.city).filter(Boolean));
+
     const filteredCities = this.cities.filter(c => {
       const date = c.ta_Date ? new Date(c.ta_Date) : null;
       const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
       const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
-      return afterStart && beforeEnd;
+      const matchesCity = allowedCities.size ? allowedCities.has(c.city ?? '') : true;
+      return afterStart && beforeEnd && matchesCity;
     });
 
     this.cityCount = filteredCities.length;

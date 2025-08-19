@@ -1,15 +1,25 @@
 <!-- src/app/pages/budget-tracker/budget-tracker.component.html -->
 <div class="budget-tracker">
   <form class="filter-section mb-2" (ngSubmit)="applyFilters()" [formGroup]="form">
-    <mat-form-field appearance="fill" class="cols-6">
-      <mat-label>Segment</mat-label>
-      <input matInput formControlName="segment" placeholder="Segment">
-    </mat-form-field>
+    <div class="cols-6">
+      <p-dropdown
+        [options]="segmentOptions"
+        formControlName="segment"
+        placeholder="Segment"
+        showClear="true"
+        styleClass="filter-dropdown w-full">
+      </p-dropdown>
+    </div>
 
-    <mat-form-field appearance="fill" class="cols-6">
-      <mat-label>City</mat-label>
-      <input matInput formControlName="city" placeholder="City">
-    </mat-form-field>
+    <div class="cols-6">
+      <p-dropdown
+        [options]="cityOptions"
+        formControlName="city"
+        placeholder="City"
+        showClear="true"
+        styleClass="filter-dropdown w-full">
+      </p-dropdown>
+    </div>
 
     <mat-form-field appearance="fill" class="cols-6">
       <mat-label>Claim Month From</mat-label>

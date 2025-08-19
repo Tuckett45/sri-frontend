@@ -58,6 +58,11 @@
   gap: 1rem;
 }
 
+::ng-deep .filter-dropdown.p-dropdown {
+  background-color: #ffffff;
+  color: #000000;
+}
+
 .filters-btn {
   align-items: center;
   background-color: #e18a25;

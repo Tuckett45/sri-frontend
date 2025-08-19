@@ -6,6 +6,7 @@ import { FormBuilder } from '@angular/forms';
 import { Subject, switchMap, startWith, takeUntil, tap } from 'rxjs';
 import { BudgetTrackerRow } from '../../../models/budget-tracker.model';
 import { TpsService } from 'src/app/services/tps.service';
+import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-budget-tracker',
@@ -41,6 +42,9 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     claimMonthTo: <Date | null>(null),
   });
 
+  segmentOptions: SelectItem[] = [];
+  cityOptions: SelectItem[] = [];
+
   private page = 1;
   private pageSize = 25;
   private reload$ = new Subject<void>();
@@ -49,6 +53,7 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   constructor(private fb: FormBuilder, private tpsService: TpsService) {}
 
   ngOnInit(): void {
+    this.loadOptions();
     // load on start and whenever filters submit or page changes
     this.reload$
       .pipe(
@@ -73,6 +78,19 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: _ => { this.loading = false; }
+      });
+  }
+
+  private loadOptions(): void {
+    this.tpsService
+      .get({ page: 1, pageSize: 1000 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => {
+        const items = res.items ?? [];
+        const segments = Array.from(new Set(items.map(i => i.Header?.Segment).filter(Boolean)));
+        const cities = Array.from(new Set(items.map(i => i.Header?.City).filter(Boolean)));
+        this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
+        this.cityOptions = cities.map(c => ({ label: c!, value: c! }));
       });
   }
 
