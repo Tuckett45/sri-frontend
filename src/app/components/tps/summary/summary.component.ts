@@ -51,6 +51,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   violationChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
+  interaction: { mode: 'index', intersect: false },
   plugins: {
     legend: {
       labels: {
@@ -58,6 +59,8 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       }
     },
     tooltip: {
+      mode: 'index',
+      intersect: false,
       callbacks: {
         label: (ctx: any) => {
           const label = ctx.dataset.label || '';
@@ -123,6 +126,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   chartOptions = {
     maintainAspectRatio: false,
     aspectRatio: 1,
+    interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: {
         labels: {
@@ -130,6 +134,8 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         }
       },
       tooltip: {
+        mode: 'index',
+        intersect: false,
         callbacks: {
           label: (ctx: any) => {
             const label = ctx.dataset.label || '';
