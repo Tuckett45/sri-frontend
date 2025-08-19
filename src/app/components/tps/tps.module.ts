@@ -21,6 +21,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BudgetTrackerComponent } from './budget-tracker/budget-tracker.component';
 import { MatPaginator } from '@angular/material/paginator';
+import { DropdownModule } from 'primeng/dropdown';
 
 @NgModule({
   declarations: [
@@ -47,6 +48,7 @@ import { MatPaginator } from '@angular/material/paginator';
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatPaginator,
+    DropdownModule,
     MatFormFieldModule,
     MatInputModule,
     ChartModule,

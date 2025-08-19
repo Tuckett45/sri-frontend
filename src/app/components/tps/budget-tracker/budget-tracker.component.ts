@@ -1,6 +1,7 @@
 // src/app/pages/budget-tracker/budget-tracker.component.ts
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { Sort } from '@angular/material/sort';
 import { FormBuilder } from '@angular/forms';
 import { Subject, switchMap, startWith, takeUntil, tap } from 'rxjs';
 import { BudgetTrackerRow } from '../../../models/budget-tracker.model';
@@ -17,8 +18,10 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   loading = false;
   rows: BudgetTrackerRow[] = [];
   total = 0;
+  expandedRowId: string | null = null;
 
   displayedColumns = [
+    'expand',
     'claim_month_year',
     'segment',
     'city',
@@ -88,6 +91,69 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     this.page = e.pageIndex + 1;
     this.pageSize = e.pageSize;
     this.reload$.next();
+  }
+
+  toggleRow(row: BudgetTrackerRow): void {
+    const id = row.Header?.RowId;
+    this.expandedRowId = this.expandedRowId === id ? null : id;
+  }
+
+  isExpandedRow = (_: number, row: BudgetTrackerRow) => this.expandedRowId === row.Header?.RowId;
+
+  onSort(sort: Sort): void {
+    const data = this.rows.slice();
+    if (!sort.active || sort.direction === '') {
+      this.rows = data;
+      return;
+    }
+
+    this.rows = data.sort((a, b) => {
+      const valueA = this.getSortValue(a, sort.active);
+      const valueB = this.getSortValue(b, sort.active);
+      const comparator = valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+      return sort.direction === 'asc' ? comparator : -comparator;
+    });
+  }
+
+  private getSortValue(row: BudgetTrackerRow, column: string): any {
+    switch (column) {
+      case 'ClaimMonthYear':
+        return row.Header?.ClaimMonthYear ?? '';
+      case 'Segment':
+        return row.Header?.Segment ?? '';
+      case 'City':
+        return row.Header?.City ?? '';
+      case 'Vendor':
+        return row.FT?.Vendor ?? '';
+      case 'Market':
+        return row.FT?.Market ?? '';
+      case 'Status':
+        return row.FT?.Status ?? '';
+      case 'FinalCost':
+        return row.DUEJ?.FinalCost ?? 0;
+      case 'TotalDollarsAllIn':
+        return row.BVCN?.TotalDollarsAllIn ?? 0;
+      default:
+        return '';
+    }
+  }
+
+  detailSections(row: BudgetTrackerRow): { title: string; data: any }[] {
+    return [
+      { title: 'FT', data: row.FT },
+      { title: 'UAE', data: row.UAE },
+      { title: 'AFAI', data: row.AFAI },
+      { title: 'AKAN', data: row.AKAN },
+      { title: 'AOBC', data: row.AOBC },
+      { title: 'BVCN', data: row.BVCN },
+      { title: 'CODH', data: row.CODH },
+      { title: 'DLDT', data: row.DLDT },
+      { title: 'DUEJ', data: row.DUEJ },
+    ].filter(s => s.data);
+  }
+
+  objectKeys(obj: any): string[] {
+    return Object.keys(obj).filter(k => k !== 'RowId');
   }
 
   asDate(v?: string | null): string {
