@@ -1,12 +1,14 @@
 <div class="market-controller">
   <div class="header-section">
     <h2>Market Controller</h2>
-    <button
-      mat-raised-button
-      class="nav-button"
-      (click)="openModal()">
-      Add Entry
-    </button>
+    <div class="toolbar" style="margin-bottom: 8px;">
+      <button mat-raised-button class="export-btn" color="primary" (click)="exportCsv()">
+        Export CSV
+      </button>
+      <button mat-raised-button class="nav-button" (click)="openModal()">
+        Add Entry
+      </button>
+    </div>
   </div>
   <p-divider />
 
