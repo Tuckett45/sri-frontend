@@ -82,24 +82,36 @@
     <div class="chart-wrapper col-12 md:col-3">
       <div class="surface-card shadow-2 p-3 border-round h-full">
         <div>
+          <div class="chart-filters mb-2">
+            <p-dropdown [options]="vendorOptions" [(ngModel)]="selectedVendorOverspent" placeholder="Vendor" showClear="true" styleClass="filter-dropdown mr-2" (onChange)="applyFilters()"></p-dropdown>
+            <p-dropdown [options]="segmentOptions" [(ngModel)]="selectedSegmentOverspent" placeholder="Segment" showClear="true" styleClass="filter-dropdown" (onChange)="applyFilters()"></p-dropdown>
+          </div>
           <span class="block text-500 font-medium mb-3">Overspent by Vendor</span>
-        <p-chart type="bar" [data]="violationsChartData" [options]="chartOptions"></p-chart>
+          <p-chart type="bar" [data]="violationsChartData" [options]="chartOptions"></p-chart>
         </div>
       </div>
     </div>
     <div class="chart-wrapper col-12 md:col-12">
       <div class="surface-card shadow-2 p-3 border-round h-full">
         <div>
+          <div class="chart-filters mb-2">
+            <p-dropdown [options]="vendorOptions" [(ngModel)]="selectedVendorSegmentChart" placeholder="Vendor" showClear="true" styleClass="filter-dropdown mr-2" (onChange)="applyFilters()"></p-dropdown>
+            <p-dropdown [options]="segmentOptions" [(ngModel)]="selectedSegmentSegmentChart" placeholder="Segment" showClear="true" styleClass="filter-dropdown" (onChange)="applyFilters()"></p-dropdown>
+          </div>
           <span class="block text-500 font-medium mb-3">Violations by Segment</span>
-        <p-chart type="line" [data]="violationsBySegmentChartData" [options]="violationChartOptions"></p-chart>
+          <p-chart type="line" [data]="violationsBySegmentChartData" [options]="violationChartOptions"></p-chart>
         </div>
       </div>
     </div>
     <div class="chart-wrapper col-12 md:col-12">
       <div class="surface-card shadow-2 p-3 border-round h-full">
-        <div >
+        <div>
+          <div class="chart-filters mb-2">
+            <p-dropdown [options]="vendorOptions" [(ngModel)]="selectedVendorAllIn" placeholder="Vendor" showClear="true" styleClass="filter-dropdown mr-2" (onChange)="applyFilters()"></p-dropdown>
+            <p-dropdown [options]="segmentOptions" [(ngModel)]="selectedSegmentAllIn" placeholder="Segment" showClear="true" styleClass="filter-dropdown" (onChange)="applyFilters()"></p-dropdown>
+          </div>
           <span class="block text-500 font-medium mb-3">Forecasted vs Actual All-In vs Remaining</span>
-        <p-chart type="bar" [data]="cityAllInChartData" [options]="chartOptions"></p-chart>
+          <p-chart type="bar" [data]="cityAllInChartData" [options]="chartOptions"></p-chart>
         </div>
       </div>
     </div>

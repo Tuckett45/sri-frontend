@@ -3,6 +3,7 @@ export interface WPViolation {
   monthYear?: string;
   vendor?: string;
   segment?: string;
+  city?: string;
   conlogPlannedAmount?: number;
   contingency?: number;
   planWithContingency?: number;
