@@ -70,18 +70,6 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       },
       grid: { color: '#ebedef' }
     },
-    y1: {
-      type: 'linear',
-      display: true,
-      position: 'right',
-      ticks: {
-        color: '#000',
-        callback: (val: any) => '$' + Number(val).toLocaleString()
-      },
-      grid: {
-        drawOnChartArea: false // Keep the line clean
-      }
-    },
     x: {
       ticks: { color: '#000' },
       grid: { color: '#ebedef' }
@@ -293,6 +281,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       labels: filteredCities.map(c => c.city),
       datasets: [
         {
+          type: 'bar',
           label: 'Forecasted All-In',
           data: filteredCities.map(c => c.forecastedAllIn),
           backgroundColor: '#66BB6A',
@@ -300,6 +289,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
           borderWidth: 1
         },
         {
+          type: 'bar',
           label: 'Actual All-In',
           data: filteredCities.map(c => c.actualAllIn),
           backgroundColor: '#FFA726',
@@ -307,6 +297,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
           borderWidth: 1
         },
         {
+          type: 'bar',
           label: 'Remaining All-In',
           data: filteredCities.map(c =>
             (c.forecastedAllIn ?? 0) - (c.actualAllIn ?? 0)
