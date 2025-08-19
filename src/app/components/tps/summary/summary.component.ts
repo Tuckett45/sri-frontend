@@ -28,8 +28,13 @@ export class SummaryComponent implements OnInit, AfterViewInit {
 
   startDate: Date | null = null;
   endDate: Date | null = null;
-  selectedVendor: string | null = null;
-  selectedSegment: string | null = null;
+  // filter selections for charts
+  selectedVendorOverspent: string | null = null;
+  selectedSegmentOverspent: string | null = null;
+  selectedVendorSegmentChart: string | null = null;
+  selectedSegmentSegmentChart: string | null = null;
+  selectedVendorAllIn: string | null = null;
+  selectedSegmentAllIn: string | null = null;
   vendorOptions: SelectItem[] = [];
   segmentOptions: SelectItem[] = [];
 
@@ -48,6 +53,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   violationChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
+  interaction: { mode: 'index', intersect: false },
   plugins: {
     legend: {
       labels: {
@@ -55,6 +61,8 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       }
     },
     tooltip: {
+      mode: 'index',
+      intersect: false,
       callbacks: {
         label: (ctx: any) => {
           const label = ctx.dataset.label || '';
@@ -108,6 +116,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   chartOptions = {
     maintainAspectRatio: false,
     aspectRatio: 1,
+    interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: {
         labels: {
@@ -115,6 +124,8 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         }
       },
       tooltip: {
+        mode: 'index',
+        intersect: false,
         callbacks: {
           label: (ctx: any) => {
             const label = ctx.dataset.label || '';
@@ -166,24 +177,26 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   }
 
   applyFilters() {
-    const filteredViolations = this.violations.filter(v => {
-      const date = v.monthYear ? new Date(v.monthYear) : null;
-      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
-      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
-      const vendorMatch = this.selectedVendor ? v.vendor === this.selectedVendor : true;
-      const segmentMatch = this.selectedSegment ? v.segment === this.selectedSegment : true;
-      return afterStart && beforeEnd && vendorMatch && segmentMatch;
-    });
+    const filterViolations = (vendor: string | null, segment: string | null) =>
+      this.violations.filter(v => {
+        const date = v.monthYear ? new Date(v.monthYear) : null;
+        const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
+        const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
+        const vendorMatch = vendor ? v.vendor === vendor : true;
+        const segmentMatch = segment ? v.segment === segment : true;
+        return afterStart && beforeEnd && vendorMatch && segmentMatch;
+      });
 
-    this.violationsCount = filteredViolations.length;
-    this.totalOverspent = filteredViolations.reduce((sum, v) => sum + this.calculateOverspent(v), 0);
-    const overspentValues = filteredViolations.map(v => this.calculateOverspent(v));
+    const metricsViolations = filterViolations(null, null);
+    this.violationsCount = metricsViolations.length;
+    this.totalOverspent = metricsViolations.reduce((sum, v) => sum + this.calculateOverspent(v), 0);
+    const overspentValues = metricsViolations.map(v => this.calculateOverspent(v));
     this.minOverspent = overspentValues.length ? Math.min(...overspentValues) : 0;
     this.maxOverspent = overspentValues.length ? Math.max(...overspentValues) : 0;
 
-    
+    const overspentViolations = filterViolations(this.selectedVendorOverspent, this.selectedSegmentOverspent);
     const vendorMap = new Map<string, number>();
-    filteredViolations.forEach(v => {
+    overspentViolations.forEach(v => {
       const vendor = v.vendor ?? 'Unknown';
       vendorMap.set(vendor, (vendorMap.get(vendor) ?? 0) + this.calculateOverspent(v));
     });
@@ -200,46 +213,49 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       ]
     };
 
+    const segmentViolations = filterViolations(this.selectedVendorSegmentChart, this.selectedSegmentSegmentChart);
+    this.violationsBySegmentChartData = {
+      labels: segmentViolations.map(v => v.segment || 'Unknown'),
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Conlog Planned Amount',
+          data: segmentViolations.map(v => v.conlogPlannedAmount ?? 0),
+          backgroundColor: '#42A5F5',
+          borderColor: '#1E88E5',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'Planned with Contingency',
+          data: segmentViolations.map(v => v.planWithContingency ?? 0),
+          backgroundColor: '#FFA726',
+          borderColor: '#FB8C00',
+          borderWidth: 1
+        },
+        {
+          type: 'line',
+          label: 'Actual Cost',
+          data: segmentViolations.map(v => v.actualCost ?? 0),
+          borderColor: '#4CAF50',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false,
+          pointBackgroundColor: '#4CAF50'
+        }
+      ]
+    };
 
-  this.violationsBySegmentChartData = {
-    labels: filteredViolations.map(v => v.segment || 'Unknown'),
-    datasets: [
-      {
-        type: 'bar',
-        label: 'Conlog Planned Amount',
-        data: filteredViolations.map(v => v.conlogPlannedAmount ?? 0),
-        backgroundColor: '#42A5F5',
-        borderColor: '#1E88E5',
-        borderWidth: 1
-      },
-      {
-        type: 'bar',
-        label: 'Planned with Contingency',
-        data: filteredViolations.map(v => v.planWithContingency ?? 0),
-        backgroundColor: '#FFA726',
-        borderColor: '#FB8C00',
-        borderWidth: 1
-      },
-      {
-        type: 'line', // 👈 Make this one a line
-        label: 'Actual Cost',
-        data: filteredViolations.map(v => v.actualCost ?? 0),
-        borderColor: '#4CAF50',
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        tension: 0.3, // Optional: smooth line
-        fill: false,
-        pointBackgroundColor: '#4CAF50'
-      }
-    ]
-  };
-
+    const cityFilterViolations = filterViolations(this.selectedVendorAllIn, this.selectedSegmentAllIn);
+    const allowedCities = new Set(cityFilterViolations.map(v => v.city).filter(Boolean));
 
     const filteredCities = this.cities.filter(c => {
       const date = c.ta_Date ? new Date(c.ta_Date) : null;
       const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
       const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
-      return afterStart && beforeEnd;
+      const matchesCity = allowedCities.size ? allowedCities.has(c.city ?? '') : true;
+      return afterStart && beforeEnd && matchesCity;
     });
 
     this.cityCount = filteredCities.length;

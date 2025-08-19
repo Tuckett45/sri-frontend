@@ -6,6 +6,7 @@ import { FormBuilder } from '@angular/forms';
 import { Subject, switchMap, startWith, takeUntil, tap } from 'rxjs';
 import { BudgetTrackerRow } from '../../../models/budget-tracker.model';
 import { TpsService } from 'src/app/services/tps.service';
+import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-budget-tracker',
@@ -19,19 +20,6 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   rows: BudgetTrackerRow[] = [];
   total = 0;
   expandedRowId: string | null = null;
-
-  private readonly displayedFields = [
-    'ClaimMonthYear',
-    'Segment',
-    'City',
-    'Vendor',
-    'Market',
-    'Status',
-    'FinalCost',
-    'TotalDollarsAllIn',
-    'ConlogLink',
-    'RowId'
-  ];
 
   displayedColumns = [
     'expand',
@@ -54,6 +42,9 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     claimMonthTo: <Date | null>(null),
   });
 
+  segmentOptions: SelectItem[] = [];
+  cityOptions: SelectItem[] = [];
+
   private page = 1;
   private pageSize = 25;
   private reload$ = new Subject<void>();
@@ -62,6 +53,7 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   constructor(private fb: FormBuilder, private tpsService: TpsService) {}
 
   ngOnInit(): void {
+    this.loadOptions();
     // load on start and whenever filters submit or page changes
     this.reload$
       .pipe(
@@ -89,6 +81,19 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
       });
   }
 
+  private loadOptions(): void {
+    this.tpsService
+      .get({ page: 1, pageSize: 1000 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => {
+        const items = res.items ?? [];
+        const segments = Array.from(new Set(items.map(i => i.Header?.Segment).filter(Boolean)));
+        const cities = Array.from(new Set(items.map(i => i.Header?.City).filter(Boolean)));
+        this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
+        this.cityOptions = cities.map(c => ({ label: c!, value: c! }));
+      });
+  }
+
   applyFilters(): void {
     this.page = 1;
     if (this.paginator) this.paginator.firstPage();
@@ -107,14 +112,11 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   }
 
   toggleRow(row: BudgetTrackerRow): void {
-    this.expandedRowId = this.expandedRowId === row.RowId ? null : row.RowId;
+    const id = row.Header?.RowId;
+    this.expandedRowId = this.expandedRowId === id ? null : id;
   }
 
-  detailKeys(row: BudgetTrackerRow): string[] {
-    return Object.keys(row).filter(k => !this.displayedFields.includes(k));
-  }
-
-  isExpandedRow = (_: number, row: BudgetTrackerRow) => this.expandedRowId === row.RowId;
+  isExpandedRow = (_: number, row: BudgetTrackerRow) => this.expandedRowId === row.Header?.RowId;
 
   onSort(sort: Sort): void {
     const data = this.rows.slice();
@@ -132,9 +134,44 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   }
 
   private getSortValue(row: BudgetTrackerRow, column: string): any {
-    const val = (row as any)[column];
-    if (val == null) return '';
-    return typeof val === 'string' ? val.toLowerCase() : val;
+    switch (column) {
+      case 'ClaimMonthYear':
+        return row.Header?.ClaimMonthYear ?? '';
+      case 'Segment':
+        return row.Header?.Segment ?? '';
+      case 'City':
+        return row.Header?.City ?? '';
+      case 'Vendor':
+        return row.FT?.Vendor ?? '';
+      case 'Market':
+        return row.FT?.Market ?? '';
+      case 'Status':
+        return row.FT?.Status ?? '';
+      case 'FinalCost':
+        return row.DUEJ?.FinalCost ?? 0;
+      case 'TotalDollarsAllIn':
+        return row.BVCN?.TotalDollarsAllIn ?? 0;
+      default:
+        return '';
+    }
+  }
+
+  detailSections(row: BudgetTrackerRow): { title: string; data: any }[] {
+    return [
+      { title: 'FT', data: row.FT },
+      { title: 'UAE', data: row.UAE },
+      { title: 'AFAI', data: row.AFAI },
+      { title: 'AKAN', data: row.AKAN },
+      { title: 'AOBC', data: row.AOBC },
+      { title: 'BVCN', data: row.BVCN },
+      { title: 'CODH', data: row.CODH },
+      { title: 'DLDT', data: row.DLDT },
+      { title: 'DUEJ', data: row.DUEJ },
+    ].filter(s => s.data);
+  }
+
+  objectKeys(obj: any): string[] {
+    return Object.keys(obj).filter(k => k !== 'RowId');
   }
 
   asDate(v?: string | null): string {

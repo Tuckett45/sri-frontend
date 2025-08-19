@@ -58,6 +58,11 @@
   gap: 1rem;
 }
 
+::ng-deep .filter-dropdown.p-dropdown {
+  background-color: #ffffff;
+  color: #000000;
+}
+
 .filters-btn {
   align-items: center;
   background-color: #e18a25;
@@ -96,9 +101,18 @@ mat-form-field {
   text-align: left;
   background-color: #525252;
   color: #fff;
+}
+
+.detail-section {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+
+  h4 {
+    grid-column: 1 / -1;
+    margin: 0 0 0.5rem 0;
+  }
 }
 
 .detail-item {

@@ -1,15 +1,25 @@
 <!-- src/app/pages/budget-tracker/budget-tracker.component.html -->
 <div class="budget-tracker">
   <form class="filter-section mb-2" (ngSubmit)="applyFilters()" [formGroup]="form">
-    <mat-form-field appearance="fill" class="cols-6">
-      <mat-label>Segment</mat-label>
-      <input matInput formControlName="segment" placeholder="Segment">
-    </mat-form-field>
+    <div class="cols-6">
+      <p-dropdown
+        [options]="segmentOptions"
+        formControlName="segment"
+        placeholder="Segment"
+        showClear="true"
+        styleClass="filter-dropdown w-full">
+      </p-dropdown>
+    </div>
 
-    <mat-form-field appearance="fill" class="cols-6">
-      <mat-label>City</mat-label>
-      <input matInput formControlName="city" placeholder="City">
-    </mat-form-field>
+    <div class="cols-6">
+      <p-dropdown
+        [options]="cityOptions"
+        formControlName="city"
+        placeholder="City"
+        showClear="true"
+        styleClass="filter-dropdown w-full">
+      </p-dropdown>
+    </div>
 
     <mat-form-field appearance="fill" class="cols-6">
       <mat-label>Claim Month From</mat-label>
@@ -40,55 +50,68 @@
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let r">
           <button mat-icon-button (click)="toggleRow(r); $event.stopPropagation()" aria-label="Toggle details">
-            <mat-icon>{{ expandedRowId === r.RowId ? 'expand_less' : 'expand_more' }}</mat-icon>
+            <mat-icon>{{ expandedRowId === r.Header.RowId ? 'expand_less' : 'expand_more' }}</mat-icon>
           </button>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="claim_month_year">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="ClaimMonthYear">Claim Month</th>
-        <td mat-cell *matCellDef="let r">{{ asDate(r.ClaimMonthYear) }}</td>
+        <td mat-cell *matCellDef="let r">{{ asDate(r.Header?.ClaimMonthYear) }}</td>
       </ng-container>
 
       <ng-container matColumnDef="segment">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="Segment">Segment</th>
-        <td mat-cell *matCellDef="let r">{{ r.Segment }}</td>
+        <td mat-cell *matCellDef="let r">{{ r.Header?.Segment }}</td>
       </ng-container>
 
       <ng-container matColumnDef="city">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="City">City</th>
-        <td mat-cell *matCellDef="let r">{{ r.City }}</td>
+        <td mat-cell *matCellDef="let r">{{ r.Header?.City }}</td>
       </ng-container>
 
       <ng-container matColumnDef="vendor">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="Vendor">Vendor</th>
-        <td mat-cell *matCellDef="let r">{{ r.Vendor }}</td>
+        <td mat-cell *matCellDef="let r">{{ r.FT?.Vendor }}</td>
       </ng-container>
 
       <ng-container matColumnDef="market">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="Market">Market</th>
-        <td mat-cell *matCellDef="let r">{{ r.Market }}</td>
+        <td mat-cell *matCellDef="let r">{{ r.FT?.Market }}</td>
       </ng-container>
 
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="Status">Status</th>
-        <td mat-cell *matCellDef="let r">{{ r.Status }}</td>
+        <td mat-cell *matCellDef="let r">{{ r.FT?.Status }}</td>
       </ng-container>
 
       <ng-container matColumnDef="final_cost">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="FinalCost">Final Cost</th>
-        <td mat-cell *matCellDef="let r">{{ r.FinalCost | currency }}</td>
+        <td mat-cell *matCellDef="let r">{{ r.DUEJ?.FinalCost | currency }}</td>
       </ng-container>
 
       <ng-container matColumnDef="total_dollars_all_in">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="TotalDollarsAllIn">Total $ All In</th>
-        <td mat-cell *matCellDef="let r">{{ r.TotalDollarsAllIn | currency }}</td>
+        <td mat-cell *matCellDef="let r">{{ r.BVCN?.TotalDollarsAllIn | currency }}</td>
       </ng-container>
 
       <ng-container matColumnDef="conlog_link">
         <th mat-header-cell *matHeaderCellDef>Conlog</th>
         <td mat-cell *matCellDef="let r">
-          <a *ngIf="r.ConlogLink" [href]="r.ConlogLink" target="_blank" rel="noopener">open</a>
+          <a *ngIf="r.Header?.ConlogLink" [href]="r.Header.ConlogLink" target="_blank" rel="noopener">open</a>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="expandedDetail">
+        <td mat-cell *matCellDef="let r" [attr.colspan]="displayedColumns.length">
+          <div class="detail-container" *ngIf="expandedRowId === r.Header.RowId">
+            <div class="detail-section" *ngFor="let section of detailSections(r)">
+              <h4>{{ section.title }}</h4>
+              <div class="detail-item" *ngFor="let key of objectKeys(section.data)">
+                <strong>{{ key }}:</strong> {{ section.data[key] }}
+              </div>
+            </div>
+          </div>
         </td>
       </ng-container>
 

@@ -1,12 +1,15 @@
-export interface BudgetTrackerRow {
-  RowId: string; // Primary key
+
+export interface BudgetTrackerHeader {
+  RowId: string;
   ConlogLink?: string | null;
   ClaimMonthYear?: string | null;
   Segment?: string | null;
   City?: string | null;
   Crew?: string | null;
+}
 
-  // FT
+export interface BudgetTrackerFT {
+  RowId: string;
   CrewLead?: string | null;
   Vendor?: string | null;
   Status?: string | null;
@@ -22,8 +25,10 @@ export interface BudgetTrackerRow {
   BalanceRemainingAmount?: number | null;
   VarianceReason?: string | null;
   Notes?: string | null;
+}
 
-  // UAE
+export interface BudgetTrackerUAE {
+  RowId: string;
   EngDollars?: number | null;
   PermitDollars?: number | null;
   MaterialDollars?: number | null;
@@ -35,20 +40,26 @@ export interface BudgetTrackerRow {
   WorkPackageDollars?: number | null;
   WorkPackageContingency?: string | null;
   TotalCostEngMatPermLabor?: number | null;
+}
 
-  // AFAI
+export interface BudgetTrackerAFAI {
+  RowId: string;
   ForecastedDollarsHhpCeData?: number | null;
   ForecastedDollarsLftCeData?: number | null;
   ForecastedSxuPercentCeData?: number | null;
   LftHhpDensity?: number | null;
+}
 
-  // AKAN
+export interface BudgetTrackerAKAN {
+  RowId: string;
   ForecastedDollarsHhp?: number | null;
   ForecastedDollarsLft?: number | null;
   DollarsMat?: number | null;
   ForecastedSxuPercent?: number | null;
+}
 
-  // AOBC
+export interface BudgetTrackerAOBC {
+  RowId: string;
   WorkPackagePlannedLaborDollars?: number | null;
   WorkPackageContingencyDollars?: number | null;
   WorkPackageDollarsLaborContingency?: number | null;
@@ -64,8 +75,10 @@ export interface BudgetTrackerRow {
   LftCompletedLinkedToConlog?: number | null;
   RemainingLft?: number | null;
   RemainingFunds?: string | null;
+}
 
-  // BVCN
+export interface BudgetTrackerBVCN {
+  RowId: string;
   FinalLaborCost?: number | null;
   TotalDollarsAllIn?: number | null;
   Hhp?: number | null;
@@ -85,8 +98,10 @@ export interface BudgetTrackerRow {
   FinalDollarsLftChange?: number | null;
   Labor?: number | null;
   DollarsLftPercentChange?: number | null;
+}
 
-  // CODH
+export interface BudgetTrackerCODH {
+  RowId: string;
   ActualConstStart?: string | null;
   ActualSawsUpDate?: string | null;
   ActualTAccepted?: string | null;
@@ -107,8 +122,10 @@ export interface BudgetTrackerRow {
   DurationTAToFinal?: string | null;
   DurationFinalToCloseout?: string | null;
   DurationToCloseout?: string | null;
+}
 
-  // DLDT
+export interface BudgetTrackerDLDT {
+  RowId: string;
   YesterdayOnlyLft?: number | null;
   CurrentWeekLftTotal?: number | null;
   CurrentWeekLftDailyAvg?: number | null;
@@ -118,8 +135,10 @@ export interface BudgetTrackerRow {
   BorePlan?: string | null;
   BoreActual?: string | null;
   BoreCompletionPercent?: string | null;
+}
 
-  // DUEJ
+export interface BudgetTrackerDUEJ {
+  RowId: string;
   DollarsHhp?: number | null;
   FinalHhp?: number | null;
   FinalSfu?: number | null;
@@ -136,6 +155,19 @@ export interface BudgetTrackerRow {
   FinalCost?: number | null;
   PlannedCostData?: number | null;
   PlannedDollarsHhp?: number | null;
+}
+
+export interface BudgetTrackerRow {
+  Header: BudgetTrackerHeader;
+  FT?: BudgetTrackerFT | null;
+  UAE?: BudgetTrackerUAE | null;
+  AFAI?: BudgetTrackerAFAI | null;
+  AKAN?: BudgetTrackerAKAN | null;
+  AOBC?: BudgetTrackerAOBC | null;
+  BVCN?: BudgetTrackerBVCN | null;
+  CODH?: BudgetTrackerCODH | null;
+  DLDT?: BudgetTrackerDLDT | null;
+  DUEJ?: BudgetTrackerDUEJ | null;
 }
 
 export interface PaginatedResponse<T> {
