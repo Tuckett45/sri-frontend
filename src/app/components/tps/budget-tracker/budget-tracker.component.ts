@@ -33,6 +33,7 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   ];
 
   displayedColumns = [
+    'expand',
     'claim_month_year',
     'segment',
     'city',
