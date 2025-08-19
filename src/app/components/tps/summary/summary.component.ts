@@ -3,6 +3,7 @@ import { UIChart } from 'primeng/chart';
 import { TpsService } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
+import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-tps-summary',
@@ -27,6 +28,10 @@ export class SummaryComponent implements OnInit, AfterViewInit {
 
   startDate: Date | null = null;
   endDate: Date | null = null;
+  selectedVendor: string | null = null;
+  selectedSegment: string | null = null;
+  vendorOptions: SelectItem[] = [];
+  segmentOptions: SelectItem[] = [];
 
   private violations: WPViolation[] = [];
   private cities: CityScorecard[] = [];
@@ -147,8 +152,11 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   loadData() {
     this.tpsService.getViolations().subscribe(res => {
       this.violations = res;
+      const vendors = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
+      const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
+      this.vendorOptions = vendors.map(v => ({ label: v!, value: v! }));
+      this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
       this.applyFilters();
-
     });
 
     this.tpsService.getCityScorecard().subscribe(res => {
@@ -162,7 +170,9 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       const date = v.monthYear ? new Date(v.monthYear) : null;
       const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
       const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
-      return afterStart && beforeEnd;
+      const vendorMatch = this.selectedVendor ? v.vendor === this.selectedVendor : true;
+      const segmentMatch = this.selectedSegment ? v.segment === this.selectedSegment : true;
+      return afterStart && beforeEnd && vendorMatch && segmentMatch;
     });
 
     this.violationsCount = filteredViolations.length;
