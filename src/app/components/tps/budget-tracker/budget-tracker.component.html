@@ -115,16 +115,6 @@
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="expandedDetail">
-        <td mat-cell *matCellDef="let r" [attr.colspan]="displayedColumns.length">
-            <div class="detail-container" *ngIf="expandedRowId === r.RowId">
-              <div class="detail-item" *ngFor="let item of detailKeys(r)">
-                <strong>{{ item }}:</strong> {{ ($any(r))[item] }}
-              </div>
-          </div>
-        </td>
-      </ng-container>
-
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let r; columns: displayedColumns" class="element-row" (click)="toggleRow(r)"></tr>
       <tr mat-row *matRowDef="let r; columns: ['expandedDetail']; when: isExpandedRow" class="detail-row"></tr>
