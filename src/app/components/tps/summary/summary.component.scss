@@ -82,6 +82,13 @@ h1 {
   gap: 0.5rem;
 }
 
+.chart-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .filters-btn {
   align-items: center;
   background-color: #144f80;

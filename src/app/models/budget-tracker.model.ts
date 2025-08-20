@@ -260,7 +260,6 @@ export interface BudgetTrackerApiRow {
   duration_t_a_to_final?: string | null;
   duration_final_to_closeout?: string | null;
   duration_to_closeout?: string | null;
-
   yesterday_only_lft?: number | null;
   current_week_lft_total?: number | null;
   current_week_lft_daily_avg?: number | null;
@@ -482,4 +481,3 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   items: T[];
 }
-
