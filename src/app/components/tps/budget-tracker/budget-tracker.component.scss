@@ -117,7 +117,13 @@ mat-form-field {
 
 .detail-item {
   display: flex;
+  flex-direction: column;
   gap: 0.25rem;
+
+  .label {
+    font-weight: 600;
+    color: #e18a25;
+  }
 }
 
 @media (max-width: 768px) {

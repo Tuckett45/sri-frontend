@@ -170,8 +170,17 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     ].filter(s => s.data);
   }
 
-  objectKeys(obj: any): string[] {
-    return Object.keys(obj).filter(k => k !== 'RowId');
+  objectEntries(obj: any): { key: string; value: any }[] {
+    return Object.entries(obj)
+      .filter(([k, v]) => k !== 'RowId' && v !== null && v !== undefined && v !== '')
+      .map(([key, value]) => ({ key, value }));
+  }
+
+  labelize(key: string): string {
+    return key
+      .replace(/_/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/^\w|\s\w/g, m => m.toUpperCase());
   }
 
   asDate(v?: string | null): string {

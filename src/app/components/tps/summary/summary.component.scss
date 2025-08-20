@@ -68,6 +68,18 @@ h1 {
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.chart-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .chart-filters {

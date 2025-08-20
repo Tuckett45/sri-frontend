@@ -12,9 +12,10 @@
       <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
       <mat-datepicker #endPicker></mat-datepicker>
     </mat-form-field>
-    <p-dropdown [options]="vendorOptions" [(ngModel)]="selectedVendor" placeholder="Vendor" class="mr-2" (onChange)="applyFilters()"></p-dropdown>
-    <p-dropdown [options]="segmentOptions" [(ngModel)]="selectedSegment" placeholder="Segment" class="mr-2" (onChange)="applyFilters()"></p-dropdown>
-    <button mat-raised-button class="filters-btn" (click)="applyFilters()">Apply</button>
+    <div class="actions">
+      <button mat-raised-button class="filters-btn" (click)="applyFilters()">Apply</button>
+      <button mat-button type="button" (click)="clearFilters()">Clear</button>
+    </div>
   </div>
   <div class="summary-items">
     <div class="summary-item surface-card shadow-2 p-3 border-round">

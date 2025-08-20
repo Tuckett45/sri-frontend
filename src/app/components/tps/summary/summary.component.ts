@@ -157,6 +157,12 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    const reinit = () => setTimeout(() => this.charts.forEach(c => c.reinit()));
+    reinit();
+    this.charts.changes.subscribe(() => reinit());
+  }
+
+  refreshCharts(): void {
     setTimeout(() => this.charts.forEach(c => c.reinit()));
   }
 
@@ -344,6 +350,18 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     };
 
     setTimeout(() => this.charts.forEach(c => c.reinit()));
+  }
+
+  clearFilters() {
+    this.startDate = null;
+    this.endDate = null;
+    this.selectedVendorOverspent = null;
+    this.selectedSegmentOverspent = null;
+    this.selectedVendorSegmentChart = null;
+    this.selectedSegmentSegmentChart = null;
+    this.selectedVendorAllIn = null;
+    this.selectedSegmentAllIn = null;
+    this.applyFilters();
   }
 
   private getPercentChange(forecasted: number, actual: number): number {

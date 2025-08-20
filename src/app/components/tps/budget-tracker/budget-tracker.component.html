@@ -107,8 +107,9 @@
           <div class="detail-container" *ngIf="expandedRowId === r.Header.RowId">
             <div class="detail-section" *ngFor="let section of detailSections(r)">
               <h4>{{ section.title }}</h4>
-              <div class="detail-item" *ngFor="let key of objectKeys(section.data)">
-                <strong>{{ key }}:</strong> {{ section.data[key] }}
+              <div class="detail-item" *ngFor="let item of objectEntries(section.data)">
+                <span class="label">{{ labelize(item.key) }}</span>
+                <span class="value">{{ item.value }}</span>
               </div>
             </div>
           </div>
