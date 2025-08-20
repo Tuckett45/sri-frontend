@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment, local_environment } from 'src/environments/environments';
 import { WPViolation } from '../models/wp-violation.model';
 import { CityScorecard } from '../models/city-scorecard.model';
-import { BudgetTrackerRow, PaginatedResponse } from '../models/budget-tracker.model';
+import { BudgetTrackerRow, PaginatedResponse, BudgetTrackerApiRow, toBudgetTrackerRow } from '../models/budget-tracker.model';
 
 export interface BudgetTracker {
   segment?: string | null;
@@ -55,6 +55,13 @@ export class TpsService {
     params = params.set('page', String(query.page ?? 1));
     params = params.set('pageSize', String(query.pageSize ?? 25));
 
-    return this.http.get<PaginatedResponse<BudgetTrackerRow>>(`${this.baseUrl}/budget-tracker`, { params });
+    return this.http
+      .get<PaginatedResponse<BudgetTrackerApiRow>>(`${this.baseUrl}/budget-tracker`, { params })
+      .pipe(
+        map(res => ({
+          ...res,
+          items: res.items?.map(toBudgetTrackerRow) ?? []
+        }))
+      );
   }
 }

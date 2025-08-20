@@ -58,15 +58,20 @@
   gap: 1rem;
 }
 
+::ng-deep .filter-dropdown.p-dropdown {
+  background-color: #ffffff;
+  color: #000000;
+}
+
 .filters-btn {
   align-items: center;
-  background-color: #144f80;
+  background-color: #e18a25;
   color: #fff;
   margin-top: 10px;
   margin-bottom: 10px;
 
   &:hover {
-    background-color: #0e3453;
+    background-color: #c9741d;
   }
 }
 
@@ -77,6 +82,46 @@ mat-form-field {
   margin-bottom: 10px;
 
   mat-label {
+    color: #e18a25;
+  }
+}
+
+.element-row {
+  cursor: pointer;
+}
+
+.detail-row {
+  td {
+    padding: 0;
+  }
+}
+
+.detail-container {
+  padding: 1rem;
+  text-align: left;
+  background-color: #525252;
+  color: #fff;
+}
+
+.detail-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+
+  h4 {
+    grid-column: 1 / -1;
+    margin: 0 0 0.5rem 0;
+  }
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .label {
+    font-weight: 600;
     color: #e18a25;
   }
 }
