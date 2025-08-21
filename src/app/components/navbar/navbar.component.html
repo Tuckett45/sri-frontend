@@ -12,10 +12,10 @@
 
   <!-- Navigation Links -->
   <div class="nav-links" [ngClass]="{ 'open': isMenuOpen, 'closed': !isMenuOpen }">
-    <button *ngIf="!authService.isTemp() || !authService.isCoordinator()" mat-button routerLink="/overview" routerLinkActive="active-link">
+    <button *ngIf="!authService.isTemp() || !authService.isCoordinator() || !authService.isMarketController()" mat-button routerLink="/overview" routerLinkActive="active-link">
       Overview
     </button>
-    <button *ngIf="!authService.isTemp() || !authService.isCoordinator()"  mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">
+    <button *ngIf="!authService.isTemp() || !authService.isCoordinator() || !authService.isMarketController()"  mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">
       Prelim Punch List Tracker
     </button>
     <button *ngIf="authService.isCM() || authService.isAdmin() || authService.isTemp()"  mat-button routerLink="/street-sheet" routerLinkActive="active-link">
