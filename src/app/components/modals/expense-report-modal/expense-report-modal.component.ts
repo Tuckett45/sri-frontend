@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Expense, ExpenseStatus } from 'src/app/models/expense.model';
+import { Expense, ExpenseStatus, ExpenseType } from 'src/app/models/expense.model';
 import { v4 as uuidv4 } from 'uuid';
 
 @Component({
@@ -17,17 +17,68 @@ export class ExpenseReportModalComponent {
   isGalleryVisible = false;
   galleryImages: any[] = [];
 
+  jobs: string[] = [
+    'JOB # 44346 GFIBER-UT-SLC-RM-OLT',
+    'JOB # 44384 GFIBER-NV-LAS-PERMIT PCKG',
+    'JOB # 44562 GFIBER-UT-SLC-RM-LIGHTC...',
+    'JOB # 44846 GFIBER-UT-SLC-FC-2025',
+    'JOB # 44847 GFIBER-AZ-PHX-FC-2025',
+    'JOB # 44848 GFIBER-CO-DEN-FC-2025',
+    'JOB # 44849 GFIBER-TX-SAT-FC-2025',
+    'JOB # 44850 GFIBER-NV-LAS-FC-2025',
+    'JOB # 44852 GFIBER-R&M-OVH-2025',
+    'JOB # 44853 GFIBER-UT-SLC-RM-FSL-2025',
+    'JOB # 44854 GFIBER-AZ-PHX-RM-FSL-2025',
+    'JOB # 44855 GFIBER-GA-ATL-DPLYMT-2025',
+    'JOB # 44856 GFIBER-TX-AUS-DPLYMT-2025',
+    'JOB # 44857 GFIBER-TX-SAT-DPLYMT-2025',
+    'JOB # 44858 GFIBER-TN-BNA-DPLYMT-2025',
+    'JOB # 44859 GFIBER-NC-CLT-DPLYMT-2025',
+    'JOB # 44860 GFIBER-CA-LAX-DPLYMT-2025',
+    'JOB # 44861 GFIBER-CO-DEN-RM-FSL-2025',
+    'JOB # 44862 GFIBER-UT-LGU-RM-FSL-2025',
+    'JOB # 44863 GFIBER-ID-PIH-RM-FSL-2025'
+  ];
+
+  phasesByJob: Record<string, string[]> = {};
+
+  expenseTypes: ExpenseType[] = ['Meals', 'Lodging', 'Fuel', 'Mileage', 'Materials', 'Other'];
+
+  get phases(): string[] {
+    const job = this.expenseForm.get('job')?.value as string | undefined;
+    return job ? (this.phasesByJob[job] ?? []) : [];
+  }
+
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<ExpenseReportModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Partial<Expense> | null
   ) {
+    this.jobs.forEach(j => (this.phasesByJob[j] = ['Make-Ready', 'Construction', 'Splicing', 'QC']));
+
     this.expenseForm = this.fb.group({
+      job: [data?.job || null, Validators.required],
+      phase: [{ value: data?.phase || null, disabled: !data?.job }, Validators.required],
       date: [data?.date || new Date(), Validators.required],
-      category: [data?.category || '', Validators.required],
-      amount: [data?.amount || null, Validators.required],
-      description: [data?.description || '']
+      expenseType: [data?.expenseType || null, Validators.required],
+      amount: [data?.amount || 0, [Validators.required, Validators.min(0)]],
+      notes: [data?.notes || '']
     });
+
+    this.expenseForm.get('job')?.valueChanges.subscribe(job => {
+      const phaseCtrl = this.expenseForm.get('phase');
+      phaseCtrl?.reset();
+      if (job) {
+        phaseCtrl?.enable();
+      } else {
+        phaseCtrl?.disable();
+      }
+    });
+
+    if (data?.receiptUrl) {
+      this.receiptBase64 = data.receiptUrl;
+      this.galleryImages = [{ itemImageSrc: this.receiptBase64 }];
+    }
   }
 
   onFileChange(event: any) {
@@ -69,10 +120,12 @@ export class ExpenseReportModalComponent {
     const value = this.expenseForm.value;
     const expense = new Expense({
       id: this.data?.id || uuidv4(),
+      job: value.job!,
+      phase: value.phase!,
       date: value.date,
-      category: value.category!,
+      expenseType: value.expenseType!,
       amount: value.amount!,
-      description: value.description || '',
+      notes: value.notes || '',
       receiptUrl: this.receiptBase64,
       status: this.data?.status || ExpenseStatus.Pending
     });
