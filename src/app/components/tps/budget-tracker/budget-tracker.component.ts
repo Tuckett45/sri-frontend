@@ -1,4 +1,3 @@
-// src/app/pages/budget-tracker/budget-tracker.component.ts
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
@@ -38,12 +37,22 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   form = this.fb.group({
     segment: [''],
     city: [''],
+    vendor: [''],
+    market: [''],
+    status: [''],
+    crew: [''],   // Header.Crew
+    gmm: [''],    // FT.Gmm
     claimMonthFrom: <Date | null>(null),
     claimMonthTo: <Date | null>(null),
   });
 
   segmentOptions: SelectItem[] = [];
   cityOptions: SelectItem[] = [];
+  vendorOptions: SelectItem[] = [];
+  marketOptions: SelectItem[] = [];
+  statusOptions: SelectItem[] = [];
+  crewOptions: SelectItem[] = [];
+  gmmOptions: SelectItem[] = [];
 
   private page = 1;
   private pageSize = 25;
@@ -54,27 +63,48 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadOptions();
+
     // load on start and whenever filters submit or page changes
     this.reload$
       .pipe(
         startWith(void 0),
         tap(() => (this.loading = true)),
-        switchMap(() =>
-          this.tpsService.get({
-            segment: this.form.value.segment || undefined,
-            city: this.form.value.city || undefined,
-            claimMonthFrom: this.form.value.claimMonthFrom || undefined,
-            claimMonthTo: this.form.value.claimMonthTo || undefined,
+        switchMap(() => {
+          const v = this.form.value;
+          return this.tpsService.get({
+            segment: v.segment || undefined,
+            city: v.city || undefined,
+            vendor: v.vendor || undefined,
+            market: v.market || undefined,
+            status: v.status || undefined,
+            gmm: v.gmm || undefined,
+            claimMonthFrom: v.claimMonthFrom || undefined,
+            claimMonthTo: v.claimMonthTo || undefined,
             page: this.page,
             pageSize: this.pageSize,
-          })
-        ),
+          } as any);
+        }),
         takeUntil(this.destroy$)
       )
       .subscribe({
         next: res => {
-          this.rows = res.items ?? [];
-          this.total = res.total ?? 0;
+          const v = this.form.value;
+          let items = res.items ?? [];
+
+          items = items.filter(r =>
+            (!v.segment || r.Header?.Segment === v.segment) &&
+            (!v.city || r.Header?.City === v.city) &&
+            (!v.crew || r.Header?.Crew === v.crew) &&
+            (!v.vendor || r.FT?.Vendor === v.vendor) &&
+            (!v.market || r.FT?.Market === v.market) &&
+            (!v.status || r.FT?.Status === v.status) &&
+            (!v.gmm || r.FT?.Gmm === v.gmm) &&
+            (!v.claimMonthFrom || new Date(r.Header?.ClaimMonthYear ?? '') >= v.claimMonthFrom) &&
+            (!v.claimMonthTo || new Date(r.Header?.ClaimMonthYear ?? '') <= v.claimMonthTo)
+          );
+
+          this.rows = items;
+          this.total = res.total ?? items.length;
           this.loading = false;
         },
         error: _ => { this.loading = false; }
@@ -87,10 +117,27 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         const items = res.items ?? [];
-        const segments = Array.from(new Set(items.map(i => i.Header?.Segment).filter(Boolean)));
-        const cities = Array.from(new Set(items.map(i => i.Header?.City).filter(Boolean)));
-        this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
-        this.cityOptions = cities.map(c => ({ label: c!, value: c! }));
+
+        const uniq = (arr: (string | null | undefined)[]) =>
+          Array.from(new Set(arr.filter(Boolean) as string[]));
+        const segments = uniq(items.map(i => i.Header?.Segment));
+        const cities   = uniq(items.map(i => i.Header?.City));
+        const crews    = uniq(items.map(i => i.Header?.Crew));
+        const vendors  = uniq(items.map(i => i.FT?.Vendor));
+        const markets  = uniq(items.map(i => i.FT?.Market));
+        const statuses = uniq(items.map(i => i.FT?.Status));
+        const gmms     = uniq(items.map(i => i.FT?.Gmm));
+
+        const asOptions = (vals: string[]): SelectItem[] => vals.map(v => ({ label: v, value: v }));
+
+        this.segmentOptions = asOptions(segments);
+        this.cityOptions    = asOptions(cities);
+        this.crewOptions    = asOptions(crews);
+
+        this.vendorOptions  = asOptions(vendors);
+        this.marketOptions  = asOptions(markets);
+        this.statusOptions  = asOptions(statuses);
+        this.gmmOptions     = asOptions(gmms);
       });
   }
 
@@ -101,7 +148,17 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   }
 
   clearFilters(): void {
-    this.form.reset({ segment: '', city: '', claimMonthFrom: null, claimMonthTo: null });
+    this.form.reset({
+      segment: '',
+      city: '',
+      vendor: '',
+      market: '',
+      status: '',
+      crew: '',
+      gmm: '',
+      claimMonthFrom: null,
+      claimMonthTo: null
+    });
     this.applyFilters();
   }
 
@@ -158,8 +215,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
 
   detailSections(row: BudgetTrackerRow): { title: string; data: any }[] {
     return [
-      { title: 'FT', data: row.FT },
-      { title: 'UAE', data: row.UAE },
+      { title: 'FT',   data: row.FT },
+      { title: 'UAE',  data: row.UAE },
       { title: 'AFAI', data: row.AFAI },
       { title: 'AKAN', data: row.AKAN },
       { title: 'AOBC', data: row.AOBC },

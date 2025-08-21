@@ -1,43 +1,68 @@
-<!-- src/app/pages/budget-tracker/budget-tracker.component.html -->
 <div class="budget-tracker">
   <form class="filter-section mb-2" (ngSubmit)="applyFilters()" [formGroup]="form">
-    <div class="cols-6">
-      <p-dropdown
-        [options]="segmentOptions"
-        formControlName="segment"
-        placeholder="Segment"
-        showClear="true"
-        styleClass="filter-dropdown w-full">
-      </p-dropdown>
+    <!-- Date range (Header.ClaimMonthYear) -->
+    <div class="filter-section grid">
+      <div class="col-12">
+        <p-dropdown [options]="segmentOptions" formControlName="segment"
+                    placeholder="Segment" showClear="true"
+                    styleClass="filter-dropdown w-full"></p-dropdown>
+      </div>
+
+      <div class="col-12">
+        <p-dropdown [options]="cityOptions" formControlName="city"
+                    placeholder="City" showClear="true"
+                    styleClass="filter-dropdown w-full"></p-dropdown>
+      </div>
+
+      <div class="col-12">
+        <p-dropdown [options]="crewOptions" formControlName="crew"
+                    placeholder="Crew" showClear="true"
+                    styleClass="filter-dropdown w-full"></p-dropdown>
+      </div>
+
+      <div class="col-12">
+        <p-dropdown [options]="vendorOptions" formControlName="vendor"
+                    placeholder="Vendor" showClear="true"
+                    styleClass="filter-dropdown w-full"></p-dropdown>
+      </div>
+
+      <div class="col-12">
+        <p-dropdown [options]="marketOptions" formControlName="market"
+                    placeholder="Market" showClear="true"
+                    styleClass="filter-dropdown w-full"></p-dropdown>
+      </div>
+
+      <div class="col-12">
+        <p-dropdown [options]="statusOptions" formControlName="status"
+                    placeholder="Status" showClear="true"
+                    styleClass="filter-dropdown w-full"></p-dropdown>
+      </div>
+
+      <div class="col-12">
+        <p-dropdown [options]="gmmOptions" formControlName="gmm"
+                    placeholder="GMM" showClear="true"
+                    styleClass="filter-dropdown w-full"></p-dropdown>
+      </div>
     </div>
 
-    <div class="cols-6">
-      <p-dropdown
-        [options]="cityOptions"
-        formControlName="city"
-        placeholder="City"
-        showClear="true"
-        styleClass="filter-dropdown w-full">
-      </p-dropdown>
-    </div>
+    <div class="filter-section grid">
+      <mat-form-field appearance="fill" class="col-12">
+        <mat-label>Claim Month From</mat-label>
+        <input matInput [matDatepicker]="fromPicker" formControlName="claimMonthFrom">
+        <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+        <mat-datepicker #fromPicker></mat-datepicker>
+      </mat-form-field>
 
-    <mat-form-field appearance="fill" class="cols-6">
-      <mat-label>Claim Month From</mat-label>
-      <input matInput [matDatepicker]="fromPicker" formControlName="claimMonthFrom">
-      <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
-      <mat-datepicker #fromPicker></mat-datepicker>
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="cols-6">
-      <mat-label>Claim Month To</mat-label>
-      <input matInput [matDatepicker]="toPicker" formControlName="claimMonthTo">
-      <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
-      <mat-datepicker #toPicker></mat-datepicker>
-    </mat-form-field>
-
-    <div class="actions">
-      <button mat-raised-button class="filters-btn" type="submit">Apply</button>
-      <button mat-button type="button" (click)="clearFilters()">Clear</button>
+      <mat-form-field appearance="fill" class="col-12">
+        <mat-label>Claim Month To</mat-label>
+        <input matInput [matDatepicker]="toPicker" formControlName="claimMonthTo">
+        <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+        <mat-datepicker #toPicker></mat-datepicker>
+      </mat-form-field>
+      <div class="actions">
+        <button mat-raised-button class="filters-btn" type="submit">Apply</button>
+        <button mat-button type="button" (click)="clearFilters()">Clear</button>
+      </div>
     </div>
   </form>
 
@@ -121,11 +146,12 @@
       <tr mat-row *matRowDef="let r; columns: ['expandedDetail']; when: isExpandedRow" class="detail-row"></tr>
     </table>
 
-    <mat-paginator [length]="total"
-                   [pageIndex]="0"
-                   [pageSize]="25"
-                   [pageSizeOptions]="[10,25,50,100]"
-                   (page)="onPage($event)">
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="0"
+      [pageSize]="25"
+      [pageSizeOptions]="[10,25,50,100]"
+      (page)="onPage($event)">
     </mat-paginator>
   </div>
 
