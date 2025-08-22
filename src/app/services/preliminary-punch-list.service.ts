@@ -80,7 +80,7 @@ export class PreliminaryPunchListService {
   getEntries(): Observable<PreliminaryPunchList[]> {
     if (!this.entriesCache$) {
       this.entriesCache$ = this.http
-        .get<PreliminaryPunchList[]>(`${local_environment.apiUrl}/PunchList/all`, this.httpOptions)
+        .get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
         .pipe(
           map(punchLists =>
             punchLists.map(punchList => {
@@ -108,13 +108,13 @@ export class PreliminaryPunchListService {
     const isRegional = user.market === 'RG';
 
     if (user.role === 'PM' && !isRegional) {
-      url = `${local_environment.apiUrl}/PunchList/pm-unresolved`;
+      url = `${environment.apiUrl}/PunchList/pm-unresolved`;
       params = params.set('state', user.market).set('company', user.company);
     } else if (user.role === 'CM' && !isRegional) {
-      url = `${local_environment.apiUrl}/PunchList/cm-unresolved`;
+      url = `${environment.apiUrl}/PunchList/cm-unresolved`;
       params = params.set('state', user.market);
     } else {
-      url = `${local_environment.apiUrl}/PunchList/unresolved`;
+      url = `${environment.apiUrl}/PunchList/unresolved`;
     }
 
     const key = this.buildKey(user, url, params);
@@ -141,13 +141,13 @@ export class PreliminaryPunchListService {
     const isRegional = user.market === 'RG';
 
     if (user.role === 'PM' && !isRegional) {
-      url = `${local_environment.apiUrl}/PunchList/pm-resolved`;
+      url = `${environment.apiUrl}/PunchList/pm-resolved`;
       params = params.set('state', user.market).set('company', user.company);
     } else if (user.role === 'CM' && !isRegional) {
-      url = `${local_environment.apiUrl}/PunchList/cm-resolved`;
+      url = `${environment.apiUrl}/PunchList/cm-resolved`;
       params = params.set('state', user.market);
     } else {
-      url = `${local_environment.apiUrl}/PunchList/resolved`;
+      url = `${environment.apiUrl}/PunchList/resolved`;
     }
 
     const key = this.buildKey(user, url, params);

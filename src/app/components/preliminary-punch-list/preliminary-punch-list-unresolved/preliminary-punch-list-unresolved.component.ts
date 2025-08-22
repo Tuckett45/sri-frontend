@@ -86,50 +86,54 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   loadUnresolvedPunchLists(user: User): void {
-    this.punchListService.getUnresolvedPunchLists(user).subscribe(
-      (response) => {
-        const results = response.map((p: { issues: any[]; }) => ({
+    this.punchListService.getUnresolvedPunchLists(user).subscribe({
+      next: (response: any) => {
+        this.unresolvedCountChange.emit(response.total);
+        // Works with either an array response or an envelope { total, page, pageSize, items }
+        const items: PreliminaryPunchList[] = Array.isArray(response)
+          ? response
+          : (response?.items ?? []);
+
+        const results = items.map(p => ({
           ...p,
-          issues: p.issues.map((issue: any) => ({ ...issue }))
+          issues: (p.issues || []).map(issue => ({ ...issue }))
         }));
-  
-        // Format dates
-        for (const punchList of results) {
-          const reportedDate = new Date(punchList.dateReported + 'Z');
-          punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
-          if (punchList.resolvedDate) {
-            const resolvedDate = new Date(punchList.resolvedDate + 'Z');
-            punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+
+        // Keep dates as Date objects (add optional display strings if you want)
+        for (const pl of results) {
+          pl.dateReported = new Date((pl.dateReported as any) + 'Z');
+          if (pl.resolvedDate) {
+            pl.resolvedDate = new Date((pl.resolvedDate as any) + 'Z');
           }
+          // Optional display fields:
+          (pl as any).dateReportedDisplay =
+            this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '';
+          (pl as any).resolvedDateDisplay =
+            pl.resolvedDate
+              ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? ''
+              : '';
         }
-  
-        // ✅ Deduplicate by ID here
-        const dedupedResults = results.filter((item: { id: any; }, index: any, self: any[]) =>
-          index === self.findIndex((t: { id: any; }) => t.id === item.id)
+
+        // Deduplicate by id
+        const dedupedResults = results.filter(
+          (item, index, self) => index === self.findIndex(t => t.id === item.id)
         );
-  
-        // ✅ Clear previous data
-        this.unresolvedPreliminaryPunchList$.next([]);
-        this.unresolvedPreliminaryPunchLists = [];
-        this.dataSource.data = [];
-  
-        // ✅ Set new data
+
+        // Reset and set data
         this.unresolvedPreliminaryPunchList$.next(dedupedResults);
-        this.dataSource.data = this.filterData(dedupedResults);
         this.unresolvedPreliminaryPunchLists = dedupedResults;
-  
-        if (this.selectedFilters) {
-          this.applyFilters();
-        }
-  
+        this.dataSource.data = this.filterData(dedupedResults);
+
+        if (this.selectedFilters?.length) this.applyFilters();
+
         this.updateUnresolvedCount();
       },
-      (error) => {
-        this.toastr.error('Error fetching unresolved punch lists', error);
+      error: (err) => {
+        this.toastr.error('Error fetching unresolved punch lists');
+        // console.error(err);
       }
-    );
+    });
   }
-  
 
   updateUnresolvedCount(): void {
     if(this.dataSource.filter != ''){
