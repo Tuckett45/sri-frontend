@@ -57,4 +57,5 @@ export class DashboardService {
                 .pipe(shareReplay(1));
         }
         return this.pmStatsCache$[key];
-    }  }
+    }  
+}
