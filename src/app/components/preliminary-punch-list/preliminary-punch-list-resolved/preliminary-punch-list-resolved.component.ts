@@ -52,6 +52,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
 
   galleryImages: any[] = [];
   private isInitialized = false;
+  totalResolved = 0;
+  pageSize = 25;
   
   constructor(
     private dialog: MatDialog,
@@ -75,9 +77,14 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       this.loadResolvedPunchLists(this.user);
       this.isInitialized = true;
     }
-  
+
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+
+    this.paginator.page.subscribe(event => {
+      this.pageSize = event.pageSize;
+      this.loadResolvedPunchLists(this.user, event.pageIndex, event.pageSize);
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -85,12 +92,16 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       this.applyFilters();
     }
   }
-  
 
-  loadResolvedPunchLists(user: User): void {
-    this.punchListService.getResolvedPunchLists(user).subscribe({
+
+  loadResolvedPunchLists(user: User, pageIndex: number = 0, pageSize: number = this.pageSize): void {
+    this.punchListService.getResolvedPunchLists(user, { page: pageIndex + 1, pageSize }).subscribe({
       next: (response: any) => {
-        this.resolvedCountChange.emit(response.total);
+        const total = Array.isArray(response)
+          ? response.length
+          : response.total ?? (response.items?.length ?? 0);
+        this.totalResolved = total;
+        this.resolvedCountChange.emit(total);
         // Support both shapes: envelope {items,...} or raw array
         const items: PreliminaryPunchList[] = Array.isArray(response)
           ? response

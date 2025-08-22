@@ -52,6 +52,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   galleryImages: any[] = [];
   private isInitialized = false;
+  totalUnresolved = 0;
+  pageSize = 25;
   
   constructor(
     private dialog: MatDialog,
@@ -80,15 +82,24 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       this.loadUnresolvedPunchLists(this.user);
       this.isInitialized = true;
     }
-  
+
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+
+    this.paginator.page.subscribe(event => {
+      this.pageSize = event.pageSize;
+      this.loadUnresolvedPunchLists(this.user, event.pageIndex, event.pageSize);
+    });
   }
 
-  loadUnresolvedPunchLists(user: User): void {
-    this.punchListService.getUnresolvedPunchLists(user).subscribe({
+  loadUnresolvedPunchLists(user: User, pageIndex: number = 0, pageSize: number = this.pageSize): void {
+    this.punchListService.getUnresolvedPunchLists(user, { page: pageIndex + 1, pageSize }).subscribe({
       next: (response: any) => {
-        this.unresolvedCountChange.emit(response.total);
+        const total = Array.isArray(response)
+          ? response.length
+          : response.total ?? (response.items?.length ?? 0);
+        this.totalUnresolved = total;
+        this.unresolvedCountChange.emit(total);
         // Works with either an array response or an envelope { total, page, pageSize, items }
         const items: PreliminaryPunchList[] = Array.isArray(response)
           ? response

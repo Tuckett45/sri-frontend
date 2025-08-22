@@ -101,7 +101,10 @@ export class PreliminaryPunchListService {
     return this.entriesCache$;
   }
 
-  getUnresolvedPunchLists(user: User, opts?: { refresh?: boolean }): Observable<any> {
+  getUnresolvedPunchLists(
+    user: User,
+    opts?: { refresh?: boolean; page?: number; pageSize?: number }
+  ): Observable<any> {
     // choose endpoint + params
     let url: string;
     let params = new HttpParams();
@@ -116,6 +119,10 @@ export class PreliminaryPunchListService {
     } else {
       url = `${environment.apiUrl}/PunchList/unresolved`;
     }
+
+    const page = opts?.page ?? 1;
+    const pageSize = opts?.pageSize ?? 25;
+    params = params.set('page', page).set('pageSize', pageSize);
 
     const key = this.buildKey(user, url, params);
     if (opts?.refresh) {
@@ -135,7 +142,10 @@ export class PreliminaryPunchListService {
     return cached$;
   }
 
-  getResolvedPunchLists(user: User, opts?: { refresh?: boolean }): Observable<any> {
+  getResolvedPunchLists(
+    user: User,
+    opts?: { refresh?: boolean; page?: number; pageSize?: number }
+  ): Observable<any> {
     let url: string;
     let params = new HttpParams();
     const isRegional = user.market === 'RG';
@@ -149,6 +159,10 @@ export class PreliminaryPunchListService {
     } else {
       url = `${environment.apiUrl}/PunchList/resolved`;
     }
+
+    const page = opts?.page ?? 1;
+    const pageSize = opts?.pageSize ?? 25;
+    params = params.set('page', page).set('pageSize', pageSize);
 
     const key = this.buildKey(user, url, params);
     if (opts?.refresh) {
@@ -196,13 +210,35 @@ export class PreliminaryPunchListService {
   getCachedUnresolvedCount(user: User): number {
     const key = [...this.unresolvedDataMap.keys()].find(k => k.startsWith(`${user.role}|${user.market}|`));
     if (!key) return 0;
-    return (this.unresolvedDataMap.get(key) ?? []).length;
+    const data = this.unresolvedDataMap.get(key);
+    if (!data) return 0;
+    if (Array.isArray(data)) {
+      return data.length;
+    }
+    if (typeof data.total === 'number') {
+      return data.total;
+    }
+    if (Array.isArray(data.items)) {
+      return data.items.length;
+    }
+    return 0;
   }
 
   getCachedResolvedCount(user: User): number {
     const key = [...this.resolvedDataMap.keys()].find(k => k.startsWith(`${user.role}|${user.market}|`));
     if (!key) return 0;
-    return (this.resolvedDataMap.get(key) ?? []).length;
+    const data = this.resolvedDataMap.get(key);
+    if (!data) return 0;
+    if (Array.isArray(data)) {
+      return data.length;
+    }
+    if (typeof data.total === 'number') {
+      return data.total;
+    }
+    if (Array.isArray(data.items)) {
+      return data.items.length;
+    }
+    return 0;
   }
 
   private handleError(error: HttpErrorResponse) {
