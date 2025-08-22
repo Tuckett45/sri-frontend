@@ -81,8 +81,8 @@ export class PreliminaryPunchListComponent implements OnInit {
     this.user = this.authService.getUser();
     // this.loadUnresolvedPunchLists(this.user);
     this.loadPunchLists();
-    this.unresolvedPunchListCount = this.punchListService.getCachedUnresolvedCount();
-    this.resolvedPunchListCount = this.punchListService.getCachedResolvedCount();
+    this.unresolvedPunchListCount = this.punchListService.getCachedUnresolvedCount(this.user);
+    this.resolvedPunchListCount = this.punchListService.getCachedResolvedCount(this.user);
   }
 
   loadPunchLists(): void {

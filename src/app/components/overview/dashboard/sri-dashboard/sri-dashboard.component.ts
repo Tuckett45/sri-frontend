@@ -780,9 +780,8 @@ export class SRIDashboardComponent implements OnInit {
     }
   }
 
-  getUnresolvedTotal() {
-    return this.dashboardData.vendorPunchListStats.reduce((total, vendorStat) => {
-      return total + vendorStat.unresolvedCount;
-    }, 0);
+  getUnresolvedTotal(): number {
+    const stats = this.dashboardData?.vendorPunchListStats ?? [];
+    return stats.reduce((total, s) => total + (Number(s?.unresolvedCount) || 0), 0);
   }
 }
