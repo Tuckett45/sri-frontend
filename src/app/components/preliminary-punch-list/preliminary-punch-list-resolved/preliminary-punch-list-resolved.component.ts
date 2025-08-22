@@ -88,48 +88,49 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   
 
   loadResolvedPunchLists(user: User): void {
-    this.punchListService.getResolvedPunchLists(user).subscribe(
-      (response) => {
-        const results = response.map((p: { issues: any[]; }) => ({
-          ...p,
-          issues: p.issues.map((issue: any) => ({ ...issue }))
-        }));
-  
-        for (const punchList of results) {
-          const reportedDate = new Date(punchList.dateReported + 'Z');
-          punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
-          if (punchList.resolvedDate) {
-            const resolvedDate = new Date(punchList.resolvedDate + 'Z');
-            punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
-          }
+  this.punchListService.getResolvedPunchLists(user).subscribe(
+    (response) => {
+      const items = response.items ?? [];
+
+      const results = items.map(p => ({
+        ...p,
+        issues: (p.issues || []).map(issue => ({ ...issue }))
+      }));
+
+      for (const punchList of results) {
+        punchList.dateReported = new Date((punchList.dateReported as any) + 'Z');
+        if (punchList.resolvedDate) {
+          punchList.resolvedDate = new Date((punchList.resolvedDate as any) + 'Z');
         }
-  
-        // ✅ Deduplicate by ID
-        const dedupedResults = results.filter((item: { id: any; }, index: any, self: any[]) =>
-          index === self.findIndex((t: { id: any; }) => t.id === item.id)
-        );
-  
-        // ✅ Clear previous data
-        this.resolvedPreliminaryPunchList$.next([]);
-        this.resolvedPreliminaryPunchLists = [];
-        this.dataSource.data = [];
-  
-        // ✅ Set deduped data
-        this.resolvedPreliminaryPunchList$.next(dedupedResults);
-        this.dataSource.data = this.filterData(dedupedResults);
-        this.resolvedPreliminaryPunchLists = dedupedResults;
-  
-        if (this.selectedFilters) {
-          this.applyFilters();
-        }
-  
-        this.updateResolvedCount();
-      },
-      (error) => {
-        this.toastr.error('Error fetching resolved punch lists', error);
+        
+        (punchList as any).dateReportedDisplay =
+          this.datePipe.transform(punchList.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '';
+        (punchList as any).resolvedDateDisplay =
+          punchList.resolvedDate
+            ? this.datePipe.transform(punchList.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? ''
+            : '';
       }
-    );
-  }
+
+      const dedupedResults = results.filter((item, index, self) =>
+        index === self.findIndex(t => t.id === item.id)
+      );
+
+      this.resolvedPreliminaryPunchList$.next(dedupedResults);
+      this.resolvedPreliminaryPunchLists = dedupedResults;
+      this.dataSource.data = this.filterData(dedupedResults);
+
+      if (this.selectedFilters?.length) {
+        this.applyFilters();
+      }
+
+      this.updateResolvedCount();
+    },
+    (error) => {
+      this.toastr.error('Error fetching resolved punch lists', error);
+    }
+  );
+}
+
   
 
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
