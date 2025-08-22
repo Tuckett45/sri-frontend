@@ -7,6 +7,11 @@ import { local_environment, environment } from '../../environments/environments'
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../models/user.model';
 
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -20,9 +25,15 @@ export class PreliminaryPunchListService {
   private unresolvedCacheMap = new Map<string, Observable<any>>();
   private resolvedCacheMap = new Map<string, Observable<any>>();
 
-  // Store the last fetched arrays per key (for counts)
-  private unresolvedDataMap = new Map<string, any[]>();
-  private resolvedDataMap = new Map<string, any[]>();
+  // Store the last fetched results per key (for counts)
+  private unresolvedDataMap = new Map<
+    string,
+    PreliminaryPunchList[] | PaginatedResponse<PreliminaryPunchList>
+  >();
+  private resolvedDataMap = new Map<
+    string,
+    PreliminaryPunchList[] | PaginatedResponse<PreliminaryPunchList>
+  >();
 
   // Page caches (kept from original; clear on writes)
   private unresolvedPageCache: Map<number, PreliminaryPunchList[]> = new Map();
@@ -214,12 +225,13 @@ export class PreliminaryPunchListService {
     if (!data) return 0;
     if (Array.isArray(data)) {
       return data.length;
-    }
-    if (typeof data.total === 'number') {
-      return data.total;
-    }
-    if (Array.isArray(data.items)) {
-      return data.items.length;
+    } else {
+      if (typeof data.total === 'number') {
+        return data.total;
+      }
+      if (Array.isArray(data.items)) {
+        return data.items.length;
+      }
     }
     return 0;
   }
@@ -231,12 +243,13 @@ export class PreliminaryPunchListService {
     if (!data) return 0;
     if (Array.isArray(data)) {
       return data.length;
-    }
-    if (typeof data.total === 'number') {
-      return data.total;
-    }
-    if (Array.isArray(data.items)) {
-      return data.items.length;
+    } else {
+      if (typeof data.total === 'number') {
+        return data.total;
+      }
+      if (Array.isArray(data.items)) {
+        return data.items.length;
+      }
     }
     return 0;
   }
