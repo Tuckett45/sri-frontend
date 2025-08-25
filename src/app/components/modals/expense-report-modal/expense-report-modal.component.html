@@ -37,7 +37,8 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Amount</mat-label>
-      <input matInput type="number" formControlName="amount" />
+      <input matInput [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }" 
+             formControlName="amount" />
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">

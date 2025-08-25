@@ -42,7 +42,7 @@ export class ExpenseReportModalComponent {
 
   phasesByJob: Record<string, string[]> = {};
 
-  expenseTypes: ExpenseType[] = ['Meals', 'Lodging', 'Fuel', 'Mileage', 'Materials', 'Other'];
+  expenseTypes: ExpenseType[] = ['Meals', 'Lodging', 'Fuel', 'Materials', 'Other'];
 
   get phases(): string[] {
     const job = this.expenseForm.get('job')?.value as string | undefined;
@@ -54,7 +54,7 @@ export class ExpenseReportModalComponent {
     private dialogRef: MatDialogRef<ExpenseReportModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Partial<Expense> | null
   ) {
-    this.jobs.forEach(j => (this.phasesByJob[j] = ['Make-Ready', 'Construction', 'Splicing', 'QC']));
+    this.jobs.forEach(j => (this.phasesByJob[j] = ['Make-Ready', 'Construction', 'Splicing', 'QC', 'Other']));
 
     this.expenseForm = this.fb.group({
       job: [data?.job || null, Validators.required],
