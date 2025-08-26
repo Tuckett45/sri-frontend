@@ -88,49 +88,56 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   
 
   loadResolvedPunchLists(user: User): void {
-    this.punchListService.getResolvedPunchLists(user).subscribe(
-      (response) => {
-        const results = response.map((p: { issues: any[]; }) => ({
+    this.punchListService.getResolvedPunchLists(user).subscribe({
+      next: (response: any) => {
+        this.resolvedCountChange.emit(response.total);
+        // Support both shapes: envelope {items,...} or raw array
+        const items: PreliminaryPunchList[] = Array.isArray(response)
+          ? response
+          : (response?.items ?? []);
+
+        const results = items.map(p => ({
           ...p,
-          issues: p.issues.map((issue: any) => ({ ...issue }))
+          issues: (p.issues || []).map(issue => ({ ...issue }))
         }));
-  
-        for (const punchList of results) {
-          const reportedDate = new Date(punchList.dateReported + 'Z');
-          punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
-          if (punchList.resolvedDate) {
-            const resolvedDate = new Date(punchList.resolvedDate + 'Z');
-            punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+
+        // Keep actual Date values; add optional display strings if you want
+        for (const pl of results) {
+          pl.dateReported = new Date((pl.dateReported as any) + 'Z');
+          if (pl.resolvedDate) {
+            pl.resolvedDate = new Date((pl.resolvedDate as any) + 'Z');
           }
+          // Optional:
+          (pl as any).dateReportedDisplay =
+            this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '';
+          (pl as any).resolvedDateDisplay =
+            pl.resolvedDate
+              ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? ''
+              : '';
         }
-  
-        // ✅ Deduplicate by ID
-        const dedupedResults = results.filter((item: { id: any; }, index: any, self: any[]) =>
-          index === self.findIndex((t: { id: any; }) => t.id === item.id)
+
+        // Deduplicate by id
+        const dedupedResults = results.filter(
+          (item, index, self) => index === self.findIndex(t => t.id === item.id)
         );
-  
-        // ✅ Clear previous data
-        this.resolvedPreliminaryPunchList$.next([]);
-        this.resolvedPreliminaryPunchLists = [];
-        this.dataSource.data = [];
-  
-        // ✅ Set deduped data
+
+        // Reset and set data
         this.resolvedPreliminaryPunchList$.next(dedupedResults);
-        this.dataSource.data = this.filterData(dedupedResults);
         this.resolvedPreliminaryPunchLists = dedupedResults;
-  
-        if (this.selectedFilters) {
+        this.dataSource.data = this.filterData(dedupedResults);
+
+        if (this.selectedFilters?.length) {
           this.applyFilters();
         }
-  
+
         this.updateResolvedCount();
       },
-      (error) => {
-        this.toastr.error('Error fetching resolved punch lists', error);
+      error: (err) => {
+        this.toastr.error('Error fetching resolved punch lists');
+        // optional: console.error(err);
       }
-    );
+    });
   }
-  
 
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
     const userVendor = this.user.company?.trim().toLowerCase();
