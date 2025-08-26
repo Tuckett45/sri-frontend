@@ -15,7 +15,7 @@ export class ExpenseApiService {
     })
   };
 
-  private baseUrl = `${local_environment.apiUrl}/expenses`;
+  private baseUrl = `${environment.apiUrl}/expenses`;
 
   constructor(private http: HttpClient) {}
 
