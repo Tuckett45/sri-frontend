@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environments';
+import { environment, local_environment } from 'src/environments/environments';
 import { Expense } from '../models/expense.model';
 
 @Injectable({
@@ -15,7 +15,7 @@ export class ExpenseApiService {
     })
   };
 
-  private baseUrl = `${environment.apiUrl}/expenses`;
+  private baseUrl = `${local_environment.apiUrl}/expenses`;
 
   constructor(private http: HttpClient) {}
 

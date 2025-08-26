@@ -41,7 +41,6 @@ export class ExpenseReportModalComponent {
   ];
 
   phasesByJob: Record<string, string[]> = {};
-
   expenseTypes: ExpenseType[] = ['Meals', 'Lodging', 'Fuel', 'Materials', 'Other'];
 
   get phases(): string[] {
@@ -61,10 +60,11 @@ export class ExpenseReportModalComponent {
       phase: [{ value: data?.phase || null, disabled: !data?.job }, Validators.required],
       date: [data?.date || new Date(), Validators.required],
       expenseType: [data?.expenseType || null, Validators.required],
-      amount: [data?.amount || 0, [Validators.required, Validators.min(0)]],
+      amount: [data?.amount ?? 0, [Validators.required, Validators.min(0)]],
       notes: [data?.notes || '']
     });
 
+    
     this.expenseForm.get('job')?.valueChanges.subscribe(job => {
       const phaseCtrl = this.expenseForm.get('phase');
       phaseCtrl?.reset();
@@ -74,21 +74,26 @@ export class ExpenseReportModalComponent {
         phaseCtrl?.disable();
       }
     });
+    
+    const existingUrl =
+      (data as any)?.receiptUrl ||
+      ((data as any)?.images?.length ? (data as any).images[0]?.blobUrl : undefined);
 
-    if (data?.receiptUrl) {
-      this.receiptBase64 = data.receiptUrl;
+    if (existingUrl) {
+      this.receiptBase64 = existingUrl;
       this.galleryImages = [{ itemImageSrc: this.receiptBase64 }];
     }
   }
 
-  onFileChange(event: any) {
-    const file = event.target.files && event.target.files[0];
+  onFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files && input.files[0];
     if (file) {
       this.receiptFile = file;
       const reader = new FileReader();
       reader.onload = () => {
         this.receiptBase64 = reader.result as string;
-        this.galleryImages = [{ itemImageSrc: this.receiptBase64 }];
+        this.galleryImages = [{ itemImageSrc: this.receiptBase64! }];
       };
       reader.readAsDataURL(file);
     }
@@ -118,6 +123,7 @@ export class ExpenseReportModalComponent {
     }
 
     const value = this.expenseForm.value;
+
     const expense = new Expense({
       id: this.data?.id || uuidv4(),
       job: value.job!,
@@ -126,9 +132,10 @@ export class ExpenseReportModalComponent {
       expenseType: value.expenseType!,
       amount: value.amount!,
       notes: value.notes || '',
+      receiptData: this.receiptBase64,
       receiptUrl: this.receiptBase64,
       status: this.data?.status || ExpenseStatus.Pending
-    });
+    } as any);
 
     this.dialogRef.close(expense);
   }
