@@ -57,7 +57,7 @@ export class PreliminaryPunchListService {
         .set('pageSize', String(pageSize));
 
       this.entriesCache$ = this.http
-        .get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
+        .get<PagedResponse<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
         .pipe(
           map(resp => ({
             ...resp,
