@@ -8,6 +8,20 @@
 <div mat-dialog-content class="modal-body">
   <form [formGroup]="expenseForm">
     <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Job</mat-label>
+      <mat-select formControlName="job">
+        <mat-option *ngFor="let job of jobs" [value]="job">{{ job }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Phase</mat-label>
+      <mat-select formControlName="phase">
+        <mat-option *ngFor="let phase of phases" [value]="phase">{{ phase }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Date</mat-label>
       <input matInput [matDatepicker]="picker" formControlName="date">
       <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
@@ -15,18 +29,21 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Category</mat-label>
-      <input matInput formControlName="category" />
+      <mat-label>Expense Type</mat-label>
+      <mat-select formControlName="expenseType">
+        <mat-option *ngFor="let type of expenseTypes" [value]="type">{{ type }}</mat-option>
+      </mat-select>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Amount</mat-label>
-      <input matInput type="number" formControlName="amount" />
+      <input matInput [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }" 
+             formControlName="amount" />
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Description</mat-label>
-      <textarea matInput formControlName="description"></textarea>
+      <mat-label>Notes</mat-label>
+      <textarea matInput formControlName="notes"></textarea>
     </mat-form-field>
 
     <div *ngIf="!receiptBase64" class="file-input-wrapper">

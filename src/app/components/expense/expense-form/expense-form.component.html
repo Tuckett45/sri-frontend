@@ -6,9 +6,9 @@
     <ng-template pTemplate="header">
       <tr>
         <th>Date</th>
-        <th>Category</th>
+        <th>Job</th>
         <th>Amount</th>
-        <th>Description</th>
+        <th>Notes</th>
         <th>Receipt</th>
         <th>Status</th>
         <th>Actions</th>
@@ -17,9 +17,9 @@
     <ng-template pTemplate="body" let-expense>
       <tr>
         <td>{{ expense.date | date:'shortDate' }}</td>
-        <td>{{ expense.category }}</td>
+        <td>{{ expense.job }}</td>
         <td>{{ expense.amount | currency }}</td>
-        <td>{{ expense.description }}</td>
+        <td>{{ expense.notes }}</td>
         <td>
           <button mat-raised-button class="image-btn" *ngIf="expense.receiptUrl" (click)="openGallery(expense.receiptUrl)">
             Receipt
