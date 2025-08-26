@@ -57,10 +57,7 @@ export class PreliminaryPunchListService {
         .set('pageSize', String(pageSize));
 
       this.entriesCache$ = this.http
-        .get<PagedResponse<PreliminaryPunchList>>(
-          `${local_environment.apiUrl}/PunchList/all`,
-          { ...this.httpOptions, params }
-        )
+        .get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
         .pipe(
           map(resp => ({
             ...resp,
@@ -93,13 +90,13 @@ export class PreliminaryPunchListService {
     const isRegional = user.market === 'RG';
 
     if (user.role === 'PM' && !isRegional) {
-      url = `${local_environment.apiUrl}/PunchList/pm-unresolved`;
+      url = `${environment.apiUrl}/PunchList/pm-unresolved`;
       params = params.set('state', user.market).set('company', user.company);
     } else if (user.role === 'CM' && !isRegional) {
-      url = `${local_environment.apiUrl}/PunchList/cm-unresolved`;
+      url = `${environment.apiUrl}/PunchList/cm-unresolved`;
       params = params.set('state', user.market);
     } else {
-      url = `${local_environment.apiUrl}/PunchList/unresolved`;
+      url = `${environment.apiUrl}/PunchList/unresolved`;
     }
 
     const key = this.buildKey(user, url, params);
@@ -137,13 +134,13 @@ export class PreliminaryPunchListService {
     const isRegional = user.market === 'RG';
 
     if (user.role === 'PM' && !isRegional) {
-      url = `${local_environment.apiUrl}/PunchList/pm-resolved`;
+      url = `${environment.apiUrl}/PunchList/pm-resolved`;
       params = params.set('state', user.market).set('company', user.company);
     } else if (user.role === 'CM' && !isRegional) {
-      url = `${local_environment.apiUrl}/PunchList/cm-resolved`;
+      url = `${environment.apiUrl}/PunchList/cm-resolved`;
       params = params.set('state', user.market);
     } else {
-      url = `${local_environment.apiUrl}/PunchList/resolved`;
+      url = `${environment.apiUrl}/PunchList/resolved`;
     }
 
     const key = this.buildKey(user, url, params);

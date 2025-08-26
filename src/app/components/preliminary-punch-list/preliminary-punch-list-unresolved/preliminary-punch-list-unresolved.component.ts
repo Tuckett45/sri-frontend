@@ -86,21 +86,25 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   loadUnresolvedPunchLists(user: User): void {
     this.punchListService.getUnresolvedPunchLists(user).subscribe({
-      next: (response: PagedResponse<PreliminaryPunchList>) => {
-        const items = response.items ?? [];
+      next: (response: any) => {
+        this.unresolvedCountChange.emit(response.total);
+        // Works with either an array response or an envelope { total, page, pageSize, items }
+        const items: PreliminaryPunchList[] = Array.isArray(response)
+          ? response
+          : (response?.items ?? []);
 
-        // clone + normalize
         const results = items.map(p => ({
           ...p,
           issues: (p.issues || []).map(issue => ({ ...issue }))
         }));
 
-        // keep date fields as Date objects; add optional display fields if you want
+        // Keep dates as Date objects (add optional display strings if you want)
         for (const pl of results) {
           pl.dateReported = new Date((pl.dateReported as any) + 'Z');
           if (pl.resolvedDate) {
             pl.resolvedDate = new Date((pl.resolvedDate as any) + 'Z');
           }
+          // Optional display fields:
           (pl as any).dateReportedDisplay =
             this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '';
           (pl as any).resolvedDateDisplay =
@@ -109,24 +113,23 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
               : '';
         }
 
-        // dedupe by id
-        const deduped = results.filter((item, index, self) =>
-          index === self.findIndex(t => t.id === item.id)
+        // Deduplicate by id
+        const dedupedResults = results.filter(
+          (item, index, self) => index === self.findIndex(t => t.id === item.id)
         );
 
-        // push into subject + table
-        this.unresolvedPreliminaryPunchList$.next(deduped);
-        this.unresolvedPreliminaryPunchLists = deduped;
-        this.dataSource.data = this.filterData(deduped);
+        // Reset and set data
+        this.unresolvedPreliminaryPunchList$.next(dedupedResults);
+        this.unresolvedPreliminaryPunchLists = dedupedResults;
+        this.dataSource.data = this.filterData(dedupedResults);
 
-        if (this.selectedFilters?.length) {
-          this.applyFilters();
-        }
+        if (this.selectedFilters?.length) this.applyFilters();
 
         this.updateUnresolvedCount();
       },
       error: (err) => {
-        this.toastr.error('Error fetching unresolved punch lists', err);
+        this.toastr.error('Error fetching unresolved punch lists');
+        // console.error(err);
       }
     });
   }

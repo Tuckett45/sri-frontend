@@ -88,50 +88,56 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   
 
   loadResolvedPunchLists(user: User): void {
-  this.punchListService.getResolvedPunchLists(user).subscribe(
-    (response) => {
-      const items = response.items ?? [];
+    this.punchListService.getResolvedPunchLists(user).subscribe({
+      next: (response: any) => {
+        this.resolvedCountChange.emit(response.total);
+        // Support both shapes: envelope {items,...} or raw array
+        const items: PreliminaryPunchList[] = Array.isArray(response)
+          ? response
+          : (response?.items ?? []);
 
-      const results = items.map(p => ({
-        ...p,
-        issues: (p.issues || []).map(issue => ({ ...issue }))
-      }));
+        const results = items.map(p => ({
+          ...p,
+          issues: (p.issues || []).map(issue => ({ ...issue }))
+        }));
 
-      for (const punchList of results) {
-        punchList.dateReported = new Date((punchList.dateReported as any) + 'Z');
-        if (punchList.resolvedDate) {
-          punchList.resolvedDate = new Date((punchList.resolvedDate as any) + 'Z');
+        // Keep actual Date values; add optional display strings if you want
+        for (const pl of results) {
+          pl.dateReported = new Date((pl.dateReported as any) + 'Z');
+          if (pl.resolvedDate) {
+            pl.resolvedDate = new Date((pl.resolvedDate as any) + 'Z');
+          }
+          // Optional:
+          (pl as any).dateReportedDisplay =
+            this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '';
+          (pl as any).resolvedDateDisplay =
+            pl.resolvedDate
+              ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? ''
+              : '';
         }
-        
-        (punchList as any).dateReportedDisplay =
-          this.datePipe.transform(punchList.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '';
-        (punchList as any).resolvedDateDisplay =
-          punchList.resolvedDate
-            ? this.datePipe.transform(punchList.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? ''
-            : '';
+
+        // Deduplicate by id
+        const dedupedResults = results.filter(
+          (item, index, self) => index === self.findIndex(t => t.id === item.id)
+        );
+
+        // Reset and set data
+        this.resolvedPreliminaryPunchList$.next(dedupedResults);
+        this.resolvedPreliminaryPunchLists = dedupedResults;
+        this.dataSource.data = this.filterData(dedupedResults);
+
+        if (this.selectedFilters?.length) {
+          this.applyFilters();
+        }
+
+        this.updateResolvedCount();
+      },
+      error: (err) => {
+        this.toastr.error('Error fetching resolved punch lists');
+        // optional: console.error(err);
       }
-
-      const dedupedResults = results.filter((item, index, self) =>
-        index === self.findIndex(t => t.id === item.id)
-      );
-
-      this.resolvedPreliminaryPunchList$.next(dedupedResults);
-      this.resolvedPreliminaryPunchLists = dedupedResults;
-      this.dataSource.data = this.filterData(dedupedResults);
-
-      if (this.selectedFilters?.length) {
-        this.applyFilters();
-      }
-
-      this.updateResolvedCount();
-    },
-    (error) => {
-      this.toastr.error('Error fetching resolved punch lists', error);
-    }
-  );
-}
-
-  
+    });
+  }
 
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
     const userVendor = this.user.company?.trim().toLowerCase();
