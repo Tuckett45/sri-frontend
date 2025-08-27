@@ -5,7 +5,6 @@ import { FormBuilder } from '@angular/forms';
 import { Subject, switchMap, startWith, takeUntil, tap } from 'rxjs';
 import { BudgetTrackerRow } from '../../../models/budget-tracker.model';
 import { TpsService } from 'src/app/services/tps.service';
-import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-budget-tracker',
@@ -32,27 +31,19 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     'total_dollars_all_in',
     'conlog_link'
   ];
+  filtersOpen = false;
+  selectedFilters: { column: string; values: string[] }[] = [];
 
   // filters
   form = this.fb.group({
-    segment: [''],
-    city: [''],
-    vendor: [''],
-    market: [''],
-    status: [''],
-    crew: [''],   // Header.Crew
-    gmm: [''],    // FT.Gmm
+    segment: <string[]>[],
+    city: <string[]>[],
     claimMonthFrom: <Date | null>(null),
     claimMonthTo: <Date | null>(null),
   });
 
-  segmentOptions: SelectItem[] = [];
-  cityOptions: SelectItem[] = [];
-  vendorOptions: SelectItem[] = [];
-  marketOptions: SelectItem[] = [];
-  statusOptions: SelectItem[] = [];
-  crewOptions: SelectItem[] = [];
-  gmmOptions: SelectItem[] = [];
+  segmentOptions: string[] = [];
+  cityOptions: string[] = [];
 
   private page = 1;
   private pageSize = 25;
@@ -69,17 +60,12 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
       .pipe(
         startWith(void 0),
         tap(() => (this.loading = true)),
-        switchMap(() => {
-          const v = this.form.value;
-          return this.tpsService.get({
-            segment: v.segment || undefined,
-            city: v.city || undefined,
-            vendor: v.vendor || undefined,
-            market: v.market || undefined,
-            status: v.status || undefined,
-            gmm: v.gmm || undefined,
-            claimMonthFrom: v.claimMonthFrom || undefined,
-            claimMonthTo: v.claimMonthTo || undefined,
+        switchMap(() =>
+          this.tpsService.get({
+            segment: (this.form.value.segment?.length ? this.form.value.segment.join(',') : undefined),
+            city: (this.form.value.city?.length ? this.form.value.city.join(',') : undefined),
+            claimMonthFrom: this.form.value.claimMonthFrom || undefined,
+            claimMonthTo: this.form.value.claimMonthTo || undefined,
             page: this.page,
             pageSize: this.pageSize,
           } as any);
@@ -117,49 +103,67 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         const items = res.items ?? [];
-
-        const uniq = (arr: (string | null | undefined)[]) =>
-          Array.from(new Set(arr.filter(Boolean) as string[]));
-        const segments = uniq(items.map(i => i.Header?.Segment));
-        const cities   = uniq(items.map(i => i.Header?.City));
-        const crews    = uniq(items.map(i => i.Header?.Crew));
-        const vendors  = uniq(items.map(i => i.FT?.Vendor));
-        const markets  = uniq(items.map(i => i.FT?.Market));
-        const statuses = uniq(items.map(i => i.FT?.Status));
-        const gmms     = uniq(items.map(i => i.FT?.Gmm));
-
-        const asOptions = (vals: string[]): SelectItem[] => vals.map(v => ({ label: v, value: v }));
-
-        this.segmentOptions = asOptions(segments);
-        this.cityOptions    = asOptions(cities);
-        this.crewOptions    = asOptions(crews);
-
-        this.vendorOptions  = asOptions(vendors);
-        this.marketOptions  = asOptions(markets);
-        this.statusOptions  = asOptions(statuses);
-        this.gmmOptions     = asOptions(gmms);
+        const segments = Array.from(new Set(items.map(i => i.Header?.Segment).filter(Boolean)));
+        const cities = Array.from(new Set(items.map(i => i.Header?.City).filter(Boolean)));
+        this.segmentOptions = segments as string[];
+        this.cityOptions = cities as string[];
       });
   }
 
-  applyFilters(): void {
+  toggleFilters(): void {
+    this.filtersOpen = !this.filtersOpen;
+  }
+
+  private applyFilters(): void {
     this.page = 1;
     if (this.paginator) this.paginator.firstPage();
     this.reload$.next();
   }
 
-  clearFilters(): void {
-    this.form.reset({
-      segment: '',
-      city: '',
-      vendor: '',
-      market: '',
-      status: '',
-      crew: '',
-      gmm: '',
-      claimMonthFrom: null,
-      claimMonthTo: null
-    });
+  onFilterChange(column: string): void {
+    const val = this.form.value;
+    let values: string[] = [];
+    if (column === 'segment') {
+      values = val.segment || [];
+    } else if (column === 'city') {
+      values = val.city || [];
+    } else if (column === 'claimMonth') {
+      values = [val.claimMonthFrom, val.claimMonthTo].filter(Boolean).map((d: Date) => d.toString());
+      column = 'claimMonth';
+    }
+    this.selectedFilters = this.selectedFilters.filter(f => f.column !== column);
+    if (values.length > 0) {
+      this.selectedFilters.push({ column, values });
+    }
     this.applyFilters();
+  }
+
+  removeChip(filter: { column: string; value: string }): void {
+    const val = this.form.value;
+    if (filter.column === 'segment') {
+      this.form.patchValue({ segment: (val.segment || []).filter((v: string) => v !== filter.value) });
+    } else if (filter.column === 'city') {
+      this.form.patchValue({ city: (val.city || []).filter((v: string) => v !== filter.value) });
+    } else if (filter.column === 'claimMonth') {
+      if (val.claimMonthFrom && val.claimMonthFrom.toString() === filter.value) {
+        this.form.patchValue({ claimMonthFrom: null });
+      }
+      if (val.claimMonthTo && val.claimMonthTo.toString() === filter.value) {
+        this.form.patchValue({ claimMonthTo: null });
+      }
+    }
+    this.onFilterChange(filter.column);
+  }
+
+  clearAll(): void {
+    this.form.reset({ segment: [], city: [], claimMonthFrom: null, claimMonthTo: null });
+    this.selectedFilters = [];
+    this.applyFilters();
+  }
+
+  formatDate(chip: any): string {
+    const d = new Date(chip);
+    return isNaN(d.getTime()) ? chip : d.toLocaleDateString();
   }
 
   onPage(e: PageEvent): void {

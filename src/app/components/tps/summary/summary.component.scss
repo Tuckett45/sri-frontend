@@ -61,6 +61,9 @@ h1 {
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+  p-calendar {
+    flex: 1 1 200px;
+  }
 
   .actions {
     display: flex;
@@ -98,7 +101,6 @@ mat-form-field {
   }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
   .filter-section {
     flex-direction: column;
@@ -137,6 +139,43 @@ mat-form-field {
         background: #e18a25 !important;
       }
   }
+
+::ng-deep .solid-dropdown .p-select-overlay {
+  background: #ffffff;
+}
+
+::ng-deep .solid-dropdown .p-select,
+::ng-deep .solid-dropdown.p-calendar {
+  background: #c9c9c9;
+  border-radius: 50px;
+}
+
+::ng-deep .solid-dropdown .p-dropdown-label,
+::ng-deep .solid-dropdown .p-dropdown-trigger,
+::ng-deep .solid-dropdown.p-calendar .p-inputtext,
+::ng-deep .solid-dropdown.p-calendar .p-datepicker-trigger {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+::ng-deep .solid-dropdown.p-calendar .p-datepicker-trigger {
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
+}
+
+::ng-deep .p-dropdown-panel {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+::ng-deep .p-dropdown-item {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+::ng-deep .p-dropdown-item.p-highlight {
+  background-color: #e0e0e0 !important;
+}
 
   ::ng-deep .solid-dropdown .p-select {
     background: #c9c9c9 !important;
