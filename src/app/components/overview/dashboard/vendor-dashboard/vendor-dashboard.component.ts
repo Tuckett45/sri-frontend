@@ -46,20 +46,74 @@ export class VendorDashboardComponent implements OnInit {
         (data: DashboardData) => {
           this.dashboardData = data;
           this.getUnresolvedTotal();
-          this.totalVendorIssueChartData = {
-            
-            labels: data.totalVendorIssueStats.map(stat => stat.area),
-            datasets: [
-              {
-                type: 'bar',
-                label: 'Congruex',
-                data: data.totalVendorIssueStats.map(stat => stat.congruexIssues),
-                backgroundColor: '#4CAF50',
-                borderColor: '#000000',
-                borderWidth: 1
-              }
-            ]
-          };
+          if(this.user.company === 'Blue Edge (BE)'){
+
+            this.totalVendorIssueChartData = {
+              
+              labels: data.totalVendorIssueStats.map(stat => stat.area),
+              datasets: [
+                {
+                  type: 'bar',
+                  label: this.user.company,
+                  data: data.totalVendorIssueStats.map(stat => stat.blueEdgeIssues),
+                  backgroundColor: '#4CAF50',
+                  borderColor: '#000000',
+                  borderWidth: 1
+                }
+              ]
+            };
+          }
+          else if(this.user.company === 'Congruex (SCI)'){
+
+            this.totalVendorIssueChartData = {
+              
+              labels: data.totalVendorIssueStats.map(stat => stat.area),
+              datasets: [
+                {
+                  type: 'bar',
+                  label: this.user.company,
+                  data: data.totalVendorIssueStats.map(stat => stat.congruexIssues),
+                  backgroundColor: '#4CAF50',
+                  borderColor: '#000000',
+                  borderWidth: 1
+                }
+              ]
+            };
+          }
+          else if(this.user.company === 'Ervin (ECC)'){
+
+            this.totalVendorIssueChartData = {
+              
+              labels: data.totalVendorIssueStats.map(stat => stat.area),
+              datasets: [
+                {
+                  type: 'bar',
+                  label: this.user.company,
+                  data: data.totalVendorIssueStats.map(stat => stat.ervinIssues),
+                  backgroundColor: '#4CAF50',
+                  borderColor: '#000000',
+                  borderWidth: 1
+                }
+              ]
+            };
+          }
+          else if(this.user.company === 'North Star'){
+
+            this.totalVendorIssueChartData = {
+              
+              labels: data.totalVendorIssueStats.map(stat => stat.area),
+              datasets: [
+                {
+                  type: 'bar',
+                  label: this.user.company,
+                  data: data.totalVendorIssueStats.map(stat => stat.northStarIssues),
+                  backgroundColor: '#4CAF50',
+                  borderColor: '#000000',
+                  borderWidth: 1
+                }
+              ]
+            };
+          }
   
           this.vendorPunchListChartData = {
             labels: data.vendorPunchListStats.map(stat => stat.vendorName),

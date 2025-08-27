@@ -16,36 +16,29 @@
   }
 
   .chart-section {
-    gap: 2rem;
-
-    // .chart-wrapper {
-    //   height: 300px;
-    // }
-  }
-
- 
-
-
-  .chart-section {
     display: flex;
     flex-wrap: wrap;
     gap: 2rem;
+  }
 
-    .chart-wrapper {
-      flex: 1 1 300px;
-      height: 300px;
-    }
+  /* Ensure every chart has a real height; PrimeNG respects parent height when maintainAspectRatio=false */
+  .chart-wrapper,
+  .chart-wrap {
+    flex: 1 1 300px;
+    width: 100%;
+    height: 360px;   /* desktop/tablet */
+    min-height: 260px;
   }
 }
 
-/* Style for the dashboard */
+/* Dashboard surface */
 .surface-ground {
   background: #f4f7fa;
   border-radius: 8px;
 }
 
 ::ng-deep .surface-card {
-  background-color: white !important;
+  background-color: #fff !important;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
@@ -62,7 +55,7 @@ h1 {
   margin-top: 20px;
 }
 
-
+/* Filters */
 .filter-section {
   display: flex;
   flex-wrap: wrap;
@@ -97,6 +90,17 @@ h1 {
   }
 }
 
+mat-form-field {
+  flex: 1 1;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+
+  mat-label {
+    color: #e18a25;
+  }
+}
+
 @media (max-width: 768px) {
   .filter-section {
     flex-direction: column;
@@ -106,13 +110,35 @@ h1 {
       width: 100%;
     }
   }
+
+  .summary-dashboard {
+    .chart-wrapper,
+    .chart-wrap {
+      height: 260px;   /* phone */
+      min-height: 220px;
+    }
+  }
 }
 
+/* Center PrimeNG charts */
 .p-chart {
   margin: 0 auto;
 }
 
+  ::ng-deep .solid-dropdown .p-select .p-select-overlay {
+    background: #ffffff !important;
+    border: #000000 !important;
+    border-radius: 4px !important;
+  }
 
+  ::ng-deep .p-select-option {
+    background: #e0e0e0 !important;
+    color: #000000 !important;
+    padding: 5px 0px 5px 15px!important;
+      &:hover {
+        background: #e18a25 !important;
+      }
+  }
 
 ::ng-deep .solid-dropdown .p-select-overlay {
   background: #ffffff;
@@ -151,3 +177,34 @@ h1 {
   background-color: #e0e0e0 !important;
 }
 
+  ::ng-deep .solid-dropdown .p-select {
+    background: #c9c9c9 !important;
+    border-radius: 50px;
+  }
+  
+  ::ng-deep .solid-dropdown .p-dropdown-label {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  ::ng-deep .solid-dropdown .p-dropdown-trigger {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  ::ng-deep .p-dropdown-panel {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  ::ng-deep .p-dropdown-item {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  ::ng-deep .p-dropdown-item.p-highlight {
+    background-color: #e0e0e0 !important;
+  }
+  ::ng-deep .p-dropdown-item.p-highlight:hover {
+    background-color: #d0d0d0 !important;
+  }

@@ -1,4 +1,3 @@
-// src/app/pages/budget-tracker/budget-tracker.component.ts
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
@@ -55,6 +54,7 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadOptions();
+
     // load on start and whenever filters submit or page changes
     this.reload$
       .pipe(
@@ -68,14 +68,29 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
             claimMonthTo: this.form.value.claimMonthTo || undefined,
             page: this.page,
             pageSize: this.pageSize,
-          })
-        ),
+          } as any);
+        }),
         takeUntil(this.destroy$)
       )
       .subscribe({
         next: res => {
-          this.rows = res.items ?? [];
-          this.total = res.total ?? 0;
+          const v = this.form.value;
+          let items = res.items ?? [];
+
+          items = items.filter(r =>
+            (!v.segment || r.Header?.Segment === v.segment) &&
+            (!v.city || r.Header?.City === v.city) &&
+            (!v.crew || r.Header?.Crew === v.crew) &&
+            (!v.vendor || r.FT?.Vendor === v.vendor) &&
+            (!v.market || r.FT?.Market === v.market) &&
+            (!v.status || r.FT?.Status === v.status) &&
+            (!v.gmm || r.FT?.Gmm === v.gmm) &&
+            (!v.claimMonthFrom || new Date(r.Header?.ClaimMonthYear ?? '') >= v.claimMonthFrom) &&
+            (!v.claimMonthTo || new Date(r.Header?.ClaimMonthYear ?? '') <= v.claimMonthTo)
+          );
+
+          this.rows = items;
+          this.total = res.total ?? items.length;
           this.loading = false;
         },
         error: _ => { this.loading = false; }
@@ -204,8 +219,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
 
   detailSections(row: BudgetTrackerRow): { title: string; data: any }[] {
     return [
-      { title: 'FT', data: row.FT },
-      { title: 'UAE', data: row.UAE },
+      { title: 'FT',   data: row.FT },
+      { title: 'UAE',  data: row.UAE },
       { title: 'AFAI', data: row.AFAI },
       { title: 'AKAN', data: row.AKAN },
       { title: 'AOBC', data: row.AOBC },

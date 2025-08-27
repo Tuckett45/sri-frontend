@@ -4,14 +4,24 @@ export enum ExpenseStatus {
   Rejected = 'Rejected'
 }
 
+export type ExpenseType =
+  | 'Meals'
+  | 'Lodging'
+  | 'Fuel'
+  | 'Mileage'
+  | 'Materials'
+  | 'Other';
+
 export class Expense {
   id?: string;
+  job!: string;
+  phase!: string;
   date!: Date;
-  category!: string;
+  expenseType!: ExpenseType;
   amount!: number;
-  description?: string;
+  notes?: string;
   receiptUrl?: string;
-  status!: ExpenseStatus;
+  status: ExpenseStatus = ExpenseStatus.Pending;
   createdBy?: string;
   createdDate?: Date;
   updatedBy?: string;

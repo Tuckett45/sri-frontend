@@ -13,7 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatNativeDateModule, MatOptgroup, MatOption } from '@angular/material/core';
 import { ChartModule } from 'primeng/chart';
 import { DividerModule } from "primeng/divider";
 import { MatSortModule } from '@angular/material/sort';
@@ -60,7 +60,9 @@ import { MatSelectModule } from '@angular/material/select';
     MatInputModule,
     MatSelectModule,
     ChartModule,
-    DividerModule
-  ]
+    DividerModule,
+    MatOptgroup,
+    MatOption
+]
 })
 export class TpsModule {}

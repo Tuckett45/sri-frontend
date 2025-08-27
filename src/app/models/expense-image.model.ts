@@ -1,10 +1,10 @@
 export class ExpenseImage {
   id?: string;
-  expenseId: string;
-  image: string | File | null;
-
-  constructor(expenseId: string, image: string | File | null = null) {
-    this.expenseId = expenseId;
-    this.image = image;
-  }
+  expenseId!: string;
+  blobUrl!: string;          // <— aligns to DB/API
+  fileName?: string | null;
+  contentType?: string | null;
+  sizeBytes?: number | null;
+  createdBy?: string | null;
+  createdDate?: string;      // ISO string from API
 }
