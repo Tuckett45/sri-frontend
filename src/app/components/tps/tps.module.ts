@@ -22,6 +22,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BudgetTrackerComponent } from './budget-tracker/budget-tracker.component';
 import { MatPaginator } from '@angular/material/paginator';
 import { DropdownModule } from 'primeng/dropdown';
+import { CalendarModule } from 'primeng/calendar';
+import { ChipModule } from 'primeng/chip';
+import { RippleModule } from 'primeng/ripple';
+import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
   declarations: [
@@ -49,8 +53,12 @@ import { DropdownModule } from 'primeng/dropdown';
     MatProgressBarModule,
     MatPaginator,
     DropdownModule,
+    CalendarModule,
+    ChipModule,
+    RippleModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     ChartModule,
     DividerModule
   ]

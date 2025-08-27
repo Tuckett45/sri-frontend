@@ -51,28 +51,64 @@
   }
 }
 
-.filter-section {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-}
-
-::ng-deep .filter-dropdown.p-dropdown {
-  background-color: #ffffff;
-  color: #000000;
-}
-
 .filters-btn {
   align-items: center;
-  background-color: #e18a25;
+  background-color: #144f80;
   color: #fff;
-  margin-top: 10px;
   margin-bottom: 10px;
 
   &:hover {
-    background-color: #c9741d;
+    background-color: #0e3453;
   }
+}
+
+.chip-filter {
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.chip-filter .p-chip {
+  background-color: #e18a25;
+  color: white;
+  border-radius: 50px;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+  box-shadow: 0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12);
+}
+
+.chip-filter .p-chip:hover {
+  background-color: #144f80;
+}
+
+.chip-filter .p-chip .pi {
+  margin-left: 5px;
+}
+
+.chip-filter .clear-all {
+  text-align: center;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #144f80;
+  color: white;
+  font-size: 14px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+
+.chip-filter .clear-all:hover {
+  background-color: #e18a25;
+}
+
+.chip-filter .clear-all:focus {
+  outline: none;
 }
 
 mat-form-field {
@@ -123,16 +159,5 @@ mat-form-field {
   .label {
     font-weight: 600;
     color: #e18a25;
-  }
-}
-
-@media (max-width: 768px) {
-  .filter-section {
-    flex-direction: column;
-    align-items: stretch;
-
-    .filters-btn {
-      width: 100%;
-    }
   }
 }

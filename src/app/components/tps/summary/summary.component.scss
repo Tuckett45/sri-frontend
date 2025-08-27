@@ -68,18 +68,14 @@ h1 {
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+  p-calendar {
+    flex: 1 1 200px;
+  }
 
   .actions {
     display: flex;
     gap: 0.5rem;
   }
-}
-
-.chart-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .chart-filters {
@@ -98,17 +94,6 @@ h1 {
 
   &:hover {
     background-color: #0e3453;
-  }
-}
-
-mat-form-field {
-  flex: 1 1;
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 10px;
-
-  mat-label {
-    color: #e18a25;
   }
 }
 
@@ -133,19 +118,23 @@ mat-form-field {
   background: #ffffff;
 }
 
-::ng-deep .solid-dropdown .p-select {
+::ng-deep .solid-dropdown .p-select,
+::ng-deep .solid-dropdown.p-calendar {
   background: #c9c9c9;
   border-radius: 50px;
 }
 
-::ng-deep .solid-dropdown .p-dropdown-label {
+::ng-deep .solid-dropdown .p-dropdown-label,
+::ng-deep .solid-dropdown .p-dropdown-trigger,
+::ng-deep .solid-dropdown.p-calendar .p-inputtext,
+::ng-deep .solid-dropdown.p-calendar .p-datepicker-trigger {
   background-color: #ffffff !important;
   color: #000000 !important;
 }
 
-::ng-deep .solid-dropdown .p-dropdown-trigger {
-  background-color: #ffffff !important;
-  color: #000000 !important;
+::ng-deep .solid-dropdown.p-calendar .p-datepicker-trigger {
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
 }
 
 ::ng-deep .p-dropdown-panel {
@@ -160,9 +149,5 @@ mat-form-field {
 
 ::ng-deep .p-dropdown-item.p-highlight {
   background-color: #e0e0e0 !important;
-}
-
-::ng-deep .filter-dropdown.p-dropdown {
-  background-color: #ffffff;
 }
 
