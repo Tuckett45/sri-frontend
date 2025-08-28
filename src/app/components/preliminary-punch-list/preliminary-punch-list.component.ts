@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { IssueArea, PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from 'src/app/services/auth.service';
@@ -81,12 +81,14 @@ export class PreliminaryPunchListComponent implements OnInit {
     this.user = this.authService.getUser();
     // this.loadUnresolvedPunchLists(this.user);
     this.loadPunchLists();
-    this.unresolvedPunchListCount = this.punchListService.getCachedUnresolvedCount();
-    this.resolvedPunchListCount = this.punchListService.getCachedResolvedCount();
+    this.unresolvedPunchListCount = this.punchListService.getCachedUnresolvedCount(this.user);
+    this.resolvedPunchListCount = this.punchListService.getCachedResolvedCount(this.user);
   }
 
   loadPunchLists(): void {
-    this.preliminaryPunchList$ = this.punchListService.getEntries(); 
+    this.preliminaryPunchList$ = this.punchListService.getEntries().pipe(
+      map(response => response.items)
+    ); 
     this.preliminaryPunchList$.subscribe(data => {
       this.dataSource.data = this.filterData(data);
     });

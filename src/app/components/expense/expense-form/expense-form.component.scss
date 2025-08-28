@@ -54,6 +54,16 @@
           }
         }
       }
+
+      .header-btn {
+        align-items: center;
+        background-color: #144f80;
+        color: #fff;
+
+        &:hover {
+          background-color: #0e3c61;
+        }
+      }
     
       .chip-filter {
         display: flex;
@@ -103,8 +113,9 @@
           th {
             background-color: #e18a25;
             color: white;
-            padding: 10px 0px 10px 10px;
+            padding: 10px;
             position: sticky;
+            text-align: center;
           }
     
           td {
@@ -190,52 +201,129 @@
         }
       
         /* Responsive design */
-        @media (max-width: 767px) {    
-          .header-section {
-            flex-direction: column;
-            align-items: flex-start;
-      
-            h2 {
-              font-size: 1.5rem;
-              margin-bottom: 10px;
-            }
-      
-            button {
-              width: 70%;
-              margin-bottom: 10px;
-            }
-          }
-      
-          .filter-section {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-      
-          .search-bar {
-            display: flex;
-            justify-content: flex-start;
-            width: 100%;
-      
-            mat-form-field {
-              width: 100%;
-      
-              input {
-                padding-left: 2px;
-              }
-      
-              mat-icon {
-                color: #e18a25;
-              }
-            }
-          }
-      
-          .chip-filter {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin-bottom: 20px;
-          }
-        }
+        /* Extra small phones (portrait ≤ 480px) */
+@media (max-width: 480px) {
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+
+    h2 {
+      font-size: 1.3rem;
+      margin-bottom: 6px;
+    }
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    width: 100%;
+
+    mat-form-field {
+      width: 100% !important;
+    }
+  }
+
+  .chip-filter {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+
+    mat-form-field,
+    .p-dropdown,
+    .clear-all {
+      width: 100% !important;
+    }
+  }
+
+  .table-wrapper {
+    table {
+      font-size: 0.8rem;
+      min-width: unset; /* Allow table to shrink */
+    }
+
+    th, td {
+      padding: 6px;
+      white-space: normal; /* Wrap long text */
+      word-break: break-word;
+    }
+
+    .actions-container {
+      flex-direction: column;
+      gap: 4px;
+    }
+  }
+}
+
+/* Small devices landscape (481px–767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+  .header-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+
+    h2 {
+      font-size: 1.4rem;
+    }
+
+    button {
+      align-self: stretch;
+    }
+  }
+
+  .filter-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .search-bar {
+    mat-form-field {
+      width: 100% !important;
+    }
+  }
+
+  .chip-filter {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 10px;
+
+    mat-form-field,
+    .p-dropdown {
+      flex: 1 1 45%;
+    }
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+
+    table {
+      min-width: 100%; /* Stretch to container */
+      border-collapse: collapse;
+      table-layout: fixed; /* Force equal distribution of width */
+    }
+
+    th, td {
+      white-space: nowrap; /* Prevent ugly wrapping in headers */
+    }
+
+    th {
+      background-color: #e18a25;
+      color: #fff;
+      text-align: center;
+    }
+  }
+}
+
       
         @media (min-width: 768px) and (max-width: 1024px) {
           .header-section {

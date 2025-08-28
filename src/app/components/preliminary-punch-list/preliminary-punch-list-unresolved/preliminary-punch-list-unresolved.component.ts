@@ -3,17 +3,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
-import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { MatTable, MatTableDataSource } from '@angular/material/table';
+import { PreliminaryPunchListService, PagedResponse } from 'src/app/services/preliminary-punch-list.service';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator } from '@angular/material/paginator';
 import { AuthService } from 'src/app/services/auth.service';
 import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { User } from 'src/app/models/user.model';
-import { MatIcon } from '@angular/material/icon';
-import { GalleriaModule } from 'primeng/galleria';
-import { DropdownChangeEvent } from 'primeng/dropdown';
 import { DatePipe } from '@angular/common';
 import { PreliminaryPunchListResolvedComponent } from '../preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 
@@ -24,15 +21,16 @@ import { PreliminaryPunchListResolvedComponent } from '../preliminary-punch-list
   standalone: false
 })
 export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterViewInit {
-  public unresolvedPreliminaryPunchList$: BehaviorSubject<PreliminaryPunchList[]> = new BehaviorSubject<PreliminaryPunchList[]>([]);
+  public unresolvedPreliminaryPunchList$: BehaviorSubject<PreliminaryPunchList[]> =
+    new BehaviorSubject<PreliminaryPunchList[]>([]);
   unresolvedPreliminaryPunchLists: PreliminaryPunchList[] = [];
-  isIssueGalleryVisible: boolean = false;
-  isResolutionGalleryVisible: boolean = false;
+  isIssueGalleryVisible = false;
+  isResolutionGalleryVisible = false;
   user!: User;
   filteredData: PreliminaryPunchList[] = [];
 
   displayedColumns: string[] = [
-    'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
+    'segmentId', 'vendorName', 'streetAddress', 'city', 'state', 'issues',
     'additionalConcerns', 'createdBy', 'dateReported',
     'issueImageId', 'pmResolved', 'resolutionImageId', 'resolvedDate', 'cmResolved', 'actions'
   ];
@@ -43,16 +41,17 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     { breakpoint: '560px', numVisible: 1 }
   ];
 
-  dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource();
+  dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource<PreliminaryPunchList>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+
   @Input('PreliminaryPunchListResolvedComponent') resolvedPunchListComponent!: PreliminaryPunchListResolvedComponent;
   @Input() selectedFilters: { column: string, values: string[] }[] = [];
   @Output() unresolvedCountChange = new EventEmitter<number>();
 
   galleryImages: any[] = [];
   private isInitialized = false;
-  
+
   constructor(
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
@@ -70,7 +69,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['selectedFilter']) {
+    // fix: watch the correct @Input name
+    if (changes['selectedFilters']) {
       this.applyFilters();
     }
   }
@@ -80,127 +80,118 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       this.loadUnresolvedPunchLists(this.user);
       this.isInitialized = true;
     }
-  
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
 
   loadUnresolvedPunchLists(user: User): void {
-    this.punchListService.getUnresolvedPunchLists(user).subscribe(
-      (response) => {
-        const results = response.map((p: { issues: any[]; }) => ({
+    this.punchListService.getUnresolvedPunchLists(user).subscribe({
+      next: (response: any) => {
+        this.unresolvedCountChange.emit(response.total);
+        // Works with either an array response or an envelope { total, page, pageSize, items }
+        const items: PreliminaryPunchList[] = Array.isArray(response)
+          ? response
+          : (response?.items ?? []);
+
+        const results = items.map(p => ({
           ...p,
-          issues: p.issues.map((issue: any) => ({ ...issue }))
+          issues: (p.issues || []).map(issue => ({ ...issue }))
         }));
-  
-        // Format dates
-        for (const punchList of results) {
-          const reportedDate = new Date(punchList.dateReported + 'Z');
-          punchList.dateReported = this.datePipe.transform(reportedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
-          if (punchList.resolvedDate) {
-            const resolvedDate = new Date(punchList.resolvedDate + 'Z');
-            punchList.resolvedDate = this.datePipe.transform(resolvedDate, 'MM/dd/yy hh:mm a', 'America/Denver') || '';
+
+        // Keep dates as Date objects (add optional display strings if you want)
+        for (const pl of results) {
+          pl.dateReported = new Date((pl.dateReported as any) + 'Z');
+          if (pl.resolvedDate) {
+            pl.resolvedDate = new Date((pl.resolvedDate as any) + 'Z');
           }
+          // Optional display fields:
+          (pl as any).dateReportedDisplay =
+            this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '';
+          (pl as any).resolvedDateDisplay =
+            pl.resolvedDate
+              ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? ''
+              : '';
         }
-  
-        // ✅ Deduplicate by ID here
-        const dedupedResults = results.filter((item: { id: any; }, index: any, self: any[]) =>
-          index === self.findIndex((t: { id: any; }) => t.id === item.id)
+
+        // Deduplicate by id
+        const dedupedResults = results.filter(
+          (item, index, self) => index === self.findIndex(t => t.id === item.id)
         );
-  
-        // ✅ Clear previous data
-        this.unresolvedPreliminaryPunchList$.next([]);
-        this.unresolvedPreliminaryPunchLists = [];
-        this.dataSource.data = [];
-  
-        // ✅ Set new data
+
+        // Reset and set data
         this.unresolvedPreliminaryPunchList$.next(dedupedResults);
-        this.dataSource.data = this.filterData(dedupedResults);
         this.unresolvedPreliminaryPunchLists = dedupedResults;
-  
-        if (this.selectedFilters) {
-          this.applyFilters();
-        }
-  
+        this.dataSource.data = this.filterData(dedupedResults);
+
+        if (this.selectedFilters?.length) this.applyFilters();
+
         this.updateUnresolvedCount();
       },
-      (error) => {
-        this.toastr.error('Error fetching unresolved punch lists', error);
+      error: (err) => {
+        this.toastr.error('Error fetching unresolved punch lists');
+        // console.error(err);
       }
-    );
+    });
   }
-  
 
   updateUnresolvedCount(): void {
-    if(this.dataSource.filter != ''){
-      const unresolvedCount = this.dataSource.filteredData.length; 
-      this.unresolvedCountChange.emit(unresolvedCount);
-    }else{
-      const unresolvedCount = this.dataSource.data.length; 
-      this.unresolvedCountChange.emit(unresolvedCount);
+    if (this.dataSource.filter) {
+      this.unresolvedCountChange.emit(this.dataSource.filteredData.length);
+    } else {
+      this.unresolvedCountChange.emit(this.dataSource.data.length);
     }
   }
-  
+
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
     const userVendor = this.user.company?.trim().toLowerCase();
     const userMarket = this.user.market?.trim().toLowerCase();
-  
-    return data.filter(punchList => {
-      const listVendor = punchList.vendorName?.trim().toLowerCase();
-      const listMarket = punchList.state?.trim().toLowerCase();
-  
+
+    return data.filter(p => {
+      const listVendor = p.vendorName?.trim().toLowerCase();
+      const listMarket = p.state?.trim().toLowerCase();
+
       if (this.user.role === 'PM') {
-        const matches = listVendor === userVendor && listMarket === userMarket;
-        return matches;
+        return listVendor === userVendor && listMarket === userMarket;
       }
-  
       if (this.user.role === 'CM' && userMarket !== 'rg') {
-        const matches = listMarket === userMarket;
-        return matches;
+        return listMarket === userMarket;
       }
-  
       return true;
     });
   }
-  
-  
-  
-  
 
   openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
       width: '600px',
       data: data || null
     });
-  
+
     dialogRef.afterClosed().subscribe((result: PreliminaryPunchList) => {
-      if (result) {
-        let punchList = result;
-        let action$: Observable<any>;
-        
-        if (punchList.updatedBy) {
-          action$ = this.punchListService.updateEntry(punchList);
-        } else {
-          action$ = this.punchListService.addEntry(punchList);
-        }
-    
-        action$.subscribe({
-          next: () => {
-            this.toastr.success('Punch List saved');
-            this.punchListService.triggerRefresh();
-          },
-          error: (err) => {
-            this.toastr.error('Error saving Punch List.');
-          }
-        });
+      if (!result) return;
+
+      const punchList = result;
+      let action$: Observable<any>;
+      if (punchList.updatedBy) {
+        action$ = this.punchListService.updateEntry(punchList);
+      } else {
+        action$ = this.punchListService.addEntry(punchList);
       }
+
+      action$.subscribe({
+        next: () => {
+          this.toastr.success('Punch List saved');
+          this.punchListService.triggerRefresh();
+        },
+        error: () => {
+          this.toastr.error('Error saving Punch List.');
+        }
+      });
     });
-    
   }
 
   refreshPunchLists(): void {
     this.loadUnresolvedPunchLists(this.user);
-    this.punchListService.getResolvedPunchLists(this.user);
+    this.punchListService.getResolvedPunchLists(this.user).subscribe(); // kick off other cache if needed
   }
 
   editReport(report: PreliminaryPunchList): void {
@@ -209,44 +200,42 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   openDeleteConfirmationDialog(report: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
-    
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.removeReport(report);
-      }
+      if (result) this.removeReport(report);
     });
   }
 
   removeReport(report: PreliminaryPunchList): void {
-    const index = this.dataSource.data.findIndex(item => item.id === report.id);
-    if (index !== -1) {
-        this.dataSource.data.splice(index, 1);
-        this.dataSource.data = [...this.dataSource.data];
-        this.punchListService.removeEntry(report.id).subscribe(
-          () => {
-              this.toastr.success('Punch List entry deleted');
-              this.updateUnresolvedCount();
-          },
-          (error) => {
-            this.toastr.error(error.error, 'Error');
-          }
-        );
-    }
+    const idx = this.dataSource.data.findIndex(item => item.id === report.id);
+    if (idx === -1) return;
+
+    this.dataSource.data.splice(idx, 1);
+    this.dataSource.data = [...this.dataSource.data];
+
+    this.punchListService.removeEntry(report.id).subscribe({
+      next: () => {
+        this.toastr.success('Punch List entry deleted');
+        this.updateUnresolvedCount();
+      },
+      error: (error) => {
+        this.toastr.error(error.error, 'Error');
+      }
+    });
   }
 
   rejectResolution(punchList: PreliminaryPunchList): void {
-    const updatedPunchList = {
+    const updatedPunchList: PreliminaryPunchList = {
       ...punchList,
       dateReported: punchList.dateReported instanceof Date
         ? punchList.dateReported
-        : new Date(punchList.dateReported)
+        : new Date(punchList.dateReported as any),
+      pmResolved: false,
+      resolvedDate: null
     };
-    updatedPunchList.pmResolved = false;
-    updatedPunchList.resolvedDate = null;
-  
+
     this.punchListService.updateEntry(updatedPunchList).subscribe({
       next: () => {
-        this.refreshPunchLists()
+        this.refreshPunchLists();
         this.toastr.success(`Resolution Rejected. Sent back to ${punchList.vendorName}`);
       },
       error: (err) => {
@@ -256,28 +245,22 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     });
   }
 
-  refreshTable(): void {    
-    const filteredEntries = this.unresolvedPreliminaryPunchList$; 
-    filteredEntries?.subscribe(entries => {
-      let updatedData = this.filterData(entries);  
-
-      this.dataSource.data = updatedData;
-      this.updateUnresolvedCount();
-    });
+  // Use current BehaviorSubject value instead of subscribing to it repeatedly
+  refreshTable(): void {
+    const entries = this.unresolvedPreliminaryPunchList$.value || [];
+    const updatedData = this.filterData(entries);
+    this.dataSource.data = updatedData;
+    this.updateUnresolvedCount();
   }
 
   openGallery(imageType: 'issueImages' | 'resolutionImages', images: string[]): void {
-    this.galleryImages = images.map(img => ({
-      itemImageSrc: img
-    }));
-  
-    if(imageType == 'issueImages'){
+    this.galleryImages = images.map(img => ({ itemImageSrc: img }));
+    if (imageType === 'issueImages') {
       this.isIssueGalleryVisible = true;
-    }else{
+    } else {
       this.isResolutionGalleryVisible = true;
     }
   }
-  
 
   closeImageModal(): void {
     this.isIssueGalleryVisible = false;
@@ -286,77 +269,68 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   searchFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
-  
-    this.dataSource.filterPredicate = (data: any, filter: string) => {
+
+    this.dataSource.filterPredicate = (data: PreliminaryPunchList, filter: string) => {
       const transformedFilter = filter.trim().toLowerCase();
       const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.createdBy} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
       return dataStr.includes(transformedFilter);
     };
-  
+
     this.dataSource.filter = filterValue;
     this.updateUnresolvedCount();
   }
-  
+
   applyFilters(): void {
-    const filteredEntries = this.unresolvedPreliminaryPunchList$;
-  
-    filteredEntries?.subscribe(entries => {
-      let updatedData = this.filterData(entries);
-  
-      this.selectedFilters.forEach(filter => {
-        if (filter.column == 'dateReported') {
-          const startDateObj = new Date(filter.values[0]);
-          const endDateObj = new Date(filter.values[1]);
-          
-          updatedData = updatedData.filter(punchList => {
-            const punchListDate = new Date(punchList.dateReported);
-            return punchListDate >= startDateObj && punchListDate <= endDateObj;
-          });
-        } else if (filter.column == 'resolvedDate') {
-          const startDateObj = new Date(filter.values[0]);
-          const endDateObj = new Date(filter.values[1]);
+    const entries = this.unresolvedPreliminaryPunchList$.value || [];
+    let updatedData = this.filterData(entries);
 
-          updatedData = updatedData.filter(punchList => {
-            if(punchList.resolvedDate != null){
-              const punchListDate = new Date(punchList.resolvedDate);
-              return punchListDate >= startDateObj && punchListDate <= endDateObj;
-            }else{
-              return;
-            }
-          
-          });
+    this.selectedFilters.forEach(filter => {
+      if (filter.column === 'dateReported') {
+        const startDateObj = new Date(filter.values[0]);
+        const endDateObj = new Date(filter.values[1]);
+        updatedData = updatedData.filter(p => {
+          const d = new Date(p.dateReported as any);
+          return d >= startDateObj && d <= endDateObj;
+        });
+      } else if (filter.column === 'resolvedDate') {
+        const startDateObj = new Date(filter.values[0]);
+        const endDateObj = new Date(filter.values[1]);
+        updatedData = updatedData.filter(p => {
+          if (!p.resolvedDate) return false;
+          const d = new Date(p.resolvedDate as any);
+          return d >= startDateObj && d <= endDateObj;
+        });
+      } else if (filter.column && filter.values) {
+        if (Array.isArray(filter.values)) {
+          updatedData = updatedData.filter(p =>
+            filter.values.some(val =>
+              (p[filter.column as keyof PreliminaryPunchList] ?? '')
+                .toString()
+                .toLowerCase()
+                .includes(val.toLowerCase())
+            )
+          );
         } else {
-          if (filter.column && filter.values) {
-            if (Array.isArray(filter.values)) {
-              updatedData = updatedData.filter(punchList => 
-                filter.values.some(val => 
-                  punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(val.toLowerCase())
-                )
-              );
-            } else {
-              updatedData = updatedData.filter(punchList => 
-                punchList[filter.column as keyof PreliminaryPunchList]?.toString().toLowerCase().includes(filter.values)
-              );
-            }
-          }
+          updatedData = updatedData.filter(p =>
+            (p[filter.column as keyof PreliminaryPunchList] ?? '')
+              .toString()
+              .toLowerCase()
+              .includes((filter.values as any).toLowerCase())
+          );
         }
-      });
-  
-      this.filteredData = updatedData;
-      this.dataSource.data = this.filteredData;
-      this.updateUnresolvedCount();
+      }
     });
-  }
-  
-  
 
-  clearAll() {
-  this.selectedFilters = [];
-  const unresolvedEntries = this.unresolvedPreliminaryPunchList$; 
-  unresolvedEntries?.subscribe(entries => {
-    const updatedData = this.filterData(entries); 
+    this.filteredData = updatedData;
+    this.dataSource.data = this.filteredData;
+    this.updateUnresolvedCount();
+  }
+
+  clearAll(): void {
+    this.selectedFilters = [];
+    const entries = this.unresolvedPreliminaryPunchList$.value || [];
+    const updatedData = this.filterData(entries);
     this.dataSource.data = updatedData;
     this.updateUnresolvedCount();
-  });
-}
+  }
 }

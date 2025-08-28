@@ -47,7 +47,13 @@ export class LoginComponent implements OnInit {
           if(this.userData.role == 'Temp'){
             this.router.navigate(['/street-sheet']);
           }
-          else{
+          else if(this.userData.role == 'OSP Coordinator'){
+            this.router.navigate(['/osp-coordinator-tracker']);
+          }
+          else if(this.userData.role == 'Controller'){
+            this.router.navigate(['/market-controller-tracker']);
+          }
+          else {
             this.router.navigate(['/preliminary-punch-list']);
           }
         },

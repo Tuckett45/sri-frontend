@@ -1,4 +1,12 @@
-import { Component, OnInit, AfterViewInit, ViewChildren, QueryList } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  ViewChildren,
+  QueryList,
+  HostListener,
+  NgZone
+} from '@angular/core';
 import { UIChart } from 'primeng/chart';
 import { TpsService } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
@@ -11,6 +19,7 @@ import { SelectItem } from 'primeng/api';
   styleUrls: ['./summary.component.scss']
 })
 export class SummaryComponent implements OnInit, AfterViewInit {
+  // ===== KPIs =====
   violationsCount = 0;
   cityCount = 0;
   totalOverspent = 0;
@@ -26,22 +35,28 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   percentChangeDollarPerHHP = 0;
   percentChangeDollarPerLFT = 0;
 
+  // ===== Filters =====
   startDate: Date | null = null;
   endDate: Date | null = null;
   filtersOpen = false;
   // filter selections for charts
   selectedVendorOverspent: string | null = null;
   selectedSegmentOverspent: string | null = null;
+
   selectedVendorSegmentChart: string | null = null;
   selectedSegmentSegmentChart: string | null = null;
+
   selectedVendorAllIn: string | null = null;
   selectedSegmentAllIn: string | null = null;
+
   vendorOptions: SelectItem[] = [];
   segmentOptions: SelectItem[] = [];
 
+  // ===== Data stores =====
   private violations: WPViolation[] = [];
   private cities: CityScorecard[] = [];
 
+  // ===== Chart data =====
   violationsChartData: any;
   cityAllInChartData: any;
   violationsBySegmentChartData: any;
@@ -51,109 +66,121 @@ export class SummaryComponent implements OnInit, AfterViewInit {
 
   @ViewChildren(UIChart) charts!: QueryList<UIChart>;
 
-  violationChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: { mode: 'index', intersect: false },
-  plugins: {
-    legend: {
-      labels: {
-        color: '#000'
-      }
-    },
-    tooltip: {
-      mode: 'index',
-      intersect: false,
-      callbacks: {
-        label: (ctx: any) => {
-          const label = ctx.dataset.label || '';
-          const value = ctx.parsed.y ?? ctx.parsed;
-          return `${label}: $${value.toLocaleString()}`;
-        }
-      }
-    }
-  },
-  scales: {
-    y: {
-      type: 'linear',
-      display: true,
-      position: 'left',
-      ticks: {
-        color: '#000',
-        callback: (val: any) => '$' + Number(val).toLocaleString()
-      },
-      grid: { color: '#ebedef' }
-    },
-    x: {
-      ticks: { color: '#000' },
-      grid: { color: '#ebedef' }
-    }
-  }
-};
+  // ===== Mobile-aware options =====
+  isMobile = false;
 
-  doughnutChartOptions = {
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          color: '#000'
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: (ctx: any) => {
-            const label = ctx.label || '';
-            const value = ctx.parsed ?? 0;
-            const total = ctx.dataset.data.reduce((acc: number, val: number) => acc + val, 0);
-            const percentage = total ? ((value / total) * 100).toFixed(1) : '0.0';
-            return `${label}: $${value.toLocaleString()} (${percentage}%)`;
-          }
-        }
-      }
-    }
-  };
+  // Active options used by template
+  violationChartOptions: any;
+  doughnutChartOptions: any;
+  chartOptions: any;
 
-
-  chartOptions = {
-    maintainAspectRatio: false,
-    aspectRatio: 1,
+  // --- Base profile (desktop-ish) ---
+  private baseOptions: any = {
+    responsive: true,
+    maintainAspectRatio: false, // allow container height to control size
     interaction: { mode: 'index', intersect: false },
+    parsing: false,
     plugins: {
       legend: {
-        labels: {
-          color: '#000'
-        }
+        position: 'top',
+        labels: { color: '#000', usePointStyle: true, boxWidth: 10, boxHeight: 10 }
       },
       tooltip: {
         mode: 'index',
         intersect: false,
         callbacks: {
           label: (ctx: any) => {
-            const label = ctx.dataset.label || '';
-            const value = ctx.parsed.y ?? ctx.parsed;
-            return `${label}: $${value.toLocaleString()}`;
+            const label = ctx.dataset?.label || ctx.label || '';
+            const v = ctx.parsed?.y ?? ctx.parsed;
+            return `${label}: ${this.compactCurrency(Number(v))}`;
           }
         }
-      }
+      },
+      decimation: { enabled: true, algorithm: 'lttb', samples: 200 }
     },
     scales: {
       x: {
-        ticks: { color: '#000' },
+        ticks: { color: '#000', autoSkip: true, maxRotation: 0, minRotation: 0 },
         grid: { color: '#ebedef' }
       },
       y: {
         ticks: {
           color: '#000',
-          callback: (val: number | string) => '$' + Number(val).toLocaleString()
+          callback: (val: number | string) => this.compactCurrency(Number(val))
         },
         grid: { color: '#ebedef' }
+      }
+    },
+    elements: {
+      bar: { borderWidth: 0, borderRadius: 4 },
+      line: { tension: 0.25, borderWidth: 2 },
+      point: { radius: 2, hoverRadius: 4 }
+    },
+    categoryPercentage: 0.7,
+    barPercentage: 0.7
+  };
+
+  private desktopOptions: any = { ...this.baseOptions };
+
+  private mobileOptions: any = {
+    ...this.baseOptions,
+    plugins: {
+      ...this.baseOptions.plugins,
+      legend: {
+        position: 'bottom',
+        labels: { ...this.baseOptions.plugins.legend.labels, boxWidth: 8, boxHeight: 8, padding: 8 }
+      },
+      tooltip: { ...this.baseOptions.plugins.tooltip, mode: 'nearest', intersect: true }
+    },
+    scales: {
+      x: {
+        ...this.baseOptions.scales.x,
+        ticks: { ...this.baseOptions.scales.x.ticks, maxTicksLimit: 6, maxRotation: 45 }
+      },
+      y: {
+        ...this.baseOptions.scales.y,
+        ticks: { ...this.baseOptions.scales.y.ticks, maxTicksLimit: 4 }
+      }
+    },
+    elements: {
+      bar: { borderWidth: 0, borderRadius: 3 },
+      line: { tension: 0.2, borderWidth: 2 },
+      point: { radius: 0, hoverRadius: 3 } // cleaner on phones
+    },
+    categoryPercentage: 0.6,
+    barPercentage: 0.6
+  };
+
+  private desktopDoughnut: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { color: '#000', usePointStyle: true } },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => {
+            const label = ctx.label || '';
+            const value = Number(ctx.parsed ?? 0);
+            const data = (ctx.dataset.data || []) as number[];
+            const total = data.reduce((a, b) => a + (b || 0), 0);
+            const pct = total ? ((value / total) * 100).toFixed(1) : '0.0';
+            return `${label}: ${this.compactCurrency(value)} (${pct}%)`;
+          }
+        }
       }
     }
   };
 
-  constructor(private tpsService: TpsService) {}
+  private mobileDoughnut: any = {
+    ...this.desktopDoughnut,
+    plugins: { ...this.desktopDoughnut.plugins, legend: { position: 'bottom', labels: { color: '#000', usePointStyle: true } } }
+  };
+
+  constructor(private tpsService: TpsService, private zone: NgZone) {}
 
   ngOnInit(): void {
+    this.setIsMobile();
+    this.applyOptionProfiles();
     this.loadData();
   }
 
@@ -171,6 +198,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     setTimeout(() => this.charts.forEach(c => c.reinit()));
   }
 
+  // ===== Data fetching & shaping =====
   loadData() {
     this.tpsService.getViolations().subscribe(res => {
       this.violations = res;
@@ -198,6 +226,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         return afterStart && beforeEnd && vendorMatch && segmentMatch;
       });
 
+    // ===== KPI calcs =====
     const metricsViolations = filterViolations(null, null);
     this.violationsCount = metricsViolations.length;
     this.totalOverspent = metricsViolations.reduce((sum, v) => sum + this.calculateOverspent(v), 0);
@@ -205,6 +234,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     this.minOverspent = overspentValues.length ? Math.min(...overspentValues) : 0;
     this.maxOverspent = overspentValues.length ? Math.max(...overspentValues) : 0;
 
+    // ===== Chart: Overspent by Vendor =====
     const overspentViolations = filterViolations(this.selectedVendorOverspent, this.selectedSegmentOverspent);
     const vendorMap = new Map<string, number>();
     overspentViolations.forEach(v => {
@@ -216,7 +246,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       datasets: [
         {
           label: 'Overspent',
-          data: Array.from(vendorMap.values()),
+          data: Array.from(vendorMap.values()).map(this.num.bind(this)),
           backgroundColor: '#42A5F5',
           borderColor: '#1E88E5',
           borderWidth: 1
@@ -224,6 +254,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       ]
     };
 
+    // ===== Chart: Violations by Segment (combo) =====
     const segmentViolations = filterViolations(this.selectedVendorSegmentChart, this.selectedSegmentSegmentChart);
     this.violationsBySegmentChartData = {
       labels: segmentViolations.map(v => v.segment || 'Unknown'),
@@ -231,7 +262,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         {
           type: 'bar',
           label: 'Conlog Planned Amount',
-          data: segmentViolations.map(v => v.conlogPlannedAmount ?? 0),
+          data: segmentViolations.map(v => this.num(v.conlogPlannedAmount)),
           backgroundColor: '#42A5F5',
           borderColor: '#1E88E5',
           borderWidth: 1
@@ -239,7 +270,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         {
           type: 'bar',
           label: 'Planned with Contingency',
-          data: segmentViolations.map(v => v.planWithContingency ?? 0),
+          data: segmentViolations.map(v => this.num(v.planWithContingency)),
           backgroundColor: '#FFA726',
           borderColor: '#FB8C00',
           borderWidth: 1
@@ -247,7 +278,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         {
           type: 'line',
           label: 'Actual Cost',
-          data: segmentViolations.map(v => v.actualCost ?? 0),
+          data: segmentViolations.map(v => this.num(v.actualCost)),
           borderColor: '#4CAF50',
           backgroundColor: 'transparent',
           borderWidth: 2,
@@ -258,6 +289,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       ]
     };
 
+    // ===== City Scorecard filters for All-In chart =====
     const cityFilterViolations = filterViolations(this.selectedVendorAllIn, this.selectedSegmentAllIn);
     const allowedCities = new Set(cityFilterViolations.map(v => v.city).filter(Boolean));
 
@@ -270,30 +302,31 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     });
 
     this.cityCount = filteredCities.length;
-    this.forecastedAllInTotal = filteredCities.reduce((sum, c) => sum + (c.forecastedAllIn ?? 0), 0);
-    this.actualAllInTotal = filteredCities.reduce((sum, c) => sum + (c.actualAllIn ?? 0), 0);
+    this.forecastedAllInTotal = filteredCities.reduce((sum, c) => sum + this.num(c.forecastedAllIn), 0);
+    this.actualAllInTotal     = filteredCities.reduce((sum, c) => sum + this.num(c.actualAllIn), 0);
 
     this.avgOverspent = this.violationsCount ? this.totalOverspent / this.violationsCount : 0;
     this.avgActualAllIn = this.cityCount ? this.actualAllInTotal / this.cityCount : 0;
     this.avgForecastedAllIn = this.cityCount ? this.forecastedAllInTotal / this.cityCount : 0;
     this.allInDifference = this.actualAllInTotal - this.forecastedAllInTotal;
 
-    const totalForecastedHHP = filteredCities.reduce((sum, c) => sum + (c.forecastedHHP ?? 0), 0);
-    const totalActualHHP = filteredCities.reduce((sum, c) => sum + (c.actualHHP ?? 0), 0);
+    const totalForecastedHHP = filteredCities.reduce((sum, c) => sum + this.num(c.forecastedHHP), 0);
+    const totalActualHHP     = filteredCities.reduce((sum, c) => sum + this.num(c.actualHHP), 0);
     this.percentChangeHHP = this.getPercentChange(totalForecastedHHP, totalActualHHP);
 
-    const totalForecastedDollarPerHHP = filteredCities.reduce((sum, c) => sum + (c.forecastedDollarPerHHP ?? 0), 0);
-    const totalActualDollarPerHHP = filteredCities.reduce((sum, c) => sum + (c.actualDollarPerHHP ?? 0), 0);
+    const totalForecastedDollarPerHHP = filteredCities.reduce((sum, c) => sum + this.num(c.forecastedDollarPerHHP), 0);
+    const totalActualDollarPerHHP     = filteredCities.reduce((sum, c) => sum + this.num(c.actualDollarPerHHP), 0);
     this.percentChangeDollarPerHHP = this.getPercentChange(totalForecastedDollarPerHHP, totalActualDollarPerHHP);
 
-    const totalForecastedDollarPerLFT = filteredCities.reduce((sum, c) => sum + (c.forecastedDollarPerLFT ?? 0), 0);
-    const totalActualDollarPerLFT = filteredCities.reduce((sum, c) => sum + (c.actualDollarPerLFT ?? 0), 0);
+    const totalForecastedDollarPerLFT = filteredCities.reduce((sum, c) => sum + this.num(c.forecastedDollarPerLFT), 0);
+    const totalActualDollarPerLFT     = filteredCities.reduce((sum, c) => sum + this.num(c.actualDollarPerLFT), 0);
     this.percentChangeDollarPerLFT = this.getPercentChange(totalActualDollarPerLFT, totalForecastedDollarPerLFT);
 
+    // ===== Doughnuts =====
     this.hhChartData = {
       labels: ['Actual HHP', 'Forecasted HHP'],
       datasets: [{
-        data: [totalForecastedHHP, totalActualHHP],
+        data: [totalActualHHP, totalForecastedHHP],
         backgroundColor: ['#42A5F5', '#FFA726']
       }]
     };
@@ -301,7 +334,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     this.dollarPerHhpChartData = {
       labels: ['Actual $/HHP', 'Forecasted $/HHP'],
       datasets: [{
-        data: [totalForecastedDollarPerHHP, totalActualDollarPerHHP],
+        data: [totalActualDollarPerHHP, totalForecastedDollarPerHHP],
         backgroundColor: ['#66BB6A', '#EF5350']
       }]
     };
@@ -314,13 +347,14 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       }]
     };
 
+    // ===== All-In by City =====
     this.cityAllInChartData = {
       labels: filteredCities.map(c => c.city),
       datasets: [
         {
           type: 'bar',
           label: 'Forecasted All-In',
-          data: filteredCities.map(c => c.forecastedAllIn),
+          data: filteredCities.map(c => this.num(c.forecastedAllIn)),
           backgroundColor: '#66BB6A',
           borderColor: '#43A047',
           borderWidth: 1
@@ -328,7 +362,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         {
           type: 'bar',
           label: 'Actual All-In',
-          data: filteredCities.map(c => c.actualAllIn),
+          data: filteredCities.map(c => this.num(c.actualAllIn)),
           backgroundColor: '#FFA726',
           borderColor: '#FB8C00',
           borderWidth: 1
@@ -336,18 +370,12 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         {
           type: 'bar',
           label: 'Remaining All-In',
-          data: filteredCities.map(c =>
-            (c.forecastedAllIn ?? 0) - (c.actualAllIn ?? 0)
-          ),
+          data: filteredCities.map(c => this.num(c.forecastedAllIn) - this.num(c.actualAllIn)),
           backgroundColor: filteredCities.map(c =>
-            ((c.forecastedAllIn ?? 0) - (c.actualAllIn ?? 0)) >= 0
-              ? '#42A5F5'
-              : '#EF5350' 
+            (this.num(c.forecastedAllIn) - this.num(c.actualAllIn)) >= 0 ? '#42A5F5' : '#EF5350'
           ),
           borderColor: filteredCities.map(c =>
-            ((c.forecastedAllIn ?? 0) - (c.actualAllIn ?? 0)) >= 0
-              ? '#1d1e1fff' 
-              : '#C62828' 
+            (this.num(c.forecastedAllIn) - this.num(c.actualAllIn)) >= 0 ? '#1d1e1fff' : '#C62828'
           ),
           borderWidth: 1
         }
@@ -375,14 +403,14 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   }
 
   calculateOverspent(v: WPViolation): number {
-    const plan = v.planWithContingency ?? 0;
-    const cost = v.actualCost ?? 0;
+    const plan = this.num(v.planWithContingency);
+    const cost = this.num(v.actualCost);
     return Math.max(0, cost - plan);
   }
 
   calculateOverspentPercent(v: WPViolation): number {
-    const plan = v.planWithContingency ?? 0;
-    const cost = v.actualCost ?? 0;
+    const plan = this.num(v.planWithContingency);
+    const cost = this.num(v.actualCost);
     const percentage = plan ? (cost - plan) / plan : 0;
     return Math.max(0, percentage);
   }
