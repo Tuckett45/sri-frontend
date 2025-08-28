@@ -1,10 +1,26 @@
 <div class="summary-dashboard surface-ground px-4 py-5 md:px-6 lg:px-8">
-  <div class="filter-section mb-3">
-    <p-calendar [(ngModel)]="startDate" dateFormat="mm/dd/yy" placeholder="Start Date" [showIcon]="true" styleClass="solid-dropdown"></p-calendar>
-    <p-calendar [(ngModel)]="endDate" dateFormat="mm/dd/yy" placeholder="End Date" [showIcon]="true" styleClass="solid-dropdown"></p-calendar>
-    <div class="actions">
-      <button mat-raised-button class="filters-btn" (click)="applyFilters()">Apply</button>
-      <button mat-button type="button" (click)="clearFilters()">Clear</button>
+  <div>
+    <button mat-raised-button color="primary" class="filters-btn" (click)="toggleFilters()">
+      <span *ngIf="!filtersOpen">View Filters</span>
+      <span *ngIf="filtersOpen">Close Filters</span>
+      <mat-icon>filter_list</mat-icon>
+    </button>
+  </div>
+  <div class="filter-section mb-3" *ngIf="filtersOpen">
+    <div class="filter-selections flex align-items-center gap-1">
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="applyFilters()">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="applyFilters()">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+      <a pRipple *ngIf="startDate || endDate" tabindex="0" class="clear-all" (click)="clearFilters()">Clear All</a>
     </div>
   </div>
 
@@ -23,7 +39,6 @@
   </div>
 
   <div class="grid">
-    <!-- Doughnut 1 -->
     <div class="donut-wrapper col-12 md:col-4">
       <div class="surface-card shadow-2 p-3 border-round h-full">
         <h4>HHP:</h4>
@@ -36,8 +51,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Doughnut 2 -->
     <div class="donut-wrapper col-12 md:col-4">
       <div class="surface-card shadow-2 p-3 border-round h-full">
         <h4>Dollar Per HHP:</h4>
@@ -50,8 +63,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Doughnut 3 -->
     <div class="donut-wrapper col-12 md:col-4">
       <div class="surface-card shadow-2 p-3 border-round h-full">
         <h4>Linear Foot:</h4>
@@ -64,42 +75,73 @@
         </div>
       </div>
     </div>
-
-    <!-- Overspent by Vendor -->
-    <div class="chart-wrapper col-12 md:col-6">
+    <div class="chart-wrapper col-12">
       <div class="surface-card shadow-2 p-3 border-round h-full">
         <div>
           <div class="chart-filters mb-2">
-            <p-dropdown [options]="vendorOptions" [(ngModel)]="selectedVendorOverspent" placeholder="Vendor" showClear="true" styleClass="solid-dropdown mr-2" (onChange)="applyFilters()"></p-dropdown>
-            <p-dropdown [options]="segmentOptions" [(ngModel)]="selectedSegmentOverspent" placeholder="Segment" showClear="true" styleClass="solid-dropdown" (onChange)="applyFilters()"></p-dropdown>
+            <mat-form-field appearance="fill" class="mr-2">
+              <mat-label>Vendor</mat-label>
+              <mat-select [(ngModel)]="selectedVendorOverspent" (selectionChange)="applyFilters()">
+                <mat-option [value]="null">All</mat-option>
+                <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>Segment</mat-label>
+              <mat-select [(ngModel)]="selectedSegmentOverspent" (selectionChange)="applyFilters()">
+                <mat-option [value]="null">All</mat-option>
+                <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
           </div>
           <span class="block text-500 font-medium mb-3">Overspent by Vendor</span>
           <p-chart type="bar" [data]="violationsChartData" [options]="chartOptions"></p-chart>
         </div>
       </div>
     </div>
-
-    <!-- Violations by Segment (mixed bar + line) -->
-    <div class="chart-wrapper col-12 md:col-12">
+    <div class="chart-wrapper col-12">
       <div class="surface-card shadow-2 p-3 border-round h-full">
         <div>
           <div class="chart-filters mb-2">
-            <p-dropdown [options]="vendorOptions" [(ngModel)]="selectedVendorSegmentChart" placeholder="Vendor" showClear="true" styleClass="solid-dropdown mr-2" (onChange)="applyFilters()"></p-dropdown>
-            <p-dropdown [options]="segmentOptions" [(ngModel)]="selectedSegmentSegmentChart" placeholder="Segment" showClear="true" styleClass="solid-dropdown" (onChange)="applyFilters()"></p-dropdown>
+            <mat-form-field appearance="fill" class="mr-2">
+              <mat-label>Vendor</mat-label>
+              <mat-select [(ngModel)]="selectedVendorSegmentChart" (selectionChange)="applyFilters()">
+                <mat-option [value]="null">All</mat-option>
+                <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>Segment</mat-label>
+              <mat-select [(ngModel)]="selectedSegmentSegmentChart" (selectionChange)="applyFilters()">
+                <mat-option [value]="null">All</mat-option>
+                <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
           </div>
           <span class="block text-500 font-medium mb-3">Violations by Segment</span>
           <p-chart type="line" [data]="violationsBySegmentChartData" [options]="violationChartOptions"></p-chart>
         </div>
       </div>
     </div>
-
-    <!-- All-In chart -->
-    <div class="chart-wrapper col-12 md:col-12">
+    <div class="chart-wrapper col-12">
       <div class="surface-card shadow-2 p-3 border-round h-full">
         <div>
           <div class="chart-filters mb-2">
-            <p-dropdown [options]="vendorOptions" [(ngModel)]="selectedVendorAllIn" placeholder="Vendor" showClear="true" styleClass="solid-dropdown mr-2" (onChange)="applyFilters()"></p-dropdown>
-            <p-dropdown [options]="segmentOptions" [(ngModel)]="selectedSegmentAllIn" placeholder="Segment" showClear="true" styleClass="solid-dropdown" (onChange)="applyFilters()"></p-dropdown>
+            <mat-form-field appearance="fill" class="mr-2">
+              <mat-label>Vendor</mat-label>
+              <mat-select [(ngModel)]="selectedVendorAllIn" (selectionChange)="applyFilters()">
+                <mat-option [value]="null">All</mat-option>
+                <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>Segment</mat-label>
+              <mat-select [(ngModel)]="selectedSegmentAllIn" (selectionChange)="applyFilters()">
+                <mat-option [value]="null">All</mat-option>
+                <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
           </div>
           <span class="block text-500 font-medium mb-3">Forecasted vs Actual All-In vs Remaining</span>
           <p-chart type="bar" [data]="cityAllInChartData" [options]="chartOptions"></p-chart>

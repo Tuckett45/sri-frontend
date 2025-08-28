@@ -15,14 +15,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MatOptgroup, MatOption } from '@angular/material/core';
 import { ChartModule } from 'primeng/chart';
-import { DividerModule } from "primeng/divider";
+import { DividerModule } from 'primeng/divider';
 import { MatSortModule } from '@angular/material/sort';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BudgetTrackerComponent } from './budget-tracker/budget-tracker.component';
-import { MatPaginator } from '@angular/material/paginator';
-import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { ChipModule } from 'primeng/chip';
 import { RippleModule } from 'primeng/ripple';
 import { MatSelectModule } from '@angular/material/select';
@@ -48,15 +46,11 @@ import { MatSelectModule } from '@angular/material/select';
     MatFormFieldModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatDatepickerModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,
-    MatPaginator,
-    DropdownModule,
-    CalendarModule,
+    MatPaginatorModule,
     ChipModule,
     RippleModule,
-    MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     ChartModule,

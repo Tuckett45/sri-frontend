@@ -32,16 +32,18 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     'total_dollars_all_in',
     'conlog_link'
   ];
+  filtersOpen = false;
+  selectedFilters: { column: string; values: string[] }[] = [];
 
   filtersOpen = false;
   selectedFilters: { column: string; values: string[] }[] = [];
 
   // ---- Filters (only what you actually use) ----
   form = this.fb.group({
-    segment: [[] as string[]],
-    city: [[] as string[]],
-    claimMonthFrom: [null as Date | null],
-    claimMonthTo: [null as Date | null]
+    segment: <string[]>[],
+    city: <string[]>[],
+    claimMonthFrom: <Date | null>(null),
+    claimMonthTo: <Date | null>(null),
   });
 
   segmentOptions: string[] = [];
@@ -130,18 +132,14 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   onFilterChange(column: string): void {
     const val = this.form.value;
     let values: string[] = [];
-
     if (column === 'segment') {
-      values = Array.isArray(val.segment) ? val.segment : [];
+      values = val.segment || [];
     } else if (column === 'city') {
-      values = Array.isArray(val.city) ? val.city : [];
+      values = val.city || [];
     } else if (column === 'claimMonth') {
-      values = [val.claimMonthFrom, val.claimMonthTo]
-        .filter((d): d is Date => !!d)
-        .map(d => d.toISOString());
+      values = [val.claimMonthFrom, val.claimMonthTo].filter(Boolean).map((d: Date) => d.toString());
       column = 'claimMonth';
     }
-
     this.selectedFilters = this.selectedFilters.filter(f => f.column !== column);
     if (values.length > 0) {
       this.selectedFilters.push({ column, values });
@@ -152,15 +150,16 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   removeChip(filter: { column: string; value: string }): void {
     const val = this.form.value;
     if (filter.column === 'segment') {
-      this.form.patchValue({ segment: (val.segment || []).filter(v => v !== filter.value) });
+      this.form.patchValue({ segment: (val.segment || []).filter((v: string) => v !== filter.value) });
     } else if (filter.column === 'city') {
-      this.form.patchValue({ city: (Array.isArray(val.city) ? val.city : []).filter(v => v !== filter.value) });
+      this.form.patchValue({ city: (val.city || []).filter((v: string) => v !== filter.value) });
     } else if (filter.column === 'claimMonth') {
-      // remove from/to matches
-      const from = val.claimMonthFrom?.toISOString();
-      const to = val.claimMonthTo?.toISOString();
-      if (from === filter.value) this.form.patchValue({ claimMonthFrom: null });
-      if (to === filter.value) this.form.patchValue({ claimMonthTo: null });
+      if (val.claimMonthFrom && val.claimMonthFrom.toString() === filter.value) {
+        this.form.patchValue({ claimMonthFrom: null });
+      }
+      if (val.claimMonthTo && val.claimMonthTo.toString() === filter.value) {
+        this.form.patchValue({ claimMonthTo: null });
+      }
     }
     this.onFilterChange(filter.column);
   }
@@ -171,7 +170,7 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  formatDate(chip: string): string {
+  formatDate(chip: any): string {
     const d = new Date(chip);
     return isNaN(d.getTime()) ? chip : d.toLocaleDateString();
   }

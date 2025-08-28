@@ -65,9 +65,12 @@ h1 {
     flex: 1 1 200px;
   }
 
-  .actions {
+.filter-section {
+  .filter-selections {
     display: flex;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
   }
 }
 
@@ -87,17 +90,6 @@ h1 {
 
   &:hover {
     background-color: #0e3453;
-  }
-}
-
-mat-form-field {
-  flex: 1 1;
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 10px;
-
-  mat-label {
-    color: #e18a25;
   }
 }
 
@@ -123,6 +115,34 @@ mat-form-field {
 /* Center PrimeNG charts */
 .p-chart {
   margin: 0 auto;
+}
+
+mat-form-field {
+  flex: 1 1;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+
+  mat-label {
+    color: #e18a25;
+  }
+}
+
+.clear-all {
+  text-align: center;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #144f80;
+  color: white;
+  font-size: 14px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+
+  &:hover {
+    background-color: #e18a25;
+  }
 }
 
   ::ng-deep .solid-dropdown .p-select .p-select-overlay {
