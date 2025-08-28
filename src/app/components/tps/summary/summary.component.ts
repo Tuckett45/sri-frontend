@@ -189,6 +189,48 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     reinit();
     this.charts.changes.subscribe(() => reinit());
   }
+   @HostListener('window:resize')
+  onResize() {
+    const wasMobile = this.isMobile;
+    this.setIsMobile();
+    if (wasMobile !== this.isMobile) {
+      this.applyOptionProfiles();
+      setTimeout(() => this.charts.forEach(c => c.reinit()));
+    }
+  }
+
+  private setIsMobile() {
+    this.isMobile = window.innerWidth <= 768;
+  }
+
+  private applyOptionProfiles() {
+    const common = this.isMobile ? this.mobileOptions : this.desktopOptions;
+    this.chartOptions = common;
+    // For the violations bar/line combo, horizontal bars help on phones with long labels
+    this.violationChartOptions = { ...common, ...(this.isMobile ? { indexAxis: 'y' } : {}) };
+    this.doughnutChartOptions = this.isMobile ? this.mobileDoughnut : this.desktopDoughnut;
+  }
+
+  // ===== Utilities =====
+  private compactCurrency(n: number) {
+    return new Intl.NumberFormat('en-US', {
+      notation: 'compact',
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 1
+    }).format(n || 0);
+  }
+
+  // Coerce strings like "$1,234,567" to numbers
+  private num(v: any): number {
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    if (typeof v === 'string') {
+      const cleaned = v.replace(/[\$,]/g, '').trim();
+      const n = Number(cleaned);
+      return isFinite(n) ? n : 0;
+    }
+    return 0;
+  }
 
   toggleFilters(): void {
     this.filtersOpen = !this.filtersOpen;

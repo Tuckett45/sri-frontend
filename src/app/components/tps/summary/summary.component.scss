@@ -1,33 +1,57 @@
+/* ===========================
+   TPS Summary / Dashboard
+   =========================== */
+
 .summary-dashboard {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 
+  /* SUMMARY ITEMS — pure CSS Grid (don’t mix with PrimeFlex cols here) */
   .summary-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-
-    .summary-item {
-      flex: 1 1 200px;
-      background-color: #ffffff;
-      text-align: center;
-    }
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* phones: 1 column */
+    gap: 0.75rem;               /* space between cards */
   }
 
+  @media (min-width: 576px) {   /* sm */
+    .summary-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 992px) {   /* lg */
+    .summary-items { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  .summary-item {
+    text-align: center;
+    padding: 1rem 1.25rem;
+    line-height: 1.35;
+    word-break: break-word; /* long numbers won’t overflow */
+    font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1rem);
+    height: 100%;
+  }
+
+  /* CHARTS AREA */
   .chart-section {
     display: flex;
     flex-wrap: wrap;
     gap: 2rem;
   }
 
-  /* Ensure every chart has a real height; PrimeNG respects parent height when maintainAspectRatio=false */
+  /* Every chart gets a real height; PrimeNG respects parent height when maintainAspectRatio=false */
   .chart-wrapper,
   .chart-wrap {
     flex: 1 1 300px;
     width: 100%;
     height: 360px;   /* desktop/tablet */
     min-height: 260px;
+  }
+
+  @media (max-width: 768px) {
+    .chart-wrapper,
+    .chart-wrap {
+      height: 260px;   /* phones */
+      min-height: 220px;
+    }
   }
 }
 
@@ -37,7 +61,8 @@
   border-radius: 8px;
 }
 
-::ng-deep .surface-card {
+/* Cards */
+:host ::ng-deep .surface-card {
   background-color: #fff !important;
   padding: 20px;
   border-radius: 8px;
@@ -49,47 +74,22 @@ h1 {
   color: #144f80;
 }
 
-.grid {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-/* Filters */
+/* ===== Filters ===== */
 .filter-section {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+
   p-calendar {
     flex: 1 1 200px;
   }
 
-.filter-section {
   .filter-selections {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
-  }
-}
-
-.chart-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.filters-btn {
-  align-items: center;
-  background-color: #144f80;
-  color: #fff;
-  margin-top: 10px;
-  margin-bottom: 10px;
-
-  &:hover {
-    background-color: #0e3453;
   }
 }
 
@@ -102,129 +102,121 @@ h1 {
       width: 100%;
     }
   }
-
-  .summary-dashboard {
-    .chart-wrapper,
-    .chart-wrap {
-      height: 260px;   /* phone */
-      min-height: 220px;
-    }
-  }
 }
 
-/* Center PrimeNG charts */
-.p-chart {
-  margin: 0 auto;
+/* Chart filter row (dropdowns above charts) */
+.chart-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+/* Buttons */
+.filters-btn {
+  align-items: center;
+  background-color: #144f80 !important;
+  color: #fff !important;
+  margin-bottom: 10px;
+
+  &:hover { background-color: #0e3453; }
+}
+
+/* PrimeNG charts centered within their wrappers */
+.p-chart { margin: 0 auto; }
+
+/* Angular Material fields */
 mat-form-field {
   flex: 1 1;
   width: 100%;
   margin-top: 10px;
   margin-bottom: 10px;
 
-  mat-label {
-    color: #e18a25;
-  }
+  mat-label { color: #e18a25; }
 }
 
+/* “Clear All” link */
 .clear-all {
   text-align: center;
   display: inline-block;
   padding: 8px 16px;
   background-color: #144f80;
-  color: white;
+  color: #fff;
   font-size: 14px;
   border-radius: 50px;
   cursor: pointer;
   transition: background-color 0.3s;
   margin-top: 10px;
 
-  &:hover {
-    background-color: #e18a25;
-  }
+  &:hover { background-color: #e18a25; }
 }
 
-  ::ng-deep .solid-dropdown .p-select .p-select-overlay {
-    background: #ffffff !important;
-    border: #000000 !important;
-    border-radius: 4px !important;
-  }
+/* ===========================
+   PrimeNG theming tweaks
+   (scoped via ::ng-deep)
+   =========================== */
 
-  ::ng-deep .p-select-option {
-    background: #e0e0e0 !important;
-    color: #000000 !important;
-    padding: 5px 0px 5px 15px!important;
-      &:hover {
-        background: #e18a25 !important;
-      }
-  }
+:host ::ng-deep .p-select-option {
+  background: #e0e0e0 !important;
+  color: #000 !important;
+  padding: 5px 0 5px 15px !important;
 
-::ng-deep .solid-dropdown .p-select-overlay {
-  background: #ffffff;
+  &:hover { background: #e18a25 !important; }
 }
 
-::ng-deep .solid-dropdown .p-select,
-::ng-deep .solid-dropdown.p-calendar {
+:host ::ng-deep .mat-mdc-raised-button:not(:disabled) {
+  align-items: center;
+  background-color: #144f80 !important;
+  color: #fff !important;
+  margin-bottom: 10px;
+
+  &:hover { background-color: #0e3453; }
+}
+
+/* “Solid” dropdown look */
+:host ::ng-deep .solid-dropdown .p-select-overlay { background: #ffffff; }
+
+:host ::ng-deep .solid-dropdown .p-select,
+:host ::ng-deep .solid-dropdown.p-calendar {
   background: #c9c9c9;
   border-radius: 50px;
 }
 
-::ng-deep .solid-dropdown .p-dropdown-label,
-::ng-deep .solid-dropdown .p-dropdown-trigger,
-::ng-deep .solid-dropdown.p-calendar .p-inputtext,
-::ng-deep .solid-dropdown.p-calendar .p-datepicker-trigger {
+:host ::ng-deep .solid-dropdown .p-dropdown-label,
+:host ::ng-deep .solid-dropdown .p-dropdown-trigger,
+:host ::ng-deep .solid-dropdown.p-calendar .p-inputtext,
+:host ::ng-deep .solid-dropdown.p-calendar .p-datepicker-trigger {
   background-color: #ffffff !important;
   color: #000000 !important;
 }
 
-::ng-deep .solid-dropdown.p-calendar .p-datepicker-trigger {
+:host ::ng-deep .solid-dropdown.p-calendar .p-datepicker-trigger {
   border-top-right-radius: 50px;
   border-bottom-right-radius: 50px;
 }
 
-::ng-deep .p-dropdown-panel {
+:host ::ng-deep .p-dropdown-panel {
   background-color: #ffffff !important;
   color: #000000 !important;
 }
 
-::ng-deep .p-dropdown-item {
+:host ::ng-deep .p-dropdown-item {
   background-color: #ffffff !important;
   color: #000000 !important;
 }
 
-::ng-deep .p-dropdown-item.p-highlight {
+:host ::ng-deep .p-dropdown-item.p-highlight {
   background-color: #e0e0e0 !important;
+
+  &:hover { background-color: #d0d0d0 !important; }
 }
 
-  ::ng-deep .solid-dropdown .p-select {
-    background: #c9c9c9 !important;
-    border-radius: 50px;
-  }
-  
-  ::ng-deep .solid-dropdown .p-dropdown-label {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-  }
-  
-  ::ng-deep .solid-dropdown .p-dropdown-trigger {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-  }
-  
-  ::ng-deep .p-dropdown-panel {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-  }
-  
-  ::ng-deep .p-dropdown-item {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-  }
-  
-  ::ng-deep .p-dropdown-item.p-highlight {
-    background-color: #e0e0e0 !important;
-  }
-  ::ng-deep .p-dropdown-item.p-highlight:hover {
-    background-color: #d0d0d0 !important;
-  }
+/* ===========================
+   Mobile micro-tweaks
+   =========================== */
+@media (max-width: 420px) {
+  .summary-item { padding: 0.875rem 1rem; }
+}
+
+/* Safety: ensure nested PrimeFlex cols never cause side scroll */
+.summary-dashboard .summary-items > * { min-width: 0; }

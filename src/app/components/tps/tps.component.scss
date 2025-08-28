@@ -1,8 +1,8 @@
 .tps-page {
   background-color: #e7e5e5 !important;
-  padding: 20px;
-  margin: 20px;
   box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: hidden; // safety against stray overflow
 
   .header-section {
     justify-content: space-between;
@@ -10,48 +10,54 @@
     margin-bottom: 20px;
   }
 
-  h2 {
-    margin-bottom: 1rem;
-  }
+  h2 { margin-bottom: 1rem; }
 }
 
-.active-tab {
-  background-color: #e18a25 !important;
+/* Active tab color */
+.active-tab { background-color: #e18a25 !important; }
+
+/* ---------- Tabs: responsive & scoped ---------- */
+:host ::ng-deep .tps-tabs {
+  width: 100%;
 }
 
-::ng-deep .p-tab {
-  flex-shrink: 2 !important;
-  white-space: pre-wrap !important;
-}
-
-::ng-deep .p-tablist-tab-list {
+:host ::ng-deep .tps-tabs .p-tablist {
   display: flex;
-  border-style: none !important;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  gap: .5rem;
+  border: 0 !important;
+  max-width: 100%;
+  touch-action: pan-y; /* vertical scroll still works */
+}
+:host ::ng-deep .tps-tabs .p-tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: .5rem .75rem !important;
 }
 
 
-@media (max-width: 768px) {
-  .header-section {
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
+@media (min-width: 768px) {
+  :host ::ng-deep .tps-tabs .p-tab { flex: 0 0 auto; } /* inline layout on tablets/desktop */
 }
 
-::ng-deep .p-tab{
-  flex-shrink: 2 !important;
-  white-space: pre-wrap !important;
-  padding: .5rem !important;
+
+@media (max-width: 480px) {
+  :host ::ng-deep .tps-tabs .p-tab { flex: 0 0 auto; }
 }
 
-::ng-deep .p-tablist-tab-list {
-  position: relative;
-  display: flex;
-  border-style: none !important;
+/* Panels: give a little breathing room */
+:host ::ng-deep .tps-tabs .p-tabpanels {
+  padding-top: 1rem;
 }
 
-::ng-deep .p-ripple {
-    overflow: visible !important;
-    position: relative;
+/* Remove old, conflicting overrides */
+:host ::ng-deep .p-tablist-tab-list { /* legacy selector you had */
+  border: 0 !important;
+}
+
+/* Keep ripple visible but not expanding layout */
+:host ::ng-deep .p-ripple {
+  overflow: visib
 }
