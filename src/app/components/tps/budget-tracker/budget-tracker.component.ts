@@ -6,7 +6,6 @@ import { FormBuilder } from '@angular/forms';
 import { Subject, switchMap, startWith, takeUntil, tap } from 'rxjs';
 import { BudgetTrackerRow } from '../../../models/budget-tracker.model';
 import { TpsService } from 'src/app/services/tps.service';
-import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-budget-tracker',
@@ -33,17 +32,19 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     'total_dollars_all_in',
     'conlog_link'
   ];
+  filtersOpen = false;
+  selectedFilters: { column: string; values: string[] }[] = [];
 
   // filters
   form = this.fb.group({
-    segment: [''],
-    city: [''],
+    segment: <string[]>[],
+    city: <string[]>[],
     claimMonthFrom: <Date | null>(null),
     claimMonthTo: <Date | null>(null),
   });
 
-  segmentOptions: SelectItem[] = [];
-  cityOptions: SelectItem[] = [];
+  segmentOptions: string[] = [];
+  cityOptions: string[] = [];
 
   private page = 1;
   private pageSize = 25;
@@ -61,8 +62,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
         tap(() => (this.loading = true)),
         switchMap(() =>
           this.tpsService.get({
-            segment: this.form.value.segment || undefined,
-            city: this.form.value.city || undefined,
+            segment: (this.form.value.segment?.length ? this.form.value.segment.join(',') : undefined),
+            city: (this.form.value.city?.length ? this.form.value.city.join(',') : undefined),
             claimMonthFrom: this.form.value.claimMonthFrom || undefined,
             claimMonthTo: this.form.value.claimMonthTo || undefined,
             page: this.page,
@@ -89,20 +90,65 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
         const items = res.items ?? [];
         const segments = Array.from(new Set(items.map(i => i.Header?.Segment).filter(Boolean)));
         const cities = Array.from(new Set(items.map(i => i.Header?.City).filter(Boolean)));
-        this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
-        this.cityOptions = cities.map(c => ({ label: c!, value: c! }));
+        this.segmentOptions = segments as string[];
+        this.cityOptions = cities as string[];
       });
   }
 
-  applyFilters(): void {
+  toggleFilters(): void {
+    this.filtersOpen = !this.filtersOpen;
+  }
+
+  private applyFilters(): void {
     this.page = 1;
     if (this.paginator) this.paginator.firstPage();
     this.reload$.next();
   }
 
-  clearFilters(): void {
-    this.form.reset({ segment: '', city: '', claimMonthFrom: null, claimMonthTo: null });
+  onFilterChange(column: string): void {
+    const val = this.form.value;
+    let values: string[] = [];
+    if (column === 'segment') {
+      values = val.segment || [];
+    } else if (column === 'city') {
+      values = val.city || [];
+    } else if (column === 'claimMonth') {
+      values = [val.claimMonthFrom, val.claimMonthTo].filter(Boolean).map((d: Date) => d.toString());
+      column = 'claimMonth';
+    }
+    this.selectedFilters = this.selectedFilters.filter(f => f.column !== column);
+    if (values.length > 0) {
+      this.selectedFilters.push({ column, values });
+    }
     this.applyFilters();
+  }
+
+  removeChip(filter: { column: string; value: string }): void {
+    const val = this.form.value;
+    if (filter.column === 'segment') {
+      this.form.patchValue({ segment: (val.segment || []).filter((v: string) => v !== filter.value) });
+    } else if (filter.column === 'city') {
+      this.form.patchValue({ city: (val.city || []).filter((v: string) => v !== filter.value) });
+    } else if (filter.column === 'claimMonth') {
+      if (val.claimMonthFrom && val.claimMonthFrom.toString() === filter.value) {
+        this.form.patchValue({ claimMonthFrom: null });
+      }
+      if (val.claimMonthTo && val.claimMonthTo.toString() === filter.value) {
+        this.form.patchValue({ claimMonthTo: null });
+      }
+    }
+    this.onFilterChange(filter.column);
+  }
+
+  clearAll(): void {
+    this.form.reset({ segment: [], city: [], claimMonthFrom: null, claimMonthTo: null });
+    this.selectedFilters = [];
+    this.applyFilters();
+  }
+
+  formatDate(chip: any): string {
+    const d = new Date(chip);
+    return isNaN(d.getTime()) ? chip : d.toLocaleDateString();
   }
 
   onPage(e: PageEvent): void {

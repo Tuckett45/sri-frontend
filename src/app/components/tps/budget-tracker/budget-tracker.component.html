@@ -1,45 +1,67 @@
 <!-- src/app/pages/budget-tracker/budget-tracker.component.html -->
 <div class="budget-tracker">
-  <form class="filter-section mb-2" (ngSubmit)="applyFilters()" [formGroup]="form">
-    <div class="cols-6">
-      <p-dropdown
-        [options]="segmentOptions"
-        formControlName="segment"
-        placeholder="Segment"
-        showClear="true"
-        styleClass="filter-dropdown w-full">
-      </p-dropdown>
+  <div>
+    <button mat-raised-button color="primary" class="filters-btn" (click)="toggleFilters()">
+      <span *ngIf="!filtersOpen">
+        View Filters
+      </span>
+      <span *ngIf="filtersOpen">
+        Close Filters
+      </span>
+      <mat-icon>filter_list</mat-icon>
+    </button>
+  </div>
+
+  <div class="chip-filter" *ngIf="filtersOpen">
+    <div class="grid flex-column lg:flex-row w-full h-full">
+      <div class="col-12 lg:col flex align-items-center flex-nowrap gap-1" *ngFor="let filter of selectedFilters">
+        <p-chip *ngFor="let chip of filter.values"
+                [label]="formatDate(chip)"
+                [removable]="true"
+                styleClass="mr-3 h-auto lg:h-full px-4 mt-3 lg:mt-0"
+                removeIcon="pi pi-times"
+                [style]="{'border-radius':'50px'}"
+                (onRemove)="removeChip({column: filter.column, value: chip})">
+        </p-chip>
+      </div>
+      <a pRipple *ngIf="selectedFilters.length > 0" tabindex="0" class="clear-all"
+         style="border-radius:50px; max-width: 7rem;" (click)="clearAll()">Clear All</a>
     </div>
 
-    <div class="cols-6">
-      <p-dropdown
-        [options]="cityOptions"
-        formControlName="city"
-        placeholder="City"
-        showClear="true"
-        styleClass="filter-dropdown w-full">
-      </p-dropdown>
+    <div class="filter-selections flex align-items-center gap-1" [formGroup]="form">
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Filter by Segment</mat-label>
+        <mat-select [multiple]="true" formControlName="segment" (selectionChange)="onFilterChange('segment')">
+          <mat-option *ngFor="let option of segmentOptions" [value]="option">{{ option }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Filter by City</mat-label>
+        <mat-select [multiple]="true" formControlName="city" (selectionChange)="onFilterChange('city')">
+          <mat-option *ngFor="let option of cityOptions" [value]="option">{{ option }}</mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
+    <span>Claim Month Range Filter</span>
+    <div class="filter-selections flex align-items-center gap-1" [formGroup]="form">
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="fromPicker" formControlName="claimMonthFrom"
+               (dateChange)="onFilterChange('claimMonth')">
+        <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+        <mat-datepicker #fromPicker></mat-datepicker>
+      </mat-form-field>
 
-    <mat-form-field appearance="fill" class="cols-6">
-      <mat-label>Claim Month From</mat-label>
-      <input matInput [matDatepicker]="fromPicker" formControlName="claimMonthFrom">
-      <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
-      <mat-datepicker #fromPicker></mat-datepicker>
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="cols-6">
-      <mat-label>Claim Month To</mat-label>
-      <input matInput [matDatepicker]="toPicker" formControlName="claimMonthTo">
-      <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
-      <mat-datepicker #toPicker></mat-datepicker>
-    </mat-form-field>
-
-    <div class="actions">
-      <button mat-raised-button class="filters-btn" type="submit">Apply</button>
-      <button mat-button type="button" (click)="clearFilters()">Clear</button>
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="toPicker" formControlName="claimMonthTo"
+               (dateChange)="onFilterChange('claimMonth')">
+        <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+        <mat-datepicker #toPicker></mat-datepicker>
+      </mat-form-field>
     </div>
-  </form>
+  </div>
 
   <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
 
