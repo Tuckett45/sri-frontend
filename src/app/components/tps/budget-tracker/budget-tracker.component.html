@@ -1,6 +1,6 @@
 <div class="budget-tracker">
   <div>
-    <button mat-raised-button color="primary" class="filters-btn" (click)="toggleFilters()">
+    <button mat-raised-button color="primary" class="filters-btn mt-2" (click)="toggleFilters()">
       <span *ngIf="!filtersOpen">
         View Filters
       </span>
@@ -17,7 +17,7 @@
         <p-chip *ngFor="let chip of filter.values"
                 [label]="formatDate(chip)"
                 [removable]="true"
-                styleClass="mr-3 h-auto lg:h-full px-4 mt-3 lg:mt-0"
+                styleClass="mr-3 h-auto lg:h-full px-4 mt-2 lg:mt-0"
                 removeIcon="pi pi-times"
                 [style]="{'border-radius':'50px'}"
                 (onRemove)="removeChip({column: filter.column, value: chip})">
