@@ -28,6 +28,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
 
   startDate: Date | null = null;
   endDate: Date | null = null;
+  filtersOpen = false;
   // filter selections for charts
   selectedVendorOverspent: string | null = null;
   selectedSegmentOverspent: string | null = null;
@@ -160,6 +161,10 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     const reinit = () => setTimeout(() => this.charts.forEach(c => c.reinit()));
     reinit();
     this.charts.changes.subscribe(() => reinit());
+  }
+
+  toggleFilters(): void {
+    this.filtersOpen = !this.filtersOpen;
   }
 
   refreshCharts(): void {

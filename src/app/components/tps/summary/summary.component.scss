@@ -63,23 +63,14 @@ h1 {
 }
 
 
+
 .filter-section {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-
-  .actions {
+  .filter-selections {
     display: flex;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
   }
-}
-
-.chart-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .chart-filters {
@@ -101,17 +92,6 @@ h1 {
   }
 }
 
-mat-form-field {
-  flex: 1 1;
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 10px;
-
-  mat-label {
-    color: #e18a25;
-  }
-}
-
 @media (max-width: 768px) {
   .filter-section {
     flex-direction: column;
@@ -127,42 +107,31 @@ mat-form-field {
   margin: 0 auto;
 }
 
+mat-form-field {
+  flex: 1 1;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
 
-
-::ng-deep .solid-dropdown .p-select-overlay {
-  background: #ffffff;
+  mat-label {
+    color: #e18a25;
+  }
 }
 
-::ng-deep .solid-dropdown .p-select {
-  background: #c9c9c9;
+.clear-all {
+  text-align: center;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #144f80;
+  color: white;
+  font-size: 14px;
   border-radius: 50px;
-}
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
 
-::ng-deep .solid-dropdown .p-dropdown-label {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
-
-::ng-deep .solid-dropdown .p-dropdown-trigger {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
-
-::ng-deep .p-dropdown-panel {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
-
-::ng-deep .p-dropdown-item {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
-
-::ng-deep .p-dropdown-item.p-highlight {
-  background-color: #e0e0e0 !important;
-}
-
-::ng-deep .filter-dropdown.p-dropdown {
-  background-color: #ffffff;
+  &:hover {
+    background-color: #e18a25;
+  }
 }
 

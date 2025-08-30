@@ -15,13 +15,19 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ChartModule } from 'primeng/chart';
-import { DividerModule } from "primeng/divider";
+import { DividerModule } from 'primeng/divider';
 import { MatSortModule } from '@angular/material/sort';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BudgetTrackerComponent } from './budget-tracker/budget-tracker.component';
-import { MatPaginator } from '@angular/material/paginator';
-import { DropdownModule } from 'primeng/dropdown';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { ChipModule } from 'primeng/chip';
+import { RippleModule } from 'primeng/ripple';
+import { MatSelectModule } from '@angular/material/select';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { CalendarModule } from 'primeng/calendar';
+import { ButtonModule } from 'primeng/button';
+import { AccordionModule } from 'primeng/accordion';
 
 @NgModule({
   declarations: [
@@ -44,13 +50,17 @@ import { DropdownModule } from 'primeng/dropdown';
     MatFormFieldModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatDatepickerModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,
-    MatPaginator,
-    DropdownModule,
-    MatFormFieldModule,
+    MatPaginatorModule,
+    ChipModule,
+    RippleModule,
     MatInputModule,
+    MatSelectModule,
+    MultiSelectModule,
+    CalendarModule,
+    ButtonModule,
+    AccordionModule,
     ChartModule,
     DividerModule
   ]
