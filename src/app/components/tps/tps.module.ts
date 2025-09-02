@@ -24,6 +24,10 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { ChipModule } from 'primeng/chip';
 import { RippleModule } from 'primeng/ripple';
 import { MatSelectModule } from '@angular/material/select';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { CalendarModule } from 'primeng/calendar';
+import { ButtonModule } from 'primeng/button';
+import { AccordionModule } from 'primeng/accordion';
 
 @NgModule({
   declarations: [
@@ -53,6 +57,10 @@ import { MatSelectModule } from '@angular/material/select';
     RippleModule,
     MatInputModule,
     MatSelectModule,
+    MultiSelectModule,
+    CalendarModule,
+    ButtonModule,
+    AccordionModule,
     ChartModule,
     DividerModule,
     MatOptgroup,

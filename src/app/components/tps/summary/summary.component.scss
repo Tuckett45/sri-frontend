@@ -97,7 +97,14 @@ h1 {
   color: #144f80;
 }
 
-/* ===== Filters ===== */
+.grid {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+
+
 .filter-section {
   display: flex;
   flex-wrap: wrap;

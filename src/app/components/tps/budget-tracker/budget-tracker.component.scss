@@ -110,15 +110,17 @@
   outline: none;
 }
 
-mat-form-field {
+
+.half-width {
   flex: 1 1;
   width: 100%;
   margin-top: 10px;
   margin-bottom: 10px;
+}
 
-  mat-label {
-    color: #e18a25;
-  }
+::ng-deep .half-width.p-multiselect,
+::ng-deep .half-width.p-calendar {
+  width: 100%;
 }
 
 .element-row {
@@ -138,18 +140,6 @@ mat-form-field {
   color: #fff;
 }
 
-.detail-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.5rem 1rem;
-  margin-bottom: 1rem;
-
-  h4 {
-    grid-column: 1 / -1;
-    margin: 0 0 0.5rem 0;
-  }
-}
-
 .detail-item {
   display: flex;
   flex-direction: column;
@@ -161,15 +151,14 @@ mat-form-field {
   }
 }
 
-@media (max-width: 768px) {
-  .filter-section {
-    flex-direction: column;
-    align-items: stretch;
+::ng-deep .detail-container .p-accordion .p-accordion-header-link {
+  background-color: #e18a25;
+  color: #fff;
+}
 
-    .filters-btn {
-      width: 100%;
-    }
-  }
+::ng-deep .detail-container .p-accordion .p-accordion-content {
+  background-color: #525252;
+  color: #fff;
 }
 
 ::ng-deep .solid-dropdown .p-select .p-select-overlay {
