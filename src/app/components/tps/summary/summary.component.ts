@@ -12,6 +12,7 @@ import { TpsService } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
 import { SelectItem } from 'primeng/api';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-tps-summary',
@@ -39,7 +40,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   startDate: Date | null = null;
   endDate: Date | null = null;
   filtersOpen = false;
-  // filter selections for charts
+
   selectedVendorOverspent: string | null = null;
   selectedSegmentOverspent: string | null = null;
 
@@ -56,13 +57,13 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   private violations: WPViolation[] = [];
   private cities: CityScorecard[] = [];
 
-  // ===== Chart data =====
-  violationsChartData: any;
-  cityAllInChartData: any;
-  violationsBySegmentChartData: any;
-  hhChartData: any;
-  dollarPerHhpChartData: any;
-  linearFootChartData: any;
+  // ===== Chart data (safe defaults so charts never see undefined) =====
+  overSpentChartData: any = { labels: [], datasets: [] };
+  cityAllInChartData: any = { labels: [], datasets: [] };
+  violationsBySegmentChartData: any = { labels: [], datasets: [] };
+  hhChartData: any = { labels: [], datasets: [] };
+  dollarPerHhpChartData: any = { labels: [], datasets: [] };
+  linearFootChartData: any = { labels: [], datasets: [] };
 
   @ViewChildren(UIChart) charts!: QueryList<UIChart>;
 
@@ -77,7 +78,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   // --- Base profile (desktop-ish) ---
   private baseOptions: any = {
     responsive: true,
-    maintainAspectRatio: false, // allow container height to control size
+    maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
     parsing: false,
     plugins: {
@@ -145,7 +146,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     elements: {
       bar: { borderWidth: 0, borderRadius: 3 },
       line: { tension: 0.2, borderWidth: 2 },
-      point: { radius: 0, hoverRadius: 3 } // cleaner on phones
+      point: { radius: 0, hoverRadius: 3 }
     },
     categoryPercentage: 0.6,
     barPercentage: 0.6
@@ -189,7 +190,8 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     reinit();
     this.charts.changes.subscribe(() => reinit());
   }
-   @HostListener('window:resize')
+
+  @HostListener('window:resize')
   onResize() {
     const wasMobile = this.isMobile;
     this.setIsMobile();
@@ -206,7 +208,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   private applyOptionProfiles() {
     const common = this.isMobile ? this.mobileOptions : this.desktopOptions;
     this.chartOptions = common;
-    // For the violations bar/line combo, horizontal bars help on phones with long labels
+    // Mixed bar/line chart behaves better with a horizontal layout on phones
     this.violationChartOptions = { ...common, ...(this.isMobile ? { indexAxis: 'y' } : {}) };
     this.doughnutChartOptions = this.isMobile ? this.mobileDoughnut : this.desktopDoughnut;
   }
@@ -221,15 +223,35 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     }).format(n || 0);
   }
 
-  // Coerce strings like "$1,234,567" to numbers
+  // Coerce dollars like "$1,234.56", "($2,345)", "−123.45", "1,234 ft" → number
   private num(v: any): number {
+    if (v == null) return 0;
     if (typeof v === 'number') return isFinite(v) ? v : 0;
-    if (typeof v === 'string') {
-      const cleaned = v.replace(/[\$,]/g, '').trim();
-      const n = Number(cleaned);
-      return isFinite(n) ? n : 0;
+
+    let s = String(v).trim();
+    if (!s) return 0;
+
+    // normalize unicode minus to ASCII
+    s = s.replace(/\u2212/g, '-');
+
+    // accounting negatives "(1234)"
+    let sign = 1;
+    if (/^\(.*\)$/.test(s)) {
+      sign = -1;
+      s = s.slice(1, -1);
     }
-    return 0;
+
+    // keep digits, one dot, and minus
+    s = s.replace(/[^0-9.\-]/g, '');
+
+    // collapse multiple dots
+    const firstDot = s.indexOf('.');
+    if (firstDot !== -1) {
+      s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
+    }
+
+    const n = parseFloat(s);
+    return isFinite(n) ? sign * n : 0;
   }
 
   toggleFilters(): void {
@@ -242,20 +264,30 @@ export class SummaryComponent implements OnInit, AfterViewInit {
 
   // ===== Data fetching & shaping =====
   loadData() {
-    this.tpsService.getViolations().subscribe(res => {
-      this.violations = res;
+  combineLatest([
+    this.tpsService.getViolations(),
+    this.tpsService.getCityScorecard()
+  ]).subscribe({
+    next: ([violations, cities]) => {
+      this.violations = violations ?? [];
+      this.cities = cities ?? [];
+
+      // build select options once we actually have data
       const vendors = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
       const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
       this.vendorOptions = vendors.map(v => ({ label: v!, value: v! }));
       this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
-      this.applyFilters();
-    });
 
-    this.tpsService.getCityScorecard().subscribe(res => {
-      this.cities = res;
       this.applyFilters();
-    });
-  }
+    },
+    error: _ => {
+      // fall back to empty datasets so charts render a "no data" state
+      this.violations = [];
+      this.cities = [];
+      this.applyFilters();
+    }
+  });
+}
 
   applyFilters() {
     const filterViolations = (vendor: string | null, segment: string | null) =>
@@ -283,12 +315,12 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       const vendor = v.vendor ?? 'Unknown';
       vendorMap.set(vendor, (vendorMap.get(vendor) ?? 0) + this.calculateOverspent(v));
     });
-    this.violationsChartData = {
+    this.overSpentChartData = {
       labels: Array.from(vendorMap.keys()),
       datasets: [
         {
           label: 'Overspent',
-          data: Array.from(vendorMap.values()).map(this.num.bind(this)),
+          data: Array.from(vendorMap.values()),
           backgroundColor: '#42A5F5',
           borderColor: '#1E88E5',
           borderWidth: 1
@@ -362,31 +394,24 @@ export class SummaryComponent implements OnInit, AfterViewInit {
 
     const totalForecastedDollarPerLFT = filteredCities.reduce((sum, c) => sum + this.num(c.forecastedDollarPerLFT), 0);
     const totalActualDollarPerLFT     = filteredCities.reduce((sum, c) => sum + this.num(c.actualDollarPerLFT), 0);
-    this.percentChangeDollarPerLFT = this.getPercentChange(totalActualDollarPerLFT, totalForecastedDollarPerLFT);
+    this.percentChangeDollarPerLFT = this.getPercentChange(totalForecastedDollarPerLFT, totalActualDollarPerLFT);
 
     // ===== Doughnuts =====
+    const hhActual = totalActualHHP;
+    const hhForecast = totalForecastedHHP;
     this.hhChartData = {
       labels: ['Actual HHP', 'Forecasted HHP'],
-      datasets: [{
-        data: [totalActualHHP, totalForecastedHHP],
-        backgroundColor: ['#42A5F5', '#FFA726']
-      }]
+      datasets: [{ data: [hhActual, hhForecast], backgroundColor: ['#42A5F5', '#FFA726'] }]
     };
 
     this.dollarPerHhpChartData = {
       labels: ['Actual $/HHP', 'Forecasted $/HHP'],
-      datasets: [{
-        data: [totalActualDollarPerHHP, totalForecastedDollarPerHHP],
-        backgroundColor: ['#66BB6A', '#EF5350']
-      }]
+      datasets: [{ data: [totalActualDollarPerHHP, totalForecastedDollarPerHHP], backgroundColor: ['#66BB6A', '#EF5350'] }]
     };
 
     this.linearFootChartData = {
       labels: ['Actual $/LFT', 'Forecasted $/LFT'],
-      datasets: [{
-        data: [totalActualDollarPerLFT, totalForecastedDollarPerLFT],
-        backgroundColor: ['#FFA000', '#AB47BC']
-      }]
+      datasets: [{ data: [totalActualDollarPerLFT, totalForecastedDollarPerLFT], backgroundColor: ['#FFA000', '#AB47BC'] }]
     };
 
     // ===== All-In by City =====
@@ -423,6 +448,12 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         }
       ]
     };
+
+    console.log({
+  overSpent: this.overSpentChartData,
+  seg: this.violationsBySegmentChartData,
+  allIn: this.cityAllInChartData
+});
 
     setTimeout(() => this.charts.forEach(c => c.reinit()));
   }

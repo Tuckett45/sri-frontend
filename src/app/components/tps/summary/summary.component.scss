@@ -10,8 +10,8 @@
   /* SUMMARY ITEMS — pure CSS Grid (don’t mix with PrimeFlex cols here) */
   .summary-items {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr)); /* phones: 1 column */
-    gap: 0.75rem;               /* space between cards */
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* phones: 2 cols */
+    gap: 0.75rem;
   }
 
   @media (min-width: 576px) {   /* sm */
@@ -25,7 +25,7 @@
     text-align: center;
     padding: 1rem 1.25rem;
     line-height: 1.35;
-    word-break: break-word; /* long numbers won’t overflow */
+    word-break: break-word;
     font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1rem);
     height: 100%;
   }
@@ -37,7 +37,7 @@
     gap: 2rem;
   }
 
-  /* Every chart gets a real height; PrimeNG respects parent height when maintainAspectRatio=false */
+  /* Chart wrappers get real height; Chart.js must use maintainAspectRatio:false */
   .chart-wrapper,
   .chart-wrap {
     flex: 1 1 300px;
@@ -46,11 +46,34 @@
     min-height: 260px;
   }
 
+  /* ------- MOBILE SIZING & CLAMPS ------- */
   @media (max-width: 768px) {
     .chart-wrapper,
     .chart-wrap {
-      height: 260px;   /* phones */
-      min-height: 220px;
+      /* take full width, no side-scroll */
+      max-width: 100vw;
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      padding-inline: 8px;
+      box-sizing: border-box;
+      flex-basis: 100%;
+
+      /* give extra height so canvas isn’t a sliver under the filters */
+      height: 420px;
+      min-height: 380px;
+    }
+
+    /* Make the canvas fill the remaining height under header+filters */
+    .chart-wrapper .p-chart,
+    .chart-wrap .p-chart,
+    .chart-wrapper .p-chart > div,
+    .chart-wrap .p-chart > div,
+    .chart-wrapper canvas,
+    .chart-wrap canvas {
+      width: 100% !important;
+      height: calc(100% - 110px) !important; /* ~title + two dropdowns */
+      display: block;
     }
   }
 }
@@ -81,9 +104,7 @@ h1 {
   align-items: center;
   gap: 1rem;
 
-  p-calendar {
-    flex: 1 1 200px;
-  }
+  p-calendar { flex: 1 1 200px; }
 
   .filter-selections {
     display: flex;
@@ -93,23 +114,31 @@ h1 {
   }
 }
 
-@media (max-width: 768px) {
-  .filter-section {
-    flex-direction: column;
-    align-items: stretch;
-
-    .filters-btn {
-      width: 100%;
-    }
-  }
-}
-
 /* Chart filter row (dropdowns above charts) */
 .chart-filters {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+
+  /* avoid built-in min-widths pushing layout */
+  > * { min-width: 0; }
+
+  :where(.p-dropdown, .p-select, .p-calendar) {
+    flex: 1 1 180px; /* desktop/tablet: two per row nicely */
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .chart-filters {
+    flex-direction: column;
+
+    :where(.p-dropdown, .p-select, .p-calendar) {
+      flex: 1 1 auto;
+      width: 100%;
+    }
+  }
 }
 
 /* Buttons */
@@ -153,7 +182,6 @@ mat-form-field {
 
 /* ===========================
    PrimeNG theming tweaks
-   (scoped via ::ng-deep)
    =========================== */
 
 :host ::ng-deep .p-select-option {
@@ -214,9 +242,15 @@ mat-form-field {
 /* ===========================
    Mobile micro-tweaks
    =========================== */
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   .summary-item { padding: 0.875rem 1rem; }
+
+  /* Reduce card padding so inner content never overflows viewport */
+  :host ::ng-deep .surface-card { padding-inline: 12px; }
 }
 
 /* Safety: ensure nested PrimeFlex cols never cause side scroll */
 .summary-dashboard .summary-items > * { min-width: 0; }
+
+/* Safety: chart cards inside chart-section never enforce min-width */
+.summary-dashboard .chart-section > * { min-width: 0; }
