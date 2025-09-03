@@ -28,6 +28,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { CalendarModule } from 'primeng/calendar';
 import { ButtonModule } from 'primeng/button';
 import { AccordionModule } from 'primeng/accordion';
+// Ensure Chart.js registerables are available when this lazy module loads
+import '../../../charts-setup';
 
 @NgModule({
   declarations: [

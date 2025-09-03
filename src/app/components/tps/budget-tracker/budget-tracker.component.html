@@ -1,8 +1,9 @@
 <div class="budget-tracker">
   <div>
-    <button pButton type="button" class="filters-btn p-button-raised" icon="pi pi-filter"
-            iconPos="right" [label]="filtersOpen ? 'Close Filters' : 'View Filters'"
-            (click)="toggleFilters()"></button>
+    <button mat-raised-button class="filters-btn" (click)="toggleFilters()">
+      {{ filtersOpen ? 'Close Filters' : 'View Filters' }}
+      <mat-icon>filter_list</mat-icon>
+    </button>
   </div>
 
   <div class="chip-filter" *ngIf="filtersOpen">
@@ -21,22 +22,36 @@
          style="border-radius:50px; max-width: 7rem;" (click)="clearAll()">Clear All</a>
     </div>
 
-    <div class="filter-selections flex align-items-center gap-1" [formGroup]="form">
-      <p-multiSelect styleClass="half-width" [options]="segmentOptions" formControlName="segment"
-                     optionLabel="label" optionValue="value" placeholder="Filter by Segment" display="chip"
-                     (onChange)="onFilterChange('segment')"></p-multiSelect>
+    <div class="filter-selections" [formGroup]="form">
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Segment</mat-label>
+        <mat-select multiple formControlName="segment" (selectionChange)="onFilterChange('segment')">
+          <mat-option *ngFor="let opt of segmentOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
 
-      <p-multiSelect styleClass="half-width" [options]="cityOptions" formControlName="city"
-                     optionLabel="label" optionValue="value" placeholder="Filter by City" display="chip"
-                     (onChange)="onFilterChange('city')"></p-multiSelect>
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>City</mat-label>
+        <mat-select multiple formControlName="city" (selectionChange)="onFilterChange('city')">
+          <mat-option *ngFor="let opt of cityOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
     <span>Claim Month Range Filter</span>
-    <div class="filter-selections flex align-items-center gap-1" [formGroup]="form">
-      <p-calendar styleClass="half-width" formControlName="claimMonthFrom" placeholder="Start Date"
-                  (onSelect)="onFilterChange('claimMonth')" [showIcon]="true" dateFormat="mm/dd/yy"></p-calendar>
+    <div class="filter-selections" [formGroup]="form">
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="fromPicker" formControlName="claimMonthFrom" (dateChange)="onFilterChange('claimMonth')" />
+        <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+        <mat-datepicker #fromPicker></mat-datepicker>
+      </mat-form-field>
 
-      <p-calendar styleClass="half-width" formControlName="claimMonthTo" placeholder="End Date"
-                  (onSelect)="onFilterChange('claimMonth')" [showIcon]="true" dateFormat="mm/dd/yy"></p-calendar>
+      <mat-form-field appearance="fill" class="half-width">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="toPicker" formControlName="claimMonthTo" (dateChange)="onFilterChange('claimMonth')" />
+        <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+        <mat-datepicker #toPicker></mat-datepicker>
+      </mat-form-field>
     </div>
   </div>
 
@@ -48,8 +63,8 @@
       <ng-container matColumnDef="expand">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let r">
-          <button mat-icon-button (click)="toggleRow(r); $event.stopPropagation()" aria-label="Toggle details">
-            <mat-icon>{{ expandedRowId === r.Header.RowId ? 'expand_less' : 'expand_more' }}</mat-icon>
+          <button mat-icon-button (click)="toggleRow(r); $event.stopPropagation()" aria-label="Toggle details" [attr.aria-expanded]="expandedRowId === r.Header?.RowId">
+            <mat-icon [class.rotated]="expandedRowId === r.Header?.RowId">expand_more</mat-icon>
           </button>
         </td>
       </ng-container>
@@ -69,6 +84,14 @@
         <td mat-cell *matCellDef="let r">{{ r.Header?.City }}</td>
       </ng-container>
 
+      <ng-container matColumnDef="conlog">
+        <th mat-header-cell *matHeaderCellDef>Conlog</th>
+        <td mat-cell *matCellDef="let r">
+          <a *ngIf="r.Header?.ConlogLink" [href]="r.Header.ConlogLink" target="_blank" rel="noopener" (click)="$event.stopPropagation()">Open</a>
+          <span *ngIf="!r.Header?.ConlogLink" class="muted">—</span>
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="vendor">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="Vendor">Vendor</th>
         <td mat-cell *matCellDef="let r">{{ r.FT?.Vendor }}</td>
@@ -81,16 +104,21 @@
 
       <ng-container matColumnDef="expandedDetail">
         <td mat-cell *matCellDef="let r" [attr.colspan]="displayedColumns.length">
-          <div class="detail-container" *ngIf="expandedRowId === r.Header.RowId">
-            <p-accordion [multiple]="true">
-              <p-accordionTab *ngFor="let section of detailSections(r)" [header]="section.title">
-                <div class="detail-item" *ngFor="let item of objectEntries(section.data)">
-                  <span class="label">{{ labelize(item.key) }}</span>
-                  <span class="value" *ngIf="!isLink(item.key)">{{ item.value }}</span>
-                  <a *ngIf="isLink(item.key)" [href]="item.value" target="_blank" rel="noopener">open</a>
-                </div>
-              </p-accordionTab>
-            </p-accordion>
+          <div class="detail-container" *ngIf="expandedRowId === r.Header?.RowId">
+            <ng-container *ngIf="detailSections(r).length; else noDetails">
+              <p-accordion [multiple]="true" [activeIndex]="0">
+                <p-accordionTab *ngFor="let section of detailSections(r)" [header]="section.title">
+                  <div class="detail-item" *ngFor="let item of objectEntries(section.data)">
+                    <span class="label">{{ labelize(item.key) }}</span>
+                    <span class="value" *ngIf="!isLink(item.key)">{{ item.value }}</span>
+                    <a *ngIf="isLink(item.key)" [href]="item.value" target="_blank" rel="noopener">open</a>
+                  </div>
+                </p-accordionTab>
+              </p-accordion>
+            </ng-container>
+            <ng-template #noDetails>
+              <div class="no-details">No additional data for this row.</div>
+            </ng-template>
           </div>
         </td>
       </ng-container>

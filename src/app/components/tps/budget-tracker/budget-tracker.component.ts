@@ -5,6 +5,7 @@ import { Sort } from '@angular/material/sort';
 import { Subject, startWith, switchMap, takeUntil, tap } from 'rxjs';
 import { BudgetTrackerRow } from '../../../models/budget-tracker.model';
 import { TpsService } from 'src/app/services/tps.service';
+import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-budget-tracker',
@@ -18,12 +19,14 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   rows: BudgetTrackerRow[] = [];
   total = 0;
   expandedRowId: string | null = null;
+  expandedElement: BudgetTrackerRow | null = null;
 
   displayedColumns = [
     'expand',
     'claim_month_year',
     'segment',
     'city',
+    'conlog',
     'vendor',
     'final_cost'
   ];
@@ -39,8 +42,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     claimMonthTo: this.fb.control<Date | null>(null),
   });
 
-  segmentOptions: string[] = [];
-  cityOptions: string[] = [];
+  segmentOptions: SelectItem[] = [];
+  cityOptions: SelectItem[] = [];
 
   private page = 1;
   private pageSize = 25;
@@ -110,8 +113,10 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         const items = res.items ?? [];
-        this.segmentOptions = Array.from(new Set(items.map(i => i.Header?.Segment).filter(Boolean))) as string[];
-        this.cityOptions = Array.from(new Set(items.map(i => i.Header?.City).filter(Boolean))) as string[];
+        const segments = Array.from(new Set(items.map(i => i.Header?.Segment).filter(Boolean))) as string[];
+        const cities = Array.from(new Set(items.map(i => i.Header?.City).filter(Boolean))) as string[];
+        this.segmentOptions = segments.map(s => ({ label: s, value: s }));
+        this.cityOptions = cities.map(c => ({ label: c, value: c }));
       });
   }
 
@@ -187,7 +192,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
 
   toggleRow(row: BudgetTrackerRow): void {
     const id = row.Header?.RowId;
-    this.expandedRowId = this.expandedRowId === id ? null : id;
+    this.expandedRowId = this.expandedRowId === id ? null : id || null;
+    this.expandedElement = this.expandedElement === row ? null : row;
   }
 
   isExpandedRow = (_: number, row: BudgetTrackerRow) => this.expandedRowId === row.Header?.RowId;

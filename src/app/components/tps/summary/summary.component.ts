@@ -5,7 +5,8 @@ import {
   ViewChildren,
   QueryList,
   HostListener,
-  NgZone
+  NgZone,
+  ChangeDetectorRef
 } from '@angular/core';
 import { UIChart } from 'primeng/chart';
 import { TpsService } from 'src/app/services/tps.service';
@@ -57,7 +58,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   private violations: WPViolation[] = [];
   private cities: CityScorecard[] = [];
 
-  // ===== Chart data (safe defaults so charts never see undefined) =====
+  // ===== Chart data (safe defaults) =====
   overSpentChartData: any = { labels: [], datasets: [] };
   cityAllInChartData: any = { labels: [], datasets: [] };
   violationsBySegmentChartData: any = { labels: [], datasets: [] };
@@ -74,13 +75,13 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   violationChartOptions: any;
   doughnutChartOptions: any;
   chartOptions: any;
+  refreshTick = 0;
 
   // --- Base profile (desktop-ish) ---
   private baseOptions: any = {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
-    parsing: false,
     plugins: {
       legend: {
         position: 'top',
@@ -96,8 +97,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
             return `${label}: ${this.compactCurrency(Number(v))}`;
           }
         }
-      },
-      decimation: { enabled: true, algorithm: 'lttb', samples: 200 }
+      }
     },
     scales: {
       x: {
@@ -177,7 +177,11 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     plugins: { ...this.desktopDoughnut.plugins, legend: { position: 'bottom', labels: { color: '#000', usePointStyle: true } } }
   };
 
-  constructor(private tpsService: TpsService, private zone: NgZone) {}
+  constructor(
+    private tpsService: TpsService,
+    private zone: NgZone,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.setIsMobile();
@@ -207,9 +211,82 @@ export class SummaryComponent implements OnInit, AfterViewInit {
 
   private applyOptionProfiles() {
     const common = this.isMobile ? this.mobileOptions : this.desktopOptions;
-    this.chartOptions = common;
+
+    // For mobile, flip to horizontal bars so category labels are readable.
+    const indexAxis: 'x' | 'y' = this.isMobile ? 'y' : 'x';
+    const catAxis = indexAxis === 'y' ? 'y' : 'x';
+    const valAxis = indexAxis === 'y' ? 'x' : 'y';
+
+    // Base options for standard bar charts (Overspent, All-In)
+    this.chartOptions = {
+      ...common,
+      indexAxis,
+      layout: { padding: 0 },
+      plugins: {
+        ...(common.plugins || {}),
+        legend: {
+          ...(common.plugins?.legend || {}),
+          position: this.isMobile ? 'bottom' : (common.plugins?.legend as any)?.position || 'top',
+          labels: {
+            ...((common.plugins as any)?.legend?.labels || {}),
+            boxWidth: this.isMobile ? 8 : 10,
+            boxHeight: this.isMobile ? 8 : 10,
+            font: { size: this.isMobile ? 10 : 12 }
+          }
+        }
+      },
+      scales: {
+        [catAxis]: {
+          ...(common.scales?.[catAxis] || {}),
+          ticks: {
+            ...(common.scales?.[catAxis as 'x' | 'y']?.ticks || {}),
+            autoSkip: false,
+            font: { size: this.isMobile ? 10 : 11 },
+            callback: (value: any, index: number, ticks: any[]) => {
+              const label = typeof value === 'string'
+                ? value
+                : (ticks && ticks[index] && (ticks[index].label ?? ticks[index].value)) ?? String(value);
+              return this.wrapLabel(String(label), this.isMobile ? 10 : 18);
+            }
+          }
+        },
+        [valAxis]: {
+          ...(common.scales?.[valAxis] || {}),
+          ticks: {
+            ...(common.scales?.[valAxis as 'x' | 'y']?.ticks || {}),
+            font: { size: this.isMobile ? 10 : 11 }
+          }
+        }
+      }
+    } as any;
     // Mixed bar/line chart behaves better with a horizontal layout on phones
-    this.violationChartOptions = { ...common, ...(this.isMobile ? { indexAxis: 'y' } : {}) };
+    this.violationChartOptions = {
+      ...common,
+      indexAxis: 'y',
+      scales: {
+        x: {
+          ...(common.scales?.x || {}),
+          ticks: {
+            ...(common.scales?.x?.ticks || {}),
+            font: { size: this.isMobile ? 10 : 11 }
+          }
+        },
+        y: {
+          ...(common.scales?.y || {}),
+          ticks: {
+            ...(common.scales?.y?.ticks || {}),
+            autoSkip: false,
+            font: { size: this.isMobile ? 10 : 11 },
+            callback: (value: any, index: number, ticks: any[]) => {
+              const label = typeof value === 'string'
+                ? value
+                : (ticks && ticks[index] && (ticks[index].label ?? ticks[index].value)) ?? String(value);
+              return this.wrapLabel(String(label), this.isMobile ? 10 : 18);
+            }
+          }
+        }
+      }
+    };
     this.doughnutChartOptions = this.isMobile ? this.mobileDoughnut : this.desktopDoughnut;
   }
 
@@ -221,6 +298,18 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       currency: 'USD',
       maximumFractionDigits: 1
     }).format(n || 0);
+  }
+
+  // Insert line breaks into long labels at word boundaries for axis ticks
+  private wrapLabel(str: string, width = 18): string {
+    if (!str) return '';
+    // Prefer breaking at spaces
+    const parts = str.match(new RegExp(`.{1,${width}}(\s|$)`, 'g'));
+    if (parts) return parts.map(s => s.trim()).join('\n');
+    // Fallback: hard break long unspaced strings
+    const chunks: string[] = [];
+    for (let i = 0; i < str.length; i += width) chunks.push(str.slice(i, i + width));
+    return chunks.join('\n');
   }
 
   // Coerce dollars like "$1,234.56", "($2,345)", "−123.45", "1,234 ft" → number
@@ -264,30 +353,30 @@ export class SummaryComponent implements OnInit, AfterViewInit {
 
   // ===== Data fetching & shaping =====
   loadData() {
-  combineLatest([
-    this.tpsService.getViolations(),
-    this.tpsService.getCityScorecard()
-  ]).subscribe({
-    next: ([violations, cities]) => {
-      this.violations = violations ?? [];
-      this.cities = cities ?? [];
+    combineLatest([
+      this.tpsService.getViolations(),
+      this.tpsService.getCityScorecard()
+    ]).subscribe({
+      next: ([violations, cities]) => {
+        this.violations = violations ?? [];
+        this.cities = cities ?? [];
 
-      // build select options once we actually have data
-      const vendors = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
-      const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
-      this.vendorOptions = vendors.map(v => ({ label: v!, value: v! }));
-      this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
+        // build select options once we actually have data
+        const vendors = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
+        const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
+        this.vendorOptions = vendors.map(v => ({ label: v!, value: v! }));
+        this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
 
-      this.applyFilters();
-    },
-    error: _ => {
-      // fall back to empty datasets so charts render a "no data" state
-      this.violations = [];
-      this.cities = [];
-      this.applyFilters();
-    }
-  });
-}
+        this.applyFilters();
+      },
+      error: _ => {
+        // fall back to empty datasets so charts render a "no data" state
+        this.violations = [];
+        this.cities = [];
+        this.applyFilters();
+      }
+    });
+  }
 
   applyFilters() {
     const filterViolations = (vendor: string | null, segment: string | null) =>
@@ -308,19 +397,22 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     this.minOverspent = overspentValues.length ? Math.min(...overspentValues) : 0;
     this.maxOverspent = overspentValues.length ? Math.max(...overspentValues) : 0;
 
-    // ===== Chart: Overspent by Vendor =====
+    // ===== Overspent by Vendor (fresh references + numeric) =====
     const overspentViolations = filterViolations(this.selectedVendorOverspent, this.selectedSegmentOverspent);
     const vendorMap = new Map<string, number>();
     overspentViolations.forEach(v => {
       const vendor = v.vendor ?? 'Unknown';
       vendorMap.set(vendor, (vendorMap.get(vendor) ?? 0) + this.calculateOverspent(v));
     });
+    const overSpentLabels = Array.from(vendorMap.keys());
+    const overSpentValues = Array.from(vendorMap.values()).map(n => Number(n) || 0);
+
     this.overSpentChartData = {
-      labels: Array.from(vendorMap.keys()),
+      labels: [...overSpentLabels],
       datasets: [
         {
           label: 'Overspent',
-          data: Array.from(vendorMap.values()),
+          data: [...overSpentValues],
           backgroundColor: '#42A5F5',
           borderColor: '#1E88E5',
           borderWidth: 1
@@ -328,39 +420,49 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       ]
     };
 
-    // ===== Chart: Violations by Segment (combo) =====
+    // ===== Violations by Segment (grouped + mixed bar/line; fresh references) =====
     const segmentViolations = filterViolations(this.selectedVendorSegmentChart, this.selectedSegmentSegmentChart);
+
+    // Group rows by segment, summing numeric fields
+    const bySegment = new Map<string, { conlog: number; plan: number; actual: number }>();
+    segmentViolations.forEach(v => {
+      const key = v.segment || 'Unknown';
+      const current = bySegment.get(key) || { conlog: 0, plan: 0, actual: 0 };
+      current.conlog += this.num((v as any).conlogPlannedAmount);
+      current.plan   += this.num((v as any).planWithContingency);
+      current.actual += this.num((v as any).actualCost);
+      bySegment.set(key, current);
+    });
+
+    const segKeys    = Array.from(bySegment.keys());
+    const segLabels  = segKeys.map(k => this.wrapLabel(k, 18));
+    const segConlog  = segKeys.map(k => bySegment.get(k)!.conlog);
+    const segPlanCty = segKeys.map(k => bySegment.get(k)!.plan);
+    const segActual  = segKeys.map(k => bySegment.get(k)!.actual);
+
     this.violationsBySegmentChartData = {
-      labels: segmentViolations.map(v => v.segment || 'Unknown'),
+      labels: [...segLabels],
       datasets: [
-        {
-          type: 'bar',
-          label: 'Conlog Planned Amount',
-          data: segmentViolations.map(v => this.num(v.conlogPlannedAmount)),
-          backgroundColor: '#42A5F5',
-          borderColor: '#1E88E5',
-          borderWidth: 1
-        },
-        {
-          type: 'bar',
-          label: 'Planned with Contingency',
-          data: segmentViolations.map(v => this.num(v.planWithContingency)),
-          backgroundColor: '#FFA726',
-          borderColor: '#FB8C00',
-          borderWidth: 1
-        },
-        {
-          type: 'line',
-          label: 'Actual Cost',
-          data: segmentViolations.map(v => this.num(v.actualCost)),
-          borderColor: '#4CAF50',
-          backgroundColor: 'transparent',
-          borderWidth: 2,
-          tension: 0.3,
-          fill: false,
-          pointBackgroundColor: '#4CAF50'
-        }
+        { type: 'bar',  label: 'Conlog Planned Amount',    data: [...segConlog],  backgroundColor: '#42A5F5', borderColor: '#1E88E5', borderWidth: 1 },
+        { type: 'bar',  label: 'Planned with Contingency', data: [...segPlanCty], backgroundColor: '#FFA726', borderColor: '#FB8C00', borderWidth: 1 },
+        { type: 'line', label: 'Actual Cost',              data: [...segActual],  borderColor: '#4CAF50', backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, fill: false, pointBackgroundColor: '#4CAF50' }
       ]
+    };
+
+    // Improve readability: use horizontal bars for many/long labels
+    this.violationChartOptions = {
+      ...this.chartOptions,
+      indexAxis: 'x',
+      scales: {
+        x: { ...(this.chartOptions?.scales as any)?.x },
+        y: {
+          ...(this.chartOptions?.scales as any)?.y,
+          ticks: {
+            ...(this.chartOptions?.scales as any)?.y?.ticks,
+            autoSkip: false
+          }
+        }
+      }
     };
 
     // ===== City Scorecard filters for All-In chart =====
@@ -396,12 +498,10 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     const totalActualDollarPerLFT     = filteredCities.reduce((sum, c) => sum + this.num(c.actualDollarPerLFT), 0);
     this.percentChangeDollarPerLFT = this.getPercentChange(totalForecastedDollarPerLFT, totalActualDollarPerLFT);
 
-    // ===== Doughnuts =====
-    const hhActual = totalActualHHP;
-    const hhForecast = totalForecastedHHP;
+    // ===== Doughnuts (numbers only) =====
     this.hhChartData = {
       labels: ['Actual HHP', 'Forecasted HHP'],
-      datasets: [{ data: [hhActual, hhForecast], backgroundColor: ['#42A5F5', '#FFA726'] }]
+      datasets: [{ data: [totalActualHHP, totalForecastedHHP], backgroundColor: ['#42A5F5', '#FFA726'] }]
     };
 
     this.dollarPerHhpChartData = {
@@ -414,48 +514,33 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       datasets: [{ data: [totalActualDollarPerLFT, totalForecastedDollarPerLFT], backgroundColor: ['#FFA000', '#AB47BC'] }]
     };
 
-    // ===== All-In by City =====
+    // ===== All-In by City (fresh refs) =====
+    const allInLabels     = filteredCities.map(c => c.city ?? '');
+    const allInForecasted = filteredCities.map(c => this.num(c.forecastedAllIn));
+    const allInActual     = filteredCities.map(c => this.num(c.actualAllIn));
+    const allInRemaining  = allInForecasted.map((f, i) => f - (allInActual[i] || 0));
+    const remBg           = allInRemaining.map(v => v >= 0 ? '#42A5F5' : '#EF5350');
+    const remBorder       = allInRemaining.map(v => v >= 0 ? '#1d1e1fff' : '#C62828');
+
     this.cityAllInChartData = {
-      labels: filteredCities.map(c => c.city),
+      labels: [...allInLabels],
       datasets: [
-        {
-          type: 'bar',
-          label: 'Forecasted All-In',
-          data: filteredCities.map(c => this.num(c.forecastedAllIn)),
-          backgroundColor: '#66BB6A',
-          borderColor: '#43A047',
-          borderWidth: 1
-        },
-        {
-          type: 'bar',
-          label: 'Actual All-In',
-          data: filteredCities.map(c => this.num(c.actualAllIn)),
-          backgroundColor: '#FFA726',
-          borderColor: '#FB8C00',
-          borderWidth: 1
-        },
-        {
-          type: 'bar',
-          label: 'Remaining All-In',
-          data: filteredCities.map(c => this.num(c.forecastedAllIn) - this.num(c.actualAllIn)),
-          backgroundColor: filteredCities.map(c =>
-            (this.num(c.forecastedAllIn) - this.num(c.actualAllIn)) >= 0 ? '#42A5F5' : '#EF5350'
-          ),
-          borderColor: filteredCities.map(c =>
-            (this.num(c.forecastedAllIn) - this.num(c.actualAllIn)) >= 0 ? '#1d1e1fff' : '#C62828'
-          ),
-          borderWidth: 1
-        }
+        { type: 'bar', label: 'Forecasted All-In', data: [...allInForecasted], backgroundColor: '#66BB6A', borderColor: '#43A047', borderWidth: 1 },
+        { type: 'bar', label: 'Actual All-In',     data: [...allInActual],     backgroundColor: '#FFA726', borderColor: '#FB8C00', borderWidth: 1 },
+        { type: 'bar', label: 'Remaining All-In',  data: [...allInRemaining],  backgroundColor: [...remBg], borderColor: [...remBorder], borderWidth: 1 }
       ]
     };
 
-    console.log({
-  overSpent: this.overSpentChartData,
-  seg: this.violationsBySegmentChartData,
-  allIn: this.cityAllInChartData
-});
-
-    setTimeout(() => this.charts.forEach(c => c.reinit()));
+    // Ensure Angular applies new [data] references, then refresh charts
+    this.cdr.detectChanges();
+    this.refreshTick++;
+    this.zone.runOutsideAngular(() => {
+      setTimeout(() => {
+        this.charts?.forEach(c => {
+          if ((c as any).refresh) { (c as any).refresh(); } else { c.reinit(); }
+        });
+      }, 0);
+    });
   }
 
   clearFilters() {
@@ -476,14 +561,14 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   }
 
   calculateOverspent(v: WPViolation): number {
-    const plan = this.num(v.planWithContingency);
-    const cost = this.num(v.actualCost);
+    const plan = this.num((v as any).planWithContingency);
+    const cost = this.num((v as any).actualCost);
     return Math.max(0, cost - plan);
   }
 
   calculateOverspentPercent(v: WPViolation): number {
-    const plan = this.num(v.planWithContingency);
-    const cost = this.num(v.actualCost);
+    const plan = this.num((v as any).planWithContingency);
+    const cost = this.num((v as any).actualCost);
     const percentage = plan ? (cost - plan) / plan : 0;
     return Math.max(0, percentage);
   }

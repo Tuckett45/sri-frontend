@@ -2,7 +2,7 @@
   background-color: #e7e5e5 !important;
   box-sizing: border-box;
   max-width: 100%;
-  overflow-x: hidden; // safety against stray overflow
+  padding: 20px;
 
   .header-section {
     justify-content: space-between;

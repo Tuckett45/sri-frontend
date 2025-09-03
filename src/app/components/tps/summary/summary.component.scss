@@ -40,10 +40,66 @@
   /* Chart wrappers get real height; Chart.js must use maintainAspectRatio:false */
   .chart-wrapper,
   .chart-wrap {
-    flex: 1 1 300px;
+    flex: 1 1 350px;
     width: 100%;
-    height: 360px;   /* desktop/tablet */
-    min-height: 260px;
+    /* Taller charts that scale with viewport height */
+    height: clamp(420px, 55vh, 820px) !important;
+    min-height: 360px;
+  }
+
+  /* Extra-tall variant for charts that must be larger */
+  .chart-wrapper.tall,
+  .chart-wrap.tall {
+    height: clamp(720px, 80vh, 1400px);
+    min-height: 640px;
+  }
+
+  /* Ensure PrimeNG chart inner containers and canvas fill wrapper height */
+  .chart-wrapper .p-chart,
+  .chart-wrap .p-chart,
+  .chart-wrapper .p-chart > div,
+  .chart-wrap .p-chart > div,
+  .chart-wrapper canvas,
+  .chart-wrap canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+  }
+
+  .p-chart > canvas,
+  .p-chart > div > canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important; /* fill the wrapper, override 150px default */
+    max-height: 100% !important;
+  }
+
+  /* Ensure the p-chart host and wrapper also stretch to consume the chart area */
+  :host ::ng-deep p-chart {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  :host ::ng-deep .p-chart {
+    position: relative;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Make the PrimeNG card stretch with the chart */
+  .chart-wrapper .surface-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .chart-wrap { flex: 1 1 auto; }
+
+  /* Explicitly target PrimeNG's inner canvas class if present */
+  :host ::ng-deep .p-chart canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
   }
 
   /* ------- MOBILE SIZING & CLAMPS ------- */
@@ -59,8 +115,8 @@
       box-sizing: border-box;
       flex-basis: 100%;
 
-      /* give extra height so canvas isn’t a sliver under the filters */
-      height: 420px;
+      /* extra height on mobile so canvas isn’t a sliver under filters */
+      height: clamp(420px, 65vh, 680px);
       min-height: 380px;
     }
 
@@ -74,6 +130,13 @@
       width: 100% !important;
       height: calc(100% - 110px) !important; /* ~title + two dropdowns */
       display: block;
+    }
+
+    /* Mobile extra-tall variant */
+    .chart-wrapper.tall,
+    .chart-wrap.tall {
+      height: clamp(640px, 85vh, 1200px);
+      min-height: 560px;
     }
   }
 }
