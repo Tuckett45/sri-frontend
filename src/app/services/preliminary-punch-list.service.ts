@@ -3,30 +3,24 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
-import { local_environment, environment } from '../../environments/environments';
-import { v4 as uuidv4 } from 'uuid';
+import { environment, local_environment } from '../../environments/environments';
 import { User } from '../models/user.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface PagedResponse<T> {
+  total: number;
+  page: number;
+  pageSize: number;
+  items: T[];
+}
+
+@Injectable({ providedIn: 'root' })
 export class PreliminaryPunchListService {
-
-  // Entries cache (all)
-  private entriesCache$!: Observable<PreliminaryPunchList[]> | null;
-  private entriesCacheData: PreliminaryPunchList[] | null = null;
-
-  // Unresolved/Resolved caches keyed by role|market|endpoint|params
-  private unresolvedCacheMap = new Map<string, Observable<any>>();
-  private resolvedCacheMap = new Map<string, Observable<any>>();
-
-  // Store the last fetched arrays per key (for counts)
-  private unresolvedDataMap = new Map<string, any[]>();
-  private resolvedDataMap = new Map<string, any[]>();
-
-  // Page caches (kept from original; clear on writes)
-  private unresolvedPageCache: Map<number, PreliminaryPunchList[]> = new Map();
-  private resolvedPageCache: Map<number, PreliminaryPunchList[]> = new Map();
+  private entriesCache$!: Observable<PagedResponse<PreliminaryPunchList>> | null;
+  private entriesCacheData: PagedResponse<PreliminaryPunchList> | null = null;
+  private unresolvedCacheMap = new Map<string, Observable<PagedResponse<PreliminaryPunchList>>>();
+  private resolvedCacheMap = new Map<string, Observable<PagedResponse<PreliminaryPunchList>>>();
+  private unresolvedDataMap = new Map<string, PagedResponse<PreliminaryPunchList>>();
+  private resolvedDataMap = new Map<string, PagedResponse<PreliminaryPunchList>>();
 
   private refreshSubject = new BehaviorSubject<void>(undefined);
 
@@ -37,26 +31,11 @@ export class PreliminaryPunchListService {
     })
   };
 
-  constructor(private http: HttpClient) {
-    this.entriesCache$ = null;
-    this.entriesCacheData = null;
-    this.unresolvedCacheMap.clear();
-    this.resolvedCacheMap.clear();
-    this.unresolvedDataMap.clear();
-    this.resolvedDataMap.clear();
-    this.unresolvedPageCache.clear();
-    this.resolvedPageCache.clear();
-  }
+  constructor(private http: HttpClient) {}
 
-  refresh$ = this.refreshSubject.asObservable();
+  readonly refresh$ = this.refreshSubject.asObservable();
+  triggerRefresh(): void { this.refreshSubject.next(); }
 
-  triggerRefresh(): void {
-    this.refreshSubject.next();
-  }
-
-  // -------------------------------
-  // Helpers
-  // -------------------------------
   private buildKey(user: User, url: string, params?: HttpParams): string {
     return `${user.role}|${user.market}|${url}|${params?.toString() ?? ''}`;
   }
@@ -69,42 +48,45 @@ export class PreliminaryPunchListService {
     this.resolvedCacheMap.clear();
     this.unresolvedDataMap.clear();
     this.resolvedDataMap.clear();
-
-    this.unresolvedPageCache.clear();
-    this.resolvedPageCache.clear();
   }
 
-  // -------------------------------
-  // API methods
-  // -------------------------------
-  getEntries(): Observable<PreliminaryPunchList[]> {
+  getEntries(pageNumber = 1, pageSize = 25): Observable<PagedResponse<PreliminaryPunchList>> {
     if (!this.entriesCache$) {
+      const params = new HttpParams()
+        .set('pageNumber', String(pageNumber))
+        .set('pageSize', String(pageSize));
+
       this.entriesCache$ = this.http
-        .get<PreliminaryPunchList[]>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
+        .get<PagedResponse<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
         .pipe(
-          map(punchLists =>
-            punchLists.map(punchList => {
-              punchList.issues.forEach((issueArea: IssueArea) => {
-                if (typeof issueArea.category === 'string') {
-                  // normalize if needed
-                  issueArea.category = issueArea.category;
-                }
+          map(resp => ({
+            ...resp,
+            items: resp.items.map(p => {
+              p.issues.forEach((ia: IssueArea) => {
+                if (typeof ia.category === 'string') ia.category = ia.category;
               });
-              return punchList;
+              return p;
             })
-          ),
-          tap(data => (this.entriesCacheData = Array.isArray(data) ? data.slice() : data)),
+          })),
+          tap(resp => (this.entriesCacheData = resp)),
           catchError(this.handleError),
-          shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 }) // 5 min TTL
+          shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 })
         );
     }
     return this.entriesCache$;
   }
 
-  getUnresolvedPunchLists(user: User, opts?: { refresh?: boolean }): Observable<any> {
-    // choose endpoint + params
+  getUnresolvedPunchLists(
+    user: User,
+    pageNumber = 1,
+    pageSize = 25,
+    opts?: { refresh?: boolean }
+  ): Observable<PagedResponse<PreliminaryPunchList>> {
     let url: string;
-    let params = new HttpParams();
+    let params = new HttpParams()
+      .set('pageNumber', String(pageNumber))
+      .set('pageSize', String(pageSize));
+
     const isRegional = user.market === 'RG';
 
     if (user.role === 'PM' && !isRegional) {
@@ -125,9 +107,12 @@ export class PreliminaryPunchListService {
 
     let cached$ = this.unresolvedCacheMap.get(key);
     if (!cached$) {
-      const request$ = this.http.get<any>(url, { params, headers: this.httpOptions.headers });
+      const request$ = this.http.get<PagedResponse<PreliminaryPunchList>>(url, {
+        params,
+        headers: this.httpOptions.headers
+      });
       cached$ = request$.pipe(
-        tap(data => this.unresolvedDataMap.set(key, Array.isArray(data) ? data.slice() : data)),
+        tap(resp => this.unresolvedDataMap.set(key, resp)),
         shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 })
       );
       this.unresolvedCacheMap.set(key, cached$);
@@ -135,9 +120,17 @@ export class PreliminaryPunchListService {
     return cached$;
   }
 
-  getResolvedPunchLists(user: User, opts?: { refresh?: boolean }): Observable<any> {
+  getResolvedPunchLists(
+    user: User,
+    pageNumber = 1,
+    pageSize = 25,
+    opts?: { refresh?: boolean }
+  ): Observable<PagedResponse<PreliminaryPunchList>> {
     let url: string;
-    let params = new HttpParams();
+    let params = new HttpParams()
+      .set('pageNumber', String(pageNumber))
+      .set('pageSize', String(pageSize));
+
     const isRegional = user.market === 'RG';
 
     if (user.role === 'PM' && !isRegional) {
@@ -158,14 +151,37 @@ export class PreliminaryPunchListService {
 
     let cached$ = this.resolvedCacheMap.get(key);
     if (!cached$) {
-      const request$ = this.http.get<any>(url, { params, headers: this.httpOptions.headers });
+      const request$ = this.http.get<PagedResponse<PreliminaryPunchList>>(url, {
+        params,
+        headers: this.httpOptions.headers
+      });
       cached$ = request$.pipe(
-        tap(data => this.resolvedDataMap.set(key, Array.isArray(data) ? data.slice() : data)),
+        tap(resp => this.resolvedDataMap.set(key, resp)),
         shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 })
       );
       this.resolvedCacheMap.set(key, cached$);
     }
     return cached$;
+  }
+
+  getAllUnresolved(pageNumber = 1, pageSize = 10) {
+    const params = new HttpParams()
+      .set('pageNumber', String(pageNumber))
+      .set('pageSize', String(pageSize));
+    return this.http.get<PagedResponse<PreliminaryPunchList>>(
+      `${local_environment.apiUrl}/PunchList/unresolved`,
+      { ...this.httpOptions, params }
+    );
+  }
+
+  getAllResolved(pageNumber = 1, pageSize = 10) {
+    const params = new HttpParams()
+      .set('pageNumber', String(pageNumber))
+      .set('pageSize', String(pageSize));
+    return this.http.get<PagedResponse<PreliminaryPunchList>>(
+      `${local_environment.apiUrl}/PunchList/resolved`,
+      { ...this.httpOptions, params }
+    );
   }
 
   getErrorCodes(): Observable<any> {
@@ -174,35 +190,34 @@ export class PreliminaryPunchListService {
 
   addEntry(punchList: PreliminaryPunchList): Observable<any> {
     this.clearCaches();
-    return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
+    return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions)
+      .pipe(catchError(this.handleError));
   }
 
   updateEntry(punchList: PreliminaryPunchList): Observable<any> {
     this.clearCaches();
-    return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
+    return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions)
+      .pipe(catchError(this.handleError));
   }
 
   removeEntry(id: string | undefined): Observable<any> {
     this.clearCaches();
-    return this.http.delete<void>(`${environment.apiUrl}/PunchList/${id}`, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
+    return this.http.delete<void>(`${environment.apiUrl}/PunchList/${id}`, this.httpOptions)
+      .pipe(catchError(this.handleError));
   }
 
   getCachedUnresolvedCount(user: User): number {
-    const key = [...this.unresolvedDataMap.keys()].find(k => k.startsWith(`${user.role}|${user.market}|`));
-    if (!key) return 0;
-    return (this.unresolvedDataMap.get(key) ?? []).length;
+    const prefix = `${user.role}|${user.market}|`;
+    const latestKey = [...this.unresolvedDataMap.keys()].find(k => k.startsWith(prefix));
+    if (!latestKey) return 0;
+    return this.unresolvedDataMap.get(latestKey)?.total ?? 0;
   }
 
   getCachedResolvedCount(user: User): number {
-    const key = [...this.resolvedDataMap.keys()].find(k => k.startsWith(`${user.role}|${user.market}|`));
-    if (!key) return 0;
-    return (this.resolvedDataMap.get(key) ?? []).length;
+    const prefix = `${user.role}|${user.market}|`;
+    const latestKey = [...this.resolvedDataMap.keys()].find(k => k.startsWith(prefix));
+    if (!latestKey) return 0;
+    return this.resolvedDataMap.get(latestKey)?.total ?? 0;
   }
 
   private handleError(error: HttpErrorResponse) {

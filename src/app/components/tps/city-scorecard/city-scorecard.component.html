@@ -1,0 +1,103 @@
+
+<form [formGroup]="filterForm" class="filter-section mb-2">
+  <mat-form-field appearance="fill" class="cols-6">
+    <mat-label>Start Date</mat-label>
+    <input matInput [matDatepicker]="cstart" formControlName="startDate">
+    <mat-datepicker-toggle matSuffix [for]="cstart"></mat-datepicker-toggle>
+    <mat-datepicker #cstart></mat-datepicker>
+  </mat-form-field>
+  <mat-form-field appearance="fill" class="cols-6">
+    <mat-label>End Date</mat-label>
+    <input matInput [matDatepicker]="cend" formControlName="endDate">
+    <mat-datepicker-toggle matSuffix [for]="cend"></mat-datepicker-toggle>
+    <mat-datepicker #cend></mat-datepicker>
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>City</mat-label>
+    <input matInput formControlName="city">
+  </mat-form-field>
+  <button mat-raised-button class="filters-btn" type="button" (click)="applyFilters()">Apply</button>
+</form>
+<div class="text-right mb-2">
+  <button mat-raised-button (click)="exportCsv()" class="export-btn">
+    <mat-icon>table_view</mat-icon> Export CSV
+  </button>
+</div>
+<div class="table-wrapper">
+<table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+  <ng-container matColumnDef="city">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>City</th>
+    <td mat-cell *matCellDef="let c">{{ c.city }}</td>
+  </ng-container>
+  <ng-container matColumnDef="forecastedHHP">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Forecasted HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.forecastedHHP | currency:'USD':'symbol':'1.2-2' }}</td>
+  </ng-container>
+  <ng-container matColumnDef="actualHHP">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Actual HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.actualHHP | currency:'USD':'symbol':'1.2-2'}}</td>
+  </ng-container>
+  <ng-container matColumnDef="percentChangeHHP">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>% Change HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.percentChangeHHP | percent}}</td>
+  </ng-container>
+  <ng-container matColumnDef="forecastedDollarPerHHP">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Forecasted $/HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.forecastedDollarPerHHP | currency:'USD':'symbol':'1.2-2'}}</td>
+  </ng-container>
+  <ng-container matColumnDef="actualDollarPerHHP">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Actual $/HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.actualDollarPerHHP | currency:'USD':'symbol':'1.2-2'}}</td>
+  </ng-container>
+  <ng-container matColumnDef="percentChangeDollarPerHHP">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>% Change $/HHP</th>
+    <td mat-cell *matCellDef="let c">{{ c.percentChangeDollarPerHHP | percent}}</td>
+  </ng-container>
+  <ng-container matColumnDef="forecastedDollarPerLFT">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Forecasted $/LFT</th>
+    <td mat-cell *matCellDef="let c">{{ c.forecastedDollarPerLFT | currency:'USD':'symbol':'1.2-2'}}</td>
+  </ng-container>
+  <ng-container matColumnDef="actualDollarPerLFT">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Actual $/LFT</th>
+    <td mat-cell *matCellDef="let c">{{ c.actualDollarPerLFT | currency:'USD':'symbol':'1.2-2'}}</td>
+  </ng-container>
+  <ng-container matColumnDef="percentChangeDollarPerLFT">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>% Change $/LFT</th>
+    <td mat-cell *matCellDef="let c">{{ c.percentChangeDollarPerLFT | percent}}</td>
+  </ng-container>
+  <ng-container matColumnDef="forecastedAllIn">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Forecasted All-In</th>
+    <td mat-cell *matCellDef="let c">{{ c.forecastedAllIn | currency:'USD':'symbol':'1.2-2'}}</td>
+  </ng-container>
+  <ng-container matColumnDef="actualAllIn">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Actual All-In</th>
+    <td mat-cell *matCellDef="let c">{{ c.actualAllIn | currency:'USD':'symbol':'1.2-2'}}</td>
+  </ng-container>
+  <ng-container matColumnDef="percentChangeAllIn">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>% Change All-In</th>
+    <td mat-cell *matCellDef="let c">{{ c.percentChangeAllIn | percent }}</td>
+  </ng-container>
+  <ng-container matColumnDef="ta_Date">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>TA Date</th>
+    <td mat-cell *matCellDef="let c">{{ c.ta_Date }}</td>
+  </ng-container>
+  <ng-container matColumnDef="compDate">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Comp Date</th>
+    <td mat-cell *matCellDef="let c">{{ c.compDate | currency:'USD':'symbol':'1.2-2'}}</td>
+  </ng-container>
+  <ng-container matColumnDef="closedDate">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Closed Date</th>
+    <td mat-cell *matCellDef="let c">{{ c.closedDate | currency:'USD':'symbol':'1.2-2'}}</td>
+  </ng-container>
+  <ng-container matColumnDef="score">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Score</th>
+    <td mat-cell *matCellDef="let c">{{ c.score }}</td>
+  </ng-container>
+  <ng-container matColumnDef="notes">
+    <th mat-header-cell mat-sort-header *matHeaderCellDef>Notes</th>
+    <td mat-cell *matCellDef="let c">{{ c.notes }}</td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
+</div>
