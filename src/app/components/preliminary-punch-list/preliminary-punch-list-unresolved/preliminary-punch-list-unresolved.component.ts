@@ -96,7 +96,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      // 0-based to API
+      // Pass 0-based pageIndex; loadUnresolvedPunchLists will convert to 1-based for the API
       this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       this.isInitialized = true;
     }
@@ -105,18 +105,19 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.dataSource.sort = this.sort;
   }
 
-  // pageNumber is 0-based for API
+  // Keep pageNumber 0-based internally; API expects 0-based pageNumber
   loadUnresolvedPunchLists(user: User, pageNumber: number = 0, pageSize: number = 25): void {
+    const apiPage = pageNumber;
     const source$ = this.searchTerm
-      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, pageNumber, pageSize)
-      : this.punchListService.getUnresolvedPunchLists(user, pageNumber, pageSize);
+      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, apiPage, pageSize)
+      : this.punchListService.getUnresolvedPunchLists(user, apiPage, pageSize);
 
     source$.subscribe({
       next: (response: any) => {
-        // Expect 0-based paging from API response
-        const respPage = Number(response?.page ?? this.pageIndex);
+        // API returns 0-based page index
+        const respPage = Number(response?.page ?? apiPage);
         const respSize = Number(response?.pageSize ?? this.pageSize);
-        if (!isNaN(respPage)) this.pageIndex = respPage;    // 0-based
+        if (!isNaN(respPage)) this.pageIndex = Math.max(0, respPage);
         if (!isNaN(respSize)) this.pageSize = respSize;
 
         this.total = Number(
@@ -146,22 +147,16 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
             pl.resolvedDate ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '' : '';
         }
 
-        // Deduplicate by id
-        const dedupedResults = results.filter(
-          (item, index, self) => index === self.findIndex(t => t.id === item.id)
-        );
-
-        // For search, keep only unresolved (not both resolved)
-        const displayRows = this.searchTerm
-          ? dedupedResults.filter(pl => !(!!pl.pmResolved && !!pl.cmResolved))
-          : dedupedResults;
-
-        // Reset and set data
-        this.unresolvedPreliminaryPunchLists = displayRows;
+        // Trust server results order/uniqueness; do not deduplicate client-side
+        this.unresolvedPreliminaryPunchLists = results;
         this.unresolvedPreliminaryPunchList$.next(this.unresolvedPreliminaryPunchLists);
-        this.dataSource.data = this.filterData(this.unresolvedPreliminaryPunchLists);
+        // During search, trust server scoping entirely; otherwise apply client role/market scoping
+        this.dataSource.data = this.searchTerm
+          ? this.unresolvedPreliminaryPunchLists
+          : this.filterData(this.unresolvedPreliminaryPunchLists);
 
-        if (this.selectedFilters?.length) this.applyFilters(false);
+        // Only apply client-side filters after load when not searching
+        if (this.selectedFilters?.length && !this.searchTerm) this.applyFilters(false);
 
         this.updateUnresolvedCount();
       },
@@ -177,13 +172,16 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     if (this.useClientPaging()) {
       this.updatePagedView();
     } else {
-      // 0-based to API
+      // Pass 0-based index; the loader converts to 1-based for API
       this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
     }
   }
 
   updateUnresolvedCount(): void {
-    this.unresolvedCountChange.emit(this.total);
+    const count = this.searchTerm
+      ? this.total
+      : (this.selectedFilters?.length ? (this.filteredData?.length ?? 0) : this.total);
+    this.unresolvedCountChange.emit(count);
   }
 
   // Server-side search entrypoint (called by parent search box)
@@ -192,7 +190,6 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.searchTerm = val;
     this.pageIndex = 0; // reset to first page
     try { this.paginator?.firstPage?.(); } catch {}
-    // 0-based to API
     this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
@@ -327,7 +324,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         this.pageIndex = 0;
         try { this.paginator?.firstPage?.(); } catch {}
       }
-      this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize); // 0-based
+      this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       return;
     }
 
@@ -337,8 +334,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       : Math.max(this.pageSize, this.dataSource?.data?.length || 25);
 
     const source$ = this.searchTerm
-      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, 0, desiredSize) // 0-based
-      : this.punchListService.getUnresolvedPunchLists(this.user, 0, desiredSize); // 0-based
+      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, 1, desiredSize)
+      : this.punchListService.getUnresolvedPunchLists(this.user, 1, desiredSize);
 
     source$.subscribe({
       next: (response: any) => {

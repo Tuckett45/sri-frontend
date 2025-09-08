@@ -83,14 +83,14 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   ngOnInit(): void {
     this.user = this.authService.getUser();
     this.punchListService.refresh$.subscribe(() => {
-      this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize); // 1-based to API
+      // `loadResolvedPunchLists` handles converting to the API's 1-based pages
+      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
     });
   }
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      // Send 1-based to API
-      this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize);
+      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       this.isInitialized = true;
     }
     // Server-side paging: do not attach local paginator to MatTableDataSource
@@ -104,22 +104,21 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     }
   }
   
-  /**
-   * pageNumber is 1-based for the API (MatPaginator remains 0-based).
-   */
-  loadResolvedPunchLists(user: User, pageNumber: number = 1, pageSize: number = 25): void {
+  // Keep `pageNumber` 0-based for paginator and API
+  loadResolvedPunchLists(user: User, pageNumber: number = 0, pageSize: number = 25): void {
+    const apiPage = pageNumber; // API expects 0-based pageNumber
     const source$ = this.searchTerm
-      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, pageNumber, pageSize)
-      : this.punchListService.getResolvedPunchLists(user, pageNumber, pageSize);
+      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, apiPage, pageSize)
+      : this.punchListService.getResolvedPunchLists(user, apiPage, pageSize);
 
     source$.subscribe({
       next: (response: any) => {
-        // Use API page if provided; otherwise fall back to the requested (1-based)
-        const respPage1 = Number(response?.page ?? pageNumber);
-        const respSize  = Number(response?.pageSize ?? pageSize);
+        // API returns 0-based page index in `page`
+        const respPage = Number(response?.page ?? apiPage);
+        const respSize = Number(response?.pageSize ?? pageSize);
 
-        if (!isNaN(respPage1)) this.pageIndex = Math.max(0, respPage1 - 1); // convert to 0-based for UI
-        if (!isNaN(respSize))  this.pageSize  = respSize;
+        if (!isNaN(respPage)) this.pageIndex = Math.max(0, respPage);
+        if (!isNaN(respSize)) this.pageSize = respSize;
 
         this.total = Number(
           response?.total ?? response?.totalCount ?? response?.count ?? response?.Total ?? response?.TotalCount ??
@@ -150,22 +149,16 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
               : '';
         }
 
-        // Deduplicate by id
-        const dedupedResults = results.filter(
-          (item, index, self) => index === self.findIndex(t => t.id === item.id)
-        );
-
-        // For search, keep only resolved rows (both PM and CM resolved)
-        const filteredByResolution = this.searchTerm
-          ? dedupedResults.filter(pl => !!pl.pmResolved && !!pl.cmResolved)
-          : dedupedResults;
-
-        // Reset and set data
-        this.resolvedPreliminaryPunchLists = filteredByResolution;
+        // Trust server results order/uniqueness; do not deduplicate client-side
+        this.resolvedPreliminaryPunchLists = results;
         this.resolvedPreliminaryPunchList$.next(this.resolvedPreliminaryPunchLists);
-        this.dataSource.data = this.filterData(this.resolvedPreliminaryPunchLists);
+        // During search, trust server scoping entirely; otherwise apply client role/market scoping
+        this.dataSource.data = this.searchTerm
+          ? this.resolvedPreliminaryPunchLists
+          : this.filterData(this.resolvedPreliminaryPunchLists);
 
-        if (this.selectedFilters?.length) {
+        // Only apply client-side filters after load when not searching
+        if (this.selectedFilters?.length && !this.searchTerm) {
           this.applyFilters(false);
         }
 
@@ -231,7 +224,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
 
   refreshPunchLists(): void {
-    this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize); // 1-based to API
+    this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
   editReport(report: PreliminaryPunchList): void {
@@ -302,10 +295,9 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     const val = (event.target as HTMLInputElement).value.trim();
     this.searchTerm = val;
     this.pageIndex = 0;
-    // 1-based to API
-    this.loadResolvedPunchLists(this.user, 1, this.pageSize);
+    this.loadResolvedPunchLists(this.user, 0, this.pageSize);
   }
-  
+
   applyFilters(resetPage: boolean = true): void {
     // When searching, keep using server-side search paging for correctness
     if (this.searchTerm) {
@@ -313,7 +305,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         this.pageIndex = 0;
         try { this.paginator?.firstPage?.(); } catch {}
       }
-      this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize); // 1-based
+      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       return;
     }
 
@@ -323,8 +315,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       : Math.max(this.pageSize, this.dataSource?.data?.length || 25);
 
     const source$ = this.searchTerm
-      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, 1, desiredSize) // 1-based
-      : this.punchListService.getResolvedPunchLists(this.user, 1, desiredSize); // 1-based
+      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, 1, desiredSize)
+      : this.punchListService.getResolvedPunchLists(this.user, 1, desiredSize);
 
     source$.subscribe({
       next: (response: any) => {
@@ -422,13 +414,16 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     if (this.useClientPaging()) {
       this.updatePagedView();
     } else {
-      this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize); // 1-based
+      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
     }
   }
 
   updateResolvedCount(): void {   
-    // Always emit the server total to match backend search response
-    this.resolvedCountChange.emit(this.total); 
+    // Emit server total during search; emit filtered total when client filters are active
+    const count = this.searchTerm
+      ? this.total
+      : (this.selectedFilters?.length ? (this.filteredData?.length ?? 0) : this.total);
+    this.resolvedCountChange.emit(count); 
   }
 
   private updatePagedView = (): void => {
