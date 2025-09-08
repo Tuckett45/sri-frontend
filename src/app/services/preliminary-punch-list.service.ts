@@ -155,7 +155,7 @@ export class PreliminaryPunchListService {
 
   getResolvedPunchLists(
     user: User,
-    pageNumber = 0,
+    pageNumber = 1,
     pageSize = 25,
     opts?: { refresh?: boolean }
   ): Observable<PagedResponse<PreliminaryPunchList>> {
@@ -220,7 +220,7 @@ export class PreliminaryPunchListService {
   searchResolvedPunchLists(
     user: User,
     term: string,
-    pageNumber = 0,
+    pageNumber = 1,
     pageSize: number | null = null
   ): Observable<PagedResponse<PreliminaryPunchList>> {
     return this.searchPunchLists(term, pageNumber, pageSize, { resolved: 'resolved', user });

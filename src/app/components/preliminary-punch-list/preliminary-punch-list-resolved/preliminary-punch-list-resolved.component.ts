@@ -83,14 +83,13 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   ngOnInit(): void {
     this.user = this.authService.getUser();
     this.punchListService.refresh$.subscribe(() => {
-      // 0-based for API
+      // `loadResolvedPunchLists` handles converting to the API's 1-based pages
       this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
     });
   }
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      // 0-based to API
       this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       this.isInitialized = true;
     }
@@ -106,20 +105,22 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
   
   /**
-   * pageNumber is 0-based for the API (same as MatPaginator).
+   * Internally we keep `pageNumber` 0-based for the paginator but the API uses
+   * 1-based indexing, so convert before requesting and normalize on response.
    */
   loadResolvedPunchLists(user: User, pageNumber: number = 0, pageSize: number = 25): void {
+    const apiPage = pageNumber + 1; // API expects 1-based
     const source$ = this.searchTerm
-      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, pageNumber, pageSize)
-      : this.punchListService.getResolvedPunchLists(user, pageNumber, pageSize);
+      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, apiPage, pageSize)
+      : this.punchListService.getResolvedPunchLists(user, apiPage, pageSize);
 
     source$.subscribe({
       next: (response: any) => {
-        // Use API page if provided; otherwise fall back to the requested (0-based)
-        const respPage = Number(response?.page ?? pageNumber);
+        // API returns 1-based page values; convert back to 0-based for paginator
+        const respPage = Number(response?.page ?? apiPage);
         const respSize = Number(response?.pageSize ?? pageSize);
 
-        if (!isNaN(respPage)) this.pageIndex = Math.max(0, respPage);
+        if (!isNaN(respPage)) this.pageIndex = Math.max(0, respPage - 1);
         if (!isNaN(respSize)) this.pageSize = respSize;
 
         this.total = Number(
@@ -232,7 +233,6 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
 
   refreshPunchLists(): void {
-    // 0-based to API
     this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
@@ -304,7 +304,6 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     const val = (event.target as HTMLInputElement).value.trim();
     this.searchTerm = val;
     this.pageIndex = 0;
-    // 0-based to API
     this.loadResolvedPunchLists(this.user, 0, this.pageSize);
   }
 
@@ -315,7 +314,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         this.pageIndex = 0;
         try { this.paginator?.firstPage?.(); } catch {}
       }
-      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize); // 0-based
+      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       return;
     }
 
@@ -325,8 +324,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       : Math.max(this.pageSize, this.dataSource?.data?.length || 25);
 
     const source$ = this.searchTerm
-      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, 0, desiredSize) // 0-based
-      : this.punchListService.getResolvedPunchLists(this.user, 0, desiredSize); // 0-based
+      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, 1, desiredSize)
+      : this.punchListService.getResolvedPunchLists(this.user, 1, desiredSize);
 
     source$.subscribe({
       next: (response: any) => {
@@ -424,7 +423,6 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     if (this.useClientPaging()) {
       this.updatePagedView();
     } else {
-      // 0-based to API
       this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
     }
   }

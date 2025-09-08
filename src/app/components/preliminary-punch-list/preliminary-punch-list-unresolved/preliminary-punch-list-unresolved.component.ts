@@ -96,7 +96,6 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      // 0-based to API
       this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       this.isInitialized = true;
     }
@@ -105,18 +104,19 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.dataSource.sort = this.sort;
   }
 
-  // pageNumber is 0-based for API
+  // Keep pageNumber 0-based internally; API expects 1-based pages
   loadUnresolvedPunchLists(user: User, pageNumber: number = 0, pageSize: number = 25): void {
+    const apiPage = pageNumber + 1;
     const source$ = this.searchTerm
-      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, pageNumber, pageSize)
-      : this.punchListService.getUnresolvedPunchLists(user, pageNumber, pageSize);
+      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, apiPage, pageSize)
+      : this.punchListService.getUnresolvedPunchLists(user, apiPage, pageSize);
 
     source$.subscribe({
       next: (response: any) => {
-        // Expect 0-based paging from API response
-        const respPage = Number(response?.page ?? this.pageIndex);
+        // API returns 1-based pages; convert back to 0-based
+        const respPage = Number(response?.page ?? apiPage);
         const respSize = Number(response?.pageSize ?? this.pageSize);
-        if (!isNaN(respPage)) this.pageIndex = respPage;    // 0-based
+        if (!isNaN(respPage)) this.pageIndex = Math.max(0, respPage - 1);
         if (!isNaN(respSize)) this.pageSize = respSize;
 
         this.total = Number(
@@ -177,7 +177,6 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     if (this.useClientPaging()) {
       this.updatePagedView();
     } else {
-      // 0-based to API
       this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
     }
   }
@@ -192,7 +191,6 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.searchTerm = val;
     this.pageIndex = 0; // reset to first page
     try { this.paginator?.firstPage?.(); } catch {}
-    // 0-based to API
     this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
@@ -327,7 +325,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         this.pageIndex = 0;
         try { this.paginator?.firstPage?.(); } catch {}
       }
-      this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize); // 0-based
+      this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       return;
     }
 
@@ -337,8 +335,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       : Math.max(this.pageSize, this.dataSource?.data?.length || 25);
 
     const source$ = this.searchTerm
-      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, 0, desiredSize) // 0-based
-      : this.punchListService.getUnresolvedPunchLists(this.user, 0, desiredSize); // 0-based
+      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, 1, desiredSize)
+      : this.punchListService.getUnresolvedPunchLists(this.user, 1, desiredSize);
 
     source$.subscribe({
       next: (response: any) => {
