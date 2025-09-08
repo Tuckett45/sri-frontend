@@ -83,14 +83,15 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   ngOnInit(): void {
     this.user = this.authService.getUser();
     this.punchListService.refresh$.subscribe(() => {
-      this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize); // 1-based to API
+      // 0-based for API
+      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
     });
   }
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      // Send 1-based to API
-      this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize);
+      // 0-based to API
+      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       this.isInitialized = true;
     }
     // Server-side paging: do not attach local paginator to MatTableDataSource
@@ -105,21 +106,21 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
   
   /**
-   * pageNumber is 1-based for the API (MatPaginator remains 0-based).
+   * pageNumber is 0-based for the API (same as MatPaginator).
    */
-  loadResolvedPunchLists(user: User, pageNumber: number = 1, pageSize: number = 25): void {
+  loadResolvedPunchLists(user: User, pageNumber: number = 0, pageSize: number = 25): void {
     const source$ = this.searchTerm
       ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, pageNumber, pageSize)
       : this.punchListService.getResolvedPunchLists(user, pageNumber, pageSize);
 
     source$.subscribe({
       next: (response: any) => {
-        // Use API page if provided; otherwise fall back to the requested (1-based)
-        const respPage1 = Number(response?.page ?? pageNumber);
-        const respSize  = Number(response?.pageSize ?? pageSize);
+        // Use API page if provided; otherwise fall back to the requested (0-based)
+        const respPage = Number(response?.page ?? pageNumber);
+        const respSize = Number(response?.pageSize ?? pageSize);
 
-        if (!isNaN(respPage1)) this.pageIndex = Math.max(0, respPage1 - 1); // convert to 0-based for UI
-        if (!isNaN(respSize))  this.pageSize  = respSize;
+        if (!isNaN(respPage)) this.pageIndex = Math.max(0, respPage);
+        if (!isNaN(respSize)) this.pageSize = respSize;
 
         this.total = Number(
           response?.total ?? response?.totalCount ?? response?.count ?? response?.Total ?? response?.TotalCount ??
@@ -231,7 +232,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
 
   refreshPunchLists(): void {
-    this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize); // 1-based to API
+    // 0-based to API
+    this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
   editReport(report: PreliminaryPunchList): void {
@@ -302,10 +304,10 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     const val = (event.target as HTMLInputElement).value.trim();
     this.searchTerm = val;
     this.pageIndex = 0;
-    // 1-based to API
-    this.loadResolvedPunchLists(this.user, 1, this.pageSize);
+    // 0-based to API
+    this.loadResolvedPunchLists(this.user, 0, this.pageSize);
   }
-  
+
   applyFilters(resetPage: boolean = true): void {
     // When searching, keep using server-side search paging for correctness
     if (this.searchTerm) {
@@ -313,7 +315,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         this.pageIndex = 0;
         try { this.paginator?.firstPage?.(); } catch {}
       }
-      this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize); // 1-based
+      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize); // 0-based
       return;
     }
 
@@ -323,8 +325,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       : Math.max(this.pageSize, this.dataSource?.data?.length || 25);
 
     const source$ = this.searchTerm
-      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, 1, desiredSize) // 1-based
-      : this.punchListService.getResolvedPunchLists(this.user, 1, desiredSize); // 1-based
+      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, 0, desiredSize) // 0-based
+      : this.punchListService.getResolvedPunchLists(this.user, 0, desiredSize); // 0-based
 
     source$.subscribe({
       next: (response: any) => {
@@ -422,7 +424,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     if (this.useClientPaging()) {
       this.updatePagedView();
     } else {
-      this.loadResolvedPunchLists(this.user, this.pageIndex + 1, this.pageSize); // 1-based
+      // 0-based to API
+      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
     }
   }
 

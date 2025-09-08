@@ -72,7 +72,8 @@ export class PreliminaryPunchListService {
     }
 
     const total = Number(resp?.total ?? resp?.totalCount ?? resp?.count ?? resp?.Total ?? resp?.TotalCount ?? 0);
-    const page  = Number(resp?.page ?? reqPage) || 1;
+    const rawPage = Number(resp?.page ?? resp?.pageNumber ?? reqPage);
+    const page  = isNaN(rawPage) ? reqPage : rawPage;
     const size  = Number(resp?.pageSize ?? reqSize) || reqSize;
     const items = (resp?.items ?? resp?.data ?? resp?.results ?? []) as T[];
 
@@ -154,7 +155,7 @@ export class PreliminaryPunchListService {
 
   getResolvedPunchLists(
     user: User,
-    pageNumber = 1,
+    pageNumber = 0,
     pageSize = 25,
     opts?: { refresh?: boolean }
   ): Observable<PagedResponse<PreliminaryPunchList>> {
@@ -219,7 +220,7 @@ export class PreliminaryPunchListService {
   searchResolvedPunchLists(
     user: User,
     term: string,
-    pageNumber = 1,
+    pageNumber = 0,
     pageSize: number | null = null
   ): Observable<PagedResponse<PreliminaryPunchList>> {
     return this.searchPunchLists(term, pageNumber, pageSize, { resolved: 'resolved', user });
