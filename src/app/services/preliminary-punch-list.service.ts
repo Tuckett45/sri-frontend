@@ -62,11 +62,13 @@ export class PreliminaryPunchListService {
   private normalizePaged<T>(resp: any, reqPage: number, reqSize: number): PagedResponse<T> {
     if (Array.isArray(resp)) {
       const total = resp.length;
+      const size = reqSize || 25;
+      const pageCount = total === 0 ? 0 : Math.ceil(total / size);
       return {
         total,
         page: reqPage,
-        pageSize: reqSize,
-        pageCount: Math.max(1, Math.ceil(total / (reqSize || 1))),
+        pageSize: size,
+        pageCount,
         items: resp as T[],
       };
     }
@@ -74,26 +76,32 @@ export class PreliminaryPunchListService {
     const total = Number(resp?.total ?? resp?.totalCount ?? resp?.count ?? resp?.Total ?? resp?.TotalCount ?? 0);
     const rawPage = Number(resp?.page ?? resp?.pageNumber ?? reqPage);
     const page  = isNaN(rawPage) ? reqPage : rawPage;
-    const size  = Number(resp?.pageSize ?? reqSize) || reqSize;
+    const sizeRaw = Number(resp?.pageSize ?? reqSize);
+    const size = isNaN(sizeRaw) || sizeRaw <= 0 ? 25 : sizeRaw;
     const items = (resp?.items ?? resp?.data ?? resp?.results ?? []) as T[];
 
+    const pageCount = total === 0 ? 0 : Math.ceil(total / size);
     return {
       total,
       page,
       pageSize: size,
-      pageCount: Math.max(1, Math.ceil(total / (size || 1))),
+      pageCount,
       items
     };
   }
 
   // ---------------- Basic lists (cached) ----------------
 
-  getEntries(pageNumber = 1, pageSize = 25): Observable<PagedResponse<PreliminaryPunchList>> {
+  getEntries(pageNumber = 0, pageSize = 25): Observable<PagedResponse<PreliminaryPunchList>> {
     if (!this.entriesCache$) {
-      // NOTE: Keeping environment.apiUrl per your original code; switch to local_environment if needed.
+      const params = new HttpParams()
+        .set('pageNumber', String(pageNumber))
+        .set('pageSize', String(pageSize));
+
       this.entriesCache$ = this.http
-        .get<PagedResponse<PreliminaryPunchList>>(`${environment.apiUrl}/PunchList/all`, this.httpOptions)
+        .get<any>(`${environment.apiUrl}/PunchList/all`, { params, headers: this.httpOptions.headers })
         .pipe(
+          map(resp => this.normalizePaged<PreliminaryPunchList>(resp, pageNumber, pageSize)),
           map(resp => ({
             ...resp,
             items: resp.items.map(p => {
@@ -113,14 +121,14 @@ export class PreliminaryPunchListService {
 
   getUnresolvedPunchLists(
     user: User,
-    pageNumber = 1,
-    pageSize = 25,
+    pageNumber?: number,
+    pageSize?: number,
     opts?: { refresh?: boolean }
   ): Observable<PagedResponse<PreliminaryPunchList>> {
     let url: string;
-    let params = new HttpParams()
-      .set('pageNumber', String(pageNumber))
-      .set('pageSize', String(pageSize));
+    let params = new HttpParams();
+    if (pageNumber != null) params = params.set('pageNumber', String(pageNumber));
+    if (pageSize != null) params = params.set('pageSize', String(pageSize));
 
     const isRegional = user.market === 'RG';
 
@@ -143,7 +151,7 @@ export class PreliminaryPunchListService {
     let cached$ = this.unresolvedCacheMap.get(key);
     if (!cached$) {
       const request$ = this.http.get<any>(url, { params, headers: this.httpOptions.headers })
-        .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, pageNumber, pageSize)));
+        .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, Number(pageNumber ?? 0), Number(pageSize ?? 25))));
       cached$ = request$.pipe(
         tap(resp => this.unresolvedDataMap.set(key, resp)),
         shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 })
@@ -155,14 +163,14 @@ export class PreliminaryPunchListService {
 
   getResolvedPunchLists(
     user: User,
-    pageNumber = 1,
-    pageSize = 25,
+    pageNumber?: number,
+    pageSize?: number,
     opts?: { refresh?: boolean }
   ): Observable<PagedResponse<PreliminaryPunchList>> {
     let url: string;
-    let params = new HttpParams()
-      .set('pageNumber', String(pageNumber))
-      .set('pageSize', String(pageSize));
+    let params = new HttpParams();
+    if (pageNumber != null) params = params.set('pageNumber', String(pageNumber));
+    if (pageSize != null) params = params.set('pageSize', String(pageSize));
 
     const isRegional = user.market === 'RG';
 
@@ -185,7 +193,7 @@ export class PreliminaryPunchListService {
     let cached$ = this.resolvedCacheMap.get(key);
     if (!cached$) {
       const request$ = this.http.get<any>(url, { params, headers: this.httpOptions.headers })
-        .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, pageNumber, pageSize)));
+        .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, Number(pageNumber ?? 0), Number(pageSize ?? 25))));
       cached$ = request$.pipe(
         tap(resp => this.resolvedDataMap.set(key, resp)),
         shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 })
@@ -195,24 +203,24 @@ export class PreliminaryPunchListService {
     return cached$;
   }
 
-  getAllUnresolved(pageNumber = 1, pageSize = 10) {
-    const params = new HttpParams()
-      .set('pageNumber', String(pageNumber))
-      .set('pageSize', String(pageSize));
+  getAllUnresolved(pageNumber?: number, pageSize?: number) {
+    let params = new HttpParams();
+    if (pageNumber != null) params = params.set('pageNumber', String(pageNumber));
+    if (pageSize != null) params = params.set('pageSize', String(pageSize));
     return this.http.get<any>(
       `${environment.apiUrl}/PunchList/unresolved`,
       { ...this.httpOptions, params }
-    ).pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, pageNumber, pageSize)));
+    ).pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, Number(pageNumber ?? 0), Number(pageSize ?? 25))));
   }
 
-  getAllResolved(pageNumber = 1, pageSize = 10) {
-    const params = new HttpParams()
-      .set('pageNumber', String(pageNumber))
-      .set('pageSize', String(pageSize));
+  getAllResolved(pageNumber?: number, pageSize?: number) {
+    let params = new HttpParams();
+    if (pageNumber != null) params = params.set('pageNumber', String(pageNumber));
+    if (pageSize != null) params = params.set('pageSize', String(pageSize));
     return this.http.get<any>(
       `${environment.apiUrl}/PunchList/resolved`,
       { ...this.httpOptions, params }
-    ).pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, pageNumber, pageSize)));
+    ).pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, Number(pageNumber ?? 0), Number(pageSize ?? 25))));
   }
 
   // ---------------- SEARCH (unified type) ----------------
@@ -220,8 +228,8 @@ export class PreliminaryPunchListService {
   searchResolvedPunchLists(
     user: User,
     term: string,
-    pageNumber = 1,
-    pageSize: number | null = null
+    pageNumber: number,
+    pageSize: number
   ): Observable<PagedResponse<PreliminaryPunchList>> {
     return this.searchPunchLists(term, pageNumber, pageSize, { resolved: 'resolved', user });
   }
@@ -229,8 +237,8 @@ export class PreliminaryPunchListService {
   searchUnresolvedPunchLists(
     user: User,
     term: string,
-    pageNumber = 1,
-    pageSize: number | null = null
+    pageNumber: number,
+    pageSize: number
   ): Observable<PagedResponse<PreliminaryPunchList>> {
     return this.searchPunchLists(term, pageNumber, pageSize, { resolved: 'unresolved', user });
   }
@@ -238,24 +246,22 @@ export class PreliminaryPunchListService {
   private searchPunchLists(
     term: string,
     pageNumber: number,
-    pageSize: number | null,
+    pageSize: number,
     opts: { resolved: 'resolved' | 'unresolved'; user: User }
   ): Observable<PagedResponse<PreliminaryPunchList>> {
     let params = new HttpParams()
       .set('term', term ?? '')
       .set('resolved', opts.resolved)
-      // Backend expects `page` in line with response shape
-      .set('page', String(pageNumber));
+      .set('pageNumber', String(pageNumber))
+      .set('pageSize', String(pageSize));
 
-    if (pageSize != null) params = params.set('pageSize', String(pageSize));
     if (opts.user?.market && opts.user?.market !== 'RG')  params = params.set('state', opts.user.market);
     if (opts.user?.company && opts.user?.company !== 'SRI') params = params.set('company', opts.user.company);
 
-    // Use the same base style as your other endpoints
     const url = `${environment.apiUrl}/PunchList/search`;
 
     return this.http.get<any>(url, { params, headers: this.httpOptions.headers })
-      .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, pageNumber, pageSize ?? 25)));
+      .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, pageNumber, pageSize)));
   }
 
   getFacets(

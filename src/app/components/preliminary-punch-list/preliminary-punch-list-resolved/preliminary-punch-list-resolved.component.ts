@@ -104,23 +104,20 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     }
   }
   
-  /**
-   * Internally we keep `pageNumber` 0-based for the paginator but the API uses
-   * 1-based indexing, so convert before requesting and normalize on response.
-   */
+  // Keep `pageNumber` 0-based for paginator and API
   loadResolvedPunchLists(user: User, pageNumber: number = 0, pageSize: number = 25): void {
-    const apiPage = pageNumber + 1; // API expects 1-based
+    const apiPage = pageNumber; // API expects 0-based pageNumber
     const source$ = this.searchTerm
       ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, apiPage, pageSize)
       : this.punchListService.getResolvedPunchLists(user, apiPage, pageSize);
 
     source$.subscribe({
       next: (response: any) => {
-        // API returns 1-based page values; convert back to 0-based for paginator
+        // API returns 0-based page index in `page`
         const respPage = Number(response?.page ?? apiPage);
         const respSize = Number(response?.pageSize ?? pageSize);
 
-        if (!isNaN(respPage)) this.pageIndex = Math.max(0, respPage - 1);
+        if (!isNaN(respPage)) this.pageIndex = Math.max(0, respPage);
         if (!isNaN(respSize)) this.pageSize = respSize;
 
         this.total = Number(
@@ -152,22 +149,16 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
               : '';
         }
 
-        // Deduplicate by id
-        const dedupedResults = results.filter(
-          (item, index, self) => index === self.findIndex(t => t.id === item.id)
-        );
-
-        // For search, keep only resolved rows (both PM and CM resolved)
-        const filteredByResolution = this.searchTerm
-          ? dedupedResults.filter(pl => !!pl.pmResolved && !!pl.cmResolved)
-          : dedupedResults;
-
-        // Reset and set data
-        this.resolvedPreliminaryPunchLists = filteredByResolution;
+        // Trust server results order/uniqueness; do not deduplicate client-side
+        this.resolvedPreliminaryPunchLists = results;
         this.resolvedPreliminaryPunchList$.next(this.resolvedPreliminaryPunchLists);
-        this.dataSource.data = this.filterData(this.resolvedPreliminaryPunchLists);
+        // During search, trust server scoping entirely; otherwise apply client role/market scoping
+        this.dataSource.data = this.searchTerm
+          ? this.resolvedPreliminaryPunchLists
+          : this.filterData(this.resolvedPreliminaryPunchLists);
 
-        if (this.selectedFilters?.length) {
+        // Only apply client-side filters after load when not searching
+        if (this.selectedFilters?.length && !this.searchTerm) {
           this.applyFilters(false);
         }
 
@@ -428,8 +419,11 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
 
   updateResolvedCount(): void {   
-    // Always emit the server total to match backend search response
-    this.resolvedCountChange.emit(this.total); 
+    // Emit server total during search; emit filtered total when client filters are active
+    const count = this.searchTerm
+      ? this.total
+      : (this.selectedFilters?.length ? (this.filteredData?.length ?? 0) : this.total);
+    this.resolvedCountChange.emit(count); 
   }
 
   private updatePagedView = (): void => {
