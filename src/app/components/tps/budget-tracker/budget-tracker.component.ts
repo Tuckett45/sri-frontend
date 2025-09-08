@@ -18,6 +18,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   loading = false;
   rows: BudgetTrackerRow[] = [];
   total = 0;
+
+  // Expanded state
   expandedRowId: string | null = null;
   expandedElement: BudgetTrackerRow | null = null;
 
@@ -98,6 +100,16 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
 
           this.rows = items;
           this.total = res.total ?? items.length;
+
+          // If expanded row no longer exists, clear expansion
+          if (
+            this.expandedRowId &&
+            !this.rows.some((r, i) => this.rowKey(r, i) === this.expandedRowId)
+          ) {
+            this.expandedRowId = null;
+            this.expandedElement = null;
+          }
+
           this.loading = false;
         },
         error: () => {
@@ -119,6 +131,34 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
         this.cityOptions = cities.map(c => ({ label: c, value: c }));
       });
   }
+
+  // ---------- Keys / trackBy / toggling ----------
+  /** Stable key for each row; falls back to a composite if RowId missing */
+  private rowKey(r: BudgetTrackerRow, idx?: number): string {
+    const h = r.Header || {};
+    return (
+      h.RowId ||
+      `${h.ClaimMonthYear ?? ''}|${h.Segment ?? ''}|${h.City ?? ''}|${r.FT?.Vendor ?? ''}|${idx ?? ''}`
+    );
+  }
+
+  /** Keep DOM nodes stable across sort/paginate/filter so expansion stays put */
+  trackByRow = (index: number, row: BudgetTrackerRow) => this.rowKey(row, index);
+
+  toggleRow(row: BudgetTrackerRow): void {
+    const idx = this.rows.indexOf(row);
+    const id = this.rowKey(row, idx);
+    if (this.expandedRowId === id) {
+      this.expandedRowId = null;
+      this.expandedElement = null;
+    } else {
+      this.expandedRowId = id;
+      this.expandedElement = row;
+    }
+  }
+
+  isExpandedRow = (_: number, row: BudgetTrackerRow) =>
+    this.expandedRowId === this.rowKey(row, this.rows.indexOf(row));
 
   // ---------- UI helpers ----------
   toggleFilters(): void {
@@ -187,16 +227,11 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   onPage(e: PageEvent): void {
     this.page = e.pageIndex + 1;
     this.pageSize = e.pageSize;
+    // Optional: collapse when paging
+    // this.expandedRowId = null;
+    // this.expandedElement = null;
     this.reload$.next();
   }
-
-  toggleRow(row: BudgetTrackerRow): void {
-    const id = row.Header?.RowId;
-    this.expandedRowId = this.expandedRowId === id ? null : id || null;
-    this.expandedElement = this.expandedElement === row ? null : row;
-  }
-
-  isExpandedRow = (_: number, row: BudgetTrackerRow) => this.expandedRowId === row.Header?.RowId;
 
   onSort(sort: Sort): void {
     const data = this.rows.slice();
@@ -222,6 +257,13 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
       }
       return sort.direction === 'asc' ? cmp : -cmp;
     });
+
+    // Keep expansion attached to the same element if it's still present
+    if (this.expandedElement) {
+      const newIdx = this.rows.indexOf(this.expandedElement);
+      this.expandedRowId = newIdx >= 0 ? this.rowKey(this.expandedElement, newIdx) : null;
+      if (newIdx < 0) this.expandedElement = null;
+    }
   }
 
   private getSortValue(row: BudgetTrackerRow, column: string): any {

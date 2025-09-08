@@ -183,6 +183,10 @@
   transition: transform 150ms ease;
 }
 
+::ng-deep .mat-sort-header-container {
+  justify-content: center !important;
+}
+
 .no-details {
   padding: 0.75rem 1rem;
   color: #fff;
@@ -197,6 +201,18 @@
 ::ng-deep .detail-container .p-accordion .p-accordion-content {
   background-color: #525252;
   color: #fff;
+}
+
+/* Angular Material expansion styles to mirror PrimeNG look */
+::ng-deep .detail-container .mat-expansion-panel-header {
+  background-color: #e18a25 !important;
+  color: #fff !important;
+}
+
+::ng-deep .detail-container .mat-expansion-panel-content,
+::ng-deep .detail-container .mat-expansion-panel-body {
+  background-color: #525252 !important;
+  color: #fff !important;
 }
 
 /* Solid dropdown look to match other tabs */

@@ -37,109 +37,57 @@
     gap: 2rem;
   }
 
-  /* Chart wrappers get real height; Chart.js must use maintainAspectRatio:false */
-  .chart-wrapper,
-  .chart-wrap {
-    flex: 1 1 350px;
-    width: 100%;
-    /* Taller charts that scale with viewport height */
-    height: clamp(420px, 55vh, 820px) !important;
-    min-height: 360px;
-  }
-
-  /* Extra-tall variant for charts that must be larger */
-  .chart-wrapper.tall,
-  .chart-wrap.tall {
-    height: clamp(720px, 80vh, 1400px);
-    min-height: 640px;
-  }
-
-  /* Ensure PrimeNG chart inner containers and canvas fill wrapper height */
-  .chart-wrapper .p-chart,
-  .chart-wrap .p-chart,
-  .chart-wrapper .p-chart > div,
-  .chart-wrap .p-chart > div,
-  .chart-wrapper canvas,
-  .chart-wrap canvas {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-  }
-
-  .p-chart > canvas,
-  .p-chart > div > canvas {
-    display: block;
-    width: 100% !important;
-    height: 100% !important; /* fill the wrapper, override 150px default */
-    max-height: 100% !important;
-  }
-
-  /* Ensure the p-chart host and wrapper also stretch to consume the chart area */
-  :host ::ng-deep p-chart {
-    display: block;
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  :host ::ng-deep .p-chart {
-    position: relative;
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  /* Make the PrimeNG card stretch with the chart */
-  .chart-wrapper .surface-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-  .chart-wrap { flex: 1 1 auto; }
-
-  /* Explicitly target PrimeNG's inner canvas class if present */
-  :host ::ng-deep .p-chart canvas {
-    width: 100% !important;
-    height: 100% !important;
-    max-height: 100% !important;
-  }
-
-  /* ------- MOBILE SIZING & CLAMPS ------- */
-  @media (max-width: 768px) {
-    .chart-wrapper,
-    .chart-wrap {
-      /* take full width, no side-scroll */
-      max-width: 100vw;
-      width: 100%;
-      min-width: 0;
-      overflow: hidden;
-      padding-inline: 8px;
-      box-sizing: border-box;
-      flex-basis: 100%;
-
-      /* extra height on mobile so canvas isn’t a sliver under filters */
-      height: clamp(420px, 65vh, 680px);
-      min-height: 380px;
-    }
-
-    /* Make the canvas fill the remaining height under header+filters */
-    .chart-wrapper .p-chart,
-    .chart-wrap .p-chart,
-    .chart-wrapper .p-chart > div,
-    .chart-wrap .p-chart > div,
-    .chart-wrapper canvas,
-    .chart-wrap canvas {
-      width: 100% !important;
-      height: calc(100% - 110px) !important; /* ~title + two dropdowns */
-      display: block;
-    }
-
-    /* Mobile extra-tall variant */
-    .chart-wrapper.tall,
-    .chart-wrap.tall {
-      height: clamp(640px, 85vh, 1200px);
-      min-height: 560px;
-    }
-  }
+  /* (Removed global wrapper heights; the single height anchor is .chart-inner) */
 }
+
+/* one chart per card */
+.chart-card {
+  position: relative;
+  z-index: 0;                  /* keep below neighbors that might be sticky */
+  display: block;
+  margin-bottom: 1.5rem;       /* space between charts */
+  border-radius: inherit;
+}
+
+/* The PrimeNG card that contains header/filters/chart */
+.chart-wrapper .surface-card {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto 1fr; /* title (auto), filters (auto), chart (1fr) */
+  overflow: hidden;            /* contain canvas paints inside the card */
+  isolation: isolate;          /* new stacking context */
+  contain: paint;              /* prevent paint bleed across siblings */
+}
+
+.chart-card .chart-title {
+  margin-bottom: .5rem;
+}
+
+/* the single element that controls the chart's height */
+.chart-inner {
+  position: relative;
+  width: 100%;
+  height: 480px;               /* responsive height anchor — adjust as you like */
+  min-height: 320px;
+  border-radius: inherit;
+}
+
+/* optional taller variant for big charts */
+.chart-inner.tall {
+  height: clamp(560px, 65vh, 1000px);
+  min-height: 420px;
+}
+
+/* make chart fill its box exactly */
+.chart-inner .p-chart,
+.chart-inner .p-chart > div,
+.chart-inner canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* (Removed host-wide p-chart height:100% rule to avoid re-expansion) */
 
 /* Dashboard surface */
 .surface-ground {
@@ -150,9 +98,10 @@
 /* Cards */
 :host ::ng-deep .surface-card {
   background-color: #fff !important;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  padding: 24px; /* inner spacing */
+  border-radius: 12px; /* softer corners */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  margin-bottom: 1.25rem;
 }
 
 h1 {
@@ -166,8 +115,7 @@ h1 {
   margin-top: 20px;
 }
 
-
-
+/* Filters (top row) */
 .filter-section {
   display: flex;
   flex-wrap: wrap;
@@ -208,6 +156,12 @@ h1 {
       flex: 1 1 auto;
       width: 100%;
     }
+  }
+
+  /* extra height on mobile so canvas isn’t a sliver under filters */
+  .chart-inner {
+    height: clamp(420px, 65vh, 680px);
+    min-height: 360px;
   }
 }
 

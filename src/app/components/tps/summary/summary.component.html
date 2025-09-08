@@ -11,14 +11,14 @@
   <!-- Global date filters -->
   <div class="filter-section mb-3" *ngIf="filtersOpen">
     <div class="filter-selections flex align-items-center gap-1">
-      <mat-form-field appearance="fill" class="half-width">
+      <mat-form-field appearance="fill">
         <mat-label>Start Date</mat-label>
         <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="applyFilters()" />
         <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
         <mat-datepicker #startPicker></mat-datepicker>
       </mat-form-field>
 
-      <mat-form-field appearance="fill" class="half-width">
+      <mat-form-field appearance="fill">
         <mat-label>End Date</mat-label>
         <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="applyFilters()" />
         <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
@@ -26,6 +26,26 @@
       </mat-form-field>
 
       <a pRipple *ngIf="startDate || endDate" tabindex="0" class="clear-all" (click)="clearFilters()">Clear All</a>
+      <mat-form-field appearance="fill">
+        <mat-label>Vendor(s)</mat-label>
+        <mat-select multiple [(ngModel)]="selectedVendorsGlobal" (selectionChange)="applyFilters()">
+          <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Segment(s)</mat-label>
+        <mat-select multiple [(ngModel)]="selectedSegmentsGlobal" (selectionChange)="applyFilters()">
+          <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>City(ies)</mat-label>
+        <mat-select multiple [(ngModel)]="selectedCitiesGlobal" (selectionChange)="applyFilters()">
+          <mat-option *ngFor="let option of cityOptions" [value]="option.value">{{ option.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
   </div>
 
@@ -65,16 +85,15 @@
   <!-- Donuts row -->
   <div class="grid">
     <div class="donut-wrapper col-12 md:col-4">
-      <div class="surface-card shadow-2 p-3 border-round h-full">
-        <h4>HHP</h4>
-        <div class="chart-wrap">
+      <div class="surface-card shadow-2 p-3 border-round chart-card">
+        <h4 class="chart-title">HHP</h4>
+        <div class="chart-inner">
           <p-chart
             *ngIf="hhChartData?.datasets?.length"
             type="doughnut"
             [data]="hhChartData"
             [options]="doughnutChartOptions"
             [responsive]="true"
-            [style]="{ width: '100%', height: '100%' }"
             [attr.data-r]="refreshTick">
           </p-chart>
         </div>
@@ -82,16 +101,15 @@
     </div>
 
     <div class="donut-wrapper col-12 md:col-4">
-      <div class="surface-card shadow-2 p-3 border-round h-full">
-        <h4>Dollar Per HHP</h4>
-        <div class="chart-wrap">
+      <div class="surface-card shadow-2 p-3 border-round chart-card">
+        <h4 class="chart-title">Dollar Per HHP</h4>
+        <div class="chart-inner">
           <p-chart
             *ngIf="dollarPerHhpChartData?.datasets?.length"
             type="doughnut"
             [data]="dollarPerHhpChartData"
             [options]="doughnutChartOptions"
             [responsive]="true"
-            [style]="{ width: '100%', height: '100%' }"
             [attr.data-r]="refreshTick">
           </p-chart>
         </div>
@@ -99,16 +117,15 @@
     </div>
 
     <div class="donut-wrapper col-12 md:col-4">
-      <div class="surface-card shadow-2 p-3 border-round h-full">
-        <h4>Linear Foot</h4>
-        <div class="chart-wrap">
+      <div class="surface-card shadow-2 p-3 border-round chart-card">
+        <h4 class="chart-title">Linear Foot</h4>
+        <div class="chart-inner">
           <p-chart
             *ngIf="linearFootChartData?.datasets?.length"
             type="doughnut"
             [data]="linearFootChartData"
             [options]="doughnutChartOptions"
             [responsive]="true"
-            [style]="{ width: '100%', height: '100%' }"
             [attr.data-r]="refreshTick">
           </p-chart>
         </div>
@@ -118,7 +135,7 @@
 
   <!-- Overspent by Vendor -->
   <div class="chart-wrapper tall col-12">
-    <div class="surface-card shadow-2 p-3 border-round h-full">
+    <div class="surface-card shadow-2 p-3 border-round chart-card">
       <div class="chart-filters mb-2">
         <mat-form-field appearance="fill" class="mr-2">
           <mat-label>Vendor</mat-label>
@@ -136,8 +153,8 @@
         </mat-form-field>
       </div>
 
-      <span class="block text-500 font-medium mb-3">Overspent by Vendor</span>
-      <div class="chart-wrap tall">
+      <span class="block text-500 font-medium mb-3 chart-title">Overspent by Vendor</span>
+      <div class="chart-inner tall">
         <p-chart
           *ngIf="overSpentChartData?.labels?.length"
           class="p-chart"
@@ -145,7 +162,6 @@
           [data]="overSpentChartData"
           [options]="chartOptions"
           [responsive]="true"
-          [style]="{ width: '100%', height: '100%' }"
           [attr.data-r]="refreshTick">
         </p-chart>
       </div>
@@ -154,7 +170,7 @@
 
   <!-- Violations by Segment (mixed) -->
   <div class="chart-wrapper tall col-12">
-    <div class="surface-card shadow-2 p-3 border-round h-full">
+    <div class="surface-card shadow-2 p-3 border-round chart-card">
       <div class="chart-filters mb-2">
         <mat-form-field appearance="fill" class="mr-2">
           <mat-label>Vendor</mat-label>
@@ -172,8 +188,8 @@
         </mat-form-field>
       </div>
 
-      <span class="block text-500 font-medium mb-3">Violations by Segment</span>
-      <div class="chart-wrap tall">
+      <span class="block text-500 font-medium mb-3 chart-title">Violations by Segment</span>
+      <div class="chart-inner tall">
         <p-chart
           *ngIf="violationsBySegmentChartData?.labels?.length"
           class="p-chart"
@@ -181,7 +197,6 @@
           [data]="violationsBySegmentChartData"
           [options]="violationChartOptions"
           [responsive]="true"
-          [style]="{ width: '100%', height: '100%' }"
           [attr.data-r]="refreshTick">
         </p-chart>
       </div>
@@ -190,7 +205,7 @@
 
   <!-- All-In -->
   <div class="chart-wrapper tall col-12">
-    <div class="surface-card shadow-2 p-3 border-round h-full">
+    <div class="surface-card shadow-2 p-3 border-round chart-card">
       <div class="chart-filters mb-2">
         <mat-form-field appearance="fill" class="mr-2">
           <mat-label>Vendor</mat-label>
@@ -200,16 +215,15 @@
           </mat-select>
         </mat-form-field>
         <mat-form-field appearance="fill">
-          <mat-label>Segment</mat-label>
-          <mat-select [(ngModel)]="selectedSegmentAllIn" (selectionChange)="applyFilters()">
-            <mat-option [value]="null">All</mat-option>
-            <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
+          <mat-label>City(ies)</mat-label>
+          <mat-select multiple [(ngModel)]="selectedCityAllIn" (selectionChange)="applyFilters()">
+            <mat-option *ngFor="let option of cityOptions" [value]="option.value">{{ option.label }}</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
 
-      <span class="block text-500 font-medium mb-3">Forecasted vs Actual All-In vs Remaining</span>
-      <div class="chart-wrap tall">
+      <span class="block text-500 font-medium mb-3 chart-title">Forecasted vs Actual All-In vs Remaining</span>
+      <div class="chart-inner tall">
         <p-chart
           *ngIf="cityAllInChartData?.labels?.length"
           class="p-chart"
@@ -217,7 +231,6 @@
           [data]="cityAllInChartData"
           [options]="chartOptions"
           [responsive]="true"
-          [style]="{ width: '100%', height: '100%' }"
           [attr.data-r]="refreshTick">
         </p-chart>
       </div>

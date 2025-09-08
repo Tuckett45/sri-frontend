@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
-import { PreliminaryPunchListService, PagedResponse } from 'src/app/services/preliminary-punch-list.service';
+import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
@@ -29,6 +29,11 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   user!: User;
   filteredData: PreliminaryPunchList[] = [];
 
+  // Only use client-side paging when filters are active AND no search term is present
+  useClientPaging(): boolean {
+    return (!!this.selectedFilters?.length) && !this.searchTerm;
+  }
+
   displayedColumns: string[] = [
     'segmentId', 'vendorName', 'streetAddress', 'city', 'state', 'issues',
     'additionalConcerns', 'createdBy', 'dateReported',
@@ -44,6 +49,10 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource<PreliminaryPunchList>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  total = 0;
+  pageSize = 25;
+  pageIndex = 0; // 0-based
+  searchTerm: string = '';
 
   @Input('PreliminaryPunchListResolvedComponent') resolvedPunchListComponent!: PreliminaryPunchListResolvedComponent;
   @Input() selectedFilters: { column: string, values: string[] }[] = [];
@@ -61,6 +70,17 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     private cdRef: ChangeDetectorRef
   ) {}
 
+  private normalizeDate(value: any): Date | null {
+    if (value == null) return null;
+    if (value instanceof Date) return new Date(value.getTime());
+    if (typeof value === 'number') return new Date(value);
+    if (typeof value === 'string') {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+  }
+
   ngOnInit(): void {
     this.user = this.authService.getUser();
     this.punchListService.refresh$.subscribe(() => {
@@ -69,7 +89,6 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // fix: watch the correct @Input name
     if (changes['selectedFilters']) {
       this.applyFilters();
     }
@@ -77,18 +96,35 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      this.loadUnresolvedPunchLists(this.user);
+      // 0-based to API
+      this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       this.isInitialized = true;
     }
-    this.dataSource.paginator = this.paginator;
+    // Server-side paging: do not attach local paginator to MatTableDataSource
+    // this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
 
-  loadUnresolvedPunchLists(user: User): void {
-    this.punchListService.getUnresolvedPunchLists(user).subscribe({
+  // pageNumber is 0-based for API
+  loadUnresolvedPunchLists(user: User, pageNumber: number = 0, pageSize: number = 25): void {
+    const source$ = this.searchTerm
+      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, pageNumber, pageSize)
+      : this.punchListService.getUnresolvedPunchLists(user, pageNumber, pageSize);
+
+    source$.subscribe({
       next: (response: any) => {
-        this.unresolvedCountChange.emit(response.total);
-        // Works with either an array response or an envelope { total, page, pageSize, items }
+        // Expect 0-based paging from API response
+        const respPage = Number(response?.page ?? this.pageIndex);
+        const respSize = Number(response?.pageSize ?? this.pageSize);
+        if (!isNaN(respPage)) this.pageIndex = respPage;    // 0-based
+        if (!isNaN(respSize)) this.pageSize = respSize;
+
+        this.total = Number(
+          response?.total ?? response?.totalCount ?? response?.count ?? response?.Total ?? response?.TotalCount ??
+          (Array.isArray(response) ? response.length : 0)
+        );
+        this.unresolvedCountChange.emit(this.total);
+
         const items: PreliminaryPunchList[] = Array.isArray(response)
           ? response
           : (response?.items ?? []);
@@ -98,19 +134,16 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
           issues: (p.issues || []).map(issue => ({ ...issue }))
         }));
 
-        // Keep dates as Date objects (add optional display strings if you want)
+        // Normalize dates
         for (const pl of results) {
-          pl.dateReported = new Date((pl.dateReported as any) + 'Z');
-          if (pl.resolvedDate) {
-            pl.resolvedDate = new Date((pl.resolvedDate as any) + 'Z');
-          }
-          // Optional display fields:
+          const dr = this.normalizeDate(pl.dateReported as any);
+          if (dr) pl.dateReported = dr;
+          const rd = this.normalizeDate(pl.resolvedDate as any);
+          if (rd) pl.resolvedDate = rd;
           (pl as any).dateReportedDisplay =
-            this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '';
+            pl.dateReported ? this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '' : '';
           (pl as any).resolvedDateDisplay =
-            pl.resolvedDate
-              ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? ''
-              : '';
+            pl.resolvedDate ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '' : '';
         }
 
         // Deduplicate by id
@@ -118,28 +151,49 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
           (item, index, self) => index === self.findIndex(t => t.id === item.id)
         );
 
-        // Reset and set data
-        this.unresolvedPreliminaryPunchList$.next(dedupedResults);
-        this.unresolvedPreliminaryPunchLists = dedupedResults;
-        this.dataSource.data = this.filterData(dedupedResults);
+        // For search, keep only unresolved (not both resolved)
+        const displayRows = this.searchTerm
+          ? dedupedResults.filter(pl => !(!!pl.pmResolved && !!pl.cmResolved))
+          : dedupedResults;
 
-        if (this.selectedFilters?.length) this.applyFilters();
+        // Reset and set data
+        this.unresolvedPreliminaryPunchLists = displayRows;
+        this.unresolvedPreliminaryPunchList$.next(this.unresolvedPreliminaryPunchLists);
+        this.dataSource.data = this.filterData(this.unresolvedPreliminaryPunchLists);
+
+        if (this.selectedFilters?.length) this.applyFilters(false);
 
         this.updateUnresolvedCount();
       },
-      error: (err) => {
+      error: () => {
         this.toastr.error('Error fetching unresolved punch lists');
-        // console.error(err);
       }
     });
   }
 
-  updateUnresolvedCount(): void {
-    if (this.dataSource.filter) {
-      this.unresolvedCountChange.emit(this.dataSource.filteredData.length);
+  onPage(event: any): void {
+    this.pageIndex = event.pageIndex; // 0-based
+    this.pageSize = event.pageSize;
+    if (this.useClientPaging()) {
+      this.updatePagedView();
     } else {
-      this.unresolvedCountChange.emit(this.dataSource.data.length);
+      // 0-based to API
+      this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
     }
+  }
+
+  updateUnresolvedCount(): void {
+    this.unresolvedCountChange.emit(this.total);
+  }
+
+  // Server-side search entrypoint (called by parent search box)
+  searchFilter(event: Event): void {
+    const val = (event.target as HTMLInputElement).value?.trim() ?? '';
+    this.searchTerm = val;
+    this.pageIndex = 0; // reset to first page
+    try { this.paginator?.firstPage?.(); } catch {}
+    // 0-based to API
+    this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
@@ -191,7 +245,6 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   refreshPunchLists(): void {
     this.loadUnresolvedPunchLists(this.user);
-    this.punchListService.getResolvedPunchLists(this.user).subscribe(); // kick off other cache if needed
   }
 
   editReport(report: PreliminaryPunchList): void {
@@ -245,7 +298,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     });
   }
 
-  // Use current BehaviorSubject value instead of subscribing to it repeatedly
+  // Use current BehaviorSubject value instead of subscribing repeatedly
   refreshTable(): void {
     const entries = this.unresolvedPreliminaryPunchList$.value || [];
     const updatedData = this.filterData(entries);
@@ -267,70 +320,121 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.isResolutionGalleryVisible = false;
   }
 
-  searchFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
-
-    this.dataSource.filterPredicate = (data: PreliminaryPunchList, filter: string) => {
-      const transformedFilter = filter.trim().toLowerCase();
-      const dataStr = `${data.segmentId} ${data.vendorName} ${data.streetAddress} ${data.city} ${data.state} ${data.createdBy} ${data.cmResolved} ${data.pmResolved}`.toLowerCase();
-      return dataStr.includes(transformedFilter);
-    };
-
-    this.dataSource.filter = filterValue;
-    this.updateUnresolvedCount();
-  }
-
-  applyFilters(): void {
-    const entries = this.unresolvedPreliminaryPunchList$.value || [];
-    let updatedData = this.filterData(entries);
-
-    this.selectedFilters.forEach(filter => {
-      if (filter.column === 'dateReported') {
-        const startDateObj = new Date(filter.values[0]);
-        const endDateObj = new Date(filter.values[1]);
-        updatedData = updatedData.filter(p => {
-          const d = new Date(p.dateReported as any);
-          return d >= startDateObj && d <= endDateObj;
-        });
-      } else if (filter.column === 'resolvedDate') {
-        const startDateObj = new Date(filter.values[0]);
-        const endDateObj = new Date(filter.values[1]);
-        updatedData = updatedData.filter(p => {
-          if (!p.resolvedDate) return false;
-          const d = new Date(p.resolvedDate as any);
-          return d >= startDateObj && d <= endDateObj;
-        });
-      } else if (filter.column && filter.values) {
-        if (Array.isArray(filter.values)) {
-          updatedData = updatedData.filter(p =>
-            filter.values.some(val =>
-              (p[filter.column as keyof PreliminaryPunchList] ?? '')
-                .toString()
-                .toLowerCase()
-                .includes(val.toLowerCase())
-            )
-          );
-        } else {
-          updatedData = updatedData.filter(p =>
-            (p[filter.column as keyof PreliminaryPunchList] ?? '')
-              .toString()
-              .toLowerCase()
-              .includes((filter.values as any).toLowerCase())
-          );
-        }
+  applyFilters(resetPage: boolean = true): void {
+    // When searching, keep using server-side search paging for correctness
+    if (this.searchTerm) {
+      if (resetPage) {
+        this.pageIndex = 0;
+        try { this.paginator?.firstPage?.(); } catch {}
       }
-    });
+      this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize); // 0-based
+      return;
+    }
 
-    this.filteredData = updatedData;
-    this.dataSource.data = this.filteredData;
-    this.updateUnresolvedCount();
+    // Fetch the entire current result set so filters apply to all rows (client-side)
+    const desiredSize = this.total && this.total > 0
+      ? this.total
+      : Math.max(this.pageSize, this.dataSource?.data?.length || 25);
+
+    const source$ = this.searchTerm
+      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, 0, desiredSize) // 0-based
+      : this.punchListService.getUnresolvedPunchLists(this.user, 0, desiredSize); // 0-based
+
+    source$.subscribe({
+      next: (response: any) => {
+        const items: PreliminaryPunchList[] = Array.isArray(response) ? response : (response?.items ?? []);
+        const results = items.map(p => ({
+          ...p,
+          issues: (p.issues || []).map(issue => ({ ...issue }))
+        }));
+
+        // Normalize dates
+        for (const pl of results) {
+          const dr = this.normalizeDate(pl.dateReported as any);
+          if (dr) pl.dateReported = dr;
+          const rd = this.normalizeDate(pl.resolvedDate as any);
+          if (rd) pl.resolvedDate = rd;
+        }
+
+        // Deduplicate by id
+        const dedupedResults = results.filter((item, index, self) => index === self.findIndex(t => t.id === item.id));
+
+        // If searching, keep only unresolved (not both resolved)
+        const baseRows = this.searchTerm
+          ? dedupedResults.filter(pl => !(!!pl.pmResolved && !!pl.cmResolved))
+          : dedupedResults;
+
+        // Scope by user vendor/market
+        let updatedData = this.filterData(baseRows);
+
+        // Apply selected filters across full dataset
+        this.selectedFilters.forEach(filter => {
+          if (filter.column === 'dateReported') {
+            const startDateObj = new Date(filter.values[0]);
+            const endDateObj = new Date(filter.values[1]);
+            updatedData = updatedData.filter(p => {
+              const d = new Date(p.dateReported as any);
+              return d >= startDateObj && d <= endDateObj;
+            });
+          } else if (filter.column === 'resolvedDate') {
+            const startDateObj = new Date(filter.values[0]);
+            const endDateObj = new Date(filter.values[1]);
+            updatedData = updatedData.filter(p => {
+              if (!p.resolvedDate) return false;
+              const d = new Date(p.resolvedDate as any);
+              return d >= startDateObj && d <= endDateObj;
+            });
+          } else if (filter.column && filter.values) {
+            if (Array.isArray(filter.values)) {
+              updatedData = updatedData.filter(p =>
+                filter.values.some(val =>
+                  (p[filter.column as keyof PreliminaryPunchList] ?? '')
+                    .toString()
+                    .toLowerCase()
+                    .includes(val.toLowerCase())
+                )
+              );
+            } else {
+              updatedData = updatedData.filter(p =>
+                (p[filter.column as keyof PreliminaryPunchList] ?? '')
+                  .toString()
+                  .toLowerCase()
+                  .includes((filter.values as any).toLowerCase())
+              );
+            }
+          }
+        });
+
+        this.filteredData = updatedData;
+        if (resetPage) {
+          this.pageIndex = 0;
+          try { this.paginator?.firstPage?.(); } catch {}
+        }
+        this.updatePagedView();
+        this.updateUnresolvedCount();
+      },
+      error: () => this.toastr.error('Error applying filters')
+    });
   }
 
   clearAll(): void {
     this.selectedFilters = [];
     const entries = this.unresolvedPreliminaryPunchList$.value || [];
     const updatedData = this.filterData(entries);
+    this.filteredData = [];
     this.dataSource.data = updatedData;
+    this.pageIndex = 0;
+    try { this.paginator?.firstPage?.(); } catch {}
     this.updateUnresolvedCount();
+  }
+
+  private updatePagedView = (): void => {
+    if (!this.useClientPaging()) return;
+    const data = Array.isArray(this.filteredData) ? this.filteredData : [];
+    const size = Number(this.pageSize) || 25;
+    const index = Number(this.pageIndex) || 0;
+    const start = Math.max(0, index * size);
+    const end = start + size;
+    this.dataSource.data = data.slice(start, Math.min(end, data.length));
   }
 }

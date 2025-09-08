@@ -21,6 +21,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BudgetTrackerComponent } from './budget-tracker/budget-tracker.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { ChipModule } from 'primeng/chip';
 import { RippleModule } from 'primeng/ripple';
 import { MatSelectModule } from '@angular/material/select';
@@ -55,6 +56,7 @@ import '../../../charts-setup';
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatPaginatorModule,
+    MatExpansionModule,
     ChipModule,
     RippleModule,
     MatInputModule,

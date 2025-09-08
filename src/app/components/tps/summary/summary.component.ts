@@ -48,17 +48,24 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   selectedVendorSegmentChart: string | null = null;
   selectedSegmentSegmentChart: string | null = null;
 
+  // All-In filters: Vendor + City (multi-city)
   selectedVendorAllIn: string | null = null;
-  selectedSegmentAllIn: string | null = null;
+  selectedCityAllIn: string[] = [];
+
+  // Global page filters (apply to all charts)
+  selectedVendorsGlobal: string[] = [];
+  selectedSegmentsGlobal: string[] = [];
+  selectedCitiesGlobal: string[] = [];
 
   vendorOptions: SelectItem[] = [];
   segmentOptions: SelectItem[] = [];
+  cityOptions: SelectItem[] = [];          // NEW
 
   // ===== Data stores =====
   private violations: WPViolation[] = [];
   private cities: CityScorecard[] = [];
 
-  // ===== Chart data (safe defaults) =====
+  // ===== Chart data =====
   overSpentChartData: any = { labels: [], datasets: [] };
   cityAllInChartData: any = { labels: [], datasets: [] };
   violationsBySegmentChartData: any = { labels: [], datasets: [] };
@@ -68,10 +75,8 @@ export class SummaryComponent implements OnInit, AfterViewInit {
 
   @ViewChildren(UIChart) charts!: QueryList<UIChart>;
 
-  // ===== Mobile-aware options =====
   isMobile = false;
 
-  // Active options used by template
   violationChartOptions: any;
   doughnutChartOptions: any;
   chartOptions: any;
@@ -212,16 +217,15 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   private applyOptionProfiles() {
     const common = this.isMobile ? this.mobileOptions : this.desktopOptions;
 
-    // For mobile, flip to horizontal bars so category labels are readable.
     const indexAxis: 'x' | 'y' = this.isMobile ? 'y' : 'x';
     const catAxis = indexAxis === 'y' ? 'y' : 'x';
     const valAxis = indexAxis === 'y' ? 'x' : 'y';
 
-    // Base options for standard bar charts (Overspent, All-In)
     this.chartOptions = {
       ...common,
       indexAxis,
-      layout: { padding: 0 },
+      maintainAspectRatio: false,
+      layout: { padding: { top: 6, right: 6, bottom: 16, left: 6 } },
       plugins: {
         ...(common.plugins || {}),
         legend: {
@@ -259,10 +263,12 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         }
       }
     } as any;
-    // Mixed bar/line chart behaves better with a horizontal layout on phones
+
     this.violationChartOptions = {
       ...common,
-      indexAxis: 'y',
+      indexAxis: 'x',
+      maintainAspectRatio: false,
+      layout: { padding: { top: 6, right: 6, bottom: 16, left: 6 } },
       scales: {
         x: {
           ...(common.scales?.x || {}),
@@ -287,6 +293,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         }
       }
     };
+
     this.doughnutChartOptions = this.isMobile ? this.mobileDoughnut : this.desktopDoughnut;
   }
 
@@ -300,45 +307,26 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     }).format(n || 0);
   }
 
-  // Insert line breaks into long labels at word boundaries for axis ticks
   private wrapLabel(str: string, width = 18): string {
     if (!str) return '';
-    // Prefer breaking at spaces
-    const parts = str.match(new RegExp(`.{1,${width}}(\s|$)`, 'g'));
+    const parts = str.match(new RegExp(`.{1,${width}}(\\s|$)`, 'g'));
     if (parts) return parts.map(s => s.trim()).join('\n');
-    // Fallback: hard break long unspaced strings
     const chunks: string[] = [];
     for (let i = 0; i < str.length; i += width) chunks.push(str.slice(i, i + width));
     return chunks.join('\n');
   }
 
-  // Coerce dollars like "$1,234.56", "($2,345)", "−123.45", "1,234 ft" → number
   private num(v: any): number {
     if (v == null) return 0;
     if (typeof v === 'number') return isFinite(v) ? v : 0;
-
     let s = String(v).trim();
     if (!s) return 0;
-
-    // normalize unicode minus to ASCII
     s = s.replace(/\u2212/g, '-');
-
-    // accounting negatives "(1234)"
     let sign = 1;
-    if (/^\(.*\)$/.test(s)) {
-      sign = -1;
-      s = s.slice(1, -1);
-    }
-
-    // keep digits, one dot, and minus
+    if (/^\(.*\)$/.test(s)) { sign = -1; s = s.slice(1, -1); }
     s = s.replace(/[^0-9.\-]/g, '');
-
-    // collapse multiple dots
     const firstDot = s.indexOf('.');
-    if (firstDot !== -1) {
-      s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
-    }
-
+    if (firstDot !== -1) s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
     const n = parseFloat(s);
     return isFinite(n) ? sign * n : 0;
   }
@@ -361,16 +349,18 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         this.violations = violations ?? [];
         this.cities = cities ?? [];
 
-        // build select options once we actually have data
-        const vendors = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
+        // build select options
+        const vendors  = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
         const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
-        this.vendorOptions = vendors.map(v => ({ label: v!, value: v! }));
+        const cityList = Array.from(new Set(this.cities.map(c => c.city).filter(Boolean)));
+
+        this.vendorOptions  = vendors.map(v => ({ label: v!, value: v! }));
         this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
+        this.cityOptions    = cityList.map(c => ({ label: c!, value: c! }));  // NEW
 
         this.applyFilters();
       },
       error: _ => {
-        // fall back to empty datasets so charts render a "no data" state
         this.violations = [];
         this.cities = [];
         this.applyFilters();
@@ -379,14 +369,35 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   }
 
   applyFilters() {
+    // Base/global filters
+    const vendorSet  = new Set(this.selectedVendorsGlobal || []);
+    const segmentSet = new Set(this.selectedSegmentsGlobal || []);
+    const citySet    = new Set(this.selectedCitiesGlobal || []);
+
+    const baseViolations = this.violations.filter(v => {
+      const date = v.monthYear ? new Date(v.monthYear) : null;
+      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
+      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
+      const vendorOk = vendorSet.size ? (v.vendor ? vendorSet.has(v.vendor) : false) : true;
+      const segmentOk = segmentSet.size ? (v.segment ? segmentSet.has(v.segment) : false) : true;
+      return afterStart && beforeEnd && vendorOk && segmentOk;
+    });
+
+    const baseCities = this.cities.filter(c => {
+      const date = c.ta_Date ? new Date(c.ta_Date) : null;
+      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
+      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
+      const cityName = c.city ?? '';
+      const cityOk = citySet.size ? citySet.has(cityName) : true;
+      return afterStart && beforeEnd && cityOk;
+    });
+
+    // helper to apply per-chart vendor/segment on top of base
     const filterViolations = (vendor: string | null, segment: string | null) =>
-      this.violations.filter(v => {
-        const date = v.monthYear ? new Date(v.monthYear) : null;
-        const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
-        const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
+      baseViolations.filter(v => {
         const vendorMatch = vendor ? v.vendor === vendor : true;
         const segmentMatch = segment ? v.segment === segment : true;
-        return afterStart && beforeEnd && vendorMatch && segmentMatch;
+        return vendorMatch && segmentMatch;
       });
 
     // ===== KPI calcs =====
@@ -397,7 +408,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     this.minOverspent = overspentValues.length ? Math.min(...overspentValues) : 0;
     this.maxOverspent = overspentValues.length ? Math.max(...overspentValues) : 0;
 
-    // ===== Overspent by Vendor (fresh references + numeric) =====
+    // ===== Overspent by Vendor =====
     const overspentViolations = filterViolations(this.selectedVendorOverspent, this.selectedSegmentOverspent);
     const vendorMap = new Map<string, number>();
     overspentViolations.forEach(v => {
@@ -410,20 +421,12 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     this.overSpentChartData = {
       labels: [...overSpentLabels],
       datasets: [
-        {
-          label: 'Overspent',
-          data: [...overSpentValues],
-          backgroundColor: '#42A5F5',
-          borderColor: '#1E88E5',
-          borderWidth: 1
-        }
+        { label: 'Overspent', data: [...overSpentValues], backgroundColor: '#42A5F5', borderColor: '#1E88E5', borderWidth: 1 }
       ]
     };
 
-    // ===== Violations by Segment (grouped + mixed bar/line; fresh references) =====
+    // ===== Violations by Segment (mixed) =====
     const segmentViolations = filterViolations(this.selectedVendorSegmentChart, this.selectedSegmentSegmentChart);
-
-    // Group rows by segment, summing numeric fields
     const bySegment = new Map<string, { conlog: number; plan: number; actual: number }>();
     segmentViolations.forEach(v => {
       const key = v.segment || 'Unknown';
@@ -433,7 +436,6 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       current.actual += this.num((v as any).actualCost);
       bySegment.set(key, current);
     });
-
     const segKeys    = Array.from(bySegment.keys());
     const segLabels  = segKeys.map(k => this.wrapLabel(k, 18));
     const segConlog  = segKeys.map(k => bySegment.get(k)!.conlog);
@@ -449,7 +451,6 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       ]
     };
 
-    // Improve readability: use horizontal bars for many/long labels
     this.violationChartOptions = {
       ...this.chartOptions,
       indexAxis: 'x',
@@ -457,24 +458,24 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         x: { ...(this.chartOptions?.scales as any)?.x },
         y: {
           ...(this.chartOptions?.scales as any)?.y,
-          ticks: {
-            ...(this.chartOptions?.scales as any)?.y?.ticks,
-            autoSkip: false
-          }
+          ticks: { ...(this.chartOptions?.scales as any)?.y?.ticks, autoSkip: false }
         }
       }
     };
 
-    // ===== City Scorecard filters for All-In chart =====
-    const cityFilterViolations = filterViolations(this.selectedVendorAllIn, this.selectedSegmentAllIn);
-    const allowedCities = new Set(cityFilterViolations.map(v => v.city).filter(Boolean));
+    // ===== All-In by City — filter by Vendor + City =====
+    // 1) From violations, pick cities that match Vendor (and date range)
+    const cityFilterViolations = filterViolations(this.selectedVendorAllIn, null);
+    const vendorAllowedCities = new Set(cityFilterViolations.map(v => v.city).filter(Boolean));
 
-    const filteredCities = this.cities.filter(c => {
-      const date = c.ta_Date ? new Date(c.ta_Date) : null;
-      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
-      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
-      const matchesCity = allowedCities.size ? allowedCities.has(c.city ?? '') : true;
-      return afterStart && beforeEnd && matchesCity;
+    // 2) Now filter CityScorecard by date + (vendorAllowedCities if vendor chosen) + (explicit city selection)
+    const filteredCities = baseCities.filter(c => {
+      const cityName = c.city ?? '';
+      const matchesVendor = this.selectedVendorAllIn ? vendorAllowedCities.has(cityName) : true;
+      const matchesCity = (this.selectedCityAllIn && this.selectedCityAllIn.length)
+        ? this.selectedCityAllIn.includes(cityName)
+        : true;
+      return matchesVendor && matchesCity;
     });
 
     this.cityCount = filteredCities.length;
@@ -498,7 +499,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     const totalActualDollarPerLFT     = filteredCities.reduce((sum, c) => sum + this.num(c.actualDollarPerLFT), 0);
     this.percentChangeDollarPerLFT = this.getPercentChange(totalForecastedDollarPerLFT, totalActualDollarPerLFT);
 
-    // ===== Doughnuts (numbers only) =====
+    // Doughnuts
     this.hhChartData = {
       labels: ['Actual HHP', 'Forecasted HHP'],
       datasets: [{ data: [totalActualHHP, totalForecastedHHP], backgroundColor: ['#42A5F5', '#FFA726'] }]
@@ -514,7 +515,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       datasets: [{ data: [totalActualDollarPerLFT, totalForecastedDollarPerLFT], backgroundColor: ['#FFA000', '#AB47BC'] }]
     };
 
-    // ===== All-In by City (fresh refs) =====
+    // Bar chart: All-In by City
     const allInLabels     = filteredCities.map(c => c.city ?? '');
     const allInForecasted = filteredCities.map(c => this.num(c.forecastedAllIn));
     const allInActual     = filteredCities.map(c => this.num(c.actualAllIn));
@@ -531,7 +532,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       ]
     };
 
-    // Ensure Angular applies new [data] references, then refresh charts
+    // push updates
     this.cdr.detectChanges();
     this.refreshTick++;
     this.zone.runOutsideAngular(() => {
@@ -546,12 +547,21 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   clearFilters() {
     this.startDate = null;
     this.endDate = null;
+
     this.selectedVendorOverspent = null;
     this.selectedSegmentOverspent = null;
+
     this.selectedVendorSegmentChart = null;
     this.selectedSegmentSegmentChart = null;
+
     this.selectedVendorAllIn = null;
-    this.selectedSegmentAllIn = null;
+    this.selectedCityAllIn = [];       // reset city filter
+
+    // Reset global page filters
+    this.selectedVendorsGlobal = [];
+    this.selectedSegmentsGlobal = [];
+    this.selectedCitiesGlobal = [];
+
     this.applyFilters();
   }
 

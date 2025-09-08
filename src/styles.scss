@@ -20,3 +20,27 @@ mat-error{
                   z-index: 90000 !important;
         }
 
+/* Global PrimeNG Chart sizing overrides */
+/* Ensure chart canvas fully fills its container regardless of component encapsulation */
+.p-chart,
+.p-chart > div,
+.p-chart > canvas,
+.p-chart > div > canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  display: block;
+}
+
+/* Chart height is controlled by its local wrapper; avoid inherited height that can cause overflow */
+/* .p-chart { height: inherit !important; } */
+
+/* Optional: Make all summary charts respect their wrappers */
+.summary-dashboard .p-chart,
+.summary-dashboard .p-chart > div,
+.summary-dashboard .p-chart > div > canvas,
+.summary-dashboard .p-chart > canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
