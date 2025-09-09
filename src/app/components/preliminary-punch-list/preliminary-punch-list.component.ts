@@ -1,9 +1,9 @@
-import { Component, Input, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { FacetsResponse, PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { map, Observable } from 'rxjs';
+import { map, Observable, Subject } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from 'src/app/services/auth.service';
@@ -13,6 +13,7 @@ import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-
 import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
 import * as Papa from 'papaparse';
 import { DatePipe } from '@angular/common';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-preliminary-punch-list',
@@ -20,7 +21,7 @@ import { DatePipe } from '@angular/common';
   styleUrls: ['./preliminary-punch-list.component.scss'],
   standalone: false
 })
-export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
+export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnDestroy {
   preliminaryPunchList$!: Observable<PreliminaryPunchList[]>;
   isIssueGalleryVisible = false;
   isResolutionGalleryVisible = false;
@@ -73,6 +74,10 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
     { breakpoint: '560px', numVisible: 1 }
   ];
 
+  // --- Debounced search handling in parent ---
+  private search$ = new Subject<string>();
+  private destroy$ = new Subject<void>();
+
   constructor(
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
@@ -91,11 +96,30 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
     // Seed counts from cache (optional)
     this.unresolvedPunchListCount = this.punchListService.getCachedUnresolvedCount(this.user);
     this.resolvedPunchListCount = this.punchListService.getCachedResolvedCount(this.user);
+
+    // Debounce search input coming from parent search box
+    this.search$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(term => {
+        // Forward the debounced term to both children
+        const syntheticEvent = { target: { value: term } } as unknown as Event;
+        this.resolvedPunchListComponent?.searchFilter(syntheticEvent);
+        this.unresolvedPunchListComponent?.searchFilter(syntheticEvent);
+      });
   }
 
   ngAfterViewInit(): void {
     // Give children a tick to mount, then push current filters
     setTimeout(() => this.updateChildFilters(), 0);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /** Fetch everything (whatever getEntries() returns) and scope to the current user's vendor/market. */
@@ -104,13 +128,15 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
       map(response => response.items)
     );
 
-    this.preliminaryPunchList$.subscribe(data => {
-      // Role scoping first (this becomes "allData" for the top-level table)
-      this.allData = this.scopeToUser(data);
-      this.dataSource.data = this.allData;
-      // Children use server paging/filtering on their own; we just push filter state
-      this.updateChildFilters();
-    });
+    this.preliminaryPunchList$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        // Role scoping first (this becomes "allData" for the top-level table)
+        this.allData = this.scopeToUser(data);
+        this.dataSource.data = this.allData;
+        // Children use server paging/filtering on their own; we just push filter state
+        this.updateChildFilters();
+      });
   }
 
   /** Scope rows to the current PM/CM rules so filters reflect what the user can actually see. */
@@ -160,6 +186,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
     const resolvedScope = this.getResolvedScopeForActiveTab();
 
     this.punchListService.getFacets(resolvedScope, state ?? undefined, company ?? undefined)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res: FacetsResponse) => {
           const states = (res.states || []).map(s => (s ?? '').toUpperCase());
@@ -312,7 +339,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
 
   refreshTable(): void {
     // Re-scope table and refresh facets
-    this.preliminaryPunchList$?.subscribe(entries => {
+    this.preliminaryPunchList$?.pipe(takeUntil(this.destroy$)).subscribe(entries => {
       this.allData = this.scopeToUser(entries);
       this.dataSource.data = this.allData;
       this.updateChildFilters();
@@ -331,10 +358,10 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
     this.isResolutionGalleryVisible = false;
   }
 
+  // Parent-level debounced search entrypoint
   applyFilter(event: Event): void {
-    // forwards to children; they will perform search (server) using current chip filters
-    this.resolvedPunchListComponent.searchFilter(event);
-    this.unresolvedPunchListComponent.searchFilter(event);
+    const term = ((event.target as HTMLInputElement)?.value ?? '').trim();
+    this.search$.next(term);
   }
 
   onFilterChange(filter: { column: string, values: string[] }) {
