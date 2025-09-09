@@ -6,10 +6,11 @@
   <!-- add class="tps-tabs" so we can target these styles safely -->
   <p-tabs class="tps-tabs" [(value)]="activeTab" (valueChange)="onTabChange($event)">
     <p-tablist>
-      <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">Summary</p-tab>
+      <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">Dashboard</p-tab>
       <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">Work Package Violations</p-tab>
       <p-tab [value]="2" [ngClass]="{ 'active-tab': activeTab === 2 }">City Scorecard</p-tab>
       <p-tab [value]="3" [ngClass]="{ 'active-tab': activeTab === 3 }">Budget Tracker</p-tab>
+      <p-tab [value]="4" [ngClass]="{ 'active-tab': activeTab === 4 }">2025 Metrics</p-tab>
     </p-tablist>
 
     <p-tabpanels>
@@ -17,6 +18,7 @@
       <p-tabpanel [value]="1"><app-violations></app-violations></p-tabpanel>
       <p-tabpanel [value]="2"><app-city-scorecard></app-city-scorecard></p-tabpanel>
       <p-tabpanel [value]="3"><app-budget-tracker></app-budget-tracker></p-tabpanel>
+      <p-tabpanel [value]="4"><app-tps-metrics></app-tps-metrics></p-tabpanel>
     </p-tabpanels>
   </p-tabs>
 </div>
