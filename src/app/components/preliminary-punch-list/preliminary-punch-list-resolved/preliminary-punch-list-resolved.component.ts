@@ -157,8 +157,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
           ? this.resolvedPreliminaryPunchLists
           : this.filterData(this.resolvedPreliminaryPunchLists);
 
-        // Only apply client-side filters after load when not searching
-        if (this.selectedFilters?.length && !this.searchTerm) {
+        // Apply any chip-selected filters to the freshly loaded data
+        if (this.selectedFilters?.length) {
           this.applyFilters(false);
         }
 
@@ -299,24 +299,66 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   }
 
   applyFilters(resetPage: boolean = true): void {
-    // When searching, keep using server-side search paging for correctness
     if (this.searchTerm) {
+      // Filter the current search results with selected chip filters
+      let updatedData = this.filterData(this.resolvedPreliminaryPunchLists);
+
+      this.selectedFilters.forEach(filter => {
+        if (filter.column == 'dateReported') {
+          const startDateObj = new Date(filter.values[0]);
+          const endDateObj = new Date(filter.values[1]);
+          updatedData = updatedData.filter(punchList => {
+            const punchListDate = new Date(punchList.dateReported as any);
+            return punchListDate >= startDateObj && punchListDate <= endDateObj;
+          });
+        } else if (filter.column == 'resolvedDate') {
+          const startDateObj = new Date(filter.values[0]);
+          const endDateObj = new Date(filter.values[1]);
+          updatedData = updatedData.filter(punchList => {
+            if (punchList.resolvedDate != null) {
+              const punchListDate = new Date(punchList.resolvedDate as any);
+              return punchListDate >= startDateObj && punchListDate <= endDateObj;
+            } else {
+              return false;
+            }
+          });
+        } else if (filter.column && filter.values) {
+          if (Array.isArray(filter.values)) {
+            updatedData = updatedData.filter(punchList =>
+              filter.values.some(val =>
+                (punchList[filter.column as keyof PreliminaryPunchList] ?? '')
+                  .toString()
+                  .toLowerCase()
+                  .includes(val.toLowerCase())
+              )
+            );
+          } else {
+            updatedData = updatedData.filter(punchList =>
+              (punchList[filter.column as keyof PreliminaryPunchList] ?? '')
+                .toString()
+                .toLowerCase()
+                .includes((filter.values as any))
+            );
+          }
+        }
+      });
+
+      this.filteredData = updatedData;
       if (resetPage) {
         this.pageIndex = 0;
         try { this.paginator?.firstPage?.(); } catch {}
       }
-      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
+      this.updatePagedView();
+      this.updateResolvedCount();
       return;
     }
 
-    // Fetch entire set (search or resolved) then apply filters over all rows (client-side)
+    // Fetch entire set (resolved) then apply filters over all rows (client-side)
     const desiredSize = this.total && this.total > 0
       ? this.total
       : Math.max(this.pageSize, this.dataSource?.data?.length || 25);
 
-    const source$ = this.searchTerm
-      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, 1, desiredSize)
-      : this.punchListService.getResolvedPunchLists(this.user, 1, desiredSize);
+    const source$ = this.punchListService.getResolvedPunchLists(this.user, 1, desiredSize);
 
     source$.subscribe({
       next: (response: any) => {
@@ -334,13 +376,8 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         // Deduplicate by id
         const dedupedResults = results.filter((item, index, self) => index === self.findIndex(t => t.id === item.id));
 
-        // If searching, keep only resolved (both PM and CM resolved)
-        const baseRows = this.searchTerm
-          ? dedupedResults.filter(pl => !!pl.pmResolved && !!pl.cmResolved)
-          : dedupedResults;
-
         // Scope by user vendor/market
-        let updatedData = this.filterData(baseRows);
+        let updatedData = this.filterData(dedupedResults);
 
         // Apply selected chip filters over full dataset
         this.selectedFilters.forEach(filter => {

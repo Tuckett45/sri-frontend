@@ -155,8 +155,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
           ? this.unresolvedPreliminaryPunchLists
           : this.filterData(this.unresolvedPreliminaryPunchLists);
 
-        // Only apply client-side filters after load when not searching
-        if (this.selectedFilters?.length && !this.searchTerm) this.applyFilters(false);
+        // Apply any chip-selected filters to the freshly loaded data
+        if (this.selectedFilters?.length) this.applyFilters(false);
 
         this.updateUnresolvedCount();
       },
@@ -318,13 +318,54 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   applyFilters(resetPage: boolean = true): void {
-    // When searching, keep using server-side search paging for correctness
     if (this.searchTerm) {
+      // Filter current search results with selected chip filters
+      let updatedData = this.filterData(this.unresolvedPreliminaryPunchLists);
+
+      this.selectedFilters.forEach(filter => {
+        if (filter.column === 'dateReported') {
+          const startDateObj = new Date(filter.values[0]);
+          const endDateObj = new Date(filter.values[1]);
+          updatedData = updatedData.filter(p => {
+            const d = new Date(p.dateReported as any);
+            return d >= startDateObj && d <= endDateObj;
+          });
+        } else if (filter.column === 'resolvedDate') {
+          const startDateObj = new Date(filter.values[0]);
+          const endDateObj = new Date(filter.values[1]);
+          updatedData = updatedData.filter(p => {
+            if (!p.resolvedDate) return false;
+            const d = new Date(p.resolvedDate as any);
+            return d >= startDateObj && d <= endDateObj;
+          });
+        } else if (filter.column && filter.values) {
+          if (Array.isArray(filter.values)) {
+            updatedData = updatedData.filter(p =>
+              filter.values.some(val =>
+                (p[filter.column as keyof PreliminaryPunchList] ?? '')
+                  .toString()
+                  .toLowerCase()
+                  .includes(val.toLowerCase())
+              )
+            );
+          } else {
+            updatedData = updatedData.filter(p =>
+              (p[filter.column as keyof PreliminaryPunchList] ?? '')
+                .toString()
+                .toLowerCase()
+                .includes((filter.values as any).toLowerCase())
+            );
+          }
+        }
+      });
+
+      this.filteredData = updatedData;
       if (resetPage) {
         this.pageIndex = 0;
         try { this.paginator?.firstPage?.(); } catch {}
       }
-      this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
+      this.updatePagedView();
+      this.updateUnresolvedCount();
       return;
     }
 
@@ -333,9 +374,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       ? this.total
       : Math.max(this.pageSize, this.dataSource?.data?.length || 25);
 
-    const source$ = this.searchTerm
-      ? this.punchListService.searchUnresolvedPunchLists(this.user, this.searchTerm, 1, desiredSize)
-      : this.punchListService.getUnresolvedPunchLists(this.user, 1, desiredSize);
+    const source$ = this.punchListService.getUnresolvedPunchLists(this.user, 1, desiredSize);
 
     source$.subscribe({
       next: (response: any) => {
@@ -356,13 +395,8 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
         // Deduplicate by id
         const dedupedResults = results.filter((item, index, self) => index === self.findIndex(t => t.id === item.id));
 
-        // If searching, keep only unresolved (not both resolved)
-        const baseRows = this.searchTerm
-          ? dedupedResults.filter(pl => !(!!pl.pmResolved && !!pl.cmResolved))
-          : dedupedResults;
-
         // Scope by user vendor/market
-        let updatedData = this.filterData(baseRows);
+        let updatedData = this.filterData(dedupedResults);
 
         // Apply selected filters across full dataset
         this.selectedFilters.forEach(filter => {
