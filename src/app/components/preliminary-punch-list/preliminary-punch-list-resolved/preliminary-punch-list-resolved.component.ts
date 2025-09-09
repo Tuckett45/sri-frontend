@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
@@ -26,13 +26,6 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
   isIssueGalleryVisible: boolean = false;
   isResolutionGalleryVisible: boolean = false;
   user!: User;
-  filteredData: PreliminaryPunchList[] = [];
-
-  // Use client-side paging only when chip filters are active (must be public for template binding)
-  useClientPaging(): boolean {
-    // Only use client-side paging when filters are active AND no search term is present
-    return (!!this.selectedFilters?.length) && !this.searchTerm;
-  }
 
   displayedColumns: string[] = [
     'segmentId', 'vendorName','streetAddress', 'city', 'state', 'issues',
@@ -65,8 +58,7 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     private punchListService: PreliminaryPunchListService,
     private toastr: ToastrService,
     public authService: AuthService,
-    public datePipe: DatePipe,
-    private cdRef: ChangeDetectorRef
+    public datePipe: DatePipe
   ) {}
 
   private normalizeDate(value: any): Date | null {
@@ -103,12 +95,25 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
       this.applyFilters();
     }
   }
-  
+
+  private buildSearchTerm(): string {
+    const terms: string[] = [];
+    if (this.searchTerm) terms.push(this.searchTerm);
+    if (this.selectedFilters?.length) {
+      this.selectedFilters.forEach(f => {
+        if (Array.isArray(f.values)) terms.push(...f.values);
+        else if (f.values) terms.push(f.values as any);
+      });
+    }
+    return terms.join(' ').trim();
+  }
+
   // Keep `pageNumber` 0-based for paginator and API
   loadResolvedPunchLists(user: User, pageNumber: number = 0, pageSize: number = 25): void {
     const apiPage = pageNumber; // API expects 0-based pageNumber
-    const source$ = this.searchTerm
-      ? this.punchListService.searchResolvedPunchLists(this.user, this.searchTerm, apiPage, pageSize)
+    const term = this.buildSearchTerm();
+    const source$ = term
+      ? this.punchListService.searchResolvedPunchLists(this.user, term, apiPage, pageSize)
       : this.punchListService.getResolvedPunchLists(user, apiPage, pageSize);
 
     source$.subscribe({
@@ -152,15 +157,10 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         // Trust server results order/uniqueness; do not deduplicate client-side
         this.resolvedPreliminaryPunchLists = results;
         this.resolvedPreliminaryPunchList$.next(this.resolvedPreliminaryPunchLists);
-        // During search, trust server scoping entirely; otherwise apply client role/market scoping
-        this.dataSource.data = this.searchTerm
+        // During search/filtering, trust server scoping entirely; otherwise apply client role/market scoping
+        this.dataSource.data = term
           ? this.resolvedPreliminaryPunchLists
           : this.filterData(this.resolvedPreliminaryPunchLists);
-
-        // Apply any chip-selected filters to the freshly loaded data
-        if (this.selectedFilters?.length) {
-          this.applyFilters(false);
-        }
 
         this.updateResolvedCount();
       },
@@ -298,178 +298,26 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     this.loadResolvedPunchLists(this.user, 0, this.pageSize);
   }
 
-  applyFilters(resetPage: boolean = true): void {
-    if (this.searchTerm) {
-      // Filter the current search results with selected chip filters
-      let updatedData = this.filterData(this.resolvedPreliminaryPunchLists);
-
-      this.selectedFilters.forEach(filter => {
-        if (filter.column == 'dateReported') {
-          const startDateObj = new Date(filter.values[0]);
-          const endDateObj = new Date(filter.values[1]);
-          updatedData = updatedData.filter(punchList => {
-            const punchListDate = new Date(punchList.dateReported as any);
-            return punchListDate >= startDateObj && punchListDate <= endDateObj;
-          });
-        } else if (filter.column == 'resolvedDate') {
-          const startDateObj = new Date(filter.values[0]);
-          const endDateObj = new Date(filter.values[1]);
-          updatedData = updatedData.filter(punchList => {
-            if (punchList.resolvedDate != null) {
-              const punchListDate = new Date(punchList.resolvedDate as any);
-              return punchListDate >= startDateObj && punchListDate <= endDateObj;
-            } else {
-              return false;
-            }
-          });
-        } else if (filter.column && filter.values) {
-          if (Array.isArray(filter.values)) {
-            updatedData = updatedData.filter(punchList =>
-              filter.values.some(val =>
-                (punchList[filter.column as keyof PreliminaryPunchList] ?? '')
-                  .toString()
-                  .toLowerCase()
-                  .includes(val.toLowerCase())
-              )
-            );
-          } else {
-            updatedData = updatedData.filter(punchList =>
-              (punchList[filter.column as keyof PreliminaryPunchList] ?? '')
-                .toString()
-                .toLowerCase()
-                .includes((filter.values as any))
-            );
-          }
-        }
-      });
-
-      this.filteredData = updatedData;
-      if (resetPage) {
-        this.pageIndex = 0;
-        try { this.paginator?.firstPage?.(); } catch {}
-      }
-      this.updatePagedView();
-      this.updateResolvedCount();
-      return;
-    }
-
-    // Fetch entire set (resolved) then apply filters over all rows (client-side)
-    const desiredSize = this.total && this.total > 0
-      ? this.total
-      : Math.max(this.pageSize, this.dataSource?.data?.length || 25);
-
-    const source$ = this.punchListService.getResolvedPunchLists(this.user, 1, desiredSize);
-
-    source$.subscribe({
-      next: (response: any) => {
-        const items: PreliminaryPunchList[] = Array.isArray(response) ? response : (response?.items ?? []);
-        const results = items.map(p => ({ ...p, issues: (p.issues || []).map(issue => ({ ...issue })) }));
-
-        // Normalize dates
-        for (const pl of results) {
-          const dr = this.normalizeDate(pl.dateReported as any);
-          if (dr) pl.dateReported = dr;
-          const rd = this.normalizeDate(pl.resolvedDate as any);
-          if (rd) pl.resolvedDate = rd;
-        }
-
-        // Deduplicate by id
-        const dedupedResults = results.filter((item, index, self) => index === self.findIndex(t => t.id === item.id));
-
-        // Scope by user vendor/market
-        let updatedData = this.filterData(dedupedResults);
-
-        // Apply selected chip filters over full dataset
-        this.selectedFilters.forEach(filter => {
-          if (filter.column == 'dateReported') {
-            const startDateObj = new Date(filter.values[0]);
-            const endDateObj = new Date(filter.values[1]);
-            updatedData = updatedData.filter(punchList => {
-              const punchListDate = new Date(punchList.dateReported as any);
-              return punchListDate >= startDateObj && punchListDate <= endDateObj;
-            });
-          } else if (filter.column == 'resolvedDate') {
-            const startDateObj = new Date(filter.values[0]);
-            const endDateObj = new Date(filter.values[1]);
-            updatedData = updatedData.filter(punchList => {
-              if (punchList.resolvedDate != null) {
-                const punchListDate = new Date(punchList.resolvedDate as any);
-                return punchListDate >= startDateObj && punchListDate <= endDateObj;
-              } else {
-                return false;
-              }
-            });
-          } else if (filter.column && filter.values) {
-            if (Array.isArray(filter.values)) {
-              updatedData = updatedData.filter(punchList =>
-                filter.values.some(val =>
-                  (punchList[filter.column as keyof PreliminaryPunchList] ?? '')
-                    .toString()
-                    .toLowerCase()
-                    .includes(val.toLowerCase())
-                )
-              );
-            } else {
-              updatedData = updatedData.filter(punchList =>
-                (punchList[filter.column as keyof PreliminaryPunchList] ?? '')
-                  .toString()
-                  .toLowerCase()
-                  .includes((filter.values as any))
-              );
-            }
-          }
-        });
-
-        this.filteredData = updatedData;
-        if (resetPage) {
-          this.pageIndex = 0;
-          try { this.paginator?.firstPage?.(); } catch {}
-        }
-        this.updatePagedView();
-        this.updateResolvedCount();
-      },
-      error: () => this.toastr.error('Error applying filters')
-    });
+  applyFilters(): void {
+    this.pageIndex = 0;
+    try { this.paginator?.firstPage?.(); } catch {}
+    this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
-  
-  clearAll() {
+
+  clearAll(): void {
     this.selectedFilters = [];
-    const unresolvedEntries = this.resolvedPreliminaryPunchList$; 
-    unresolvedEntries?.subscribe(entries => {
-      let updatedData = this.filterData(entries);
-  
-      this.dataSource.data = updatedData;
-      this.pageIndex = 0;
-      try { this.paginator?.firstPage?.(); } catch {}
-      this.updateResolvedCount();
-    });
+    this.pageIndex = 0;
+    try { this.paginator?.firstPage?.(); } catch {}
+    this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
   onPage(event: any): void {
     this.pageIndex = event.pageIndex; // 0-based
     this.pageSize = event.pageSize;
-    if (this.useClientPaging()) {
-      this.updatePagedView();
-    } else {
-      this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
-    }
+    this.loadResolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
-  updateResolvedCount(): void {   
-    // Emit server total during search; emit filtered total when client filters are active
-    const count = this.searchTerm
-      ? this.total
-      : (this.selectedFilters?.length ? (this.filteredData?.length ?? 0) : this.total);
-    this.resolvedCountChange.emit(count); 
-  }
-
-  private updatePagedView = (): void => {
-    if (!this.useClientPaging()) return;
-    const data = Array.isArray(this.filteredData) ? this.filteredData : [];
-    const size = Number(this.pageSize) || 25;
-    const index = Number(this.pageIndex) || 0;
-    const start = Math.max(0, index * size);
-    const end = start + size;
-    this.dataSource.data = data.slice(start, Math.min(end, data.length));
+  updateResolvedCount(): void {
+    this.resolvedCountChange.emit(this.total);
   }
 }

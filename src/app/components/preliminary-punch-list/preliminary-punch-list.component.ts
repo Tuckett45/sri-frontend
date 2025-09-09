@@ -332,11 +332,9 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit {
   }
 
   applyFilter(event: Event): void {
-    // forwards to children; they will perform search (server) or local filtering
+    // forwards to children; they will perform search (server) using current chip filters
     this.resolvedPunchListComponent.searchFilter(event);
     this.unresolvedPunchListComponent.searchFilter(event);
-    // re-apply any chip-selected filters after search term changes
-    this.updateChildFilters();
   }
 
   onFilterChange(filter: { column: string, values: string[] }) {
