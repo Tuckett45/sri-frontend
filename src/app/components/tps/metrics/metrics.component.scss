@@ -24,3 +24,57 @@
   color: #666;
 }
 
+/* Filters */
+.filters-btn {
+  align-items: center;
+  background-color: #144f80 !important;
+  color: #fff !important;
+  margin-bottom: 10px;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+}
+
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+
+  .filter-selections {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.clear-all {
+  text-align: center;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #144f80;
+  color: #fff;
+  font-size: 14px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+
+  &:hover {
+    background-color: #e18a25;
+  }
+}
+
+mat-form-field {
+  flex: 1 1;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+
+  mat-label {
+    color: #e18a25;
+  }
+}
+
