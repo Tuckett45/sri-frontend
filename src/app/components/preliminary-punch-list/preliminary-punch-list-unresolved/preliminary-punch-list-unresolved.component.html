@@ -153,7 +153,7 @@
         <div class="actions-container">
           <!-- Only show Reject when PM has resolved but CM has not, and current user is not CM -->
           <button mat-raised-button
-                  *ngIf="report.pmResolved && !report.cmResolved && user.role !== 'CM'"
+                  *ngIf="report.pmResolved && !report.cmResolved && user.role === 'CM'"
                   (click)="rejectResolution(report)"
                   class="reject-btn">
             Reject Resolution
