@@ -1,4 +1,4 @@
-<div>
+<div *ngIf="isMobile" class="mb-2">
   <button mat-raised-button class="filters-btn" (click)="toggleFilters()">
     <span *ngIf="!filtersOpen">View Filters</span>
     <span *ngIf="filtersOpen">Close Filters</span>
@@ -6,44 +6,44 @@
   </button>
 </div>
 
-<div class="filter-section mb-3" *ngIf="filtersOpen">
+<div class="filter-section mb-3" *ngIf="isMobile ? filtersOpen : true">
   <div class="filter-selections flex align-items-center gap-1">
-    <mat-form-field appearance="fill">
-      <mat-label>Start Date</mat-label>
-      <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="applyFilters()" />
-      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-      <mat-datepicker #startPicker></mat-datepicker>
-    </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Start Date</mat-label>
+    <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="applyFilters()" />
+    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+    <mat-datepicker #startPicker></mat-datepicker>
+  </mat-form-field>
 
-    <mat-form-field appearance="fill">
-      <mat-label>End Date</mat-label>
-      <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="applyFilters()" />
-      <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-      <mat-datepicker #endPicker></mat-datepicker>
-    </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>End Date</mat-label>
+    <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="applyFilters()" />
+    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+    <mat-datepicker #endPicker></mat-datepicker>
+  </mat-form-field>
 
-    <a pRipple *ngIf="startDate || endDate || selectedVendors.length || selectedSegments.length || selectedCities.length" tabindex="0" class="clear-all" (click)="clearFilters()">Clear All</a>
+  <mat-form-field appearance="fill">
+    <mat-label>Vendor(s)</mat-label>
+    <mat-select multiple [(ngModel)]="selectedVendors" (selectionChange)="applyFilters()">
+      <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
+    </mat-select>
+  </mat-form-field>
 
-    <mat-form-field appearance="fill">
-      <mat-label>Vendor(s)</mat-label>
-      <mat-select multiple [(ngModel)]="selectedVendors" (selectionChange)="applyFilters()">
-        <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Segment(s)</mat-label>
+    <mat-select multiple [(ngModel)]="selectedSegments" (selectionChange)="applyFilters()">
+      <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
+    </mat-select>
+  </mat-form-field>
 
-    <mat-form-field appearance="fill">
-      <mat-label>Segment(s)</mat-label>
-      <mat-select multiple [(ngModel)]="selectedSegments" (selectionChange)="applyFilters()">
-        <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>City(ies)</mat-label>
+    <mat-select multiple [(ngModel)]="selectedCities" (selectionChange)="applyFilters()">
+      <mat-option *ngFor="let option of cityOptions" [value]="option.value">{{ option.label }}</mat-option>
+    </mat-select>
+  </mat-form-field>
 
-    <mat-form-field appearance="fill">
-      <mat-label>City(ies)</mat-label>
-      <mat-select multiple [(ngModel)]="selectedCities" (selectionChange)="applyFilters()">
-        <mat-option *ngFor="let option of cityOptions" [value]="option.value">{{ option.label }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+  <a pRipple *ngIf="startDate || endDate || selectedVendors.length || selectedSegments.length || selectedCities.length" tabindex="0" class="clear-all" (click)="clearFilters()">Clear All</a>
   </div>
 </div>
 
@@ -58,7 +58,7 @@
 </div>
 
 <div class="metrics-section">
-  <h2>2025 NON-HHHP</h2>
+  <h2>2025 NON-HHP</h2>
   <div class="cards-grid">
     <div class="stat-card" *ngFor="let m of metrics2025NonHhhp">
       <div class="stat-value">{{ m.value }}</div>

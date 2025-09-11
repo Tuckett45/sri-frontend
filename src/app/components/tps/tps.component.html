@@ -4,7 +4,7 @@
   </div>
 
   <!-- add class="tps-tabs" so we can target these styles safely -->
-  <p-tabs class="tps-tabs" [(value)]="activeTab" (valueChange)="onTabChange($event)">
+  <p-tabs class="tps-tabs" [scrollable]="true" [(value)]="activeTab" (valueChange)="onTabChange($event)">
     <p-tablist>
       <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">Dashboard</p-tab>
       <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">Work Package Violations</p-tab>

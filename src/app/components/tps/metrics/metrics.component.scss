@@ -78,3 +78,14 @@ mat-form-field {
   }
 }
 
+/* Mobile layout */
+@media (max-width: 768px) {
+  .filter-section .filter-selections {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filters-btn {
+    width: 100%;
+  }
+}
+

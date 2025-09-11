@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { TpsService } from 'src/app/services/tps.service';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
 import { WPViolation } from 'src/app/models/wp-violation.model';
@@ -23,6 +23,7 @@ export class MetricsComponent implements OnInit {
   startDate: Date | null = null;
   endDate: Date | null = null;
   filtersOpen = false;
+  isMobile = false;
   selectedVendors: string[] = [];
   selectedSegments: string[] = [];
   selectedCities: string[] = [];
@@ -37,6 +38,7 @@ export class MetricsComponent implements OnInit {
   constructor(private tpsService: TpsService) {}
 
   ngOnInit(): void {
+    this.updateIsMobile();
     combineLatest([
       this.tpsService.getViolations(),
       this.tpsService.getCityScorecard()
@@ -60,6 +62,19 @@ export class MetricsComponent implements OnInit {
         this.applyFilters();
       }
     });
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.updateIsMobile();
+  }
+
+  private updateIsMobile(): void {
+    this.isMobile = window.innerWidth <= 768;
+    // Optional: auto-open filters on desktop, keep toggle behavior on mobile
+    if (!this.isMobile) {
+      this.filtersOpen = true;
+    }
   }
 
   toggleFilters(): void {
@@ -120,6 +135,7 @@ export class MetricsComponent implements OnInit {
     const currency = (n: number) =>
       new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 
+    const remainingJobs = rows.filter(r => (r.closedDate ? new Date(r.closedDate) > new Date() : true)).map(r => r.compDate ? 1 : 0).length;
     const forecastedHhp = nums(rows.map(r => r.forecastedDollarPerHHP));
     const actualHhp = nums(rows.map(r => r.actualDollarPerHHP));
     const forecastedLft = nums(rows.map(r => r.forecastedDollarPerLFT));
@@ -129,17 +145,18 @@ export class MetricsComponent implements OnInit {
     const totalLabor = actualAllIn.reduce((a, b) => a + b, 0);
 
     return [
+      { label: 'Remaining Jobs', value: String(remainingJobs) },
       { label: 'Total Segments', value: String(rows.length) },
-      { label: 'Planned Avg SHMP', value: currency(avg(forecastedHhp)) },
+      { label: 'Forcasted Avg HHP', value: currency(avg(forecastedHhp)) },
       { label: 'Labor Cost', value: currency(totalLabor) },
-      { label: 'Plan - Avg SHMP', value: currency(avg(forecastedHhp)) },
-      { label: 'Plan - Avg $/FT', value: currency(avg(forecastedLft)) },
-      { label: 'Plan - All In $/FT', value: currency(avg(forecastedAllIn)) },
+      { label: 'Forcasted - Avg HHP', value: currency(avg(forecastedHhp)) },
+      { label: 'Forcasted - Avg $/FT', value: currency(avg(forecastedLft)) },
+      { label: 'Forcasted - All In $/FT', value: currency(avg(forecastedAllIn)) },
       { label: 'Actual to Date - Avg SHMP', value: currency(avg(actualHhp)) },
       { label: 'Actual to Date - Avg $/FT', value: currency(avg(actualLft)) },
-      { label: 'Plan - Median SHMP', value: currency(median(forecastedHhp)) },
-      { label: 'Plan - Median $/FT', value: currency(median(forecastedLft)) },
-      { label: 'Actual to Date - Median SHMP', value: currency(median(actualHhp)) },
+      { label: 'Forcasted - Median HHP', value: currency(median(forecastedHhp)) },
+      { label: 'Forcasted - Median $/FT', value: currency(median(forecastedLft)) },
+      { label: 'Actual to Date - Median HHP', value: currency(median(actualHhp)) },
       { label: 'Actual to Date - Median $/FT', value: currency(median(actualLft)) }
     ];
   }
