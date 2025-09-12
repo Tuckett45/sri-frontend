@@ -20,6 +20,31 @@ export interface FacetsResponse {
   states: string[];
 }
 
+export type SearchParams = {
+  term?: string;
+  resolved: 'resolved' | 'unresolved';
+  page: number;         // 0-based page index expected by controller
+  pageSize: number;
+
+  // legacy/role scope
+  state?: string | null;
+  company?: string | null;
+
+  // multi-selects (either CSVs or arrays – service will build CSVs if arrays provided)
+  segmentIdsCsv?: string;
+  vendorsCsv?: string;
+  statesCsv?: string;
+  segmentIds?: string[];
+  vendors?: string[];
+  states?: string[];
+
+  // date windows (string ISO or Date)
+  dateReportedStart?: string | Date | null;
+  dateReportedEnd?: string | Date | null;
+  resolvedStart?: string | Date | null;
+  resolvedEnd?: string | Date | null;
+};
+
 @Injectable({ providedIn: 'root' })
 export class PreliminaryPunchListService {
   private entriesCache$!: Observable<PagedResponse<PreliminaryPunchList>> | null;
@@ -44,6 +69,7 @@ export class PreliminaryPunchListService {
   readonly refresh$ = this.refreshSubject.asObservable();
   triggerRefresh(): void { this.refreshSubject.next(); }
 
+  // -------- helpers --------
   private buildKey(user: User, url: string, params?: HttpParams): string {
     return `${user.role}|${user.market}|${user.company ?? ''}|${url}|${params?.toString() ?? ''}`;
   }
@@ -88,6 +114,19 @@ export class PreliminaryPunchListService {
       pageCount,
       items
     };
+  }
+
+  // Basic string/date normalizers for search params
+  private norm(s?: string | null): string {
+    return (s ?? '').replace(/\u00A0/g, ' ').replace(/\t/g, ' ').trim();
+  }
+  private normUpper(s?: string | null): string {
+    return this.norm(s).toUpperCase();
+  }
+  private toIso(d?: string | Date | null): string {
+    if (!d) return '';
+    const dt = d instanceof Date ? d : new Date(d);
+    return isNaN(dt.getTime()) ? '' : dt.toISOString();
   }
 
   // ---------------- Basic lists (cached) ----------------
@@ -223,46 +262,89 @@ export class PreliminaryPunchListService {
     ).pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, Number(pageNumber ?? 0), Number(pageSize ?? 25))));
   }
 
-  // ---------------- SEARCH (unified type) ----------------
+  // ---------------- UNIFIED SEARCH (combined filters) ----------------
 
-  searchResolvedPunchLists(
-    user: User,
-    term: string,
-    pageNumber: number,
-    pageSize: number
-  ): Observable<PagedResponse<PreliminaryPunchList>> {
-    return this.searchPunchLists(term, pageNumber, pageSize, { resolved: 'resolved', user });
-  }
+  public searchPunchLists(params: SearchParams): Observable<PagedResponse<PreliminaryPunchList>> {
+  const url = `${environment.apiUrl}/PunchList/search`;
 
-  searchUnresolvedPunchLists(
-    user: User,
-    term: string,
-    pageNumber: number,
-    pageSize: number
-  ): Observable<PagedResponse<PreliminaryPunchList>> {
-    return this.searchPunchLists(term, pageNumber, pageSize, { resolved: 'unresolved', user });
-  }
+  // Build CSVs from arrays if arrays were provided
+  const segCsv =
+    params.segmentIdsCsv ??
+    (params.segmentIds ? params.segmentIds.map(v => this.norm(v)).filter(Boolean).join(',') : '');
+  const vendCsv =
+    params.vendorsCsv ??
+    (params.vendors ? params.vendors.map(v => this.norm(v)).filter(Boolean).join(',') : '');
+  const statesCsv =
+    params.statesCsv ??
+    (params.states ? params.states.map(v => this.normUpper(v)).filter(Boolean).join(',') : '');
 
-  private searchPunchLists(
-    term: string,
-    pageNumber: number,
-    pageSize: number,
-    opts: { resolved: 'resolved' | 'unresolved'; user: User }
-  ): Observable<PagedResponse<PreliminaryPunchList>> {
-    let params = new HttpParams()
-      .set('term', term ?? '')
-      .set('resolved', opts.resolved)
-      .set('pageNumber', String(pageNumber))
-      .set('pageSize', String(pageSize));
+  let hp = new HttpParams()
+    .set('term', this.norm(params.term ?? ''))
+    .set('resolved', params.resolved)
+    .set('pageNumber', String(params.page)) // 0-based expected by controller
+    .set('pageSize', String(params.pageSize));
 
-    if (opts.user?.market && opts.user?.market !== 'RG')  params = params.set('state', opts.user.market);
-    if (opts.user?.company && opts.user?.company !== 'SRI') params = params.set('company', opts.user.company);
+  // Optional role/legacy scope
+  if (params.state)   hp = hp.set('state', this.normUpper(params.state));
+  if (params.company) hp = hp.set('company', this.norm(params.company));
 
-    const url = `${environment.apiUrl}/PunchList/search`;
+  // Multi-select CSVs (only set when non-empty)
+  if (segCsv)    hp = hp.set('segmentIdsCsv', segCsv);
+  if (vendCsv)   hp = hp.set('vendorsCsv', vendCsv);
+  if (statesCsv) hp = hp.set('statesCsv', statesCsv);
 
-    return this.http.get<any>(url, { params, headers: this.httpOptions.headers })
-      .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, pageNumber, pageSize)));
-  }
+  // Dates (only set when valid)
+  const drStart = this.toIso(params.dateReportedStart);
+  const drEnd   = this.toIso(params.dateReportedEnd);
+  const rzStart = this.toIso(params.resolvedStart);
+  const rzEnd   = this.toIso(params.resolvedEnd);
+  if (drStart) hp = hp.set('dateReportedStart', drStart);
+  if (drEnd)   hp = hp.set('dateReportedEnd',   drEnd);
+  if (rzStart) hp = hp.set('resolvedStart',     rzStart);
+  if (rzEnd)   hp = hp.set('resolvedEnd',       rzEnd);
+
+  return this.http.get<any>(url, { params: hp, headers: this.httpOptions.headers })
+    .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, params.page, params.pageSize)));
+}
+
+
+  /** Backward-compatible helpers (now call the unified search) */
+  // searchResolvedPunchLists(
+  //   user: User,
+  //   term: string,
+  //   pageNumber: number,
+  //   pageSize: number
+  // ): Observable<PagedResponse<PreliminaryPunchList>> {
+  //   // Preserve your prior role scoping
+  //   const isRegional = user?.market === 'RG';
+  //   return this.searchPunchLists({
+  //     term,
+  //     resolved: 'resolved',
+  //     page: pageNumber,
+  //     pageSize,
+  //     state: (!isRegional && user?.market) ? user.market : undefined,
+  //     company: (user?.company && user?.company !== 'SRI') ? user.company : undefined
+  //   });
+  // }
+
+  // searchUnresolvedPunchLists(
+  //   user: User,
+  //   term: string,
+  //   pageNumber: number,
+  //   pageSize: number
+  // ): Observable<PagedResponse<PreliminaryPunchList>> {
+  //   const isRegional = user?.market === 'RG';
+  //   return this.searchPunchLists({
+  //     term,
+  //     resolved: 'unresolved',
+  //     page: pageNumber,
+  //     pageSize,
+  //     state: (!isRegional && user?.market) ? user.market : undefined,
+  //     company: (user?.company && user?.company !== 'SRI') ? user.company : undefined
+  //   });
+  // }
+
+  // ---------------- Facets & Misc ----------------
 
   getFacets(
     resolved: 'all' | 'resolved' | 'unresolved' = 'all',
@@ -274,8 +356,6 @@ export class PreliminaryPunchListService {
     if (company) params = params.set('company', company);
     return this.http.get<FacetsResponse>(`${environment.apiUrl}/PunchList/facets`, { params });
   }
-
-  // ---------------- Misc ----------------
 
   getErrorCodes(): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/PunchList/error-codes`);

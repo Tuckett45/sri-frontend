@@ -1,10 +1,22 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  OnChanges,
+  OnDestroy,
+  Output,
+  SimpleChanges,
+  ViewChild
+} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { PreliminaryPunchListModalComponent } from '../../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
 import { PreliminaryPunchListService } from 'src/app/services/preliminary-punch-list.service';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { takeUntil, finalize } from 'rxjs/operators';
 import { MatTableDataSource } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { MatPaginator } from '@angular/material/paginator';
@@ -14,13 +26,30 @@ import { User } from 'src/app/models/user.model';
 import { DatePipe } from '@angular/common';
 import { PreliminaryPunchListResolvedComponent } from '../preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 
+// Mirror of the parent's params bag (kept local to avoid cross-file deps)
+type ChildSearchParams = {
+  term?: string;
+  resolved: 'resolved' | 'unresolved';
+  state?: string | null;
+  company?: string | null;
+  segmentIdsCsv?: string;
+  vendorsCsv?: string;
+  statesCsv?: string;
+  dateReportedStart?: string | Date | null;
+  dateReportedEnd?: string | Date | null;
+  resolvedStart?: string | Date | null;
+  resolvedEnd?: string | Date | null;
+  page?: number;
+  pageSize?: number;
+};
+
 @Component({
   selector: 'preliminary-punch-list-unresolved',
   templateUrl: './preliminary-punch-list-unresolved.component.html',
   styleUrls: ['./preliminary-punch-list-unresolved.component.scss'],
   standalone: false
 })
-export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterViewInit {
+export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
   public unresolvedPreliminaryPunchList$: BehaviorSubject<PreliminaryPunchList[]> =
     new BehaviorSubject<PreliminaryPunchList[]>([]);
   unresolvedPreliminaryPunchLists: PreliminaryPunchList[] = [];
@@ -43,13 +72,20 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   dataSource: MatTableDataSource<PreliminaryPunchList> = new MatTableDataSource<PreliminaryPunchList>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+
   total = 0;
   pageSize = 25;
   pageIndex = 0; // 0-based
-  searchTerm: string = '';
+  searchTerm = '';
 
+  private destroy$ = new Subject<void>();
+  private activeSub?: Subscription;
+  private requestSeq = 0;
+
+  // Inputs/Outputs
   @Input('PreliminaryPunchListResolvedComponent') resolvedPunchListComponent!: PreliminaryPunchListResolvedComponent;
   @Input() selectedFilters: { column: string, values: string[] }[] = [];
+  @Input() searchParams?: ChildSearchParams; // combined filters from parent (optional)
   @Output() unresolvedCountChange = new EventEmitter<number>();
 
   galleryImages: any[] = [];
@@ -63,112 +99,159 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     public datePipe: DatePipe
   ) {}
 
+  // -------- Helpers --------
+  private norm = (s?: string | null) => (s ?? '').replace(/\u00A0/g, ' ').replace(/\t/g, ' ').trim();
+  private normUpper = (s?: string | null) => this.norm(s).toUpperCase();
+  private toIsoDate(d: any): string | null {
+    if (!d) return null;
+    const dt = d instanceof Date ? d : new Date(d);
+    return isNaN(dt.getTime()) ? null : dt.toISOString();
+  }
+
+  private getVals(col: string): string[] {
+    return (this.selectedFilters.find(f => f.column === col)?.values ?? []).slice();
+  }
+
   private normalizeDate(value: any): Date | null {
     if (value == null) return null;
-    if (value instanceof Date) return new Date(value.getTime());
-    if (typeof value === 'number') return new Date(value);
-    if (typeof value === 'string') {
-      const d = new Date(value);
-      return isNaN(d.getTime()) ? null : d;
+    const d = value instanceof Date ? value : new Date(value);
+    return isNaN(d.getTime()) ? null : new Date(d.getTime());
+  }
+
+  /** Build unified params for the API. If parent provided searchParams, merge/override. */
+  private buildUnifiedParams(pageNumber: number, pageSize: number) {
+    // Derive from local filters by default
+    const segCsv    = this.getVals('segmentId').map(v => this.norm(v)).filter(Boolean).join(',');
+    const vendCsv   = this.getVals('vendorName').map(v => this.norm(v)).filter(Boolean).join(',');
+    const statesCsv = this.getVals('state').map(v => this.normUpper(v)).filter(Boolean).join(',');
+
+    const dr = this.getVals('dateReported');
+    const rz = this.getVals('resolvedDate');
+
+    // Role/market scoping (optional; mirrors prior behavior)
+    let roleState: string | null = null;
+    let roleCompany: string | null = null;
+    const market = this.user?.market ? this.normUpper(this.user.market) : '';
+    const company = this.user?.company ? this.norm(this.user.company) : '';
+    if (this.user?.role === 'PM') {
+      roleState = market || null;
+      roleCompany = company || null;
+    } else if (this.user?.role === 'CM' && market !== 'RG') {
+      roleState = market || null;
     }
-    return null;
+
+    // Base from local
+    let req: ChildSearchParams = {
+      term: this.searchTerm || '',
+      resolved: 'unresolved',
+      state: roleState,
+      company: roleCompany,
+      segmentIdsCsv: segCsv || undefined,
+      vendorsCsv: vendCsv || undefined,
+      statesCsv: statesCsv || undefined,
+      dateReportedStart: this.toIsoDate(dr[0]),
+      dateReportedEnd:   this.toIsoDate(dr[1]),
+      resolvedStart:     this.toIsoDate(rz[0]),
+      resolvedEnd:       this.toIsoDate(rz[1]),
+      page: pageNumber,
+      pageSize
+    };
+
+    // If parent provided a params bag, override with its values
+    if (this.searchParams) {
+      req = {
+        ...req,
+        ...this.searchParams,
+        resolved: 'unresolved',
+        page: pageNumber,
+        pageSize
+      };
+      // Normalize date types to ISO strings
+      req.dateReportedStart = this.toIsoDate(req.dateReportedStart);
+      req.dateReportedEnd   = this.toIsoDate(req.dateReportedEnd);
+      req.resolvedStart     = this.toIsoDate(req.resolvedStart);
+      req.resolvedEnd       = this.toIsoDate(req.resolvedEnd);
+    }
+
+    return req;
   }
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
-    this.punchListService.refresh$.subscribe(() => {
-      this.loadUnresolvedPunchLists(this.user);
-    });
+    this.punchListService.refresh$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize));
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['selectedFilters']) {
+    if (changes['selectedFilters'] || changes['searchParams']) {
       this.applyFilters();
     }
   }
 
   ngAfterViewInit(): void {
     if (!this.isInitialized) {
-      // Pass 0-based pageIndex; loadUnresolvedPunchLists forwards 0-based to the API
       this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
       this.isInitialized = true;
     }
-    // Server-side paging: do not attach local paginator to MatTableDataSource
-    // this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
 
-  private buildSearchTerm(): string {
-    const terms: string[] = [];
-    if (this.searchTerm) terms.push(this.searchTerm);
-    if (this.selectedFilters?.length) {
-      this.selectedFilters.forEach(f => {
-        if (Array.isArray(f.values)) terms.push(...f.values);
-        else if (f.values) terms.push(f.values as any);
-      });
-    }
-    return terms.join(' ').trim();
+  ngOnDestroy(): void {
+    this.activeSub?.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  // Keep pageNumber 0-based internally; API expects 0-based pageNumber
   loadUnresolvedPunchLists(user: User, pageNumber: number = 0, pageSize: number = 25): void {
-    const apiPage = pageNumber;
-    const term = this.buildSearchTerm();
-    const source$ = term
-      ? this.punchListService.searchUnresolvedPunchLists(this.user, term, apiPage, pageSize)
-      : this.punchListService.getUnresolvedPunchLists(user, apiPage, pageSize);
+    const reqId = ++this.requestSeq;       // bump request id
+    this.activeSub?.unsubscribe();         // cancel previous in-flight call
 
-    source$.subscribe({
-      next: (response: any) => {
-        // API returns 0-based page index
-        const respPage = Number(response?.page ?? apiPage);
-        const respSize = Number(response?.pageSize ?? this.pageSize);
-        if (!isNaN(respPage)) this.pageIndex = Math.max(0, respPage);
-        if (!isNaN(respSize)) this.pageSize = respSize;
+    const req = this.buildUnifiedParams(pageNumber, pageSize);
 
-        this.total = Number(
-          response?.total ?? response?.totalCount ?? response?.count ?? response?.Total ?? response?.TotalCount ??
-          (Array.isArray(response) ? response.length : 0)
-        );
-        this.unresolvedCountChange.emit(this.total);
+    this.activeSub = this.punchListService.searchPunchLists(req as any)
+      .pipe(takeUntil(this.destroy$), finalize(() => { /* optional: stop spinner */ }))
+      .subscribe({
+        next: (response: any) => {
+          // Ignore stale responses
+          if (reqId !== this.requestSeq) return;
 
-        const items: PreliminaryPunchList[] = Array.isArray(response)
-          ? response
-          : (response?.items ?? []);
+          const respPage = Number(response?.page ?? pageNumber);
+          const respSize = Number(response?.pageSize ?? pageSize);
+          this.pageIndex = isNaN(respPage) ? pageNumber : Math.max(0, respPage);
+          this.pageSize  = isNaN(respSize) ? pageSize : respSize;
 
-        const results = items.map(p => ({
-          ...p,
-          issues: (p.issues || []).map(issue => ({ ...issue }))
-        }));
+          this.total = Number(
+            response?.total ?? response?.totalCount ?? response?.count ??
+            response?.Total ?? response?.TotalCount ?? 0
+          );
+          this.unresolvedCountChange.emit(this.total);
 
-        // Normalize dates
-        for (const pl of results) {
-          const dr = this.normalizeDate(pl.dateReported as any);
-          if (dr) pl.dateReported = dr;
-          const rd = this.normalizeDate(pl.resolvedDate as any);
-          if (rd) pl.resolvedDate = rd;
-          (pl as any).dateReportedDisplay =
-            pl.dateReported ? this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '' : '';
-          (pl as any).resolvedDateDisplay =
-            pl.resolvedDate ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '' : '';
-        }
+          const items: PreliminaryPunchList[] = Array.isArray(response) ? response : (response?.items ?? []);
+          const results = items.map(p => ({
+            ...p,
+            issues: (p.issues || []).map(issue => ({ ...issue }))
+          }));
 
-        // Trust server results order/uniqueness; do not deduplicate client-side
-        this.unresolvedPreliminaryPunchLists = results;
-        this.unresolvedPreliminaryPunchList$.next(this.unresolvedPreliminaryPunchLists);
-        // During search/filtering, trust server scoping entirely; otherwise apply client role/market scoping
-        this.dataSource.data = term
-          ? this.unresolvedPreliminaryPunchLists
-          : this.filterData(this.unresolvedPreliminaryPunchLists);
+          // Normalize dates
+          for (const pl of results) {
+            const dr = this.normalizeDate(pl.dateReported as any); if (dr) pl.dateReported = dr;
+            const rd = this.normalizeDate(pl.resolvedDate as any); if (rd) pl.resolvedDate = rd;
+            (pl as any).dateReportedDisplay =
+              pl.dateReported ? this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '' : '';
+            (pl as any).resolvedDateDisplay =
+              pl.resolvedDate ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '' : '';
+          }
 
-        this.updateUnresolvedCount();
-      },
-      error: () => {
-        this.toastr.error('Error fetching unresolved punch lists');
-      }
-    });
+          this.unresolvedPreliminaryPunchLists = results;
+          this.unresolvedPreliminaryPunchList$.next(results);
+          this.dataSource.data = results; // trust server order
+        },
+        error: () => this.toastr.error('Error fetching unresolved punch lists')
+      });
   }
 
+  // -------- Paging --------
   onPage(event: any): void {
     this.pageIndex = event.pageIndex; // 0-based
     this.pageSize = event.pageSize;
@@ -179,15 +262,20 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.unresolvedCountChange.emit(this.total);
   }
 
-  // Server-side search entrypoint (called by parent search box)
+  // -------- Search box (server-side) --------
   searchFilter(event: Event): void {
     const val = (event.target as HTMLInputElement).value?.trim() ?? '';
     this.searchTerm = val;
-    this.pageIndex = 0; // reset to first page
+
+    // Keep unified params in sync with search box
+    if (this.searchParams) this.searchParams = { ...this.searchParams, term: val };
+
+    this.pageIndex = 0;
     try { this.paginator?.firstPage?.(); } catch {}
     this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
+  // -------- Client-side fallback scoping (only when not searching/filtering) --------
   filterData(data: PreliminaryPunchList[]): PreliminaryPunchList[] {
     const userVendor = this.user.company?.trim().toLowerCase();
     const userMarket = this.user.market?.trim().toLowerCase();
@@ -206,6 +294,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     });
   }
 
+  // -------- CRUD + UI helpers --------
   openModal(data?: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(PreliminaryPunchListModalComponent, {
       width: '600px',
@@ -236,7 +325,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
   }
 
   refreshPunchLists(): void {
-    this.loadUnresolvedPunchLists(this.user);
+    this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
   editReport(report: PreliminaryPunchList): void {
@@ -312,14 +401,23 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.isResolutionGalleryVisible = false;
   }
 
+  // -------- Parent hooks --------
   applyFilters(): void {
     this.pageIndex = 0;
     try { this.paginator?.firstPage?.(); } catch {}
     this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);
   }
 
+  /** Called by parent when it builds a new combined params bag */
+  applyFiltersWithParams(params?: ChildSearchParams): void {
+    if (params) this.searchParams = params;
+    this.applyFilters();
+  }
+
   clearAll(): void {
     this.selectedFilters = [];
+    this.searchParams = undefined; // clear unified params if parent requests clear
+    this.searchTerm = '';
     this.pageIndex = 0;
     try { this.paginator?.firstPage?.(); } catch {}
     this.loadUnresolvedPunchLists(this.user, this.pageIndex, this.pageSize);

@@ -15,6 +15,21 @@ import * as Papa from 'papaparse';
 import { DatePipe } from '@angular/common';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
+// Child expects a searchParams bag; define a local type (no import needed)
+type ChildSearchParams = {
+  term?: string;
+  resolved: 'resolved' | 'unresolved';
+  state?: string | null;
+  company?: string | null;
+  segmentIdsCsv?: string;
+  vendorsCsv?: string;
+  statesCsv?: string;
+  dateReportedStart?: string | null;
+  dateReportedEnd?: string | null;
+  resolvedStart?: string | null;
+  resolvedEnd?: string | null;
+};
+
 @Component({
   selector: 'app-preliminary-punch-list',
   templateUrl: './preliminary-punch-list.component.html',
@@ -78,6 +93,16 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
   private search$ = new Subject<string>();
   private destroy$ = new Subject<void>();
 
+  // --- helpers/normalizers + current search term ---
+  private norm = (s?: string | null) => (s ?? '').replace(/\u00A0/g, ' ').replace(/\t/g, ' ').trim();
+  private normUpper = (s?: string | null) => this.norm(s).toUpperCase();
+  private toIso = (d?: string | Date | null): string | null => {
+    if (!d) return null;
+    const dt = d instanceof Date ? d : new Date(d);
+    return isNaN(dt.getTime()) ? null : dt.toISOString();
+  };
+  private currentSearchTerm = '';
+
   constructor(
     private dialog: MatDialog,
     private punchListService: PreliminaryPunchListService,
@@ -105,10 +130,13 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
         takeUntil(this.destroy$)
       )
       .subscribe(term => {
-        // Forward the debounced term to both children
+        this.currentSearchTerm = term; // keep in parent so we include in params
+        // Keep legacy wiring for children search boxes (optional)
         const syntheticEvent = { target: { value: term } } as unknown as Event;
         this.resolvedPunchListComponent?.searchFilter(syntheticEvent);
         this.unresolvedPunchListComponent?.searchFilter(syntheticEvent);
+        // Ensure children re-fetch with combined filters too
+        this.updateChildFilters();
       });
   }
 
@@ -306,10 +334,6 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
     });
   }
 
-  editReport(report: PreliminaryPunchList): void {
-    this.openModal(report);
-  }
-
   openDeleteConfirmationDialog(report: PreliminaryPunchList): void {
     const dialogRef = this.dialog.open(DeleteConfirmationModalComponent);
     dialogRef.afterClosed().subscribe(result => {
@@ -361,6 +385,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
   // Parent-level debounced search entrypoint
   applyFilter(event: Event): void {
     const term = ((event.target as HTMLInputElement)?.value ?? '').trim();
+    this.currentSearchTerm = term; // keep in sync
     this.search$.next(term);
   }
 
@@ -401,15 +426,76 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
     return chip;
   }
 
-  /** Push the current selectedFilters to children so they re-filter. */
+  /** Build and push the current selectedFilters to children so they re-filter (server-side). */
   updateChildFilters() {
-    this.resolvedPunchListComponent?.applyFilters();
-    this.unresolvedPunchListComponent?.applyFilters();
+    const resolvedParams = this.buildSearchParams('resolved');
+    const unresolvedParams = this.buildSearchParams('unresolved');
+
+    if (this.resolvedPunchListComponent) {
+      (this.resolvedPunchListComponent as any).searchParams = resolvedParams; // support @Input in child
+      if ((this.resolvedPunchListComponent as any).applyFiltersWithParams) {
+        (this.resolvedPunchListComponent as any).applyFiltersWithParams(resolvedParams);
+      } else {
+        this.resolvedPunchListComponent.applyFilters();
+      }
+    }
+
+    if (this.unresolvedPunchListComponent) {
+      (this.unresolvedPunchListComponent as any).searchParams = unresolvedParams;
+      if ((this.unresolvedPunchListComponent as any).applyFiltersWithParams) {
+        (this.unresolvedPunchListComponent as any).applyFiltersWithParams(unresolvedParams);
+      } else {
+        this.unresolvedPunchListComponent.applyFilters();
+      }
+    }
   }
 
   // Back-compat entrypoint
   applyFilters(): void {
     this.updateChildFilters();
+  }
+
+  /** Construct the combined params bag the children will send to /PunchList/search */
+  private buildSearchParams(scope: 'resolved' | 'unresolved'): ChildSearchParams {
+    // Role scoping (same as before)
+    const role = (this.user?.role || '').toUpperCase();
+    const market = this.norm(this.user?.market || '');
+    const company = this.norm(this.user?.company || '');
+
+    let roleState: string | null = null;
+    let roleCompany: string | null = null;
+
+    if (role === 'PM') {
+      roleState = this.normUpper(market) || null;
+      roleCompany = company || null;
+    } else if (role === 'CM' && this.normUpper(market) !== 'RG') {
+      roleState = this.normUpper(market) || null;
+    }
+
+    // Multi-selects → CSV
+    const segmentIdsCsv = this.selectedSegmentIds.map(v => this.norm(v)).filter(Boolean).join(',') || undefined;
+    const vendorsCsv    = this.selectedVendors.map(v => this.norm(v)).filter(Boolean).join(',') || undefined;
+    const statesCsv     = this.selectedStates.map(v => this.normUpper(v)).filter(Boolean).join(',') || undefined;
+
+    // Date ranges (either dedicated fields or 2-item arrays)
+    const drStart = this.toIso(this.dateReportedStartDate || this.dateReportedSelectedDates[0] || null);
+    const drEnd   = this.toIso(this.dateReportedEndDate   || this.dateReportedSelectedDates[1] || null);
+    const rzStart = this.toIso(this.resolvedDateStartDate || this.resolvedDateSelectedDates[0] || null);
+    const rzEnd   = this.toIso(this.resolvedDateEndDate   || this.resolvedDateSelectedDates[1] || null);
+
+    return {
+      term: this.currentSearchTerm || '',
+      resolved: scope,
+      state: roleState ?? undefined,
+      company: roleCompany ?? undefined,
+      segmentIdsCsv,
+      vendorsCsv,
+      statesCsv,
+      dateReportedStart: drStart,
+      dateReportedEnd: drEnd,
+      resolvedStart: rzStart,
+      resolvedEnd: rzEnd
+    };
   }
 
   exportToCSV(): void {
