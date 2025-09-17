@@ -153,25 +153,28 @@
         <td mat-cell *matCellDef="let r" [attr.colspan]="displayedColumns.length">
           <div class="detail-container" *ngIf="isExpandedRow(0, r)" (click)="$event.stopPropagation()">
             <ng-container *ngIf="detailSections(r).length; else noDetails">
-              <mat-accordion multi>
-                <mat-expansion-panel *ngFor="let section of detailSections(r); let i = index" [expanded]="i === 0">
-                  <mat-expansion-panel-header>
-                    <mat-panel-title>{{ section.title }}</mat-panel-title>
-                  </mat-expansion-panel-header>
-                  <div class="detail-item" *ngFor="let item of objectEntries(section.data)">
-                    <span class="label">{{ labelize(item.key) }}</span>
-                    <span class="value" *ngIf="!isLink(item.key)">{{ item.value }}</span>
-                    <a
-                      *ngIf="isLink(item.key)"
-                      [href]="item.value"
-                      target="_blank"
-                      rel="noopener"
-                      (click)="$event.stopPropagation()"
-                      >open</a
-                    >
+              <div class="detail-grid">
+                <div class="detail-card" *ngFor="let section of detailSections(r)">
+                  <header class="detail-card__header">
+                    <h3 class="detail-card__title">{{ section.title }}</h3>
+                  </header>
+                  <div class="detail-card__content">
+                    <div class="detail-field" *ngFor="let item of objectEntries(section.data)">
+                      <span class="detail-field__label">{{ labelize(item.key) }}</span>
+                      <span class="detail-field__value" *ngIf="!isLink(item.key)">{{ item.value }}</span>
+                      <a
+                        *ngIf="isLink(item.key)"
+                        class="detail-field__link"
+                        [href]="item.value"
+                        target="_blank"
+                        rel="noopener"
+                        (click)="$event.stopPropagation()"
+                        >Open Link</a
+                      >
+                    </div>
                   </div>
-                </mat-expansion-panel>
-              </mat-accordion>
+                </div>
+              </div>
             </ng-container>
             <ng-template #noDetails>
               <div class="no-details">No additional data for this row.</div>
