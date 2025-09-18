@@ -1,69 +1,330 @@
+<!-- Mobile toggle preserved -->
 <div *ngIf="isMobile" class="mb-2">
   <button mat-raised-button class="filters-btn" (click)="toggleFilters()">
     <span *ngIf="!filtersOpen">View Filters</span>
     <span *ngIf="filtersOpen">Close Filters</span>
     <mat-icon>filter_list</mat-icon>
   </button>
-</div>
+ </div>
 
+<!-- FILTERS -->
 <div class="filter-section mb-3" *ngIf="isMobile ? filtersOpen : true">
-  <div class="filter-selections flex align-items-center gap-1">
-  <mat-form-field appearance="fill">
-    <mat-label>Start Date</mat-label>
-    <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="applyFilters()" />
-    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-    <mat-datepicker #startPicker></mat-datepicker>
-  </mat-form-field>
+  <div class="filter-selections flex align-items-center gap-1 wrap">
+    <mat-form-field appearance="fill">
+      <mat-label>View</mat-label>
+      <mat-select [(ngModel)]="selectedView" (selectionChange)="applyFilters()">
+        <mat-option *ngFor="let v of viewOptions" [value]="v.value">{{ v.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Year</mat-label>
+      <mat-select [(ngModel)]="selectedYear" (selectionChange)="applyFilters()">
+        <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
+      </mat-select>
+    </mat-form-field>
 
-  <mat-form-field appearance="fill">
-    <mat-label>End Date</mat-label>
-    <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="applyFilters()" />
-    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-    <mat-datepicker #endPicker></mat-datepicker>
-  </mat-form-field>
-
-  <mat-form-field appearance="fill">
-    <mat-label>Vendor(s)</mat-label>
-    <mat-select multiple [(ngModel)]="selectedVendors" (selectionChange)="applyFilters()">
-      <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field appearance="fill">
-    <mat-label>Segment(s)</mat-label>
-    <mat-select multiple [(ngModel)]="selectedSegments" (selectionChange)="applyFilters()">
-      <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field appearance="fill">
-    <mat-label>City(ies)</mat-label>
-    <mat-select multiple [(ngModel)]="selectedCities" (selectionChange)="applyFilters()">
-      <mat-option *ngFor="let option of cityOptions" [value]="option.value">{{ option.label }}</mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <a pRipple *ngIf="startDate || endDate || selectedVendors.length || selectedSegments.length || selectedCities.length" tabindex="0" class="clear-all" (click)="clearFilters()">Clear All</a>
+    <a pRipple tabindex="0" class="clear-all" (click)="clearFilters()">Clear All</a>
   </div>
 </div>
 
-<div class="metrics-section">
-  <h2>2025</h2>
-  <div class="cards-grid">
-    <div class="stat-card" *ngFor="let m of metrics2025">
-      <div class="stat-value">{{ m.value }}</div>
-      <div class="stat-label">{{ m.label }}</div>
-    </div>
+<!-- 1) YEAR SUMMARY TABLE -->
+<div class="metrics-section" *ngIf="selectedView === 'year'">
+  <h2>{{ selectedYear }} — Metro Year Summary</h2>
+
+  <div class="table-wrap">
+    <table mat-table [dataSource]="yearSummaryRows" class="mat-elevation-z1 full-width wide">
+
+      <ng-container matColumnDef="year">
+        <th mat-header-cell *matHeaderCellDef> Year </th>
+        <td mat-cell *matCellDef="let r"> {{ r.year }} </td>
+      </ng-container>
+      <ng-container matColumnDef="metro">
+        <th mat-header-cell *matHeaderCellDef> Metro </th>
+        <td mat-cell *matCellDef="let r"> {{ r.metro }} </td>
+      </ng-container>
+      <ng-container matColumnDef="isAverageRow">
+        <th mat-header-cell *matHeaderCellDef> Avg Row </th>
+        <td mat-cell *matCellDef="let r"> {{ r.isAverageRow }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="planned_Avg_Per_HHP">
+        <th mat-header-cell *matHeaderCellDef> Planned $/HHP (Avg) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.planned_Avg_Per_HHP | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="laborCostToDate_Avg_Per_HHP">
+        <th mat-header-cell *matHeaderCellDef> Labor to Date $/HHP (Avg) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.laborCostToDate_Avg_Per_HHP | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="plan_AvgLabor_Per_HHP">
+        <th mat-header-cell *matHeaderCellDef> Plan Labor $/HHP (Avg) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.plan_AvgLabor_Per_HHP | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="actualToDate_AllIn_Per_HHP">
+        <th mat-header-cell *matHeaderCellDef> Actual All-In $/HHP </th>
+        <td mat-cell *matCellDef="let r"> {{ r.actualToDate_AllIn_Per_HHP | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="plan_AllIn_Per_HHP">
+        <th mat-header-cell *matHeaderCellDef> Plan All-In $/HHP </th>
+        <td mat-cell *matCellDef="let r"> {{ r.plan_AllIn_Per_HHP | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="actualToDate_Median_Per_HHP">
+        <th mat-header-cell *matHeaderCellDef> Actual Median $/HHP </th>
+        <td mat-cell *matCellDef="let r"> {{ r.actualToDate_Median_Per_HHP | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="plan_Median_Per_HHP">
+        <th mat-header-cell *matHeaderCellDef> Plan Median $/HHP </th>
+        <td mat-cell *matCellDef="let r"> {{ r.plan_Median_Per_HHP | number:'1.0-2' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="planned_Avg_Per_LFT">
+        <th mat-header-cell *matHeaderCellDef> Planned $/LFT (Avg) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.planned_Avg_Per_LFT | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="actualToDate_Avg_Per_LFT">
+        <th mat-header-cell *matHeaderCellDef> Actual to Date $/LFT (Avg) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.actualToDate_Avg_Per_LFT | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="plan_Avg_Per_LFT">
+        <th mat-header-cell *matHeaderCellDef> Plan $/LFT (Avg) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.plan_Avg_Per_LFT | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="actualToDate_Median_Per_LFT">
+        <th mat-header-cell *matHeaderCellDef> Actual Median $/LFT </th>
+        <td mat-cell *matCellDef="let r"> {{ r.actualToDate_Median_Per_LFT | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="plan_Median_Per_LFT">
+        <th mat-header-cell *matHeaderCellDef> Plan Median $/LFT </th>
+        <td mat-cell *matCellDef="let r"> {{ r.plan_Median_Per_LFT | number:'1.0-2' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="sXU_Percent">
+        <th mat-header-cell *matHeaderCellDef> SXU % </th>
+        <td mat-cell *matCellDef="let r"> {{ (r.sXU_Percent || 0) * 10000 | number:'1.0-2' }}% </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="yearDisplayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: yearDisplayedColumns;"></tr>
+
+      <tr class="empty" *ngIf="!yearSummaryRows?.length">
+        <td [attr.colspan]="yearDisplayedColumns.length">No data</td>
+      </tr>
+    </table>
   </div>
 </div>
 
-<div class="metrics-section">
-  <h2>2025 NON-HHP</h2>
-  <div class="cards-grid">
-    <div class="stat-card" *ngFor="let m of metrics2025NonHhhp">
-      <div class="stat-value">{{ m.value }}</div>
-      <div class="stat-label">{{ m.label }}</div>
-    </div>
+<!-- 2) MONTHLY SUMMARY BY YEAR -->
+<div class="metrics-section" *ngIf="selectedView === 'month'">
+  <h2>{{ selectedYear }} — Monthly Summary</h2>
+
+  <div class="table-wrap">
+    <table mat-table [dataSource]="monthSummaryRows" class="mat-elevation-z1 full-width wide">
+
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef> Id </th>
+        <td mat-cell *matCellDef="let r"> {{ r.id }} </td>
+      </ng-container>
+      <ng-container matColumnDef="year">
+        <th mat-header-cell *matHeaderCellDef> Year </th>
+        <td mat-cell *matCellDef="let r"> {{ r.year }} </td>
+      </ng-container>
+      <ng-container matColumnDef="month">
+        <th mat-header-cell *matHeaderCellDef> Month # </th>
+        <td mat-cell *matCellDef="let r"> {{ r.month }} </td>
+      </ng-container>
+      <ng-container matColumnDef="monthName">
+        <th mat-header-cell *matHeaderCellDef> Month </th>
+        <td mat-cell *matCellDef="let r"> {{ r.monthName }} </td>
+      </ng-container>
+      <ng-container matColumnDef="isTotalsRow">
+        <th mat-header-cell *matHeaderCellDef> Totals Row </th>
+        <td mat-cell *matCellDef="let r"> {{ r.isTotalsRow }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="segmentCount">
+        <th mat-header-cell *matHeaderCellDef> Segments </th>
+        <td mat-cell *matCellDef="let r"> {{ r.segmentCount }} </td>
+      </ng-container>
+      <ng-container matColumnDef="eng_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Eng ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.eng_Dollars | currency:'USD' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="permit_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Permit ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.permit_Dollars | currency:'USD' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="material_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Material ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.material_Dollars | currency:'USD' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="plannedCost_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Planned Cost ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.plannedCost_Dollars | currency:'USD' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="current_TotalAllIn_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Current All-In ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.current_TotalAllIn_Dollars | currency:'USD' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="hhp">
+        <th mat-header-cell *matHeaderCellDef> HHP </th>
+        <td mat-cell *matCellDef="let r"> {{ r.hhp }} </td>
+      </ng-container>
+      <ng-container matColumnDef="sfu">
+        <th mat-header-cell *matHeaderCellDef> SFU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.sfu }} </td>
+      </ng-container>
+      <ng-container matColumnDef="mdu">
+        <th mat-header-cell *matHeaderCellDef> MDU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.mdu }} </td>
+      </ng-container>
+      <ng-container matColumnDef="sbu">
+        <th mat-header-cell *matHeaderCellDef> SBU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.sbu }} </td>
+      </ng-container>
+      <ng-container matColumnDef="mtu">
+        <th mat-header-cell *matHeaderCellDef> MTU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.mtu }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="allIn_Per_HHP">
+        <th mat-header-cell *matHeaderCellDef> All-In $/HHP </th>
+        <td mat-cell *matCellDef="let r"> {{ r.allIn_Per_HHP | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="hhp_Delta">
+        <th mat-header-cell *matHeaderCellDef> HHP Delta </th>
+        <td mat-cell *matCellDef="let r"> {{ r.hhp_Delta | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="sxu">
+        <th mat-header-cell *matHeaderCellDef> SXU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.sxu | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="sxu_Percent">
+        <th mat-header-cell *matHeaderCellDef> SXU % </th>
+        <td mat-cell *matCellDef="let r"> {{ (r.sxu_Percent || 0) * 10000 | number:'1.0-2' }}% </td>
+      </ng-container>
+
+      <ng-container matColumnDef="avg_LFT_Per_Day">
+        <th mat-header-cell *matHeaderCellDef> Avg LFT/Day </th>
+        <td mat-cell *matCellDef="let r"> {{ r.avg_LFT_Per_Day | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="avg_Dollars_Per_Material">
+        <th mat-header-cell *matHeaderCellDef> Avg $/Material </th>
+        <td mat-cell *matCellDef="let r"> {{ r.avg_Dollars_Per_Material | number:'1.0-2' }} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="monthDisplayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: monthDisplayedColumns;"></tr>
+
+      <tr class="empty" *ngIf="!monthSummaryRows?.length">
+        <td [attr.colspan]="monthDisplayedColumns.length">No data</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- 3) YEARLY SUMMARY BY MUNICIPALITY -->
+<div class="metrics-section" *ngIf="selectedView === 'municipality'">
+  <h2>{{ selectedYear }} — Yearly Summary by Municipality</h2>
+
+  <div class="table-wrap">
+    <table mat-table [dataSource]="muniSummaryRows" class="mat-elevation-z1 full-width wide">
+
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef> Id </th>
+        <td mat-cell *matCellDef="let r"> {{ r.id }} </td>
+      </ng-container>
+      <ng-container matColumnDef="year">
+        <th mat-header-cell *matHeaderCellDef> Year </th>
+        <td mat-cell *matCellDef="let r"> {{ r.year }} </td>
+      </ng-container>
+      <ng-container matColumnDef="city">
+        <th mat-header-cell *matHeaderCellDef> City / Municipality </th>
+        <td mat-cell *matCellDef="let r"> {{ r.city }} </td>
+      </ng-container>
+      <ng-container matColumnDef="isTotalsRow">
+        <th mat-header-cell *matHeaderCellDef> Totals Row </th>
+        <td mat-cell *matCellDef="let r"> {{ r.isTotalsRow }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="segmentCount">
+        <th mat-header-cell *matHeaderCellDef> Segments </th>
+        <td mat-cell *matCellDef="let r"> {{ r.segmentCount }} </td>
+      </ng-container>
+      <ng-container matColumnDef="eng_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Eng ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.eng_Dollars | currency:'USD' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="permit_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Permit ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.permit_Dollars | currency:'USD' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="material_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Material ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.material_Dollars | currency:'USD' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="plannedCost_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Planned Cost ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.plannedCost_Dollars | currency:'USD' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="current_TotalAllIn_Dollars">
+        <th mat-header-cell *matHeaderCellDef> Current All-In ($) </th>
+        <td mat-cell *matCellDef="let r"> {{ r.current_TotalAllIn_Dollars | currency:'USD' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="hhp">
+        <th mat-header-cell *matHeaderCellDef> HHP </th>
+        <td mat-cell *matCellDef="let r"> {{ r.hhp }} </td>
+      </ng-container>
+      <ng-container matColumnDef="sfu">
+        <th mat-header-cell *matHeaderCellDef> SFU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.sfu }} </td>
+      </ng-container>
+      <ng-container matColumnDef="mdu">
+        <th mat-header-cell *matHeaderCellDef> MDU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.mdu }} </td>
+      </ng-container>
+      <ng-container matColumnDef="sbu">
+        <th mat-header-cell *matHeaderCellDef> SBU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.sbu }} </td>
+      </ng-container>
+      <ng-container matColumnDef="mtu">
+        <th mat-header-cell *matHeaderCellDef> MTU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.mtu }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="allIn_Per_HHP">
+        <th mat-header-cell *matHeaderCellDef> All-In $/HHP </th>
+        <td mat-cell *matCellDef="let r"> {{ r.allIn_Per_HHP | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="hhp_Delta">
+        <th mat-header-cell *matHeaderCellDef> HHP Delta </th>
+        <td mat-cell *matCellDef="let r"> {{ r.hhp_Delta | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="sxu">
+        <th mat-header-cell *matHeaderCellDef> SXU </th>
+        <td mat-cell *matCellDef="let r"> {{ r.sxu | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="sxu_Percent">
+        <th mat-header-cell *matHeaderCellDef> SXU % </th>
+        <td mat-cell *matCellDef="let r"> {{ (r.sxu_Percent || 0) * 10000 | number:'1.0-2' }}% </td>
+      </ng-container>
+
+      <ng-container matColumnDef="avg_LFT_Per_Day">
+        <th mat-header-cell *matHeaderCellDef> Avg LFT/Day </th>
+        <td mat-cell *matCellDef="let r"> {{ r.avg_LFT_Per_Day | number:'1.0-2' }} </td>
+      </ng-container>
+      <ng-container matColumnDef="avg_Dollars_Per_Material">
+        <th mat-header-cell *matHeaderCellDef> Avg $/Material </th>
+        <td mat-cell *matCellDef="let r"> {{ r.avg_Dollars_Per_Material | number:'1.0-2' }} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="muniDisplayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: muniDisplayedColumns;"></tr>
+
+      <tr class="empty" *ngIf="!muniSummaryRows?.length">
+        <td [attr.colspan]="muniDisplayedColumns.length">No data</td>
+      </tr>
+    </table>
   </div>
 </div>
 

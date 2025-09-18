@@ -1,13 +1,103 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { TpsService } from 'src/app/services/tps.service';
-import { CityScorecard } from 'src/app/models/city-scorecard.model';
-import { WPViolation } from 'src/app/models/wp-violation.model';
-import { SelectItem } from 'primeng/api';
-import { combineLatest } from 'rxjs';
+import { MetroByMonthOverview, MetroByMunicipalityOverview } from 'src/app/models/kpi.models';
 
-interface Stat {
-  label: string;
-  value: string;
+interface MetroYearSummary {
+  id?: string;
+  year: number;
+  metro: string;
+  isAverageRow?: boolean;
+  [key: string]: any;
+}
+
+// View-models for normalized table rows
+interface YearSummaryRow {
+  id?: string;
+  year: number;
+  metro: string;
+  isAverageRow?: boolean;
+
+  planned_Avg_Per_HHP: number;
+  laborCostToDate_Avg_Per_HHP: number;
+  plan_AvgLabor_Per_HHP: number;
+  actualToDate_AllIn_Per_HHP: number;
+  plan_AllIn_Per_HHP: number;
+  actualToDate_Median_Per_HHP: number;
+  plan_Median_Per_HHP: number;
+
+  planned_Avg_Per_LFT: number;
+  actualToDate_Avg_Per_LFT: number;
+  plan_Avg_Per_LFT: number;
+  actualToDate_Median_Per_LFT: number;
+  plan_Median_Per_LFT: number;
+
+  sXU_Percent: number;
+
+  createdAtUtc?: string;
+  updatedAtUtc?: string | null;
+}
+
+interface MonthSummaryRow {
+  id?: string;
+  year: number;
+  month: number;
+  monthName: string;
+  isTotalsRow?: boolean;
+
+  segmentCount: number;
+  eng_Dollars: number;
+  permit_Dollars: number;
+  material_Dollars: number;
+  plannedCost_Dollars: number;
+  current_TotalAllIn_Dollars: number;
+
+  hhp: number;
+  sfu: number;
+  mdu: number;
+  sbu: number;
+  mtu: number;
+
+  allIn_Per_HHP: number;
+  hhp_Delta: number;
+  sxu: number;
+  sxu_Percent: number;
+
+  avg_LFT_Per_Day: number;
+  avg_Dollars_Per_Material: number;
+
+  createdAtUtc?: string;
+  updatedAtUtc?: string | null;
+}
+
+interface MuniSummaryRow {
+  id?: string;
+  year: number;
+  city: string;
+  isTotalsRow?: boolean;
+
+  segmentCount: number;
+  eng_Dollars: number;
+  permit_Dollars: number;
+  material_Dollars: number;
+  plannedCost_Dollars: number;
+  current_TotalAllIn_Dollars: number;
+
+  hhp: number;
+  sfu: number;
+  mdu: number;
+  sbu: number;
+  mtu: number;
+
+  allIn_Per_HHP: number;
+  hhp_Delta: number;
+  sxu: number;
+  sxu_Percent: number;
+
+  avg_LFT_Per_Day: number;
+  avg_Dollars_Per_Material: number;
+
+  createdAtUtc?: string;
+  updatedAtUtc?: string | null;
 }
 
 @Component({
@@ -16,52 +106,53 @@ interface Stat {
   styleUrls: ['./metrics.component.scss']
 })
 export class MetricsComponent implements OnInit {
-  metrics2025: Stat[] = [];
-  metrics2025NonHhhp: Stat[] = [];
+  // ===== Tables =====
+  yearSummaryRows: YearSummaryRow[] = [];
+  monthSummaryRows: MonthSummaryRow[] = [];
+  muniSummaryRows: MuniSummaryRow[] = [];
 
-  // ===== Filters =====
-  startDate: Date | null = null;
-  endDate: Date | null = null;
+  // ===== Filters / UI =====
   filtersOpen = false;
   isMobile = false;
-  selectedVendors: string[] = [];
-  selectedSegments: string[] = [];
-  selectedCities: string[] = [];
+  years: number[] = [2026, 2025, 2024];
+  selectedYear: number = 2025;         // default to 2025 as requested
+  metroText: string = '';               // optional filter; passes to Year/Month endpoints
+  // View toggle: which API/view to display
+  viewOptions = [
+    { label: 'Year Summary', value: 'year' as const },
+    { label: 'Monthly', value: 'month' as const },
+    { label: 'Municipality', value: 'municipality' as const }
+  ];
+  selectedView: 'year' | 'month' | 'municipality' = 'year';
 
-  vendorOptions: SelectItem[] = [];
-  segmentOptions: SelectItem[] = [];
-  cityOptions: SelectItem[] = [];
+  // Mat-table displayed columns per view
+  yearDisplayedColumns: string[] = [
+    'year','metro','isAverageRow',
+    'planned_Avg_Per_HHP','laborCostToDate_Avg_Per_HHP','plan_AvgLabor_Per_HHP','actualToDate_AllIn_Per_HHP','plan_AllIn_Per_HHP','actualToDate_Median_Per_HHP','plan_Median_Per_HHP',
+    'planned_Avg_Per_LFT','actualToDate_Avg_Per_LFT','plan_Avg_Per_LFT','actualToDate_Median_Per_LFT','plan_Median_Per_LFT',
+    'sXU_Percent'
+  ];
+  monthDisplayedColumns: string[] = [
+    'year','month','monthName','isTotalsRow',
+    'segmentCount','eng_Dollars','permit_Dollars','material_Dollars','plannedCost_Dollars','current_TotalAllIn_Dollars',
+    'hhp','sfu','mdu','sbu','mtu',
+    'allIn_Per_HHP','hhp_Delta','sxu','sxu_Percent',
+    'avg_LFT_Per_Day','avg_Dollars_Per_Material'
+  ];
+  muniDisplayedColumns: string[] = [
+    'year','city','isTotalsRow',
+    'segmentCount','eng_Dollars','permit_Dollars','material_Dollars','plannedCost_Dollars','current_TotalAllIn_Dollars',
+    'hhp','sfu','mdu','sbu','mtu',
+    'allIn_Per_HHP','hhp_Delta','sxu','sxu_Percent',
+    'avg_LFT_Per_Day','avg_Dollars_Per_Material'
+  ];
+  
 
-  private violations: WPViolation[] = [];
-  private cities: CityScorecard[] = [];
-
-  constructor(private tpsService: TpsService) {}
+  constructor(private tps: TpsService) {}
 
   ngOnInit(): void {
     this.updateIsMobile();
-    combineLatest([
-      this.tpsService.getViolations(),
-      this.tpsService.getCityScorecard()
-    ]).subscribe({
-      next: ([violations, cities]) => {
-        this.violations = violations ?? [];
-        this.cities = cities ?? [];
-
-        const vendors = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
-        const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
-        const cityList = Array.from(new Set(this.cities.map(c => c.city).filter(Boolean)));
-        this.vendorOptions = vendors.map(v => ({ label: v!, value: v! }));
-        this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
-        this.cityOptions = cityList.map(c => ({ label: c!, value: c! }));
-
-        this.applyFilters();
-      },
-      error: _ => {
-        this.violations = [];
-        this.cities = [];
-        this.applyFilters();
-      }
-    });
+    this.applyFilters();
   }
 
   @HostListener('window:resize')
@@ -69,95 +160,175 @@ export class MetricsComponent implements OnInit {
     this.updateIsMobile();
   }
 
-  private updateIsMobile(): void {
-    this.isMobile = window.innerWidth <= 768;
-    // Optional: auto-open filters on desktop, keep toggle behavior on mobile
-    if (!this.isMobile) {
-      this.filtersOpen = true;
-    }
-  }
-
   toggleFilters(): void {
     this.filtersOpen = !this.filtersOpen;
   }
 
   clearFilters(): void {
-    this.startDate = null;
-    this.endDate = null;
-    this.selectedVendors = [];
-    this.selectedSegments = [];
-    this.selectedCities = [];
+    this.metroText = '';
     this.applyFilters();
   }
 
-  applyFilters(): void {
-    const vendorSet = new Set(this.selectedVendors || []);
-    const segmentSet = new Set(this.selectedSegments || []);
-    const citySet = new Set(this.selectedCities || []);
-
-    const baseViolations = this.violations.filter(v => {
-      const date = v.monthYear ? new Date(v.monthYear) : null;
-      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
-      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
-      const vendorOk = vendorSet.size ? (v.vendor ? vendorSet.has(v.vendor) : false) : true;
-      const segmentOk = segmentSet.size ? (v.segment ? segmentSet.has(v.segment) : false) : true;
-      return afterStart && beforeEnd && vendorOk && segmentOk;
-    });
-
-    const allowedCities = new Set(baseViolations.map(v => v.city).filter(Boolean));
-
-    const baseCities = this.cities.filter(c => {
-      const date = c.ta_Date ? new Date(c.ta_Date) : null;
-      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
-      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
-      const cityName = c.city ?? '';
-      const cityOk = citySet.size ? citySet.has(cityName) : true;
-      const vendorSegOk = (vendorSet.size || segmentSet.size) ? allowedCities.has(cityName) : true;
-      return afterStart && beforeEnd && cityOk && vendorSegOk;
-    });
-
-    const withHhp = baseCities.filter(c => (c.forecastedHHP ?? 0) > 0);
-    const withoutHhp = baseCities.filter(c => (c.forecastedHHP ?? 0) <= 0);
-    this.metrics2025 = this.buildMetrics(withHhp);
-    this.metrics2025NonHhhp = this.buildMetrics(withoutHhp);
+  private updateIsMobile(): void {
+    this.isMobile = window.innerWidth <= 768;
+    if (!this.isMobile) this.filtersOpen = true;
   }
 
-  private buildMetrics(rows: CityScorecard[]): Stat[] {
-    if (!rows.length) return [];
-    const nums = (vals: (number | undefined | null)[]) => vals.map(v => v ?? 0);
-    const avg = (vals: number[]) => (vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0);
-    const median = (vals: number[]) => {
-      if (!vals.length) return 0;
-      const sorted = [...vals].sort((a, b) => a - b);
-      const m = Math.floor(sorted.length / 2);
-      return sorted.length % 2 ? sorted[m] : (sorted[m - 1] + sorted[m]) / 2;
-    };
-    const currency = (n: number) =>
-      new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+  private pickNum(obj: any, keys: string[], fallback = 0): number {
+    for (const k of keys) {
+      const v = obj?.[k];
+      if (typeof v === 'number') return v;
+      if (typeof v === 'string' && v.trim() !== '' && !isNaN(+v)) return +v;
+    }
+    return fallback;
+  }
 
-    const remainingJobs = rows.filter(r => (r.closedDate ? new Date(r.closedDate) > new Date() : true)).map(r => r.compDate ? 1 : 0).length;
-    const forecastedHhp = nums(rows.map(r => r.forecastedDollarPerHHP));
-    const actualHhp = nums(rows.map(r => r.actualDollarPerHHP));
-    const forecastedLft = nums(rows.map(r => r.forecastedDollarPerLFT));
-    const actualLft = nums(rows.map(r => r.actualDollarPerLFT));
-    const forecastedAllIn = nums(rows.map(r => r.forecastedAllIn));
-    const actualAllIn = nums(rows.map(r => r.actualAllIn));
-    const totalLabor = actualAllIn.reduce((a, b) => a + b, 0);
+  private monthName(n: number): string {
+    const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return names[(n ?? 0) - 1] ?? '';
+    }
 
-    return [
-      { label: 'Remaining Jobs', value: String(remainingJobs) },
-      { label: 'Total Segments', value: String(rows.length) },
-      { label: 'Forcasted Avg HHP', value: currency(avg(forecastedHhp)) },
-      { label: 'Labor Cost', value: currency(totalLabor) },
-      { label: 'Forcasted - Avg HHP', value: currency(avg(forecastedHhp)) },
-      { label: 'Forcasted - Avg $/FT', value: currency(avg(forecastedLft)) },
-      { label: 'Forcasted - All In $/FT', value: currency(avg(forecastedAllIn)) },
-      { label: 'Actual to Date - Avg SHMP', value: currency(avg(actualHhp)) },
-      { label: 'Actual to Date - Avg $/FT', value: currency(avg(actualLft)) },
-      { label: 'Forcasted - Median HHP', value: currency(median(forecastedHhp)) },
-      { label: 'Forcasted - Median $/FT', value: currency(median(forecastedLft)) },
-      { label: 'Actual to Date - Median HHP', value: currency(median(actualHhp)) },
-      { label: 'Actual to Date - Median $/FT', value: currency(median(actualLft)) }
-    ];
+  async applyFilters(): Promise<void> {
+    const view = this.selectedView;
+    // Clear all to avoid showing stale data when switching views
+    this.yearSummaryRows = [];
+    this.monthSummaryRows = [];
+    this.muniSummaryRows = [];
+
+    if (view === 'year') {
+      await this.loadYearSummary();
+    } else if (view === 'month') {
+      await this.loadMonthlySummary();
+    } else if (view === 'municipality') {
+      await this.loadMunicipalitySummary();
+    }
+  }
+
+  private async loadYearSummary(): Promise<void> {
+    const year = this.selectedYear;
+    const metro = this.metroText?.trim() || undefined;
+    try {
+      const yearRows = await this.tps.getMetroYearSummary({
+        year,
+        metro,
+        includeAverages: false
+      }).toPromise();
+      const nonAvg = (yearRows ?? []).filter(r => !r.isAverageRow && !r['isAverageRow']);
+      this.yearSummaryRows = nonAvg.map(r => ({
+        year: this.pickNum(r, ['year','Year']),
+        metro: (r as any).metro ?? (r as any).Metro ?? '(unknown)',
+        isAverageRow: Boolean((r as any).isAverageRow ?? (r as any).IsAverageRow ?? false),
+
+        planned_Avg_Per_HHP: this.pickNum(r, ['planned_Avg_Per_HHP','Planned_Avg_Per_HHP']),
+        laborCostToDate_Avg_Per_HHP: this.pickNum(r, ['laborCostToDate_Avg_Per_HHP','LaborCostToDate_Avg_Per_HHP']),
+        plan_AvgLabor_Per_HHP: this.pickNum(r, ['plan_AvgLabor_Per_HHP','Plan_AvgLabor_Per_HHP']),
+        actualToDate_AllIn_Per_HHP: this.pickNum(r, ['actualToDate_AllIn_Per_HHP','ActualToDate_AllIn_Per_HHP']),
+        plan_AllIn_Per_HHP: this.pickNum(r, ['plan_AllIn_Per_HHP','Plan_AllIn_Per_HHP']),
+        actualToDate_Median_Per_HHP: this.pickNum(r, ['actualToDate_Median_Per_HHP','ActualToDate_Median_Per_HHP']),
+        plan_Median_Per_HHP: this.pickNum(r, ['plan_Median_Per_HHP','Plan_Median_Per_HHP']),
+
+        planned_Avg_Per_LFT: this.pickNum(r, ['planned_Avg_Per_LFT','Planned_Avg_Per_LFT']),
+        actualToDate_Avg_Per_LFT: this.pickNum(r, ['actualToDate_Avg_Per_LFT','ActualToDate_Avg_Per_LFT']),
+        plan_Avg_Per_LFT: this.pickNum(r, ['plan_Avg_Per_LFT','Plan_Avg_Per_LFT']),
+        actualToDate_Median_Per_LFT: this.pickNum(r, ['actualToDate_Median_Per_LFT','ActualToDate_Median_Per_LFT']),
+        plan_Median_Per_LFT: this.pickNum(r, ['plan_Median_Per_LFT','Plan_Median_Per_LFT']),
+
+        sXU_Percent: this.pickNum(r, ['sXU_Percent','SXU_Percent','sxu_Percent','sxU_Percent']),
+
+        createdAtUtc: (r as any).createdAtUtc ?? (r as any).CreatedAtUtc ?? undefined,
+        updatedAtUtc: (r as any).updatedAtUtc ?? (r as any).UpdatedAtUtc ?? undefined
+      }));
+    } catch {
+      this.yearSummaryRows = [];
+    }
+  }
+
+  private async loadMonthlySummary(): Promise<void> {
+    const year = this.selectedYear;
+    const metro = this.metroText?.trim() || undefined;
+    try {
+      const byMonth = await this.tps.getMetroByMonth({
+        year,
+        metro,
+        includeTotals: true
+      }).toPromise();
+      const months = (byMonth ?? []).filter(r => !(r.isTotalsRow || r['isTotalsRow'] || r.month === 0));
+      this.monthSummaryRows = months
+        .sort((a, b) => (a.month ?? 0) - (b.month ?? 0))
+        .map(r => ({
+          year: this.pickNum(r, ['year','Year']),
+          month: (r as any).month ?? (r as any).Month ?? 0,
+          monthName: this.monthName((r as any).month ?? (r as any).Month ?? 0),
+          isTotalsRow: Boolean((r as any).isTotalsRow ?? (r as any).IsTotalsRow ?? false),
+
+          segmentCount: this.pickNum(r, ['segmentCount','SegmentCount']),
+          eng_Dollars: this.pickNum(r, ['eng_Dollars','Eng_Dollars']),
+          permit_Dollars: this.pickNum(r, ['permit_Dollars','Permit_Dollars']),
+          material_Dollars: this.pickNum(r, ['material_Dollars','Material_Dollars']),
+          plannedCost_Dollars: this.pickNum(r, ['plannedCost_Dollars','PlannedCost_Dollars']),
+          current_TotalAllIn_Dollars: this.pickNum(r, ['current_TotalAllIn_Dollars','Current_TotalAllIn_Dollars']),
+
+          hhp: this.pickNum(r, ['hhp','HHP']),
+          sfu: this.pickNum(r, ['sfu','SFU']),
+          mdu: this.pickNum(r, ['mdu','MDU']),
+          sbu: this.pickNum(r, ['sbu','SBU']),
+          mtu: this.pickNum(r, ['mtu','MTU']),
+
+          allIn_Per_HHP: this.pickNum(r, ['allIn_Per_HHP','AllIn_Per_HHP']),
+          hhp_Delta: this.pickNum(r, ['hhp_Delta','hhP_Delta','HHP_Delta']),
+          sxu: this.pickNum(r, ['sxu','SXU']),
+          sxu_Percent: this.pickNum(r, ['sxu_Percent','SXU_Percent','sXU_Percent','sxU_Percent']),
+
+          avg_LFT_Per_Day: this.pickNum(r, ['avg_LFT_Per_Day','Avg_LFT_Per_Day']),
+          avg_Dollars_Per_Material: this.pickNum(r, ['avg_Dollars_Per_Material','Avg_Dollars_Per_Material']),
+
+          createdAtUtc: (r as any).createdAtUtc ?? (r as any).CreatedAtUtc ?? undefined,
+          updatedAtUtc: (r as any).updatedAtUtc ?? (r as any).UpdatedAtUtc ?? undefined
+        }));
+    } catch {
+      this.monthSummaryRows = [];
+    }
+  }
+
+  private async loadMunicipalitySummary(): Promise<void> {
+    const year = this.selectedYear;
+    try {
+      const byMuni: MetroByMunicipalityOverview[] | undefined = await this.tps.getMetroByMunicipality({
+        year,
+        includeTotals: true
+      }).toPromise();
+      const rows = (byMuni ?? []).filter(r => !(r.isTotalsRow || r['isTotalsRow']));
+      this.muniSummaryRows = rows.map(r => ({
+        year: this.pickNum(r, ['year','Year']),
+        city: (r as any).city ?? (r as any).City ?? (r as any).municipality ?? (r as any).Municipality ?? '(unknown)',
+        isTotalsRow: Boolean((r as any).isTotalsRow ?? (r as any).IsTotalsRow ?? false),
+
+        segmentCount: this.pickNum(r, ['segmentCount','SegmentCount']),
+        eng_Dollars: this.pickNum(r, ['eng_Dollars','Eng_Dollars']),
+        permit_Dollars: this.pickNum(r, ['permit_Dollars','Permit_Dollars']),
+        material_Dollars: this.pickNum(r, ['material_Dollars','Material_Dollars']),
+        plannedCost_Dollars: this.pickNum(r, ['plannedCost_Dollars','PlannedCost_Dollars']),
+        current_TotalAllIn_Dollars: this.pickNum(r, ['current_TotalAllIn_Dollars','Current_TotalAllIn_Dollars']),
+
+        hhp: this.pickNum(r, ['hhp','HHP']),
+        sfu: this.pickNum(r, ['sfu','SFU']),
+        mdu: this.pickNum(r, ['mdu','MDU']),
+        sbu: this.pickNum(r, ['sbu','SBU']),
+        mtu: this.pickNum(r, ['mtu','MTU']),
+
+        allIn_Per_HHP: this.pickNum(r, ['allIn_Per_HHP','AllIn_Per_HHP']),
+        hhp_Delta: this.pickNum(r, ['hhp_Delta','hhP_Delta','HHP_Delta']),
+        sxu: this.pickNum(r, ['sxu','SXU']),
+        sxu_Percent: this.pickNum(r, ['sxu_Percent','SXU_Percent','sXU_Percent','sxU_Percent']),
+
+        avg_LFT_Per_Day: this.pickNum(r, ['avg_LFT_Per_Day','Avg_LFT_Per_Day']),
+        avg_Dollars_Per_Material: this.pickNum(r, ['avg_Dollars_Per_Material','Avg_Dollars_Per_Material']),
+
+        createdAtUtc: (r as any).createdAtUtc ?? (r as any).CreatedAtUtc ?? undefined,
+        updatedAtUtc: (r as any).updatedAtUtc ?? (r as any).UpdatedAtUtc ?? undefined
+      }));
+    } catch {
+      this.muniSummaryRows = [];
+    }
   }
 }
