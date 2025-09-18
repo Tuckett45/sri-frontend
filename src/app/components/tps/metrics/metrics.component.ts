@@ -127,20 +127,20 @@ export class MetricsComponent implements OnInit {
 
   // Mat-table displayed columns per view
   yearDisplayedColumns: string[] = [
-    'year','metro','isAverageRow',
+    'year','metro',
     'planned_Avg_Per_HHP','laborCostToDate_Avg_Per_HHP','plan_AvgLabor_Per_HHP','actualToDate_AllIn_Per_HHP','plan_AllIn_Per_HHP','actualToDate_Median_Per_HHP','plan_Median_Per_HHP',
     'planned_Avg_Per_LFT','actualToDate_Avg_Per_LFT','plan_Avg_Per_LFT','actualToDate_Median_Per_LFT','plan_Median_Per_LFT',
     'sXU_Percent'
   ];
   monthDisplayedColumns: string[] = [
-    'year','month','monthName','isTotalsRow',
+    'year','monthName',
     'segmentCount','eng_Dollars','permit_Dollars','material_Dollars','plannedCost_Dollars','current_TotalAllIn_Dollars',
     'hhp','sfu','mdu','sbu','mtu',
     'allIn_Per_HHP','hhp_Delta','sxu','sxu_Percent',
     'avg_LFT_Per_Day','avg_Dollars_Per_Material'
   ];
   muniDisplayedColumns: string[] = [
-    'year','city','isTotalsRow',
+    'year','city',
     'segmentCount','eng_Dollars','permit_Dollars','material_Dollars','plannedCost_Dollars','current_TotalAllIn_Dollars',
     'hhp','sfu','mdu','sbu','mtu',
     'allIn_Per_HHP','hhp_Delta','sxu','sxu_Percent',
