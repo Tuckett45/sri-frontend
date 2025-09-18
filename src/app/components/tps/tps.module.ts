@@ -20,6 +20,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BudgetTrackerComponent } from './budget-tracker/budget-tracker.component';
+import { MetricsComponent } from './metrics/metrics.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { ChipModule } from 'primeng/chip';
@@ -38,7 +39,8 @@ import '../../../charts-setup';
     SummaryComponent,
     ViolationsComponent,
     CityScorecardComponent,
-    BudgetTrackerComponent
+    BudgetTrackerComponent,
+    MetricsComponent
   ],
   imports: [
     CommonModule,

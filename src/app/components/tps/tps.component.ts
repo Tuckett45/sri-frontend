@@ -9,13 +9,14 @@ import { SummaryComponent } from './summary/summary.component';
 export class TpsComponent {
   activeTab = 0;
 
-  @ViewChild(SummaryComponent) summary?: SummaryComponent;
+  @ViewChild(SummaryComponent) dashboard?: SummaryComponent;
 
   onTabChange(index: number | string): void {
     const idx = Number(index);
     this.activeTab = idx;
-    if (idx === 0) {
-      this.summary?.refreshCharts();
-    }
+      if (idx === 0) {
+        // Refresh charts when the Dashboard tab is active
+        this.dashboard?.refreshCharts();
+      }
   }
 }

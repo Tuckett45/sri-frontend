@@ -1,14 +1,4 @@
 <div class="summary-dashboard surface-ground md:px-6 lg:px-8">
-  <!-- Filters toggle -->
-  <div>
-    <button mat-raised-button class="filters-btn" (click)="toggleFilters()">
-      <span *ngIf="!filtersOpen">View Filters</span>
-      <span *ngIf="filtersOpen">Close Filters</span>
-      <mat-icon>filter_list</mat-icon>
-    </button>
-  </div>
-
-  <!-- Global date filters -->
   <div class="filter-section mb-3" *ngIf="filtersOpen">
     <div class="filter-selections flex align-items-center gap-1">
       <mat-form-field appearance="fill">
@@ -46,6 +36,8 @@
           <mat-option *ngFor="let option of cityOptions" [value]="option.value">{{ option.label }}</mat-option>
         </mat-select>
       </mat-form-field>
+
+      <a pRipple *ngIf="startDate || endDate || selectedVendorsGlobal.length || selectedSegmentsGlobal.length || selectedCitiesGlobal.length" tabindex="0" class="clear-all" (click)="clearFilters()">Clear All</a>
     </div>
   </div>
 
