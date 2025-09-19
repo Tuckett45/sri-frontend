@@ -149,16 +149,26 @@ h1 {
 }
 
 @media (max-width: 768px) {
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    .filter-selections {
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      gap: 0.75rem;
+    }
+    .clear-all {
+      align-self: flex-start;
+    }
+  }
   .chart-filters {
     flex-direction: column;
-
     :where(.p-dropdown, .p-select, .p-calendar) {
       flex: 1 1 auto;
       width: 100%;
     }
   }
-
-  /* extra height on mobile so canvas isn’t a sliver under filters */
   .chart-inner {
     height: clamp(420px, 65vh, 680px);
     min-height: 360px;
@@ -278,3 +288,4 @@ mat-form-field {
 
 /* Safety: chart cards inside chart-section never enforce min-width */
 .summary-dashboard .chart-section > * { min-width: 0; }
+

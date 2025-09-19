@@ -1,6 +1,8 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { TpsService } from 'src/app/services/tps.service';
 import { MetroByMonthOverview, MetroByMunicipalityOverview } from 'src/app/models/kpi.models';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 
 interface MetroYearSummary {
   id?: string;
@@ -110,6 +112,11 @@ export class MetricsComponent implements OnInit {
   yearSummaryRows: YearSummaryRow[] = [];
   monthSummaryRows: MonthSummaryRow[] = [];
   muniSummaryRows: MuniSummaryRow[] = [];
+
+  yearSummaryDataSource = new MatTableDataSource<YearSummaryRow>();
+  monthSummaryDataSource = new MatTableDataSource<MonthSummaryRow>();
+  muniSummaryDataSource = new MatTableDataSource<MuniSummaryRow>();
+  @ViewChild(MatSort) sort!: MatSort;
 
   // ===== Filters / UI =====
   filtersOpen = false;
@@ -238,6 +245,8 @@ export class MetricsComponent implements OnInit {
         createdAtUtc: (r as any).createdAtUtc ?? (r as any).CreatedAtUtc ?? undefined,
         updatedAtUtc: (r as any).updatedAtUtc ?? (r as any).UpdatedAtUtc ?? undefined
       }));
+      this.yearSummaryDataSource.data = this.yearSummaryRows;
+      this.yearSummaryDataSource.sort = this.sort;
     } catch {
       this.yearSummaryRows = [];
     }
@@ -285,6 +294,8 @@ export class MetricsComponent implements OnInit {
           createdAtUtc: (r as any).createdAtUtc ?? (r as any).CreatedAtUtc ?? undefined,
           updatedAtUtc: (r as any).updatedAtUtc ?? (r as any).UpdatedAtUtc ?? undefined
         }));
+      this.monthSummaryDataSource.data = this.monthSummaryRows;
+      this.monthSummaryDataSource.sort = this.sort;
     } catch {
       this.monthSummaryRows = [];
     }
@@ -327,6 +338,8 @@ export class MetricsComponent implements OnInit {
         createdAtUtc: (r as any).createdAtUtc ?? (r as any).CreatedAtUtc ?? undefined,
         updatedAtUtc: (r as any).updatedAtUtc ?? (r as any).UpdatedAtUtc ?? undefined
       }));
+      this.muniSummaryDataSource.data = this.muniSummaryRows;
+      this.muniSummaryDataSource.sort = this.sort;
     } catch {
       this.muniSummaryRows = [];
     }
