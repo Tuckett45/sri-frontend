@@ -1,0 +1,178 @@
+﻿@import "../styles/expense-shared";
+
+.expense-table {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &.is-loading {
+    .table-wrapper,
+    .table-actions {
+      pointer-events: none;
+      opacity: 0.6;
+      button {
+      align-items: center;
+      background-color: #e18a25;
+      color: #fff;
+
+      &:hover {
+        background-color: #b86404;
+      }
+    }
+    }
+  }
+
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.65);
+    z-index: 2;
+  }
+
+  .table-actions {
+    display: flex;
+    justify-content: flex-end;
+    button {
+      align-items: center;
+      background-color: #e18a25;
+      color: #fff;
+
+      &:hover {
+        background-color: #b86404;
+      }
+    }
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  table[mat-table] {
+    width: 100%;
+    min-width: 680px;
+    border-spacing: 0;
+  }
+
+  :host ::ng-deep .mat-mdc-table {
+    background-color: transparent;
+  }
+
+  :host ::ng-deep .mat-mdc-header-row {
+    background-color: $expense-accent;
+  }
+
+  :host ::ng-deep .mat-mdc-header-cell {
+    color: #ffffff;
+    font-weight: 600;
+    text-align: center;
+    padding: 0.875rem 1rem;
+  }
+
+  :host ::ng-deep .mat-mdc-cell {
+    text-align: center;
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+  }
+
+  :host ::ng-deep .mat-mdc-row:nth-child(even) {
+    background-color: #f6f7fb;
+  }
+
+  :host ::ng-deep .mat-mdc-row:nth-child(odd) {
+    background-color: #ffffff;
+  }
+
+  :host ::ng-deep .mat-mdc-paginator {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .actions-container {
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+
+    button[mat-icon-button][disabled] {
+      opacity: 0.4;
+    }
+  }
+
+  .approve-icon {
+    color: $expense-success;
+  }
+
+  .reject-icon {
+    color: #f44336;
+  }
+
+  .galleria-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    img {
+      max-width: 80%;
+      max-height: 1000px;
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .galleria-thumbnail {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 5px;
+      border: 2px solid #ddd;
+    }
+  }
+
+  :host ::ng-deep .p-galleria {
+    .p-galleria-thumbnail-container {
+      background: #f8fafc;
+      padding: 1rem 0.25rem;
+    }
+
+    .p-galleria-thumbnail-item {
+      opacity: 0.6;
+
+      &.p-galleria-thumbnail-item-active {
+        opacity: 1;
+      }
+    }
+
+    .p-galleria-close-button {
+      background: rgba(255, 255, 255, 0.1);
+      color: $expense-primary;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+      }
+    }
+
+    .p-galleria-nav-button {
+      background-color: $expense-primary;
+      color: $expense-accent;
+
+      &:hover {
+        color: #ffffff;
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #777;
+  }
+}

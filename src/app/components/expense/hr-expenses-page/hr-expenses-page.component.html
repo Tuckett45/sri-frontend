@@ -1,0 +1,45 @@
+﻿<div class="page-controls">
+  <button
+    mat-stroked-button
+    type="button"
+    class="toggle-filters-btn"
+    (click)="toggleFilters()"
+    aria-controls="hr-filters">
+    <mat-icon>{{ filtersOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
+    {{ filtersOpen ? 'Hide Filters' : 'Show Filters' }}
+  </button>
+
+  <div class="export-buttons">
+    <button mat-raised-button class="header-btn" (click)="exportPdf()">
+      <mat-icon>picture_as_pdf</mat-icon>
+      Export to PDF
+    </button>
+    <button mat-raised-button class="export-btn" (click)="exportCsv()">
+      <mat-icon>table_view</mat-icon>
+      Export to CSV
+    </button>
+  </div>
+</div>
+
+<app-expense-filters
+  *ngIf="filtersOpen"
+  id="hr-filters"
+  [statusOptions]="statusOptions"
+  (filtersChange)="onFiltersChange($event)">
+</app-expense-filters>
+
+<app-expense-table
+  [expenses]="filteredExpenses"
+  [loading]="loading || statusUpdatingIds.size > 0"
+  [showEmployeeColumn]="true"
+  [showAddButton]="false"
+  [enableEdit]="true"
+  [enableDelete]="false"
+  [enableApproval]="true"
+  [pendingStatusIds]="statusUpdatingIds"
+  [emptyStateMessage]="'No expenses match the current filters.'"
+  (edit)="openExpenseDetails($event)"
+  (approve)="onApprove($event)"
+  (reject)="onReject($event)">
+</app-expense-table>
+

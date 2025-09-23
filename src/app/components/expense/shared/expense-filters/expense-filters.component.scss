@@ -1,0 +1,50 @@
+﻿@import "../styles/expense-shared";
+
+.expense-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid rgba(20, 79, 128, 0.12);
+
+  .filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  .filter-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  button {
+    color: $expense-primary;
+    border-color: rgba(20, 79, 128, 0.3);
+
+    &:hover {
+      border-color: $expense-primary;
+      color: $expense-primary;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .expense-filters {
+    padding: 0.75rem;
+
+    .filter-actions {
+      justify-content: stretch;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

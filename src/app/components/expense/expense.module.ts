@@ -1,10 +1,12 @@
-import { NgModule } from '@angular/core';
+﻿import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ExpenseRoutingModule } from './expense-routing.module';
 import { ExpenseComponent } from './expense.component';
-import { ExpenseFormComponent } from './expense-form/expense-form.component';
-import { MyExpensesComponent } from './my-expenses/my-expenses.component';
+import { HrExpensesPageComponent } from './hr-expenses-page/hr-expenses-page.component';
+import { EmployeeExpensesPageComponent } from './employee-expenses-page/employee-expenses-page.component';
+import { ExpenseFiltersComponent } from './shared/expense-filters/expense-filters.component';
+import { ExpenseTableComponent } from './shared/expense-table/expense-table.component';
 import { CalendarModule } from 'primeng/calendar';
 import { InputTextModule } from 'primeng/inputtext';
 import { Textarea } from 'primeng/inputtextarea';
@@ -15,6 +17,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { GalleriaModule } from 'primeng/galleria';
 import { TabsModule } from 'primeng/tabs';
 import { MatPaginator } from "@angular/material/paginator";
@@ -33,7 +36,7 @@ import { Divider } from "primeng/divider";
 import { MatTooltip } from "@angular/material/tooltip";
 
 @NgModule({
-  declarations: [ExpenseComponent, ExpenseFormComponent, MyExpensesComponent],
+  declarations: [ExpenseComponent, HrExpensesPageComponent, EmployeeExpensesPageComponent, ExpenseFiltersComponent, ExpenseTableComponent],
   imports: [
     CommonModule,
     FormsModule,
@@ -64,9 +67,13 @@ import { MatTooltip } from "@angular/material/tooltip";
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatTableModule,
-    Divider,
-    MatTooltip
+  MatTableModule,
+  MatProgressSpinnerModule,
+  Divider,
+  MatTooltip
 ]
 })
 export class ExpenseModule {}
+
+
+
