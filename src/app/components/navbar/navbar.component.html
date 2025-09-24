@@ -36,6 +36,22 @@
     <button mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
       Profile
     </button>
+    <button
+      mat-button
+      *ngIf="notificationsEnabled()"
+      routerLink="/notifications"
+      routerLinkActive="active-link"
+      class="notifications-link"
+    >
+      <span class="flex align-items-center gap-2">
+        Notifications
+        <p-badge
+          *ngIf="unreadCount() > 0"
+          [value]="unreadCount()"
+          severity="danger"
+        ></p-badge>
+      </span>
+    </button>
     <button mat-button *ngIf="authService.isAdmin()" routerLink="/feature-flags" routerLinkActive="active-link">
       Feature Flags
     </button>

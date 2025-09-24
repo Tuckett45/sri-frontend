@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from 'src/app/models/user.model';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-navbar',
@@ -12,7 +13,13 @@ export class NavbarComponent {
   isMenuOpen = false;  // Track if the menu is open or not
   userData!: User;
 
-  constructor(public authService: AuthService) {}
+  readonly notificationsEnabled = this.notificationService.notificationsEnabled;
+  readonly unreadCount = this.notificationService.unreadCount;
+
+  constructor(
+    public authService: AuthService,
+    private readonly notificationService: NotificationService
+  ) {}
 
   // Function to toggle the menu on and off
   toggleMenu(): void {

@@ -81,6 +81,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { CardModule } from 'primeng/card';
 import { InputSwitchModule } from 'primeng/inputswitch';
+import { BadgeModule } from 'primeng/badge';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import { NgxCurrencyDirective } from "ngx-currency";
@@ -90,6 +91,7 @@ import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashb
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
 import '../charts-setup';
 import { FeatureFlagPanelComponent } from './components/feature-flags/feature-flag-panel.component';
+import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -129,7 +131,8 @@ export const customCurrencyMaskConfig = {
     OspCoordinatorTrackerComponent,
     MarketControllerComponent,
     MarketControllerModalComponent,
-    FeatureFlagPanelComponent
+    FeatureFlagPanelComponent,
+    UserNotificationsComponent
   ],
   imports: [
     NgxCurrencyDirective,
@@ -150,6 +153,7 @@ export const customCurrencyMaskConfig = {
     FloatLabel,
     DropdownModule,
     TagModule,
+    BadgeModule,
     TableModule,
     CardModule,
     InputSwitchModule,
