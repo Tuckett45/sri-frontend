@@ -3,6 +3,15 @@ import { AuthService } from '../../services/auth.service';
 import { User } from 'src/app/models/user.model';
 import { NotificationService } from '../../services/notification.service';
 
+type NavLink = {
+  label: string;
+  route: string;
+  isVisible: () => boolean;
+  exact?: boolean;
+  cssClass?: string;
+  isNotifications?: boolean;
+};
+
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
@@ -15,6 +24,80 @@ export class NavbarComponent {
 
   readonly notificationsEnabled = this.notificationService.notificationsEnabled;
   readonly unreadCount = this.notificationService.unreadCount;
+  readonly exactMatchOptions = { exact: true } as const;
+  readonly defaultMatchOptions = { exact: false } as const;
+
+  readonly navLinks: NavLink[] = [
+    {
+      label: 'Overview',
+      route: '/overview',
+      isVisible: () =>
+        this.authService.isClient() ||
+        this.authService.isCM() ||
+        this.authService.isAdmin() ||
+        this.authService.isPM()
+    },
+    {
+      label: 'Prelim Punch List Tracker',
+      route: '/preliminary-punch-list',
+      isVisible: () =>
+        this.authService.isCM() ||
+        this.authService.isAdmin() ||
+        this.authService.isPM()
+    },
+    {
+      label: 'Street Sheet Tracker',
+      route: '/street-sheet',
+      isVisible: () =>
+        this.authService.isCM() ||
+        this.authService.isAdmin() ||
+        this.authService.isTemp()
+    },
+    {
+      label: 'OSP Coordinator',
+      route: '/osp-coordinator-tracker',
+      isVisible: () =>
+        this.authService.isCoordinator() ||
+        this.authService.isAdmin()
+    },
+    {
+      label: 'Market Controller',
+      route: '/market-controller-tracker',
+      isVisible: () =>
+        this.authService.isMarketController() ||
+        this.authService.isAdmin()
+    },
+    {
+      label: 'Expenses',
+      route: '/expenses',
+      isVisible: () => this.authService.isAdmin()
+    },
+    {
+      label: 'TPS',
+      route: '/tps',
+      isVisible: () =>
+        this.authService.isAdmin() ||
+        this.authService.isClient()
+    },
+    {
+      label: 'Profile',
+      route: '/profile',
+      exact: true,
+      isVisible: () => true
+    },
+    {
+      label: 'Notifications',
+      route: '/notifications',
+      cssClass: 'notifications-link',
+      isNotifications: true,
+      isVisible: () => this.notificationsEnabled()
+    },
+    {
+      label: 'Feature Flags',
+      route: '/feature-flags',
+      isVisible: () => this.authService.isAdmin()
+    }
+  ];
 
   constructor(
     public authService: AuthService,

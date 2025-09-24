@@ -12,49 +12,30 @@
 
   <!-- Navigation Links -->
   <div class="nav-links" [ngClass]="{ 'open': isMenuOpen, 'closed': !isMenuOpen }">
-    <button *ngIf="authService.isClient() || authService.isCM() || authService.isAdmin() || authService.isPM()" mat-button routerLink="/overview" routerLinkActive="active-link">
-      Overview
-    </button>
-    <button *ngIf="authService.isCM() || authService.isAdmin() || authService.isPM()"  mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">
-      Prelim Punch List Tracker
-    </button>
-    <button *ngIf="authService.isCM() || authService.isAdmin() || authService.isTemp()"  mat-button routerLink="/street-sheet" routerLinkActive="active-link">
-      Street Sheet Tracker
-    </button>
-    <button *ngIf="authService.isCoordinator() || authService.isAdmin()"  mat-button routerLink="/osp-coordinator-tracker" routerLinkActive="active-link">
-      OSP Coordinator
-    </button>
-    <button *ngIf="authService.isMarketController() || authService.isAdmin()"  mat-button routerLink="/market-controller-tracker" routerLinkActive="active-link">
-      Market Controller
-    </button>
-    <button mat-button *ngIf="authService.isAdmin()"  routerLink="/expenses" routerLinkActive="active-link">
-      Expenses
-    </button>
-    <button mat-button *ngIf="authService.isAdmin() || authService.isClient()"  routerLink="/tps" routerLinkActive="active-link">
-      TPS
-    </button>
-    <button mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
-      Profile
-    </button>
-    <button
-      mat-button
-      *ngIf="notificationsEnabled()"
-      routerLink="/notifications"
-      routerLinkActive="active-link"
-      class="notifications-link"
-    >
-      <span class="flex align-items-center gap-2">
-        Notifications
-        <p-badge
-          *ngIf="unreadCount() > 0"
-          [value]="unreadCount()"
-          severity="danger"
-        ></p-badge>
-      </span>
-    </button>
-    <button mat-button *ngIf="authService.isAdmin()" routerLink="/feature-flags" routerLinkActive="active-link">
-      Feature Flags
-    </button>
+    <ng-container *ngFor="let link of navLinks">
+      <button
+        *ngIf="link.isVisible()"
+        mat-button
+        [routerLink]="link.route"
+        routerLinkActive="active-link"
+        [routerLinkActiveOptions]="link.exact ? exactMatchOptions : defaultMatchOptions"
+        [ngClass]="link.cssClass"
+      >
+        <ng-container *ngIf="!link.isNotifications; else notificationLink">
+          {{ link.label }}
+        </ng-container>
+        <ng-template #notificationLink>
+          <span class="flex align-items-center gap-2">
+            {{ link.label }}
+            <p-badge
+              *ngIf="unreadCount() > 0"
+              [value]="unreadCount()"
+              severity="danger"
+            ></p-badge>
+          </span>
+        </ng-template>
+      </button>
+    </ng-container>
     <button mat-button (click)="logout()">Logout</button>
   </div>
 </mat-toolbar>
