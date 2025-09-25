@@ -91,11 +91,6 @@ export class NavbarComponent {
       cssClass: 'notifications-link',
       isNotifications: true,
       isVisible: () => this.notificationsEnabled()
-    },
-    {
-      label: 'Feature Flags',
-      route: '/feature-flags',
-      isVisible: () => this.authService.isAdmin()
     }
   ];
 

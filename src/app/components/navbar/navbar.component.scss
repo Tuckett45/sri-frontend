@@ -1,4 +1,4 @@
-mat-toolbar {
+﻿mat-toolbar {
   position: fixed;
   top: 0;
   left: 0;
@@ -161,4 +161,17 @@ mat-toolbar {
   .logo {
     font-size: 1.2rem; /* Make the logo smaller on very small screens */
   }
+}
+
+
+.nav-links button .p-badge {
+  background-color: #dc2626;
+  color: #ffffff;
+  font-weight: 600;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-links button.active-link .p-badge {
+  background-color: #ffffff;
+  color: #144f80;
 }

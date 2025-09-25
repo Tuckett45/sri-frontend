@@ -27,11 +27,12 @@
         <ng-template #notificationLink>
           <span class="flex align-items-center gap-2">
             {{ link.label }}
-            <p-badge
+            <span class="notification-bell"
               *ngIf="unreadCount() > 0"
-              [value]="unreadCount()"
               severity="danger"
-            ></p-badge>
+            >{{ unreadCount() }}
+              <i class="pi pi-bell" style="font-size: 1.0rem"></i>
+            </span>
           </span>
         </ng-template>
       </button>
