@@ -36,9 +36,6 @@
     <button mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
       Profile
     </button>
-    <button mat-button *ngIf="authService.isAdmin()" routerLink="/feature-flags" routerLinkActive="active-link">
-      Feature Flags
-    </button>
     <button mat-button (click)="logout()">Logout</button>
   </div>
 </mat-toolbar>
