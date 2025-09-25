@@ -1,0 +1,113 @@
+<section class="notifications-page">
+  <p-card styleClass="w-full">
+    <ng-template pTemplate="title">
+      <div class="flex align-items-center justify-content-between">
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-bell text-primary text-xl"></i>
+          <span class="font-semibold text-lg">Notifications</span>
+        </div>
+        <div class="flex align-items-center gap-2">
+          <p-badge
+            *ngIf="unreadCount() > 0"
+            [value]="unreadCount()"
+            severity="danger"
+            styleClass="text-sm"
+          ></p-badge>
+          <button
+            pButton
+            type="button"
+            label="Mark all read"
+            class="p-button-text"
+            [disabled]="unreadCount() === 0"
+            (click)="markAllAsRead()"
+          ></button>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      <ng-container *ngIf="notificationsEnabled(); else disabledFlag">
+        <div *ngIf="notifications().length > 0; else emptyState" class="flex flex-column gap-3">
+          <div
+            class="notification-card surface-card border-round p-3"
+            *ngFor="let notification of unreadNotifications(); trackBy: trackByNotificationId"
+          >
+            <div class="flex align-items-center justify-content-between">
+              <div class="flex align-items-center gap-2">
+                <p-tag [value]="notification.category | titlecase" [severity]="tagSeverity(notification.category)"></p-tag>
+                <span class="font-semibold text-md">{{ notification.title }}</span>
+              </div>
+              <span class="timestamp">{{ notification.createdAt | date: 'short' }}</span>
+            </div>
+            <p class="message mt-2 mb-3">{{ notification.message }}</p>
+            <div class="flex align-items-center justify-content-between">
+              <div class="flex gap-2" *ngIf="notification.action">
+                <button pButton type="button" label="{{ notification.action.label }}" (click)="goToAction(notification)"></button>
+              </div>
+              <button
+                pButton
+                type="button"
+                label="Mark read"
+                class="p-button-text"
+                (click)="markAsRead(notification)"
+              ></button>
+            </div>
+          </div>
+
+          <p-divider *ngIf="readNotifications().length"></p-divider>
+
+          <div
+            class="notification-card surface-100 border-round p-3"
+            *ngFor="let notification of readNotifications(); trackBy: trackByNotificationId"
+          >
+            <div class="flex align-items-center justify-content-between">
+              <div class="flex align-items-center gap-2">
+                <p-tag [value]="notification.category | titlecase" [severity]="tagSeverity(notification.category)"></p-tag>
+                <span class="font-medium text-md">{{ notification.title }}</span>
+              </div>
+              <span class="timestamp">{{ notification.createdAt | date: 'short' }}</span>
+            </div>
+            <p class="message mt-2 mb-3">{{ notification.message }}</p>
+            <div class="flex align-items-center justify-content-between">
+              <div class="flex gap-2" *ngIf="notification.action">
+                <button
+                  pButton
+                  type="button"
+                  label="{{ notification.action.label }}"
+                  class="p-button-outlined"
+                  (click)="goToAction(notification)"
+                ></button>
+              </div>
+              <button
+                pButton
+                type="button"
+                label="Mark unread"
+                class="p-button-text"
+                (click)="markAsUnread(notification)"
+              ></button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyState>
+          <div class="empty-state surface-100 border-round p-5 text-center">
+            <i class="pi pi-inbox text-3xl text-500 mb-3"></i>
+            <h3 class="m-0">You're all caught up!</h3>
+            <p class="mt-2 mb-0 text-600">Keep an eye here for project updates and alerts.</p>
+          </div>
+        </ng-template>
+      </ng-container>
+
+      <ng-template #disabledFlag>
+        <div class="disabled-flag surface-100 border-round p-5 text-center">
+          <i class="pi pi-bell-slash text-3xl text-500 mb-3"></i>
+          <h3 class="m-0">Notifications are currently disabled</h3>
+          <p class="mt-2 mb-3 text-600">
+            Your administrator can enable the notifications feature from the feature flag settings.
+          </p>
+          <a routerLink="/feature-flags" class="p-button p-component p-button-text">Go to feature flags</a>
+        </div>
+      </ng-template>
+    </ng-template>
+  </p-card>
+</section>

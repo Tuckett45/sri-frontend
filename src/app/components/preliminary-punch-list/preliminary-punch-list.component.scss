@@ -24,6 +24,21 @@
     align-items: center;
   }
 
+  .view-toggle {
+    background: rgba(255, 255, 255, 0.9);
+    margin-bottom: 1.5rem;
+
+    .p-selectbutton .p-button {
+      min-width: 10rem;
+      font-weight: 600;
+    }
+
+    .view-hint {
+      font-size: 0.85rem;
+      color: #4b5563;
+    }
+  }
+
   .export-btn {
     align-items: center;
     background-color: #0baa06;
@@ -354,6 +369,11 @@
         padding: 8px;
       }
     }
+  }
+
+  .timeline-wrapper {
+    margin-top: 1.5rem;
+    background: rgba(255, 255, 255, 0.9);
   }
 }
 

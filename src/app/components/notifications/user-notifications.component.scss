@@ -1,0 +1,27 @@
+.notifications-page {
+  padding: 2rem 0;
+
+  .notification-card {
+    box-shadow: var(--surface-overlay); // subtle separation
+    border: 1px solid var(--surface-border);
+
+    .message {
+      color: var(--text-color-secondary);
+      line-height: 1.5;
+    }
+
+    .timestamp {
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .empty-state,
+  .disabled-flag {
+    color: var(--text-color-secondary);
+
+    h3 {
+      color: var(--text-color);
+    }
+  }
+}
