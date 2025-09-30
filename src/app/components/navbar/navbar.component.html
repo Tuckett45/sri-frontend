@@ -27,7 +27,7 @@
     <button *ngIf="authService.isMarketController() || authService.isAdmin()"  mat-button routerLink="/market-controller-tracker" routerLinkActive="active-link">
       Market Controller
     </button>
-    <button mat-button *ngIf="authService.isAdmin()"  routerLink="/expenses" routerLinkActive="active-link">
+    <button mat-button *ngIf="authService.isAdmin() || authService.isHR()"  routerLink="/expenses" routerLinkActive="active-link">
       Expenses
     </button>
     <button mat-button *ngIf="authService.isAdmin() || authService.isClient()"  routerLink="/tps" routerLinkActive="active-link">

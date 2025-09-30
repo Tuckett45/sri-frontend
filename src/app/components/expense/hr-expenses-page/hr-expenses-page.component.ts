@@ -8,14 +8,21 @@ import { ExpenseApiService } from 'src/app/services/expense-api.service';
 import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
 
+type DisplayExpense = Expense & {
+  job?: string | null;
+  notes?: string | null;
+  receiptUrl?: string | null;
+  date?: string;
+};
+
 @Component({
   selector: 'app-hr-expenses-page',
   templateUrl: './hr-expenses-page.component.html',
   styleUrls: ['./hr-expenses-page.component.scss']
 })
 export class HrExpensesPageComponent implements OnInit {
-  expenses: Expense[] = [];
-  filteredExpenses: Expense[] = [];
+  expenses: DisplayExpense[] = [];
+  filteredExpenses: DisplayExpense[] = [];
   statusOptions = Object.values(ExpenseStatus);
   loading = false;
   filtersOpen = false;
@@ -51,7 +58,8 @@ export class HrExpensesPageComponent implements OnInit {
     this.loading = true;
     this.expenseApi.getTeamExpenses().subscribe({
       next: res => {
-        this.expenses = res?.items ?? [];
+        const expenseArray = Array.isArray(res) ? res : [res];
+        this.expenses = expenseArray.map((item: ExpenseListItem) => this.toViewModel(item));
         this.applyFilters();
         this.loading = false;
       },
@@ -61,6 +69,16 @@ export class HrExpensesPageComponent implements OnInit {
       }
     });
   }
+
+  private toViewModel(item: ExpenseListItem): DisplayExpense {
+      const mapped = {...item,
+        job: (item as any).job ?? item.projectId ?? '',      
+        notes: (item as any).notes ?? (item as any).description ?? item.descriptionNotes ?? '',
+        receiptUrl: item.images?.[0]?.blobUrl ?? (item as any).receiptUrl ?? null,
+        date: item.date ?? item.createdDate ?? new Date().toISOString()
+      } as DisplayExpense;
+      return mapped;
+    }
 
   exportCsv(): void {
     if (!this.filteredExpenses.length) {

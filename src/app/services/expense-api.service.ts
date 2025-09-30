@@ -29,7 +29,7 @@ export class ExpenseApiService {
     })
   };
 
-  private baseUrl = `${environment.apiUrl}/expenses`;
+  private baseUrl = `${local_environment.apiUrl}/expenses`;
 
   constructor(private http: HttpClient) {}
 
@@ -223,8 +223,8 @@ export class ExpenseApiService {
   }
 
   
-  getTeamExpenses(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}): Observable<ExpenseListResponse> {
-    return this.getExpenses(opts);
+  getTeamExpenses(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}): Observable<ExpenseListItem> {
+    return this.getExpenses(opts).pipe(map(res => (res) as unknown as ExpenseListItem));
   }
 }
 

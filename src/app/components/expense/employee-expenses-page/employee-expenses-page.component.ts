@@ -74,7 +74,6 @@ export class EmployeeExpensesPageComponent implements OnInit {
       next: items => {
         const expenseArray = Array.isArray(items) ? items : [items];
         this.expenses = expenseArray.map((item: ExpenseListItem) => this.toViewModel(item));
-        console.log('Mapped expenses', this.expenses);
         this.applyFilters();
         this.loading = false;
       },
@@ -86,22 +85,18 @@ export class EmployeeExpensesPageComponent implements OnInit {
   }
 
   private toViewModel(item: ExpenseListItem): DisplayExpense {
-    console.log('toViewModel input', item);
     const mapped = {...item,
       job: (item as any).job ?? item.projectId ?? '',      
       notes: (item as any).notes ?? (item as any).description ?? item.descriptionNotes ?? '',
       receiptUrl: item.images?.[0]?.blobUrl ?? (item as any).receiptUrl ?? null,
       date: item.date ?? item.createdDate ?? new Date().toISOString()
     } as DisplayExpense;
-    console.log('toViewModel', mapped);
     return mapped;
   }
 
   private applyFilters(): void {
-    console.log('applyFilters with filters', this.currentFilters, 'source', this.expenses);
     const { startDate, endDate, job, status } = this.currentFilters;
     this.filteredExpenses = this.expenses.filter(exp => {
-      console.log('filtering', exp);  
       const expenseDate = exp.date ? new Date(exp.date) : null;
       const matchesStart = startDate ? (expenseDate ? expenseDate >= new Date(startDate) : false) : true;
       const matchesEnd = endDate ? (expenseDate ? expenseDate <= new Date(endDate) : false) : true;
@@ -109,7 +104,6 @@ export class EmployeeExpensesPageComponent implements OnInit {
       const matchesJob = job ? jobSource.toLowerCase().includes(job.toLowerCase()) : true;
       const matchesStatus = status ? exp.status === status : true;
       const keep = matchesStart && matchesEnd && matchesJob && matchesStatus;
-      console.log('matches', { expenseDate, matchesStart, matchesEnd, matchesJob, matchesStatus, keep });
       return matchesStart && matchesEnd && matchesJob && matchesStatus;
     });
   }
