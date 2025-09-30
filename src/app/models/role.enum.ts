@@ -5,5 +5,6 @@ export enum UserRole {
     Admin = 'Admin',
     Temp = 'Temp',
     OSPCoordinator = 'OSP Coordinator',
-    Controller = 'Controller'
+    Controller = 'Controller',
+    HR = 'HR'
 }

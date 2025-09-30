@@ -1,13 +1,21 @@
-﻿import { Component, OnInit } from '@angular/core';
-import { Expense, ExpenseStatus } from 'src/app/models/expense.model';
+import { Component, OnInit } from '@angular/core';
+import { Expense, ExpenseListItem, ExpenseStatus } from 'src/app/models/expense.model';
 import { ExpenseApiService } from 'src/app/services/expense-api.service';
 import { ToastrService } from 'ngx-toastr';
 import { MatDialog } from '@angular/material/dialog';
-import { ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
+import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { AuthService } from 'src/app/services/auth.service';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
+
+type DisplayExpense = Expense & {
+  job?: string | null;
+  notes?: string | null;
+  receiptUrl?: string | null;
+  date?: string;
+};
 
 @Component({
   selector: 'app-employee-expenses-page',
@@ -15,24 +23,30 @@ import { ExpenseFilters } from '../shared/expense-filters/expense-filters.compon
   styleUrls: ['./employee-expenses-page.component.scss']
 })
 export class EmployeeExpensesPageComponent implements OnInit {
-  expenses: Expense[] = [];
-  filteredExpenses: Expense[] = [];
+  expenses: DisplayExpense[] = [];
+  filteredExpenses: DisplayExpense[] = [];
   statusOptions = Object.values(ExpenseStatus);
   loading = false;
-  filtersOpen = true;
+  filtersOpen = false;
+  private readonly userIdentifier: string | null;
 
   private currentFilters: ExpenseFilters = {
     startDate: null,
     endDate: null,
     job: '',
+    phase: '',
     status: ''
   };
 
   constructor(
-    private expenseApi: ExpenseApiService,
-    private toastr: ToastrService,
-    private dialog: MatDialog
-  ) {}
+    private readonly expenseApi: ExpenseApiService,
+    private readonly toastr: ToastrService,
+    private readonly dialog: MatDialog,
+    private readonly authService: AuthService
+  ) {
+    const currentUser = this.authService.getUser();
+    this.userIdentifier = currentUser?.id ?? null;
+  }
 
   ngOnInit(): void {
     this.loadExpenses();
@@ -49,9 +63,18 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
   loadExpenses(): void {
     this.loading = true;
-    this.expenseApi.getMyExpenses().subscribe({
-      next: res => {
-        this.expenses = res ?? [];
+
+    if (!this.userIdentifier) {
+      this.toastr.error('Unable to determine current user.');
+      this.loading = false;
+      return;
+    }
+
+    this.expenseApi.getMyExpenses(this.userIdentifier, { includeImages: true, page: 1, pageSize: 200 }).subscribe({
+      next: items => {
+        const expenseArray = Array.isArray(items) ? items : [items];
+        this.expenses = expenseArray.map((item: ExpenseListItem) => this.toViewModel(item));
+        console.log('Mapped expenses', this.expenses);
         this.applyFilters();
         this.loading = false;
       },
@@ -62,14 +85,31 @@ export class EmployeeExpensesPageComponent implements OnInit {
     });
   }
 
+  private toViewModel(item: ExpenseListItem): DisplayExpense {
+    console.log('toViewModel input', item);
+    const mapped = {...item,
+      job: (item as any).job ?? item.projectId ?? '',      
+      notes: (item as any).notes ?? (item as any).description ?? item.descriptionNotes ?? '',
+      receiptUrl: item.images?.[0]?.blobUrl ?? (item as any).receiptUrl ?? null,
+      date: item.date ?? item.createdDate ?? new Date().toISOString()
+    } as DisplayExpense;
+    console.log('toViewModel', mapped);
+    return mapped;
+  }
+
   private applyFilters(): void {
+    console.log('applyFilters with filters', this.currentFilters, 'source', this.expenses);
     const { startDate, endDate, job, status } = this.currentFilters;
     this.filteredExpenses = this.expenses.filter(exp => {
-      const expenseDate = new Date(exp.date);
-      const matchesStart = startDate ? expenseDate >= new Date(startDate) : true;
-      const matchesEnd = endDate ? expenseDate <= new Date(endDate) : true;
-      const matchesJob = job ? exp.job?.toLowerCase().includes(job.toLowerCase()) : true;
+      console.log('filtering', exp);  
+      const expenseDate = exp.date ? new Date(exp.date) : null;
+      const matchesStart = startDate ? (expenseDate ? expenseDate >= new Date(startDate) : false) : true;
+      const matchesEnd = endDate ? (expenseDate ? expenseDate <= new Date(endDate) : false) : true;
+      const jobSource = exp.job ?? '';
+      const matchesJob = job ? jobSource.toLowerCase().includes(job.toLowerCase()) : true;
       const matchesStatus = status ? exp.status === status : true;
+      const keep = matchesStart && matchesEnd && matchesJob && matchesStatus;
+      console.log('matches', { expenseDate, matchesStart, matchesEnd, matchesJob, matchesStatus, keep });
       return matchesStart && matchesEnd && matchesJob && matchesStatus;
     });
   }
@@ -80,10 +120,11 @@ export class EmployeeExpensesPageComponent implements OnInit {
       return;
     }
 
-    const header = ['Date', 'Job', 'Amount', 'Status', 'Notes'];
+    const header = ['Date', 'Job', 'Phase', 'Amount', 'Status', 'Notes'];
     const rows = this.filteredExpenses.map(exp => [
-      new Date(exp.date).toLocaleDateString(),
+      exp.date ? new Date(exp.date).toLocaleDateString() : '',
       exp.job ?? '',
+      exp.phase ?? '',
       exp.amount?.toString() ?? '',
       exp.status ?? '',
       exp.notes ?? ''
@@ -112,10 +153,11 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
     const doc = new jsPDF();
     autoTable(doc, {
-      head: [['Date', 'Job', 'Amount', 'Status']],
+      head: [['Date', 'Job', 'Phase', 'Amount', 'Status']],
       body: this.filteredExpenses.map(e => [
-        new Date(e.date).toLocaleDateString(),
+        e.date ? new Date(e.date).toLocaleDateString() : '',
         e.job ?? '',
+        e.phase ?? '',  
         e.amount?.toString() ?? '',
         e.status ?? ''
       ])
@@ -129,9 +171,9 @@ export class EmployeeExpensesPageComponent implements OnInit {
       data: null
     });
 
-    dialogRef.afterClosed().subscribe((expense: Expense | undefined) => {
-      if (expense) {
-        this.onExpenseSubmit(expense);
+    dialogRef.afterClosed().subscribe((result: ExpenseDialogResult | undefined) => {
+      if (result?.expense) {
+        this.onExpenseSubmit(result);
       }
     });
   }
@@ -142,9 +184,9 @@ export class EmployeeExpensesPageComponent implements OnInit {
       data: expense
     });
 
-    dialogRef.afterClosed().subscribe((updated: Expense | undefined) => {
-      if (updated) {
-        this.expenseApi.updateExpense(updated).subscribe({
+    dialogRef.afterClosed().subscribe((result: ExpenseDialogResult | undefined) => {
+      if (result?.expense) {
+        this.expenseApi.updateExpense(result.expense, result.file ?? undefined, result.receiptData ?? undefined).subscribe({
           next: () => {
             this.toastr.success('Expense updated');
             this.loadExpenses();
@@ -155,8 +197,8 @@ export class EmployeeExpensesPageComponent implements OnInit {
     });
   }
 
-  onExpenseSubmit(expense: Expense): void {
-    this.expenseApi.submitExpense(expense).subscribe({
+  onExpenseSubmit(result: ExpenseDialogResult): void {
+    this.expenseApi.submitExpense(result.expense, result.file ?? undefined, result.receiptData ?? undefined).subscribe({
       next: () => {
         this.toastr.success('Expense submitted');
         this.loadExpenses();

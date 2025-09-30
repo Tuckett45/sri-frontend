@@ -1,11 +1,11 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Expense, ExpenseStatus } from 'src/app/models/expense.model';
+import { Expense, ExpenseListItem, ExpenseStatus } from 'src/app/models/expense.model';
 import { ExpenseApiService } from 'src/app/services/expense-api.service';
-import { ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
+import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
 
 @Component({
@@ -18,13 +18,14 @@ export class HrExpensesPageComponent implements OnInit {
   filteredExpenses: Expense[] = [];
   statusOptions = Object.values(ExpenseStatus);
   loading = false;
-  filtersOpen = true;
+  filtersOpen = false;
   readonly statusUpdatingIds = new Set<string>();
   private currentFilters: ExpenseFilters = {
     startDate: null,
     endDate: null,
     job: '',
-    status: ''
+    phase: '',
+    status: 'Pending'
   };
 
   constructor(
@@ -50,7 +51,7 @@ export class HrExpensesPageComponent implements OnInit {
     this.loading = true;
     this.expenseApi.getTeamExpenses().subscribe({
       next: res => {
-        this.expenses = res ?? [];
+        this.expenses = res?.items ?? [];
         this.applyFilters();
         this.loading = false;
       },
@@ -67,14 +68,15 @@ export class HrExpensesPageComponent implements OnInit {
       return;
     }
 
-    const header = ['Employee', 'Date', 'Job', 'Amount', 'Status', 'Notes'];
+    const header = ['Employee', 'Date', 'Job', 'Phase', 'Amount', 'Status', 'Notes'];
     const rows = this.filteredExpenses.map(exp => [
       exp.createdBy ?? '',
       new Date(exp.date).toLocaleDateString(),
-      exp.job ?? '',
+      exp.projectId ?? '',
+      exp.phase ?? '',
       exp.amount?.toString() ?? '',
       exp.status ?? '',
-      exp.notes ?? ''
+      exp.descriptionNotes ?? ''
     ]);
 
     const csvContent = [header, ...rows]
@@ -100,11 +102,12 @@ export class HrExpensesPageComponent implements OnInit {
 
     const doc = new jsPDF();
     autoTable(doc, {
-      head: [['Employee', 'Date', 'Job', 'Amount', 'Status']],
+      head: [['Employee', 'Date', 'Job', 'Phase', 'Amount', 'Status']],
       body: this.filteredExpenses.map(e => [
         e.createdBy ?? '',
         new Date(e.date).toLocaleDateString(),
-        e.job ?? '',
+        e.projectId ?? '',
+        e.phase ?? '',
         e.amount?.toString() ?? '',
         e.status ?? ''
       ])
@@ -119,9 +122,9 @@ export class HrExpensesPageComponent implements OnInit {
       disableClose: true
     });
 
-    dialogRef.afterClosed().subscribe((updated: Expense | undefined) => {
-      if (updated) {
-        this.expenseApi.updateExpense(updated).subscribe({
+    dialogRef.afterClosed().subscribe((result: ExpenseDialogResult | undefined) => {
+      if (result?.expense) {
+        this.expenseApi.updateExpense(result.expense, result.file ?? undefined, result.receiptData ?? undefined).subscribe({
           next: () => {
             this.toastr.success('Expense updated');
             this.loadExpenses();
@@ -148,23 +151,19 @@ export class HrExpensesPageComponent implements OnInit {
     }
 
     this.statusUpdatingIds.add(expense.id);
-    this.expenseApi.setExpenseStatus(expense.id, status).subscribe({
-      next: () => {
+    const updated: Expense = { ...expense, status };
+
+    this.expenseApi.updateExpense(updated).subscribe({
+      next: (saved) => {
         this.toastr.success(`Expense ${status.toLowerCase()}`);
         const target = this.expenses.find(e => e.id === expense.id);
-        if (target) {
-          target.status = status;
-        }
+        if (target) target.status = saved.status ?? status; // sync UI
         this.applyFilters();
-        if (expense.id) {
-          this.statusUpdatingIds.delete(expense.id);
-        }
+        if (expense.id) this.statusUpdatingIds.delete(expense.id);
       },
       error: () => {
         this.toastr.error('Failed to update expense status');
-        if (expense.id) {
-          this.statusUpdatingIds.delete(expense.id);
-        }
+        if (expense.id) this.statusUpdatingIds.delete(expense.id);
       }
     });
   }
@@ -175,12 +174,14 @@ export class HrExpensesPageComponent implements OnInit {
       const expenseDate = new Date(exp.date);
       const matchesStart = startDate ? expenseDate >= new Date(startDate) : true;
       const matchesEnd = endDate ? expenseDate <= new Date(endDate) : true;
-      const matchesJob = job ? exp.job?.toLowerCase().includes(job.toLowerCase()) : true;
-      const matchesStatus = status ? exp.status === status : true;
+      const matchesJob = job ? exp.projectId?.toLowerCase().includes(job.toLowerCase()) : true;
+      const matchesStatus = status ? (exp.status === status) : true;
       return matchesStart && matchesEnd && matchesJob && matchesStatus;
     });
   }
 }
+
+
 
 
 

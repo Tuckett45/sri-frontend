@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ExpenseApiService } from 'src/app/services/expense-api.service';
 import { Expense } from 'src/app/models/expense.model';
 import { ToastrService } from 'ngx-toastr';
 import { MatDialog } from '@angular/material/dialog';
 import { ExpenseReportModalComponent } from '../modals/expense-report-modal/expense-report-modal.component';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { AuthService } from 'src/app/services/auth.service';
+import { UserRole } from 'src/app/models/role.enum';
 
 @Component({
   selector: 'app-expense',
@@ -16,29 +18,51 @@ export class ExpenseComponent implements OnInit {
   loading = false;
   isReceiptGalleryVisible = false;
   galleryImages: any[] = [];
-  activeTab = 0;
+  activeTab = 'hr';
+  readonly canViewHrTab: boolean;
+  readonly hrTabValue = 'hr';
+  readonly myTabValue = 'my';
 
   constructor(
     private expenseApi: ExpenseApiService,
     private toastr: ToastrService,
-    private dialog: MatDialog
-  ) {}
+    private dialog: MatDialog,
+    private authService: AuthService
+  ) {
+    this.canViewHrTab = this.isHrUser();
+    if (!this.canViewHrTab) {
+      this.activeTab = this.myTabValue;
+    }
+  }
 
-  ngOnInit() {
+  ngOnInit(): void {
+    if (!this.canViewHrTab) {
+      this.activeTab = this.myTabValue;
+    }
     // this.loadExpenses();
   }
 
-  loadExpenses() {
-    this.loading = true;
-    this.expenseApi.getExpenses().subscribe({
-      next: (res) => {
-        this.expenses = res;
-        this.loading = false;
-      },
-      error: () => {
-        this.toastr.error('Failed to load expenses');
-        this.loading = false;
-      }
+  private isHrUser(): boolean {
+    const roleFromUser = this.authService.getUser()?.role;
+    const fallbackRole = this.authService.getUserRole() as unknown as string;
+    const role = roleFromUser ?? fallbackRole;
+    const hrRoles: Array<string> = [UserRole.HR, 'HR'];
+    return !!role && hrRoles.includes(role);
+  }
+
+  loadExpenses(): void {
+  this.loading = true;
+
+  const opts: any = { page: 1, pageSize: 200 };
+  if (!this.canViewHrTab) {
+    const me = this.authService.getUser()?.id;
+    if (me) opts.createdBy = me;
+  }
+
+    this.expenseApi.getExpensesFlat(opts).subscribe({
+      next: items => { this.expenses = items; this.loading = false; },
+      error: err => { this.toastr.error('Failed to load expenses'); this.loading = false; console.error(err); }
     });
   }
+
 }
