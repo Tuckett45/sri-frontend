@@ -20,7 +20,44 @@ export class MarketControllerModalComponent {
     'Invoice Scrub',
     'Directed Work'
   ];
-  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
+
+
+  vendors: string[] = [
+    'Alarm Control Systems, Inc.',
+    'American Residential Services LLC (dba Yes!)',
+    'Anixter Inc.',
+    'Arizona Blue Stakes Inc. dba Arizona 811',
+    'BPG Designs, LLC',
+    'Blue Edge Infrastructure',
+    'Brungardt Honomichl & Company, P.A. (BHC Rhodes)',
+    'Business Oriented Software Solutions, Inc. (BOSS 811)',
+    'CHC Consulting, LLC',
+    'City of Chandler',
+    'City of Mesa',
+    'Crown Castle',
+    'Ervin Cable',
+    'Fibernet USA',
+    'James McPeak Inc.',
+    'K&B Engineering',
+    'Niels Fugal Sons Co, LLC',
+    'Northstar Communications, Inc.',
+    'Pacific Network Solutions Construction LLC',
+    'Prince Telecom',
+    'Project Resource Group (PRG)',
+    'Right Side Locating',
+    'Rocky Mountain West Telecom dba RMWT, Inc.',
+    'System Resources Telecom LLC (SRI)',
+    'Sorensen, Craig F. Construction Inc. (SCI)',
+    'Tower Engineering Services, LLC',
+    'Town of Queen Creek',
+    'Unified Building Group LLC',
+    'Underground Service Alert of Northern California and Nevada',
+    'Utah Department of Transportation',
+    'WYCO Field Services, LLC',
+    'Wyyred Connect, LLC',
+    'Pearce Services LLC'
+  ];
+
 
   constructor(
     private fb: FormBuilder,

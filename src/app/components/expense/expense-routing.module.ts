@@ -3,11 +3,12 @@ import { RouterModule, Routes } from '@angular/router';
 import { ExpenseComponent } from './expense.component';
 import { EmployeeExpensesPageComponent } from './employee-expenses-page/employee-expenses-page.component';
 import { HrExpensesPageComponent } from './hr-expenses-page/hr-expenses-page.component';
+import { HrRoleGuard } from '../../guards/hr-role.guard';
 
 const routes: Routes = [
   { path: '', component: ExpenseComponent },
   { path: 'employee', component: EmployeeExpensesPageComponent },
-  { path: 'hr', component: HrExpensesPageComponent },
+  { path: 'hr', component: HrExpensesPageComponent, canActivate: [HrRoleGuard] },
   { path: 'my', redirectTo: 'employee' }
 ];
 
@@ -16,3 +17,4 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class ExpenseRoutingModule {}
+

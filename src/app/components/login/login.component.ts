@@ -52,6 +52,8 @@ export class LoginComponent implements OnInit {
           }
           else if(this.userData.role == 'Controller'){
             this.router.navigate(['/market-controller-tracker']);
+          }else if(this.userData.role == 'HR'){
+            this.router.navigate(['/expenses']);
           }
           else {
             this.router.navigate(['/preliminary-punch-list']);

@@ -50,6 +50,15 @@ $page-controls-gap: 0.75rem;
   }
 }
 
+.add-expesne-btn {
+  background-color: $expense-accent !important;
+  color: #fff !important;
+
+  &:hover {
+    background-color: darken($expense-accent, 10%) !important;
+  }
+}
+
 .toggle-filters-btn {
   margin-top: 1rem;
   display: inline-flex;

@@ -4,6 +4,9 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Expense } from 'src/app/models/expense.model';
 import { MatProgressSpinner } from "@angular/material/progress-spinner";
+import { MatIcon } from "@angular/material/icon";
+import { Tag } from "primeng/tag";
+import { GalleriaModule } from "primeng/galleria";
 
 @Component({
   selector: 'app-expense-table',
@@ -124,6 +127,25 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     return looksBase64 ? `data:image/jpeg;base64,${url.replace(/\s+/g, '')}` : url;
   }
 
+  getNotes(expense: Expense): string {
+    const candidates = [
+      expense.descriptionNotes,
+      (expense as any)?.description,
+      (expense as any)?.notes
+    ];
+
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string') {
+        const trimmed = candidate.trim();
+        if (trimmed) {
+          return trimmed;
+        }
+      }
+    }
+
+    return '';
+  }
+
   openGallery(expense: Expense): void {
     const url = this.getReceiptUrl(expense);
     if (!url) return;
@@ -150,7 +172,7 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     if (this.showEmployeeColumn) {
       base.push('employee');
     }
-    base.push('job', 'amount', 'notes', 'receipt', 'status');
+    base.push('job', 'phase', 'amount', 'notes', 'receipt', 'status');
 
     if (this.shouldShowActionsColumn()) {
       base.push('actions');
