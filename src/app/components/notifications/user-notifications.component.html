@@ -1,4 +1,4 @@
-﻿<section class="notifications-wrapper">
+<section class="notifications-wrapper">
   <div class="notifications-card surface-card border-round shadow-1">
     <header class="section-header">
       <div class="title-group">
@@ -13,13 +13,12 @@
           {{ unreadCount() }}
         </span>
         <button
-          pButton
+          mat-raised-button
           type="button"
-          label="Mark all read"
-          class="p-button-text"
+          class="accent-action"
           [disabled]="unreadCount() === 0"
           (click)="markAllAsRead()"
-        ></button>
+        >Mark all read</button>
       </div>
     </header>
 
@@ -40,15 +39,17 @@
             <p class="message">{{ notification.message }}</p>
             <div class="notification-actions">
               <div class="left" *ngIf="notification.action">
-                <button pButton type="button" label="{{ notification.action.label }}" (click)="goToAction(notification)"></button>
+                <button mat-raised-button type="button" class="primary-action" 
+                (click)="goToAction(notification)">
+                  {{ notification.action.label }}
+                </button>
               </div>
               <button
-                pButton
+                mat-raised-button
                 type="button"
-                label="Mark read"
-                class="p-button-text"
+                class="accent-action"
                 (click)="markAsRead(notification)"
-              ></button>
+              >Mark read</button>
             </div>
           </div>
 
@@ -69,20 +70,18 @@
             <div class="notification-actions">
               <div class="left" *ngIf="notification.action">
                 <button
-                  pButton
+                  mat-raised-button
                   type="button"
-                  label="{{ notification.action.label }}"
-                  class="p-button-outlined"
+                  class="primary-action outlined"
                   (click)="goToAction(notification)"
-                ></button>
+                >{{ notification.action.label }}</button>
               </div>
               <button
-                pButton
+                mat-raised-button
                 type="button"
-                label="Mark unread"
-                class="p-button-text"
+                class="unread-action"
                 (click)="markAsUnread(notification)"
-              ></button>
+              >Mark unread</button>
             </div>
           </div>
         </div>
@@ -109,3 +108,4 @@
     </div>
   </div>
 </section>
+

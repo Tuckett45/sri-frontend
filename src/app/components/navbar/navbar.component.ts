@@ -70,7 +70,8 @@ export class NavbarComponent {
     {
       label: 'Expenses',
       route: '/expenses',
-      isVisible: () => this.authService.isAdmin()
+      isVisible: () => this.authService.isAdmin() ||
+        this.authService.isHR()
     },
     {
       label: 'TPS',
