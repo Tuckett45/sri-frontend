@@ -95,7 +95,7 @@ export class NotificationService {
       },
       {
         id: 'expense-due',
-        title: 'Reminder: submit travel expenses',
+        title: 'Submit travel expenses',
         message: 'Upload last week’s travel receipts before Friday to keep reimbursements on time.',
         category: 'reminder',
         createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 5),
