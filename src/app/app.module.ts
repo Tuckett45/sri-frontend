@@ -92,6 +92,7 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
 import '../charts-setup';
 import { FeatureFlagPanelComponent } from './components/feature-flags/feature-flag-panel.component';
 import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
+import { OverlayBadge } from "primeng/overlaybadge";
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -139,9 +140,9 @@ export const customCurrencyMaskConfig = {
     BrowserModule,
     BrowserAnimationsModule,
     ToastrModule.forRoot({
-      timeOut: 3000, 
-      positionClass: 'toast-top-right',
-      preventDuplicates: true, 
+        timeOut: 3000,
+        positionClass: 'toast-top-right',
+        preventDuplicates: true,
     }),
     DialogModule,
     ButtonModule,
@@ -163,7 +164,7 @@ export const customCurrencyMaskConfig = {
     InputTextModule,
     HttpClientModule,
     FormsModule,
-    ReactiveFormsModule, 
+    ReactiveFormsModule,
     AppRoutingModule,
     GalleriaModule,
     MatDialogModule,
@@ -196,8 +197,9 @@ export const customCurrencyMaskConfig = {
     GoalsComponent,
     MeterGroupModule,
     DividerModule,
-    ChartComponent
-  ],
+    ChartComponent,
+    OverlayBadge
+],
   providers: [provideCharts(withDefaultRegisterables()),
     provideEnvironmentNgxCurrency({
       align: "right",

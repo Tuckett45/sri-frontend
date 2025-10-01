@@ -18,6 +18,10 @@
       <mat-icon>table_view</mat-icon>
       Export to CSV
     </button>
+    <button mat-raised-button class="add-expesne-btn" (click)="openAddExpense()">
+      <mat-icon>add</mat-icon>
+      Add Expense
+    </button>
   </div>
 </div>
 
@@ -31,11 +35,7 @@
 <app-expense-table
   [expenses]="filteredExpenses"
   [loading]="loading"
-  [showAddButton]="true"
-  [addButtonLabel]="'Add Expense'"
   [emptyStateMessage]="'No expenses match the current filters.'"
-  (add)="openAddExpense()"
   (edit)="openEditExpense($event)"
   (delete)="openDeleteConfirmationDialog($event)">
 </app-expense-table>
-

@@ -27,11 +27,17 @@
         <ng-template #notificationLink>
           <span class="flex align-items-center gap-2">
             {{ link.label }}
-            <p-badge
-              *ngIf="unreadCount() > 0"
-              [value]="unreadCount()"
-              severity="danger"
-            ></p-badge>
+            <ng-container *ngIf="unreadCount() > 0; else idleBell">
+              <span class="notification-bell p-overlay-badge">
+                <i class="pi pi-bell"></i>
+                <span class="p-badge p-badge-danger">{{ unreadCount() }}</span>
+              </span>
+            </ng-container>
+            <ng-template #idleBell>
+              <!-- <span class="notification-bell no-badge">
+                <i class="pi pi-bell"></i> -->
+              <!-- </span> -->
+            </ng-template>
           </span>
         </ng-template>
       </button>

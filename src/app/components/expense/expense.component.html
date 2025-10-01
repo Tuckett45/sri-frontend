@@ -5,18 +5,18 @@
   <div class="card table-wrapper">
     <p-tabs [(value)]="activeTab">
       <p-tablist>
-        <p-tab [value]="0" [ngClass]="{ 'active-tab': activeTab === 0 }">
+        <p-tab *ngIf="canViewHrTab" [value]="hrTabValue" [ngClass]="{ 'active-tab': activeTab === hrTabValue }">
           Expense List
         </p-tab>
-        <p-tab [value]="1" [ngClass]="{ 'active-tab': activeTab === 1 }">
+        <p-tab [value]="myTabValue" [ngClass]="{ 'active-tab': activeTab === myTabValue }">
           My Expenses
         </p-tab>
       </p-tablist>
       <p-tabpanels>
-        <p-tabpanel [value]="0">
+        <p-tabpanel *ngIf="canViewHrTab" [value]="hrTabValue">
           <app-hr-expenses-page></app-hr-expenses-page>
         </p-tabpanel>
-        <p-tabpanel [value]="1">
+        <p-tabpanel [value]="myTabValue">
           <app-employee-expenses-page></app-employee-expenses-page>
         </p-tabpanel>
       </p-tabpanels>

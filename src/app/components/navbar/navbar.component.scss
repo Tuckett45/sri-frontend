@@ -1,4 +1,4 @@
-mat-toolbar {
+﻿mat-toolbar {
   position: fixed;
   top: 0;
   left: 0;
@@ -162,3 +162,56 @@ mat-toolbar {
     font-size: 1.2rem; /* Make the logo smaller on very small screens */
   }
 }
+
+
+  .nav-links button .notification-bell {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+
+    .pi {
+      font-size: 1.05rem;
+      color: #dc2626;
+    }
+
+    .p-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      background: #dc2626;
+      color: #ffffff;
+      box-shadow: 0 4px 8px rgba(220, 38, 38, 0.25);
+      border: 2px solid #ffffff;
+    }
+
+    &.no-badge {
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+
+      .pi {
+        color: rgba(20, 79, 128, 0.85);
+      }
+    }
+  }
+
+
+  ::ng-deep .p-overlay-badge > .p-badge {
+    transform: translate(0%, -0%) !important;
+  }
+
+  ::ng-deep .p-badge {
+    display:inherit !important;
+  }

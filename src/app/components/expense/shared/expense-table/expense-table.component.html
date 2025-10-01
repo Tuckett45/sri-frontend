@@ -17,6 +17,11 @@
         <td mat-cell *matCellDef="let expense">{{ expense.date | date:'shortDate' }}</td>
       </ng-container>
 
+      <ng-container matColumnDef="phase">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Phase</th>
+        <td mat-cell *matCellDef="let expense">{{ expense.phase || '-' }}</td>
+      </ng-container>
+
       <ng-container matColumnDef="employee" *ngIf="showEmployeeColumn">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Employee</th>
         <td mat-cell *matCellDef="let expense">{{ expense.createdBy || '—' }}</td>
@@ -24,7 +29,7 @@
 
       <ng-container matColumnDef="job">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Job</th>
-        <td mat-cell *matCellDef="let expense">{{ expense.job }}</td>
+        <td mat-cell *matCellDef="let expense">{{ expense.projectId || '-' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="amount">
@@ -34,7 +39,7 @@
 
       <ng-container matColumnDef="notes">
         <th mat-header-cell *matHeaderCellDef>Notes</th>
-        <td mat-cell *matCellDef="let expense">{{ expense.notes }}</td>
+        <td mat-cell *matCellDef="let expense">{{ getNotes(expense) || '-' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="receipt">

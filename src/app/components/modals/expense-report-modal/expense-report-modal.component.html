@@ -1,115 +1,144 @@
+<!-- src/app/components/expense-report-modal/expense-report-modal.component.html -->
 <div mat-dialog-title class="modal-header">
-  <h3 class="modal-title">Add Expense</h3>
+  <h5 class="modal-title">{{ data?.id ? 'Edit Expense' : 'New Expense' }}</h5>
   <button mat-icon-button type="button" (click)="close()" aria-label="Close">
     <mat-icon>close</mat-icon>
   </button>
 </div>
 
-<div mat-dialog-content class="modal-body">
-  <form [formGroup]="expenseForm">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Job</mat-label>
-      <mat-select formControlName="job">
-        <mat-option *ngFor="let job of jobs" [value]="job">{{ job }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+<mat-dialog-content class="modal-body">
+  <form [formGroup]="expenseForm" class="expense-form">
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Date</mat-label>
+        <input matInput type="date" formControlName="date">
+      </mat-form-field>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Phase</mat-label>
-      <mat-select formControlName="phase">
-        <mat-option *ngFor="let phase of phases" [value]="phase">{{ phase }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Date</mat-label>
-      <input matInput [matDatepicker]="picker" formControlName="date">
-      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Expense Type</mat-label>
-      <mat-select formControlName="expenseType">
-        <mat-option *ngFor="let type of expenseTypes" [value]="type">{{ type }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Amount</mat-label>
-      <input
-        matInput
-        [currencyMask]="{ prefix: '$ ', thousands: ',', decimal: '.', align: 'left', allowZero: true, precision: 2 }"
-        formControlName="amount" />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Notes</mat-label>
-      <textarea matInput formControlName="notes"></textarea>
-    </mat-form-field>
-
-    <!-- Upload button (no image yet) -->
-    <div *ngIf="!receiptBase64" class="file-input-wrapper">
-      <label class="custom-label">Receipt</label>
-      <button
-        mat-raised-button
-        type="button"
-        class="image-btn"
-        (click)="fileInput.click()">
-        Upload Receipt
-        <mat-icon>attach_file</mat-icon>
-      </button>
-      <input
-        type="file"
-        #fileInput
-        accept="image/*"
-        (change)="onFileChange($event)"
-        hidden>
+      <mat-form-field appearance="outline">
+        <mat-label>Project (Job #)</mat-label>
+        <input
+          matInput
+          placeholder="Select or enter a project"
+          formControlName="projectId"
+          [matAutocomplete]="projectIdAutocomplete"
+        />
+        <mat-autocomplete #projectIdAutocomplete="matAutocomplete">
+          <mat-option *ngFor="let j of filteredJobs" [value]="j">{{ j }}</mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
     </div>
 
-    <!-- Preview block -->
-    <div *ngIf="receiptBase64" class="file-preview">
-      <div style="display: flex; flex-direction: column;">
-        <!-- Use sanitized URL from component -->
-        <img
-          [src]="receiptSafeUrl || receiptBase64"
-          alt="Receipt preview"
-          (click)="openGallery()"
-          class="preview-image">
-        <span class="image-label">Receipt</span>
-      </div>
-      <button mat-icon-button type="button" class="delete-icon" (click)="removeImage()" aria-label="Remove receipt">
-        <mat-icon>delete</mat-icon>
-      </button>
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Phase</mat-label>
+        <mat-select formControlName="phase">
+          <mat-option *ngFor="let phase of phases" [value]="phase">{{ phase }}</mat-option>
+        </mat-select>
+      </mat-form-field>
 
-      <p-galleria
-        *ngIf="isGalleryVisible"
-        [value]="galleryImages"
-        [(visible)]="isGalleryVisible"
-        [containerStyle]="{ 'max-width': '80%' }"
-        [circular]="true"
-        [fullScreen]="true"
-        [transitionInterval]="1500"
-        [showItemNavigators]="true"
-        [showThumbnails]="true">
-        <ng-template pTemplate="item" let-item>
-          <div style="display: flex; justify-content: center; align-items: center;">
-            <img [src]="item.itemImageSrc"
-                 style="max-width: 80%; max-height: 1000px; object-fit: contain; display: block; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,.2);" />
-          </div>
-        </ng-template>
-        <ng-template pTemplate="thumbnail" let-item>
-          <div style="display: flex; justify-content: center; align-items: center;">
-            <img [src]="item.itemImageSrc"
-                 style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer; border: 2px solid #ddd;" />
-          </div>
-        </ng-template>
-      </p-galleria>
+      <mat-form-field appearance="outline">
+        <mat-label>Location</mat-label>
+        <input matInput placeholder="City, ST" formControlName="locationText">
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Vendor</mat-label>
+        <input matInput formControlName="vendor">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Category</mat-label>
+        <mat-select formControlName="category">
+          <mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Payment Method</mat-label>
+        <mat-select formControlName="paymentMethod">
+          <mat-option *ngFor="let p of paymentMethods" [value]="p">{{ p }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Amount</mat-label>
+        <input matInput type="number" step="0.01" min="0" formControlName="amount">
+      </mat-form-field>
+
+      <mat-form-field *ngIf="expenseForm.get('category')?.value === 'Mileage'" appearance="outline">
+        <mat-label>Miles</mat-label>
+        <input matInput type="number" step="0.1" min="0" formControlName="mileageMiles">
+      </mat-form-field>
+
+      <mat-form-field class="full" appearance="outline">
+        <mat-label>Description / Notes</mat-label>
+        <input matInput formControlName="descriptionNotes">
+      </mat-form-field>
+    </div>
+
+    <mat-checkbox formControlName="isEntertainment">
+      This is an entertainment expense
+    </mat-checkbox>
+
+    <fieldset class="ent" *ngIf="expenseForm.get('isEntertainment')?.value" formGroupName="entertainment">
+      <legend>Entertainment Details</legend>
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>Type of Entertainment</mat-label>
+          <input matInput formControlName="typeOfEntertainment">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Name of Establishment</mat-label>
+          <input matInput formControlName="nameOfEstablishment">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Number in Party</mat-label>
+          <input matInput type="number" min="1" formControlName="numberInParty">
+        </mat-form-field>
+
+        <mat-form-field class="full" appearance="outline">
+          <mat-label>Business Relationship</mat-label>
+          <input matInput formControlName="businessRelationship">
+        </mat-form-field>
+
+        <mat-form-field class="full" appearance="outline">
+          <mat-label>Business Purpose</mat-label>
+          <input matInput formControlName="businessPurpose">
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <div class="row files">
+      <div class="file-input-wrapper">
+        <span class="custom-label">Attach receipt</span>
+        <input type="file" class="file-input" (change)="onFileChange($event)">
+        <div class="file-preview" *ngIf="receiptSafeUrl">
+          <img [src]="receiptSafeUrl" alt="receipt" class="preview-image">
+          <button mat-stroked-button color="warn" type="button" class="image-btn" (click)="removeImage()">Remove</button>
+        </div>
+      </div>
+
+      <div *ngIf="!receiptSafeUrl && (data?.images?.length || 0) > 0" class="file-input-wrapper">
+        <span class="custom-label">Existing receipt</span>
+        <a [href]="data?.images?.[0]?.blobUrl" target="_blank" rel="noopener">
+          Open current receipt
+        </a>
+      </div>
     </div>
   </form>
-</div>
+</mat-dialog-content>
 
-<div mat-dialog-actions class="modal-footer">
+<mat-dialog-actions class="modal-footer">
   <button mat-raised-button type="button" class="cancel-btn" (click)="close()">Cancel</button>
-  <button mat-raised-button type="button" class="save-btn" (click)="save()" [disabled]="expenseForm.invalid">Save</button>
-</div>
+  <button mat-raised-button type="button" color="primary" class="save-btn" (click)="save()">Save</button>
+</mat-dialog-actions>
+
+
+
+

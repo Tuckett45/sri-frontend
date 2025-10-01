@@ -70,7 +70,8 @@ export class NavbarComponent {
     {
       label: 'Expenses',
       route: '/expenses',
-      isVisible: () => this.authService.isAdmin()
+      isVisible: () => this.authService.isAdmin() ||
+        this.authService.isHR()
     },
     {
       label: 'TPS',
@@ -91,11 +92,6 @@ export class NavbarComponent {
       cssClass: 'notifications-link',
       isNotifications: true,
       isVisible: () => this.notificationsEnabled()
-    },
-    {
-      label: 'Feature Flags',
-      route: '/feature-flags',
-      isVisible: () => this.authService.isAdmin()
     }
   ];
 
