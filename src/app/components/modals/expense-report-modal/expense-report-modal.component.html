@@ -117,9 +117,28 @@
     <div class="row files">
       <div class="file-input-wrapper">
         <span class="custom-label">Attach receipt</span>
-        <input type="file" class="file-input" (change)="onFileChange($event)">
+        <input type="file" class="file-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" (change)="onFileChange($event)">
         <div class="file-preview" *ngIf="receiptSafeUrl">
-          <img [src]="receiptSafeUrl" alt="receipt" class="preview-image">
+          <ng-container [ngSwitch]="receiptPreviewKind">
+            <img *ngSwitchCase="'image'" [src]="receiptSafeUrl" alt="Receipt preview" class="preview-image">
+
+            <div *ngSwitchCase="'pdf'" class="file-preview-link">
+              <mat-icon aria-hidden="true">picture_as_pdf</mat-icon>
+              <a [attr.href]="receiptPreviewUrl" target="_blank" rel="noopener">
+                Open PDF attachment
+              </a>
+            </div>
+
+            <div *ngSwitchDefault class="file-preview-link">
+              <mat-icon aria-hidden="true">insert_drive_file</mat-icon>
+              <a [attr.href]="receiptPreviewUrl" target="_blank" rel="noopener">
+                Open attachment
+              </a>
+            </div>
+          </ng-container>
+
+          <div class="file-details" *ngIf="receiptPreviewName">{{ receiptPreviewName }}</div>
+
           <button mat-stroked-button color="warn" type="button" class="image-btn" (click)="removeImage()">Remove</button>
         </div>
       </div>

@@ -21,13 +21,38 @@ mat-form-field {
 .file-preview {
   margin-top: 10px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .image-label {
   font-size: medium;
   color: #0c0c0c;
+}
+
+.file-preview-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  mat-icon {
+    color: #144f80;
+  }
+
+  a {
+    text-decoration: none;
+    color: #144f80;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.file-details {
+  font-size: 0.85rem;
+  color: #424242;
 }
 
 .preview-image {
@@ -334,8 +359,9 @@ button.mat-raised-button {
 .file-preview {
   margin-top: 10px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .preview-image {
@@ -381,11 +407,11 @@ button.mat-raised-button {
 
 
 /* File input styling */
-.file-input-wrapper {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  margin-top: 10px;
+  .file-input-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
 
   .custom-label {
     margin-bottom: 5px;

@@ -66,10 +66,7 @@ export class ExpenseApiService {
     if (e.category === ExpenseCategory.Mileage && e.mileageMiles != null) {
       fd.append('MileageMiles', String(e.mileageMiles));
     }
-    // If your backend expects DescriptionNotes for form, keep this:
-    if ((e as any).descriptionNotes) fd.append('DescriptionNotes', (e as any).descriptionNotes);
-    // If you standardized on `description`, map it:
-    if ((e as any).description) fd.append('DescriptionNotes', (e as any).description);
+    fd.append('DescriptionNotes', e.descriptionNotes ?? '');
 
     const isEnt = !!e.isEntertainment || e.category === ExpenseCategory.Entertainment;
     fd.append('IsEntertainment', String(isEnt));
@@ -105,10 +102,7 @@ export class ExpenseApiService {
         category: expense.category,
         paymentMethod: expense.paymentMethod,
         mileageMiles: expense.mileageMiles ?? null,
-        // If you renamed to `description` in JSON, prefer that:
-        description: (expense as any).description ?? (expense as any).descriptionNotes ?? null,
-        // If not renamed, keep descriptionNotes instead:
-        // descriptionNotes: (expense as any).descriptionNotes ?? null,
+        descriptionNotes: expense.descriptionNotes ?? null,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
         entertainment: expense.isEntertainment && expense.entertainment ? {
           typeOfEntertainment: expense.entertainment.typeOfEntertainment,
@@ -145,10 +139,7 @@ export class ExpenseApiService {
         category: expense.category,
         paymentMethod: expense.paymentMethod,
         mileageMiles: expense.mileageMiles ?? null,
-        // JSON name�prefer `description` if backend exposes it:
-        description: (expense as any).description ?? (expense as any).descriptionNotes ?? null,
-        // Or keep descriptionNotes if you didn�t switch controller JSON:
-        // descriptionNotes: (expense as any).descriptionNotes ?? null,
+        descriptionNotes: expense.descriptionNotes ?? null,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
         entertainment: expense.isEntertainment && expense.entertainment ? {
           typeOfEntertainment: expense.entertainment.typeOfEntertainment,
