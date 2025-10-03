@@ -38,6 +38,16 @@ export class NavbarComponent {
         this.authService.isPM()
     },
     {
+      label: 'Deployments',
+      route: '/deployments',
+      isVisible: () =>
+        this.authService.isAdmin() ||
+        this.authService.isPM() ||
+        this.authService.isCM() ||
+        this.authService.isClient() ||
+        this.authService.isCoordinator()
+    },
+    {
       label: 'Prelim Punch List Tracker',
       route: '/preliminary-punch-list',
       isVisible: () =>
@@ -129,3 +139,4 @@ export class NavbarComponent {
     this.authService.logout();
   }
 }
+

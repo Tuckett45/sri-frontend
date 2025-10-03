@@ -1,0 +1,41 @@
+<p-card *ngIf="project() as project" class="detail-card">
+  <ng-template pTemplate="header">
+    <div class="header">
+      <div>
+        <h2>{{ project.name }}</h2>
+        <p class="meta">{{ project.dataCenter }} • {{ project.vendor }}</p>
+      </div>
+      <p-tag [value]="project.status" [severity]="statusSeverity(project.status)"></p-tag>
+    </div>
+  </ng-template>
+
+  <div class="body">
+    <section class="progress">
+      <p>Overall Progress</p>
+      <p-progressBar [value]="progress(project.status)"></p-progressBar>
+    </section>
+
+    <p-divider></p-divider>
+
+    <section class="phases">
+      <h3>Phases</h3>
+      <div class="phase-buttons">
+        <a
+          *ngFor="let step of statusSteps"
+          [routerLink]="['/deployments', project.id, 'phase', step.label]"
+          pButton
+          size="small"
+          [severity]="step.label === project.status ? 'info' : undefined"
+          [label]="step.label"
+        ></a>
+      </div>
+      <a
+        [routerLink]="['/deployments', project.id, 'handoff']"
+        pButton
+        severity="warn"
+        size="small"
+        label="Handoff"
+      ></a>
+    </section>
+  </div>
+</p-card>
