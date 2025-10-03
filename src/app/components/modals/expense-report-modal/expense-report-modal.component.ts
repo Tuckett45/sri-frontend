@@ -1,4 +1,4 @@
-import { Component, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, Inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormGroupDirective } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -26,14 +26,18 @@ export interface ExpenseDialogResult {
   styleUrls: ['./expense-report-modal.component.scss'],
   standalone: false
 })
-export class ExpenseReportModalComponent {
+export class ExpenseReportModalComponent implements OnDestroy {
   private readonly currentUserId: string | null;
   expenseForm: FormGroup;
   receiptFile?: File;
   receiptBase64?: string;    
   receiptSafeUrl?: SafeResourceUrl;
+  receiptPreviewKind: 'image' | 'pdf' | 'file' | null = null;
+  receiptPreviewUrl?: string;
+  receiptPreviewName?: string;
   isGalleryVisible = false;
   galleryImages: Array<{ itemImageSrc: string }> = [];
+  private receiptObjectUrl?: string;
 
   jobs: string[] = [
     '23471 - David Nottingham O/H',
@@ -157,7 +161,10 @@ export class ExpenseReportModalComponent {
     const img0: ExpenseImage | undefined = (data as any)?.images?.[0];
     const existingUrl = img0?.blobUrl;
     const existingType = img0?.contentType as string | undefined;
-    if (existingUrl) this.setPreviewFromUrl(existingUrl, existingType);
+    if (existingUrl) {
+      this.receiptPreviewName = img0?.fileName ?? undefined;
+      this.setPreviewFromUrl(existingUrl, existingType);
+    }
   }
   private resolveCurrentUserId(): string | null {
     const current = this.authService.getUser();
@@ -209,28 +216,46 @@ export class ExpenseReportModalComponent {
     const input = event.target as HTMLInputElement;
     const file = input?.files && input.files[0];
     if (!file) return;
+    this.receiptPreviewName = file.name;
+    this.receiptFile = file;
+    this.revokeObjectUrl();
 
-    if (!file.type.startsWith('image/')) {
-      this.removeImage();
+    const type = (file.type || '').toLowerCase();
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    const isImage = type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif'].includes(ext);
+    const isPdf = type === 'application/pdf' || ext === 'pdf';
+
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        this.receiptPreviewKind = 'image';
+        this.receiptBase64 = result;
+        this.receiptPreviewUrl = result;
+        this.receiptSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(result);
+        this.galleryImages = [{ itemImageSrc: result }];
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
       return;
     }
 
-    this.receiptFile = file;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string; 
-      this.receiptBase64 = result;
-      this.receiptSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(result);
-      this.galleryImages = [{ itemImageSrc: result }];
-      this.cdr.detectChanges();
-    };
-    reader.readAsDataURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    this.receiptObjectUrl = objectUrl;
+    this.receiptBase64 = undefined;
+    this.receiptPreviewUrl = objectUrl;
+    this.receiptSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+    this.galleryImages = [];
+    this.receiptPreviewKind = isPdf ? 'pdf' : 'file';
+    this.cdr.detectChanges();
   }
 
   private setPreviewFromUrl(url?: string, contentType?: string) {
     if (!url) {
       this.receiptBase64 = undefined;
       this.receiptSafeUrl = undefined;
+      this.receiptPreviewUrl = undefined;
+      this.receiptPreviewKind = null;
       this.galleryImages = [];
       return;
     }
@@ -238,30 +263,52 @@ export class ExpenseReportModalComponent {
     const isData = /^data:/i.test(url);
     const looksLikeBase64 = /^[A-Za-z0-9+/=\s]+$/.test(url) && !isHttp && !isData;
 
-    const guessedType =
-      contentType ||
-      (/\.(jpe?g)(\?|$)/i.test(url) ? 'image/jpeg'
-        : /\.(png)(\?|$)/i.test(url) ? 'image/png'
-        : 'image/jpeg');
+    const guessedType = (contentType || '').toLowerCase();
+    const isPdf = guessedType === 'application/pdf' || /\.pdf(\?|$)/i.test(url);
+    const isImage = !isPdf && (/^image\//i.test(guessedType)
+      || /\.(jpe?g|png|gif|webp|bmp|heic|heif)(\?|$)/i.test(url));
+
+    const effectiveType = guessedType || (isPdf ? 'application/pdf' : (isImage ? 'image/jpeg' : 'application/octet-stream'));
 
     const dataUrl = looksLikeBase64
-      ? `data:${guessedType};base64,${url.replace(/\s+/g, '')}`
+      ? `data:${effectiveType};base64,${url.replace(/\s+/g, '')}`
       : url;
 
-    this.receiptBase64 = dataUrl;
+    this.receiptBase64 = isImage ? dataUrl : undefined;
     this.receiptSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(dataUrl);
-    this.galleryImages = [{ itemImageSrc: dataUrl }];
+    this.receiptPreviewUrl = dataUrl;
+    if (isImage) {
+      this.receiptPreviewKind = 'image';
+      this.galleryImages = [{ itemImageSrc: dataUrl }];
+    } else if (isPdf) {
+      this.receiptPreviewKind = 'pdf';
+      this.galleryImages = [];
+    } else {
+      this.receiptPreviewKind = 'file';
+      this.galleryImages = [];
+    }
   }
 
   removeImage() {
+    this.revokeObjectUrl();
     this.receiptFile = undefined;
     this.receiptBase64 = undefined;
     this.receiptSafeUrl = undefined;
+    this.receiptPreviewUrl = undefined;
+    this.receiptPreviewKind = null;
+    this.receiptPreviewName = undefined;
     this.galleryImages = [];
   }
 
+  private revokeObjectUrl() {
+    if (this.receiptObjectUrl) {
+      URL.revokeObjectURL(this.receiptObjectUrl);
+      this.receiptObjectUrl = undefined;
+    }
+  }
+
   openGallery() {
-    if (this.receiptBase64) {
+    if (this.receiptPreviewKind === 'image' && this.receiptBase64) {
       this.galleryImages = [{ itemImageSrc: this.receiptBase64 }];
       this.isGalleryVisible = true;
     }
@@ -269,6 +316,10 @@ export class ExpenseReportModalComponent {
 
   closeImageModal() { 
     this.isGalleryVisible = false; 
+  }
+
+  ngOnDestroy(): void {
+    this.revokeObjectUrl();
   }
 
   save() {
