@@ -22,6 +22,8 @@
     "@angular/platform-browser-dynamic": "18.2.6",
     "@angular/router": "18.2.6",
     "@asymmetrik/ngx-leaflet": "^18.0.1",
+    "@azure/msal-angular": "^4.0.20",
+    "@azure/msal-browser": "^4.24.1",
     "@ks89/angular-modal-gallery": "^12.0.0",
     "@microsoft/signalr": "^9.0.6",
     "@ngrx/effects": "^18.0.2",

@@ -20,10 +20,10 @@
         color="accent"
         class="cta-button"
         type="button"
-        (click)="showCreateDialog.set(true)"
+        (click)="openDeploymentWizard()"
       >
-        <mat-icon>add</mat-icon>
-        <span>New Deployment</span>
+        <mat-icon>assignment</mat-icon>
+        <span>Start Deployment</span>
       </button>
     </div>
   </section>
@@ -92,23 +92,44 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-project>
-        <tr>
-          <td>{{ project.name }}</td>
-          <td>{{ project.dataCenter }}</td>
-          <td>{{ project.vendor }}</td>
-          <td>
-            <p-tag [value]="project.status" [severity]="statusSeverity(project.status)"></p-tag>
+        <tr class="deployment-row">
+          <td data-label="Name">
+            <div class="cell-name">
+              <strong>{{ project.name }}</strong>
+              <span class="meta">{{ project.startDate | date:'MMM d, y' }} - {{ project.targetCompletion | date:'MMM d, y' }}</span>
+            </div>
           </td>
-          <td>
-            <p-progressBar [value]="progressFor(project.status)"></p-progressBar>
+          <td data-label="Data Center">
+            <div class="cell-meta">
+              <mat-icon>location_on</mat-icon>
+              <span>{{ project.dataCenter }}</span>
+            </div>
           </td>
-          <td>
+          <td data-label="Vendor">
+            <div class="cell-meta">
+              <mat-icon>business</mat-icon>
+              <span>{{ project.vendor }}</span>
+            </div>
+          </td>
+          <td data-label="Status">
+            <span class="status-chip" [ngClass]="statusSeverity(project.status)">{{ project.status }}</span>
+            <small class="status-meta">{{ describeStatus(project.status) }}</small>
+          </td>
+          <td data-label="Progress">
+            <div class="progress-wrapper">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="progressFor(project.status)"></div>
+              </div>
+              <span class="progress-label">{{ progressFor(project.status) }}%</span>
+            </div>
+          </td>
+          <td data-label="Actions" class="actions-cell">
             <button
               mat-raised-button
               color="accent"
               class="open-button"
               type="button"
-              [routerLink]="['/deployments', project.id]"
+              (click)="openDeployment(project)"
             >
               <mat-icon>arrow_forward</mat-icon>
               <span>Open</span>
@@ -120,21 +141,4 @@
   </section>
 </div>
 
-<p-dialog
-  header="Create Deployment"
-  [visible]="showCreateDialog()"
-  (onHide)="showCreateDialog.set(false)"
-  [modal]="true"
-  [style]="{ width: '420px' }"
-  styleClass="deployment-dialog"
->
-  <p>TODO: Capture project creation details.</p>
-  <ng-template pTemplate="footer">
-    <div class="dialog-actions">
-      <button mat-button type="button" (click)="showCreateDialog.set(false)">Cancel</button>
-      <button mat-raised-button color="accent" type="button" (click)="onCreateDeployment()">
-        Create
-      </button>
-    </div>
-  </ng-template>
-</p-dialog>
+

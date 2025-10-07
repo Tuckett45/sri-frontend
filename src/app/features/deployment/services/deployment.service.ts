@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DeploymentProject, DeploymentStatus, PhaseRun, ChecklistItem, Photo, TestResult, PunchItem, HandoffPackage } from '../models/deployment.models';
+import { StartDeploymentProgressPayload } from '../models/deployment-progress.model';
 
 type ChecklistPayload = { items: ChecklistItem[] };
 
@@ -67,5 +68,9 @@ export class DeploymentService {
 
   signHandoff(id: string, payload: Partial<HandoffPackage>): Observable<HandoffPackage> {
     return this.http.post<HandoffPackage>(`${this.baseUrl}/${id}/handoff/sign`, payload);
+  }
+
+  saveProgress(id: string, payload: StartDeploymentProgressPayload): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${id}/progress`, payload);
   }
 }

@@ -1,0 +1,216 @@
+<div class="modal-container">
+  <header class="modal-header">
+    <div class="modal-title-wrap">
+      <h5 class="modal-title">Start Deployment</h5>
+      <p class="modal-subtitle">Kick off and track each deployment phase.</p>
+    </div>
+    <button mat-icon-button type="button" class="close-button" (click)="close()" aria-label="Close start deployment dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <mat-dialog-content class="modal-body">
+    <div class="deployment-body">
+      <div class="wizard-wrapper">
+        <div class="wizard">
+          <nav class="wizard-nav" aria-label="Deployment phases">
+            <h4>Phases</h4>
+            <ul role="tablist">
+              <li *ngFor="let phase of deploymentPhases; index as i" [class.active]="activePhaseIndex() === i">
+                <button
+                  type="button"
+                  (click)="selectPhase(i)"
+                  [attr.aria-selected]="activePhaseIndex() === i"
+                  [attr.aria-controls]="'phase-panel-' + i"
+                  [attr.tabindex]="activePhaseIndex() === i ? 0 : -1"
+                  role="tab"
+                >
+                  <span class="phase-index">{{ i + 1 }}</span>
+                  <span class="phase-labels">
+                    <strong>{{ phase.title }}</strong>
+                    <small>{{ phase.summary }}</small>
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </nav>
+
+          <section
+            class="wizard-content"
+            *ngIf="deploymentPhases[activePhaseIndex()] as activePhase"
+            [attr.id]="'phase-panel-' + activePhaseIndex()"
+            role="tabpanel"
+          >
+            <div class="phase-panel">
+              <header class="phase-header">
+                <div class="phase-index">{{ activePhaseIndex() + 1 }}</div>
+                <div class="phase-header-text">
+                  <h3>{{ activePhase.title }}</h3>
+                  <p>{{ activePhase.summary }}</p>
+                </div>
+              </header>
+
+              <ng-container *ngTemplateOutlet="phaseDetail; context: { $implicit: activePhase }"></ng-container>
+
+              <div class="phase-nav-buttons">
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  type="button"
+                  (click)="goToPreviousStep()"
+                  [disabled]="activePhaseIndex() === 0 && activeTaskTabIndex() === 0"
+                >
+                  <mat-icon>chevron_left</mat-icon>
+                  Previous
+                </button>
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  type="button"
+                  (click)="goToNextStep()"
+                  [disabled]="isAtFinalStep()"
+                >
+                  Next
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="mobile-phase-tabs">
+          <mat-tab-group
+            class="phase-tabs"
+            [selectedIndex]="activePhaseIndex()"
+            (selectedIndexChange)="selectPhase($event)"
+            animationDuration="0ms"
+            dynamicHeight
+          >
+            <mat-tab *ngFor="let phase of deploymentPhases; index as i" [label]="phase.title">
+              <div class="phase-panel">
+                <header class="phase-header">
+                  <div class="phase-index">{{ i + 1 }}</div>
+                  <div class="phase-header-text">
+                    <h3>{{ phase.title }}</h3>
+                    <p>{{ phase.summary }}</p>
+                  </div>
+                </header>
+
+                <ng-container *ngTemplateOutlet="phaseDetail; context: { $implicit: phase }"></ng-container>
+
+                <div class="phase-nav-buttons">
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    type="button"
+                    (click)="goToPreviousStep()"
+                    [disabled]="activePhaseIndex() === 0 && activeTaskTabIndex() === 0"
+                  >
+                    <mat-icon>chevron_left</mat-icon>
+                    Previous
+                  </button>
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    type="button"
+                    (click)="goToNextStep()"
+                    [disabled]="isAtFinalStep()"
+                  >
+                    Next
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="modal-footer" align="end">
+    <button mat-raised-button color="accent" type="button" (click)="saveProgress()">Save Progress</button>
+    <button mat-raised-button color="warn" type="button" (click)="close()">Close</button>
+  </mat-dialog-actions>
+</div>
+
+<ng-template #phaseDetail let-phase>
+  <ng-container [ngSwitch]="phase.type">
+    <form
+      *ngSwitchCase="'siteSurvey'"
+      class="survey-form"
+      [formGroup]="siteSurveyForm"
+      (ngSubmit)="onSiteSurveySubmit()"
+    >
+      <p class="survey-intro">
+        Validate the site readiness before scheduling installation. Mark each item yes/no and document follow-up actions where needed.
+      </p>
+
+      <div class="question" *ngFor="let question of siteSurveyQuestions" [formGroup]="questionGroup(question.id)">
+        <div class="question-header">
+          <span class="question-id">{{ question.id }}</span>
+          <h4>{{ question.title }}</h4>
+        </div>
+
+        <div class="response">
+          <mat-radio-group
+            formControlName="status"
+            (change)="onStatusChange(question, $event.value)"
+            [attr.aria-label]="question.title"
+          >
+            <mat-radio-button class="radio-option" value="yes">Yes</mat-radio-button>
+            <mat-radio-button class="radio-option" value="no">No</mat-radio-button>
+          </mat-radio-group>
+          <mat-error *ngIf="radioError(questionGroup(question.id))">Selection required.</mat-error>
+        </div>
+
+        <div class="notes" *ngIf="question.detailsPrompt">
+          <mat-form-field appearance="outline" class="notes-field">
+            <mat-label style="color: black;">{{ question.detailsPrompt }}</mat-label>
+            <textarea
+              matInput
+              formControlName="notes"
+              style="color: black;"
+              rows="3"
+            ></textarea>
+            <mat-error *ngIf="notesError(questionGroup(question.id))">Provide details for a "No" response.</mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- <div class="survey-actions">
+        <button mat-raised-button color="warn" type="button" (click)="close()">Cancel</button>
+        <button mat-raised-button color="accent" type="submit">Submit Checklist</button>
+      </div> -->
+    </form>
+
+    <ng-container *ngSwitchDefault>
+      <ng-container *ngIf="getPhaseTaskGroups(phase.type).length; else narrativeComingSoon">
+        <mat-tab-group
+          class="phase-tabs"
+          [selectedIndex]="activeTaskTabIndex()"
+          (selectedIndexChange)="activeTaskTabIndex.set($event)"
+          dynamicHeight
+        >
+          <mat-tab *ngFor="let group of getPhaseTaskGroups(phase.type)" [label]="group.heading">
+            <div class="task-list" [formGroup]="phaseTaskForm(phase.type)">
+              <p *ngIf="group.intro" class="task-intro">{{ group.intro }}</p>
+              <div class="task-item" *ngFor="let task of group.tasks" [class.child]="task.isChild">
+                <mat-checkbox [formControlName]="task.id">
+                  <span class="task-label">{{ task.label }}</span>
+                  <span class="task-desc">{{ task.description }}</span>
+                </mat-checkbox>
+              </div>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+  <ng-template #narrativeComingSoon>
+    <div class="phase-placeholder">
+      <p>Structured tasks for {{ phase.title }} will appear here.</p>
+      <p class="phase-body" *ngIf="phase.body">{{ phase.body }}</p>
+    </div>
+  </ng-template>
+</ng-template>

@@ -189,7 +189,7 @@ export class AuthService {
     }
   }
 
-  getAccessToken(): string | null {
+  async getAccessToken(): Promise<string | null> {
     const storedToken = sessionStorage.getItem('authToken');
     if (storedToken) {
       return storedToken;
