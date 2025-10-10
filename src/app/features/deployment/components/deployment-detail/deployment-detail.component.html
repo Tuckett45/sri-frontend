@@ -3,7 +3,7 @@
     <div class="header">
       <div>
         <h2>{{ project.name }}</h2>
-        <p class="meta">{{ project.dataCenter }} • {{ project.vendor }}</p>
+        <p class="meta">{{ project.dataCenter }} • {{ project.vendorName }}</p>
       </div>
       <p-tag [value]="project.status" [severity]="statusSeverity(project.status)"></p-tag>
     </div>

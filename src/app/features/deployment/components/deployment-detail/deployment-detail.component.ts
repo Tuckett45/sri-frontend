@@ -7,7 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TimelineModule } from 'primeng/timeline';
-import { DeploymentProject, DeploymentStatus } from '../../models/deployment.models';
+import { Deployment, DeploymentStatus } from '../../models/deployment.models';
 import { DeploymentService } from '../../services/deployment.service';
 import { DeploymentStateService } from '../../services/deployment-state.service';
 import { Subscription } from 'rxjs';
@@ -40,7 +40,7 @@ type TimelineState = 'complete' | 'current' | 'pending';
 })
 export class DeploymentDetailComponent implements OnInit, OnDestroy {
   protected readonly statusSteps = Object.values(DeploymentStatus).map(label => ({ label }));
-  protected readonly project = signal<DeploymentProject | null>(null);
+  protected readonly project = signal<Deployment | null>(null);
   private readonly severityMap = new Map<DeploymentStatus, "success" | "secondary" | "info" | "warn" | "danger" | "contrast">([
     [DeploymentStatus.Planned, "secondary"],
     [DeploymentStatus.Survey, "secondary"],
@@ -154,7 +154,7 @@ export class DeploymentDetailComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.subscription = this.service.get(id).subscribe(project => {
+      this.service.get(id).then((project) => {
         this.project.set(project);
         this.state.setProject(project);
       });

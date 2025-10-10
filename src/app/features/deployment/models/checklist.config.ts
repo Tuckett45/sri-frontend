@@ -5,6 +5,7 @@ const photoRequirement = (id: string, label: string, description?: string): Chec
   id,
   label,
   description,
+  notes: description,
   type: 'photo',
   required: true,
 });
@@ -13,6 +14,7 @@ const fileRequirement = (id: string, label: string, description?: string): Check
   id,
   label,
   description,
+  notes: description,
   type: 'file',
   required: true,
 });

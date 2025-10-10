@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import { Observable, from, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { DeploymentService } from './deployment.service';
 import { DeploymentStateService } from './deployment-state.service';
@@ -8,15 +8,8 @@ import { AuthService } from 'src/app/services/auth.service';
 import { DeploymentStatus } from '../models/deployment.models';
 
 const ROLE_ORDER: DeploymentStatus[] = [
-  DeploymentStatus.Planned,
-  DeploymentStatus.Survey,
-  DeploymentStatus.Inventory,
-  DeploymentStatus.Install,
-  DeploymentStatus.Cabling,
-  DeploymentStatus.Labeling,
-  DeploymentStatus.Handoff,
-  DeploymentStatus.Complete,
-];
+  'Planned','Survey','Inventory','Install','Cabling','Labeling','Handoff','Complete'
+] as unknown as DeploymentStatus[]; // if DeploymentStatus is a string union
 
 @Injectable({ providedIn: 'root' })
 export class PhaseGuardService {
@@ -27,35 +20,34 @@ export class PhaseGuardService {
 
   canActivate(route: ActivatedRouteSnapshot, _state: RouterStateSnapshot): Observable<boolean | UrlTree> {
     const projectId = route.paramMap.get('id');
-    const phaseParam = route.paramMap.get('phase') as DeploymentStatus | null;
+    const phaseParamRaw = route.paramMap.get('phase'); // string | null
 
-    if (!projectId) {
-      return of(this.router.parseUrl('/deployments'));
-    }
+    if (!projectId) return of(this.router.parseUrl('/deployments'));
+    if (!phaseParamRaw) return of(true);
+
+    // normalize phase name (case-insensitive, hyphens to proper case if needed)
+    const phaseParam = this.normalizePhase(phaseParamRaw);
 
     const user = this.auth.getUser();
     const role = (user?.role ?? '').toString();
 
-    if (!phaseParam) {
-      return of(true);
-    }
-
-    return this.deployments.get(projectId).pipe(
+    // Convert the Promise from deployments.get(...) to an Observable via from()
+    return from(this.deployments.get(projectId)).pipe(
       map(project => {
         this.state.setProject(project);
-        const phaseIndex = ROLE_ORDER.indexOf(phaseParam);
+
+        const phaseIndex = ROLE_ORDER.indexOf(phaseParam as DeploymentStatus);
         if (phaseIndex === -1) {
           return this.router.parseUrl(`/deployments/${projectId}`);
         }
 
         switch (role) {
           case 'Admin':
-            return true;
           case 'DE':
             return true;
           case 'Vendor':
-            return phaseIndex >= ROLE_ORDER.indexOf(DeploymentStatus.Survey) &&
-              phaseIndex <= ROLE_ORDER.indexOf(DeploymentStatus.Labeling)
+            return phaseIndex >= ROLE_ORDER.indexOf('Survey' as DeploymentStatus) &&
+                   phaseIndex <= ROLE_ORDER.indexOf('Labeling' as DeploymentStatus)
               ? true
               : this.router.parseUrl(`/deployments/${projectId}`);
           default:
@@ -65,8 +57,24 @@ export class PhaseGuardService {
       catchError(() => of(this.router.parseUrl('/deployments')))
     );
   }
+
+  private normalizePhase(raw: string): string {
+    const v = raw.trim().toLowerCase();
+    // map common variants if your routes use lowercase slugs
+    switch (v) {
+      case 'planned':   return 'Planned';
+      case 'survey':    return 'Survey';
+      case 'inventory': return 'Inventory';
+      case 'install':   return 'Install';
+      case 'cabling':   return 'Cabling';
+      case 'labeling':  return 'Labeling';
+      case 'handoff':   return 'Handoff';
+      case 'complete':  return 'Complete';
+      default:          return raw; // fallback
+    }
+  }
 }
 
-export const phaseGuard: CanActivateFn = (route, state) => {
-  return inject(PhaseGuardService).canActivate(route, state);
-};
+// If you want a functional alias:
+export const phaseGuard = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
+  inject(PhaseGuardService).canActivate(route, state);

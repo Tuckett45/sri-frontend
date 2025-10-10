@@ -11,7 +11,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
-import { DeploymentProject, DeploymentStatus } from '../../models/deployment.models';
+import { ToastrService } from 'ngx-toastr';
+import { Deployment, DeploymentStatus } from '../../models/deployment.models';
 import { DeploymentService } from '../../services/deployment.service';
 import { StartDeploymentProgressPayload } from '../../models/deployment-progress.model';
 import {
@@ -50,6 +51,8 @@ export class DeploymentDashboardComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly dialog = inject(MatDialog);
   private readonly deploymentService = inject(DeploymentService);
+  private readonly toastr = inject(ToastrService);
+  private readonly wizardPhaseCount = 6; // mirrors the number of phases defined in the start deployment wizard
 
   protected readonly statusOptions = Object.values(DeploymentStatus);
   private readonly severityMap = new Map<DeploymentStatus, 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast'>([
@@ -80,7 +83,7 @@ export class DeploymentDashboardComponent implements OnInit {
     dataCenter: [''],
   });
 
-  protected readonly deployments = signal<DeploymentProject[]>([]);
+  protected readonly deployments = signal<Deployment[]>([]);
   protected readonly showFilters = signal(true);
   private readonly draftProgress = signal<Record<string, StartDeploymentProgressPayload>>({});
   protected readonly filters = signal<DeploymentFilter>({});
@@ -89,7 +92,7 @@ export class DeploymentDashboardComponent implements OnInit {
     const { status, vendor, dataCenter } = this.filters();
     return this.deployments().filter(project => {
       const matchesStatus = status ? project.status === status : true;
-      const matchesVendor = vendor ? project.vendor?.toLowerCase().includes(vendor.toLowerCase()) : true;
+      const matchesVendor = vendor ? project.vendorName?.toLowerCase().includes(vendor.toLowerCase()) : true;
       const matchesDc = dataCenter ? project.dataCenter?.toLowerCase().includes(dataCenter.toLowerCase()) : true;
       return matchesStatus && matchesVendor && matchesDc;
     });
@@ -108,7 +111,7 @@ export class DeploymentDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.filterForm.valueChanges
-      .pipe(takeUntilDestroyed())
+      .pipe()
       .subscribe(raw => {
         this.filters.set({
           status: (raw.status as DeploymentStatus | '') || null,
@@ -125,57 +128,57 @@ export class DeploymentDashboardComponent implements OnInit {
       dataCenter: initial.dataCenter?.trim() || null,
     });
 
-    const demo: DeploymentProject[] = [
+    const demo: Deployment[] = [
       {
         id: 'demo-001',
         name: 'Chicago Edge Expansion',
         dataCenter: 'Chicago RDC',
-        vendor: 'Westward Infrastructure',
+        vendorName: 'Westward Infrastructure',
         status: DeploymentStatus.Survey,
         startDate: '2024-09-15',
-        targetCompletion: '2024-11-30',
+        targetHandoffDate: '2024-11-30',
       },
       {
         id: 'demo-002',
         name: 'Phoenix Fiber Retrofit',
         dataCenter: 'Phoenix Core',
-        vendor: 'Copperline Cabling',
+        vendorName: 'Copperline Cabling',
         status: DeploymentStatus.Install,
         startDate: '2024-10-01',
-        targetCompletion: '2024-12-15',
+        targetHandoffDate: '2024-12-15',
       },
       {
         id: 'demo-003',
         name: 'Newark Inventory Staging',
         dataCenter: 'Newark Hub',
-        vendor: 'BrightLine Logistics',
+        vendorName: 'BrightLine Logistics',
         status: DeploymentStatus.Inventory,
         startDate: '2024-08-10',
-        targetCompletion: '2024-10-05',
+        targetHandoffDate: '2024-10-05',
       },
       {
         id: 'demo-004',
         name: 'Austin Labeling Refresh',
         dataCenter: 'Austin Edge',
-        vendor: 'LabelCraft Services',
+        vendorName: 'LabelCraft Services',
         status: DeploymentStatus.Labeling,
         startDate: '2024-09-22',
-        targetCompletion: '2024-11-12',
+        targetHandoffDate: '2024-11-12',
       },
       {
         id: 'demo-005',
         name: 'Nashville Hand-Off',
         dataCenter: 'Nashville RDC',
-        vendor: 'Equinix Field Services',
+        vendorName: 'Equinix Field Services',
         status: DeploymentStatus.Handoff,
         startDate: '2024-11-02',
-        targetCompletion: '2025-01-05',
+        targetHandoffDate: '2025-01-05',
       },
     ];
 
     this.deploymentService
       .list()
-      .pipe(takeUntilDestroyed())
+      .pipe()
       .subscribe({
         next: projects => {
           if (projects?.length) {
@@ -219,11 +222,11 @@ export class DeploymentDashboardComponent implements OnInit {
     });
     dialogRef
       .afterClosed()
-      .pipe(takeUntilDestroyed())
+      .pipe()
       .subscribe(result => this.handleWizardResult(null, result ?? undefined));
   }
 
-  protected openDeployment(project: DeploymentProject): void {
+  protected openDeployment(project: Deployment): void {
     const initialPhaseIndex = this.phaseIndexByStatus[project.status] ?? 0;
     const dialogRef = this.dialog.open<
       StartDeploymentModalComponent,
@@ -241,36 +244,46 @@ export class DeploymentDashboardComponent implements OnInit {
 
     dialogRef
       .afterClosed()
-      .pipe(takeUntilDestroyed())
+      .pipe()
       .subscribe(result => this.handleWizardResult(project, result ?? undefined));
   }
 
   private handleWizardResult(
-    project: DeploymentProject | null,
+    project: Deployment | null,
     result?: StartDeploymentDialogResult | undefined
   ): void {
-    if (!result || result.action !== 'save') {
+    if (!result || result.action !== 'save') return;
+
+    const deploymentId = project?.id ?? result.progress.projectId ?? null;
+    const normalized = this.normalizeProgressPayload(result.progress, deploymentId);
+    const cacheKey = deploymentId ?? '__new';
+    this.draftProgress.update(curr => ({ ...curr, [cacheKey]: normalized }));
+
+    if (!deploymentId) {
+      this.toastr.info('Deployment wizard progress saved as a draft. Associate a project to sync it.');
       return;
     }
 
-    const targetProjectId = result.progress.projectId ?? project?.id ?? null;
+    const projectLabel = project?.name ?? 'deployment';
+    const isWizardComplete = normalized.activePhaseIndex >= this.wizardPhaseCount - 1;
 
-    const normalizedProgress = this.normalizeProgressPayload(result.progress, targetProjectId);
-    const cacheKey = targetProjectId ?? '__new';
-    this.draftProgress.update(current => ({ ...current, [cacheKey]: normalizedProgress }));
-
-    if (targetProjectId) {
-      this.deploymentService
-        .saveProgress(targetProjectId, normalizedProgress)
-        .pipe(takeUntilDestroyed())
-        .subscribe({
-          next: () => console.debug('Deployment progress saved', targetProjectId, normalizedProgress),
-          error: error => console.error('Failed to save deployment progress', error),
-        });
-    } else {
-      console.debug('Captured deployment wizard progress (no project id)', normalizedProgress);
-    }
+    this.deploymentService
+      .saveProgress(deploymentId, normalized)
+      .pipe()
+      .subscribe({
+        next: () => {
+          const message = isWizardComplete
+            ? `${projectLabel} wizard completed. Deployment is ready for the next phase.`
+            : `Saved progress for ${projectLabel}.`;
+          this.toastr.success(message);
+        },
+        error: (err) => {
+          console.error('Failed to save progress', err);
+          this.toastr.error('Failed to save deployment progress. Please try again.');
+        },
+      });
   }
+
 
   private getCachedProgress(projectId: string | null): StartDeploymentProgressPayload | null {
     const key = projectId ?? '__new';
@@ -283,29 +296,25 @@ export class DeploymentDashboardComponent implements OnInit {
 
   private normalizeProgressPayload(
     progress: StartDeploymentProgressPayload,
-    projectId: string | null
+    deploymentId: string | null
   ): StartDeploymentProgressPayload {
     const clonedPhaseTasks = Object.entries(progress.phaseTasks ?? {}).reduce(
-      (acc, [phase, tasks]) => {
-        acc[phase] = { ...tasks };
-        return acc;
-      },
+      (acc, [phase, tasks]) => { acc[phase] = { ...tasks }; return acc; },
       {} as Record<string, Record<string, boolean>>
     );
 
     return {
       ...progress,
-      projectId,
-      siteSurvey: {
-        responses: progress.siteSurvey.responses.map(entry => ({ ...entry })),
-      },
+      projectId: deploymentId, // keep if you need it for caching/UI; server will ignore it
+      siteSurvey: { responses: progress.siteSurvey.responses.map(e => ({ ...e })) },
+      receiving: progress.receiving
+        ? { responses: progress.receiving.responses.map(e => ({ ...e, followUps: e.followUps?.map(f => ({ ...f })) ?? [] })) }
+        : null, // <- prefer null over undefined
       phaseTasks: clonedPhaseTasks,
       submittedSiteSurvey: progress.submittedSiteSurvey
-        ? {
-            ...progress.submittedSiteSurvey,
-            responses: progress.submittedSiteSurvey.responses.map(entry => ({ ...entry })),
-          }
-        : undefined,
+        ? { ...progress.submittedSiteSurvey, responses: progress.submittedSiteSurvey.responses.map(e => ({ ...e })) }
+        : null, // <- prefer null over undefined
     };
   }
+
 }

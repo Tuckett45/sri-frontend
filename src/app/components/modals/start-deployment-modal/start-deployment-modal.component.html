@@ -10,6 +10,56 @@
   </header>
 
   <mat-dialog-content class="modal-body">
+
+    <section *ngIf="!project; else existingDeploymentSummary" class="meta-card">
+      <h4 class="meta-title">Deployment Details</h4>
+      <p class="meta-subtitle">Provide the basic information before tracking progress.</p>
+
+      <form [formGroup]="metaForm" class="meta-grid" novalidate>
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+          <mat-error *ngIf="metaForm.get('name')?.hasError('required')">Name is required.</mat-error>
+          <mat-error *ngIf="metaForm.get('name')?.hasError('minlength')">Name must be at least 3 characters.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Data Center</mat-label>
+          <mat-select formControlName="dataCenter">
+            <mat-option *ngFor="let dc of dataCenters()" [value]="dc.name">{{ dc.name }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="metaForm.get('dataCenter')?.hasError('required')">Data Center is required.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vendor</mat-label>
+          <mat-select formControlName="vendorId">
+            <mat-option *ngFor="let v of vendors()" [value]="v.id">{{ v.name }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="metaForm.get('vendorId')?.hasError('required')">Vendor is required.</mat-error>
+        </mat-form-field>
+      </form>
+    </section>
+
+    <!-- Existing deployment: read-only summary -->
+    <ng-template #existingDeploymentSummary>
+      <section class="meta-summary">
+        <div class="summary-row">
+          <div class="summary-item">
+            <div class="summary-label">Name</div>
+            <div class="summary-value">{{ project?.name }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Data Center</div>
+            <div class="summary-value">{{ project?.dataCenter }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Vendor</div>
+            <div class="summary-value">{{ project?.vendorName }}</div>
+          </div>
+        </div>
+      </section>
+    </ng-template>
     <div class="deployment-body">
       <div class="wizard-wrapper">
         <div class="wizard">
@@ -148,7 +198,7 @@
 
       <div class="question" *ngFor="let question of siteSurveyQuestions" [formGroup]="questionGroup(question.id)">
         <div class="question-header">
-          <span class="question-id">{{ question.id }}</span>
+          <span class="question-id">{{ question.displayId || question.id }}</span>
           <h4>{{ question.title }}</h4>
         </div>
 
@@ -182,6 +232,133 @@
         <button mat-raised-button color="warn" type="button" (click)="close()">Cancel</button>
         <button mat-raised-button color="accent" type="submit">Submit Checklist</button>
       </div> -->
+    </form>
+
+    <form
+      *ngSwitchCase="'receiving'"
+      class="survey-form receiving-form"
+      [formGroup]="receivingForm"
+      novalidate
+    >
+      <p class="survey-intro">
+        Section 2: Receive and Inventory Gear at Data Centers. Confirm each item, capture Yes/No responses, and document any follow-up notes.
+      </p>
+
+      <mat-tab-group class="receiving-tabs" dynamicHeight>
+        <mat-tab *ngFor="let group of receivingQuestionGroups" [label]="group.heading">
+          <div class="receiving-tab-content">
+            <p *ngIf="group.intro" class="question-group-intro">{{ group.intro }}</p>
+
+            <div
+              class="question receiving-question"
+              *ngFor="let question of group.questions"
+              [formGroupName]="question.id"
+              [class.child]="question.isChild"
+            >
+              <ng-container [ngSwitch]="question.controlType">
+                <ng-container *ngSwitchCase="'checkbox'">
+                  <mat-checkbox formControlName="checked">
+                    <span class="checkbox-label">
+                      <span class="checkbox-label-id">{{ question.label }}</span>
+                      <span class="checkbox-label-text">{{ question.text }}</span>
+                    </span>
+                  </mat-checkbox>
+                  <div class="notes" *ngIf="question.notesPrompt">
+                    <mat-form-field appearance="outline" class="notes-field">
+                      <mat-label style="color: black;">{{ question.notesPrompt }}</mat-label>
+                      <textarea
+                        matInput
+                        formControlName="notes"
+                        style="color: black;"
+                        rows="3"
+                      ></textarea>
+                      <mat-error *ngIf="receivingNotesError(receivingQuestionGroup(question.id))">
+                        Provide details before proceeding.
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                </ng-container>
+
+                <ng-container *ngSwitchCase="'text'">
+                  <div class="question-header">
+                    <span class="question-id">{{ question.label }}</span>
+                    <h4>{{ question.text }}</h4>
+                  </div>
+                  <mat-form-field appearance="outline" class="notes-field">
+                    <mat-label style="color: black;">{{ question.notesPrompt || 'Details' }}</mat-label>
+                    <textarea
+                      matInput
+                      formControlName="text"
+                      style="color: black;"
+                      rows="3"
+                    ></textarea>
+                    <mat-error *ngIf="receivingTextError(question.id)">Details required.</mat-error>
+                  </mat-form-field>
+                </ng-container>
+
+                <ng-container *ngSwitchDefault>
+                  <div class="question-header">
+                    <span class="question-id">{{ question.label }}</span>
+                    <h4>{{ question.text }}</h4>
+                  </div>
+
+                  <div class="response">
+                    <mat-radio-group
+                      formControlName="status"
+                      (change)="onReceivingStatusChange(question, $event.value)"
+                      [attr.aria-label]="question.text"
+                    >
+                      <mat-radio-button class="radio-option" value="yes">
+                        {{ question.radioLabels?.yes || 'Yes' }}
+                      </mat-radio-button>
+                      <mat-radio-button class="radio-option" value="no">
+                        {{ question.radioLabels?.no || 'No' }}
+                      </mat-radio-button>
+                    </mat-radio-group>
+                    <mat-error *ngIf="receivingRadioError(receivingQuestionGroup(question.id))">
+                      Selection required.
+                    </mat-error>
+                  </div>
+
+                  <div class="notes" *ngIf="question.notesPrompt">
+                    <mat-form-field appearance="outline" class="notes-field">
+                      <mat-label style="color: black;">{{ question.notesPrompt }}</mat-label>
+                      <textarea
+                        matInput
+                        formControlName="notes"
+                        style="color: black;"
+                        rows="3"
+                      ></textarea>
+                      <mat-error *ngIf="receivingNotesError(receivingQuestionGroup(question.id))">
+                        Provide details for a "No" response.
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="follow-ups" formGroupName="followUps" *ngIf="question.followUps?.length">
+                    <mat-form-field
+                      appearance="outline"
+                      class="notes-field"
+                      *ngFor="let followUp of question.followUps"
+                    >
+                      <mat-label style="color: black;">{{ followUp.label }} {{ followUp.prompt }}</mat-label>
+                      <textarea
+                        matInput
+                        [formControlName]="followUp.id"
+                        style="color: black;"
+                        rows="3"
+                      ></textarea>
+                      <mat-error *ngIf="receivingFollowUpError(question.id, followUp.id)">
+                        Provide details for a "No" response.
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                </ng-container>
+              </ng-container>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
     </form>
 
     <ng-container *ngSwitchDefault>

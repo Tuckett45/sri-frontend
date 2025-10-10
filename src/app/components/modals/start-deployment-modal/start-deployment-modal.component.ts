@@ -9,12 +9,14 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { DeploymentProject } from 'src/app/features/deployment/models/deployment.models';
+import { MatSelectModule } from '@angular/material/select';
+import { Deployment } from 'src/app/features/deployment/models/deployment.models';
 import {
   SiteSurveyProgress,
   SiteSurveyProgressEntry,
   SiteSurveySubmission,
   StartDeploymentProgressPayload,
+  PhaseQuestionProgress,
 } from 'src/app/features/deployment/models/deployment-progress.model';
 
 interface SiteSurveyQuestion {
@@ -23,6 +25,7 @@ interface SiteSurveyQuestion {
   detailsPrompt?: string;
   requireNotesWhenNo?: boolean;
   info?: string;
+  displayId?: string;
 }
 
 interface NarrativeItem {
@@ -62,13 +65,45 @@ interface PhaseTaskGroup {
   tasks: PhaseTask[];
 }
 
+type ReceivingControlType = 'radio' | 'checkbox' | 'text';
+
+interface ReceivingQuestionFollowUp {
+  id: string;
+  label: string;
+  prompt: string;
+}
+
+interface ReceivingQuestion {
+  id: string;
+  label: string;
+  text: string;
+  controlType: ReceivingControlType;
+  notesPrompt?: string;
+  requireNotesWhenNo?: boolean;
+  requireText?: boolean;
+  requireNotesForStatus?: 'yes' | 'no' | 'both' | null;
+  followUpsRequiredFor?: 'yes' | 'no' | 'both' | null;
+  radioLabels?: { yes: string; no: string };
+  followUps?: ReceivingQuestionFollowUp[];
+  isChild?: boolean;
+}
+
+interface ReceivingQuestionGroup {
+  heading: string;
+  intro?: string | null;
+  questions: ReceivingQuestion[];
+}
+
+type VendorOption = { id: string; name: string };
+type DataCenterOption = { id: string; name: string };
+
 export type StartDeploymentDialogResult = {
   action: 'save';
   progress: StartDeploymentProgressPayload;
 };
 
 export interface StartDeploymentDialogData {
-  project?: DeploymentProject | null;
+  project?: Deployment | null;
   initialPhaseIndex?: number;
   progress?: StartDeploymentProgressPayload | null;
 }
@@ -86,7 +121,8 @@ export interface StartDeploymentDialogData {
     MatRadioModule,
     MatCheckboxModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatSelectModule,
   ],
   templateUrl: './start-deployment-modal.component.html',
   styleUrls: ['./start-deployment-modal.component.scss'],
@@ -108,7 +144,35 @@ export class StartDeploymentModalComponent implements OnInit {
 
   protected emptyFormGroup!: FormGroup;
   protected siteSurveyForm!: FormGroup;
+  protected receivingForm!: FormGroup;
 
+  /** NEW: deployment metadata form for new deployments */
+  protected metaForm!: FormGroup<{
+    name: FormControl<string>;
+    dataCenter: FormControl<string>;
+    vendorId: FormControl<string>;
+  }>;
+
+  /** Simple in-memory option lists (replace with service data when ready) */
+  private readonly vendorOptions = signal<VendorOption[]>([
+    { id: 'ven-westward', name: 'Westward Infrastructure' },
+    { id: 'ven-copperline', name: 'Copperline Cabling' },
+    { id: 'ven-brightline', name: 'BrightLine Logistics' },
+    { id: 'ven-labelcraft', name: 'LabelCraft Services' },
+    { id: 'ven-equinix', name: 'Equinix Field Services' },
+  ]);
+  private readonly dataCenterOptions = signal<DataCenterOption[]>([
+    { id: 'dc-chi', name: 'Chicago RDC' },
+    { id: 'dc-phx', name: 'Phoenix Core' },
+    { id: 'dc-nwk', name: 'Newark Hub' },
+    { id: 'dc-aus', name: 'Austin Edge' },
+    { id: 'dc-bna', name: 'Nashville RDC' },
+  ]);
+
+  vendors(): VendorOption[] { return this.vendorOptions(); }
+  dataCenters(): DataCenterOption[] { return this.dataCenterOptions(); }
+
+  protected receivingQuestionGroups: ReceivingQuestionGroup[] = [];
   protected readonly deploymentPhases: ReadonlyArray<DeploymentPhaseSection> = [
     {
       id: 'siteSurvey',
@@ -119,90 +183,49 @@ export class StartDeploymentModalComponent implements OnInit {
     {
       id: 'receiving',
       title: 'Receiving & Inventory',
-      summary: 'Track shipments, validate inventory, and stage equipment for install.',
-      body: 'Capture bill-of-material checks, serial-number audits, and staging confirmations before work moves to the floor.',
+      summary: 'Receive and inventory gear at data centers.',
+      body: 'Section 2: Receive and Inventory Gear at Data Centers.',
       type: 'receiving',
       narrative: [
         {
-          heading: '2.0 Establish Receiving & Inventory Process',
+          heading: 'Section 2: Receive and Inventory Gear at Data Centers',
           items: [
-            { label: '2.0', text: 'Vendor establishes reliable receiving and inventory workflow that prevents loss or misplacement of assets.' }
+            {
+              label: '2.0',
+              text: 'Vendor will be responsible for establishing a reliable receiving and inventory process that will prevent the misplacement of any project equipment or other assets.'
+            }
           ]
         },
         {
           heading: '2.1 Receiving Equipment',
           items: [
-            {
-              label: '2.1.1',
-              text: 'Ensure every item on the Work Order is inventoried and accounted for.',
-              subitems: [
-                { label: '2.1.1.1', text: 'Compare Work Order details to the equipment received.' }
-              ]
-            },
-            {
-              label: '2.1.2',
-              text: 'Verify Work Order aligns with the run list materials.',
-              subitems: [
-                { label: '2.1.2.1', text: 'Compare Work Order to the RFP; confirm all materials were ordered.' }
-              ]
-            },
-            {
-              label: '2.1.3',
-              text: 'Check airflow orientation of equipment destined for racks.',
-              subitems: [
-                { label: '2.1.3.1', text: 'Verify fans and power supplies align with planned airflow.' },
-                { label: '2.1.3.2', text: 'Confirm all FRUs match airflow direction.' }
-              ]
-            },
-            {
-              label: '2.1.4',
-              text: 'Confirm all optical modules are received and reconciled with the RFP.',
-              subitems: [
-                { label: '2.1.4.1', text: 'Validate optics received vs. assignments in the RFP.' },
-                { label: '2.1.4.2', text: 'Identify any missing optics per RFP expectations.' }
-              ]
-            },
-            {
-              label: '2.1.5',
-              text: 'Confirm specialized cabling arrived (DAC, SAS, VCP).'
-            },
-            {
-              label: '2.1.6',
-              text: 'Document shortages of optics, PSUs, rack kits, drives, or cables.',
-              subitems: [
-                { label: '2.1.6.1', text: 'Vendor projects: report shortages to DE immediately via email.' },
-                { label: '2.1.6.2', text: 'DC Ops projects: notify DE and update associated tickets.' }
-              ]
-            },
-            {
-              label: '2.1.7',
-              text: 'Document and photograph damaged equipment.',
-              subitems: [
-                { label: '2.1.7.1', text: 'Vendor projects: report damages to DE via email immediately.' },
-                { label: '2.1.7.2', text: 'DC Ops projects: inform DE, update the ticket.' }
-              ]
-            },
-            {
-              label: '2.1.8',
-              text: 'Verify replacement parts, if any, arrive before installation.'
-            }
+            { label: '2.1.1', text: 'Ensure all equipment on the Work Order is inventoried and accounted for.', subitems: [
+              { label: '2.1.1.1', text: 'Compare the Work Order details to the equipment received.' }
+            ]},
+            { label: '2.1.2', text: 'Ensure all the equipment on the Work Order matches the materials in the run list.', subitems: [
+              { label: '2.1.2.1', text: 'Compare the Work Order to the RFP; has everything been ordered?' }
+            ]},
+            { label: '2.1.3', text: 'Check airflow of equipment to match up with rack placement orientation.', subitems: [
+              { label: '2.1.3.1', text: 'Do the fans and power supplies match airflow?' },
+              { label: '2.1.3.2', text: 'Do the fans and power supplies match each other?', subitems: [
+                { label: '2.1.3.2.1', text: 'All FRU should have the same airflow.' }
+              ]}
+            ]},
+            { label: '2.1.4', text: 'Confirm all optical modules (SFPs, QSFPs, GBICs) are included when receiving equipment.' },
+            { label: '2.1.5', text: 'Confirm any specialized cabling has been received.' },
+            { label: '2.1.6', text: 'Document any missing equipment including but not limited to optics, power supplies, rack mounting kits, drives, and peripheral cables.' },
+            { label: '2.1.7', text: 'Document and photograph any damaged equipment.' },
+            { label: '2.1.8', text: 'All equipment serial numbers (not model number or asset tag) are to be scanned into the Comcast provided document using a scanner that allows for direct barcode scanning from device to document.' },
+            { label: '2.1.9', text: 'Double-check all equipment serial numbers, device names, makes and models after the equipment is racked in a cabinet to ensure accuracy.' },
+            { label: '2.1.10', text: 'The scanned serial numbers should match the serial numbers in the work orders. Note for DEs: The RFP sheet or a version of it can be used to scan serial numbers and highlight fields such as SN, Cab, RU, etc.' }
           ]
         },
         {
-          heading: '2.2 Inventory Control',
+          heading: '2.2 Move the gear to the Data Center',
           items: [
-            {
-              label: '2.2.1',
-              text: 'Maintain staging checklist with equipment locations.'
-            },
-            {
-              label: '2.2.2',
-              text: 'Secure storage for high-value components to prevent loss.'
-            },
-            {
-              label: '2.2.3',
-              text: 'Log serial numbers into asset tracking system before install.'
-            }
+            { label: '2.2.1', text: 'Assemble small servers and switches before moving into the Data Center.' },
+            { label: '2.2.2', text: 'Disassemble large devices to facilitate easier lifting and racking.' },
+            { label: '2.2.3', text: 'Organize all parts that are associated with each other.' }
           ]
         }
       ]
@@ -213,30 +236,17 @@ export class StartDeploymentModalComponent implements OnInit {
       summary: 'Mount, cable, and power all hardware to specification.',
       type: 'installation',
       narrative: [
-        {
-          heading: '3.1 Rack & Stack',
-          items: [
-            {
-              label: '3.1.1',
-              text: 'Install hardware into racks following elevation diagrams.',
-              subitems: [
-                { label: '3.1.1.1', text: 'Verify rails and mounting hardware are torqued appropriately.' },
-                { label: '3.1.1.2', text: 'Ensure weight distribution aligns with rack standards.' }
-              ]
-            },
-            {
-              label: '3.1.2',
-              text: 'Connect power feeds per design drawing.'
-            }
-          ]
-        },
-        {
-          heading: '3.2 Power Validation',
-          items: [
-            { label: '3.2.1', text: 'Verify redundant power paths per rack design.' },
-            { label: '3.2.2', text: 'Document breaker assignments and load levels.' }
-          ]
-        }
+        { heading: '3.1 Rack & Stack', items: [
+          { label: '3.1.1', text: 'Install hardware into racks following elevation diagrams.', subitems: [
+            { label: '3.1.1.1', text: 'Verify rails and mounting hardware are torqued appropriately.' },
+            { label: '3.1.1.2', text: 'Ensure weight distribution aligns with rack standards.' }
+          ]},
+          { label: '3.1.2', text: 'Connect power feeds per design drawing.' }
+        ]},
+        { heading: '3.2 Power Validation', items: [
+          { label: '3.2.1', text: 'Verify redundant power paths per rack design.' },
+          { label: '3.2.2', text: 'Document breaker assignments and load levels.' }
+        ]}
       ]
     },
     {
@@ -245,21 +255,15 @@ export class StartDeploymentModalComponent implements OnInit {
       summary: 'Lay in copper and fiber, manage pathways, and test connectivity.',
       type: 'cabling',
       narrative: [
-        {
-          heading: '4.1 Structured Cabling',
-          items: [
-            { label: '4.1.1', text: 'Route cables per pathway standards.' },
-            { label: '4.1.2', text: 'Bundle and secure cables with velcro wraps.' },
-            { label: '4.1.3', text: 'Label terminations per schema.' }
-          ]
-        },
-        {
-          heading: '4.2 Testing',
-          items: [
-            { label: '4.2.1', text: 'Run continuity tests on all copper drops.' },
-            { label: '4.2.2', text: 'Document fiber light levels and certify results.' }
-          ]
-        }
+        { heading: '4.1 Structured Cabling', items: [
+          { label: '4.1.1', text: 'Route cables per pathway standards.' },
+          { label: '4.1.2', text: 'Bundle and secure cables with velcro wraps.' },
+          { label: '4.1.3', text: 'Label terminations per schema.' }
+        ]},
+        { heading: '4.2 Testing', items: [
+          { label: '4.2.1', text: 'Run continuity tests on all copper drops.' },
+          { label: '4.2.2', text: 'Document fiber light levels and certify results.' }
+        ]}
       ]
     },
     {
@@ -268,13 +272,10 @@ export class StartDeploymentModalComponent implements OnInit {
       summary: 'Generate and apply labels to meet operations standards.',
       type: 'labeling',
       narrative: [
-        {
-          heading: '5.1 Label Application',
-          items: [
-            { label: '5.1.1', text: 'Apply rack, device, and cable labels with approved materials.' },
-            { label: '5.1.2', text: 'Capture photos of labeling for documentation.' }
-          ]
-        }
+        { heading: '5.1 Label Application', items: [
+          { label: '5.1.1', text: 'Apply rack, device, and cable labels with approved materials.' },
+          { label: '5.1.2', text: 'Capture photos of labeling for documentation.' }
+        ]}
       ]
     },
     {
@@ -283,64 +284,77 @@ export class StartDeploymentModalComponent implements OnInit {
       summary: 'Compile validation evidence and finalize stakeholder approvals.',
       type: 'handoff',
       narrative: [
-        {
-          heading: '6.1 Operational Readiness',
-          items: [
-            { label: '6.1.1', text: 'Provide deployment summary packet to stakeholders.' },
-            { label: '6.1.2', text: 'Confirm monitoring systems report expected status.' },
-            { label: '6.1.3', text: 'Schedule handoff review with DE and Ops.' }
-          ]
-        },
-        {
-          heading: '6.4 Punch List',
-          items: [
-            { label: '6.4.8', text: 'Generate punch list items for issues.' },
-            { label: '6.4.9', text: 'Resolve punch list with photographic evidence.' }
-          ]
-        }
+        { heading: '6.1 Operational Readiness', items: [
+          { label: '6.1.1', text: 'Provide deployment summary packet to stakeholders.' },
+          { label: '6.1.2', text: 'Confirm monitoring systems report expected status.' },
+          { label: '6.1.3', text: 'Schedule handoff review with DE and Ops.' }
+        ]},
+        { heading: '6.4 Punch List', items: [
+          { label: '6.4.8', text: 'Generate punch list items for issues.' },
+          { label: '6.4.9', text: 'Resolve punch list with photographic evidence.' }
+        ]}
       ]
     }
   ];
 
   protected readonly siteSurveyQuestions: SiteSurveyQuestion[] = [
-    {
-      id: 'ss-1',
-      title: 'Rack elevation diagrams confirmed with facilities?',
-      requireNotesWhenNo: true,
-      detailsPrompt: 'If "No", describe discrepancies and blockers.'
-    },
-    {
-      id: 'ss-2',
-      title: 'Power whips in place and energized?',
-      requireNotesWhenNo: true,
-      detailsPrompt: 'Outline missing circuits or pending approvals.'
-    },
-    {
-      id: 'ss-3',
-      title: 'Receiving area staged and inventory reconciled?',
-      detailsPrompt: 'Capture open issues or missing items.'
-    },
-    {
-      id: 'ss-4',
-      title: 'Cable pathways cleared and accessible?',
-      requireNotesWhenNo: true,
-      detailsPrompt: 'Describe obstructions or access constraints.'
-    },
-    {
-      id: 'ss-5',
-      title: 'Network demarc confirmed and ready?',
-      info: 'Ensure cross-connects are scheduled prior to installation.'
-    }
+    { id: 'ss-1-0', displayId: '1.0', title: 'Vendor or Operations project lead must check the Data Center and cabinets assigned for the project.', requireNotesWhenNo: true, detailsPrompt: 'If "No", explain what remains unchecked and who is responsible.' },
+    { id: 'ss-1-1', displayId: '1.1', title: 'Before installation begins, confirm cabinet rail requirements are properly set and appropriate for the project; ensure the assigned RU are open and available.', requireNotesWhenNo: true, detailsPrompt: 'If not, why not? Is there an available option?' },
+    { id: 'ss-1-2', displayId: '1.2', title: 'Ensure the assigned patch panel and breakout panel ports are open and available.', requireNotesWhenNo: true, detailsPrompt: 'If not, why not? Are there cables which should have been removed from a previous decommission project? Check the server cabinets and the network cabinets.' },
+    { id: 'ss-1-3', displayId: '1.3', title: 'Ensure the assigned power strip outlets are open and available.', requireNotesWhenNo: true, detailsPrompt: 'If not, why not? Are the right connectors specified for the assigned outlets?' },
+    { id: 'ss-1-4', displayId: '1.4', title: 'General inspection of the site for cleanliness and proper maintenance.', requireNotesWhenNo: true, detailsPrompt: 'Report issues, roadblocks, and obstacles.' },
+    { id: 'ss-1-5', displayId: '1.5', title: 'Confirm DE provided pictures of equipment showing port name & NIC card placement and rack elevations.', requireNotesWhenNo: true, detailsPrompt: 'If "No", list missing images or documentation.' }
   ];
 
   private phaseTaskGroupsMap!: Record<PhaseType, PhaseTaskGroup[]>;
   private phaseTaskFormsMap!: Record<PhaseType, FormGroup>;
 
   ngOnInit(): void {
+    // ---- Deployment metadata form (only used for NEW deployments) ----
+    this.metaForm = this.fb.nonNullable.group({
+      name: ['', [Validators.required, Validators.minLength(3)]],
+      dataCenter: ['', Validators.required],
+      vendorId: ['', Validators.required],
+    });
+
+    if (this.project) {
+      // Pre-fill when editing/viewing existing deployment (form not shown in UI for existing)
+      this.metaForm.patchValue({
+        name: this.project.name ?? '',
+        dataCenter: this.project.dataCenter ?? '',
+        vendorId: '', // if you have a vendorId, put it here
+      }, { emitEvent: false });
+    } else {
+      // Choose sensible defaults for new deployment
+      this.metaForm.patchValue({
+        dataCenter: this.dataCenterOptions()[0]?.name ?? '',
+        vendorId: this.vendorOptions()[0]?.id ?? '',
+      }, { emitEvent: false });
+    }
+
+    // ---- Existing wizard setup ----
     this.emptyFormGroup = this.fb.group({});
     this.siteSurveyForm = this.buildSiteSurveyForm();
+    this.receivingQuestionGroups = this.buildReceivingQuestionGroups();
+    this.receivingForm = this.buildReceivingForm(this.receivingQuestionGroups);
+
+    // prime validators for receiving
+    this.receivingQuestionGroups.forEach(group => {
+      group.questions.forEach(question => {
+        const formGroup = this.receivingQuestionGroup(question.id);
+        let initialStatus: 'yes' | 'no' | null = null;
+        if (question.controlType === 'radio') {
+          initialStatus = (formGroup?.get('status')?.value as 'yes' | 'no' | null) ?? null;
+        } else if (question.controlType === 'checkbox') {
+          initialStatus = formGroup?.get('checked')?.value ? 'yes' : 'no';
+        }
+        this.enforceReceivingValidators(question, initialStatus, formGroup);
+      });
+    });
+
     this.phaseTaskGroupsMap = this.buildPhaseTaskGroups();
     this.phaseTaskFormsMap = this.buildPhaseTaskForms(this.phaseTaskGroupsMap);
+
     this.existingProgress = this.data?.progress ?? null;
     this.restoreProgressState();
   }
@@ -363,9 +377,7 @@ export class StartDeploymentModalComponent implements OnInit {
   }
 
   protected goToNextStep(): void {
-    if (this.isAtFinalStep()) {
-      return;
-    }
+    if (this.isAtFinalStep()) return;
 
     const groups = this.getPhaseTaskGroups(this.currentPhaseType());
     if (groups.length && this.activeTaskTabIndex() < groups.length - 1) {
@@ -419,7 +431,12 @@ export class StartDeploymentModalComponent implements OnInit {
   }
 
   protected saveProgress(): void {
-    const progress = this.buildProgressPayload();
+    // If starting a brand-new deployment, require metadata first
+    if (!this.project && this.metaForm.invalid) {
+      this.metaForm.markAllAsTouched();
+      return;
+    }
+    const progress = this._buildProgressPayload();
     this.dialogRef.close({ action: 'save', progress });
   }
 
@@ -428,16 +445,52 @@ export class StartDeploymentModalComponent implements OnInit {
     this.enforceNotesValidator(question, value, group);
   }
 
+  protected receivingQuestionGroup(id: string): FormGroup {
+    return (this.receivingForm.get(id) as FormGroup | null) ?? this.emptyFormGroup;
+  }
+
+  protected onReceivingStatusChange(question: ReceivingQuestion, value: 'yes' | 'no'): void {
+    if (question.controlType !== 'radio') return;
+    const group = this.receivingQuestionGroup(question.id);
+    this.enforceReceivingValidators(question, value, group);
+  }
+
   protected radioError(group: FormGroup | null): boolean {
     if (!group) return false;
     const control = group.get('status');
     return !!control && control.invalid && (control.touched || this.siteSurveySubmitAttempted());
   }
 
+  protected receivingRadioError(group: FormGroup | null): boolean {
+    if (!group) return false;
+    const control = group.get('status');
+    return !!control && control.invalid && (control.touched || control.dirty);
+  }
+
   protected notesError(group: FormGroup | null): boolean {
     if (!group) return false;
     const control = group.get('notes');
     return !!control && control.invalid && (control.touched || this.siteSurveySubmitAttempted());
+  }
+
+  protected receivingNotesError(group: FormGroup | null): boolean {
+    if (!group) return false;
+    const control = group.get('notes');
+    return !!control && control.invalid && (control.touched || control.dirty);
+  }
+
+  protected receivingFollowUpError(questionId: string, followUpId: string): boolean {
+    const group = this.receivingQuestionGroup(questionId);
+    const followUps = group?.get('followUps') as FormGroup | null;
+    if (!followUps) return false;
+    const control = followUps.get(followUpId);
+    return !!control && control.invalid && (control.touched || control.dirty);
+  }
+
+  protected receivingTextError(questionId: string): boolean {
+    const group = this.receivingQuestionGroup(questionId);
+    const control = group?.get('text');
+    return !!control && control.invalid && (control.touched || control.dirty);
   }
 
   protected onSiteSurveySubmit(): void {
@@ -448,8 +501,7 @@ export class StartDeploymentModalComponent implements OnInit {
     }
 
     const submission = this.buildSiteSurveySubmission();
-    const progress = this.buildProgressPayload(submission);
-    console.debug('Site survey submission', submission);
+    const progress = this._buildProgressPayload(submission);
     this.dialogRef.close({ action: 'save', progress });
   }
 
@@ -457,15 +509,18 @@ export class StartDeploymentModalComponent implements OnInit {
     this.dialogRef.close(result);
   }
 
-  private buildProgressPayload(submittedSiteSurvey?: SiteSurveySubmission): StartDeploymentProgressPayload {
-    return {
+  /** renamed to avoid any accidental shadowing by a field */
+  private _buildProgressPayload(submittedSiteSurvey: SiteSurveySubmission | null = null): StartDeploymentProgressPayload {
+    const payload: StartDeploymentProgressPayload = {
       projectId: this.project?.id ?? null,
       activePhaseIndex: this.activePhaseIndex(),
       activeTaskTabIndex: this.activeTaskTabIndex(),
       siteSurvey: this.collectSiteSurveyProgress(),
+      receiving: this.collectReceivingProgress() ?? null,
       phaseTasks: this.collectPhaseTaskProgress(),
       submittedSiteSurvey,
     };
+    return payload;
   }
 
   private collectSiteSurveyProgress(): SiteSurveyProgress {
@@ -484,6 +539,70 @@ export class StartDeploymentModalComponent implements OnInit {
         };
       }),
     };
+  }
+
+  private collectReceivingProgress(): PhaseQuestionProgress {
+    const responses = [] as PhaseQuestionProgress['responses'];
+
+    this.receivingQuestionGroups.forEach(group => {
+      group.questions.forEach(question => {
+        const form = this.receivingForm.get(question.id) as FormGroup | null;
+        if (!form) return;
+
+        if (question.controlType === 'radio') {
+          const raw = form.getRawValue() as {
+            status: 'yes' | 'no' | null;
+            notes?: string;
+            followUps?: Record<string, string>;
+          };
+
+          const followUps = (question.followUps ?? []).map(followUp => {
+            const value = raw?.followUps?.[followUp.id] ?? '';
+            const trimmed = value?.trim() ?? '';
+            return {
+              id: followUp.id,
+              prompt: `${followUp.label} ${followUp.prompt}`.trim(),
+              response: trimmed.length ? trimmed : null,
+            };
+          });
+
+          responses.push({
+            id: question.id,
+            title: `${question.label} ${question.text}`.trim(),
+            controlType: 'radio',
+            status: raw?.status ?? null,
+            notes: raw?.notes?.trim() ? raw.notes.trim() : null,
+            followUps,
+          });
+          return;
+        }
+
+        if (question.controlType === 'checkbox') {
+          const raw = form.getRawValue() as { checked?: boolean; notes?: string };
+          responses.push({
+            id: question.id,
+            title: `${question.label} ${question.text}`.trim(),
+            controlType: 'checkbox',
+            checked: !!raw?.checked,
+            notes: raw?.notes?.trim() ? raw.notes.trim() : null,
+            followUps: [],
+          });
+          return;
+        }
+
+        const raw = form.getRawValue() as { text?: string };
+        const trimmed = raw?.text?.trim() ?? '';
+        responses.push({
+          id: question.id,
+          title: `${question.label} ${question.text}`.trim(),
+          controlType: 'text',
+          textResponse: trimmed.length ? trimmed : null,
+          followUps: [],
+        });
+      });
+    });
+
+    return { responses };
   }
 
   private collectPhaseTaskProgress(): Record<string, Record<string, boolean>> {
@@ -505,11 +624,13 @@ export class StartDeploymentModalComponent implements OnInit {
 
     if (this.existingProgress) {
       this.applySiteSurveyProgress(this.existingProgress.siteSurvey ?? null);
+      this.applyReceivingProgress(this.existingProgress.receiving ?? null);
       this.applyPhaseTaskProgress(this.existingProgress.phaseTasks ?? {});
       const groups = this.getPhaseTaskGroups(this.currentPhaseType());
       this.activeTaskTabIndex.set(this.clampTabIndex(requestedTab, groups.length));
     } else {
       this.applySiteSurveyProgress(null);
+      this.applyReceivingProgress(null);
     }
 
     this.siteSurveySubmitAttempted.set(false);
@@ -530,10 +651,63 @@ export class StartDeploymentModalComponent implements OnInit {
     });
   }
 
+  private applyReceivingProgress(progress: PhaseQuestionProgress | null): void {
+    const responses = new Map<string, PhaseQuestionProgress['responses'][number]>(
+      (progress?.responses ?? []).map(entry => [entry.id, entry])
+    );
+
+    this.receivingQuestionGroups.forEach(group => {
+      group.questions.forEach(question => {
+        const entry = responses.get(question.id);
+        const form = this.receivingForm.get(question.id) as FormGroup | null;
+        if (!form) return;
+
+        if (question.controlType === 'radio') {
+          const status = entry?.status ?? null;
+          const notesValue = entry?.notes ?? '';
+          const followUps = form.get('followUps') as FormGroup | null;
+          if (followUps) {
+            const followUpValues = (question.followUps ?? []).reduce((acc, followUp) => {
+              const match = entry?.followUps?.find(item => item.id === followUp.id);
+              acc[followUp.id] = match?.response ?? '';
+              return acc;
+            }, {} as Record<string, string>);
+            followUps.patchValue(followUpValues, { emitEvent: false });
+          }
+
+          form.patchValue(
+            { status, notes: notesValue ?? '' },
+            { emitEvent: false }
+          );
+          this.enforceReceivingValidators(question, status, form);
+          return;
+        }
+
+        if (question.controlType === 'checkbox') {
+          const legacyStatus = (entry as any)?.status ?? null;
+          const checked =
+            (entry as any)?.checked ?? (legacyStatus ? legacyStatus === 'yes' : false);
+          const patch: Record<string, unknown> = { checked };
+          if (form.contains('notes')) {
+            const legacyNotes = (entry as any)?.notes ?? (entry as any)?.textResponse ?? '';
+            patch['notes'] = legacyNotes ?? '';
+          }
+          form.patchValue(patch, { emitEvent: false });
+          this.enforceReceivingValidators(question, checked ? 'yes' : 'no', form);
+          return;
+        }
+
+        form.patchValue(
+          { text: (entry as any)?.textResponse ?? (entry as any)?.notes ?? '' },
+          { emitEvent: false }
+        );
+        this.enforceReceivingValidators(question, null, form);
+      });
+    });
+  }
+
   private applyPhaseTaskProgress(progress: Record<string, Record<string, boolean>>): void {
-    if (!progress) {
-      return;
-    }
+    if (!progress) return;
 
     Object.entries(progress).forEach(([phaseKey, values]) => {
       const form = this.phaseTaskFormsMap[phaseKey as PhaseType];
@@ -549,9 +723,7 @@ export class StartDeploymentModalComponent implements OnInit {
     group: FormGroup
   ): void {
     const notes = group.get('notes');
-    if (!notes) {
-      return;
-    }
+    if (!notes) return;
 
     if (status === 'no' && question.requireNotesWhenNo) {
       notes.addValidators([Validators.required, Validators.minLength(3)]);
@@ -562,18 +734,91 @@ export class StartDeploymentModalComponent implements OnInit {
     notes.updateValueAndValidity({ emitEvent: false });
   }
 
-  private clampPhaseIndex(index: number): number {
-    if (!Number.isFinite(index)) {
-      return 0;
+  private enforceReceivingValidators(
+    question: ReceivingQuestion,
+    status: 'yes' | 'no' | null,
+    group: FormGroup | null
+  ): void {
+    if (!group) return;
+
+    if (question.controlType === 'radio') {
+      const notes = group.get('notes');
+      if (notes) {
+        const notesRequirement =
+          question.requireNotesForStatus ?? (question.requireNotesWhenNo ? 'no' : null);
+        const shouldRequireNotes =
+          notesRequirement === 'both'
+            ? status === 'yes' || status === 'no'
+            : notesRequirement
+            ? status === notesRequirement
+            : false;
+        notes.setValidators(
+          shouldRequireNotes ? [Validators.required, Validators.minLength(3)] : []
+        );
+        notes.updateValueAndValidity({ emitEvent: false });
+      }
+
+      const followUps = group.get('followUps') as FormGroup | null;
+      if (followUps) {
+        Object.values(followUps.controls).forEach(control => {
+          const followRequirement =
+            question.followUpsRequiredFor ??
+            ((question.followUps?.length ?? 0) > 0 ? 'no' : null);
+          const shouldRequireResponse =
+            followRequirement === 'both'
+              ? status === 'yes' || status === 'no'
+              : followRequirement
+              ? status === followRequirement
+              : false;
+          control.setValidators(
+            shouldRequireResponse ? [Validators.required, Validators.minLength(3)] : []
+          );
+          control.updateValueAndValidity({ emitEvent: false });
+        });
+      }
+      return;
     }
+
+    if (question.controlType === 'checkbox') {
+      const notes = group.get('notes');
+      if (notes) {
+        const checkedControl = group.get('checked');
+        const checked = !!checkedControl?.value;
+        const notesRequirement =
+          question.requireNotesForStatus ?? (question.requireNotesWhenNo ? 'no' : null);
+        const shouldRequireNotes =
+          notesRequirement === 'both'
+            ? true
+            : notesRequirement === 'yes'
+            ? checked
+            : notesRequirement === 'no'
+            ? !checked
+            : false;
+        notes.setValidators(
+          shouldRequireNotes ? [Validators.required, Validators.minLength(3)] : []
+        );
+        notes.updateValueAndValidity({ emitEvent: false });
+      }
+      return;
+    }
+
+    const textControl = group.get('text');
+    if (textControl) {
+      textControl.setValidators(
+        question.requireText ? [Validators.required, Validators.minLength(3)] : []
+      );
+      textControl.updateValueAndValidity({ emitEvent: false });
+    }
+  }
+
+  private clampPhaseIndex(index: number): number {
+    if (!Number.isFinite(index)) return 0;
     const max = Math.max(this.deploymentPhases.length - 1, 0);
     return Math.min(Math.max(Math.trunc(index), 0), max);
   }
 
   private clampTabIndex(index: number, total: number): number {
-    if (!Number.isFinite(index) || total <= 0) {
-      return 0;
-    }
+    if (!Number.isFinite(index) || total <= 0) return 0;
     return Math.min(Math.max(Math.trunc(index), 0), total - 1);
   }
 
@@ -593,48 +838,98 @@ export class StartDeploymentModalComponent implements OnInit {
     this.siteSurveySubmitAttempted.set(false);
   }
 
-  private buildDemoProgress(): StartDeploymentProgressPayload {
-    const responses: SiteSurveyProgressEntry[] = this.siteSurveyQuestions.map((question, index) => ({
-      id: question.id,
-      title: question.title,
-      status: (index % 3 === 0 ? 'no' : 'yes') as 'yes' | 'no',
-      notes:
-        index % 3 === 0
-          ? 'Investigate outstanding issues before proceeding.'
-          : null,
-    }));
+  private buildReceivingQuestionGroups(): ReceivingQuestionGroup[] {
+    return [
+      {
+        heading: '2.1 Receiving Equipment',
+        intro: 'Validate every piece of equipment received against work orders, airflow requirements, optics, and cabling expectations.',
+        questions: [
+          { id: 'receiving-2-1-1', label: '2.1.1', text: 'Ensure all equipment on the Work Order is inventoried and accounted for.', controlType: 'checkbox' },
+          { id: 'receiving-2-1-1-1', label: '2.1.1.1', text: 'Compare the Work Order details to the equipment received.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-2', label: '2.1.2', text: 'Ensure all the equipment on the Work Order matches the materials in the run list.', controlType: 'checkbox' },
+          { id: 'receiving-2-1-2-1', label: '2.1.2.1', text: 'Compare the Work Order to the RFP; has everything been ordered?', controlType: 'radio', notesPrompt: 'If "No", list outstanding material and expected arrival dates.', requireNotesForStatus: 'no', followUpsRequiredFor: 'no', isChild: true },
+          { id: 'receiving-2-1-3', label: '2.1.3', text: 'Check airflow of equipment to match up with rack placement orientation.', controlType: 'checkbox' },
+          { id: 'receiving-2-1-3-1', label: '2.1.3.1', text: 'Do the fans and power supplies match airflow?', controlType: 'radio', notesPrompt: 'If "No", specify the mismatched components and remediation plan.', requireNotesForStatus: 'no', followUpsRequiredFor: 'no', isChild: true },
+          { id: 'receiving-2-1-3-2', label: '2.1.3.2', text: 'Do the fans and power supplies match each other?', controlType: 'radio', notesPrompt: 'If "No", outline the corrective action and affected gear.', requireNotesForStatus: 'no', followUpsRequiredFor: 'no', isChild: true },
+          { id: 'receiving-2-1-3-2-1', label: '2.1.3.2.1', text: 'All FRU should have the same airflow.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-4', label: '2.1.4', text: 'Confirm all optical modules (SFPs, QSFPs, GBICs) are included when receiving equipment.', controlType: 'checkbox' },
+          { id: 'receiving-2-1-4-1', label: '2.1.4.1', text: 'Confirm all optics received are assigned in the RFP.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-4-2', label: '2.1.4.2', text: 'Per the RFP, are there any optics missing?', controlType: 'radio', notesPrompt: 'If "No", list the optics that still need reconciliation.', requireNotesForStatus: 'no', followUpsRequiredFor: 'no', isChild: true },
+          { id: 'receiving-2-1-5', label: '2.1.5', text: 'Confirm any specialized cabling has been received.', controlType: 'checkbox' },
+          { id: 'receiving-2-1-5-1', label: '2.1.5.1', text: 'Direct Attach Copper (DAC) cabling received.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-5-2', label: '2.1.5.2', text: 'SAS cabling received.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-5-3', label: '2.1.5.3', text: 'VCP cabling received.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-6', label: '2.1.6', text: 'Document any missing equipment including optics, power supplies, rack mounting kits, drives, and peripheral cables.', controlType: 'checkbox' },
+          { id: 'receiving-2-1-6-1', label: '2.1.6.1', text: 'For vendor projects, report all shortages to the DE via email ASAP.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-6-2', label: '2.1.6.2', text: 'For DC Ops projects, report all shortages to the DE via email ASAP and update the ticket.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-7', label: '2.1.7', text: 'Document and photograph any damaged equipment.', controlType: 'radio', radioLabels: { yes: 'Damaged', no: 'No Damage' }, notesPrompt: 'If damaged, describe the issue and reference images or ticket numbers.', requireNotesForStatus: 'yes', followUpsRequiredFor: 'yes' },
+          { id: 'receiving-2-1-7-1', label: '2.1.7.1', text: 'For vendor projects, report all damages to the DE via email ASAP.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-7-2', label: '2.1.7.2', text: 'For DC Ops projects, report all damages to the DE and update the ticket.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-8', label: '2.1.8', text: 'All equipment serial numbers are to be scanned into the Comcast provided document using a barcode scanner.', controlType: 'text', notesPrompt: 'Document scanning status, outstanding devices, or issues encountered.', requireText: true },
+          { id: 'receiving-2-1-8-1', label: '2.1.8.1', text: 'Ensure the correct serial and hostname association is maintained throughout the project.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-1-9', label: '2.1.9', text: 'Double-check all equipment serial numbers, device names, makes and models after the equipment is racked to ensure accuracy.', controlType: 'checkbox' },
+          { id: 'receiving-2-1-10', label: '2.1.10', text: 'The scanned serial numbers should match the serial numbers in the work orders. Note for DEs: The RFP sheet or version of that can be used to scan serial numbers. Can also highlight the sections they need to fill in SN, Cab, RU, etc.', controlType: 'checkbox', notesPrompt: 'If mismatches were found, summarize resolution steps.', requireNotesForStatus: 'no' },
+        ],
+      },
+      {
+        heading: '2.2 Move the gear to the Data Center',
+        intro: 'Prepare equipment for transport and organize it upon arrival to maintain project separation and readiness.',
+        questions: [
+          { id: 'receiving-2-2-1', label: '2.2.1', text: 'Assemble small servers and switches before moving into the Data Center.', controlType: 'checkbox' },
+          { id: 'receiving-2-2-1-1', label: '2.2.1.1', text: 'NICs installed.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-2-1-2', label: '2.2.1.2', text: 'Drives installed.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-2-1-3', label: '2.2.1.3', text: 'Cards installed.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-2-2', label: '2.2.2', text: 'Disassemble large devices to facilitate easier lifting and racking.', controlType: 'checkbox' },
+          { id: 'receiving-2-2-2-1', label: '2.2.2.1', text: 'Reassemble the unit once it is racked.', controlType: 'checkbox', isChild: true },
+          { id: 'receiving-2-2-3', label: '2.2.3', text: 'Organize all parts that are associated with each other.', controlType: 'checkbox' },
+          { id: 'receiving-2-2-3-1', label: '2.2.3.1', text: 'Keep all equipment for each project together and separate from other projects as gear is being moved into the cage.', controlType: 'checkbox', isChild: true },
+        ],
+      },
+    ];
+  }
 
-    const phaseTasks: Record<string, Record<string, boolean>> = {};
-    Object.entries(this.phaseTaskFormsMap ?? {}).forEach(([phase, form]) => {
-      const controls = Object.keys(form?.controls ?? {});
-      if (!controls.length) {
-        return;
-      }
-      const selection: Record<string, boolean> = {};
-      controls.slice(0, 3).forEach((controlId, idx) => {
-        selection[controlId] = idx % 2 === 0;
+  private buildReceivingForm(groups: ReceivingQuestionGroup[]): FormGroup {
+    const questionGroups: Record<string, FormGroup> = {};
+
+    groups.forEach(group => {
+      group.questions.forEach(question => {
+        if (question.controlType === 'radio') {
+          const followUpControls: Record<string, FormControl<string>> = {};
+          (question.followUps ?? []).forEach(followUp => {
+            followUpControls[followUp.id] = this.fb.control('', { nonNullable: true });
+          });
+          questionGroups[question.id] = this.fb.group({
+            status: [null, Validators.required],
+            notes: [''],
+            followUps: this.fb.group(followUpControls),
+          });
+        } else if (question.controlType === 'checkbox') {
+          const checkboxControls: Record<string, FormControl | FormGroup> = {
+            checked: this.fb.control(false, { nonNullable: true }),
+          };
+          if (question.notesPrompt) {
+            checkboxControls['notes'] = this.fb.control('');
+          }
+          questionGroups[question.id] = this.fb.group(checkboxControls);
+        } else {
+          questionGroups[question.id] = this.fb.group({
+            text: [
+              '',
+              question.requireText ? [Validators.required, Validators.minLength(3)] : [],
+            ],
+          });
+        }
       });
-      if (Object.keys(selection).length) {
-        phaseTasks[phase] = selection;
-      }
     });
 
-    return {
-      projectId: this.project?.id ?? null,
-      activePhaseIndex: 1,
-      activeTaskTabIndex: 0,
-      siteSurvey: { responses },
-      phaseTasks,
-    };
+    return this.fb.group(questionGroups);
   }
 
   private buildPhaseTaskGroups(): Record<PhaseType, PhaseTaskGroup[]> {
     const map = {} as Record<PhaseType, PhaseTaskGroup[]>;
     for (const phase of this.deploymentPhases) {
-      if (!phase.narrative?.length) {
-        map[phase.type] = [];
-        continue;
-      }
+      if (phase.type === 'receiving') { map[phase.type] = []; continue; }
+      if (!phase.narrative?.length) { map[phase.type] = []; continue; }
       map[phase.type] = phase.narrative.map(group => ({
         heading: group.heading ?? phase.title,
         intro: group.intro ?? null,
@@ -646,25 +941,29 @@ export class StartDeploymentModalComponent implements OnInit {
 
   private flattenNarrativeItems(section: DeploymentPhaseSection, items: NarrativeItem[]): PhaseTask[] {
     const tasks: PhaseTask[] = [];
-    items.forEach((item, itemIndex) => {
-      const baseId = this.toControlId(`${section.id}-${item.label || itemIndex}`);
+
+    const formatFallbackLabel = (path: number[]): string => path.join('.');
+
+    const walk = (node: NarrativeItem, indexPath: number[], parentId: string | null): void => {
+      const label = node.label || `Task ${formatFallbackLabel(indexPath)}`;
+      const id = this.toControlId(`${section.id}-${label}`);
       tasks.push({
-        id: baseId,
-        label: item.label || `Task ${itemIndex + 1}`,
-        description: item.text,
-        parentId: null,
-        isChild: false
+        id,
+        label,
+        description: node.text,
+        parentId,
+        isChild: parentId !== null
       });
-      item.subitems?.forEach((sub, subIndex) => {
-        tasks.push({
-          id: this.toControlId(`${section.id}-${item.label || itemIndex}-${sub.label || subIndex}`),
-          label: sub.label || `${item.label ?? 'Task'} ${itemIndex + 1}.${subIndex + 1}`,
-          description: sub.text,
-          parentId: baseId,
-          isChild: true
-        });
+
+      node.subitems?.forEach((child, childIndex) => {
+        walk(child, [...indexPath, childIndex + 1], id);
       });
+    };
+
+    items.forEach((item, itemIndex) => {
+      walk(item, [itemIndex + 1], null);
     });
+
     return tasks;
   }
 

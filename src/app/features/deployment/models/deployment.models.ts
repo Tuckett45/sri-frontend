@@ -1,5 +1,8 @@
 export type Id = string;
 
+/* -------------------------
+   Deployment Status Enum
+-------------------------- */
 export enum DeploymentStatus {
   Planned = 'Planned',
   Survey = 'Survey',
@@ -11,19 +14,84 @@ export enum DeploymentStatus {
   Complete = 'Complete'
 }
 
-export interface DeploymentProject {
+/* -------------------------
+   Phase State Enum
+-------------------------- */
+export type PhaseState = 'Pending' | 'InProgress' | 'Complete';
+
+/* ============================================================
+   Deployments (dbo.Deployments)
+   ============================================================ */
+export interface Deployment {
   id: Id;
   name: string;
   dataCenter: string;
-  vendor: string;
+  vendorName: string;
+  deploymentEngineerId?: string;
   status: DeploymentStatus;
-  assignedVendorIds?: Id[];
   startDate?: string;
-  targetCompletion?: string;
-  metadata?: Record<string, unknown>;
+  targetHandoffDate?: string;
+  rfpId?: string;
+  workOrderId?: string;
+  createdBy?: string;
+  createdDate?: string;
+  updatedBy?: string;
+  updatedDate?: string;
+  progressPercent?: number;
+  nextStatus?: DeploymentStatus | null;
 }
 
-export type ChecklistItemType =
+/* ============================================================
+   Deployment Assets (dbo.DeploymentAssets)
+   ============================================================ */
+export interface DeploymentAsset {
+  id: Id;
+  deploymentId: Id;
+  hostname: string;
+  serialNumber?: string;
+  rack?: string;
+  ru?: number;
+  slot?: string;
+  metadataJson?: string; // backend stores serialized JSON
+  createdBy?: string;
+  createdDate?: string;
+  updatedBy?: string;
+  updatedDate?: string;
+}
+
+/* ============================================================
+   Deployment Phases (dbo.DeploymentPhases)
+   ============================================================ */
+export interface DeploymentPhase {
+  id: Id;
+  deploymentId: Id;
+  phaseCode: number;      // 1..6
+  name: string;
+  status: PhaseState;
+  startedDate?: string;
+  completedDate?: string;
+}
+
+/* ============================================================
+   Deployment SubPhases (dbo.DeploymentSubPhases)
+   ============================================================ */
+export interface DeploymentSubPhase {
+  id: Id;
+  deploymentId: Id;
+  phaseCode: number;
+  subCode: string;        // e.g. "1.1", "2.1.4"
+  title: string;
+  required: boolean;
+  status: PhaseState;
+  completedDate?: string;
+}
+
+/* ============================================================
+   Checklist (Template + Answers)
+   ============================================================ */
+
+/** Input control types used by the template/view model */
+export type ChecklistInputType =
   | 'checkbox'
   | 'text'
   | 'textarea'
@@ -33,47 +101,136 @@ export type ChecklistItemType =
   | 'photo'
   | 'file';
 
+/** UI option shape for select/radio controls */
 export interface ChecklistOption {
   label: string;
   value: string | number;
 }
 
+/** UI model used by components/forms */
 export interface ChecklistItem {
-  id: Id;
+  id: Id;                       // = itemKey
   label: string;
-  description?: string;
+  type: ChecklistInputType;     // from template
   required?: boolean;
-  type: ChecklistItemType;
+  description?: string;
+  notes?: string | null;
   options?: ChecklistOption[];
   placeholder?: string;
   evidenceIds?: string[];
   value?: unknown;
+  passed?: boolean | null;
 }
 
+/** READ model returned by API (template + current answer merged) */
+export interface ChecklistItemVm {
+  itemKey: string;
+  label: string;
+  controlType: ChecklistInputType; // <- use for rendering inputs
+  optionsJson?: string | null;     // JSON string (ChecklistOption[])
+  placeholder?: string | null;
+  required: boolean;
+  value?: string | null;           // current saved value (stringified)
+  passed?: boolean | null;
+  notes?: string | null;
+}
+
+/** WRITE DTO sent to API when saving answers */
+export interface ChecklistItemDto {
+  itemKey: string;                // from ChecklistItem.id
+  label: string;
+  value?: string | null;
+  required: boolean;
+  passed?: boolean | null;
+  notes?: string | null;
+}
+
+/* ============================================================
+   Media (dbo.DeploymentMedia)
+   ============================================================ */
+export interface DeploymentMedia {
+  id: Id;
+  deploymentId: Id;
+  phaseCode?: number;
+  subCode?: string;
+  mediaType: string;      // e.g. "DeviceFront", "FlukeDTX"
+  kind: 'Photo' | 'File';
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  url: string;
+  uploadedBy?: string;
+  uploadedAt: string;
+  hash?: string;
+  metadataJson?: string;
+}
+
+/* ============================================================
+   Evidence (dbo.DeploymentEvidence)
+   ============================================================ */
+export interface DeploymentEvidence {
+  id: Id;
+  deploymentId: Id;
+  phaseCode: number;
+  subCode: string;
+  evidenceType: 'Photo' | 'File';
+  kind: string;
+  mediaId: Id;
+  createdDate: string;
+}
+
+/* ============================================================
+   Handoff Package (dbo.DeploymentHandoff)
+   ============================================================ */
+export interface DeploymentHandoff {
+  id: Id;
+  deploymentId: Id;
+  vendorSignedBy?: string;
+  vendorSignedAt?: string;
+  deSignedBy?: string;
+  deSignedAt?: string;
+  packageUrl?: string;
+  asBuiltMediaId?: string;
+  portTestMediaId?: string;
+  requiredPhotosJson?: string;
+  createdDate: string;
+  updatedDate?: string;
+}
+
+/** Convenience FE package shape (optional; maps to DeploymentHandoff) */
+export interface HandoffPackage {
+  id: Id;
+  deploymentId: Id;
+  requiredPhotos: string[];
+  asBuiltFileId?: string | null;
+  portTestFileId?: string | null;
+  signedVendorBy?: string | null;
+  signedVendorAt?: string | null;
+  signedDeBy?: string | null;
+  signedDeAt?: string | null;
+  packageUrl?: string | null;
+}
+
+/* ============================================================
+   Aggregated UI Models (Phases + Checklist)
+   ============================================================ */
 export interface PhaseRun {
   id: Id;
-  projectId: Id;
-  status: DeploymentStatus;
-  startedAt: string;
+  deploymentId: Id;
+  phaseCode: number;
+  name: string;
+  status: PhaseState;
+  startedAt?: string;
   completedAt?: string;
-  checklist?: ChecklistItem[];
-}
-
-export interface DeploymentAsset {
-  id: Id;
-  projectId: Id;
-  hostname: string;
-  serialNumber?: string;
-  rack?: string;
-  ru?: number;
-  slot?: string;
-  metadata?: Record<string, unknown>;
+  checklist?: ChecklistItemDto[]; // when saving, send DTO[]
 }
 
 export interface Photo {
   id: Id;
-  projectId: Id;
-  phase: DeploymentStatus;
+  deploymentId: Id;
+  phaseCode: number;
+  subCode?: string;
+  mediaType?: string;
   url: string;
   caption?: string;
   uploadedAt: string;
@@ -82,34 +239,26 @@ export interface Photo {
 
 export interface TestResult {
   id: Id;
-  projectId: Id;
-  phase: DeploymentStatus;
+  deploymentId: Id;
+  phaseCode: number;
+  subCode?: string;
+  mediaType?: string;
   name: string;
   fileUrl: string;
   uploadedAt: string;
   uploadedBy: Id;
 }
 
+/* ============================================================
+   Punch Items (placeholder for future expansion)
+   ============================================================ */
 export interface PunchItem {
   id: Id;
-  projectId: Id;
-  phase: DeploymentStatus;
+  deploymentId: Id;
+  phaseCode: number;
   description: string;
   owner: string;
   createdAt: string;
   resolvedAt?: string;
   resolutionNotes?: string;
-}
-
-export interface HandoffPackage {
-  id: Id;
-  projectId: Id;
-  signedVendorBy?: string;
-  signedVendorAt?: string;
-  signedDeBy?: string;
-  signedDeAt?: string;
-  packageUrl?: string;
-  requiredPhotos: string[];
-  asBuiltFileId?: string;
-  portTestFileId?: string;
 }
