@@ -135,7 +135,6 @@ export class DeploymentService {
   }
 
   saveProgress(id: string, payload: StartDeploymentProgressPayload): Observable<void> {
-    debugger;
     const { projectId: _ignore, receiving, submittedSiteSurvey, ...rest } = payload;
     const body: StartDeploymentProgressBody = {
       ...rest,

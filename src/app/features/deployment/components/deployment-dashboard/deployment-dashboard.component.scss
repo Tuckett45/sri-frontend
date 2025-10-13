@@ -305,6 +305,130 @@
   text-align: right;
 }
 
+@media (max-width: 1024px) {
+  .deployment-page {
+    padding: 16px;
+    margin: 12px;
+  }
+
+  .table-card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-card-header {
+    text-align: center;
+
+    h2 {
+      font-size: 1.35rem;
+    }
+
+    .table-subtitle {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  ::ng-deep .deployment-table .p-datatable-wrapper {
+    padding-bottom: 0.5rem;
+  }
+
+  ::ng-deep .deployment-table .p-datatable-table {
+    width: 100%;
+  }
+
+  ::ng-deep .deployment-table .p-datatable-thead {
+    display: none;
+  }
+
+  ::ng-deep .deployment-table .p-datatable-tbody > tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    background-color: #ffffff;
+  }
+
+  ::ng-deep .deployment-table .p-datatable-tbody > tr:last-child {
+    margin-bottom: 0.5rem;
+  }
+
+  ::ng-deep .deployment-table .p-datatable-tbody > tr > td {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    border: none;
+    padding: 0;
+  }
+
+  ::ng-deep .deployment-table .p-datatable-tbody > tr > td::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  .cell-meta,
+  .cell-name,
+  .progress-wrapper {
+    align-items: flex-start;
+  }
+
+  .progress-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+
+    .progress-label {
+      align-self: flex-end;
+    }
+  }
+
+  .actions-cell {
+    text-align: left;
+
+    .open-button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  ::ng-deep .deployment-table .p-paginator {
+    justify-content: center;
+    padding-top: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .deployment-page {
+    gap: 16px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .header-actions button {
+    flex: 1 1 auto;
+  }
+
+  .filters-container,
+  .table-card {
+    padding: 14px;
+  }
+
+  ::ng-deep .deployment-table .p-datatable-tbody > tr {
+    padding: 1rem;
+  }
+}
+
 
 
 

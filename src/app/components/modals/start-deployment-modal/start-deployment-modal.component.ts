@@ -97,10 +97,18 @@ interface ReceivingQuestionGroup {
 type VendorOption = { id: string; name: string };
 type DataCenterOption = { id: string; name: string };
 
-export type StartDeploymentDialogResult = {
+export interface StartDeploymentMetadata {
+  name: string;
+  dataCenter: string;
+  vendorId: string;
+  vendorName: string;
+}
+
+export interface StartDeploymentDialogResult {
   action: 'save';
   progress: StartDeploymentProgressPayload;
-};
+  metadata?: StartDeploymentMetadata | null;
+}
 
 export interface StartDeploymentDialogData {
   project?: Deployment | null;
@@ -211,88 +219,286 @@ export class StartDeploymentModalComponent implements OnInit {
                 { label: '2.1.3.2.1', text: 'All FRU should have the same airflow.' }
               ]}
             ]},
-            { label: '2.1.4', text: 'Confirm all optical modules (SFPs, QSFPs, GBICs) are included when receiving equipment.' },
-            { label: '2.1.5', text: 'Confirm any specialized cabling has been received.' },
-            { label: '2.1.6', text: 'Document any missing equipment including but not limited to optics, power supplies, rack mounting kits, drives, and peripheral cables.' },
-            { label: '2.1.7', text: 'Document and photograph any damaged equipment.' },
-            { label: '2.1.8', text: 'All equipment serial numbers (not model number or asset tag) are to be scanned into the Comcast provided document using a scanner that allows for direct barcode scanning from device to document.' },
-            { label: '2.1.9', text: 'Double-check all equipment serial numbers, device names, makes and models after the equipment is racked in a cabinet to ensure accuracy.' },
-            { label: '2.1.10', text: 'The scanned serial numbers should match the serial numbers in the work orders. Note for DEs: The RFP sheet or a version of it can be used to scan serial numbers and highlight fields such as SN, Cab, RU, etc.' }
+            { label: '2.1.4', text: 'Confirm all optical modules (SFPs, QSFPs, GBICs) are included when receiving equipment.', subitems: [
+              { label: '2.1.4.1', text: 'Confirm all optics received are assigned in the RFP.' },
+              { label: '2.1.4.2', text: 'Determine whether any optics are missing and reconcile with purchasing.' }
+            ]},
+            { label: '2.1.5', text: 'Confirm any specialized cabling has been received.', subitems: [
+              { label: '2.1.5.1', text: 'Direct Attach Copper (DAC).' },
+              { label: '2.1.5.2', text: 'SAS cabling.' },
+              { label: '2.1.5.3', text: 'VCP cabling.' }
+            ]},
+            { label: '2.1.6', text: 'Document any missing equipment including optics, power supplies, rack mounting kits, drives, and peripheral cables.', subitems: [
+              { label: '2.1.6.1', text: 'For vendor projects, report shortages to the DE via email immediately.' },
+              { label: '2.1.6.2', text: 'For DC Ops projects, report shortages to the DE and update the ticket.' }
+            ]},
+            { label: '2.1.7', text: 'Document and photograph any damaged equipment.', subitems: [
+              { label: '2.1.7.1', text: 'For vendor projects, report all damages to the DE via email immediately.' },
+              { label: '2.1.7.2', text: 'For DC Ops projects, report damages to the DE and update the ticket.' }
+            ]},
+            { label: '2.1.8', text: 'Scan all equipment serial numbers (not model numbers or asset tags) into the Comcast provided document using barcode scanners to avoid manual entry.', subitems: [
+              { label: '2.1.8.1', text: 'Ensure serial and hostname associations remain accurate throughout the project.' }
+            ]},
+            { label: '2.1.9', text: 'Double-check all equipment serial numbers, device names, makes, and models after racking to ensure accuracy.' },
+            { label: '2.1.10', text: 'Validate scanned serial numbers match work orders; the RFP sheet may be used to guide scanning and highlighting required fields.' }
           ]
         },
         {
           heading: '2.2 Move the gear to the Data Center',
           items: [
             { label: '2.2.1', text: 'Assemble small servers and switches before moving into the Data Center.' },
-            { label: '2.2.2', text: 'Disassemble large devices to facilitate easier lifting and racking.' },
-            { label: '2.2.3', text: 'Organize all parts that are associated with each other.' }
+            { label: '2.2.1.1', text: 'Install NICs, drives, and cards prior to transport for small systems.' },
+            { label: '2.2.2', text: 'Disassemble large devices to facilitate easier lifting and racking.', subitems: [
+              { label: '2.2.2.1', text: 'Reassemble the unit once it is racked.' }
+            ]},
+            { label: '2.2.3', text: 'Organize all associated parts together.', subitems: [
+              { label: '2.2.3.1', text: 'Keep equipment for each project together and separate from other projects while moving into the cage.' }
+            ]}
           ]
         }
       ]
     },
     {
       id: 'installation',
-      title: 'Installation',
-      summary: 'Mount, cable, and power all hardware to specification.',
+      title: 'Installation Standards',
+      summary: 'Mount, cable, and power all hardware in accordance with Comcast standards.',
       type: 'installation',
       narrative: [
-        { heading: '3.1 Rack & Stack', items: [
-          { label: '3.1.1', text: 'Install hardware into racks following elevation diagrams.', subitems: [
-            { label: '3.1.1.1', text: 'Verify rails and mounting hardware are torqued appropriately.' },
-            { label: '3.1.1.2', text: 'Ensure weight distribution aligns with rack standards.' }
-          ]},
-          { label: '3.1.2', text: 'Connect power feeds per design drawing.' }
-        ]},
-        { heading: '3.2 Power Validation', items: [
-          { label: '3.2.1', text: 'Verify redundant power paths per rack design.' },
-          { label: '3.2.2', text: 'Document breaker assignments and load levels.' }
-        ]}
+        {
+          heading: '3.0 Installation Standards',
+          items: [
+            { label: '3.0', text: 'Device installation at any Comcast Data Center should adhere to the Comcast installation standards outlined in the run book.' },
+            { label: '3.1', text: 'Install all equipment per manufacturer requirements unless otherwise noted in the Comcast provided design document.' },
+            { label: '3.2', text: 'If rails are not provided, solid ears may be used when appropriate.' },
+            { label: '3.3', text: 'Mount equipment with the model-specific manufacturer supplied snap-in rails and/or rack mounting screws required by the project.' },
+            { label: '3.4', text: 'Apply device name labels to the front and rear of each chassis using the naming provided in the Comcast design document.' },
+            { label: '3.5', text: 'Install equipment in the correct cabinet, rack position, and RU per the design. Any changes must be approved by the Deployment Engineer and reflected in as-built documentation for DCIM accuracy.' },
+          ],
+        },
+        {
+          heading: '3.6 Airflow & Power',
+          items: [
+            { label: '3.6', text: 'Install all equipment with the correct airflow orientation.' },
+            { label: '3.7', text: 'Seal unused rack positions with blanking panels to prevent hot and cold air mixing.' },
+            { label: '3.8', text: 'Connect power supplies only to assigned power strips and outlets—no exceptions.' },
+            { label: '3.9', text: 'Ensure every device is powered from the rack in which it is installed.' },
+            { label: '3.10', text: 'Remove loose equipment and combustible material from racks and surrounding datacenter space; dispose of extras per local recycling laws.' },
+          ],
+        },
+        {
+          heading: '3.11 Switch Placement & Validation',
+          items: [
+            { label: '3.11', text: 'Maintain sufficient adjacent RU for future upgrades. Cabinet switch counts should leave space for server growth; coordinate placement with the Deployment Engineer.' },
+            { label: '3.12', text: 'Test and certify all installed cabling after installation using a Fluke DTX 1800 (or equivalent). Perform bi-directional tests meeting TIA/EIA-568-B requirements and record outlet identifiers with completion dates.' },
+          ],
+        },
+        {
+          heading: '3.13 Rack & Stack Execution',
+          items: [
+            { label: '3.13.1', text: 'Install hardware into racks following elevation diagrams and ensure rails and mounting hardware are properly torqued with balanced weight distribution.' },
+            { label: '3.13.2', text: 'Connect power feeds according to the Comcast design drawing and document breaker assignments and load levels.' },
+          ],
+        },
       ]
     },
     {
       id: 'cabling',
       title: 'Cabling',
-      summary: 'Lay in copper and fiber, manage pathways, and test connectivity.',
+      summary: 'Install copper, fiber, and power cabling per Comcast Network Cabling Standards.',
       type: 'cabling',
       narrative: [
-        { heading: '4.1 Structured Cabling', items: [
-          { label: '4.1.1', text: 'Route cables per pathway standards.' },
-          { label: '4.1.2', text: 'Bundle and secure cables with velcro wraps.' },
-          { label: '4.1.3', text: 'Label terminations per schema.' }
-        ]},
-        { heading: '4.2 Testing', items: [
-          { label: '4.2.1', text: 'Run continuity tests on all copper drops.' },
-          { label: '4.2.2', text: 'Document fiber light levels and certify results.' }
-        ]}
+        {
+          heading: '4.0 Cabling Standards Overview',
+          items: [
+            { label: '4.0', text: 'Follow the Comcast Network Cabling Standard (02-17-2021 Version 2.3 – Data Center Addendum) for all cabling activities.' },
+          ],
+        },
+        {
+          heading: '4.1 Power Cord Installation',
+          items: [
+            { label: '4.1', text: 'Place RPDUs per the Data Center Cabinet Power Addendum and route power cords horizontally to designated power strips.' },
+            { label: '4.1.1', text: 'Apply the data center specific power cord color scheme (see 4.4.2).' },
+            { label: '4.1.2', text: 'Secure power cables to each device using manufacturer straps or Velcro.' },
+            { label: '4.1.3', text: 'Route power cables away from Cat6 and fiber cabling when possible and along RPDU mounting plates.' },
+            { label: '4.1.4', text: 'Maintain a minimum 2" separation between data and power cables when running parallel.' },
+            { label: '4.1.5', text: 'Cross data and power cables only at 90° angles while maintaining required separation.' },
+            { label: '4.1.6', text: 'Use only NEMA 5-15R wall outlets for laptops or crash carts; never use RPDU outlets for unracked equipment.' },
+            { label: '4.1.6.1', text: 'C14 to NEMA 5-15R adaptors are prohibited in datacenter spaces.' },
+          ],
+        },
+        {
+          heading: '4.2 Copper Cable Installation',
+          items: [
+            { label: '4.2', text: 'Install twisted pair copper cabling to maintain signal integrity; bundle loosely with natural lay to minimize crosstalk.' },
+            { label: '4.2.1', text: 'Follow the Comcast standard color scheme for copper cabling.' },
+            { label: '4.2.2', text: 'Order copper patch cords in 1-foot increments starting at 1-foot lengths to avoid excessive slack.' },
+            { label: '4.2.3', text: 'Route cabling neatly within cable management when available and separate from fiber and power.' },
+            { label: '4.2.4', text: 'Avoid parallel runs of Cat6 and power within 2 inches; if unavoidable, isolate or cross at 90°.' },
+            { label: '4.2.5', text: 'Ensure cabling does not impede access to other devices; follow cabinet sides and cable management pathways.' },
+            { label: '4.2.6', text: 'Split copper patch cables from the middle of the device to left and right cable managers in network racks.' },
+            { label: '4.2.7', text: 'Use only predetermined cabinet openings for cable entry and exit.' },
+            { label: '4.2.8', text: 'Never route cables inter-cabinet through open cabinet sides.' },
+            { label: '4.2.9', text: 'Secure cables with ½" Velcro; tie wraps, zip ties, and waxed lacing twine are prohibited.' },
+            { label: '4.2.10', text: 'Respect manufacturer bend radius limitations to avoid kinks or damage.' },
+            { label: '4.2.11', text: 'Protect cables from sharp edges using fiber paper and lacing cord; tape is prohibited.' },
+            { label: '4.2.12', text: 'Test and certify all Cat6 cabling end-to-end with approved equipment.' },
+          ],
+        },
+        {
+          heading: '4.3 Fiber Optic Cable Installation',
+          items: [
+            { label: '4.3', text: 'Install fiber cabling to maintain signal quality; bundle loosely and follow cabinet schemes with copper and power separated.' },
+            { label: '4.3.1', text: 'Use Comcast standard color schemes for fiber (AQUA for OM3/OM4, YELLOW for OS2).' },
+            { label: '4.3.2', text: 'Order fiber patch cords in 1-meter increments starting at 1 meter; limit service loops to 0.5 meter unless rails require more.' },
+            { label: '4.3.3', text: 'Ensure fiber cabling does not impede device access and follows cabinet edges or management.' },
+            { label: '4.3.4', text: 'Split fiber cables from the middle of the device to left/right cable managers.' },
+            { label: '4.3.5', text: 'Secure fiber with ½" Velcro; protect connectors, keeping end caps on until installation completes and clean before mating.' },
+            { label: '4.3.6', text: 'Never exceed manufacturer bend radius and avoid stepping on fiber cabling.' },
+            { label: '4.3.7', text: 'Route to front ports by splitting media evenly to both sides of the cabinet; ensure tidy dress for vertical line cards.' },
+            { label: '4.3.8', text: 'Clean and inspect all optical connectors, patch panels, and equipment ports prior to final connections.' },
+          ],
+        },
+        {
+          heading: '4.4 Patch & Power Cord Standards',
+          items: [
+            { label: '4.4', text: 'Standardize patch and power cord colors to reduce inventory and maintain consistency across data centers.' },
+            { label: '4.4.1', text: 'Use Category 6, 28AWG unshielded twisted pair copper cords with standardized colors for each facility type.', subitems: [
+              { label: '4.4.1.1', text: 'NDC: Blue (In-band), Red (Out-of-band), Yellow (Crossover), Green (Rollover).' },
+              { label: '4.4.1.2', text: 'RDC: Blue (In-band), Red (Out-of-band), Yellow (Crossover), Green (Rollover).' },
+              { label: '4.4.1.3', text: 'Fiber optics: AQUA for OM3/OM4 multimode, YELLOW for OS2 single-mode.' },
+            ]},
+            { label: '4.4.2', text: 'Apply data center specific power cable markings and ½" black Velcro for cord retention.', subitems: [
+              { label: '4.4.2.1', text: 'NDC: PSU1 black cable with yellow tape; PSU2 black cable with blue tape.' },
+              { label: '4.4.2.2', text: 'RDC: PSU1 black cable with red tape; PSU2 black cable with blue tape.' },
+              { label: '4.4.2.3', text: 'Other facilities (CNF, Dry Creek, Stone Mountain, Titan) follow run book power feed color guidance.' },
+            ]},
+            { label: '4.4.3', text: 'Note: non-plenum cable is standard unless local code requires plenum-rated cable.' },
+          ],
+        },
       ]
     },
     {
       id: 'labeling',
-      title: 'Labeling',
-      summary: 'Generate and apply labels to meet operations standards.',
+      title: 'Labeling Standards',
+      summary: 'Print, apply, and verify all labels per Comcast labeling standards.',
       type: 'labeling',
       narrative: [
-        { heading: '5.1 Label Application', items: [
-          { label: '5.1.1', text: 'Apply rack, device, and cable labels with approved materials.' },
-          { label: '5.1.2', text: 'Capture photos of labeling for documentation.' }
-        ]}
+        {
+          heading: '5.0 Labeling Overview',
+          items: [
+            { label: '5.0', text: 'Apply standard labeling throughout Comcast facilities to simplify troubleshooting and inventory.' },
+          ],
+        },
+        {
+          heading: '5.1 Printing of All Labels',
+          items: [
+            { label: '5.1.1', text: 'Print labels using Comcast-approved materials (Panduit Vinyl labels on a Panduit TPD43ME or equivalent).' },
+            { label: '5.1.2', text: 'Provide a label printer onsite for adjustments or replacements as needed.' },
+            { label: '5.1.3', text: 'Maintain replacement ribbon inventory (Panduit P/N RMEH4BL).' },
+            { label: '5.1.4', text: 'Ensure technicians responsible for label printing have Panduit Easy-Mark software.' },
+          ],
+        },
+        {
+          heading: '5.2 Trunk Cable Labels',
+          items: [
+            { label: '5.2.1', text: 'Use Panduit S200 line thermal transfer self-laminating labels with a minimum 0.75" printable area.' },
+            { label: '5.2.2', text: 'Wrap labels 2.25" from the connector end; do not flag.' },
+            { label: '5.2.3', text: 'Include near-end and far-end patch panel names and ports matching DCIM documentation.' },
+          ],
+        },
+        {
+          heading: '5.3 Device Name Labels',
+          items: [
+            { label: '5.3.1', text: 'Label servers and network gear front and rear with hostnames using Brother P-Touch (TZe-231) or Panduit (C300X038YJT) media.' },
+            { label: '5.3.2', text: 'Use Consolas font with sizing to accommodate QR codes and two lines of text.' },
+            { label: '5.3.3', text: 'Include QR code, hostname, and serial number on device labels.' },
+            { label: '5.3.4', text: 'If rear space is limited, affix labels to rails and include removable front covers as needed.' },
+          ],
+        },
+        {
+          heading: '5.4 Copper & Fiber Patch Cord Labels',
+          items: [
+            { label: '5.4.1', text: 'Use Panduit S200X225VATY white labels for copper and fiber patch cords.' },
+            { label: '5.4.2', text: 'Print with Arial Narrow font size 8–10, maximizing readability without truncation.' },
+            { label: '5.4.3', text: 'List all cable hops on the label per run book examples.' },
+            { label: '5.4.4', text: 'Flag labels rather than wrapping them.' },
+            { label: '5.4.5', text: 'Orient labels toward the cabinet door opening.' },
+            { label: '5.4.6', text: 'Place labels 2–3" from the end of the cable (6–8" for patch panel terminations).' },
+            { label: '5.4.7', text: 'Follow the labeling syntax Rack.RU:slot/port - DestinationRack.RU:slot/port.' },
+          ],
+        },
+        {
+          heading: '5.5 Power Cord Labels',
+          items: [
+            { label: '5.5.1', text: 'Use Panduit S200X225VATY labels for power cords with Consolas font size 12.' },
+            { label: '5.5.2', text: 'Apply labels upright facing outside the cabinet and include RPDU receptacle mapping.' },
+            { label: '5.5.3', text: 'Apply color tape at each end of the power cable immediately after the boot per facility standards.' },
+            { label: '5.5.4', text: 'Velcro each power cable to the associated power supply.' },
+            { label: '5.5.5', text: 'Document RPDU orientation (e.g., NDC: Power Strip 1A right side, 1B left side when facing rear).' },
+          ],
+        },
       ]
     },
     {
       id: 'handoff',
       title: 'Handoff',
-      summary: 'Compile validation evidence and finalize stakeholder approvals.',
+      summary: 'Complete final validation, documentation, and sign-off for deployment handoff.',
       type: 'handoff',
       narrative: [
-        { heading: '6.1 Operational Readiness', items: [
-          { label: '6.1.1', text: 'Provide deployment summary packet to stakeholders.' },
-          { label: '6.1.2', text: 'Confirm monitoring systems report expected status.' },
-          { label: '6.1.3', text: 'Schedule handoff review with DE and Ops.' }
-        ]},
-        { heading: '6.4 Punch List', items: [
-          { label: '6.4.8', text: 'Generate punch list items for issues.' },
-          { label: '6.4.9', text: 'Resolve punch list with photographic evidence.' }
-        ]}
+        {
+          heading: '6.0 Deployment Handoff Overview',
+          items: [
+            { label: '6.0', text: 'Use the Hardware Installation Handoff Checklist to verify deployments are complete and ready for Comcast acceptance.' },
+          ],
+        },
+        {
+          heading: '6.1 Definition & Daily Review',
+          items: [
+            { label: '6.1', text: 'Reserve the final installation day for review and verification by the Comcast team.' },
+            { label: '6.1.1', text: 'Review the project daily with the team lead or DE to monitor cable routing, major issues, and concerns.' },
+          ],
+        },
+        {
+          heading: '6.2 Vendor Responsibilities',
+          items: [
+            { label: '6.2.1', text: 'Configure management IPs and credentials on deployed devices.' },
+            { label: '6.2.2', text: 'Rework any items identified as incomplete or incorrect.' },
+            { label: '6.2.3', text: 'Provide pictures of completed work, including detailed evidence for any issues identified (hostname labels, serial numbers, cable labels, etc.).' },
+            { label: '6.2.4', text: 'Capture cabinet photos per Comcast camera setup guidance (front/rear top, middle, bottom) at highest resolution and upload to project OneDrive folders.' },
+            { label: '6.2.5', text: 'Provide final as-built documentation.' },
+            { label: '6.2.6', text: 'Deliver port-to-port test results with highlighted discrepancies and remediation timeline prior to Comcast connectivity validation.' },
+          ],
+        },
+        {
+          heading: '6.3 Comcast Engineer Responsibilities',
+          items: [
+            { label: '6.3.1', text: 'Perform final engineer validation, confirming in-band and out-of-band connections.' },
+            { label: '6.3.1.2', text: 'Inspect work with the vendor to complete the site Handoff Checklist.' },
+            { label: '6.3.2', text: 'Deployment Engineer validates final project state and releases vendor from site.' },
+            { label: '6.3.2.1', text: 'Confirm all connections are up, operational, and aligned with the design.' },
+            { label: '6.3.3', text: 'Obtain signatures from both Comcast and vendor representatives on the handoff sheet.' },
+          ],
+        },
+        {
+          heading: '6.4 Final Engineer Validation Checklist',
+          items: [
+            { label: '6.4.1', text: 'Verify physical connections against the design.' },
+            { label: '6.4.2', text: 'Check all labeling for accuracy and completeness.' },
+            { label: '6.4.3', text: 'Confirm all fiber connections and ports are cleaned and scoped.' },
+            { label: '6.4.4', text: 'Inspect cabling and cords for jacket condition, bend radius, routing, and dressing.' },
+            { label: '6.4.5', text: 'Test end-to-end device connectivity and record results.' },
+            { label: '6.4.6', text: 'Verify terminal server and web access to devices when applicable.' },
+            { label: '6.4.7', text: 'Generate punch-list items for outstanding deployment issues.' },
+            { label: '6.4.8', text: 'Resolve punch-list entries with photo evidence for each remediation.' },
+            { label: '6.4.9', text: 'Confirm cleanliness of workplace locations and surrounding areas.' },
+          ],
+        },
+        {
+          heading: '6.5 Handoff Documentation',
+          items: [
+            { label: '6.5', text: 'Complete the Hardware Installation Handoff Checklist, capturing site information, key dates, and participant sign-off (vendor and Comcast).' },
+          ],
+        },
       ]
     }
   ];
@@ -437,7 +643,8 @@ export class StartDeploymentModalComponent implements OnInit {
       return;
     }
     const progress = this._buildProgressPayload();
-    this.dialogRef.close({ action: 'save', progress });
+    const metadata = this.project ? null : this.buildDeploymentMetadata();
+    this.dialogRef.close({ action: 'save', progress, metadata });
   }
 
   protected onStatusChange(question: SiteSurveyQuestion, value: 'yes' | 'no'): void {
@@ -502,7 +709,8 @@ export class StartDeploymentModalComponent implements OnInit {
 
     const submission = this.buildSiteSurveySubmission();
     const progress = this._buildProgressPayload(submission);
-    this.dialogRef.close({ action: 'save', progress });
+    const metadata = this.project ? null : this.buildDeploymentMetadata();
+    this.dialogRef.close({ action: 'save', progress, metadata });
   }
 
   protected close(result?: unknown): void {
@@ -521,6 +729,17 @@ export class StartDeploymentModalComponent implements OnInit {
       submittedSiteSurvey,
     };
     return payload;
+  }
+
+  private buildDeploymentMetadata(): StartDeploymentMetadata {
+    const raw = this.metaForm.getRawValue();
+    const vendor = this.vendorOptions().find(option => option.id === raw.vendorId);
+    return {
+      name: raw.name.trim(),
+      dataCenter: raw.dataCenter.trim(),
+      vendorId: raw.vendorId,
+      vendorName: vendor?.name ?? raw.vendorId,
+    };
   }
 
   private collectSiteSurveyProgress(): SiteSurveyProgress {

@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { firstValueFrom } from 'rxjs';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -223,7 +223,7 @@ export class DeploymentDashboardComponent implements OnInit {
     dialogRef
       .afterClosed()
       .pipe()
-      .subscribe(result => this.handleWizardResult(null, result ?? undefined));
+      .subscribe(result => { void this.handleNewDeploymentResult(result ?? undefined); });
   }
 
   protected openDeployment(project: Deployment): void {
@@ -245,43 +245,140 @@ export class DeploymentDashboardComponent implements OnInit {
     dialogRef
       .afterClosed()
       .pipe()
-      .subscribe(result => this.handleWizardResult(project, result ?? undefined));
+      .subscribe(result => { void this.handleWizardResult(project, result ?? undefined); });
   }
 
-  private handleWizardResult(
+  private async handleNewDeploymentResult(
+    result?: StartDeploymentDialogResult | undefined
+  ): Promise<void> {
+    if (!result || result.action !== 'save') return;
+    const metadata = result.metadata ?? null;
+    const provisionalProject: Deployment | null = metadata
+      ? {
+          id: result.progress.projectId ?? '',
+          name: metadata.name,
+          dataCenter: metadata.dataCenter,
+          vendorName: metadata.vendorName,
+          status: DeploymentStatus.Planned,
+        }
+      : null;
+
+    await this.handleWizardResult(provisionalProject, result);
+  }
+
+  private async handleWizardResult(
     project: Deployment | null,
     result?: StartDeploymentDialogResult | undefined
-  ): void {
+  ): Promise<void> {
     if (!result || result.action !== 'save') return;
 
-    const deploymentId = project?.id ?? result.progress.projectId ?? null;
-    const normalized = this.normalizeProgressPayload(result.progress, deploymentId);
-    const cacheKey = deploymentId ?? '__new';
-    this.draftProgress.update(curr => ({ ...curr, [cacheKey]: normalized }));
+    const metadata = result.metadata ?? null;
+    const mergedProject: Deployment | null = project
+      ? {
+          ...project,
+          ...(metadata
+            ? {
+                name: metadata.name,
+                dataCenter: metadata.dataCenter,
+                vendorName: metadata.vendorName,
+              }
+            : {}),
+        }
+      : metadata
+      ? {
+          id: result.progress.projectId ?? '',
+          name: metadata.name,
+          dataCenter: metadata.dataCenter,
+          vendorName: metadata.vendorName,
+          status: DeploymentStatus.Planned,
+        }
+      : null;
 
-    if (!deploymentId) {
-      this.toastr.info('Deployment wizard progress saved as a draft. Associate a project to sync it.');
+    const candidateId = mergedProject?.id && mergedProject.id.length ? mergedProject.id : null;
+    const incomingId = candidateId ?? result.progress.projectId ?? null;
+    const normalized = this.normalizeProgressPayload(result.progress, incomingId);
+    const projectLabel = mergedProject?.name ?? 'deployment';
+
+    if (incomingId) {
+      normalized.projectId = incomingId;
+      this.cacheProgress(incomingId, normalized);
+      await this.persistProgress(incomingId, normalized, projectLabel);
       return;
     }
 
-    const projectLabel = project?.name ?? 'deployment';
-    const isWizardComplete = normalized.activePhaseIndex >= this.wizardPhaseCount - 1;
+    if (!metadata) {
+      this.cacheProgress('__new', normalized);
+      this.toastr.error('Deployment details are required before saving progress.');
+      return;
+    }
 
-    this.deploymentService
-      .saveProgress(deploymentId, normalized)
-      .pipe()
-      .subscribe({
-        next: () => {
-          const message = isWizardComplete
-            ? `${projectLabel} wizard completed. Deployment is ready for the next phase.`
-            : `Saved progress for ${projectLabel}.`;
-          this.toastr.success(message);
-        },
-        error: (err) => {
-          console.error('Failed to save progress', err);
-          this.toastr.error('Failed to save deployment progress. Please try again.');
-        },
+    try {
+      const createPayload: Partial<Deployment> = {
+        name: metadata.name,
+        dataCenter: metadata.dataCenter,
+        vendorName: metadata.vendorName,
+        status: mergedProject?.status ?? DeploymentStatus.Planned,
+      };
+      const created = await this.deploymentService.create(createPayload);
+      const newId = created?.id;
+      if (!newId) {
+        throw new Error('Deployment creation did not return an id.');
+      }
+
+      const newProject: Deployment = {
+        ...(mergedProject ?? {
+          name: metadata.name,
+          dataCenter: metadata.dataCenter,
+          vendorName: metadata.vendorName,
+          status: DeploymentStatus.Planned,
+        }),
+        id: newId,
+      };
+
+      normalized.projectId = newId;
+      this.cacheProgress(newId, normalized);
+      this.draftProgress.update(curr => {
+        if (!('__new' in curr)) {
+          return curr;
+        }
+        const { __new, ...rest } = curr;
+        return rest;
       });
+
+      this.deployments.update(list => [...list, newProject]);
+
+      await this.persistProgress(newId, normalized, newProject.name);
+    } catch (error) {
+      console.error('Failed to create deployment', error);
+      this.cacheProgress('__new', normalized);
+      this.toastr.error('Unable to create deployment. Progress saved locally.');
+    }
+  }
+
+  private cacheProgress(cacheKey: string, progress: StartDeploymentProgressPayload): void {
+    this.draftProgress.update(curr => ({ ...curr, [cacheKey]: progress }));
+  }
+
+  private async persistProgress(
+    targetId: string,
+    normalized: StartDeploymentProgressPayload,
+    projectLabel: string
+  ): Promise<void> {
+    const isWizardComplete = normalized.activePhaseIndex >= this.wizardPhaseCount - 1;
+    try {
+      await firstValueFrom(
+        this.deploymentService
+          .saveProgress(targetId, normalized)
+          .pipe()
+      );
+      const message = isWizardComplete
+        ? `${projectLabel} wizard completed. Deployment is ready for the next phase.`
+        : `Saved progress for ${projectLabel}.`;
+      this.toastr.success(message);
+    } catch (err) {
+      console.error('Failed to save progress', err);
+      this.toastr.error('Failed to save deployment progress. Please try again.');
+    }
   }
 
 
@@ -316,5 +413,5 @@ export class DeploymentDashboardComponent implements OnInit {
         : null, // <- prefer null over undefined
     };
   }
-
 }
+
