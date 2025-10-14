@@ -104,8 +104,8 @@
 
               <div class="phase-nav-buttons">
                 <button
-                  mat-stroked-button
-                  color="primary"
+                  mat-raised-button
+                  style="background-color: #144f80; color: white;"
                   type="button"
                   (click)="goToPreviousStep()"
                   [disabled]="activePhaseIndex() === 0 && activeTaskTabIndex() === 0"
@@ -114,8 +114,8 @@
                   Previous
                 </button>
                 <button
-                  mat-stroked-button
-                  color="primary"
+                  mat-raised-button
+                  style="background-color: #144f80; color: white;"
                   type="button"
                   (click)="goToNextStep()"
                   [disabled]="isAtFinalStep()"

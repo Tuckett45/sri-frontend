@@ -134,6 +134,10 @@ export class DeploymentService {
       `${this.base}/${id}/phases/${phaseCode}/${encodeURIComponent(subCode)}/evidence/${mediaId}`, {}, { headers: this.httpOptions.headers }));
   }
 
+  getProgress(deploymentId: string): Observable<StartDeploymentProgressPayload> {
+    return this.http.get<StartDeploymentProgressPayload>(`${this.base}/${deploymentId}/progress`);
+  }
+
   saveProgress(id: string, payload: StartDeploymentProgressPayload): Observable<void> {
     const { projectId: _ignore, receiving, submittedSiteSurvey, ...rest } = payload;
     const body: StartDeploymentProgressBody = {

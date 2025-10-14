@@ -10,6 +10,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { ToastrService } from 'ngx-toastr';
 import { Deployment } from 'src/app/features/deployment/models/deployment.models';
 import {
   SiteSurveyProgress,
@@ -71,6 +72,7 @@ interface ReceivingQuestionFollowUp {
   id: string;
   label: string;
   prompt: string;
+  isRequiredOn?: 'yes' | 'no' | 'both' | null;
 }
 
 interface ReceivingQuestion {
@@ -83,6 +85,7 @@ interface ReceivingQuestion {
   requireText?: boolean;
   requireNotesForStatus?: 'yes' | 'no' | 'both' | null;
   followUpsRequiredFor?: 'yes' | 'no' | 'both' | null;
+  followUpsRequiredWhen?: 'yes' | 'no' | 'both' | null;
   radioLabels?: { yes: string; no: string };
   followUps?: ReceivingQuestionFollowUp[];
   isChild?: boolean;
@@ -141,6 +144,7 @@ export class StartDeploymentModalComponent implements OnInit {
   private readonly dialogRef =
     inject(MatDialogRef<StartDeploymentModalComponent, StartDeploymentDialogResult | undefined>);
   private readonly data = inject<StartDeploymentDialogData | null>(MAT_DIALOG_DATA, { optional: true }) ?? null;
+  private readonly toastr = inject(ToastrService);
 
   protected readonly project = this.data?.project ?? null;
   private existingProgress: StartDeploymentProgressPayload | null = null;
@@ -566,6 +570,7 @@ export class StartDeploymentModalComponent implements OnInit {
   }
 
   protected currentPhaseType(): PhaseType {
+    debugger;
     const current = this.deploymentPhases[this.activePhaseIndex()];
     return current?.type ?? 'siteSurvey';
   }
@@ -579,13 +584,21 @@ export class StartDeploymentModalComponent implements OnInit {
   }
 
   protected selectPhase(index: number): void {
+    if (index === this.activePhaseIndex()) return;
+    if (index > this.activePhaseIndex() && !this.validateCurrentStepStrict()) {
+      return;
+    }
     this.advanceToPhase(index, 0);
   }
 
   protected goToNextStep(): void {
+    if (!this.validateCurrentStepStrict()) {
+      return;
+    }
     if (this.isAtFinalStep()) return;
 
     const groups = this.getPhaseTaskGroups(this.currentPhaseType());
+    debugger;
     if (groups.length && this.activeTaskTabIndex() < groups.length - 1) {
       this.activeTaskTabIndex.update(i => i + 1);
       return;
@@ -640,6 +653,9 @@ export class StartDeploymentModalComponent implements OnInit {
     // If starting a brand-new deployment, require metadata first
     if (!this.project && this.metaForm.invalid) {
       this.metaForm.markAllAsTouched();
+      return;
+    }
+    if (!this.validateCurrentStepStrict()) {
       return;
     }
     const progress = this._buildProgressPayload();
@@ -702,7 +718,13 @@ export class StartDeploymentModalComponent implements OnInit {
 
   protected onSiteSurveySubmit(): void {
     this.siteSurveySubmitAttempted.set(true);
-    if (this.siteSurveyForm.invalid) {
+    const errors = this.collectSiteSurveyErrors();
+    if (errors.length) {
+      this.siteSurveyForm.markAllAsTouched();
+      this.showValidationErrors(errors);
+      return;
+    }
+    if (this.siteSurveyForm.invalid) { // fallback guard
       this.siteSurveyForm.markAllAsTouched();
       return;
     }
@@ -831,6 +853,157 @@ export class StartDeploymentModalComponent implements OnInit {
       progress[phase.type] = form ? (form.getRawValue() as Record<string, boolean>) : {};
     }
     return progress;
+  }
+
+  private validateCurrentStepStrict(): boolean {
+    const phase = this.currentPhaseType();
+    if (phase === 'siteSurvey') {
+      const errors = this.collectSiteSurveyErrors();
+      if (errors.length) {
+        this.siteSurveyForm.markAllAsTouched();
+        this.showValidationErrors(errors);
+        return false;
+      }
+    }
+    if (phase === 'receiving') {
+      const errors = this.collectReceivingErrors();
+      if (errors.length) {
+        this.receivingForm.markAllAsTouched();
+        this.showValidationErrors(errors);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private collectSiteSurveyErrors(): string[] {
+    const errors: string[] = [];
+    this.siteSurveyQuestions.forEach(question => {
+      const group = this.questionGroup(question.id);
+      const status = group.get('status')?.value as 'yes' | 'no' | null;
+      if (!status) {
+        errors.push(`${question.displayId ?? question.id}: select Yes or No.`);
+      }
+      const notesCtrl = group.get('notes');
+      if (notesCtrl) {
+        const notesRequired = status === 'no' && question.requireNotesWhenNo;
+        if (notesRequired && !(notesCtrl.value ?? '').trim()) {
+          errors.push(`${question.displayId ?? question.id}: add follow-up details.`);
+        }
+      }
+    });
+    return errors;
+  }
+
+  private collectReceivingErrors(): string[] {
+    const errors: string[] = [];
+    this.receivingQuestionGroups.forEach(group => {
+      group.questions.forEach(question => {
+        const form = this.receivingForm.get(question.id) as FormGroup | null;
+        if (!form) return;
+
+        if (question.controlType === 'radio') {
+          const status = form.get('status')?.value as 'yes' | 'no' | null;
+          if (!status) {
+            errors.push(`${question.label}: select Yes or No.`);
+            return;
+          }
+          const notesCtrl = form.get('notes');
+          if (notesCtrl) {
+            const notesRequired = this.isReceivingNotesRequired(question, status);
+            if (notesRequired && !(notesCtrl.value ?? '').trim()) {
+              errors.push(`${question.label}: provide notes for a "${status.toUpperCase()}" response.`);
+            }
+          }
+          const followUpsGroup = form.get('followUps') as FormGroup | null;
+          if (followUpsGroup) {
+            (question.followUps ?? []).forEach(followUp => {
+              const requirement = this.followUpRequirement(followUp, question);
+              const needsResponse =
+                requirement === 'both'
+                  ? status === 'yes' || status === 'no'
+                  : requirement
+                  ? status === requirement
+                  : false;
+              if (needsResponse) {
+                const value = (followUpsGroup.get(followUp.id)?.value ?? '').trim();
+                if (!value) {
+                  errors.push(`${followUp.label}: enter follow-up details.`);
+                }
+              }
+            });
+          }
+          return;
+        }
+
+        if (question.controlType === 'checkbox') {
+          const notesCtrl = form.get('notes');
+          if (notesCtrl) {
+            const checked = !!form.get('checked')?.value;
+            const notesRequired = this.isCheckboxNotesRequired(question, checked);
+            if (notesRequired && !(notesCtrl.value ?? '').trim()) {
+              errors.push(`${question.label}: add notes when this is ${checked ? 'checked' : 'unchecked'}.`);
+            }
+          }
+          return;
+        }
+
+        if (question.controlType === 'text') {
+          const textValue = (form.get('text')?.value ?? '').trim();
+          if (question.requireText && !textValue) {
+            errors.push(`${question.label}: provide the requested details.`);
+          }
+        }
+      });
+    });
+    return errors;
+  }
+
+  private isReceivingNotesRequired(question: ReceivingQuestion, status: 'yes' | 'no' | null): boolean {
+    const requirement = question.requireNotesForStatus ?? (question.requireNotesWhenNo ? 'no' : null);
+    return requirement === 'both'
+      ? status === 'yes' || status === 'no'
+      : requirement
+      ? status === requirement
+      : false;
+  }
+
+  private isCheckboxNotesRequired(question: ReceivingQuestion, checked: boolean): boolean {
+    const requirement = question.requireNotesForStatus ?? (question.requireNotesWhenNo ? 'no' : null);
+    return requirement === 'both'
+      ? true
+      : requirement === 'yes'
+      ? checked
+      : requirement === 'no'
+      ? !checked
+      : false;
+  }
+
+  private followUpRequirement(
+    followUp: ReceivingQuestionFollowUp,
+    question: ReceivingQuestion
+  ): 'yes' | 'no' | 'both' | null {
+    return (
+      followUp?.isRequiredOn ??
+      question.followUpsRequiredWhen ??
+      question.followUpsRequiredFor ??
+      ((question.followUps?.length ?? 0) > 0 ? 'no' : null)
+    );
+  }
+
+  private showValidationErrors(errors: string[]): void {
+    if (!errors.length) return;
+    const maxToShow = 5;
+    const message =
+      errors
+        .slice(0, maxToShow)
+        .map(err => `• ${err}`)
+        .join('<br>') +
+      (errors.length > maxToShow ? '<br>• ...' : '');
+    this.toastr.error(message, 'Complete required items', {
+      enableHtml: true,
+      timeOut: 6000,
+    });
   }
 
   private restoreProgressState(): void {
@@ -979,15 +1152,18 @@ export class StartDeploymentModalComponent implements OnInit {
 
       const followUps = group.get('followUps') as FormGroup | null;
       if (followUps) {
-        Object.values(followUps.controls).forEach(control => {
+        Object.entries(followUps.controls).forEach(([followUpId, control]) => {
+          const followMeta = question.followUps?.find(item => item.id === followUpId);
           const followRequirement =
+            followMeta?.isRequiredOn ??
+            question.followUpsRequiredWhen ??
             question.followUpsRequiredFor ??
             ((question.followUps?.length ?? 0) > 0 ? 'no' : null);
           const shouldRequireResponse =
             followRequirement === 'both'
               ? status === 'yes' || status === 'no'
               : followRequirement
-              ? status === followRequirement
+                ? status === followRequirement
               : false;
           control.setValidators(
             shouldRequireResponse ? [Validators.required, Validators.minLength(3)] : []
@@ -1084,7 +1260,7 @@ export class StartDeploymentModalComponent implements OnInit {
           { id: 'receiving-2-1-7', label: '2.1.7', text: 'Document and photograph any damaged equipment.', controlType: 'radio', radioLabels: { yes: 'Damaged', no: 'No Damage' }, notesPrompt: 'If damaged, describe the issue and reference images or ticket numbers.', requireNotesForStatus: 'yes', followUpsRequiredFor: 'yes' },
           { id: 'receiving-2-1-7-1', label: '2.1.7.1', text: 'For vendor projects, report all damages to the DE via email ASAP.', controlType: 'checkbox', isChild: true },
           { id: 'receiving-2-1-7-2', label: '2.1.7.2', text: 'For DC Ops projects, report all damages to the DE and update the ticket.', controlType: 'checkbox', isChild: true },
-          { id: 'receiving-2-1-8', label: '2.1.8', text: 'All equipment serial numbers are to be scanned into the Comcast provided document using a barcode scanner.', controlType: 'text', notesPrompt: 'Document scanning status, outstanding devices, or issues encountered.', requireText: true },
+          { id: 'receiving-2-1-8', label: '2.1.8', text: 'All equipment serial numbers are to be scanned into the Comcast provided document using a barcode scanner.', controlType: 'checkbox'},
           { id: 'receiving-2-1-8-1', label: '2.1.8.1', text: 'Ensure the correct serial and hostname association is maintained throughout the project.', controlType: 'checkbox', isChild: true },
           { id: 'receiving-2-1-9', label: '2.1.9', text: 'Double-check all equipment serial numbers, device names, makes and models after the equipment is racked to ensure accuracy.', controlType: 'checkbox' },
           { id: 'receiving-2-1-10', label: '2.1.10', text: 'The scanned serial numbers should match the serial numbers in the work orders. Note for DEs: The RFP sheet or version of that can be used to scan serial numbers. Can also highlight the sections they need to fill in SN, Cab, RU, etc.', controlType: 'checkbox', notesPrompt: 'If mismatches were found, summarize resolution steps.', requireNotesForStatus: 'no' },
