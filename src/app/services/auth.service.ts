@@ -128,8 +128,13 @@ export class AuthService {
     }
   }
 
-  forgotPassword(email: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/auth/forgot-password/${email}`, this.httpOptions);
+  forgotPassword(email: string): Observable<string> {
+  const url = `${environment.apiUrl}/auth/forgot-password/${encodeURIComponent(email)}`;
+    return this.http.post<string>(url, null, {
+      headers: this.httpOptions?.headers,
+      // backend returns plain text like Ok("Password email sent")
+      responseType: 'text' as 'json'
+    });
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {
