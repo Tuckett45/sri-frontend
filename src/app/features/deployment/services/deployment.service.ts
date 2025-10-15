@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { firstValueFrom, map, Observable } from 'rxjs';
 import { environment, local_environment } from '../../../../environments/environments';
-import { DeploymentHandoff, HandoffPackage } from '../models/deployment.models';
+import { DeploymentHandoff, HandoffPackage, Deployment } from '../models/deployment.models';
 import { StartDeploymentProgressPayload } from '../models/deployment-progress.model';
 
 export enum DeploymentStatus {
@@ -15,25 +15,6 @@ export enum DeploymentStatus {
   Labeling = 'Labeling',
   Handoff = 'Handoff',
   Complete = 'Complete'
-}
-
-export interface Deployment {
-  id: string;
-  name: string;
-  dataCenter: string;
-  vendorName: string;
-  deploymentEngineerId?: string;
-  status: DeploymentStatus;
-  startDate?: string;
-  targetHandoffDate?: string;
-  rfpId?: string;
-  workOrderId?: string;
-  createdBy?: string;
-  createdDate?: string;
-  updatedBy?: string;
-  updatedDate?: string;
-  progressPercent?: number;
-  nextStatus?: DeploymentStatus | null;
 }
 
 export interface DeploymentQuery {

@@ -16,14 +16,14 @@
       <p class="meta-subtitle">Provide the basic information before tracking progress.</p>
 
       <form [formGroup]="metaForm" class="meta-grid" novalidate>
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="fill" class="meta-field">
           <mat-label>Name</mat-label>
           <input matInput formControlName="name" />
           <mat-error *ngIf="metaForm.get('name')?.hasError('required')">Name is required.</mat-error>
           <mat-error *ngIf="metaForm.get('name')?.hasError('minlength')">Name must be at least 3 characters.</mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="fill" class="meta-field">
           <mat-label>Data Center</mat-label>
           <mat-select formControlName="dataCenter">
             <mat-option *ngFor="let dc of dataCenters()" [value]="dc.name">{{ dc.name }}</mat-option>
@@ -31,7 +31,7 @@
           <mat-error *ngIf="metaForm.get('dataCenter')?.hasError('required')">Data Center is required.</mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="fill" class="meta-field">
           <mat-label>Vendor</mat-label>
           <mat-select formControlName="vendorId">
             <mat-option *ngFor="let v of vendors()" [value]="v.id">{{ v.name }}</mat-option>
@@ -215,15 +215,14 @@
         </div>
 
         <div class="notes" *ngIf="question.detailsPrompt">
-          <mat-form-field appearance="outline" class="notes-field">
-            <mat-label style="color: black;">{{ question.detailsPrompt }}</mat-label>
+          <mat-form-field appearance="fill" class="notes-field">
+            <mat-label>{{ question.detailsPrompt }}</mat-label>
             <textarea
               matInput
               formControlName="notes"
-              style="color: black;"
               rows="3"
             ></textarea>
-            <mat-error *ngIf="notesError(questionGroup(question.id))">Provide details for a "No" response.</mat-error>
+            <mat-error style="background-color: white;" *ngIf="notesError(questionGroup(question.id))">Provide details for a "No" response.</mat-error>
           </mat-form-field>
         </div>
       </div>
@@ -264,15 +263,15 @@
                     </span>
                   </mat-checkbox>
                   <div class="notes" *ngIf="question.notesPrompt">
-                    <mat-form-field appearance="outline" class="notes-field">
-                      <mat-label style="color: black;">{{ question.notesPrompt }}</mat-label>
+                    <mat-form-field appearance="fill" class="notes-field">
+                      <mat-label>{{ question.notesPrompt }}</mat-label>
                       <textarea
                         matInput
                         formControlName="notes"
-                        style="color: black;"
+                        
                         rows="3"
                       ></textarea>
-                      <mat-error *ngIf="receivingNotesError(receivingQuestionGroup(question.id))">
+                      <mat-error style="background-color: white;" *ngIf="receivingNotesError(receivingQuestionGroup(question.id))">
                         Provide details before proceeding.
                       </mat-error>
                     </mat-form-field>
@@ -284,12 +283,12 @@
                     <span class="question-id">{{ question.label }}</span>
                     <h4>{{ question.text }}</h4>
                   </div>
-                  <mat-form-field appearance="outline" class="notes-field">
-                    <mat-label style="color: black;">{{ question.notesPrompt || 'Details' }}</mat-label>
+                  <mat-form-field appearance="fill" class="notes-field">
+                    <mat-label >{{ question.notesPrompt || 'Details' }}</mat-label>
                     <textarea
                       matInput
                       formControlName="text"
-                      style="color: black;"
+                      
                       rows="3"
                     ></textarea>
                     <mat-error *ngIf="receivingTextError(question.id)">Details required.</mat-error>
@@ -321,15 +320,15 @@
                   </div>
 
                   <div class="notes" *ngIf="question.notesPrompt">
-                    <mat-form-field appearance="outline" class="notes-field">
-                      <mat-label style="color: black;">{{ question.notesPrompt }}</mat-label>
+                    <mat-form-field appearance="fill" class="notes-field">
+                      <mat-label >{{ question.notesPrompt }}</mat-label>
                       <textarea
                         matInput
                         formControlName="notes"
-                        style="color: black;"
+                        
                         rows="3"
                       ></textarea>
-                      <mat-error *ngIf="receivingNotesError(receivingQuestionGroup(question.id))">
+                      <mat-error style="background-color: white;" *ngIf="receivingNotesError(receivingQuestionGroup(question.id))">
                         Provide details for a "No" response.
                       </mat-error>
                     </mat-form-field>
@@ -337,18 +336,18 @@
 
                   <div class="follow-ups" formGroupName="followUps" *ngIf="question.followUps?.length">
                     <mat-form-field
-                      appearance="outline"
+                      appearance="fill"
                       class="notes-field"
                       *ngFor="let followUp of question.followUps"
                     >
-                      <mat-label style="color: black;">{{ followUp.label }} {{ followUp.prompt }}</mat-label>
+                      <mat-label >{{ followUp.label }} {{ followUp.prompt }}</mat-label>
                       <textarea
                         matInput
                         [formControlName]="followUp.id"
-                        style="color: black;"
+                        
                         rows="3"
                       ></textarea>
-                      <mat-error *ngIf="receivingFollowUpError(question.id, followUp.id)">
+                      <mat-error style="background-color: white;" *ngIf="receivingFollowUpError(question.id, followUp.id)">
                         Provide details for a "No" response.
                       </mat-error>
                     </mat-form-field>

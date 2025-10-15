@@ -5,7 +5,7 @@ export type Id = string;
 -------------------------- */
 export enum DeploymentStatus {
   Planned = 'Planned',
-  Survey = 'Survey',
+  Survey = 'Site Survey',
   Inventory = 'Inventory',
   Install = 'Install',
   Cabling = 'Cabling',

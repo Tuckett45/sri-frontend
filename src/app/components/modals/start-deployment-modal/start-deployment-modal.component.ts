@@ -46,7 +46,7 @@ interface DeploymentPhaseSection {
   title: string;
   summary: string;
   body?: string;
-  type: 'siteSurvey' | 'receiving' | 'installation' | 'cabling' | 'labeling' | 'handoff';
+  type: 'planned' | 'siteSurvey' | 'receiving' | 'installation' | 'cabling' | 'labeling' | 'handoff' | 'complete';
   narrative?: NarrativeGroup[];
 }
 
@@ -570,7 +570,6 @@ export class StartDeploymentModalComponent implements OnInit {
   }
 
   protected currentPhaseType(): PhaseType {
-    debugger;
     const current = this.deploymentPhases[this.activePhaseIndex()];
     return current?.type ?? 'siteSurvey';
   }
@@ -653,9 +652,6 @@ export class StartDeploymentModalComponent implements OnInit {
     // If starting a brand-new deployment, require metadata first
     if (!this.project && this.metaForm.invalid) {
       this.metaForm.markAllAsTouched();
-      return;
-    }
-    if (!this.validateCurrentStepStrict()) {
       return;
     }
     const progress = this._buildProgressPayload();

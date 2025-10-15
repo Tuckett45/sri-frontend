@@ -1,7 +1,8 @@
 // src/app/features/deployments/services/deployment-state.service.ts
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { DeploymentService, Deployment, DeploymentStatus } from './deployment.service';
+import { DeploymentService } from './deployment.service';
 import { DeploymentsSocketService } from './deployments-socket.service';
+import { Deployment, DeploymentStatus } from '../models/deployment.models';
 
 @Injectable({ providedIn: 'root' })
 export class DeploymentStateService {

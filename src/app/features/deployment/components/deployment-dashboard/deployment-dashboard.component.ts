@@ -20,6 +20,8 @@ import {
   StartDeploymentDialogData,
   StartDeploymentDialogResult,
 } from 'src/app/components/modals/start-deployment-modal/start-deployment-modal.component';
+import { User } from 'src/app/models/user.model';
+import { AuthService } from 'src/app/services/auth.service';
 
 interface DeploymentFilter {
   status?: DeploymentStatus | null;
@@ -48,11 +50,11 @@ interface DeploymentFilter {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeploymentDashboardComponent implements OnInit {
+  user!: User;
   private readonly fb = inject(FormBuilder);
   private readonly dialog = inject(MatDialog);
   private readonly deploymentService = inject(DeploymentService);
-  private readonly toastr = inject(ToastrService);
-  private readonly wizardPhaseCount = 6; // mirrors the number of phases defined in the start deployment wizard
+  private readonly wizardPhaseCount = 6;
 
   protected readonly statusOptions = Object.values(DeploymentStatus);
   private readonly severityMap = new Map<DeploymentStatus, 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast'>([
@@ -76,6 +78,15 @@ export class DeploymentDashboardComponent implements OnInit {
     [DeploymentStatus.Handoff]: 5,
     [DeploymentStatus.Complete]: 5,
   };
+
+  private readonly statusByPhaseIndex: DeploymentStatus[] = [
+    DeploymentStatus.Survey,
+    DeploymentStatus.Inventory,
+    DeploymentStatus.Install,
+    DeploymentStatus.Cabling,
+    DeploymentStatus.Labeling,
+    DeploymentStatus.Handoff,
+  ];
 
   protected readonly filterForm = this.fb.nonNullable.group({
     status: [''],
@@ -109,7 +120,13 @@ export class DeploymentDashboardComponent implements OnInit {
     [DeploymentStatus.Complete]: 'Deployment closed and fully handed off',
   } satisfies Record<DeploymentStatus, string>;
 
+  constructor(
+      private toastr: ToastrService,
+      public authService: AuthService,
+    ) {}
+
   ngOnInit(): void {
+    this.user = this.authService.getUser();
     this.filterForm.valueChanges
       .pipe()
       .subscribe(raw => {
@@ -209,6 +226,14 @@ export class DeploymentDashboardComponent implements OnInit {
     return index >= 0 ? Math.round(((index + 1) / this.statusOptions.length) * 100) : 0;
   }
 
+  private statusFromPhaseIndex(phaseIndex: number | null | undefined): DeploymentStatus {
+    if (typeof phaseIndex !== 'number' || !Number.isFinite(phaseIndex)) {
+      return DeploymentStatus.Planned;
+    }
+    const clamped = Math.max(0, Math.min(Math.floor(phaseIndex), this.statusByPhaseIndex.length - 1));
+    return this.statusByPhaseIndex[clamped] ?? DeploymentStatus.Planned;
+  }
+
   protected statusSeverity(status: DeploymentStatus): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
     return this.severityMap.get(status) ?? 'secondary';
   }
@@ -300,7 +325,8 @@ export class DeploymentDashboardComponent implements OnInit {
 
     if (progress) {
       const percent = this.calculateProgressPercentage(progress);
-      this.updateDeploymentProgress(project.id, percent);
+      const status = this.statusFromPhaseIndex(progress.activePhaseIndex);
+      this.updateDeploymentProgress(project.id, percent, status);
     }
 
     this.openDeploymentDialog(project, initialPhaseIndex, progress);
@@ -311,13 +337,14 @@ export class DeploymentDashboardComponent implements OnInit {
   ): Promise<void> {
     if (!result || result.action !== 'save') return;
     const metadata = result.metadata ?? null;
+    const phaseStatus = this.statusFromPhaseIndex(result.progress?.activePhaseIndex ?? null);
     const provisionalProject: Deployment | null = metadata
       ? {
           id: result.progress.projectId ?? '',
           name: metadata.name,
           dataCenter: metadata.dataCenter,
           vendorName: metadata.vendorName,
-          status: DeploymentStatus.Planned,
+          status: phaseStatus,
         }
       : null;
 
@@ -356,7 +383,7 @@ export class DeploymentDashboardComponent implements OnInit {
     if (!result || result.action !== 'save') return;
 
     const metadata = result.metadata ?? null;
-    const mergedProject: Deployment | null = project
+    let mergedProject: Deployment | null = project
       ? {
           ...project,
           ...(metadata
@@ -396,12 +423,20 @@ export class DeploymentDashboardComponent implements OnInit {
       return;
     }
 
+    const phaseStatus = this.statusFromPhaseIndex(normalized.activePhaseIndex);
+    mergedProject = mergedProject
+      ? { ...mergedProject, status: phaseStatus }
+      : null;
+
+    const createdDate = new Date().toISOString();
+
     try {
       const createPayload: Partial<Deployment> = {
         name: metadata.name,
         dataCenter: metadata.dataCenter,
         vendorName: metadata.vendorName,
-        status: mergedProject?.status ?? DeploymentStatus.Planned,
+        status: phaseStatus,
+        createdDate,
       };
       const created = await this.deploymentService.create(createPayload);
       const newId = created?.id;
@@ -414,10 +449,12 @@ export class DeploymentDashboardComponent implements OnInit {
           name: metadata.name,
           dataCenter: metadata.dataCenter,
           vendorName: metadata.vendorName,
-          status: DeploymentStatus.Planned,
         }),
         id: newId,
+        status: phaseStatus,
         progressPercent,
+        createdBy: this.user.id,
+        createdDate,
       };
 
       normalized.projectId = newId;
@@ -444,14 +481,35 @@ export class DeploymentDashboardComponent implements OnInit {
     this.draftProgress.update(curr => ({ ...curr, [cacheKey]: progress }));
   }
 
-  private updateDeploymentProgress(projectId: string, progressPercent: number): void {
+  private updateDeploymentProgress(
+    projectId: string,
+    progressPercent: number,
+    status?: DeploymentStatus
+  ): void {
     this.deployments.update(list =>
       list.map(item =>
         item.id === projectId
-          ? { ...item, progressPercent }
+          ? {
+              ...item,
+              progressPercent,
+              ...(status ? { status } : {}),
+            }
           : item
       )
     );
+  }
+
+  private async syncDeploymentStatus(projectId: string, status: DeploymentStatus): Promise<void> {
+    if (!projectId) return;
+    const current = this.deployments().find(item => item.id === projectId)?.status;
+    if (current === status) {
+      return;
+    }
+    try {
+      await this.deploymentService.update(projectId, { status });
+    } catch (error) {
+      console.warn('Failed to update deployment status', projectId, error);
+    }
   }
 
   private async refreshProgressForProjects(projects: Deployment[]): Promise<void> {
@@ -465,7 +523,8 @@ export class DeploymentDashboardComponent implements OnInit {
             const normalized = this.normalizeProgressPayload(remote, remote.projectId ?? project.id ?? null);
             this.cacheProgress(project.id, normalized);
             const percent = this.calculateProgressPercentage(normalized);
-            this.updateDeploymentProgress(project.id, percent);
+            const status = this.statusFromPhaseIndex(normalized.activePhaseIndex);
+            this.updateDeploymentProgress(project.id, percent, status);
           } catch (error) {
             console.warn('Unable to load progress for deployment', project.id, error);
           }
@@ -481,12 +540,14 @@ export class DeploymentDashboardComponent implements OnInit {
   ): Promise<void> {
     const isWizardComplete = normalized.activePhaseIndex >= this.wizardPhaseCount - 1;
     try {
+      const phaseStatus = this.statusFromPhaseIndex(normalized.activePhaseIndex);
       await firstValueFrom(
         this.deploymentService
           .saveProgress(targetId, normalized)
           .pipe()
       );
-      this.updateDeploymentProgress(targetId, progressPercent);
+      await this.syncDeploymentStatus(targetId, phaseStatus);
+      this.updateDeploymentProgress(targetId, progressPercent, phaseStatus);
       const message = isWizardComplete
         ? `${projectLabel} wizard completed. Deployment is ready for the next phase.`
         : `Saved progress for ${projectLabel}.`;
