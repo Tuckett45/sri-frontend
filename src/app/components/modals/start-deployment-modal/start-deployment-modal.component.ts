@@ -10,8 +10,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { Deployment } from 'src/app/features/deployment/models/deployment.models';
+import { Deployment, DeploymentStatus, DeploymentMedia } from 'src/app/features/deployment/models/deployment.models';
 import {
   SiteSurveyProgress,
   SiteSurveyProgressEntry,
@@ -19,6 +20,7 @@ import {
   StartDeploymentProgressPayload,
   PhaseQuestionProgress,
 } from 'src/app/features/deployment/models/deployment-progress.model';
+import { DeploymentMediaApiService } from 'src/app/features/deployment/services/deployment-media-api.service';
 
 interface SiteSurveyQuestion {
   id: string;
@@ -97,6 +99,8 @@ interface ReceivingQuestionGroup {
   questions: ReceivingQuestion[];
 }
 
+type MediaPhase = 'receiving' | 'handoff';
+
 type VendorOption = { id: string; name: string };
 type DataCenterOption = { id: string; name: string };
 
@@ -108,7 +112,7 @@ export interface StartDeploymentMetadata {
 }
 
 export interface StartDeploymentDialogResult {
-  action: 'save';
+  action: 'save' | 'complete';
   progress: StartDeploymentProgressPayload;
   metadata?: StartDeploymentMetadata | null;
 }
@@ -145,6 +149,7 @@ export class StartDeploymentModalComponent implements OnInit {
     inject(MatDialogRef<StartDeploymentModalComponent, StartDeploymentDialogResult | undefined>);
   private readonly data = inject<StartDeploymentDialogData | null>(MAT_DIALOG_DATA, { optional: true }) ?? null;
   private readonly toastr = inject(ToastrService);
+  private readonly mediaApi = inject(DeploymentMediaApiService);
 
   protected readonly project = this.data?.project ?? null;
   private existingProgress: StartDeploymentProgressPayload | null = null;
@@ -185,6 +190,27 @@ export class StartDeploymentModalComponent implements OnInit {
   dataCenters(): DataCenterOption[] { return this.dataCenterOptions(); }
 
   protected receivingQuestionGroups: ReceivingQuestionGroup[] = [];
+
+  private readonly mediaConfigs: Record<MediaPhase, { status: DeploymentStatus; kind: string; description: string }> = {
+    receiving: {
+      status: DeploymentStatus.Inventory,
+      kind: 'ReceivingEvidence',
+      description: 'Attach photos of damaged or missing gear so the deployment engineer can review quickly.',
+    },
+    handoff: {
+      status: DeploymentStatus.Handoff,
+      kind: 'HandoffDocumentation',
+      description: 'Upload final documentation photos and remediation evidence for handoff review.',
+    },
+  };
+
+  protected readonly mediaByPhase = signal<Record<MediaPhase, DeploymentMedia[]>>({
+    receiving: [],
+    handoff: [],
+  });
+
+  private readonly uploadingMediaPhase = signal<MediaPhase | null>(null);
+
   protected readonly deploymentPhases: ReadonlyArray<DeploymentPhaseSection> = [
     {
       id: 'siteSurvey',
@@ -567,6 +593,11 @@ export class StartDeploymentModalComponent implements OnInit {
 
     this.existingProgress = this.data?.progress ?? null;
     this.restoreProgressState();
+
+    if (this.project?.id) {
+      void this.refreshMedia('receiving');
+      void this.refreshMedia('handoff');
+    }
   }
 
   protected currentPhaseType(): PhaseType {
@@ -583,10 +614,21 @@ export class StartDeploymentModalComponent implements OnInit {
   }
 
   protected selectPhase(index: number): void {
-    if (index === this.activePhaseIndex()) return;
-    if (index > this.activePhaseIndex() && !this.validateCurrentStepStrict()) {
-      return;
+    const currentIndex = this.activePhaseIndex();
+    if (index === currentIndex) return;
+
+    if (index > currentIndex) {
+      if (!this.validateCurrentStepStrict()) {
+        return;
+      }
+
+      const groups = this.getPhaseTaskGroups(this.currentPhaseType());
+      if (groups.length && this.activeTaskTabIndex() < groups.length - 1) {
+        this.activeTaskTabIndex.update(tab => Math.min(tab + 1, groups.length - 1));
+        return;
+      }
     }
+
     this.advanceToPhase(index, 0);
   }
 
@@ -597,7 +639,6 @@ export class StartDeploymentModalComponent implements OnInit {
     if (this.isAtFinalStep()) return;
 
     const groups = this.getPhaseTaskGroups(this.currentPhaseType());
-    debugger;
     if (groups.length && this.activeTaskTabIndex() < groups.length - 1) {
       this.activeTaskTabIndex.update(i => i + 1);
       return;
@@ -649,6 +690,10 @@ export class StartDeploymentModalComponent implements OnInit {
   }
 
   protected saveProgress(): void {
+    if (this.uploadingMediaPhase()) {
+      this.toastr.warning('Please wait for uploads to finish before saving progress.');
+      return;
+    }
     // If starting a brand-new deployment, require metadata first
     if (!this.project && this.metaForm.invalid) {
       this.metaForm.markAllAsTouched();
@@ -657,6 +702,108 @@ export class StartDeploymentModalComponent implements OnInit {
     const progress = this._buildProgressPayload();
     const metadata = this.project ? null : this.buildDeploymentMetadata();
     this.dialogRef.close({ action: 'save', progress, metadata });
+  }
+
+  protected completeDeployment(): void {
+    if (!this.isAtFinalStep()) {
+      return;
+    }
+    if (this.uploadingMediaPhase()) {
+      this.toastr.warning('Please wait for uploads to finish before completing the deployment.');
+      return;
+    }
+    if (!this.validateCurrentStepStrict()) {
+      return;
+    }
+    if (!this.project && this.metaForm.invalid) {
+      this.metaForm.markAllAsTouched();
+      return;
+    }
+    const progress = this._buildProgressPayload();
+    const metadata = this.project ? null : this.buildDeploymentMetadata();
+    this.dialogRef.close({ action: 'complete', progress, metadata });
+  }
+
+  protected mediaFor(phase: MediaPhase): DeploymentMedia[] {
+    return this.mediaByPhase()[phase] ?? [];
+  }
+
+  protected mediaDescription(phase: MediaPhase): string {
+    return this.mediaConfigs[phase]?.description ?? '';
+  }
+
+  protected canUploadMedia(): boolean {
+    return !!this.project?.id;
+  }
+
+  protected isUploadingMedia(phase: MediaPhase): boolean {
+    return this.uploadingMediaPhase() === phase;
+  }
+
+  protected async onMediaSelected(phase: MediaPhase, event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement | null;
+    const files = input?.files ? Array.from(input.files) : [];
+    if (files.length === 0) {
+      return;
+    }
+    if (!this.project?.id) {
+      this.toastr.error('Save the deployment details before uploading images.');
+      if (input) input.value = '';
+      return;
+    }
+
+    const config = this.mediaConfigs[phase];
+    this.uploadingMediaPhase.set(phase);
+    try {
+      await firstValueFrom(
+        this.mediaApi.uploadMedia({
+          deploymentId: this.project.id,
+          phaseCode: this.phaseCodeFromStatus(config.status),
+          subCode: null,
+          beMediaType: 'image',
+          businessKind: config.kind,
+          files,
+        })
+      );
+      this.toastr.success(
+        files.length === 1 ? 'Uploaded 1 image.' : `Uploaded ${files.length} images.`
+      );
+      await this.refreshMedia(phase);
+    } catch (error) {
+      console.error('Failed to upload media', error);
+      this.toastr.error('Unable to upload images. Please try again.');
+    } finally {
+      if (input) {
+        input.value = '';
+      }
+      this.uploadingMediaPhase.set(null);
+    }
+  }
+
+  protected trackMedia(_index: number, item: DeploymentMedia): string {
+    return item.id;
+  }
+
+  private async refreshMedia(phase: MediaPhase): Promise<void> {
+    if (!this.project?.id) {
+      return;
+    }
+    const config = this.mediaConfigs[phase];
+    try {
+      const all = await firstValueFrom(
+        this.mediaApi.listMedia(this.project.id, this.phaseCodeFromStatus(config.status))
+      );
+      const filtered = all.filter(item => item.mediaType === config.kind);
+      this.mediaByPhase.update(curr => ({ ...curr, [phase]: filtered }));
+    } catch (error) {
+      console.warn('Unable to load media for phase', phase, error);
+    }
+  }
+
+  private phaseCodeFromStatus(status: DeploymentStatus): number {
+    const order = Object.values(DeploymentStatus);
+    const index = order.indexOf(status);
+    return index >= 0 ? index : 0;
   }
 
   protected onStatusChange(question: SiteSurveyQuestion, value: 'yes' | 'no'): void {

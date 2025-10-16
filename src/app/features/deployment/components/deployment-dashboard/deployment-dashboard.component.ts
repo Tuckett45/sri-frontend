@@ -325,7 +325,10 @@ export class DeploymentDashboardComponent implements OnInit {
 
     if (progress) {
       const percent = this.calculateProgressPercentage(progress);
-      const status = this.statusFromPhaseIndex(progress.activePhaseIndex);
+      const status =
+        project.status === DeploymentStatus.Complete
+          ? DeploymentStatus.Complete
+          : this.statusFromPhaseIndex(progress.activePhaseIndex);
       this.updateDeploymentProgress(project.id, percent, status);
     }
 
@@ -335,9 +338,12 @@ export class DeploymentDashboardComponent implements OnInit {
   private async handleNewDeploymentResult(
     result?: StartDeploymentDialogResult | undefined
   ): Promise<void> {
-    if (!result || result.action !== 'save') return;
+    if (!result || (result.action !== 'save' && result.action !== 'complete')) return;
     const metadata = result.metadata ?? null;
-    const phaseStatus = this.statusFromPhaseIndex(result.progress?.activePhaseIndex ?? null);
+    const isCompleteAction = result.action === 'complete';
+    const phaseStatus = isCompleteAction
+      ? DeploymentStatus.Complete
+      : this.statusFromPhaseIndex(result.progress?.activePhaseIndex ?? null);
     const provisionalProject: Deployment | null = metadata
       ? {
           id: result.progress.projectId ?? '',
@@ -380,7 +386,7 @@ export class DeploymentDashboardComponent implements OnInit {
     project: Deployment | null,
     result?: StartDeploymentDialogResult | undefined
   ): Promise<void> {
-    if (!result || result.action !== 'save') return;
+    if (!result || (result.action !== 'save' && result.action !== 'complete')) return;
 
     const metadata = result.metadata ?? null;
     let mergedProject: Deployment | null = project
@@ -409,11 +415,18 @@ export class DeploymentDashboardComponent implements OnInit {
     const normalized = this.normalizeProgressPayload(result.progress, incomingId);
     const projectLabel = mergedProject?.name ?? 'deployment';
     const progressPercent = this.calculateProgressPercentage(normalized);
+    const isCompleteAction = result.action === 'complete';
+    if (isCompleteAction) {
+      normalized.activePhaseIndex = Math.max(normalized.activePhaseIndex, this.wizardPhaseCount - 1);
+    }
+    const phaseStatus = isCompleteAction
+      ? DeploymentStatus.Complete
+      : this.statusFromPhaseIndex(normalized.activePhaseIndex);
 
     if (incomingId) {
       normalized.projectId = incomingId;
       this.cacheProgress(incomingId, normalized);
-      await this.persistProgress(incomingId, normalized, projectLabel, progressPercent);
+      await this.persistProgress(incomingId, normalized, projectLabel, progressPercent, phaseStatus);
       return;
     }
 
@@ -423,7 +436,6 @@ export class DeploymentDashboardComponent implements OnInit {
       return;
     }
 
-    const phaseStatus = this.statusFromPhaseIndex(normalized.activePhaseIndex);
     mergedProject = mergedProject
       ? { ...mergedProject, status: phaseStatus }
       : null;
@@ -469,7 +481,7 @@ export class DeploymentDashboardComponent implements OnInit {
 
       this.deployments.update(list => [...list, newProject]);
 
-      await this.persistProgress(newId, normalized, newProject.name, progressPercent);
+      await this.persistProgress(newId, normalized, newProject.name, progressPercent, phaseStatus);
     } catch (error) {
       console.error('Failed to create deployment', error);
       this.cacheProgress('__new', normalized);
@@ -523,7 +535,10 @@ export class DeploymentDashboardComponent implements OnInit {
             const normalized = this.normalizeProgressPayload(remote, remote.projectId ?? project.id ?? null);
             this.cacheProgress(project.id, normalized);
             const percent = this.calculateProgressPercentage(normalized);
-            const status = this.statusFromPhaseIndex(normalized.activePhaseIndex);
+            const status =
+              project.status === DeploymentStatus.Complete
+                ? DeploymentStatus.Complete
+                : this.statusFromPhaseIndex(normalized.activePhaseIndex);
             this.updateDeploymentProgress(project.id, percent, status);
           } catch (error) {
             console.warn('Unable to load progress for deployment', project.id, error);
@@ -536,11 +551,12 @@ export class DeploymentDashboardComponent implements OnInit {
     targetId: string,
     normalized: StartDeploymentProgressPayload,
     projectLabel: string,
-    progressPercent: number
+    progressPercent: number,
+    statusOverride?: DeploymentStatus
   ): Promise<void> {
     const isWizardComplete = normalized.activePhaseIndex >= this.wizardPhaseCount - 1;
     try {
-      const phaseStatus = this.statusFromPhaseIndex(normalized.activePhaseIndex);
+      const phaseStatus = statusOverride ?? this.statusFromPhaseIndex(normalized.activePhaseIndex);
       await firstValueFrom(
         this.deploymentService
           .saveProgress(targetId, normalized)
@@ -548,9 +564,12 @@ export class DeploymentDashboardComponent implements OnInit {
       );
       await this.syncDeploymentStatus(targetId, phaseStatus);
       this.updateDeploymentProgress(targetId, progressPercent, phaseStatus);
-      const message = isWizardComplete
-        ? `${projectLabel} wizard completed. Deployment is ready for the next phase.`
-        : `Saved progress for ${projectLabel}.`;
+      const message =
+        phaseStatus === DeploymentStatus.Complete
+          ? `${projectLabel} marked complete.`
+          : isWizardComplete
+            ? `${projectLabel} wizard completed. Deployment is ready for the next phase.`
+            : `Saved progress for ${projectLabel}.`;
       this.toastr.success(message);
     } catch (err) {
       console.error('Failed to save progress', err);

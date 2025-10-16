@@ -105,7 +105,7 @@
               <div class="phase-nav-buttons">
                 <button
                   mat-raised-button
-                  style="background-color: #144f80; color: white;"
+                  class="phase-btns"
                   type="button"
                   (click)="goToPreviousStep()"
                   [disabled]="activePhaseIndex() === 0 && activeTaskTabIndex() === 0"
@@ -114,14 +114,25 @@
                   Previous
                 </button>
                 <button
+                  *ngIf="!isAtFinalStep()"
                   mat-raised-button
-                  style="background-color: #144f80; color: white;"
+                  class="phase-btns"
                   type="button"
                   (click)="goToNextStep()"
-                  [disabled]="isAtFinalStep()"
                 >
                   Next
                   <mat-icon>chevron_right</mat-icon>
+                </button>
+                <button
+                  *ngIf="isAtFinalStep()"
+                  mat-raised-button
+                  class="complete-btn"
+                  type="button"
+                  (click)="completeDeployment()"
+                  [disabled]="isUploadingMedia('handoff')"
+                >
+                  Complete
+                  <mat-icon>check_circle</mat-icon>
                 </button>
               </div>
             </div>
@@ -150,8 +161,8 @@
 
                 <div class="phase-nav-buttons">
                   <button
-                    mat-stroked-button
-                    color="primary"
+                    mat-raised-button
+                    class="phase-btns"
                     type="button"
                     (click)="goToPreviousStep()"
                     [disabled]="activePhaseIndex() === 0 && activeTaskTabIndex() === 0"
@@ -160,14 +171,25 @@
                     Previous
                   </button>
                   <button
-                    mat-stroked-button
-                    color="primary"
+                    *ngIf="!isAtFinalStep()"
+                    mat-raised-button
+                    class="phase-btns"
                     type="button"
                     (click)="goToNextStep()"
-                    [disabled]="isAtFinalStep()"
                   >
                     Next
                     <mat-icon>chevron_right</mat-icon>
+                  </button>
+                  <button
+                  *ngIf="isAtFinalStep()"
+                  mat-raised-button
+                  class="complete-btn"
+                  type="button"
+                  (click)="completeDeployment()"
+                  [disabled]="isUploadingMedia('handoff')"
+                >
+                    Complete
+                    <mat-icon>check_circle</mat-icon>
                   </button>
                 </div>
               </div>
@@ -358,6 +380,9 @@
           </div>
         </mat-tab>
       </mat-tab-group>
+      <ng-container
+        *ngTemplateOutlet="mediaUpload; context: { phase: 'receiving', title: 'Receiving Photos' }"
+      ></ng-container>
     </form>
 
     <ng-container *ngSwitchDefault>
@@ -382,11 +407,60 @@
         </mat-tab-group>
       </ng-container>
     </ng-container>
+    <ng-container *ngIf="phase.type === 'handoff'">
+      <ng-container
+        *ngTemplateOutlet="mediaUpload; context: { phase: 'handoff', title: 'Handoff Documentation' }"
+      ></ng-container>
+    </ng-container>
   </ng-container>
   <ng-template #narrativeComingSoon>
     <div class="phase-placeholder">
       <p>Structured tasks for {{ phase.title }} will appear here.</p>
       <p class="phase-body" *ngIf="phase.body">{{ phase.body }}</p>
     </div>
+  </ng-template>
+  <ng-template #mediaUpload let-phase="phase" let-title="title">
+    <section class="media-upload-card">
+      <div class="media-upload-header">
+        <div class="media-upload-heading">
+          <h4>{{ title }}</h4>
+          <p class="media-upload-subtitle">{{ mediaDescription(phase) }}</p>
+        </div>
+        <button
+          mat-raised-button
+          class="phase-btns"
+          type="button"
+          (click)="fileInput.click()"
+          [disabled]="!canUploadMedia() || isUploadingMedia(phase)"
+        >
+          <mat-icon>cloud_upload</mat-icon>
+          Upload photos
+        </button>
+        <input
+          #fileInput
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          (change)="onMediaSelected(phase, $event)"
+        />
+      </div>
+      <p *ngIf="!canUploadMedia()" class="media-upload-hint">
+        Save the deployment to enable uploads.
+      </p>
+      <div class="media-upload-status" *ngIf="isUploadingMedia(phase)">
+        <mat-icon>cloud_upload</mat-icon>
+        Uploading photos…
+      </div>
+      <div class="media-thumbnails" *ngIf="mediaFor(phase).length; else noMedia">
+        <figure class="media-thumb" *ngFor="let media of mediaFor(phase); trackBy: trackMedia">
+          <img [src]="media.url" [alt]="media.fileName" />
+          <figcaption>{{ media.fileName }}</figcaption>
+        </figure>
+      </div>
+      <ng-template #noMedia>
+        <p class="media-empty">No images uploaded yet.</p>
+      </ng-template>
+    </section>
   </ng-template>
 </ng-template>

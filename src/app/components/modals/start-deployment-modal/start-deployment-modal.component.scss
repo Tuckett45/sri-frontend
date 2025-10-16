@@ -351,6 +351,88 @@
   }
 }
 
+.media-upload-card {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: rgba(20, 79, 128, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(20, 79, 128, 0.15);
+}
+
+.media-upload-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.media-upload-heading h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.media-upload-subtitle {
+  margin: 0.25rem 0 0;
+  color: #475569;
+  font-size: 0.88rem;
+}
+
+.media-upload-hint {
+  margin-top: 0.75rem;
+  color: #b45309;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.media-upload-status {
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #144f80;
+  font-weight: 600;
+}
+
+.media-thumbnails {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.media-thumb {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: inset 0 0 0 1px rgba(20, 79, 128, 0.12);
+}
+
+.media-thumb img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+}
+
+.media-thumb figcaption {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.media-empty {
+  margin-top: 0.75rem;
+  color: #64748b;
+  font-style: italic;
+}
+
 ::ng-deep .mat-mdc-tab-header-pagination-chevron {
     border-style: solid;
     border-width: 2px 2px 0 0;
@@ -571,6 +653,24 @@ textarea[matInput] {
   }
 }
 
+.phase-btns {
+  background-color: #144f80;
+  color: #fff;
+
+  &:hover {
+    background-color: #0b3a5e;
+  }
+}
+
+.complete-btn {
+  background-color: #0b9406;
+  color: #fff;
+
+  &:hover {
+    background-color: #055503;
+  }
+}
+
 ::ng-deep .mat-mdc-select {
   color: rgb(255, 255, 255) !important;
 } 
@@ -709,6 +809,15 @@ textarea[matInput]::placeholder {
     button {
       justify-content: center;
     }
+  }
+
+  .media-upload-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .media-thumbnails {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
 }
 
