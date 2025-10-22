@@ -199,6 +199,13 @@ export class ExpenseApiService {
     return this.getExpenses(opts).pipe(map(res => res.items));
   }
 
+  analyzeReceipt(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file); // must match the backend parameter name
+
+    return this.http.post<any>(`${local_environment.apiUrl}/expense/analyze-receipt`, formData);
+  }
+
   /** Personal view: flat list filtered by the specified user (email/UPN/id). */
   getMyExpenses(
     createdBy: string,

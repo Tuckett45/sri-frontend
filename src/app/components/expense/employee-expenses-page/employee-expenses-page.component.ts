@@ -9,6 +9,8 @@ import autoTable from 'jspdf-autotable';
 import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
+import { forkJoin, of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 
 type DisplayExpense = Expense & {
   job?: string | null;
@@ -34,7 +36,6 @@ export class EmployeeExpensesPageComponent implements OnInit {
     startDate: null,
     endDate: null,
     job: '',
-    phase: '',
     status: ''
   };
 
@@ -72,7 +73,7 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
     this.expenseApi.getMyExpenses(this.userIdentifier, { includeImages: true, page: 1, pageSize: 200 }).subscribe({
       next: items => {
-        const expenseArray = Array.isArray(items) ? items : [items];
+        const expenseArray = Array.isArray(items) ? items : items ? [items] : [];
         this.expenses = expenseArray.map((item: ExpenseListItem) => this.toViewModel(item));
         this.applyFilters();
         this.loading = false;
@@ -86,6 +87,7 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
   private toViewModel(item: ExpenseListItem): DisplayExpense {
     const mapped = {...item,
+      projectId: item.projectId ?? (item as any).job ?? '',
       job: (item as any).job ?? item.projectId ?? '',      
       notes: (item as any).notes ?? (item as any).description ?? item.descriptionNotes ?? '',
       receiptUrl: item.images?.[0]?.blobUrl ?? (item as any).receiptUrl ?? null,
@@ -114,11 +116,10 @@ export class EmployeeExpensesPageComponent implements OnInit {
       return;
     }
 
-    const header = ['Date', 'Job', 'Phase', 'Amount', 'Status', 'Notes'];
+    const header = ['Date', 'Job', 'Amount', 'Status', 'Notes'];
     const rows = this.filteredExpenses.map(exp => [
       exp.date ? new Date(exp.date).toLocaleDateString() : '',
       exp.job ?? '',
-      exp.phase ?? '',
       exp.amount?.toString() ?? '',
       exp.status ?? '',
       exp.notes ?? ''
@@ -147,11 +148,10 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
     const doc = new jsPDF();
     autoTable(doc, {
-      head: [['Date', 'Job', 'Phase', 'Amount', 'Status']],
+      head: [['Date', 'Job', 'Amount', 'Status']],
       body: this.filteredExpenses.map(e => [
         e.date ? new Date(e.date).toLocaleDateString() : '',
         e.job ?? '',
-        e.phase ?? '',  
         e.amount?.toString() ?? '',
         e.status ?? ''
       ])
@@ -180,13 +180,32 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: ExpenseDialogResult | undefined) => {
       if (result?.expense) {
-        this.expenseApi.updateExpense(result.expense, result.file ?? undefined, result.receiptData ?? undefined).subscribe({
-          next: () => {
-            this.toastr.success('Expense updated');
-            this.loadExpenses();
-          },
-          error: () => this.toastr.error('Update failed')
-        });
+        const existingImageIds = (expense.images ?? []).map(img => img.id).filter((id): id is string => !!id);
+        const needsImageCleanup = !!result.file && existingImageIds.length > 0;
+
+        const removeImages$ = needsImageCleanup
+          ? forkJoin(existingImageIds.map(id => this.expenseApi.removeImage(id))).pipe(
+              catchError(err => {
+                console.warn('Failed to remove existing expense images before update', err);
+                this.toastr.warning('Could not remove existing receipt before uploading a new one.');
+                return of(null);
+              })
+            )
+          : of(null);
+
+        removeImages$
+          .pipe(
+            switchMap(() =>
+              this.expenseApi.updateExpense(result.expense, result.file ?? undefined, result.receiptData ?? undefined)
+            )
+          )
+          .subscribe({
+            next: () => {
+              this.toastr.success('Expense updated');
+              this.loadExpenses();
+            },
+            error: () => this.toastr.error('Update failed')
+          });
       }
     });
   }

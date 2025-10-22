@@ -1,5 +1,5 @@
-﻿import { AfterViewInit, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
+import { AfterViewInit, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Expense } from 'src/app/models/expense.model';
@@ -17,17 +17,71 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   private static readonly imageExtensions = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif']);
 
   private _expenses: Expense[] = [];
+  private _serverPagination = false;
+  private _pageSize = 10;
+  private _pageIndex = 0;
+  private _totalItems = 0;
 
   @Input()
   set expenses(value: Expense[] | null) {
     this._expenses = value ?? [];
     this.dataSource.data = this._expenses;
     this.rebindTableHelpers();
+    if (!this.serverPagination && this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+    if (typeof this.dataSource._updateChangeSubscription === 'function') {
+      this.dataSource._updateChangeSubscription();
+    }
   }
 
   get expenses(): Expense[] {
     return this._expenses;
   }
+
+  @Input()
+  set serverPagination(value: boolean) {
+    this._serverPagination = !!value;
+    this.rebindTableHelpers();
+  }
+  get serverPagination(): boolean {
+    return this._serverPagination;
+  }
+
+  @Input()
+  set pageSize(value: number) {
+    this._pageSize = Number.isFinite(value) && value > 0 ? value : 10;
+    if (this.paginator) {
+      this.paginator.pageSize = this._pageSize;
+    }
+  }
+  get pageSize(): number {
+    return this._pageSize;
+  }
+
+  @Input()
+  set pageIndex(value: number) {
+    this._pageIndex = Number.isFinite(value) && value >= 0 ? value : 0;
+    if (this.paginator) {
+      this.paginator.pageIndex = this._pageIndex;
+    }
+  }
+  get pageIndex(): number {
+    return this._pageIndex;
+  }
+
+  @Input()
+  set totalItems(value: number) {
+    this._totalItems = Number.isFinite(value) && value >= 0 ? value : 0;
+    if (this.paginator && this.serverPagination) {
+      this.paginator.length = this._totalItems;
+    }
+  }
+  get totalItems(): number {
+    return this._totalItems;
+  }
+
+  @Input() pageSizeOptions: number[] = [5, 10, 25];
 
   @Input() showActions = true;
   @Input() loading = false;
@@ -45,6 +99,7 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   @Output() delete = new EventEmitter<Expense>();
   @Output() approve = new EventEmitter<Expense>();
   @Output() reject = new EventEmitter<Expense>();
+  @Output() pageChange = new EventEmitter<PageEvent>();
 
   displayedColumns: string[] = [];
   dataSource = new MatTableDataSource<Expense>([]);
@@ -203,7 +258,7 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     if (this.showEmployeeColumn) {
       base.push('employee');
     }
-    base.push('job', 'phase', 'amount', 'notes', 'receipt', 'status');
+    base.push('job', 'amount', 'notes', 'receipt', 'status');
 
     if (this.shouldShowActionsColumn()) {
       base.push('actions');
@@ -219,10 +274,23 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
 
   private rebindTableHelpers(): void {
     if (this.paginator) {
-      this.dataSource.paginator = this.paginator;
+      this.dataSource.paginator = this.serverPagination ? null : this.paginator;
+      this.paginator.pageSize = this._pageSize;
+      this.paginator.pageIndex = this._pageIndex;
+      if (this.serverPagination) {
+        this.paginator.length = this._totalItems;
+      }
     }
     if (this.sort) {
       this.dataSource.sort = this.sort;
+    }
+  }
+
+  onPaginatorPage(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    if (this.serverPagination) {
+      this.pageChange.emit(event);
     }
   }
 
@@ -265,5 +333,6 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     return 'file';
   }
 }
+
 
 

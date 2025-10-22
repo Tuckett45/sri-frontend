@@ -1,12 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { PageEvent } from '@angular/material/paginator';
 import { ToastrService } from 'ngx-toastr';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Expense, ExpenseListItem, ExpenseStatus } from 'src/app/models/expense.model';
-import { ExpenseApiService } from 'src/app/services/expense-api.service';
+import { Expense, ExpenseListItem, ExpenseListResponse, ExpenseStatus } from 'src/app/models/expense.model';
+import { ExpenseApiService } from '../../../services/expense-api.service';
+import { Inject } from '@angular/core';
 import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
+import { forkJoin, of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 
 type DisplayExpense = Expense & {
   job?: string | null;
@@ -22,7 +26,10 @@ type DisplayExpense = Expense & {
 })
 export class HrExpensesPageComponent implements OnInit {
   expenses: DisplayExpense[] = [];
-  filteredExpenses: DisplayExpense[] = [];
+  totalItems = 0;
+  pageIndex = 0;
+  pageSize = 10;
+  pageSizeOptions: number[] = [10, 25, 50];
   statusOptions = Object.values(ExpenseStatus);
   loading = false;
   filtersOpen = false;
@@ -31,12 +38,10 @@ export class HrExpensesPageComponent implements OnInit {
     startDate: null,
     endDate: null,
     job: '',
-    phase: '',
-    status: 'Pending'
+    status: ''
   };
-
   constructor(
-    private expenseApi: ExpenseApiService,
+    @Inject(ExpenseApiService) private expenseApi: ExpenseApiService,
     private toastr: ToastrService,
     private dialog: MatDialog
   ) {}
@@ -47,20 +52,76 @@ export class HrExpensesPageComponent implements OnInit {
 
   onFiltersChange(filters: ExpenseFilters): void {
     this.currentFilters = filters;
-    this.applyFilters();
+    this.loadExpenses(0, this.pageSize);
   }
 
   toggleFilters(): void {
     this.filtersOpen = !this.filtersOpen;
   }
 
-  loadExpenses(): void {
+  onPageChange(event: PageEvent): void {
+    this.loadExpenses(event.pageIndex, event.pageSize);
+  }
+
+  loadExpenses(pageIndex: number = this.pageIndex, pageSize: number = this.pageSize): void {
     this.loading = true;
-    this.expenseApi.getTeamExpenses().subscribe({
+    this.pageIndex = pageIndex;
+    this.pageSize = pageSize;
+
+    const query: Parameters<ExpenseApiService['getExpenses']>[0] = {
+      includeImages: true,
+      page: pageIndex + 1,
+      pageSize,
+    };
+
+    const from = this.toQueryDate(this.currentFilters.startDate);
+    const to = this.toQueryDate(this.currentFilters.endDate);
+    if (from) query.from = from;
+    if (to) query.to = to;
+    if (this.currentFilters.status) {
+      query.status = this.currentFilters.status as ExpenseStatus;
+    }
+    const projectInput = this.currentFilters.job?.trim();
+    if (projectInput) {
+      query.projectIds = projectInput;
+    }
+
+    this.expenseApi.getTeamExpenses(query).subscribe({
       next: res => {
-        const expenseArray = Array.isArray(res) ? res : [res];
-        this.expenses = expenseArray.map((item: ExpenseListItem) => this.toViewModel(item));
-        this.applyFilters();
+        const response: ExpenseListResponse = Array.isArray(res)
+          ? {
+              page: pageIndex + 1,
+              pageSize,
+              items: res as ExpenseListItem[],
+              total: (res as ExpenseListItem[]).length,
+            }
+          : (res as unknown as ExpenseListResponse ?? {
+              page: pageIndex + 1,
+              pageSize,
+              items: [],
+              total: 0,
+            });
+
+        const allItems = response.items ?? [];
+        let items = allItems;
+
+        if (!response.total && allItems.length > pageSize) {
+          const start = pageIndex * pageSize;
+          items = allItems.slice(start, start + pageSize);
+        }
+
+        if (!items.length && (response.page ?? 1) > 1) {
+          const prevIndex = Math.max(pageIndex - 1, 0);
+          if (prevIndex !== pageIndex) {
+            this.loadExpenses(prevIndex, pageSize);
+          } else {
+            this.loading = false;
+          }
+          return;
+        }
+
+        this.totalItems = response.total ?? this.estimateTotal(response);
+        this.expenses = items.map(item => this.toViewModel(item));
         this.loading = false;
       },
       error: () => {
@@ -71,27 +132,43 @@ export class HrExpensesPageComponent implements OnInit {
   }
 
   private toViewModel(item: ExpenseListItem): DisplayExpense {
-      const mapped = {...item,
-        job: (item as any).job ?? item.projectId ?? '',      
-        notes: (item as any).notes ?? (item as any).description ?? item.descriptionNotes ?? '',
-        receiptUrl: item.images?.[0]?.blobUrl ?? (item as any).receiptUrl ?? null,
-        date: item.date ?? item.createdDate ?? new Date().toISOString()
-      } as DisplayExpense;
-      return mapped;
-    }
+    const mapped = {
+      ...item,
+      projectId: item.projectId ?? (item as any).job ?? '',
+      job: (item as any).job ?? item.projectId ?? '',
+      notes: (item as any).notes ?? (item as any).description ?? item.descriptionNotes ?? '',
+      receiptUrl: item.images?.[0]?.blobUrl ?? (item as any).receiptUrl ?? null,
+      date: item.date ?? item.createdDate ?? new Date().toISOString()
+    } as DisplayExpense;
+    return mapped;
+  }
+
+  private toQueryDate(value: Date | string | null): string | undefined {
+    if (!value) return undefined;
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  private estimateTotal(res: ExpenseListResponse): number {
+    const items = res.items ?? [];
+    const baseCount = (res.page - 1) * res.pageSize + items.length;
+    return items.length === res.pageSize ? baseCount + 1 : baseCount;
+  }
 
   exportCsv(): void {
-    if (!this.filteredExpenses.length) {
+    if (!this.expenses.length) {
       this.toastr.info('No expenses to export');
       return;
     }
 
     const header = ['Employee', 'Date', 'Job', 'Phase', 'Amount', 'Status', 'Notes'];
-    const rows = this.filteredExpenses.map(exp => [
+    const rows = this.expenses.map(exp => [
       exp.createdBy ?? '',
-      new Date(exp.date).toLocaleDateString(),
+      new Date(exp.date ?? '').toLocaleDateString(),
       exp.projectId ?? '',
-      exp.phase ?? '',
+      (exp as any).phase ?? '',
       exp.amount?.toString() ?? '',
       exp.status ?? '',
       exp.descriptionNotes ?? ''
@@ -113,7 +190,7 @@ export class HrExpensesPageComponent implements OnInit {
   }
 
   exportPdf(): void {
-    if (!this.filteredExpenses.length) {
+    if (!this.expenses.length) {
       this.toastr.info('No expenses to export');
       return;
     }
@@ -121,11 +198,11 @@ export class HrExpensesPageComponent implements OnInit {
     const doc = new jsPDF();
     autoTable(doc, {
       head: [['Employee', 'Date', 'Job', 'Phase', 'Amount', 'Status']],
-      body: this.filteredExpenses.map(e => [
+      body: this.expenses.map(e => [
         e.createdBy ?? '',
-        new Date(e.date).toLocaleDateString(),
+        new Date(e.date ?? '').toLocaleDateString(),
         e.projectId ?? '',
-        e.phase ?? '',
+        (e as any).phase ?? '',
         e.amount?.toString() ?? '',
         e.status ?? ''
       ])
@@ -142,13 +219,32 @@ export class HrExpensesPageComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: ExpenseDialogResult | undefined) => {
       if (result?.expense) {
-        this.expenseApi.updateExpense(result.expense, result.file ?? undefined, result.receiptData ?? undefined).subscribe({
-          next: () => {
-            this.toastr.success('Expense updated');
-            this.loadExpenses();
-          },
-          error: () => this.toastr.error('Update failed')
-        });
+        const existingImageIds = (expense.images ?? []).map(img => img.id).filter((id): id is string => !!id);
+        const needsCleanup = !!result.file && existingImageIds.length > 0;
+
+        const removeImages$ = needsCleanup
+          ? forkJoin(existingImageIds.map(id => this.expenseApi.removeImage(id))).pipe(
+              catchError(err => {
+                console.warn('Failed to remove existing expense images before update', err);
+                this.toastr.warning('Could not remove existing receipt before uploading a new one.');
+                return of(null);
+              })
+            )
+          : of(null);
+
+        removeImages$
+          .pipe(
+            switchMap(() =>
+              this.expenseApi.updateExpense(result.expense, result.file ?? undefined, result.receiptData ?? undefined)
+            )
+          )
+          .subscribe({
+            next: () => {
+              this.toastr.success('Expense updated');
+              this.loadExpenses(this.pageIndex, this.pageSize);
+            },
+            error: () => this.toastr.error('Update failed')
+          });
       }
     });
   }
@@ -161,7 +257,6 @@ export class HrExpensesPageComponent implements OnInit {
     this.updateStatus(expense, ExpenseStatus.Rejected);
   }
 
-
   private updateStatus(expense: Expense, status: ExpenseStatus): void {
     if (!expense.id) {
       this.toastr.error('Expense is missing an identifier');
@@ -172,12 +267,10 @@ export class HrExpensesPageComponent implements OnInit {
     const updated: Expense = { ...expense, status };
 
     this.expenseApi.updateExpense(updated).subscribe({
-      next: (saved) => {
+      next: () => {
         this.toastr.success(`Expense ${status.toLowerCase()}`);
-        const target = this.expenses.find(e => e.id === expense.id);
-        if (target) target.status = saved.status ?? status; // sync UI
-        this.applyFilters();
         if (expense.id) this.statusUpdatingIds.delete(expense.id);
+        this.loadExpenses(this.pageIndex, this.pageSize);
       },
       error: () => {
         this.toastr.error('Failed to update expense status');
@@ -185,32 +278,4 @@ export class HrExpensesPageComponent implements OnInit {
       }
     });
   }
-
-  private applyFilters(): void {
-    const { startDate, endDate, job, status } = this.currentFilters;
-    this.filteredExpenses = this.expenses.filter(exp => {
-      const expenseDate = new Date(exp.date);
-      const matchesStart = startDate ? expenseDate >= new Date(startDate) : true;
-      const matchesEnd = endDate ? expenseDate <= new Date(endDate) : true;
-      const matchesJob = job ? exp.projectId?.toLowerCase().includes(job.toLowerCase()) : true;
-      const matchesStatus = status ? (exp.status === status) : true;
-      return matchesStart && matchesEnd && matchesJob && matchesStatus;
-    });
-  }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
