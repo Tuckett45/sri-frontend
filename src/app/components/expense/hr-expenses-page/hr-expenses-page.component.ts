@@ -88,15 +88,8 @@ export class HrExpensesPageComponent implements OnInit {
 
     this.expenseApi.getTeamExpenses(query).subscribe({
       next: res => {
-        debugger;
-        const response: ExpenseListResponse = res ?? {
-          page: pageIndex + 1,
-          pageSize,
-          items: res,
-          total: 0,
-        };
-        debugger;
-        const items = response.items ?? response as unknown as ExpenseListItem[];
+        const response = this.normalizeResponse(res, pageIndex, pageSize);
+        const items = response.items ?? [];
 
         if (!items.length && (response.page ?? 1) > 1) {
           const prevIndex = Math.max(pageIndex - 1, 0);
@@ -108,10 +101,7 @@ export class HrExpensesPageComponent implements OnInit {
           return;
         }
 
-        this.totalItems =
-          typeof response.total === 'number'
-            ? response.total
-            : this.estimateTotal(response);
+        this.totalItems = this.resolveTotal(response, items.length);
 
         this.expenses = items.map(item => this.toViewModel(item));
         this.loading = false;
@@ -143,10 +133,68 @@ export class HrExpensesPageComponent implements OnInit {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   }
 
-  private estimateTotal(res: ExpenseListResponse): number {
-    const items = res.items ?? [];
-    const baseCount = (res.page - 1) * res.pageSize + items.length;
-    return items.length === res.pageSize ? baseCount + 1 : baseCount;
+  private normalizeResponse(
+    res: ExpenseListResponse | ExpenseListItem[] | null | undefined,
+    fallbackPageIndex: number,
+    fallbackPageSize: number
+  ): ExpenseListResponse {
+    const fallback: ExpenseListResponse = {
+      page: fallbackPageIndex + 1,
+      pageSize: fallbackPageSize,
+      items: []
+    };
+
+    if (!res) {
+      return fallback;
+    }
+
+    if (Array.isArray(res)) {
+      return { ...fallback, items: res };
+    }
+
+    const page = this.toNumber(res.page, fallback.page);
+    const pageSize = this.toNumber(res.pageSize, fallback.pageSize);
+    const totalValue = this.toNumber(res.total, undefined);
+    const total = Number.isFinite(totalValue) ? totalValue : undefined;
+    const items = Array.isArray(res.items) ? res.items : fallback.items;
+
+    return {
+      page,
+      pageSize,
+      items,
+      total
+    };
+  }
+
+  private resolveTotal(res: ExpenseListResponse, itemCount: number): number {
+    if (Number.isFinite(res.total)) {
+      return res.total as number;
+    }
+
+    const page = this.toNumber(res.page, 1);
+    const pageSize = this.toNumber(res.pageSize, itemCount || this.pageSize);
+
+    const baseCount = (page - 1) * pageSize + itemCount;
+    return itemCount >= pageSize ? baseCount + 1 : baseCount;
+  }
+
+  private toNumber(value: unknown, fallback: number | undefined): number {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return fallback ?? NaN;
+      }
+      const coerced = Number(trimmed);
+      if (Number.isFinite(coerced)) {
+        return coerced;
+      }
+    }
+
+    return fallback ?? NaN;
   }
 
   exportCsv(): void {
