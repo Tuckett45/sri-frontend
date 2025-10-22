@@ -38,6 +38,7 @@ export class HrExpensesPageComponent implements OnInit {
     startDate: null,
     endDate: null,
     job: '',
+    employee: '',
     status: ''
   };
   constructor(
@@ -84,6 +85,10 @@ export class HrExpensesPageComponent implements OnInit {
     const projectInput = this.currentFilters.job?.trim();
     if (projectInput) {
       query.projectIds = projectInput;
+    }
+    const employeeInput = this.currentFilters.employee?.trim();
+    if (employeeInput) {
+      query.createdBy = employeeInput;
     }
 
     this.expenseApi.getTeamExpenses(query).subscribe({
@@ -203,12 +208,11 @@ export class HrExpensesPageComponent implements OnInit {
       return;
     }
 
-    const header = ['Employee', 'Date', 'Job', 'Phase', 'Amount', 'Status', 'Notes'];
+    const header = ['Employee', 'Date', 'Job', 'Amount', 'Status', 'Notes'];
     const rows = this.expenses.map(exp => [
       exp.createdBy ?? '',
       new Date(exp.date ?? '').toLocaleDateString(),
       exp.projectId ?? '',
-      (exp as any).phase ?? '',
       exp.amount?.toString() ?? '',
       exp.status ?? '',
       exp.descriptionNotes ?? ''
@@ -237,12 +241,11 @@ export class HrExpensesPageComponent implements OnInit {
 
     const doc = new jsPDF();
     autoTable(doc, {
-      head: [['Employee', 'Date', 'Job', 'Phase', 'Amount', 'Status']],
+      head: [['Employee', 'Date', 'Job', 'Amount', 'Status']],
       body: this.expenses.map(e => [
         e.createdBy ?? '',
         new Date(e.date ?? '').toLocaleDateString(),
         e.projectId ?? '',
-        (e as any).phase ?? '',
         e.amount?.toString() ?? '',
         e.status ?? ''
       ])

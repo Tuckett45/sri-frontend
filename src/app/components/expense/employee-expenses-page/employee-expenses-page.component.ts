@@ -36,6 +36,7 @@ export class EmployeeExpensesPageComponent implements OnInit {
     startDate: null,
     endDate: null,
     job: '',
+    employee: '',
     status: ''
   };
 
@@ -97,16 +98,19 @@ export class EmployeeExpensesPageComponent implements OnInit {
   }
 
   private applyFilters(): void {
-    const { startDate, endDate, job, status } = this.currentFilters;
+    const { startDate, endDate, job, employee, status } = this.currentFilters;
     this.filteredExpenses = this.expenses.filter(exp => {
       const expenseDate = exp.date ? new Date(exp.date) : null;
       const matchesStart = startDate ? (expenseDate ? expenseDate >= new Date(startDate) : false) : true;
       const matchesEnd = endDate ? (expenseDate ? expenseDate <= new Date(endDate) : false) : true;
       const jobSource = exp.job ?? '';
       const matchesJob = job ? jobSource.toLowerCase().includes(job.toLowerCase()) : true;
+      const employeeFilter = employee ? employee.trim().toLowerCase() : '';
+      const employeeSource = (exp.createdBy ?? '').toLowerCase();
+      const matchesEmployee = employeeFilter ? employeeSource.includes(employeeFilter) : true;
       const matchesStatus = status ? exp.status === status : true;
-      const keep = matchesStart && matchesEnd && matchesJob && matchesStatus;
-      return matchesStart && matchesEnd && matchesJob && matchesStatus;
+      const keep = matchesStart && matchesEnd && matchesJob && matchesEmployee && matchesStatus;
+      return keep;
     });
   }
 

@@ -29,7 +29,7 @@ export class ExpenseApiService {
     })
   };
 
-  private baseUrl = `${environment.apiUrl}/expenses`;
+  private baseUrl = `${local_environment.apiUrl}/expenses`;
 
   constructor(private http: HttpClient) {}
 
@@ -55,7 +55,6 @@ export class ExpenseApiService {
     const fd = new FormData();
     if (e.id) fd.append('Id', e.id);
     fd.append('ProjectId', e.projectId ?? '');
-    fd.append('Phase', e.phase ?? '');
     fd.append('Date', this.toDateInput(e.date));
     if (e.locationText) fd.append('LocationText', e.locationText);
     fd.append('Vendor', e.vendor ?? '');
@@ -68,6 +67,8 @@ export class ExpenseApiService {
     }
     fd.append('DescriptionNotes', e.descriptionNotes ?? '');
 
+    const isMOB = !!e.mobilization;
+    fd.append('Mobilization', String(isMOB));
     const isEnt = !!e.isEntertainment || e.category === ExpenseCategory.Entertainment;
     fd.append('IsEntertainment', String(isEnt));
     if (isEnt && e.entertainment) {
@@ -94,7 +95,6 @@ export class ExpenseApiService {
     } else {
       const payload: any = {
         projectId: expense.projectId,
-        phase: expense.phase ?? null,
         date: this.toDateInput(expense.date),
         locationText: expense.locationText || null,
         vendor: expense.vendor,
@@ -104,6 +104,7 @@ export class ExpenseApiService {
         mileageMiles: expense.mileageMiles ?? null,
         descriptionNotes: expense.descriptionNotes ?? null,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
+        mobilization: expense.mobilization,
         entertainment: expense.isEntertainment && expense.entertainment ? {
           typeOfEntertainment: expense.entertainment.typeOfEntertainment,
           nameOfEstablishment: expense.entertainment.nameOfEstablishment,
@@ -131,7 +132,6 @@ export class ExpenseApiService {
       const payload: any = {
         id: expense.id,
         projectId: expense.projectId,
-        phase: expense.phase ?? null,
         date: this.toDateInput(expense.date),
         locationText: expense.locationText || null,
         vendor: expense.vendor,
@@ -140,6 +140,7 @@ export class ExpenseApiService {
         paymentMethod: expense.paymentMethod,
         mileageMiles: expense.mileageMiles ?? null,
         descriptionNotes: expense.descriptionNotes ?? null,
+        mobilization: expense.mobilization,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
         entertainment: expense.isEntertainment && expense.entertainment ? {
           typeOfEntertainment: expense.entertainment.typeOfEntertainment,
@@ -199,14 +200,27 @@ export class ExpenseApiService {
     return this.getExpenses(opts).pipe(map(res => res.items));
   }
 
+  searchExpenses(request: {
+    from?: string;
+    to?: string;
+    projectId?: string;
+    projectIds?: string[];
+    includeImages?: boolean;
+    employeeId?: string;
+    page?: number;
+    pageSize?: number;
+    status?: ExpenseStatus;
+  }): Observable<ExpenseListResponse> {
+    return this.http.post<ExpenseListResponse>(`${this.baseUrl}/search`, request, this.jsonOptions);
+  }
+
   analyzeReceipt(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file); // must match the backend parameter name
 
-    return this.http.post<any>(`${local_environment.apiUrl}/expense/analyze-receipt`, formData);
+    return this.http.post<any>(`${local_environment.apiUrl}/expenses/analyze-receipt`, formData);
   }
 
-  /** Personal view: flat list filtered by the specified user (email/UPN/id). */
   getMyExpenses(
     createdBy: string,
     opts: {
@@ -222,7 +236,23 @@ export class ExpenseApiService {
 
   
   getTeamExpenses(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}): Observable<ExpenseListResponse> {
-    return this.getExpenses(opts);
+    const projectIdInput = typeof opts.projectIds === 'string' ? opts.projectIds.trim() : '';
+    const projectIdsArray = projectIdInput
+      ? projectIdInput.split(',').map(p => p.trim()).filter(Boolean)
+      : undefined;
+    const singleProjectId = projectIdsArray && projectIdsArray.length === 1 ? projectIdsArray[0] : undefined;
+
+    return this.searchExpenses({
+      from: opts.from,
+      to: opts.to,
+      projectId: singleProjectId,
+      projectIds: projectIdsArray,
+      includeImages: opts.includeImages,
+      employeeId: (opts.createdBy ?? '').trim() || undefined,
+      page: opts.page,
+      pageSize: opts.pageSize,
+      status: opts.status
+    });
   }
 }
 

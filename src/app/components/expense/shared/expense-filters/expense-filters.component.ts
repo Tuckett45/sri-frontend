@@ -8,6 +8,7 @@ export interface ExpenseFilters {
   startDate: Date | string | null;
   endDate: Date | string | null;
   job: string;
+  employee: string;
   status: ExpenseStatus | 'Pending' | 'Approved' | 'Rejected' | '' | null;
 }
 
@@ -29,6 +30,7 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
     startDate: [null],
     endDate: [null],
     job: [''],
+    employee: [''],
     status: ['']
   });
 
@@ -49,6 +51,7 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
       startDate: null,
       endDate: null,
       job: '',
+      employee: '',
       status: ''
     });
     this.emitFilters();
@@ -60,11 +63,12 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
   }
 
   private emitFilters(): void {
-    const { startDate, endDate, job, status } = this.form.value as ExpenseFilters;
+    const { startDate, endDate, job, employee, status } = this.form.value as ExpenseFilters;
     this.filtersChange.emit({
       startDate: startDate ?? null,
       endDate: endDate ?? null,
       job: job ?? '',
+      employee: employee ?? '',
       status: status ?? ''
     });
   }
