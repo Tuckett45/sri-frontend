@@ -88,14 +88,12 @@ export class HrExpensesPageComponent implements OnInit {
 
     this.expenseApi.getTeamExpenses(query).subscribe({
       next: res => {
-        debugger;
         const response: ExpenseListResponse = res ?? {
           page: pageIndex + 1,
           pageSize,
           items: res,
           total: 0,
         };
-        debugger;
         const items = response.items ?? response as unknown as ExpenseListItem[];
 
         if (!items.length && (response.page ?? 1) > 1) {
