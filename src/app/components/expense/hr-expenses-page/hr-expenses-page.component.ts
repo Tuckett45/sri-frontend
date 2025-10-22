@@ -88,27 +88,15 @@ export class HrExpensesPageComponent implements OnInit {
 
     this.expenseApi.getTeamExpenses(query).subscribe({
       next: res => {
-        const response: ExpenseListResponse = Array.isArray(res)
-          ? {
-              page: pageIndex + 1,
-              pageSize,
-              items: res as ExpenseListItem[],
-              total: (res as ExpenseListItem[]).length,
-            }
-          : (res as unknown as ExpenseListResponse ?? {
-              page: pageIndex + 1,
-              pageSize,
-              items: [],
-              total: 0,
-            });
-
-        const allItems = response.items ?? [];
-        let items = allItems;
-
-        if (!response.total && allItems.length > pageSize) {
-          const start = pageIndex * pageSize;
-          items = allItems.slice(start, start + pageSize);
-        }
+        debugger;
+        const response: ExpenseListResponse = res ?? {
+          page: pageIndex + 1,
+          pageSize,
+          items: res,
+          total: 0,
+        };
+        debugger;
+        const items = response.items ?? response as unknown as ExpenseListItem[];
 
         if (!items.length && (response.page ?? 1) > 1) {
           const prevIndex = Math.max(pageIndex - 1, 0);
@@ -120,7 +108,11 @@ export class HrExpensesPageComponent implements OnInit {
           return;
         }
 
-        this.totalItems = response.total ?? this.estimateTotal(response);
+        this.totalItems =
+          typeof response.total === 'number'
+            ? response.total
+            : this.estimateTotal(response);
+
         this.expenses = items.map(item => this.toViewModel(item));
         this.loading = false;
       },

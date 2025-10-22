@@ -221,8 +221,8 @@ export class ExpenseApiService {
   }
 
   
-  getTeamExpenses(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}): Observable<ExpenseListItem> {
-    return this.getExpenses(opts).pipe(map(res => (res) as unknown as ExpenseListItem));
+  getTeamExpenses(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}): Observable<ExpenseListResponse> {
+    return this.getExpenses(opts);
   }
 }
 
