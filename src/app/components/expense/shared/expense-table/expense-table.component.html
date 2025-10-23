@@ -1,4 +1,4 @@
-﻿<div class="expense-table" [class.is-loading]="loading">
+<div class="expense-table" [class.is-loading]="loading">
   <div class="loading-overlay" *ngIf="loading">
     <mat-progress-spinner diameter="48" mode="indeterminate"></mat-progress-spinner>
   </div>
@@ -17,14 +17,9 @@
         <td mat-cell *matCellDef="let expense">{{ expense.date | date:'shortDate' }}</td>
       </ng-container>
 
-      <ng-container matColumnDef="phase">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Phase</th>
-        <td mat-cell *matCellDef="let expense">{{ expense.phase || '-' }}</td>
-      </ng-container>
-
       <ng-container matColumnDef="employee" *ngIf="showEmployeeColumn">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Employee</th>
-        <td mat-cell *matCellDef="let expense">{{ expense.createdBy || '—' }}</td>
+        <td mat-cell *matCellDef="let expense">{{ expense.createdBy || '-' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="job">
@@ -57,7 +52,13 @@
               <mat-icon *ngIf="receipt.kind === 'file'">insert_drive_file</mat-icon>
             </button>
 
-            <button mat-icon-button *ngIf="receipt.kind !== 'pdf'" type="button" matTooltip="Open in new tab" (click)="openInNewTab(expense)" [disabled]="loading">
+            <button
+              mat-icon-button
+              *ngIf="receipt.kind !== 'pdf'"
+              type="button"
+              matTooltip="Open in new tab"
+              (click)="openInNewTab(expense)"
+              [disabled]="loading">
               <mat-icon>open_in_new</mat-icon>
             </button>
           </ng-container>
@@ -71,7 +72,7 @@
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="actions" *ngIf="hasActionColumn">
+      <ng-container matColumnDef="actions" *ngIf="hasActionColumn()">
         <th mat-header-cell *matHeaderCellDef>Actions</th>
         <td mat-cell class="actions-container" *matCellDef="let expense">
           <button
@@ -117,7 +118,14 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackByExpenseId"></tr>
     </table>
 
-    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+    <mat-paginator
+      [length]="serverPagination ? totalItems : dataSource.data.length"
+      [pageSize]="pageSize"
+      [pageIndex]="pageIndex"
+      [pageSizeOptions]="pageSizeOptions"
+      showFirstLastButtons
+      (page)="onPaginatorPage($event)">
+    </mat-paginator>
   </div>
 
   <ng-template #emptyState>
@@ -152,5 +160,4 @@
     </ng-template>
   </p-galleria>
 </div>
-
 

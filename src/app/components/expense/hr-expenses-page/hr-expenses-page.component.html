@@ -1,4 +1,4 @@
-﻿<div class="page-controls">
+<div class="page-controls">
   <button
     mat-stroked-button
     type="button"
@@ -29,7 +29,7 @@
 </app-expense-filters>
 
 <app-expense-table
-  [expenses]="filteredExpenses"
+  [expenses]="expenses"
   [loading]="loading || statusUpdatingIds.size > 0"
   [showEmployeeColumn]="true"
   [showAddButton]="false"
@@ -38,8 +38,13 @@
   [enableApproval]="true"
   [pendingStatusIds]="statusUpdatingIds"
   [emptyStateMessage]="'No expenses match the current filters.'"
+  [serverPagination]="true"
+  [pageSize]="pageSize"
+  [pageIndex]="pageIndex"
+  [pageSizeOptions]="pageSizeOptions"
+  [totalItems]="totalItems"
+  (pageChange)="onPageChange($event)"
   (edit)="openExpenseDetails($event)"
   (approve)="onApprove($event)"
   (reject)="onReject($event)">
 </app-expense-table>
-

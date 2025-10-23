@@ -29,11 +29,12 @@
   *ngIf="filtersOpen"
   id="employee-filters"
   [statusOptions]="statusOptions"
+  [showEmployeeField]="false"
   (filtersChange)="onFiltersChange($event)">
 </app-expense-filters>
 
 <app-expense-table
-  [expenses]="filteredExpenses"
+  [expenses]="expenses"
   [loading]="loading"
   [emptyStateMessage]="'No expenses match the current filters.'"
   (edit)="openEditExpense($event)"
