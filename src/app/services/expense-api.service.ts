@@ -55,7 +55,6 @@ export class ExpenseApiService {
     const fd = new FormData();
     if (e.id) fd.append('Id', e.id);
     fd.append('ProjectId', e.projectId ?? '');
-    fd.append('Phase', e.phase ?? '');
     fd.append('Date', this.toDateInput(e.date));
     if (e.locationText) fd.append('LocationText', e.locationText);
     fd.append('Vendor', e.vendor ?? '');
@@ -68,6 +67,8 @@ export class ExpenseApiService {
     }
     fd.append('DescriptionNotes', e.descriptionNotes ?? '');
 
+    const isMOB = !!e.mobilization;
+    fd.append('Mobilization', String(isMOB));
     const isEnt = !!e.isEntertainment || e.category === ExpenseCategory.Entertainment;
     fd.append('IsEntertainment', String(isEnt));
     if (isEnt && e.entertainment) {
@@ -94,7 +95,6 @@ export class ExpenseApiService {
     } else {
       const payload: any = {
         projectId: expense.projectId,
-        phase: expense.phase ?? null,
         date: this.toDateInput(expense.date),
         locationText: expense.locationText || null,
         vendor: expense.vendor,
@@ -104,6 +104,7 @@ export class ExpenseApiService {
         mileageMiles: expense.mileageMiles ?? null,
         descriptionNotes: expense.descriptionNotes ?? null,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
+        mobilization: expense.mobilization,
         entertainment: expense.isEntertainment && expense.entertainment ? {
           typeOfEntertainment: expense.entertainment.typeOfEntertainment,
           nameOfEstablishment: expense.entertainment.nameOfEstablishment,
@@ -131,7 +132,6 @@ export class ExpenseApiService {
       const payload: any = {
         id: expense.id,
         projectId: expense.projectId,
-        phase: expense.phase ?? null,
         date: this.toDateInput(expense.date),
         locationText: expense.locationText || null,
         vendor: expense.vendor,
@@ -140,6 +140,7 @@ export class ExpenseApiService {
         paymentMethod: expense.paymentMethod,
         mileageMiles: expense.mileageMiles ?? null,
         descriptionNotes: expense.descriptionNotes ?? null,
+        mobilization: expense.mobilization,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
         entertainment: expense.isEntertainment && expense.entertainment ? {
           typeOfEntertainment: expense.entertainment.typeOfEntertainment,
@@ -199,7 +200,35 @@ export class ExpenseApiService {
     return this.getExpenses(opts).pipe(map(res => res.items));
   }
 
-  /** Personal view: flat list filtered by the specified user (email/UPN/id). */
+  searchExpenses(request: {
+    from?: string;
+    to?: string;
+    job?: string;
+    includeImages?: boolean;
+    employee?: string;
+    page?: number;
+    pageSize?: number;
+    status?: ExpenseStatus;
+  }): Observable<ExpenseListResponse> {
+    let params = new HttpParams();
+    Object.entries(request ?? {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, String(value));
+      }
+    });
+    return this.http.get<ExpenseListResponse>(`${this.baseUrl}/search`, {
+      ...this.authOnlyOptions,
+      params
+    });
+  }
+
+  analyzeReceipt(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file); // must match the backend parameter name
+
+    return this.http.post<any>(`${environment.apiUrl}/expenses/analyze-receipt`, formData);
+  }
+
   getMyExpenses(
     createdBy: string,
     opts: {

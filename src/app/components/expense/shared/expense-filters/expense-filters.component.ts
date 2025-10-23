@@ -8,7 +8,7 @@ export interface ExpenseFilters {
   startDate: Date | string | null;
   endDate: Date | string | null;
   job: string;
-  phase: string;
+  employee: string;
   status: ExpenseStatus | 'Pending' | 'Approved' | 'Rejected' | '' | null;
 }
 
@@ -19,6 +19,7 @@ export interface ExpenseFilters {
 })
 export class ExpenseFiltersComponent implements OnInit, OnDestroy {
   @Input() statusOptions: ExpenseStatus[] = [];
+  @Input() showEmployeeField = true;
   @Input() set initialFilters(value: Partial<ExpenseFilters> | null) {
     if (!value) return;
     this.form.patchValue(value);
@@ -30,7 +31,7 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
     startDate: [null],
     endDate: [null],
     job: [''],
-    phase: [''],
+    employee: [''],
     status: ['']
   });
 
@@ -51,7 +52,7 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
       startDate: null,
       endDate: null,
       job: '',
-      phase: '',
+      employee: '',
       status: ''
     });
     this.emitFilters();
@@ -63,12 +64,12 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
   }
 
   private emitFilters(): void {
-    const { startDate, endDate, job, phase, status } = this.form.value as ExpenseFilters;
+    const { startDate, endDate, job, employee, status } = this.form.value as ExpenseFilters;
     this.filtersChange.emit({
       startDate: startDate ?? null,
       endDate: endDate ?? null,
       job: job ?? '',
-      phase: phase ?? '',
+      employee: employee ?? '',
       status: status ?? ''
     });
   }
