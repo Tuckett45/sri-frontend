@@ -19,7 +19,7 @@
       <input matInput formControlName="job" />
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field *ngIf="showEmployeeField" appearance="fill">
       <mat-label>Employee</mat-label>
       <input matInput formControlName="employee" />
     </mat-form-field>

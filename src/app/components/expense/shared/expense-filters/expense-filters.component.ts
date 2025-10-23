@@ -19,6 +19,7 @@ export interface ExpenseFilters {
 })
 export class ExpenseFiltersComponent implements OnInit, OnDestroy {
   @Input() statusOptions: ExpenseStatus[] = [];
+  @Input() showEmployeeField = true;
   @Input() set initialFilters(value: Partial<ExpenseFilters> | null) {
     if (!value) return;
     this.form.patchValue(value);

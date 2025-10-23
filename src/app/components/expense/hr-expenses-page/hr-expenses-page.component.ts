@@ -34,6 +34,8 @@ export class HrExpensesPageComponent implements OnInit {
   loading = false;
   filtersOpen = false;
   readonly statusUpdatingIds = new Set<string>();
+  private filtersInitialized = false;
+  private isUsingFilters = false;
   private currentFilters: ExpenseFilters = {
     startDate: null,
     endDate: null,
@@ -53,7 +55,23 @@ export class HrExpensesPageComponent implements OnInit {
 
   onFiltersChange(filters: ExpenseFilters): void {
     this.currentFilters = filters;
-    this.loadExpenses(0, this.pageSize);
+    const useSearch = this.hasActiveFilters(filters);
+    this.isUsingFilters = useSearch;
+
+    if (!this.filtersInitialized) {
+      this.filtersInitialized = true;
+      if (useSearch) {
+        this.searchExpenses(0, this.pageSize);
+      }
+      return;
+    }
+
+    this.pageIndex = 0;
+    if (useSearch) {
+      this.searchExpenses(0, this.pageSize);
+    } else {
+      this.loadExpenses(0, this.pageSize);
+    }
   }
 
   toggleFilters(): void {
@@ -61,61 +79,117 @@ export class HrExpensesPageComponent implements OnInit {
   }
 
   onPageChange(event: PageEvent): void {
-    this.loadExpenses(event.pageIndex, event.pageSize);
+    if (this.isUsingFilters) {
+      this.searchExpenses(event.pageIndex, event.pageSize);
+    } else {
+      this.loadExpenses(event.pageIndex, event.pageSize);
+    }
   }
 
   loadExpenses(pageIndex: number = this.pageIndex, pageSize: number = this.pageSize): void {
-    this.loading = true;
     this.pageIndex = pageIndex;
     this.pageSize = pageSize;
 
-    const query: Parameters<ExpenseApiService['getExpenses']>[0] = {
+    this.loading = true;
+    const params: Parameters<ExpenseApiService['getExpenses']>[0] = {
       includeImages: true,
       page: pageIndex + 1,
-      pageSize,
+      pageSize
     };
 
-    const from = this.toQueryDate(this.currentFilters.startDate);
-    const to = this.toQueryDate(this.currentFilters.endDate);
-    if (from) query.from = from;
-    if (to) query.to = to;
-    if (this.currentFilters.status) {
-      query.status = this.currentFilters.status as ExpenseStatus;
-    }
-    const projectInput = this.currentFilters.job?.trim();
-    if (projectInput) {
-      query.projectIds = projectInput;
-    }
-    const employeeInput = this.currentFilters.employee?.trim();
-    if (employeeInput) {
-      query.createdBy = employeeInput;
-    }
-
-    this.expenseApi.getTeamExpenses(query).subscribe({
+    this.expenseApi.getExpenses(params).subscribe({
       next: res => {
-        const response = this.normalizeResponse(res, pageIndex, pageSize);
-        const items = response.items ?? [];
-
-        if (!items.length && (response.page ?? 1) > 1) {
-          const prevIndex = Math.max(pageIndex - 1, 0);
-          if (prevIndex !== pageIndex) {
-            this.loadExpenses(prevIndex, pageSize);
-          } else {
-            this.loading = false;
-          }
-          return;
+        if (this.isUsingFilters) {
+          this.loading = false;
+          this.searchExpenses(this.pageIndex, this.pageSize);
+        } else {
+          this.handleResponse(res, pageIndex, pageSize, false);
         }
-
-        this.totalItems = this.resolveTotal(response, items.length);
-
-        this.expenses = items.map(item => this.toViewModel(item));
-        this.loading = false;
       },
       error: () => {
         this.toastr.error('Failed to load team expenses');
         this.loading = false;
       }
     });
+  }
+
+  private searchExpenses(pageIndex: number, pageSize: number): void {
+    const request = this.buildSearchRequest(pageIndex, pageSize);
+    this.loading = true;
+    this.pageIndex = pageIndex;
+    this.pageSize = pageSize;
+
+    this.expenseApi.searchExpenses(request).subscribe({
+      next: res => this.handleResponse(res, pageIndex, pageSize, true),
+      error: () => {
+        this.toastr.error('Failed to load team expenses');
+        this.loading = false;
+      }
+    });
+  }
+
+  private buildSearchRequest(
+    pageIndex: number,
+    pageSize: number
+  ): Parameters<ExpenseApiService['searchExpenses']>[0] {
+    const request: Parameters<ExpenseApiService['searchExpenses']>[0] = {
+      includeImages: true,
+      page: pageIndex + 1,
+      pageSize
+    };
+
+    const from = this.toQueryDate(this.currentFilters.startDate);
+    const to = this.toQueryDate(this.currentFilters.endDate);
+    if (from) request.from = from;
+    if (to) request.to = to;
+    if (this.currentFilters.status) {
+      request.status = this.currentFilters.status as ExpenseStatus;
+    }
+    const jobInput = this.currentFilters.job?.trim();
+    if (jobInput) {
+      request.job = jobInput;
+    }
+    const employeeInput = this.currentFilters.employee?.trim();
+    if (employeeInput) {
+      request.employee = employeeInput;
+    }
+
+    return request;
+  }
+
+  private hasActiveFilters(filters: ExpenseFilters = this.currentFilters): boolean {
+    const hasStart = !!filters.startDate;
+    const hasEnd = !!filters.endDate;
+    const hasJob = !!filters.job && filters.job.trim().length > 0;
+    const hasEmployee = !!filters.employee && filters.employee.trim().length > 0;
+    const hasStatus = !!filters.status;
+    return hasStart || hasEnd || hasJob || hasEmployee || hasStatus;
+  }
+
+  private handleResponse(
+    res: ExpenseListResponse | ExpenseListItem[] | null | undefined,
+    pageIndex: number,
+    pageSize: number,
+    fromSearch: boolean
+  ): void {
+    const response = this.normalizeResponse(res, pageIndex, pageSize);
+    const items = response.items ?? [];
+
+    if (!items.length && (response.page ?? 1) > 1) {
+      const prevIndex = Math.max(pageIndex - 1, 0);
+      if (prevIndex !== pageIndex) {
+        if (fromSearch) {
+          this.searchExpenses(prevIndex, pageSize);
+        } else {
+          this.loadExpenses(prevIndex, pageSize);
+        }
+        return;
+      }
+    }
+
+    this.totalItems = this.resolveTotal(response, items.length);
+    this.expenses = items.map(item => this.toViewModel(item));
+    this.loading = false;
   }
 
   private toViewModel(item: ExpenseListItem): DisplayExpense {

@@ -29,7 +29,7 @@ export class ExpenseApiService {
     })
   };
 
-  private baseUrl = `${local_environment.apiUrl}/expenses`;
+  private baseUrl = `${environment.apiUrl}/expenses`;
 
   constructor(private http: HttpClient) {}
 
@@ -203,22 +203,30 @@ export class ExpenseApiService {
   searchExpenses(request: {
     from?: string;
     to?: string;
-    projectId?: string;
-    projectIds?: string[];
+    job?: string;
     includeImages?: boolean;
-    employeeId?: string;
+    employee?: string;
     page?: number;
     pageSize?: number;
     status?: ExpenseStatus;
   }): Observable<ExpenseListResponse> {
-    return this.http.post<ExpenseListResponse>(`${this.baseUrl}/search`, request, this.jsonOptions);
+    let params = new HttpParams();
+    Object.entries(request ?? {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, String(value));
+      }
+    });
+    return this.http.get<ExpenseListResponse>(`${this.baseUrl}/search`, {
+      ...this.authOnlyOptions,
+      params
+    });
   }
 
   analyzeReceipt(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file); // must match the backend parameter name
 
-    return this.http.post<any>(`${local_environment.apiUrl}/expenses/analyze-receipt`, formData);
+    return this.http.post<any>(`${environment.apiUrl}/expenses/analyze-receipt`, formData);
   }
 
   getMyExpenses(
@@ -235,24 +243,8 @@ export class ExpenseApiService {
   }
 
   
-  getTeamExpenses(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}): Observable<ExpenseListResponse> {
-    const projectIdInput = typeof opts.projectIds === 'string' ? opts.projectIds.trim() : '';
-    const projectIdsArray = projectIdInput
-      ? projectIdInput.split(',').map(p => p.trim()).filter(Boolean)
-      : undefined;
-    const singleProjectId = projectIdsArray && projectIdsArray.length === 1 ? projectIdsArray[0] : undefined;
-
-    return this.searchExpenses({
-      from: opts.from,
-      to: opts.to,
-      projectId: singleProjectId,
-      projectIds: projectIdsArray,
-      includeImages: opts.includeImages,
-      employeeId: (opts.createdBy ?? '').trim() || undefined,
-      page: opts.page,
-      pageSize: opts.pageSize,
-      status: opts.status
-    });
+  getTeamExpenses(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}): Observable<ExpenseListItem> {
+    return this.getExpenses(opts).pipe(map(res => (res) as unknown as ExpenseListItem));
   }
 }
 
