@@ -1,7 +1,7 @@
 // src/app/features/deployments/services/deployment.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { firstValueFrom, map, Observable } from 'rxjs';
+import { catchError, firstValueFrom, map, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { environment, local_environment } from '../../../../environments/environments';
 import { DeploymentHandoff, HandoffPackage, Deployment } from '../models/deployment.models';
 import { StartDeploymentProgressPayload } from '../models/deployment-progress.model';
@@ -54,6 +54,7 @@ export type StartDeploymentProgressBody =
 export class DeploymentService {
   private http = inject(HttpClient);
   private base = `${local_environment.apiUrl}/deployments`;
+  private listCache = new Map<string, Observable<Deployment[]>>();
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -64,14 +65,28 @@ export class DeploymentService {
 
   // ----- Deployments -----
   list(q: DeploymentQuery = {}): Observable<Deployment[]> {
+    const key = this.buildQueryCacheKey(q);
+    const cached = this.listCache.get(key);
+    if (cached) return cached;
+
     let params = new HttpParams();
     Object.entries(q).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
     });
 
-    return this.http.get<{ total: number; rows: Deployment[] } | Deployment[]>(this.base, { params, headers: this.httpOptions.headers }).pipe(
-      map(res => Array.isArray(res) ? res : res.rows)
-    );
+    const request$ = this.http
+      .get<{ total: number; rows: Deployment[] } | Deployment[]>(this.base, { params, headers: this.httpOptions.headers })
+      .pipe(
+        map(res => Array.isArray(res) ? res : res.rows),
+        shareReplay({ bufferSize: 1, refCount: false }),
+        catchError(err => {
+          this.listCache.delete(key);
+          return throwError(() => err);
+        })
+      );
+
+    this.listCache.set(key, request$);
+    return request$;
   }
 
   async get(id: string) {
@@ -79,15 +94,21 @@ export class DeploymentService {
   }
 
   async create(payload: Partial<Deployment>) {
-    return firstValueFrom(this.http.post<{ id: string }>(this.base, payload, { headers: this.httpOptions.headers }));
+    const result = await firstValueFrom(this.http.post<{ id: string }>(this.base, payload, { headers: this.httpOptions.headers }));
+    this.invalidateListCache();
+    return result;
   }
 
   async update(id: string, payload: Partial<Deployment>) {
-    return firstValueFrom(this.http.put<void>(`${this.base}/${id}`, payload, { headers: this.httpOptions.headers }));
+    const result = await firstValueFrom(this.http.put<void>(`${this.base}/${id}`, payload, { headers: this.httpOptions.headers }));
+    this.invalidateListCache();
+    return result;
   }
 
   async advance(id: string, from: number, to: number) {
-    return firstValueFrom(this.http.post<void>(`${this.base}/${id}/advance`, { from, to }, { headers: this.httpOptions.headers }));
+    const result = await firstValueFrom(this.http.post<void>(`${this.base}/${id}/advance`, { from, to }, { headers: this.httpOptions.headers }));
+    this.invalidateListCache();
+    return result;
   }
 
   // ----- Phases/Subphases/Checklist -----
@@ -126,7 +147,9 @@ export class DeploymentService {
       receiving: receiving ?? null,
       submittedSiteSurvey: submittedSiteSurvey ?? null,
     };
-    return this.http.post<void>(`${this.base}/${id}/progress`, body, { headers: this.httpOptions.headers });
+    return this.http.post<void>(`${this.base}/${id}/progress`, body, { headers: this.httpOptions.headers }).pipe(
+      tap(() => this.invalidateListCache())
+    );
   }
 
   // ----- Handoff -----
@@ -136,5 +159,16 @@ export class DeploymentService {
 
   async signHandoff(id: string, payload: HandoffUpdateDto) {
     return firstValueFrom(this.http.post<HandoffPackage>(`${this.base}/${id}/handoff`, payload, { headers: this.httpOptions.headers }));
+  }
+
+  private buildQueryCacheKey(q: DeploymentQuery): string {
+    const normalizedEntries = Object.entries(q)
+      .filter(([, v]) => v !== undefined && v !== null && v !== '')
+      .sort(([a], [b]) => a.localeCompare(b));
+    return JSON.stringify(normalizedEntries);
+  }
+
+  private invalidateListCache(): void {
+    this.listCache.clear();
   }
 }

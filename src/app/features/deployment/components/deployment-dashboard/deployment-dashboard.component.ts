@@ -145,7 +145,7 @@ export class DeploymentDashboardComponent implements OnInit {
       dataCenter: initial.dataCenter?.trim() || null,
     });
 
-    const demo: Deployment[] = [
+    const demo = this.decorateDeploymentList([
       {
         id: 'demo-001',
         name: 'Chicago Edge Expansion',
@@ -191,7 +191,7 @@ export class DeploymentDashboardComponent implements OnInit {
         startDate: '2024-11-02',
         targetHandoffDate: '2025-01-05',
       },
-    ];
+    ]);
 
     this.deploymentService
       .list()
@@ -199,8 +199,9 @@ export class DeploymentDashboardComponent implements OnInit {
       .subscribe({
         next: projects => {
           if (projects?.length) {
-            this.deployments.set(projects);
-            void this.refreshProgressForProjects(projects);
+            const normalized = this.decorateDeploymentList(projects);
+            this.deployments.set(normalized);
+            void this.refreshProgressForProjects(normalized);
           } else {
             this.deployments.set(demo);
           }
@@ -211,14 +212,6 @@ export class DeploymentDashboardComponent implements OnInit {
 
   protected describeStatus(status: DeploymentStatus): string {
     return this.statusDescriptions[status];
-  }
-
-  protected progressFor(project: Deployment): number {
-    const explicit = project.progressPercent;
-    if (typeof explicit === 'number' && Number.isFinite(explicit)) {
-      return Math.max(0, Math.min(100, Math.round(explicit)));
-    }
-    return this.progressFromStatus(project.status);
   }
 
   private progressFromStatus(status: DeploymentStatus): number {
@@ -498,12 +491,13 @@ export class DeploymentDashboardComponent implements OnInit {
     progressPercent: number,
     status?: DeploymentStatus
   ): void {
+    const clamped = this.clampProgress(progressPercent);
     this.deployments.update(list =>
       list.map(item =>
         item.id === projectId
           ? {
               ...item,
-              progressPercent,
+              progressPercent: clamped,
               ...(status ? { status } : {}),
             }
           : item
@@ -608,6 +602,32 @@ export class DeploymentDashboardComponent implements OnInit {
         ? { ...progress.submittedSiteSurvey, responses: progress.submittedSiteSurvey.responses.map(e => ({ ...e })) }
         : null, // <- prefer null over undefined
     };
+  }
+
+  private decorateDeploymentList(list: Deployment[]): Deployment[] {
+    return list.map(project => this.decorateDeployment(project));
+  }
+
+  private decorateDeployment(project: Deployment): Deployment {
+    return {
+      ...project,
+      progressPercent: this.computeProjectProgress(project),
+    };
+  }
+
+  private computeProjectProgress(project: Deployment): number {
+    const explicit = project.progressPercent;
+    if (typeof explicit === 'number' && Number.isFinite(explicit)) {
+      return this.clampProgress(explicit);
+    }
+    return this.progressFromStatus(project.status);
+  }
+
+  private clampProgress(raw: number): number {
+    if (!Number.isFinite(raw)) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, Math.round(raw)));
   }
 }
 

@@ -118,9 +118,9 @@
           <td data-label="Progress">
             <div class="progress-wrapper">
               <div class="progress-bar">
-                <div class="progress-fill" [style.width.%]="progressFor(project)"></div>
+                <div class="progress-fill" [style.width.%]="project.progressPercent ?? 0"></div>
               </div>
-              <span class="progress-label">{{ progressFor(project) }}%</span>
+              <span class="progress-label">{{ project.progressPercent ?? 0 }}%</span>
             </div>
           </td>
           <td data-label="Actions" class="actions-cell">
