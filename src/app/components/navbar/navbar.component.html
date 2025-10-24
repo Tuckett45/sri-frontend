@@ -15,6 +15,9 @@
     <button *ngIf="authService.isClient() || authService.isCM() || authService.isAdmin() || authService.isPM()" mat-button routerLink="/overview" routerLinkActive="active-link">
       Overview
     </button>
+    <button *ngIf="authService.isCM() || authService.isAdmin() || authService.isPM()"  mat-button routerLink="/dispatch" routerLinkActive="active-link">
+      Dispatch Board
+    </button>
     <button *ngIf="authService.isCM() || authService.isAdmin() || authService.isPM()"  mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">
       Prelim Punch List Tracker
     </button>

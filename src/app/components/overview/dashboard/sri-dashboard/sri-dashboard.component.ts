@@ -9,14 +9,13 @@ import { User } from 'src/app/models/user.model';
 import { VendorIssueStats } from 'src/app/models/vendor-issue-stats.model';
 import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
-import { DispatchBoardComponent } from '../../../dispatch-board/dispatch-board.component';
 
 @Component({
   selector: 'sri-dashboard',
   templateUrl: './sri-dashboard.component.html',
   styleUrls: ['./sri-dashboard.component.scss'],
   standalone: true,
-  imports: [ChartModule, CommonModule, DividerModule, FormsModule, DropdownModule, DispatchBoardComponent]
+  imports: [ChartModule, CommonModule, DividerModule, FormsModule, DropdownModule]
 })
 export class SRIDashboardComponent implements OnInit {
   dashboardData!: DashboardData;

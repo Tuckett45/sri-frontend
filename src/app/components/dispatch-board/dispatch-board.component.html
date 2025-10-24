@@ -36,7 +36,11 @@
         <h3>Active Tickets</h3>
         <span class="section-caption">Prioritize high-risk work and schedule dispatch windows.</span>
       </div>
-      <p-table [value]="tickets" responsiveLayout="scroll" [tableStyle]="{ 'min-width': '60rem' }">
+      <p-table
+        [value]="tickets"
+        responsiveLayout="scroll"
+        [tableStyle]="{ 'min-width': '62rem' }"
+        styleClass="ticket-table">
         <ng-template pTemplate="header">
           <tr>
             <th>Ticket</th>
@@ -50,43 +54,61 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-ticket>
-          <tr>
+          <tr [ngClass]="['ticket-row', ticket.priority ? 'priority-' + ticket.priority.toLowerCase() : '', ticket.stage ? 'stage-' + ticket.stage : '']">
             <td>
-              <div class="ticket-id">{{ ticket.id }}</div>
-              <small class="requested">Requested by {{ ticket.requestedBy }}</small>
+              <div class="ticket-cell">
+                <span class="ticket-id">{{ ticket.id }}</span>
+                <small class="requested">Requested by {{ ticket.requestedBy }}</small>
+              </div>
             </td>
             <td>
               <div class="summary">{{ ticket.summary }}</div>
-              <small class="category">{{ ticket.category }}</small>
+              <span class="category-pill">{{ ticket.category }}</span>
             </td>
             <td>
               <div class="market">{{ ticket.market }}</div>
-              <small class="due-date">Due {{ ticket.dueDate | date:'MMM d' }}</small>
+              <span class="due-date-pill">Due {{ ticket.dueDate | date:'MMM d' }}</span>
             </td>
             <td>
-              <p-tag [value]="ticket.priority" [severity]="ticket.priority === 'Critical' ? 'danger' : ticket.priority === 'High' ? 'warn' : ticket.priority === 'Medium' ? 'info' : 'success'"></p-tag>
+              <span class="priority-chip" [ngClass]="'priority-' + ticket.priority.toLowerCase()">{{ ticket.priority }}</span>
             </td>
             <td>
-              <p-tag [value]="resolveStageLabel(ticket.stage)" [severity]="resolveStageSeverity(ticket.stage)"></p-tag>
+              <span class="stage-chip" [ngClass]="'stage-' + ticket.stage">{{ resolveStageLabel(ticket.stage) }}</span>
             </td>
             <td>
-              <p-dropdown
-                class="assignee-select"
-                [options]="userOptions"
-                [ngModel]="ticket.assignee"
-                (onChange)="onAssigneeChange(ticket, $event.value)"
-                placeholder="Assign dispatcher"
-                appendTo="body">
-              </p-dropdown>
+              <div class="assignee-cell">
+                <p-dropdown
+                  class="assignee-select"
+                  [options]="userOptions"
+                  [ngModel]="ticket.assignee"
+                  (onChange)="onAssigneeChange(ticket, $event.value)"
+                  placeholder="Assign dispatcher"
+                  appendTo="body">
+                </p-dropdown>
+                <small class="assignee-hint" *ngIf="ticket.assignee">
+                  Assigned to {{ resolveAssigneeName(ticket.assignee) }}
+                </small>
+              </div>
             </td>
             <td class="notes-cell">
-              <input pInputText type="text" [(ngModel)]="ticket.eta" placeholder="Add ETA or note" />
-              <textarea pInputTextarea autoResize rows="1" [(ngModel)]="ticket.notes" placeholder="Team notes"></textarea>
+              <input
+                pInputText
+                class="eta-input"
+                type="text"
+                [(ngModel)]="ticket.eta"
+                placeholder="Add ETA or note" />
+              <textarea
+                pInputTextarea
+                class="note-area"
+                autoResize
+                rows="1"
+                [(ngModel)]="ticket.notes"
+                placeholder="Team notes"></textarea>
             </td>
             <td class="actions">
-              <button pButton type="button" label="Advance" class="p-button-text" (click)="advanceStage(ticket)"></button>
-              <button pButton type="button" label="Dispatch" class="p-button-rounded p-button-sm" (click)="dispatchTicket(ticket)"></button>
-              <button pButton type="button" label="Complete" class="p-button-outlined p-button-sm" (click)="markFieldComplete(ticket)"></button>
+              <button pButton type="button" label="Advance" class="p-button-text action-link" (click)="advanceStage(ticket)"></button>
+              <button pButton type="button" label="Dispatch" class="p-button-rounded p-button-sm action-primary" (click)="dispatchTicket(ticket)"></button>
+              <button pButton type="button" label="Complete" class="p-button-outlined p-button-sm action-outline" (click)="markFieldComplete(ticket)"></button>
             </td>
           </tr>
           <tr *ngIf="ticket.validationError">

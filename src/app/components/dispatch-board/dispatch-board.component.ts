@@ -71,33 +71,33 @@ export class DispatchBoardComponent {
     {
       label: 'Management & Operations Improvement',
       segments: [
-        { label: 'Operating Review', start: 'Jan', end: 'Feb', color: '#94a3b8' },
-        { label: 'Process Design', start: 'Mar', end: 'Apr', color: '#64748b' },
-        { label: 'Field Pilot', start: 'May', end: 'Jun', color: '#475569', emphasis: true },
-        { label: 'Scale + Optimization', start: 'Jul', end: 'Oct', color: '#1e293b' },
-        { label: 'Stabilize', start: 'Nov', end: 'Dec', color: '#0f172a' }
+        { label: 'Operating Review', start: 'Jan', end: 'Feb', color: '#bfdbfe' },
+        { label: 'Process Design', start: 'Mar', end: 'Apr', color: '#93c5fd' },
+        { label: 'Field Pilot', start: 'May', end: 'Jun', color: '#60a5fa', emphasis: true },
+        { label: 'Scale + Optimization', start: 'Jul', end: 'Oct', color: '#3b82f6' },
+        { label: 'Stabilize', start: 'Nov', end: 'Dec', color: '#1d4ed8' }
       ]
     },
     {
       label: 'Dispatch Enablement',
       segments: [
-        { label: 'Workflow Mapping', start: 'Jan', end: 'Feb', color: '#bef264' },
-        { label: 'Tooling Fit', start: 'Mar', end: 'Mar', color: '#a3e635' },
-        { label: 'Integration Build', start: 'Apr', end: 'May', color: '#84cc16' },
-        { label: 'Training', start: 'Jun', end: 'Jul', color: '#22c55e' },
-        { label: 'Go-Live Support', start: 'Aug', end: 'Sep', color: '#16a34a' },
-        { label: 'Continuous Improvement', start: 'Oct', end: 'Dec', color: '#15803d' }
+        { label: 'Workflow Mapping', start: 'Jan', end: 'Feb', color: '#fed7aa' },
+        { label: 'Tooling Fit', start: 'Mar', end: 'Mar', color: '#fdba74' },
+        { label: 'Integration Build', start: 'Apr', end: 'May', color: '#fb923c' },
+        { label: 'Training', start: 'Jun', end: 'Jul', color: '#f97316' },
+        { label: 'Go-Live Support', start: 'Aug', end: 'Sep', color: '#ea580c' },
+        { label: 'Continuous Improvement', start: 'Oct', end: 'Dec', color: '#c2410c' }
       ]
     },
     {
       label: 'Dispatch',
       segments: [
-        { label: 'Intake', start: 'Jan', end: 'Jan', color: '#f0abfc' },
-        { label: 'Triage', start: 'Feb', end: 'Mar', color: '#e879f9' },
-        { label: 'Scheduling', start: 'Apr', end: 'May', color: '#d946ef' },
-        { label: 'Assign & Dispatch', start: 'Jun', end: 'Aug', color: '#c026d3', emphasis: true },
-        { label: 'Field Execution', start: 'Sep', end: 'Oct', color: '#a21caf' },
-        { label: 'Closeout', start: 'Nov', end: 'Dec', color: '#86198f' }
+        { label: 'Intake', start: 'Jan', end: 'Jan', color: '#bae6fd' },
+        { label: 'Triage', start: 'Feb', end: 'Mar', color: '#7dd3fc' },
+        { label: 'Scheduling', start: 'Apr', end: 'May', color: '#38bdf8' },
+        { label: 'Assign & Dispatch', start: 'Jun', end: 'Aug', color: '#0284c7', emphasis: true },
+        { label: 'Field Execution', start: 'Sep', end: 'Oct', color: '#0369a1' },
+        { label: 'Closeout', start: 'Nov', end: 'Dec', color: '#0c4a6e' }
       ]
     }
   ];
@@ -110,7 +110,7 @@ export class DispatchBoardComponent {
     { id: 'am', name: 'Avery Moore', role: 'Technician', workload: 4 }
   ];
 
-  readonly userOptions = this.users.map(user => ({ label: `${user.name} • ${user.role}`, value: user.id }));
+  readonly userOptions = this.users.map(user => ({ label: `${user.name} - ${user.role}`, value: user.id }));
 
   tickets: DispatchTicket[] = [
     {

@@ -8,11 +8,13 @@ import { ResetPasswordComponent } from './components/reset-password/reset-passwo
 import { StreetSheetComponent } from './components/street-sheet/street-sheet.component';
 import { OspCoordinatorTrackerComponent } from './components/osp-coordinator-tracker/osp-coordinator-tracker.component';
 import { MarketControllerComponent } from './components/market-controller/market-controller.component';
+import { DispatchBoardComponent } from './components/dispatch-board/dispatch-board.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'overview', component: OverviewComponent, canActivate: [AuthGuard] },
+  { path: 'dispatch', component: DispatchBoardComponent, canActivate: [AuthGuard] },
   { path: 'street-sheet', component: StreetSheetComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: UserProfileComponent, canActivate: [AuthGuard] },
   { path: 'osp-coordinator-tracker', component: OspCoordinatorTrackerComponent, canActivate: [AuthGuard] },
