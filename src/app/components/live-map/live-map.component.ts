@@ -45,7 +45,7 @@ export class LiveMapComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     private signalRService: SignalRService,
-    private azureMapsService: AzureMapsService,
+    public azureMapsService: AzureMapsService,
     private mapMarkerService: MapMarkerService,
     private streetSheetService: StreetSheetService,
     private toastr: ToastrService
