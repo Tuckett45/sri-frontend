@@ -32,6 +32,13 @@ jobs:
           npm cache clean --force
           npm install --no-optional
 
+      - name: Build the application
+        run: |
+          npm run build --if-present
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        timeout-minutes: 10
+
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -41,6 +48,7 @@ jobs:
           action: "upload"
           app_location: "/"  # App source code path, adjust if necessary
           output_location: "dist/sri-frontend"  # Adjust to your build output directory
+          skip_app_build: true  # Skip build since we already built it
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
