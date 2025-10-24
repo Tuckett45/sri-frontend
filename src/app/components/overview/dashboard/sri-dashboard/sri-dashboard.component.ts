@@ -9,7 +9,7 @@ import { User } from 'src/app/models/user.model';
 import { VendorIssueStats } from 'src/app/models/vendor-issue-stats.model';
 import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
-import { DispatchBoardComponent } from '../dispatch-board/dispatch-board.component';
+import { DispatchBoardComponent } from '../../../dispatch-board/dispatch-board.component';
 
 @Component({
   selector: 'sri-dashboard',
