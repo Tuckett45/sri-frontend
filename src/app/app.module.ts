@@ -86,6 +86,7 @@ import { provideEnvironmentNgxCurrency, NgxCurrencyInputMode } from 'ngx-currenc
 import 'leaflet-search'
 import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashboard/sri-dashboard.component';
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
+import { LiveMapComponent } from './components/live-map/live-map.component';
 import '../charts-setup';
 
 export const customCurrencyMaskConfig = {
@@ -125,7 +126,8 @@ export const customCurrencyMaskConfig = {
     WidgetComponent,
     OspCoordinatorTrackerComponent,
     MarketControllerComponent,
-    MarketControllerModalComponent
+    MarketControllerModalComponent,
+    LiveMapComponent
   ],
   imports: [
     NgxCurrencyDirective,

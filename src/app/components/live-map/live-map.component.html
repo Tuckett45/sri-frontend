@@ -1,0 +1,154 @@
+<div class="live-map-container">
+  <!-- Header Controls -->
+  <div class="map-header">
+    <div class="header-left">
+      <h2>🗺️ Live Map</h2>
+      <div class="connection-status" [ngClass]="getConnectionStatusClass()" *ngIf="showConnectionStatus">
+        <i class="pi pi-circle-fill"></i>
+        <span>{{ getConnectionStatusText() }}</span>
+      </div>
+    </div>
+    
+    <div class="header-controls">
+      <!-- Live Mode Toggle -->
+      <button 
+        class="btn btn-toggle"
+        [ngClass]="{ 'active': isLiveMode }"
+        (click)="toggleLiveMode()"
+        [disabled]="!connectionStatus.isConnected && !isLiveMode">
+        <i class="pi pi-broadcast"></i>
+        {{ isLiveMode ? 'Live Mode ON' : 'Live Mode OFF' }}
+      </button>
+
+      <!-- Location Tracking Toggle -->
+      <button 
+        class="btn btn-toggle"
+        [ngClass]="{ 'active': isLocationTracking }"
+        (click)="toggleLocationTracking()"
+        [disabled]="!isLiveMode">
+        <i class="pi pi-map-marker"></i>
+        {{ isLocationTracking ? 'Tracking ON' : 'Tracking OFF' }}
+      </button>
+
+      <!-- View Controls -->
+      <div class="view-controls">
+        <button 
+          class="btn btn-icon"
+          (click)="centerOnCurrentLocation()"
+          [disabled]="!currentLocation"
+          title="Center on my location">
+          <i class="pi pi-compass"></i>
+        </button>
+        
+        <button 
+          class="btn btn-icon"
+          (click)="fitToAllMarkers()"
+          title="Fit to all markers">
+          <i class="pi pi-search-plus"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map Container -->
+  <div class="map-wrapper">
+    <div #azureMapContainer id="azureMapContainer" class="azure-map"></div>
+    
+    <!-- Map Overlay Controls -->
+    <div class="map-overlay">
+      <!-- Layer Controls -->
+      <div class="layer-controls">
+        <h4>Layers</h4>
+        <div class="layer-toggle">
+          <input 
+            type="checkbox" 
+            id="showLiveMarkers" 
+            [(ngModel)]="showLiveMarkers"
+            (change)="toggleMarkerVisibility('live')">
+          <label for="showLiveMarkers">
+            <i class="pi pi-circle" style="color: #00FF00;"></i>
+            Live Markers ({{ liveMarkers.length }})
+          </label>
+        </div>
+        
+        <div class="layer-toggle">
+          <input 
+            type="checkbox" 
+            id="showStaticMarkers" 
+            [(ngModel)]="showStaticMarkers"
+            (change)="toggleMarkerVisibility('static')">
+          <label for="showStaticMarkers">
+            <i class="pi pi-circle" style="color: #FF0000;"></i>
+            Static Markers ({{ staticMarkers.length }})
+          </label>
+        </div>
+        
+        <div class="layer-toggle">
+          <input 
+            type="checkbox" 
+            id="autoCenter" 
+            [(ngModel)]="autoCenter">
+          <label for="autoCenter">
+            <i class="pi pi-crosshairs"></i>
+            Auto Center
+          </label>
+        </div>
+      </div>
+
+      <!-- Current Location Info -->
+      <div class="location-info" *ngIf="currentLocation && isLocationTracking">
+        <h4>📍 My Location</h4>
+        <p><strong>Lat:</strong> {{ currentLocation.lat | number:'1.6-6' }}</p>
+        <p><strong>Lon:</strong> {{ currentLocation.lon | number:'1.6-6' }}</p>
+        <p *ngIf="currentLocation.accuracy">
+          <strong>Accuracy:</strong> {{ currentLocation.accuracy | number:'1.0-0' }}m
+        </p>
+      </div>
+
+      <!-- Live Users List -->
+      <div class="live-users" *ngIf="liveMarkers.length > 0 && isLiveMode">
+        <h4>👥 Live Users ({{ liveMarkers.length }})</h4>
+        <div class="user-list">
+          <div 
+            class="user-item" 
+            *ngFor="let marker of liveMarkers"
+            (click)="azureMapsService.setView(marker.position, 15)">
+            <div class="user-info">
+              <span class="user-email">{{ marker.userEmail }}</span>
+              <span class="user-time">{{ marker.lastUpdated | date:'short' }}</span>
+            </div>
+            <div class="user-accuracy" *ngIf="marker.accuracy">
+              {{ marker.accuracy | number:'1.0-0' }}m
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-left">
+      <span *ngIf="isLiveMode" class="status-item">
+        <i class="pi pi-broadcast"></i>
+        Live Mode Active
+      </span>
+      <span *ngIf="isLocationTracking" class="status-item">
+        <i class="pi pi-map-marker"></i>
+        Location Tracking
+      </span>
+    </div>
+    
+    <div class="status-right">
+      <span class="status-item">
+        Static: {{ staticMarkers.length }}
+      </span>
+      <span class="status-item" *ngIf="isLiveMode">
+        Live: {{ liveMarkers.length }}
+      </span>
+      <span class="status-item" [ngClass]="getConnectionStatusClass()">
+        {{ getConnectionStatusText() }}
+      </span>
+    </div>
+  </div>
+</div>
