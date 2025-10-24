@@ -1,0 +1,147 @@
+<div class="dispatch-board surface-card shadow-2 p-4 border-round">
+  <div class="header">
+    <div>
+      <h2 class="title">Dispatch Command Board</h2>
+      <p class="subtitle">Track operational cadence, triage tickets, and dispatch the right crews in real-time.</p>
+    </div>
+    <div class="stage-counts">
+      <div class="stage-pill" *ngFor="let stage of stageSequence">
+        <span class="pill-label">{{ stageLabels[stage] }}</span>
+        <span class="pill-value">{{ getStageCount(stage) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="roadmap">
+    <div class="roadmap-header">
+      <div class="lane-label">Year</div>
+      <div class="lane-grid">
+        <div class="month" *ngFor="let month of months">{{ month }}</div>
+      </div>
+    </div>
+
+    <div class="roadmap-lane" *ngFor="let lane of roadmapLanes">
+      <div class="lane-label">{{ lane.label }}</div>
+      <div class="lane-grid">
+        <div class="segment" *ngFor="let segment of lane.segments" [ngStyle]="getMonthGridStyle(segment)">
+          <span class="segment-label">{{ segment.label }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="board-grid">
+    <div class="ticket-table surface-section">
+      <div class="section-header">
+        <h3>Active Tickets</h3>
+        <span class="section-caption">Prioritize high-risk work and schedule dispatch windows.</span>
+      </div>
+      <p-table [value]="tickets" responsiveLayout="scroll" [tableStyle]="{ 'min-width': '60rem' }">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Ticket</th>
+            <th>Summary</th>
+            <th>Market</th>
+            <th>Priority</th>
+            <th>Stage</th>
+            <th>Assignee</th>
+            <th>ETA / Notes</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-ticket>
+          <tr>
+            <td>
+              <div class="ticket-id">{{ ticket.id }}</div>
+              <small class="requested">Requested by {{ ticket.requestedBy }}</small>
+            </td>
+            <td>
+              <div class="summary">{{ ticket.summary }}</div>
+              <small class="category">{{ ticket.category }}</small>
+            </td>
+            <td>
+              <div class="market">{{ ticket.market }}</div>
+              <small class="due-date">Due {{ ticket.dueDate | date:'MMM d' }}</small>
+            </td>
+            <td>
+              <p-tag [value]="ticket.priority" [severity]="ticket.priority === 'Critical' ? 'danger' : ticket.priority === 'High' ? 'warn' : ticket.priority === 'Medium' ? 'info' : 'success'"></p-tag>
+            </td>
+            <td>
+              <p-tag [value]="resolveStageLabel(ticket.stage)" [severity]="resolveStageSeverity(ticket.stage)"></p-tag>
+            </td>
+            <td>
+              <p-dropdown
+                class="assignee-select"
+                [options]="userOptions"
+                [ngModel]="ticket.assignee"
+                (onChange)="onAssigneeChange(ticket, $event.value)"
+                placeholder="Assign dispatcher"
+                appendTo="body">
+              </p-dropdown>
+            </td>
+            <td class="notes-cell">
+              <input pInputText type="text" [(ngModel)]="ticket.eta" placeholder="Add ETA or note" />
+              <textarea pInputTextarea autoResize rows="1" [(ngModel)]="ticket.notes" placeholder="Team notes"></textarea>
+            </td>
+            <td class="actions">
+              <button pButton type="button" label="Advance" class="p-button-text" (click)="advanceStage(ticket)"></button>
+              <button pButton type="button" label="Dispatch" class="p-button-rounded p-button-sm" (click)="dispatchTicket(ticket)"></button>
+              <button pButton type="button" label="Complete" class="p-button-outlined p-button-sm" (click)="markFieldComplete(ticket)"></button>
+            </td>
+          </tr>
+          <tr *ngIf="ticket.validationError">
+            <td colspan="8" class="validation">{{ ticket.validationError }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="dispatch-sidebar">
+      <div class="surface-section">
+        <div class="section-header">
+          <h3>Dispatch Queue</h3>
+          <span class="section-caption">Crew-ready tickets moving into the field.</span>
+        </div>
+        <div class="queue" *ngIf="getQueueTickets().length; else emptyQueue">
+          <div class="queue-item" *ngFor="let ticket of getQueueTickets()">
+            <div>
+              <div class="ticket-id">{{ ticket.id }}</div>
+              <div class="summary">{{ ticket.summary }}</div>
+            </div>
+            <div class="queue-meta">
+              <span class="assignee" *ngIf="ticket.assignee">
+                {{ resolveAssigneeName(ticket.assignee) }}
+              </span>
+              <p-tag [value]="resolveStageLabel(ticket.stage)" [severity]="resolveStageSeverity(ticket.stage)"></p-tag>
+            </div>
+          </div>
+        </div>
+        <ng-template #emptyQueue>
+          <div class="empty-state">
+            <h4>No crews en route</h4>
+            <p>Assign a field resource and press <strong>Dispatch</strong> to populate this queue.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="surface-section on-call">
+        <div class="section-header">
+          <h3>On-Call Roster</h3>
+          <span class="section-caption">Balance workload before dispatching.</span>
+        </div>
+        <ul class="roster">
+          <li *ngFor="let user of users">
+            <div>
+              <div class="name">{{ user.name }}</div>
+              <small>{{ user.role }}</small>
+            </div>
+            <div class="roster-meta">
+              <span class="badge" [class.on-call]="user.onCall">{{ user.onCall ? 'On Call' : 'Available' }}</span>
+              <span class="workload">{{ user.workload }} active</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
