@@ -12,7 +12,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ToastrService } from 'ngx-toastr';
-import { Deployment, DeploymentStatus } from '../../models/deployment.models';
+import { Deployment, DeploymentMedia, DeploymentStatus } from '../../models/deployment.models';
 import { DeploymentService } from '../../services/deployment.service';
 import { StartDeploymentProgressPayload } from '../../models/deployment-progress.model';
 import {
@@ -22,6 +22,9 @@ import {
 } from 'src/app/components/modals/start-deployment-modal/start-deployment-modal.component';
 import { User } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
+import { DeploymentMediaApiService } from '../../services/deployment-media-api.service';
+
+type MediaPhase = 'receiving' | 'handoff';
 
 interface DeploymentFilter {
   status?: DeploymentStatus | null;
@@ -54,7 +57,13 @@ export class DeploymentDashboardComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly dialog = inject(MatDialog);
   private readonly deploymentService = inject(DeploymentService);
+  private readonly mediaApi = inject(DeploymentMediaApiService);
   private readonly wizardPhaseCount = 6;
+
+  private readonly mediaKindByPhase: Record<MediaPhase, string> = {
+    receiving: 'ReceivingEvidence',
+    handoff: 'HandoffDocumentation',
+  };
 
   protected readonly statusOptions = Object.values(DeploymentStatus);
   private readonly severityMap = new Map<DeploymentStatus, 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast'>([
@@ -289,6 +298,7 @@ export class DeploymentDashboardComponent implements OnInit {
       maxWidth: '95vw',
       data: {
         progress: null,
+        media: null,
       },
     });
     dialogRef
@@ -300,6 +310,7 @@ export class DeploymentDashboardComponent implements OnInit {
   protected async openDeployment(project: Deployment): Promise<void> {
     const initialPhaseIndex = this.phaseIndexByStatus[project.status] ?? 0;
     let progress = this.getCachedProgress(project.id);
+    const mediaPromise = project.id ? this.fetchDeploymentMedia(project.id) : Promise.resolve(this.emptyMedia());
 
     try {
       const remote = await firstValueFrom(this.deploymentService.getProgress(project.id));
@@ -321,11 +332,45 @@ export class DeploymentDashboardComponent implements OnInit {
       const status =
         project.status === DeploymentStatus.Complete
           ? DeploymentStatus.Complete
-          : this.statusFromPhaseIndex(progress.activePhaseIndex);
+        : this.statusFromPhaseIndex(progress.activePhaseIndex);
       this.updateDeploymentProgress(project.id, percent, status);
     }
 
-    this.openDeploymentDialog(project, initialPhaseIndex, progress);
+    const media = await mediaPromise;
+    this.openDeploymentDialog(project, initialPhaseIndex, progress, media);
+  }
+
+  private emptyMedia(): Record<MediaPhase, DeploymentMedia[]> {
+    return { receiving: [], handoff: [] };
+  }
+
+  private async fetchDeploymentMedia(projectId: string): Promise<Record<MediaPhase, DeploymentMedia[]>> {
+    const fallback = this.emptyMedia();
+    if (!projectId) {
+      return fallback;
+    }
+    try {
+      const all = await firstValueFrom(this.mediaApi.listMedia(projectId));
+      if (!Array.isArray(all) || all.length === 0) {
+        return fallback;
+      }
+      const receivingKind = this.mediaKindByPhase.receiving.toLowerCase();
+      const handoffKind = this.mediaKindByPhase.handoff.toLowerCase();
+      const normalize = (value: string | null | undefined) => (value ?? '').toLowerCase();
+      const grouped: Record<MediaPhase, DeploymentMedia[]> = { receiving: [], handoff: [] };
+      for (const item of all) {
+        const kind = normalize(item.mediaType);
+        if (kind === receivingKind) {
+          grouped.receiving.push(item);
+        } else if (kind === handoffKind) {
+          grouped.handoff.push(item);
+        }
+      }
+      return grouped;
+    } catch (error) {
+      console.warn('Unable to load deployment media', projectId, error);
+      return fallback;
+    }
   }
 
   private async handleNewDeploymentResult(
@@ -353,7 +398,8 @@ export class DeploymentDashboardComponent implements OnInit {
   private openDeploymentDialog(
     project: Deployment,
     initialPhaseIndex: number,
-    progress: StartDeploymentProgressPayload | null
+    progress: StartDeploymentProgressPayload | null,
+    media: Partial<Record<MediaPhase, DeploymentMedia[]>> | null
   ): void {
     const dialogRef = this.dialog.open<
       StartDeploymentModalComponent,
@@ -366,6 +412,7 @@ export class DeploymentDashboardComponent implements OnInit {
         project,
         initialPhaseIndex,
         progress,
+        media,
       },
     });
 
@@ -405,6 +452,8 @@ export class DeploymentDashboardComponent implements OnInit {
 
     const candidateId = mergedProject?.id && mergedProject.id.length ? mergedProject.id : null;
     const incomingId = candidateId ?? result.progress.projectId ?? null;
+    const previousStatus =
+      incomingId != null ? this.deployments().find(item => item.id === incomingId)?.status ?? null : null;
     const normalized = this.normalizeProgressPayload(result.progress, incomingId);
     const projectLabel = mergedProject?.name ?? 'deployment';
     const progressPercent = this.calculateProgressPercentage(normalized);
@@ -419,7 +468,7 @@ export class DeploymentDashboardComponent implements OnInit {
     if (incomingId) {
       normalized.projectId = incomingId;
       this.cacheProgress(incomingId, normalized);
-      await this.persistProgress(incomingId, normalized, projectLabel, progressPercent, phaseStatus);
+      await this.persistProgress(incomingId, normalized, projectLabel, progressPercent, phaseStatus, previousStatus);
       return;
     }
 
@@ -474,7 +523,7 @@ export class DeploymentDashboardComponent implements OnInit {
 
       this.deployments.update(list => [...list, newProject]);
 
-      await this.persistProgress(newId, normalized, newProject.name, progressPercent, phaseStatus);
+      await this.persistProgress(newId, normalized, newProject.name, progressPercent, phaseStatus, null);
     } catch (error) {
       console.error('Failed to create deployment', error);
       this.cacheProgress('__new', normalized);
@@ -518,6 +567,30 @@ export class DeploymentDashboardComponent implements OnInit {
     }
   }
 
+  private async syncPhaseAdvancement(
+    projectId: string,
+    previousStatus: DeploymentStatus | null,
+    nextStatus: DeploymentStatus
+  ): Promise<void> {
+    if (!projectId) {
+      return;
+    }
+    const toIndex = this.phaseIndexByStatus[nextStatus];
+    if (toIndex === undefined) {
+      return;
+    }
+    const fromIndex =
+      previousStatus != null ? this.phaseIndexByStatus[previousStatus] : undefined;
+    if (fromIndex === undefined || fromIndex === toIndex || fromIndex > toIndex) {
+      return;
+    }
+    try {
+      await this.deploymentService.advance(projectId, fromIndex, toIndex);
+    } catch (error) {
+      console.warn('Failed to advance deployment phase', { projectId, fromIndex, toIndex, error });
+    }
+  }
+
   private async refreshProgressForProjects(projects: Deployment[]): Promise<void> {
     await Promise.all(
       (projects ?? [])
@@ -546,11 +619,13 @@ export class DeploymentDashboardComponent implements OnInit {
     normalized: StartDeploymentProgressPayload,
     projectLabel: string,
     progressPercent: number,
-    statusOverride?: DeploymentStatus
+    statusOverride?: DeploymentStatus,
+    previousStatus?: DeploymentStatus | null
   ): Promise<void> {
     const isWizardComplete = normalized.activePhaseIndex >= this.wizardPhaseCount - 1;
     try {
       const phaseStatus = statusOverride ?? this.statusFromPhaseIndex(normalized.activePhaseIndex);
+      await this.syncPhaseAdvancement(targetId, previousStatus ?? null, phaseStatus);
       await firstValueFrom(
         this.deploymentService
           .saveProgress(targetId, normalized)

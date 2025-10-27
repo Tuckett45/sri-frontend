@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
@@ -7,10 +7,14 @@ import {
   DeploymentMediaProgressDto
 } from '../models/deployment-media.api';
 import { DeploymentMedia } from '../models/deployment.models'; 
+import { environment, local_environment } from '../../../../environments/environments';
 
 @Injectable({ providedIn: 'root' })
 export class DeploymentMediaApiService {
-  private base = '/api/deployments';
+  private base = `${local_environment.apiUrl}/deployments`;
+  private readonly apiHeaders = new HttpHeaders({
+    'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+  });
 
   constructor(private http: HttpClient) {}
 
@@ -35,7 +39,8 @@ export class DeploymentMediaApiService {
 
     return this.http.post<DeploymentMediaUploadResponse[]>(
       `${this.base}/${opts.deploymentId}/media`,
-      form
+      form,
+      { headers: this.apiHeaders }
     );
   }
 
@@ -47,7 +52,7 @@ export class DeploymentMediaApiService {
 
     return this.http.get<DeploymentMediaItemDto[]>(
       `${this.base}/${deploymentId}/media`,
-      { params }
+      { params, headers: this.apiHeaders }
     ).pipe(map(rows => rows.map(this.mapDtoToMedia)));
   }
 
@@ -59,12 +64,12 @@ export class DeploymentMediaApiService {
 
     return this.http.get<DeploymentMediaProgressDto[]>(
       `${this.base}/${deploymentId}/media/progress`,
-      { params }
+      { params, headers: this.apiHeaders }
     );
   }
 
   deleteMedia(deploymentId: string, id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${deploymentId}/media/${id}`);
+    return this.http.delete<void>(`${this.base}/${deploymentId}/media/${id}`, { headers: this.apiHeaders });
   }
 
   // ------------ Mappers ------------

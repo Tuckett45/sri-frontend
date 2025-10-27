@@ -121,6 +121,7 @@ export interface StartDeploymentDialogData {
   project?: Deployment | null;
   initialPhaseIndex?: number;
   progress?: StartDeploymentProgressPayload | null;
+  media?: Partial<Record<MediaPhase, DeploymentMedia[]>> | null;
 }
 
 @Component({
@@ -205,8 +206,8 @@ export class StartDeploymentModalComponent implements OnInit {
   };
 
   protected readonly mediaByPhase = signal<Record<MediaPhase, DeploymentMedia[]>>({
-    receiving: [],
-    handoff: [],
+    receiving: this.data?.media?.receiving ?? [],
+    handoff: this.data?.media?.handoff ?? [],
   });
 
   private readonly uploadingMediaPhase = signal<MediaPhase | null>(null);
@@ -719,6 +720,10 @@ export class StartDeploymentModalComponent implements OnInit {
       this.metaForm.markAllAsTouched();
       return;
     }
+    this.phaseCodeFromStatus(DeploymentStatus.Complete);
+    if (this.project) {
+      this.project.status = DeploymentStatus.Complete;
+    }
     const progress = this._buildProgressPayload();
     const metadata = this.project ? null : this.buildDeploymentMetadata();
     this.dialogRef.close({ action: 'complete', progress, metadata });
@@ -791,9 +796,10 @@ export class StartDeploymentModalComponent implements OnInit {
     const config = this.mediaConfigs[phase];
     try {
       const all = await firstValueFrom(
-        this.mediaApi.listMedia(this.project.id, this.phaseCodeFromStatus(config.status))
+        this.mediaApi.listMedia(this.project.id)
       );
-      const filtered = all.filter(item => item.mediaType === config.kind);
+      const normalizedKind = config.kind.toLowerCase();
+      const filtered = all.filter(item => (item.mediaType ?? '').toLowerCase() === normalizedKind);
       this.mediaByPhase.update(curr => ({ ...curr, [phase]: filtered }));
     } catch (error) {
       console.warn('Unable to load media for phase', phase, error);
@@ -803,7 +809,8 @@ export class StartDeploymentModalComponent implements OnInit {
   private phaseCodeFromStatus(status: DeploymentStatus): number {
     const order = Object.values(DeploymentStatus);
     const index = order.indexOf(status);
-    return index >= 0 ? index : 0;
+    // Backend phase codes are 1-based; default to 1 for unknown statuses.
+    return index >= 0 ? index + 1 : 1;
   }
 
   protected onStatusChange(question: SiteSurveyQuestion, value: 'yes' | 'no'): void {
