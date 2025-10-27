@@ -91,8 +91,8 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
     this.expenseApi.getExpenses(params).subscribe({
       next: res => {
-        const items = Array.isArray(res?.items) ? res.items : [];
-        const mapped = items.map((item: ExpenseListItem) => this.toViewModel(item));
+        const list = this.extractItems(res);
+        const mapped = list.map((item: ExpenseListItem) => this.toViewModel(item));
         this.baseExpenses = mapped;
         if (hasFilters) {
           this.loading = false;
@@ -136,8 +136,8 @@ export class EmployeeExpensesPageComponent implements OnInit {
     this.loading = true;
     this.expenseApi.searchExpenses(searchRequest).subscribe({
       next: res => {
-        const items = Array.isArray(res?.items) ? res.items : [];
-        this.expenses = items.map((item: ExpenseListItem) => this.toViewModel(item));
+        const list = this.extractItems(res);
+        this.expenses = list.map((item: ExpenseListItem) => this.toViewModel(item));
         this.filteredExpenses = [...this.expenses];
         this.loading = false;
       },
@@ -291,6 +291,21 @@ export class EmployeeExpensesPageComponent implements OnInit {
       },
       error: () => this.toastr.error('Deletion failed')
     });
+  }
+
+  private extractItems(response: unknown): ExpenseListItem[] {
+    if (Array.isArray(response)) {
+      return response as ExpenseListItem[];
+    }
+
+    const candidates = [response, (response as any)?.data, (response as any)?.result, (response as any)?.results];
+    for (const candidate of candidates) {
+      if (Array.isArray((candidate as any)?.items)) {
+        return ((candidate as any).items as ExpenseListItem[]) ?? [];
+      }
+    }
+
+    return [];
   }
 }
 
