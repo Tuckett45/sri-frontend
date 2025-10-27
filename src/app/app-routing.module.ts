@@ -9,6 +9,7 @@ import { StreetSheetComponent } from './components/street-sheet/street-sheet.com
 import { OspCoordinatorTrackerComponent } from './components/osp-coordinator-tracker/osp-coordinator-tracker.component';
 import { MarketControllerComponent } from './components/market-controller/market-controller.component';
 import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
+import { FeatureFlagPanelComponent } from './components/feature-flags/feature-flag-panel.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -17,6 +18,7 @@ const routes: Routes = [
   { path: 'street-sheet', component: StreetSheetComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: UserProfileComponent, canActivate: [AuthGuard] },
   { path: 'notifications', component: UserNotificationsComponent, canActivate: [AuthGuard] },
+  { path: 'feature-flags', component: FeatureFlagPanelComponent, canActivate: [AuthGuard] },
   { path: 'osp-coordinator-tracker', component: OspCoordinatorTrackerComponent, canActivate: [AuthGuard] },
   { path: 'market-controller-tracker', component: MarketControllerComponent, canActivate: [AuthGuard] },
   { path: 'deployments', loadChildren: () => import('./features/deployment/deployment.module').then(m => m.DeploymentModule), canActivate: [AuthGuard] },
@@ -32,4 +34,3 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class AppRoutingModule { }
-
