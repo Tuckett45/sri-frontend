@@ -48,7 +48,6 @@ export interface Expense {
   id?: string;
   date: string;              // ISO 'YYYY-MM-DD'
   projectId: string;
-  phase: string;
   locationText?: string;
   vendor: string;
   amount: number;
@@ -57,7 +56,9 @@ export interface Expense {
   mileageMiles?: number | null;
   descriptionNotes?: string | null;
   isEntertainment: boolean;
+  mobilization: boolean;
   status: ExpenseStatus;
+  phase?: string | null;
   entertainment?: EntertainmentDetail | null;
 
   images?: ExpenseImage[];
@@ -76,5 +77,6 @@ export interface ExpenseListResponse {
   page: number;
   pageSize: number;
   items: ExpenseListItem[];
+  total?: number;
 }
 

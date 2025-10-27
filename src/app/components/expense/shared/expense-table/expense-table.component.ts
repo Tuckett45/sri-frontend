@@ -1,5 +1,5 @@
-﻿import { AfterViewInit, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
+import { AfterViewInit, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Expense } from 'src/app/models/expense.model';
@@ -14,18 +14,74 @@ import { GalleriaModule } from "primeng/galleria";
   styleUrls: ['./expense-table.component.scss']
 })
 export class ExpenseTableComponent implements AfterViewInit, OnChanges {
+  private static readonly imageExtensions = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif']);
+
   private _expenses: Expense[] = [];
+  private _serverPagination = false;
+  private _pageSize = 10;
+  private _pageIndex = 0;
+  private _totalItems = 0;
 
   @Input()
   set expenses(value: Expense[] | null) {
     this._expenses = value ?? [];
     this.dataSource.data = this._expenses;
     this.rebindTableHelpers();
+    if (!this.serverPagination && this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+    if (typeof this.dataSource._updateChangeSubscription === 'function') {
+      this.dataSource._updateChangeSubscription();
+    }
   }
 
   get expenses(): Expense[] {
     return this._expenses;
   }
+
+  @Input()
+  set serverPagination(value: boolean) {
+    this._serverPagination = !!value;
+    this.rebindTableHelpers();
+  }
+  get serverPagination(): boolean {
+    return this._serverPagination;
+  }
+
+  @Input()
+  set pageSize(value: number) {
+    this._pageSize = Number.isFinite(value) && value > 0 ? value : 10;
+    if (this.paginator) {
+      this.paginator.pageSize = this._pageSize;
+    }
+  }
+  get pageSize(): number {
+    return this._pageSize;
+  }
+
+  @Input()
+  set pageIndex(value: number) {
+    this._pageIndex = Number.isFinite(value) && value >= 0 ? value : 0;
+    if (this.paginator) {
+      this.paginator.pageIndex = this._pageIndex;
+    }
+  }
+  get pageIndex(): number {
+    return this._pageIndex;
+  }
+
+  @Input()
+  set totalItems(value: number) {
+    this._totalItems = Number.isFinite(value) && value >= 0 ? value : 0;
+    if (this.paginator && this.serverPagination) {
+      this.paginator.length = this._totalItems;
+    }
+  }
+  get totalItems(): number {
+    return this._totalItems;
+  }
+
+  @Input() pageSizeOptions: number[] = [5, 10, 25];
 
   @Input() showActions = true;
   @Input() loading = false;
@@ -43,6 +99,7 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   @Output() delete = new EventEmitter<Expense>();
   @Output() approve = new EventEmitter<Expense>();
   @Output() reject = new EventEmitter<Expense>();
+  @Output() pageChange = new EventEmitter<PageEvent>();
 
   displayedColumns: string[] = [];
   dataSource = new MatTableDataSource<Expense>([]);
@@ -114,17 +171,40 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     return false;
   }
 
-  getReceiptUrl(exp: Expense): string | null {
-    const blobUrl = (exp as any)?.images?.[0]?.blobUrl as string | undefined;
-    if (blobUrl) return blobUrl;
+  getReceiptResource(exp: Expense): { url: string; kind: 'image' | 'pdf' | 'file' } | null {
+    const imageMeta = ((exp as any)?.images?.[0] ?? {}) as {
+      blobUrl?: string;
+      contentType?: string | null;
+      fileName?: string | null;
+    };
 
-    const url = (exp as any)?.receiptUrl as string | undefined;
-    if (!url) return null;
+    let rawUrl = imageMeta.blobUrl ?? (exp as any)?.receiptUrl;
+    if (typeof rawUrl !== 'string' || !rawUrl.trim()) return null;
+    rawUrl = rawUrl.trim();
 
-    if (/^(https?:)?\/\//i.test(url) || /^data:/i.test(url)) return url;
+    const lowerContentType = (imageMeta.contentType ?? '').toLowerCase();
+    const ext = this.extractExtension(imageMeta.fileName ?? rawUrl);
 
-    const looksBase64 = /^[A-Za-z0-9+/=\s]+$/.test(url);
-    return looksBase64 ? `data:image/jpeg;base64,${url.replace(/\s+/g, '')}` : url;
+    const isDataUrl = /^data:/i.test(rawUrl);
+    const isHttp = /^(https?:)?\/\//i.test(rawUrl);
+    const looksBase64 = /^[A-Za-z0-9+/=\s]+$/.test(rawUrl);
+
+    let mimeType = this.inferMimeType(lowerContentType, ext, rawUrl);
+
+    let normalizedUrl = rawUrl;
+    if (!isHttp && !isDataUrl && looksBase64) {
+      const effectiveMime = mimeType || 'application/octet-stream';
+      normalizedUrl = `data:${effectiveMime};base64,${rawUrl.replace(/\s+/g, '')}`;
+      mimeType = effectiveMime;
+    }
+
+    if (!mimeType && isDataUrl) {
+      const match = /^data:([^;,]+)/i.exec(normalizedUrl);
+      mimeType = match?.[1]?.toLowerCase() || '';
+    }
+
+    const kind = this.resolveKind(mimeType, ext, normalizedUrl);
+    return { url: normalizedUrl, kind };
   }
 
   getNotes(expense: Expense): string {
@@ -146,17 +226,23 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     return '';
   }
 
-  openGallery(expense: Expense): void {
-    const url = this.getReceiptUrl(expense);
-    if (!url) return;
-    this.galleryImages = [{ itemImageSrc: url }];
-    this.isReceiptGalleryVisible = true;
+  openReceipt(expense: Expense): void {
+    const resource = this.getReceiptResource(expense);
+    if (!resource) return;
+
+    if (resource.kind === 'image') {
+      this.galleryImages = [{ itemImageSrc: resource.url }];
+      this.isReceiptGalleryVisible = true;
+      return;
+    }
+
+    window.open(resource.url, '_blank', 'noopener');
   }
 
   openInNewTab(expense: Expense): void {
-    const url = this.getReceiptUrl(expense);
-    if (!url) return;
-    window.open(url, '_blank', 'noopener');
+    const resource = this.getReceiptResource(expense);
+    if (!resource) return;
+    window.open(resource.url, '_blank', 'noopener');
   }
 
   closeGallery(): void {
@@ -172,7 +258,7 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     if (this.showEmployeeColumn) {
       base.push('employee');
     }
-    base.push('job', 'phase', 'amount', 'notes', 'receipt', 'status');
+    base.push('job', 'amount', 'notes', 'receipt', 'status');
 
     if (this.shouldShowActionsColumn()) {
       base.push('actions');
@@ -188,12 +274,65 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
 
   private rebindTableHelpers(): void {
     if (this.paginator) {
-      this.dataSource.paginator = this.paginator;
+      this.dataSource.paginator = this.serverPagination ? null : this.paginator;
+      this.paginator.pageSize = this._pageSize;
+      this.paginator.pageIndex = this._pageIndex;
+      if (this.serverPagination) {
+        this.paginator.length = this._totalItems;
+      }
     }
     if (this.sort) {
       this.dataSource.sort = this.sort;
     }
   }
+
+  onPaginatorPage(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    if (this.serverPagination) {
+      this.pageChange.emit(event);
+    }
+  }
+
+  private extractExtension(fileName: string | null | undefined): string {
+    if (!fileName) return '';
+    const match = /\.([A-Za-z0-9]+)(?:\?|#|$)/.exec(fileName);
+    return match ? match[1].toLowerCase() : '';
+  }
+
+  private inferMimeType(contentType: string, ext: string, url: string): string {
+    if (contentType) return contentType;
+
+    const fromDataUrl = /^data:([^;,]+)/i.exec(url)?.[1]?.toLowerCase();
+    if (fromDataUrl) return fromDataUrl;
+
+    if (ext) {
+      if (ExpenseTableComponent.imageExtensions.has(ext)) return 'image/' + (ext === 'jpg' ? 'jpeg' : ext);
+      if (ext === 'pdf') return 'application/pdf';
+    }
+    return '';
+  }
+
+  private resolveKind(mimeType: string, ext: string, url: string): 'image' | 'pdf' | 'file' {
+    const lowerType = mimeType.toLowerCase();
+
+    if (lowerType.startsWith('image/')) return 'image';
+    if (lowerType === 'application/pdf') return 'pdf';
+
+    if (!lowerType) {
+      if (/^data:image\//i.test(url)) return 'image';
+      if (/^data:application\/pdf/i.test(url) || ext === 'pdf') return 'pdf';
+      const dataMime = /^data:([^;,]+)/i.exec(url)?.[1]?.toLowerCase();
+      if (dataMime?.startsWith('image/')) return 'image';
+      if (dataMime === 'application/pdf') return 'pdf';
+    }
+
+    if (ext && ExpenseTableComponent.imageExtensions.has(ext)) return 'image';
+    if (ext === 'pdf') return 'pdf';
+
+    return 'file';
+  }
 }
+
 
 

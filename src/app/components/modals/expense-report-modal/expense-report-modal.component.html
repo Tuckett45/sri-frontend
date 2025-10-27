@@ -8,10 +8,59 @@
 
 <mat-dialog-content class="modal-body">
   <form [formGroup]="expenseForm" class="expense-form">
+    <div class="file-input-wrapper top-upload">
+      <label for="receiptUpload" class="custom-label">Attach Receipt</label>
+      <input
+        id="receiptUpload"
+        type="file"
+        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+        class="file-input"
+        (change)="onReceiptUpload($event)"
+      />
+      <div class="file-preview" *ngIf="receiptSafeUrl">
+        <ng-container [ngSwitch]="receiptPreviewKind">
+          <img
+            *ngSwitchCase="'image'"
+            [src]="receiptSafeUrl"
+            alt="Receipt preview"
+            class="preview-image"
+          />
+          <div *ngSwitchCase="'pdf'" class="file-preview-link">
+            <mat-icon aria-hidden="true">picture_as_pdf</mat-icon>
+            <a [attr.href]="receiptPreviewUrl" target="_blank" rel="noopener">
+              Open PDF Attachment
+            </a>
+          </div>
+          <div *ngSwitchDefault class="file-preview-link">
+            <mat-icon aria-hidden="true">insert_drive_file</mat-icon>
+            <a [attr.href]="receiptPreviewUrl" target="_blank" rel="noopener">
+              Open Attachment
+            </a>
+          </div>
+        </ng-container>
+
+        <button
+          mat-stroked-button
+          color="warn"
+          type="button"
+          class="image-btn"
+          (click)="removeImage()"
+        >
+          Remove
+        </button>
+      </div>
+      <div *ngIf="!receiptSafeUrl && (data?.images?.length || 0) > 0" class="file-existing">
+        <span class="custom-label">Existing Receipt:</span>
+        <a [href]="data?.images?.[0]?.blobUrl" target="_blank" rel="noopener">
+          Open Current Receipt
+        </a>
+      </div>
+    </div>
     <div class="row">
       <mat-form-field appearance="outline">
         <mat-label>Date</mat-label>
-        <input matInput type="date" formControlName="date">
+        <input matInput type="date" formControlName="date" />
+        <mat-error *ngIf="hasError('date', 'required')">Date is required.</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -25,27 +74,22 @@
         <mat-autocomplete #projectIdAutocomplete="matAutocomplete">
           <mat-option *ngFor="let j of filteredJobs" [value]="j">{{ j }}</mat-option>
         </mat-autocomplete>
+        <mat-error *ngIf="hasError('projectId', 'required')">Project is required.</mat-error>
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field appearance="outline">
-        <mat-label>Phase</mat-label>
-        <mat-select formControlName="phase">
-          <mat-option *ngFor="let phase of phases" [value]="phase">{{ phase }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
         <mat-label>Location</mat-label>
-        <input matInput placeholder="City, ST" formControlName="locationText">
+        <input matInput placeholder="City, ST" formControlName="locationText" />
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field appearance="outline">
         <mat-label>Vendor</mat-label>
-        <input matInput formControlName="vendor">
+        <input matInput formControlName="vendor" />
+        <mat-error *ngIf="hasError('vendor', 'required')">Vendor is required.</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -53,6 +97,7 @@
         <mat-select formControlName="category">
           <mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option>
         </mat-select>
+        <mat-error *ngIf="hasError('category', 'required')">Category is required.</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -60,25 +105,32 @@
         <mat-select formControlName="paymentMethod">
           <mat-option *ngFor="let p of paymentMethods" [value]="p">{{ p }}</mat-option>
         </mat-select>
+        <mat-error *ngIf="hasError('paymentMethod', 'required')">Payment method is required.</mat-error>
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field appearance="outline">
         <mat-label>Amount</mat-label>
-        <input matInput type="number" step="0.01" min="0" formControlName="amount">
+        <input matInput type="number" step="0.01" min="0" formControlName="amount" />
+        <mat-error *ngIf="hasError('amount', 'required')">Amount is required.</mat-error>
+        <mat-error *ngIf="hasError('amount', 'min')">Amount must be zero or greater.</mat-error>
       </mat-form-field>
 
       <mat-form-field *ngIf="expenseForm.get('category')?.value === 'Mileage'" appearance="outline">
         <mat-label>Miles</mat-label>
-        <input matInput type="number" step="0.1" min="0" formControlName="mileageMiles">
+        <input matInput type="number" step="0.1" min="0" formControlName="mileageMiles" />
       </mat-form-field>
 
       <mat-form-field class="full" appearance="outline">
         <mat-label>Description / Notes</mat-label>
-        <input matInput formControlName="descriptionNotes">
+        <input matInput formControlName="descriptionNotes" />
       </mat-form-field>
     </div>
+
+    <mat-checkbox formControlName="mobilization">
+      Mobilization/MOB
+    </mat-checkbox>
 
     <mat-checkbox formControlName="isEntertainment">
       This is an entertainment expense
@@ -88,49 +140,37 @@
       <legend>Entertainment Details</legend>
       <div class="row">
         <mat-form-field appearance="outline">
-          <mat-label>Type of Entertainment</mat-label>
-          <input matInput formControlName="typeOfEntertainment">
-        </mat-form-field>
+        <mat-label>Type of Entertainment</mat-label>
+        <input matInput formControlName="typeOfEntertainment" />
+        <mat-error *ngIf="hasNestedError('entertainment.typeOfEntertainment', 'required')">Required.</mat-error>
+      </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Name of Establishment</mat-label>
-          <input matInput formControlName="nameOfEstablishment">
-        </mat-form-field>
+        <mat-label>Name of Establishment</mat-label>
+        <input matInput formControlName="nameOfEstablishment" />
+        <mat-error *ngIf="hasNestedError('entertainment.nameOfEstablishment', 'required')">Required.</mat-error>
+      </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Number in Party</mat-label>
-          <input matInput type="number" min="1" formControlName="numberInParty">
-        </mat-form-field>
+        <mat-label>Number in Party</mat-label>
+        <input matInput type="number" min="1" formControlName="numberInParty" />
+        <mat-error *ngIf="hasNestedError('entertainment.numberInParty', 'required')">Required.</mat-error>
+        <mat-error *ngIf="hasNestedError('entertainment.numberInParty', 'min')">Must be at least 1.</mat-error>
+      </mat-form-field>
 
         <mat-form-field class="full" appearance="outline">
-          <mat-label>Business Relationship</mat-label>
-          <input matInput formControlName="businessRelationship">
-        </mat-form-field>
+        <mat-label>Business Relationship</mat-label>
+        <input matInput formControlName="businessRelationship" />
+        <mat-error *ngIf="hasNestedError('entertainment.businessRelationship', 'required')">Required.</mat-error>
+      </mat-form-field>
 
         <mat-form-field class="full" appearance="outline">
-          <mat-label>Business Purpose</mat-label>
-          <input matInput formControlName="businessPurpose">
-        </mat-form-field>
+        <mat-label>Business Purpose</mat-label>
+        <input matInput formControlName="businessPurpose" />
+        <mat-error *ngIf="hasNestedError('entertainment.businessPurpose', 'required')">Required.</mat-error>
+      </mat-form-field>
       </div>
     </fieldset>
-
-    <div class="row files">
-      <div class="file-input-wrapper">
-        <span class="custom-label">Attach receipt</span>
-        <input type="file" class="file-input" (change)="onFileChange($event)">
-        <div class="file-preview" *ngIf="receiptSafeUrl">
-          <img [src]="receiptSafeUrl" alt="receipt" class="preview-image">
-          <button mat-stroked-button color="warn" type="button" class="image-btn" (click)="removeImage()">Remove</button>
-        </div>
-      </div>
-
-      <div *ngIf="!receiptSafeUrl && (data?.images?.length || 0) > 0" class="file-input-wrapper">
-        <span class="custom-label">Existing receipt</span>
-        <a [href]="data?.images?.[0]?.blobUrl" target="_blank" rel="noopener">
-          Open current receipt
-        </a>
-      </div>
-    </div>
   </form>
 </mat-dialog-content>
 
@@ -138,7 +178,3 @@
   <button mat-raised-button type="button" class="cancel-btn" (click)="close()">Cancel</button>
   <button mat-raised-button type="button" color="primary" class="save-btn" (click)="save()">Save</button>
 </mat-dialog-actions>
-
-
-
-

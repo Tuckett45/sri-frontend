@@ -108,8 +108,12 @@ export class AuthService {
       tap(user => {
         if (user) {
           localStorage.setItem('loggedIn', 'true');
-          localStorage.setItem('user', JSON.stringify(user)); 
-  
+          localStorage.setItem('user', JSON.stringify(user));
+          const token = (user as { token?: string; accessToken?: string }).accessToken ?? (user as { token?: string }).token;
+          if (token) {
+            sessionStorage.setItem('authToken', token);
+          }
+
           this.loggedInStatus.next(true);
           this.setUserRole(user.role);
           this.setUser(user);
@@ -123,13 +127,22 @@ export class AuthService {
     if (user) {
       const parsedUser = JSON.parse(user);
       this.setUserRole(parsedUser.role);
-      this.currentUser = parsedUser; 
+      this.currentUser = parsedUser;
+      const token = parsedUser?.accessToken ?? parsedUser?.token;
+      if (token) {
+        sessionStorage.setItem('authToken', token);
+      }
       this.loggedInStatus.next(true);
     }
   }
 
-  forgotPassword(email: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/auth/forgot-password/${email}`, this.httpOptions);
+  forgotPassword(email: string): Observable<string> {
+  const url = `${environment.apiUrl}/auth/forgot-password/${encodeURIComponent(email)}`;
+    return this.http.post<string>(url, null, {
+      headers: this.httpOptions?.headers,
+      // backend returns plain text like Ok("Password email sent")
+      responseType: 'text' as 'json'
+    });
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {
@@ -143,42 +156,66 @@ export class AuthService {
     this.resetCurrentUser();
     this.loggedInStatus.next(false);
     this.router.navigate(['/login']);
-}
+  }
 
-private clearStorage(): void {
+  private clearStorage(): void {
     localStorage.removeItem('loggedIn');
     sessionStorage.removeItem('authToken');
     localStorage.removeItem('user');
-}
+  }
 
-private resetCurrentUser(): void {
+  private resetCurrentUser(): void {
     const userString = localStorage.getItem('user');
 
     if (userString) {
-        try {
-            const userObj = JSON.parse(userString);
+      try {
+        const userObj = JSON.parse(userString);
 
-            if (userObj && userObj.id) {
-                this.currentUser = new User(
-                  userObj.id,
-                  userObj.name,
-                  userObj.email,
-                  userObj.password,
-                  userObj.role,
-                  userObj.market,
-                  userObj.company,
-                  new Date(userObj.createdDate),
-                  userObj.isApproved,
-                  userObj.approvalToken
-                );
-            }
-        } catch (error) {
-            console.error("Error parsing user data from localStorage:", error);
-            this.currentUser = null;
+        if (userObj && userObj.id) {
+          this.currentUser = new User(
+            userObj.id,
+            userObj.name,
+            userObj.email,
+            userObj.password,
+            userObj.role,
+            userObj.market,
+            userObj.company,
+            new Date(userObj.createdDate),
+            userObj.isApproved,
+            userObj.approvalToken
+          );
         }
-    } else {
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
         this.currentUser = null;
+      }
+    } else {
+      this.currentUser = null;
     }
-}
+  }
+
+  async getAccessToken(): Promise<string | null> {
+    const storedToken = sessionStorage.getItem('authToken');
+    if (storedToken) {
+      return storedToken;
+    }
+
+    const userString = localStorage.getItem('user');
+    if (!userString) {
+      return null;
+    }
+
+    try {
+      const parsedUser = JSON.parse(userString) as { accessToken?: string; token?: string };
+      const token = parsedUser.accessToken ?? parsedUser.token ?? null;
+      if (token) {
+        sessionStorage.setItem('authToken', token);
+      }
+      return token;
+    } catch (error) {
+      console.error('Error parsing user data when retrieving access token:', error);
+      return null;
+    }
+  }
 
 }
