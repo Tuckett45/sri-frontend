@@ -39,6 +39,17 @@ export interface DeploymentQueryParams {
   pageSize?: number;
 }
 
+// Import existing types for compatibility
+export interface DeploymentQuery {
+  status?: string;
+  vendor?: string;
+  dataCenter?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 export interface CacheEntry<T> {
   data: T;
   timestamp: number;
@@ -217,6 +228,50 @@ export class CachedDeploymentService {
    */
   clearCache(): void {
     this.cache.clear();
+  }
+
+  /**
+   * Compatibility method with existing DeploymentService interface
+   */
+  list(q: DeploymentQuery = {}): Observable<DeploymentListItem[]> {
+    return this.getDeployments(q).pipe(
+      map(response => response.rows)
+    );
+  }
+
+  /**
+   * Compatibility method - get single deployment (async version)
+   */
+  async get(id: string): Promise<any> {
+    return this.getDeployment(id).toPromise();
+  }
+
+  /**
+   * Compatibility method - create deployment (async version)
+   */
+  async create(payload: any): Promise<any> {
+    return this.createDeployment(payload).toPromise();
+  }
+
+  /**
+   * Compatibility method - update deployment (async version)
+   */
+  async update(id: string, payload: any): Promise<any> {
+    return this.updateDeployment(id, payload).toPromise();
+  }
+
+  /**
+   * Get deployment progress (Observable version for compatibility)
+   */
+  getProgress(deploymentId: string): Observable<any> {
+    return this.getDeploymentProgress(deploymentId);
+  }
+
+  /**
+   * Save deployment progress (Observable version for compatibility)
+   */
+  saveProgress(id: string, payload: any): Observable<any> {
+    return this.saveDeploymentProgress(id, payload);
   }
 
   // Private helper methods
