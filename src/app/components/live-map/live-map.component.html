@@ -2,7 +2,7 @@
   <!-- Header Controls -->
   <div class="map-header">
     <div class="header-left">
-      <h2>🗺️ Live Map</h2>
+      <h2>Live Map</h2>
       <div class="connection-status" [ngClass]="getConnectionStatusClass()" *ngIf="showConnectionStatus">
         <i class="pi pi-circle-fill"></i>
         <span>{{ getConnectionStatusText() }}</span>
@@ -35,7 +35,6 @@
         <button 
           class="btn btn-icon"
           (click)="centerOnCurrentLocation()"
-          [disabled]="!currentLocation"
           title="Center on my location">
           <i class="pi pi-compass"></i>
         </button>
@@ -52,7 +51,7 @@
 
   <!-- Map Container -->
   <div class="map-wrapper">
-    <div #azureMapContainer id="azureMapContainer" class="azure-map"></div>
+    <div #mapContainer id="mapContainer" class="leaflet-map"></div>
     
     <!-- Map Overlay Controls -->
     <div class="map-overlay">
@@ -97,7 +96,7 @@
 
       <!-- Current Location Info -->
       <div class="location-info" *ngIf="currentLocation && isLocationTracking">
-        <h4>📍 My Location</h4>
+        <h4>My Location</h4>
         <p><strong>Lat:</strong> {{ currentLocation.lat | number:'1.6-6' }}</p>
         <p><strong>Lon:</strong> {{ currentLocation.lon | number:'1.6-6' }}</p>
         <p *ngIf="currentLocation.accuracy">
@@ -107,7 +106,7 @@
 
       <!-- Live Users List -->
       <div class="live-users" *ngIf="liveMarkers.length > 0 && isLiveMode">
-        <h4>👥 Live Users ({{ liveMarkers.length }})</h4>
+        <h4>Live Users ({{ liveMarkers.length }})</h4>
         <div class="user-list">
           <div 
             class="user-item" 

@@ -14,6 +14,7 @@ import { MapMarker } from '../../models/map-marker.model';
 import { StreetSheet } from '../../models/street-sheet.model';
 import { User } from '../../models/user.model';
 import { ToastrService } from 'ngx-toastr';
+import type { ControlPosition, ErrorEvent, LocationEvent } from 'leaflet';
 
 @Component({
   selector: 'app-live-map',
@@ -21,11 +22,12 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: ['./live-map.component.scss']
 })
 export class LiveMapComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('azureMapContainer', { static: true }) mapContainer!: ElementRef;
+  @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef;
 
   private destroy$ = new Subject<void>();
   private locationWatchId: number | null = null;
   private locationUpdateInterval: any = null;
+  private pendingLocateContext: { setView: boolean; showSuccess: boolean } | null = null;
 
   // Component state
   public isLiveMode = false;
@@ -58,7 +60,7 @@ export class LiveMapComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.initializeAzureMap();
+    this.initializeMap();
   }
 
   ngOnDestroy(): void {
@@ -88,23 +90,34 @@ export class LiveMapComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private async initializeAzureMap(): Promise<void> {
+  private async initializeMap(): Promise<void> {
     try {
       const mapOptions = {
         center: this.getUserMarketCoordinates(),
         zoom: 10,
-        style: 'road'
+        locateControl: {
+          position: 'topright' as ControlPosition,
+          setView: true,
+          onStart: () => {
+            this.pendingLocateContext = { setView: true, showSuccess: false };
+          },
+          onLocate: (event: LocationEvent) => this.handleLocateSuccess(event),
+          onError: (error: ErrorEvent) => this.handleLocateError(error)
+        }
       };
 
-      await this.azureMapsService.initializeMap('azureMapContainer', mapOptions);
-      console.log('Azure Maps initialized successfully');
+      await this.azureMapsService.initializeMap('mapContainer', mapOptions);
+      console.log('Leaflet map initialized successfully');
       
       // Load existing markers after map is ready
       this.loadExistingMarkers();
+      this.azureMapsService.setLayerVisibility('static', this.showStaticMarkers);
+      this.azureMapsService.setLayerVisibility('live', this.showLiveMarkers);
+      this.requestCurrentLocation(true);
       
     } catch (error) {
-      console.error('Failed to initialize Azure Maps:', error);
-      this.toastr.error('Failed to initialize map. Please check your Azure Maps configuration.', 'Map Error');
+      console.error('Failed to initialize Leaflet map:', error);
+      this.toastr.error('Failed to initialize map. Please check your map configuration.', 'Map Error');
     }
   }
 
@@ -230,7 +243,7 @@ export class LiveMapComponent implements OnInit, OnDestroy, AfterViewInit {
       popup: {
         content: `
           <div class="live-marker-popup">
-            <h4>📍 Live Location</h4>
+            <h4>Live Location</h4>
             <p><strong>User:</strong> ${update.userEmail}</p>
             <p><strong>Accuracy:</strong> ${update.accuracy ? Math.round(update.accuracy) + 'm' : 'Unknown'}</p>
             <p><strong>Updated:</strong> ${new Date(update.timestamp).toLocaleTimeString()}</p>
@@ -383,6 +396,22 @@ export class LiveMapComponent implements OnInit, OnDestroy, AfterViewInit {
     this.toastr.info('Location tracking stopped', 'Live Map');
   }
 
+  private requestCurrentLocation(setView: boolean = false, showSuccess: boolean = false): void {
+    if (!this.azureMapsService.isInitialized()) {
+      return;
+    }
+
+    this.pendingLocateContext = { setView, showSuccess };
+
+    this.azureMapsService.locateUser(
+      {
+        setView,
+        watch: false
+      },
+      true
+    );
+  }
+
   private clearLiveMarkers(): void {
     this.liveMarkers.forEach(marker => {
       this.azureMapsService.removeMarker(marker.id);
@@ -393,10 +422,10 @@ export class LiveMapComponent implements OnInit, OnDestroy, AfterViewInit {
   public toggleMarkerVisibility(type: 'live' | 'static'): void {
     if (type === 'live') {
       this.showLiveMarkers = !this.showLiveMarkers;
-      // Toggle live marker visibility
+      this.azureMapsService.setLayerVisibility('live', this.showLiveMarkers);
     } else {
       this.showStaticMarkers = !this.showStaticMarkers;
-      // Toggle static marker visibility
+      this.azureMapsService.setLayerVisibility('static', this.showStaticMarkers);
     }
   }
 
@@ -404,12 +433,50 @@ export class LiveMapComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.currentLocation) {
       this.azureMapsService.setView([this.currentLocation.lon, this.currentLocation.lat], 15);
     } else {
-      this.toastr.warning('Current location not available', 'Location');
+      this.requestCurrentLocation(true, true);
     }
   }
 
   public fitToAllMarkers(): void {
     this.azureMapsService.fitToMarkers();
+  }
+
+  private handleLocateSuccess(event: LocationEvent): void {
+    this.currentLocation = {
+      lat: event.latlng.lat,
+      lon: event.latlng.lng,
+      accuracy: typeof event.accuracy === 'number' ? event.accuracy : undefined
+    };
+
+    if (this.pendingLocateContext?.showSuccess) {
+      this.toastr.success('Current location updated', 'Location');
+    }
+
+    this.pendingLocateContext = null;
+  }
+
+  private handleLocateError(error: ErrorEvent): void {
+    this.pendingLocateContext = null;
+
+    let message = 'Failed to get location';
+    switch (error.code) {
+      case 1:
+        message = 'Location permission denied';
+        break;
+      case 2:
+        message = 'Location information is unavailable';
+        break;
+      case 3:
+        message = 'Location request timed out';
+        break;
+      default:
+        if (error.message) {
+          message = error.message;
+        }
+        break;
+    }
+
+    this.toastr.error(message, 'Location Error');
   }
 
   public getConnectionStatusText(): string {

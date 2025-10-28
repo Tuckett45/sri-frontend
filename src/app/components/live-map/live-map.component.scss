@@ -121,7 +121,7 @@
   position: relative;
   overflow: hidden;
 
-  .azure-map {
+  .leaflet-map {
     width: 100%;
     height: 100%;
   }
@@ -283,6 +283,78 @@
   }
 }
 
+.map-marker-icon {
+  background: transparent;
+  border: none;
+}
+
+.map-marker {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.map-marker-live {
+  animation: pulse 1.5s infinite;
+}
+
+::ng-deep .leaflet-control-simple-locate {
+  .locate-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    color: #333;
+    background: #ffffff;
+  }
+
+  .locate-icon {
+    position: relative;
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .locate-icon::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .locate-icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    background: currentColor;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  &.locating .locate-icon {
+    animation: none;
+  }
+
+  &.locating .locate-icon::before {
+    animation: locate-spin 1s linear infinite;
+  }
+}
+
 // Animations
 @keyframes pulse {
   0%, 100% {
@@ -290,6 +362,15 @@
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+@keyframes locate-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 
@@ -330,8 +411,8 @@
   }
 }
 
-// Azure Maps popup customization
-:global(.azure-maps-popup-content) {
+// Leaflet popup customization
+::ng-deep .leaflet-popup-content {
   .marker-popup,
   .live-marker-popup {
     h4 {
