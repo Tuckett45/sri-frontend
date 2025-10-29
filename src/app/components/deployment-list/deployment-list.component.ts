@@ -9,7 +9,7 @@ import {
   TrackByFunction
 } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { Subject, BehaviorSubject, combineLatest, timer } from 'rxjs';
+import { Subject, BehaviorSubject, combineLatest, timer, of } from 'rxjs';
 import { 
   takeUntil, 
   debounceTime, 
@@ -82,7 +82,7 @@ export class DeploymentListComponent implements OnInit, OnDestroy, AfterViewInit
   
   // Performance metrics
   cacheStats$ = timer(0, 30000).pipe( // Update every 30 seconds
-    switchMap(() => this.deploymentService.getCacheStats()),
+    switchMap(() => of(this.deploymentService.getCacheStats())),
     startWith({ size: 0, hitRate: 0 })
   );
 
