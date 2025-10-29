@@ -1,0 +1,118 @@
+.daily-update-dashboard {
+  .header-section {
+    h2 {
+      color: var(--text-color);
+    }
+  }
+
+  .recent-updates-list {
+    max-height: 300px;
+    overflow-y: auto;
+
+    .recent-update-item {
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: var(--surface-hover);
+      }
+
+      &:last-child {
+        border-bottom: none !important;
+      }
+    }
+  }
+
+  .blocker-item,
+  .rma-item {
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+
+    &:last-child {
+      border-bottom: none !important;
+    }
+  }
+
+  .quick-actions {
+    .p-button {
+      min-width: 150px;
+    }
+  }
+
+  // Chart container styling
+  .p-chart {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .grid .col-12.md\\:col-6.lg\\:col-3 {
+      margin-bottom: 1rem;
+    }
+
+    .quick-actions {
+      .flex {
+        flex-direction: column;
+        align-items: stretch;
+
+        .p-button {
+          margin-bottom: 0.5rem;
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  // Status indicator colors
+  .text-red-500 {
+    color: #ef4444 !important;
+  }
+
+  .text-orange-500 {
+    color: #f97316 !important;
+  }
+
+  .text-yellow-500 {
+    color: #eab308 !important;
+  }
+
+  .text-green-500 {
+    color: #22c55e !important;
+  }
+
+  .text-green-600 {
+    color: #16a34a !important;
+  }
+
+  .text-blue-500 {
+    color: #3b82f6 !important;
+  }
+
+  .text-purple-500 {
+    color: #a855f7 !important;
+  }
+
+  .text-gray-500 {
+    color: #6b7280 !important;
+  }
+
+  // Loading state
+  .p-progressspinner {
+    width: 50px;
+    height: 50px;
+  }
+
+  // Summary cards hover effect
+  .surface-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+  }
+}
+

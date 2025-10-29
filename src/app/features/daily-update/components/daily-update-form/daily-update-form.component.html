@@ -1,0 +1,383 @@
+<div class="daily-update-form surface-card shadow-4 p-4 border-round">
+  <div class="header-section mb-4">
+    <h2 class="text-2xl font-bold text-900 m-0">
+      {{isEditMode ? 'Edit' : 'Create'}} Daily Update
+    </h2>
+    <p-divider />
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-content-center align-items-center" style="height: 200px;">
+    <p-progressSpinner></p-progressSpinner>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="dailyUpdateForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+    
+    <!-- Basic Information -->
+    <div class="surface-card shadow-2 p-3 border-round mb-4">
+      <h3 class="text-lg font-medium text-900 mb-3">Basic Information</h3>
+      
+      <div class="grid">
+        <div class="col-12 md:col-6">
+          <label for="bugNumber" class="block text-900 font-medium mb-2">Bug Number *</label>
+          <p-inputText 
+            id="bugNumber"
+            formControlName="bugNumber"
+            placeholder="B/1234"
+            styleClass="w-full"
+            [class.ng-invalid]="isFieldInvalid('bugNumber')">
+          </p-inputText>
+          <small *ngIf="isFieldInvalid('bugNumber')" class="p-error">{{getFieldError('bugNumber')}}</small>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="endOfDay" class="block text-900 font-medium mb-2">End of Day Date *</label>
+          <p-calendar 
+            id="endOfDay"
+            formControlName="endOfDay"
+            dateFormat="mm/dd/yy"
+            styleClass="w-full"
+            [class.ng-invalid]="isFieldInvalid('endOfDay')">
+          </p-calendar>
+          <small *ngIf="isFieldInvalid('endOfDay')" class="p-error">{{getFieldError('endOfDay')}}</small>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="site" class="block text-900 font-medium mb-2">Site *</label>
+          <p-dropdown 
+            id="site"
+            formControlName="site"
+            [options]="availableSites"
+            placeholder="Select Site"
+            styleClass="w-full"
+            [class.ng-invalid]="isFieldInvalid('site')">
+          </p-dropdown>
+          <small *ngIf="isFieldInvalid('site')" class="p-error">{{getFieldError('site')}}</small>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="pmNames" class="block text-900 font-medium mb-2">PM Names *</label>
+          <p-multiSelect 
+            id="pmNames"
+            formControlName="pmNames"
+            [options]="availablePMs"
+            placeholder="Select PMs"
+            styleClass="w-full"
+            [class.ng-invalid]="isFieldInvalid('pmNames')">
+          </p-multiSelect>
+          <small *ngIf="isFieldInvalid('pmNames')" class="p-error">{{getFieldError('pmNames')}}</small>
+        </div>
+
+        <div class="col-12">
+          <label for="sow" class="block text-900 font-medium mb-2">SOW Description *</label>
+          <textarea 
+            pTextarea
+            id="sow"
+            formControlName="sow"
+            rows="3"
+            placeholder="e.g., 3 WSAI RSW, Cat5e, Fiber, Config and Troubleshoot"
+            class="w-full"
+            [class.ng-invalid]="isFieldInvalid('sow')">
+          </textarea>
+          <small *ngIf="isFieldInvalid('sow')" class="p-error">{{getFieldError('sow')}}</small>
+        </div>
+
+        <div class="col-12 md:col-4">
+          <label for="siteRackLocation" class="block text-900 font-medium mb-2">Site Rack Location *</label>
+          <p-inputText 
+            id="siteRackLocation"
+            formControlName="siteRackLocation"
+            placeholder="e.g., TUL40-1-2"
+            styleClass="w-full"
+            [class.ng-invalid]="isFieldInvalid('siteRackLocation')">
+          </p-inputText>
+          <small *ngIf="isFieldInvalid('siteRackLocation')" class="p-error">{{getFieldError('siteRackLocation')}}</small>
+        </div>
+
+        <div class="col-12 md:col-4">
+          <label for="installBegin" class="block text-900 font-medium mb-2">Install Begin Date</label>
+          <p-calendar 
+            id="installBegin"
+            formControlName="installBegin"
+            dateFormat="mm/dd/yy"
+            styleClass="w-full">
+          </p-calendar>
+        </div>
+
+        <div class="col-12 md:col-4">
+          <label for="googleExpectedCompleteDate" class="block text-900 font-medium mb-2">Google Expected Complete Date</label>
+          <p-calendar 
+            id="googleExpectedCompleteDate"
+            formControlName="googleExpectedCompleteDate"
+            dateFormat="mm/dd/yy"
+            styleClass="w-full">
+          </p-calendar>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Tracking -->
+    <div class="surface-card shadow-2 p-3 border-round mb-4">
+      <h3 class="text-lg font-medium text-900 mb-3">Progress Tracking</h3>
+      
+      <!-- Install Progress -->
+      <div class="mb-4">
+        <div class="flex justify-content-between align-items-center mb-2">
+          <h4 class="text-900 font-medium m-0">Install Progress by Scope</h4>
+          <p-button 
+            type="button"
+            icon="pi pi-plus" 
+            label="Add Scope"
+            (onClick)="addScopeProgress('installPercentComplete')"
+            styleClass="p-button-sm p-button-outlined">
+          </p-button>
+        </div>
+        
+        <div formArrayName="installPercentComplete">
+          <div *ngFor="let progress of installPercentComplete.controls; let i = index" 
+               [formGroupName]="i" 
+               class="grid align-items-end mb-2">
+            <div class="col-12 md:col-4">
+              <label class="block text-900 font-medium mb-1">Scope</label>
+              <p-inputText formControlName="scope" placeholder="e.g., WSAI Installation" styleClass="w-full"></p-inputText>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block text-900 font-medium mb-1">Percentage</label>
+              <p-inputNumber formControlName="percentage" [min]="0" [max]="100" suffix="%" styleClass="w-full"></p-inputNumber>
+            </div>
+            <div class="col-12 md:col-4">
+              <label class="block text-900 font-medium mb-1">Description</label>
+              <p-inputText formControlName="description" placeholder="Progress notes" styleClass="w-full"></p-inputText>
+            </div>
+            <div class="col-12 md:col-1">
+              <p-button 
+                type="button"
+                icon="pi pi-trash" 
+                (onClick)="removeScopeProgress('installPercentComplete', i)"
+                styleClass="p-button-sm p-button-danger p-button-outlined">
+              </p-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Progress -->
+      <div class="mb-4">
+        <div class="flex justify-content-between align-items-center mb-2">
+          <h4 class="text-900 font-medium m-0">Test Progress by Scope</h4>
+          <p-button 
+            type="button"
+            icon="pi pi-plus" 
+            label="Add Test Scope"
+            (onClick)="addScopeProgress('testPercentComplete')"
+            styleClass="p-button-sm p-button-outlined">
+          </p-button>
+        </div>
+        
+        <div formArrayName="testPercentComplete">
+          <div *ngFor="let progress of testPercentComplete.controls; let i = index" 
+               [formGroupName]="i" 
+               class="grid align-items-end mb-2">
+            <div class="col-12 md:col-4">
+              <label class="block text-900 font-medium mb-1">Test Scope</label>
+              <p-inputText formControlName="scope" placeholder="e.g., Connectivity Testing" styleClass="w-full"></p-inputText>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block text-900 font-medium mb-1">Percentage</label>
+              <p-inputNumber formControlName="percentage" [min]="0" [max]="100" suffix="%" styleClass="w-full"></p-inputNumber>
+            </div>
+            <div class="col-12 md:col-4">
+              <label class="block text-900 font-medium mb-1">Description</label>
+              <p-inputText formControlName="description" placeholder="Test notes" styleClass="w-full"></p-inputText>
+            </div>
+            <div class="col-12 md:col-1">
+              <p-button 
+                type="button"
+                icon="pi pi-trash" 
+                (onClick)="removeScopeProgress('testPercentComplete', i)"
+                styleClass="p-button-sm p-button-danger p-button-outlined">
+              </p-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activities -->
+    <div class="surface-card shadow-2 p-3 border-round mb-4">
+      <h3 class="text-lg font-medium text-900 mb-3">Activities</h3>
+      
+      <div class="grid">
+        <div class="col-12 md:col-6">
+          <label for="completedActivity" class="block text-900 font-medium mb-2">Completed Activity *</label>
+          <textarea 
+            pTextarea
+            id="completedActivity"
+            formControlName="completedActivity"
+            rows="4"
+            placeholder="Describe what was completed today"
+            class="w-full"
+            [class.ng-invalid]="isFieldInvalid('completedActivity')">
+          </textarea>
+          <small *ngIf="isFieldInvalid('completedActivity')" class="p-error">{{getFieldError('completedActivity')}}</small>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="plannedActivity" class="block text-900 font-medium mb-2">Planned Activity *</label>
+          <textarea 
+            pTextarea
+            id="plannedActivity"
+            formControlName="plannedActivity"
+            rows="4"
+            placeholder="Describe planned activities for next day"
+            class="w-full"
+            [class.ng-invalid]="isFieldInvalid('plannedActivity')">
+          </textarea>
+          <small *ngIf="isFieldInvalid('plannedActivity')" class="p-error">{{getFieldError('plannedActivity')}}</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blockers -->
+    <div class="surface-card shadow-2 p-3 border-round mb-4">
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3 class="text-lg font-medium text-900 m-0">Active Blockers</h3>
+        <p-button 
+          type="button"
+          icon="pi pi-plus" 
+          label="Add Blocker"
+          (onClick)="addBlocker()"
+          styleClass="p-button-sm p-button-outlined">
+        </p-button>
+      </div>
+      
+      <div formArrayName="activeBlockers">
+        <div *ngFor="let blocker of activeBlockers.controls; let i = index" 
+             [formGroupName]="i" 
+             class="surface-border border-1 border-round p-3 mb-3">
+          <div class="grid">
+            <div class="col-12">
+              <label class="block text-900 font-medium mb-2">Description *</label>
+              <textarea pTextarea formControlName="description" rows="2" placeholder="Describe the blocker" class="w-full"></textarea>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block text-900 font-medium mb-2">Category *</label>
+              <p-dropdown formControlName="category" [options]="blockerCategories" styleClass="w-full"></p-dropdown>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block text-900 font-medium mb-2">Severity *</label>
+              <p-dropdown formControlName="severity" [options]="blockerSeverities" styleClass="w-full"></p-dropdown>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block text-900 font-medium mb-2">Ticket Number</label>
+              <p-inputText formControlName="ticketNumber" placeholder="TKT-1234" styleClass="w-full"></p-inputText>
+            </div>
+            <div class="col-12 md:col-2">
+              <label class="block text-900 font-medium mb-2">Reported Date</label>
+              <p-calendar formControlName="reportedDate" dateFormat="mm/dd/yy" styleClass="w-full"></p-calendar>
+            </div>
+            <div class="col-12 md:col-1">
+              <label class="block text-900 font-medium mb-2">&nbsp;</label>
+              <p-button 
+                type="button"
+                icon="pi pi-trash" 
+                (onClick)="removeBlocker(i)"
+                styleClass="p-button-sm p-button-danger p-button-outlined w-full">
+              </p-button>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="activeBlockers.length === 0" class="text-center text-500 p-4">
+          No active blockers
+        </div>
+      </div>
+    </div>
+
+    <!-- Open RMAs -->
+    <div class="surface-card shadow-2 p-3 border-round mb-4">
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3 class="text-lg font-medium text-900 m-0">Open RMA Requests</h3>
+        <p-button 
+          type="button"
+          icon="pi pi-plus" 
+          label="Add RMA"
+          (onClick)="addRMA()"
+          styleClass="p-button-sm p-button-outlined">
+        </p-button>
+      </div>
+      
+      <div formArrayName="openRMA">
+        <div *ngFor="let rma of openRMA.controls; let i = index" 
+             [formGroupName]="i" 
+             class="surface-border border-1 border-round p-3 mb-3">
+          <div class="grid">
+            <div class="col-12 md:col-3">
+              <label class="block text-900 font-medium mb-2">Equipment Type *</label>
+              <p-inputText formControlName="equipmentType" placeholder="e.g., WSAI Unit" styleClass="w-full"></p-inputText>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block text-900 font-medium mb-2">Serial Number</label>
+              <p-inputText formControlName="serialNumber" placeholder="SN123456" styleClass="w-full"></p-inputText>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block text-900 font-medium mb-2">Status *</label>
+              <p-dropdown formControlName="status" [options]="rmaStatuses" styleClass="w-full"></p-dropdown>
+            </div>
+            <div class="col-12 md:col-2">
+              <label class="block text-900 font-medium mb-2">Reported Date</label>
+              <p-calendar formControlName="reportedDate" dateFormat="mm/dd/yy" styleClass="w-full"></p-calendar>
+            </div>
+            <div class="col-12 md:col-1">
+              <label class="block text-900 font-medium mb-2">&nbsp;</label>
+              <p-button 
+                type="button"
+                icon="pi pi-trash" 
+                (onClick)="removeRMA(i)"
+                styleClass="p-button-sm p-button-danger p-button-outlined w-full">
+              </p-button>
+            </div>
+            <div class="col-12">
+              <label class="block text-900 font-medium mb-2">Failure Description *</label>
+              <textarea pTextarea formControlName="failureDescription" rows="2" placeholder="Describe the equipment failure" class="w-full"></textarea>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="openRMA.length === 0" class="text-center text-500 p-4">
+          No open RMA requests
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="surface-card shadow-2 p-3 border-round mb-4">
+      <h3 class="text-lg font-medium text-900 mb-3">Notes</h3>
+      <textarea 
+        pTextarea
+        formControlName="notes"
+        rows="4"
+        placeholder="Additional notes or comments"
+        class="w-full">
+      </textarea>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex justify-content-end gap-3">
+      <p-button 
+        type="button"
+        label="Cancel" 
+        icon="pi pi-times"
+        (onClick)="onCancel()"
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button 
+        type="submit"
+        [label]="isEditMode ? 'Update' : 'Create'"
+        icon="pi pi-check"
+        [loading]="saving"
+        [disabled]="dailyUpdateForm.invalid"
+        styleClass="p-button-success">
+      </p-button>
+    </div>
+  </form>
+</div>

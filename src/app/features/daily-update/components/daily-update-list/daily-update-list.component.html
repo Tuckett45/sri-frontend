@@ -1,0 +1,284 @@
+<div class="daily-update-list surface-card shadow-4 p-4 border-round">
+  <div class="header-section mb-4">
+    <div class="flex justify-content-between align-items-center">
+      <h2 class="text-2xl font-bold text-900 m-0">Daily Updates</h2>
+      <div class="flex gap-2">
+        <p-button 
+          icon="pi pi-filter" 
+          label="Filter"
+          (onClick)="toggleFilter()"
+          [outlined]="!filterVisible"
+          styleClass="p-button-outlined">
+        </p-button>
+        <p-button 
+          icon="pi pi-download" 
+          label="Export"
+          (onClick)="exportToCSV()"
+          styleClass="p-button-outlined">
+        </p-button>
+        <p-button 
+          icon="pi pi-plus" 
+          label="Create New"
+          (onClick)="createNew()"
+          styleClass="p-button-success">
+        </p-button>
+      </div>
+    </div>
+    <p-divider />
+  </div>
+
+  <!-- Filter Panel -->
+  <div *ngIf="filterVisible" class="surface-card shadow-2 p-3 border-round mb-4">
+    <h3 class="text-lg font-medium text-900 mb-3">Filters</h3>
+    
+    <div class="grid">
+      <div class="col-12 md:col-3">
+        <label class="block text-900 font-medium mb-2">Date Range</label>
+        <p-calendar 
+          [(ngModel)]="dateRange"
+          selectionMode="range"
+          dateFormat="mm/dd/yy"
+          placeholder="Select date range"
+          styleClass="w-full"
+          (onSelect)="onFilterChange()">
+        </p-calendar>
+      </div>
+
+      <div class="col-12 md:col-3">
+        <label class="block text-900 font-medium mb-2">Sites</label>
+        <p-multiSelect 
+          [(ngModel)]="selectedSites"
+          [options]="availableSites"
+          placeholder="Select sites"
+          styleClass="w-full"
+          (onChange)="onFilterChange()">
+        </p-multiSelect>
+      </div>
+
+      <div class="col-12 md:col-3">
+        <label class="block text-900 font-medium mb-2">PM Names</label>
+        <p-multiSelect 
+          [(ngModel)]="selectedPMs"
+          [options]="availablePMs"
+          placeholder="Select PMs"
+          styleClass="w-full"
+          (onChange)="onFilterChange()">
+        </p-multiSelect>
+      </div>
+
+      <div class="col-12 md:col-3">
+        <label class="block text-900 font-medium mb-2">Issues Filter</label>
+        <div class="flex flex-column gap-2">
+          <p-checkbox 
+            [(ngModel)]="hasBlockersFilter"
+            [binary]="true"
+            label="Has Blockers"
+            (onChange)="onFilterChange()">
+          </p-checkbox>
+          <p-checkbox 
+            [(ngModel)]="hasRMAsFilter"
+            [binary]="true"
+            label="Has Open RMAs"
+            (onChange)="onFilterChange()">
+          </p-checkbox>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-3">
+      <p-button 
+        label="Clear Filters" 
+        icon="pi pi-times"
+        (onClick)="clearFilters()"
+        styleClass="p-button-outlined">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <p-table 
+    [value]="filteredUpdates"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="rows"
+    [totalRecords]="totalRecords"
+    [first]="first"
+    (onPage)="onPageChange($event)"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    styleClass="p-datatable-striped">
+    
+    <ng-template pTemplate="header">
+      <tr>
+        <th *ngFor="let col of cols" [pSortableColumn]="col.sortable ? col.field : null">
+          {{col.header}}
+          <p-sortIcon *ngIf="col.sortable" [field]="col.field"></p-sortIcon>
+        </th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-update>
+      <tr>
+        <td>{{formatDate(update.endOfDay)}}</td>
+        <td>
+          <span class="font-medium">{{update.bugNumber}}</span>
+        </td>
+        <td>
+          <span class="font-medium text-primary">{{update.site}}</span>
+        </td>
+        <td>
+          <div class="text-sm">{{formatPMNames(update.pmNames)}}</div>
+        </td>
+        <td>
+          <div class="flex align-items-center">
+            <span [class]="getProgressClass(calculateAverageProgress(update.installPercentComplete))" 
+                  class="font-medium">
+              {{calculateAverageProgress(update.installPercentComplete)}}%
+            </span>
+            <p-progressBar 
+              [value]="calculateAverageProgress(update.installPercentComplete)"
+              styleClass="ml-2 flex-1"
+              [style]="{'height': '0.5rem'}">
+            </p-progressBar>
+          </div>
+        </td>
+        <td>
+          <div class="flex align-items-center">
+            <span [class]="getProgressClass(calculateAverageProgress(update.testPercentComplete))" 
+                  class="font-medium">
+              {{calculateAverageProgress(update.testPercentComplete)}}%
+            </span>
+            <p-progressBar 
+              [value]="calculateAverageProgress(update.testPercentComplete)"
+              styleClass="ml-2 flex-1"
+              [style]="{'height': '0.5rem'}">
+            </p-progressBar>
+          </div>
+        </td>
+        <td>
+          <div *ngIf="update.activeBlockers.length > 0" class="flex align-items-center">
+            <i class="pi pi-exclamation-triangle text-red-500 mr-1"></i>
+            <span class="text-red-500 font-medium">{{update.activeBlockers.length}}</span>
+            <p-button 
+              icon="pi pi-eye"
+              [text]="true"
+              [rounded]="true"
+              size="small"
+              pTooltip="View blockers"
+              (onClick)="viewUpdate(update)"
+              styleClass="ml-1">
+            </p-button>
+          </div>
+          <span *ngIf="update.activeBlockers.length === 0" class="text-green-500">
+            <i class="pi pi-check-circle mr-1"></i>None
+          </span>
+        </td>
+        <td>
+          <div *ngIf="update.openRMA.length > 0" class="flex align-items-center">
+            <i class="pi pi-cog text-orange-500 mr-1"></i>
+            <span class="text-orange-500 font-medium">{{update.openRMA.length}}</span>
+            <p-button 
+              icon="pi pi-eye"
+              [text]="true"
+              [rounded]="true"
+              size="small"
+              pTooltip="View RMAs"
+              (onClick)="viewUpdate(update)"
+              styleClass="ml-1">
+            </p-button>
+          </div>
+          <span *ngIf="update.openRMA.length === 0" class="text-green-500">
+            <i class="pi pi-check-circle mr-1"></i>None
+          </span>
+        </td>
+        <td>
+          <div class="flex gap-1">
+            <p-button 
+              icon="pi pi-eye"
+              [text]="true"
+              [rounded]="true"
+              size="small"
+              pTooltip="View details"
+              (onClick)="viewUpdate(update)"
+              styleClass="p-button-info">
+            </p-button>
+            <p-button 
+              icon="pi pi-pencil"
+              [text]="true"
+              [rounded]="true"
+              size="small"
+              pTooltip="Edit update"
+              (onClick)="editUpdate(update)"
+              styleClass="p-button-warning">
+            </p-button>
+            <p-button 
+              icon="pi pi-trash"
+              [text]="true"
+              [rounded]="true"
+              size="small"
+              pTooltip="Delete update"
+              (onClick)="deleteUpdate(update)"
+              styleClass="p-button-danger">
+            </p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="9" class="text-center p-4">
+          <div class="flex flex-column align-items-center">
+            <i class="pi pi-inbox text-4xl text-400 mb-3"></i>
+            <span class="text-lg text-600">No daily updates found</span>
+            <p-button 
+              label="Create First Update" 
+              icon="pi pi-plus"
+              (onClick)="createNew()"
+              styleClass="mt-3 p-button-success">
+            </p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Summary Cards -->
+  <div class="grid mt-4" *ngIf="!loading && filteredUpdates.length > 0">
+    <div class="col-12 md:col-3">
+      <div class="surface-card shadow-2 p-3 border-round text-center">
+        <div class="text-2xl font-bold text-900">{{filteredUpdates.length}}</div>
+        <div class="text-600">Total Updates</div>
+      </div>
+    </div>
+    <div class="col-12 md:col-3">
+      <div class="surface-card shadow-2 p-3 border-round text-center">
+        <div class="text-2xl font-bold text-red-500">
+          {{filteredUpdates.reduce((sum, u) => sum + u.activeBlockers.length, 0)}}
+        </div>
+        <div class="text-600">Active Blockers</div>
+      </div>
+    </div>
+    <div class="col-12 md:col-3">
+      <div class="surface-card shadow-2 p-3 border-round text-center">
+        <div class="text-2xl font-bold text-orange-500">
+          {{filteredUpdates.reduce((sum, u) => sum + u.openRMA.length, 0)}}
+        </div>
+        <div class="text-600">Open RMAs</div>
+      </div>
+    </div>
+    <div class="col-12 md:col-3">
+      <div class="surface-card shadow-2 p-3 border-round text-center">
+        <div class="text-2xl font-bold text-blue-500">
+          {{Math.round(filteredUpdates.reduce((sum, u) => sum + calculateAverageProgress(u.installPercentComplete), 0) / filteredUpdates.length)}}%
+        </div>
+        <div class="text-600">Avg Install Progress</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog></p-confirmDialog>
+

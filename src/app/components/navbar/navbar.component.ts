@@ -48,6 +48,14 @@ export class NavbarComponent {
         this.authService.isCoordinator()
     },
     {
+      label: 'Daily Updates',
+      route: '/daily-updates',
+      isVisible: () =>
+        this.authService.isAdmin() ||
+        this.authService.isPM() ||
+        this.authService.isCM()
+    },
+    {
       label: 'Prelim Punch List Tracker',
       route: '/preliminary-punch-list',
       isVisible: () =>
@@ -139,4 +147,3 @@ export class NavbarComponent {
     this.authService.logout();
   }
 }
-

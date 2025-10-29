@@ -1,0 +1,229 @@
+<div class="daily-update-dashboard surface-card shadow-4 p-3 border-round">
+  <div class="header-section mb-4">
+    <div class="flex justify-content-between align-items-center">
+      <h2 class="text-2xl font-bold text-900 m-0">Indigo Daily Update Dashboard</h2>
+      <p-button 
+        icon="pi pi-refresh" 
+        label="Refresh" 
+        (onClick)="refreshDashboard()"
+        [loading]="loading"
+        styleClass="p-button-outlined">
+      </p-button>
+    </div>
+    <p-divider />
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="surface-ground px-4 py-5 md:px-6 lg:px-8" *ngIf="!loading">
+    <div class="grid">
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="surface-card shadow-2 p-3 border-round">
+          <div class="flex justify-content-between mb-3">
+            <div>
+              <span class="block text-500 font-medium mb-3">Total Reports</span>
+              <div class="text-900 font-medium text-xl">{{summary.totalReports}}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-file-edit text-blue-500 text-xl"></i>
+            </div>
+          </div>
+          <span class="text-500">All time</span>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="surface-card shadow-2 p-3 border-round">
+          <div class="flex justify-content-between mb-3">
+            <div>
+              <span class="block text-500 font-medium mb-3">Active Blockers</span>
+              <div class="text-900 font-medium text-xl">{{summary.activeBlockers}}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-red-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
+            </div>
+          </div>
+          <span class="text-500">Requiring attention</span>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="surface-card shadow-2 p-3 border-round">
+          <div class="flex justify-content-between mb-3">
+            <div>
+              <span class="block text-500 font-medium mb-3">Open RMAs</span>
+              <div class="text-900 font-medium text-xl">{{summary.openRMAs}}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-cog text-orange-500 text-xl"></i>
+            </div>
+          </div>
+          <span class="text-500">Equipment replacements</span>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="surface-card shadow-2 p-3 border-round">
+          <div class="flex justify-content-between mb-3">
+            <div>
+              <span class="block text-500 font-medium mb-3">Sites with Issues</span>
+              <div class="text-900 font-medium text-xl">{{summary.sitesWithIssues}}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-map-marker text-purple-500 text-xl"></i>
+            </div>
+          </div>
+          <span class="text-500">Need monitoring</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-content-center align-items-center" style="height: 200px;">
+    <p-progressSpinner></p-progressSpinner>
+  </div>
+
+  <!-- Charts and Data -->
+  <div class="grid" *ngIf="!loading">
+    <!-- Progress Overview Chart -->
+    <div class="col-12 sm:col-12 md:col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Average Progress Overview</span>
+        <p-divider />
+        <div style="height: 300px;">
+          <p-chart type="bar" [data]="progressChartData" [options]="progressChartOptions"></p-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Blockers by Category -->
+    <div class="col-12 sm:col-12 md:col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Active Blockers by Category</span>
+        <p-divider />
+        <div style="height: 300px;">
+          <p-chart type="doughnut" [data]="blockerChartData" [options]="blockerChartOptions"></p-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Site Activity Chart -->
+    <div class="col-12 sm:col-12 md:col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Reports per Site</span>
+        <p-divider />
+        <div style="height: 300px;">
+          <p-chart type="bar" [data]="siteActivityChartData" [options]="siteActivityChartOptions"></p-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Updates -->
+    <div class="col-12 sm:col-12 md:col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Recent Updates</span>
+        <p-divider />
+        <div class="recent-updates-list">
+          <div *ngFor="let update of recentUpdates" class="recent-update-item p-2 border-bottom-1 surface-border">
+            <div class="flex justify-content-between align-items-start">
+              <div class="flex-1">
+                <div class="font-medium text-900">{{update.site}}</div>
+                <div class="text-600 text-sm">{{update.pmNames.join(', ')}}</div>
+                <div class="text-500 text-sm mt-1">{{update.completedActivity}}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-600 text-sm">{{formatDate(update.endOfDay)}}</div>
+                <div *ngIf="update.activeBlockers.length > 0" class="text-red-500 text-sm">
+                  <i class="pi pi-exclamation-triangle mr-1"></i>{{update.activeBlockers.length}} blockers
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="recentUpdates.length === 0" class="text-center text-500 p-4">
+            No recent updates available
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Critical Issues Summary -->
+    <div class="col-12">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <span class="block text-500 font-medium mb-3">Critical Issues Summary</span>
+        <p-divider />
+        
+        <div class="grid">
+          <!-- High Priority Blockers -->
+          <div class="col-12 md:col-6">
+            <h4 class="text-900 font-medium">High Priority Blockers</h4>
+            <div *ngFor="let update of updatesWithBlockers.slice(0, 5)" class="blocker-item p-2 border-bottom-1 surface-border">
+              <div class="flex justify-content-between align-items-center">
+                <div class="flex-1">
+                  <div class="font-medium text-900">{{update.site}}</div>
+                  <div *ngFor="let blocker of update.activeBlockers" class="text-sm mt-1">
+                    <span [class]="getBlockerSeverityClass(blocker.severity)">
+                      <i class="pi pi-circle-fill mr-1"></i>{{blocker.severity}}
+                    </span>
+                    <span class="text-600 ml-2">{{blocker.description}}</span>
+                    <span *ngIf="blocker.ticketNumber" class="text-500 ml-2">({{blocker.ticketNumber}})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="updatesWithBlockers.length === 0" class="text-center text-500 p-4">
+              No active blockers
+            </div>
+          </div>
+
+          <!-- Open RMAs -->
+          <div class="col-12 md:col-6">
+            <h4 class="text-900 font-medium">Open RMA Requests</h4>
+            <div *ngFor="let update of updatesWithRMAs.slice(0, 5)" class="rma-item p-2 border-bottom-1 surface-border">
+              <div class="flex justify-content-between align-items-center">
+                <div class="flex-1">
+                  <div class="font-medium text-900">{{update.site}}</div>
+                  <div *ngFor="let rma of update.openRMA" class="text-sm mt-1">
+                    <span [class]="getRMAStatusClass(rma.status)">
+                      <i class="pi pi-circle-fill mr-1"></i>{{rma.status}}
+                    </span>
+                    <span class="text-600 ml-2">{{rma.equipmentType}}</span>
+                    <span *ngIf="rma.serialNumber" class="text-500 ml-2">({{rma.serialNumber}})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="updatesWithRMAs.length === 0" class="text-center text-500 p-4">
+              No open RMAs
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions mt-4" *ngIf="!loading">
+    <p-divider />
+    <div class="flex justify-content-center gap-3 mt-3">
+      <p-button 
+        label="Create New Update" 
+        icon="pi pi-plus" 
+        routerLink="/daily-updates/form"
+        styleClass="p-button-success">
+      </p-button>
+      <p-button 
+        label="View All Updates" 
+        icon="pi pi-list" 
+        routerLink="/daily-updates/list"
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button 
+        label="View Reports" 
+        icon="pi pi-chart-bar" 
+        routerLink="/daily-updates/reports"
+        styleClass="p-button-outlined">
+      </p-button>
+    </div>
+  </div>
+</div>
+

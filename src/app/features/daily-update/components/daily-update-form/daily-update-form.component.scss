@@ -1,0 +1,161 @@
+.daily-update-form {
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .header-section {
+    h2 {
+      color: var(--text-color);
+    }
+  }
+
+  // Form section styling
+  .surface-card {
+    h3, h4 {
+      color: var(--text-color);
+    }
+
+    .grid {
+      .col-12, .col-6, .col-4, .col-3, .col-2, .col-1 {
+        padding: 0.5rem;
+      }
+    }
+  }
+
+  // Form validation styling
+  .ng-invalid.ng-touched {
+    border-color: #e24c4c !important;
+  }
+
+  .p-error {
+    color: #e24c4c;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+  }
+
+  // Form array items styling
+  .surface-border {
+    background-color: var(--surface-a);
+    
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+  }
+
+  // Button styling
+  .p-button-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  // Progress bars and indicators
+  .progress-indicator {
+    .p-progressbar {
+      height: 0.5rem;
+      background-color: var(--surface-d);
+      border-radius: 0.25rem;
+      overflow: hidden;
+
+      .p-progressbar-value {
+        background-color: var(--primary-color);
+        transition: width 0.3s ease;
+      }
+    }
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .grid {
+      .col-12.md\\:col-6,
+      .col-12.md\\:col-4,
+      .col-12.md\\:col-3,
+      .col-12.md\\:col-2,
+      .col-12.md\\:col-1 {
+        margin-bottom: 1rem;
+      }
+    }
+
+    .flex.justify-content-end {
+      flex-direction: column;
+      
+      .p-button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+
+  // Loading state
+  .p-progressspinner {
+    width: 50px;
+    height: 50px;
+  }
+
+  // Form field labels
+  label {
+    font-weight: 500;
+    color: var(--text-color);
+  }
+
+  // Input field styling
+  .p-inputtext,
+  .p-inputtextarea,
+  .p-dropdown,
+  .p-multiselect,
+  .p-calendar,
+  .p-inputnumber {
+    &:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.2);
+    }
+  }
+
+  // Placeholder styling
+  ::placeholder {
+    color: var(--text-color-secondary);
+    opacity: 0.7;
+  }
+
+  // Section dividers
+  .p-divider {
+    margin: 1rem 0;
+  }
+
+  // Empty state styling
+  .text-center.text-500 {
+    font-style: italic;
+    background-color: var(--surface-b);
+    border-radius: 0.25rem;
+  }
+
+  // Form array add/remove buttons
+  .p-button-outlined {
+    &.p-button-danger {
+      border-color: #e24c4c;
+      color: #e24c4c;
+
+      &:hover {
+        background-color: #e24c4c;
+        color: white;
+      }
+    }
+  }
+
+  // Success button styling
+  .p-button-success {
+    background-color: #22c55e;
+    border-color: #22c55e;
+
+    &:hover {
+      background-color: #16a34a;
+      border-color: #16a34a;
+    }
+
+    &:disabled {
+      background-color: #9ca3af;
+      border-color: #9ca3af;
+      opacity: 0.6;
+    }
+  }
+}
+

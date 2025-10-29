@@ -1,0 +1,183 @@
+<div class="daily-update-reports surface-card shadow-4 p-4 border-round">
+  <div class="header-section mb-4">
+    <div class="flex justify-content-between align-items-center">
+      <h2 class="text-2xl font-bold text-900 m-0">Daily Update Reports & Analytics</h2>
+      <p-button 
+        icon="pi pi-refresh" 
+        label="Refresh"
+        (onClick)="refreshReports()"
+        [loading]="loading"
+        styleClass="p-button-outlined">
+      </p-button>
+    </div>
+    <p-divider />
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-content-center align-items-center" style="height: 400px;">
+    <p-progressSpinner></p-progressSpinner>
+  </div>
+
+  <!-- Reports Content -->
+  <div *ngIf="!loading" class="grid">
+    
+    <!-- Progress Trend Chart -->
+    <div class="col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <h3 class="text-lg font-medium text-900 mb-3">Progress Trend Over Time</h3>
+        <p-divider />
+        <div style="height: 300px;">
+          <p-chart type="line" [data]="progressTrendData" [options]="chartOptions"></p-chart>
+        </div>
+        <small class="text-500">Shows average install and test progress over time</small>
+      </div>
+    </div>
+
+    <!-- Blocker Analysis -->
+    <div class="col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <h3 class="text-lg font-medium text-900 mb-3">Active Blockers by Category</h3>
+        <p-divider />
+        <div style="height: 300px;">
+          <p-chart type="doughnut" [data]="blockerAnalysisData" [options]="doughnutOptions"></p-chart>
+        </div>
+        <small class="text-500">Distribution of blockers across different categories</small>
+      </div>
+    </div>
+
+    <!-- Site Performance -->
+    <div class="col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <h3 class="text-lg font-medium text-900 mb-3">Site Performance Comparison</h3>
+        <p-divider />
+        <div style="height: 300px;">
+          <p-chart type="bar" [data]="sitePerformanceData" [options]="chartOptions"></p-chart>
+        </div>
+        <small class="text-500">Average progress comparison across different sites</small>
+      </div>
+    </div>
+
+    <!-- PM Productivity -->
+    <div class="col-12 lg:col-6">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <h3 class="text-lg font-medium text-900 mb-3">PM Productivity Analysis</h3>
+        <p-divider />
+        <div style="height: 300px;">
+          <p-chart type="bar" [data]="pmProductivityData" [options]="chartOptions"></p-chart>
+        </div>
+        <small class="text-500">Number of updates and average progress by PM</small>
+      </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="col-12">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <h3 class="text-lg font-medium text-900 mb-3">Summary Statistics</h3>
+        <p-divider />
+        
+        <div class="grid">
+          <div class="col-12 md:col-3">
+            <div class="text-center p-3 border-round surface-border border-1">
+              <div class="text-2xl font-bold text-primary">{{dailyUpdates.length}}</div>
+              <div class="text-600">Total Reports</div>
+            </div>
+          </div>
+          
+          <div class="col-12 md:col-3">
+            <div class="text-center p-3 border-round surface-border border-1">
+              <div class="text-2xl font-bold text-red-500">
+                {{dailyUpdates.reduce((sum, u) => sum + u.activeBlockers.length, 0)}}
+              </div>
+              <div class="text-600">Total Active Blockers</div>
+            </div>
+          </div>
+          
+          <div class="col-12 md:col-3">
+            <div class="text-center p-3 border-round surface-border border-1">
+              <div class="text-2xl font-bold text-orange-500">
+                {{dailyUpdates.reduce((sum, u) => sum + u.openRMA.length, 0)}}
+              </div>
+              <div class="text-600">Total Open RMAs</div>
+            </div>
+          </div>
+          
+          <div class="col-12 md:col-3">
+            <div class="text-center p-3 border-round surface-border border-1">
+              <div class="text-2xl font-bold text-green-500">
+                {{dailyUpdates.filter(u => u.activeBlockers.length === 0 && u.openRMA.length === 0).length}}
+              </div>
+              <div class="text-600">Sites Without Issues</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity Timeline -->
+    <div class="col-12">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <h3 class="text-lg font-medium text-900 mb-3">Recent Activity Timeline</h3>
+        <p-divider />
+        
+        <div class="timeline-container">
+          <div *ngFor="let update of dailyUpdates.slice(0, 10)" class="timeline-item p-3 border-bottom-1 surface-border">
+            <div class="flex justify-content-between align-items-start">
+              <div class="flex-1">
+                <div class="flex align-items-center mb-2">
+                  <i class="pi pi-calendar text-primary mr-2"></i>
+                  <span class="font-medium text-900">{{update.site}}</span>
+                  <span class="text-500 ml-2">{{update.endOfDay | date:'short'}}</span>
+                </div>
+                <div class="text-600 mb-2">{{update.pmNames.join(', ')}}</div>
+                <div class="text-sm text-700">{{update.completedActivity}}</div>
+                
+                <div class="flex align-items-center mt-2 gap-3">
+                  <div class="flex align-items-center">
+                    <i class="pi pi-wrench text-blue-500 mr-1"></i>
+                    <span class="text-sm">Install: {{Math.round(dailyUpdates.reduce((sum, u) => sum + (u.installPercentComplete.reduce((acc, p) => acc + p.percentage, 0) / (u.installPercentComplete.length || 1)), 0) / dailyUpdates.length)}}%</span>
+                  </div>
+                  
+                  <div *ngIf="update.activeBlockers.length > 0" class="flex align-items-center">
+                    <i class="pi pi-exclamation-triangle text-red-500 mr-1"></i>
+                    <span class="text-sm text-red-500">{{update.activeBlockers.length}} blockers</span>
+                  </div>
+                  
+                  <div *ngIf="update.openRMA.length > 0" class="flex align-items-center">
+                    <i class="pi pi-cog text-orange-500 mr-1"></i>
+                    <span class="text-sm text-orange-500">{{update.openRMA.length}} RMAs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions mt-4" *ngIf="!loading">
+    <p-divider />
+    <div class="flex justify-content-center gap-3 mt-3">
+      <p-button 
+        label="View Dashboard" 
+        icon="pi pi-chart-line" 
+        routerLink="/daily-updates/dashboard"
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button 
+        label="View All Updates" 
+        icon="pi pi-list" 
+        routerLink="/daily-updates/list"
+        styleClass="p-button-outlined">
+      </p-button>
+      <p-button 
+        label="Create New Update" 
+        icon="pi pi-plus" 
+        routerLink="/daily-updates/form"
+        styleClass="p-button-success">
+      </p-button>
+    </div>
+  </div>
+</div>
+
