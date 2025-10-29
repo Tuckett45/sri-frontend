@@ -86,7 +86,7 @@
           <div class="col-12 md:col-3">
             <div class="text-center p-3 border-round surface-border border-1">
               <div class="text-2xl font-bold text-red-500">
-                {{dailyUpdates.reduce((sum, u) => sum + u.activeBlockers.length, 0)}}
+                {{totalActiveBlockers}}
               </div>
               <div class="text-600">Total Active Blockers</div>
             </div>
@@ -95,7 +95,7 @@
           <div class="col-12 md:col-3">
             <div class="text-center p-3 border-round surface-border border-1">
               <div class="text-2xl font-bold text-orange-500">
-                {{dailyUpdates.reduce((sum, u) => sum + u.openRMA.length, 0)}}
+                {{totalOpenRMAs}}
               </div>
               <div class="text-600">Total Open RMAs</div>
             </div>
@@ -104,7 +104,7 @@
           <div class="col-12 md:col-3">
             <div class="text-center p-3 border-round surface-border border-1">
               <div class="text-2xl font-bold text-green-500">
-                {{dailyUpdates.filter(u => u.activeBlockers.length === 0 && u.openRMA.length === 0).length}}
+                {{sitesWithoutIssues}}
               </div>
               <div class="text-600">Sites Without Issues</div>
             </div>
@@ -120,7 +120,7 @@
         <p-divider />
         
         <div class="timeline-container">
-          <div *ngFor="let update of dailyUpdates.slice(0, 10)" class="timeline-item p-3 border-bottom-1 surface-border">
+          <div *ngFor="let update of recentUpdates" class="timeline-item p-3 border-bottom-1 surface-border">
             <div class="flex justify-content-between align-items-start">
               <div class="flex-1">
                 <div class="flex align-items-center mb-2">
@@ -134,7 +134,7 @@
                 <div class="flex align-items-center mt-2 gap-3">
                   <div class="flex align-items-center">
                     <i class="pi pi-wrench text-blue-500 mr-1"></i>
-                    <span class="text-sm">Install: {{Math.round(dailyUpdates.reduce((sum, u) => sum + (u.installPercentComplete.reduce((acc, p) => acc + p.percentage, 0) / (u.installPercentComplete.length || 1)), 0) / dailyUpdates.length)}}%</span>
+                    <span class="text-sm">Install: {{getInstallProgressForUpdate(update)}}%</span>
                   </div>
                   
                   <div *ngIf="update.activeBlockers.length > 0" class="flex align-items-center">
@@ -180,4 +180,3 @@
     </div>
   </div>
 </div>
-

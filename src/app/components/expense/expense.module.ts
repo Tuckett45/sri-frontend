@@ -74,6 +74,3 @@ import { MatTooltip } from "@angular/material/tooltip";
 ]
 })
 export class ExpenseModule {}
-
-
-

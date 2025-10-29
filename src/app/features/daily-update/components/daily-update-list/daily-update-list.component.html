@@ -111,7 +111,7 @@
     
     <ng-template pTemplate="header">
       <tr>
-        <th *ngFor="let col of cols" [pSortableColumn]="col.sortable ? col.field : null">
+        <th *ngFor="let col of cols" [pSortableColumn]="col.sortable ? col.field : undefined">
           {{col.header}}
           <p-sortIcon *ngIf="col.sortable" [field]="col.field"></p-sortIcon>
         </th>
@@ -255,7 +255,7 @@
     <div class="col-12 md:col-3">
       <div class="surface-card shadow-2 p-3 border-round text-center">
         <div class="text-2xl font-bold text-red-500">
-          {{filteredUpdates.reduce((sum, u) => sum + u.activeBlockers.length, 0)}}
+          {{totalActiveBlockers}}
         </div>
         <div class="text-600">Active Blockers</div>
       </div>
@@ -263,7 +263,7 @@
     <div class="col-12 md:col-3">
       <div class="surface-card shadow-2 p-3 border-round text-center">
         <div class="text-2xl font-bold text-orange-500">
-          {{filteredUpdates.reduce((sum, u) => sum + u.openRMA.length, 0)}}
+          {{totalOpenRMAs}}
         </div>
         <div class="text-600">Open RMAs</div>
       </div>
@@ -271,7 +271,7 @@
     <div class="col-12 md:col-3">
       <div class="surface-card shadow-2 p-3 border-round text-center">
         <div class="text-2xl font-bold text-blue-500">
-          {{Math.round(filteredUpdates.reduce((sum, u) => sum + calculateAverageProgress(u.installPercentComplete), 0) / filteredUpdates.length)}}%
+          {{averageInstallProgress}}%
         </div>
         <div class="text-600">Avg Install Progress</div>
       </div>
@@ -281,4 +281,3 @@
 
 <!-- Confirmation Dialog -->
 <p-confirmDialog></p-confirmDialog>
-

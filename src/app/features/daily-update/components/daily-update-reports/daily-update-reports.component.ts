@@ -254,5 +254,51 @@ export class DailyUpdateReportsComponent implements OnInit, OnDestroy {
   refreshReports(): void {
     this.loadReportData();
   }
-}
 
+  // Getter methods for template calculations
+  get averageInstallProgress(): number {
+    if (this.dailyUpdates.length === 0) return 0;
+    const totalProgress = this.dailyUpdates.reduce((sum, update) => {
+      const avgProgress = this.calculateAverageProgress(update.installPercentComplete);
+      return sum + avgProgress;
+    }, 0);
+    return Math.round(totalProgress / this.dailyUpdates.length);
+  }
+
+  get averageTestProgress(): number {
+    if (this.dailyUpdates.length === 0) return 0;
+    const totalProgress = this.dailyUpdates.reduce((sum, update) => {
+      const avgProgress = this.calculateAverageProgress(update.testPercentComplete);
+      return sum + avgProgress;
+    }, 0);
+    return Math.round(totalProgress / this.dailyUpdates.length);
+  }
+
+  get totalActiveBlockers(): number {
+    return this.dailyUpdates.reduce((sum, update) => sum + update.activeBlockers.length, 0);
+  }
+
+  get totalOpenRMAs(): number {
+    return this.dailyUpdates.reduce((sum, update) => sum + update.openRMA.length, 0);
+  }
+
+  get recentUpdates(): DailyUpdate[] {
+    return this.dailyUpdates
+      .sort((a, b) => b.endOfDay.getTime() - a.endOfDay.getTime())
+      .slice(0, 5);
+  }
+
+  getInstallProgressForUpdate(update: DailyUpdate): number {
+    return Math.round(this.calculateAverageProgress(update.installPercentComplete));
+  }
+
+  getTestProgressForUpdate(update: DailyUpdate): number {
+    return Math.round(this.calculateAverageProgress(update.testPercentComplete));
+  }
+
+  get sitesWithoutIssues(): number {
+    return this.dailyUpdates.filter(update => 
+      update.activeBlockers.length === 0 && update.openRMA.length === 0
+    ).length;
+  }
+}

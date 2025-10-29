@@ -285,4 +285,21 @@ export class DailyUpdateListComponent implements OnInit, OnDestroy {
     
     return [csvHeaders, ...csvRows].join('\n');
   }
+
+  // Getter methods for template calculations
+  get totalActiveBlockers(): number {
+    return this.filteredUpdates.reduce((sum, update) => sum + update.activeBlockers.length, 0);
+  }
+
+  get totalOpenRMAs(): number {
+    return this.filteredUpdates.reduce((sum, update) => sum + update.openRMA.length, 0);
+  }
+
+  get averageInstallProgress(): number {
+    if (this.filteredUpdates.length === 0) return 0;
+    const totalProgress = this.filteredUpdates.reduce((sum, update) => {
+      return sum + this.calculateAverageProgress(update.installPercentComplete);
+    }, 0);
+    return Math.round(totalProgress / this.filteredUpdates.length);
+  }
 }
