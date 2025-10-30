@@ -12,7 +12,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { Deployment, DeploymentStatus, DeploymentMedia } from 'src/app/features/deployment/models/deployment.models';
+import {
+  Deployment,
+  DeploymentStatus,
+  DeploymentMedia,
+  DeploymentRole,
+} from 'src/app/features/deployment/models/deployment.models';
 import {
   SiteSurveyProgress,
   SiteSurveyProgressEntry,
@@ -21,6 +26,13 @@ import {
   PhaseQuestionProgress,
 } from 'src/app/features/deployment/models/deployment-progress.model';
 import { DeploymentMediaApiService } from 'src/app/features/deployment/services/deployment-media-api.service';
+import { AuthService } from 'src/app/services/auth.service';
+import {
+  resolveUserDeploymentRole,
+  roleClassList,
+  roleBadgeLabel,
+  isRoleAllowed,
+} from 'src/app/features/deployment/utils/role.utils';
 
 interface SiteSurveyQuestion {
   id: string;
@@ -35,12 +47,14 @@ interface NarrativeItem {
   label: string;
   text: string;
   subitems?: NarrativeItem[];
+  roles?: DeploymentRole[];
 }
 
 interface NarrativeGroup {
   heading?: string;
   intro?: string;
   items: NarrativeItem[];
+  roles?: DeploymentRole[];
 }
 
 interface DeploymentPhaseSection {
@@ -60,6 +74,7 @@ interface PhaseTask {
   description: string;
   parentId?: string | null;
   isChild?: boolean;
+  roles?: DeploymentRole[];
 }
 
 interface PhaseTaskGroup {
@@ -151,10 +166,13 @@ export class StartDeploymentModalComponent implements OnInit {
   private readonly data = inject<StartDeploymentDialogData | null>(MAT_DIALOG_DATA, { optional: true }) ?? null;
   private readonly toastr = inject(ToastrService);
   private readonly mediaApi = inject(DeploymentMediaApiService);
+  private readonly auth = inject(AuthService);
 
   protected readonly project = this.data?.project ?? null;
   private existingProgress: StartDeploymentProgressPayload | null = null;
   private readonly initialPhaseIndex = Math.max(0, this.data?.initialPhaseIndex ?? 0);
+  private readonly activeRole: DeploymentRole = resolveUserDeploymentRole(this.auth.getUser());
+  protected readonly userRole = this.activeRole;
 
   protected readonly siteSurveySubmitAttempted = signal(false);
   protected readonly activePhaseIndex = signal(this.initialPhaseIndex);
@@ -484,6 +502,7 @@ export class StartDeploymentModalComponent implements OnInit {
         },
         {
           heading: '6.1 Definition & Daily Review',
+          roles: ['Vendor'],
           items: [
             { label: '6.1', text: 'Reserve the final installation day for review and verification by the Comcast team.' },
             { label: '6.1.1', text: 'Review the project daily with the team lead or DE to monitor cable routing, major issues, and concerns.' },
@@ -491,6 +510,7 @@ export class StartDeploymentModalComponent implements OnInit {
         },
         {
           heading: '6.2 Vendor Responsibilities',
+          roles: ['Vendor'],
           items: [
             { label: '6.2.1', text: 'Configure management IPs and credentials on deployed devices.' },
             { label: '6.2.2', text: 'Rework any items identified as incomplete or incorrect.' },
@@ -502,6 +522,7 @@ export class StartDeploymentModalComponent implements OnInit {
         },
         {
           heading: '6.3 Comcast Engineer Responsibilities',
+          roles: ['ComcastDeploymentEngineer'],
           items: [
             { label: '6.3.1', text: 'Perform final engineer validation, confirming in-band and out-of-band connections.' },
             { label: '6.3.1.2', text: 'Inspect work with the vendor to complete the site Handoff Checklist.' },
@@ -512,6 +533,7 @@ export class StartDeploymentModalComponent implements OnInit {
         },
         {
           heading: '6.4 Final Engineer Validation Checklist',
+          roles: ['ComcastDeploymentEngineer'],
           items: [
             { label: '6.4.1', text: 'Verify physical connections against the design.' },
             { label: '6.4.2', text: 'Check all labeling for accuracy and completeness.' },
@@ -526,6 +548,7 @@ export class StartDeploymentModalComponent implements OnInit {
         },
         {
           heading: '6.5 Handoff Documentation',
+          roles: ['ComcastDeploymentEngineer'],
           items: [
             { label: '6.5', text: 'Complete the Hardware Installation Handoff Checklist, capturing site information, key dates, and participant sign-off (vendor and Comcast).' },
           ],
@@ -1478,35 +1501,46 @@ export class StartDeploymentModalComponent implements OnInit {
       map[phase.type] = phase.narrative.map(group => ({
         heading: group.heading ?? phase.title,
         intro: group.intro ?? null,
-        tasks: this.flattenNarrativeItems(phase, group.items)
+        tasks: this.flattenNarrativeItems(phase, group.items, group.roles)
       }));
     }
     return map;
   }
 
-  private flattenNarrativeItems(section: DeploymentPhaseSection, items: NarrativeItem[]): PhaseTask[] {
+  private flattenNarrativeItems(
+    section: DeploymentPhaseSection,
+    items: NarrativeItem[],
+    defaultRoles?: DeploymentRole[]
+  ): PhaseTask[] {
     const tasks: PhaseTask[] = [];
 
     const formatFallbackLabel = (path: number[]): string => path.join('.');
 
-    const walk = (node: NarrativeItem, indexPath: number[], parentId: string | null): void => {
+    const walk = (
+      node: NarrativeItem,
+      indexPath: number[],
+      parentId: string | null,
+      inheritedRoles?: DeploymentRole[]
+    ): void => {
       const label = node.label || `Task ${formatFallbackLabel(indexPath)}`;
       const id = this.toControlId(`${section.id}-${label}`);
+      const roles = node.roles ?? inheritedRoles ?? defaultRoles;
       tasks.push({
         id,
         label,
         description: node.text,
         parentId,
-        isChild: parentId !== null
+        isChild: parentId !== null,
+        roles: roles && roles.length ? roles : undefined,
       });
 
       node.subitems?.forEach((child, childIndex) => {
-        walk(child, [...indexPath, childIndex + 1], id);
+        walk(child, [...indexPath, childIndex + 1], id, roles);
       });
     };
 
     items.forEach((item, itemIndex) => {
-      walk(item, [itemIndex + 1], null);
+      walk(item, [itemIndex + 1], null, defaultRoles);
     });
 
     return tasks;
@@ -1523,12 +1557,42 @@ export class StartDeploymentModalComponent implements OnInit {
       const controls: Record<string, FormControl<boolean>> = {};
       groups.forEach(group => {
         group.tasks.forEach(task => {
-          controls[task.id] = this.fb.control(false, { nonNullable: true });
+          const control = this.fb.control(false, { nonNullable: true });
+          if (!isRoleAllowed(task.roles, this.activeRole)) {
+            control.disable({ emitEvent: false });
+          }
+          controls[task.id] = control;
         });
       });
       forms[phase.type] = this.fb.group(controls);
     }
     return forms;
+  }
+
+  protected roleClasses(roles?: DeploymentRole[]): string[] {
+    return roleClassList(roles);
+  }
+
+  protected roleLabel(roles?: DeploymentRole[]): string | null {
+    return roleBadgeLabel(roles);
+  }
+
+  protected taskClassMap(phase: PhaseType, task: PhaseTask): Record<string, boolean> {
+    const classes: Record<string, boolean> = {};
+    this.roleClasses(task.roles).forEach(cls => {
+      classes[cls] = true;
+    });
+    if (task.isChild) {
+      classes['child'] = true;
+    }
+    if (this.isTaskDisabled(phase, task.id)) {
+      classes['task-disabled'] = true;
+    }
+    return classes;
+  }
+
+  protected isTaskDisabled(phase: PhaseType, taskId: string): boolean {
+    return !!this.phaseTaskForm(phase).get(taskId)?.disabled;
   }
 
   private buildSiteSurveySubmission(): SiteSurveySubmission {

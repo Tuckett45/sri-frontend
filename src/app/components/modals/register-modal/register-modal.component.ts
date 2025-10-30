@@ -3,8 +3,22 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from '../../../services/auth.service';
 import { User } from 'src/app/models/user.model';
+import { UserRole } from 'src/app/models/role.enum';
 import { v4 as uuidv4 } from 'uuid';
 import { ToastrService } from 'ngx-toastr';
+
+type RegisterFormValue = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: UserRole | string;
+  market: string;
+  company: string;
+  createdDate: Date;
+  isApproved?: boolean;
+  approvalToken?: string;
+};
 
 @Component({
   selector: 'app-register-modal',
@@ -14,7 +28,18 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class RegisterModalComponent {
   registerForm!: FormGroup;
-  roles: string[] = ['CM', 'PM', 'Client', 'OSP Coordinator', 'Controller', 'HR'];
+  roles: UserRole[] = [
+    UserRole.CM,
+    UserRole.PM,
+    UserRole.Client,
+    UserRole.OSPCoordinator,
+    UserRole.Controller,
+    UserRole.HR,
+    UserRole.Technician,
+    UserRole.ComcastDeploymentEngineer,
+    UserRole.DcOps,
+    UserRole.Vendor
+  ];
   companys: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
   markets: { name: string, abbreviation: string }[] = [
     { name: 'Arizona', abbreviation: 'AZ' },
@@ -25,6 +50,17 @@ export class RegisterModalComponent {
     { name: 'Utah', abbreviation: 'UT' },
     { name: 'Regional', abbreviation: 'RG' }
   ];
+
+  private readonly autoCompanyByRole: Partial<Record<UserRole, string>> = {
+    [UserRole.CM]: 'SRI',
+    [UserRole.OSPCoordinator]: 'SRI',
+    [UserRole.Controller]: 'SRI',
+    [UserRole.HR]: 'SRI',
+    [UserRole.Technician]: 'SRI',
+    [UserRole.ComcastDeploymentEngineer]: 'Comcast',
+    [UserRole.DcOps]: 'Comcast',
+    [UserRole.Client]: 'Google',
+  };
 
   constructor(
     private fb: FormBuilder,
@@ -45,6 +81,8 @@ export class RegisterModalComponent {
       company: [''],
       createdDate: [new Date],
     }, { validator: this.passwordMatchValidator });
+
+    this.onRoleChange();
   }
 
   passwordMatchValidator(form: FormGroup) {
@@ -54,38 +92,61 @@ export class RegisterModalComponent {
   }
 
   onRoleChange(): void {
-    const role = this.registerForm.get('role')?.value;
-    if (role !== 'PM') {
-      this.registerForm.get('company')?.reset();
+    const role = this.registerForm.get('role')?.value as UserRole | string | null;
+    const companyControl = this.registerForm.get('company');
+    if (!companyControl) {
+      return;
     }
+
+    const userRole = this.toUserRole(role);
+    const autoCompany = userRole ? this.autoCompanyByRole[userRole] : undefined;
+
+    if (autoCompany) {
+      companyControl.setValue(autoCompany);
+      companyControl.clearValidators();
+    } else if (this.requiresCompanySelection(role)) {
+      companyControl.setValue('');
+      companyControl.setValidators([Validators.required]);
+    } else {
+      companyControl.reset('');
+      companyControl.clearValidators();
+    }
+
+    companyControl.updateValueAndValidity();
   }
 
   onSubmit(): void {
-    const formValues = this.registerForm.value;
+    const formValues = this.registerForm.getRawValue() as RegisterFormValue;
+    const userRole = this.toUserRole(formValues.role);
+    const autoCompany = userRole ? this.autoCompanyByRole[userRole] : undefined;
 
-    if (formValues.role == 'CM' || formValues.role == 'OSP Coordinator' || formValues.role == 'Controller' || formValues.role == 'HR'){
-      formValues.company = 'SRI';
-    }else if(formValues.role == 'Client'){
-      formValues.company = 'Google'; 
-      //Change values of companies in the future based on role
+    if (autoCompany) {
+      formValues.company = autoCompany;
+    } else if (!this.requiresCompanySelection(formValues.role)) {
+      formValues.company = formValues.company ?? '';
     }
+
+    const createdDate: Date =
+      formValues.createdDate instanceof Date
+        ? formValues.createdDate
+        : new Date(formValues.createdDate as unknown as string);
 
     const newUser: User = new User(
       uuidv4(),
       formValues.name,
       formValues.email,
       formValues.password,
-      formValues.role,
+      formValues.role as string,
       formValues.market,
       formValues.company,
-      formValues.createdDate.toISOString(),
-      formValues.isApproved,
+      createdDate,
+      formValues.isApproved ?? false,
       formValues.approvalToken
     );
 
     if (this.registerForm.valid) {
       this.authService.register(newUser).subscribe({
-        next: (response) => {
+        next: () => {
           this.toastr.success('Registration successful! Waiting for Approval....', 'Success');
           this.dialogRef.close();
         },
@@ -94,6 +155,22 @@ export class RegisterModalComponent {
         }
       });
     }
+  }
+
+  requiresCompanySelection(role: UserRole | string | null | undefined): boolean {
+    if (!role) {
+      return false;
+    }
+    const value = typeof role === 'string' ? role : (role as string);
+    return value === UserRole.PM || value === UserRole.Vendor;
+  }
+
+  private toUserRole(role: UserRole | string | null | undefined): UserRole | undefined {
+    if (!role) {
+      return undefined;
+    }
+    const value = typeof role === 'string' ? role : (role as string);
+    return (Object.values(UserRole) as string[]).includes(value) ? (value as UserRole) : undefined;
   }
 
   close(): void {

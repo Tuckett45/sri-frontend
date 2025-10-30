@@ -396,11 +396,27 @@
           <mat-tab *ngFor="let group of getPhaseTaskGroups(phase.type)" [label]="group.heading">
             <div class="task-list" [formGroup]="phaseTaskForm(phase.type)">
               <p *ngIf="group.intro" class="task-intro">{{ group.intro }}</p>
-              <div class="task-item" *ngFor="let task of group.tasks" [class.child]="task.isChild">
+              <div
+                class="task-item"
+                *ngFor="let task of group.tasks"
+                [ngClass]="taskClassMap(phase.type, task)"
+              >
                 <mat-checkbox [formControlName]="task.id">
-                  <span class="task-label">{{ task.label }}</span>
+                  <span class="task-label-wrap">
+                    <span class="task-label">{{ task.label }}</span>
+                    <span
+                      *ngIf="roleLabel(task.roles)"
+                      class="role-badge"
+                      [ngClass]="roleClasses(task.roles)"
+                    >
+                      {{ roleLabel(task.roles) }}
+                    </span>
+                  </span>
                   <span class="task-desc">{{ task.description }}</span>
                 </mat-checkbox>
+                <small class="read-only-hint" *ngIf="isTaskDisabled(phase.type, task.id)">
+                  Read-only for your role
+                </small>
               </div>
             </div>
           </mat-tab>

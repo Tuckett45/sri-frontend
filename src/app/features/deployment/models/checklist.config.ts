@@ -1,22 +1,33 @@
+import { ChecklistItem, DeploymentRole, DeploymentStatus } from './deployment.models';
 
-import { ChecklistItem, DeploymentStatus } from './deployment.models';
-
-const photoRequirement = (id: string, label: string, description?: string): ChecklistItem => ({
+const photoRequirement = (
+  id: string,
+  label: string,
+  description?: string,
+  roles?: DeploymentRole[]
+): ChecklistItem => ({
   id,
   label,
   description,
   notes: description,
   type: 'photo',
   required: true,
+  assignedRoles: roles,
 });
 
-const fileRequirement = (id: string, label: string, description?: string): ChecklistItem => ({
+const fileRequirement = (
+  id: string,
+  label: string,
+  description?: string,
+  roles?: DeploymentRole[]
+): ChecklistItem => ({
   id,
   label,
   description,
   notes: description,
   type: 'file',
   required: true,
+  assignedRoles: roles,
 });
 
 export const ChecklistTemplates: Record<DeploymentStatus, ChecklistItem[]> = {
@@ -139,24 +150,26 @@ export const ChecklistTemplates: Record<DeploymentStatus, ChecklistItem[]> = {
     photoRequirement('label-sample-photo', 'Label sample photo'),
   ],
   [DeploymentStatus.Handoff]: [
-    photoRequirement('cabinet-front-top', 'Cabinet front top'),
-    photoRequirement('cabinet-front-mid', 'Cabinet front middle'),
-    photoRequirement('cabinet-front-bottom', 'Cabinet front bottom'),
-    photoRequirement('cabinet-rear-top', 'Cabinet rear top'),
-    photoRequirement('cabinet-rear-mid', 'Cabinet rear middle'),
-    photoRequirement('cabinet-rear-bottom', 'Cabinet rear bottom'),
-    fileRequirement('as-built', 'As-Built package'),
-    fileRequirement('port-tests', 'Port test results'),
+    photoRequirement('cabinet-front-top', 'Cabinet front top', undefined, ['Vendor']),
+    photoRequirement('cabinet-front-mid', 'Cabinet front middle', undefined, ['Vendor']),
+    photoRequirement('cabinet-front-bottom', 'Cabinet front bottom', undefined, ['Vendor']),
+    photoRequirement('cabinet-rear-top', 'Cabinet rear top', undefined, ['Vendor']),
+    photoRequirement('cabinet-rear-mid', 'Cabinet rear middle', undefined, ['Vendor']),
+    photoRequirement('cabinet-rear-bottom', 'Cabinet rear bottom', undefined, ['Vendor']),
+    fileRequirement('as-built', 'As-Built package', undefined, ['Vendor']),
+    fileRequirement('port-tests', 'Port test results', undefined, ['Vendor']),
     {
       id: 'de-validation',
       label: 'DE validation complete',
       type: 'checkbox',
       required: true,
+      assignedRoles: ['ComcastDeploymentEngineer'],
     },
     {
       id: 'handoff-notes',
       label: 'Handoff notes',
       type: 'textarea',
+      assignedRoles: ['ComcastDeploymentEngineer'],
     },
   ],
   [DeploymentStatus.Complete]: [

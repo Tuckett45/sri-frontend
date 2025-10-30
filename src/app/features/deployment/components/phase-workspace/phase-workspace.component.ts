@@ -6,13 +6,15 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { DeploymentStatus, ChecklistItem } from '../../models/deployment.models';
+import { DeploymentStatus, ChecklistItem, DeploymentRole } from '../../models/deployment.models';
 import { ChecklistComponent } from '../checklist/checklist.component';
 import { LabelGeneratorComponent } from '../label-generator/label-generator.component';
 import { DeploymentService, ChecklistItemDto } from '../../services/deployment.service';
 import { ChecklistTemplates } from '../../models/checklist.config';
 import { isChecklistComplete } from '../../utils/checklist.utils';
 import { DeploymentStateService } from '../../services/deployment-state.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { isRoleAllowed, resolveUserDeploymentRole } from '../../utils/role.utils';
 
 interface SubPhaseSummary {
   code: string;
@@ -53,8 +55,12 @@ export class PhaseWorkspaceComponent implements OnInit {
   private readonly deploymentService = inject(DeploymentService);
   private readonly state = inject(DeploymentStateService);
   private readonly messageService = inject(MessageService);
+  private readonly auth = inject(AuthService);
 
   private currentPhaseCode = 0;
+
+  private readonly activeRole: DeploymentRole = resolveUserDeploymentRole(this.auth.getUser());
+  protected readonly userRole = this.activeRole;
 
   readonly phaseLabel = computed(() => this.phase());
 
@@ -76,6 +82,7 @@ export class PhaseWorkspaceComponent implements OnInit {
     const template = this.cloneTemplate(phaseParam);
     this.items.set(template);
     this.setupFormControls(template);
+    this.applyRoleGuards(template);
 
     try {
       const fetched = await this.fetchSubPhases(projectId, this.currentPhaseCode);
@@ -94,6 +101,7 @@ export class PhaseWorkspaceComponent implements OnInit {
 
   protected onChecklistChange(items: ChecklistItem[]) {
     this.items.set(items);
+    this.applyRoleGuards(items);
   }
 
   protected async save(): Promise<void> {
@@ -162,27 +170,43 @@ export class PhaseWorkspaceComponent implements OnInit {
 
   private setupFormControls(template: ChecklistItem[]): void {
     template.forEach(item => {
-      if (this.form.contains(item.id)) {
-        return;
+      if (!this.form.contains(item.id)) {
+        switch (item.type) {
+          case 'checkbox':
+            this.form.addControl(item.id, this.fb.control(false));
+            break;
+          case 'photo':
+          case 'file':
+            this.form.addControl(item.id, this.fb.control([]));
+            break;
+          case 'number':
+            this.form.addControl(item.id, this.fb.control(null));
+            break;
+          case 'date':
+            this.form.addControl(item.id, this.fb.control(null));
+            break;
+          default:
+            this.form.addControl(item.id, this.fb.control(''));
+        }
       }
-      switch (item.type) {
-        case 'checkbox':
-          this.form.addControl(item.id, this.fb.control(false));
-          break;
-        case 'photo':
-        case 'file':
-          this.form.addControl(item.id, this.fb.control([]));
-          break;
-        case 'number':
-          this.form.addControl(item.id, this.fb.control(null));
-          break;
-        case 'date':
-          this.form.addControl(item.id, this.fb.control(null));
-          break;
-        default:
-          this.form.addControl(item.id, this.fb.control(''));
-      }
+      this.guardControl(item);
     });
+  }
+
+  private applyRoleGuards(items: ChecklistItem[]): void {
+    items.forEach(item => this.guardControl(item));
+  }
+
+  private guardControl(item: ChecklistItem): void {
+    const control = this.form.get(item.id);
+    if (!control) {
+      return;
+    }
+    if (isRoleAllowed(item.assignedRoles, this.activeRole)) {
+      control.enable({ emitEvent: false });
+    } else {
+      control.disable({ emitEvent: false });
+    }
   }
 
   private async fetchSubPhases(projectId: string, phaseCode: number): Promise<SubPhaseSummary[]> {
@@ -272,6 +296,7 @@ export class PhaseWorkspaceComponent implements OnInit {
     });
 
     this.items.set(updated);
+    this.applyRoleGuards(updated);
   }
 
   private collectChecklistPayload(): ChecklistItemDto[] {

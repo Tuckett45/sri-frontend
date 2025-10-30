@@ -10,7 +10,14 @@ import { PhotoUploaderComponent } from '../photo-uploader/photo-uploader.compone
 import { TestsUploaderComponent } from '../tests-uploader/tests-uploader.component';
 import { MessageService } from 'primeng/api';
 import { DeploymentService, HandoffUpdateDto } from '../../services/deployment.service';
-import { HandoffPackage } from '../../models/deployment.models';
+import { DeploymentRole, HandoffPackage } from '../../models/deployment.models';
+import { AuthService } from 'src/app/services/auth.service';
+import {
+  isRoleAllowed,
+  resolveUserDeploymentRole,
+  roleBadgeLabel,
+  roleClassList,
+} from '../../utils/role.utils';
 
 @Component({
   selector: 'ark-handoff',
@@ -38,7 +45,15 @@ export class HandoffComponent implements OnInit {
     portTests: [[] as string[]],
     vendorSigned: [false],
     deSigned: [false],
+    sriSigned: [false],
   });
+
+  private readonly auth = inject(AuthService);
+  private readonly activeRole: DeploymentRole = resolveUserDeploymentRole(this.auth.getUser());
+  protected readonly userRole = this.activeRole;
+  protected readonly vendorRole: DeploymentRole[] = ['Vendor'];
+  protected readonly deRole: DeploymentRole[] = ['ComcastDeploymentEngineer'];
+  protected readonly sriRole: DeploymentRole[] = ['Technician'];
 
   // Default to 6, but we’ll prefer the package’s requiredPhotos length if present
   protected readonly defaultRequiredPhotoCount = 6;
@@ -60,6 +75,7 @@ export class HandoffComponent implements OnInit {
       this.loading.set(false);
       return;
     }
+    this.configureSignoffControls();
     this.projectId = id;
     void this.loadHandoffPackage(id);
   }
@@ -90,6 +106,39 @@ export class HandoffComponent implements OnInit {
     );
   }
 
+  protected roleClasses(roles?: DeploymentRole[]): string[] {
+    return roleClassList(roles);
+  }
+
+  protected roleLabel(roles?: DeploymentRole[]): string | null {
+    return roleBadgeLabel(roles);
+  }
+
+  protected isSignDisabled(controlName: 'vendorSigned' | 'deSigned' | 'sriSigned'): boolean {
+    return !!this.form.get(controlName)?.disabled;
+  }
+
+  private configureSignoffControls(): void {
+    this.guardSignControl('vendorSigned', ['Vendor']);
+    this.guardSignControl('deSigned', ['ComcastDeploymentEngineer']);
+    this.guardSignControl('sriSigned', ['Technician']);
+  }
+
+  private guardSignControl(
+    controlName: 'vendorSigned' | 'deSigned' | 'sriSigned',
+    allowedRoles: DeploymentRole[]
+  ): void {
+    const control = this.form.get(controlName);
+    if (!control) {
+      return;
+    }
+    if (isRoleAllowed(allowedRoles, this.activeRole)) {
+      control.enable({ emitEvent: false });
+    } else {
+      control.disable({ emitEvent: false });
+    }
+  }
+
   protected async sign(): Promise<void> {
     if (!this.projectId) return;
     if (!this.canSign()) return;
@@ -100,14 +149,19 @@ export class HandoffComponent implements OnInit {
       portTests = [],
       vendorSigned,
       deSigned,
+      sriSigned,
     } = this.form.getRawValue();
+
+    const currentPkg = this.pkg();
+    const now = new Date().toISOString();
 
     const payload: HandoffUpdateDto = {
       requiredPhotos: cabinetPhotos,
       asBuiltFileId: asBuilt[0] ?? null,
       portTestFileId: portTests[0] ?? null,
-      signedVendorAt: vendorSigned ? new Date().toISOString() : null,
-      signedDeAt: deSigned ? new Date().toISOString() : null,
+      signedVendorAt: vendorSigned ? currentPkg?.signedVendorAt ?? now : null,
+      signedDeAt: deSigned ? currentPkg?.signedDeAt ?? now : null,
+      signedSriAt: sriSigned ? currentPkg?.signedSriAt ?? now : null,
     };
 
     this.loading.set(true);
@@ -145,8 +199,10 @@ export class HandoffComponent implements OnInit {
         portTests: pkg.portTestFileId ? [pkg.portTestFileId] : [],
         vendorSigned: !!pkg.signedVendorAt,
         deSigned: !!pkg.signedDeAt,
+        sriSigned: !!pkg.signedSriAt,
       },
       { emitEvent: false }
     );
+    this.configureSignoffControls();
   }
 }

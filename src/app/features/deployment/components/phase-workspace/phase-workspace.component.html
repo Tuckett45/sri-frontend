@@ -12,7 +12,12 @@
   </ng-template>
 
   <form [formGroup]="form" class="checklist-form">
-    <ark-checklist [form]="form" [items]="items()" (itemsChange)="onChecklistChange($event)"></ark-checklist>
+    <ark-checklist
+      [form]="form"
+      [items]="items()"
+      [activeRole]="userRole"
+      (itemsChange)="onChecklistChange($event)"
+    ></ark-checklist>
   </form>
 </p-card>
 

@@ -1,10 +1,16 @@
 <div class="checklist">
-  <div class="item" *ngFor="let item of items">
-    <label [attr.for]="item.id" class="item-label">
-      {{ item.label }}
-      <span *ngIf="item.required" class="required">*</span>
-    </label>
+  <div class="item" *ngFor="let item of items" [ngClass]="classMap(item)">
+    <div class="item-header">
+      <label [attr.for]="item.id" class="item-label">
+        <span class="item-title">{{ item.label }}</span>
+        <span *ngIf="item.required" class="required">*</span>
+      </label>
+      <span *ngIf="roleLabel(item)" class="role-badge" [ngClass]="classesFor(item)">
+        {{ roleLabel(item) }}
+      </span>
+    </div>
     <p class="description" *ngIf="item.description">{{ item.description }}</p>
+    <p class="read-only-hint" *ngIf="isDisabled(item)">Read-only for your role</p>
 
     <ng-container [ngSwitch]="item.type">
       <p-checkbox

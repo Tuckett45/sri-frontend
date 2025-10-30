@@ -1,5 +1,11 @@
 export type Id = string;
 
+export type DeploymentRole =
+  | 'Technician'
+  | 'ComcastDeploymentEngineer'
+  | 'DcOps'
+  | 'Vendor';
+
 /* -------------------------
    Deployment Status Enum
 -------------------------- */
@@ -113,6 +119,7 @@ export interface ChecklistItem {
   label: string;
   type: ChecklistInputType;     // from template
   required?: boolean;
+  assignedRoles?: DeploymentRole[];
   description?: string;
   notes?: string | null;
   options?: ChecklistOption[];
@@ -189,6 +196,8 @@ export interface DeploymentHandoff {
   vendorSignedAt?: string;
   deSignedBy?: string;
   deSignedAt?: string;
+  sriSignedBy?: string;
+  sriSignedAt?: string;
   packageUrl?: string;
   asBuiltMediaId?: string;
   portTestMediaId?: string;
@@ -208,6 +217,8 @@ export interface HandoffPackage {
   signedVendorAt?: string | null;
   signedDeBy?: string | null;
   signedDeAt?: string | null;
+  signedSriBy?: string | null;
+  signedSriAt?: string | null;
   packageUrl?: string | null;
 }
 

@@ -42,6 +42,7 @@ export interface HandoffUpdateDto {
   portTestFileId?: string | null;
   signedVendorAt?: string | null;
   signedDeAt?: string | null;
+  signedSriAt?: string | null;
 }
 
 export type StartDeploymentProgressBody =

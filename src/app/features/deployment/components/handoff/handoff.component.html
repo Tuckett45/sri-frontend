@@ -21,8 +21,56 @@
     </div>
 
     <div class="section signatures">
-      <p-checkbox formControlName="vendorSigned" label="Vendor signature"></p-checkbox>
-      <p-checkbox formControlName="deSigned" label="DE signature"></p-checkbox>
+      <div class="signature-item" [ngClass]="roleClasses(vendorRole)">
+        <div class="signature-row">
+          <p-checkbox
+            formControlName="vendorSigned"
+            inputId="handoff-vendor"
+            binary="true"
+            label="Vendor signature"
+          ></p-checkbox>
+          <span class="role-badge" [ngClass]="roleClasses(vendorRole)">
+            {{ roleLabel(vendorRole) }}
+          </span>
+        </div>
+        <small class="read-only-hint" *ngIf="isSignDisabled('vendorSigned')">
+          Read-only for your role
+        </small>
+      </div>
+
+      <div class="signature-item" [ngClass]="roleClasses(deRole)">
+        <div class="signature-row">
+          <p-checkbox
+            formControlName="deSigned"
+            inputId="handoff-de"
+            binary="true"
+            label="Comcast DE signature"
+          ></p-checkbox>
+          <span class="role-badge" [ngClass]="roleClasses(deRole)">
+            {{ roleLabel(deRole) }}
+          </span>
+        </div>
+        <small class="read-only-hint" *ngIf="isSignDisabled('deSigned')">
+          Read-only for your role
+        </small>
+      </div>
+
+      <div class="signature-item" [ngClass]="roleClasses(sriRole)">
+        <div class="signature-row">
+          <p-checkbox
+            formControlName="sriSigned"
+            inputId="handoff-sri"
+            binary="true"
+            label="SRI Technician sign-off"
+          ></p-checkbox>
+          <span class="role-badge" [ngClass]="roleClasses(sriRole)">
+            {{ roleLabel(sriRole) }}
+          </span>
+        </div>
+        <small class="read-only-hint" *ngIf="isSignDisabled('sriSigned')">
+          Read-only for your role
+        </small>
+      </div>
     </div>
 
     <button pButton type="button" label="Sign & Complete" icon="pi pi-check" [disabled]="!canSign()" (click)="sign()"></button>

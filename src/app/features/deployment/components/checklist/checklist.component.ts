@@ -7,9 +7,10 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { CalendarModule } from 'primeng/calendar';
 import { FloatLabelModule } from 'primeng/floatlabel';
-import { ChecklistItem } from '../../models/deployment.models';
+import { ChecklistItem, DeploymentRole } from '../../models/deployment.models';
 import { PhotoUploaderComponent } from '../photo-uploader/photo-uploader.component';
 import { TestsUploaderComponent } from '../tests-uploader/tests-uploader.component';
+import { roleBadgeLabel, roleClassList } from '../../utils/role.utils';
 
 @Component({
   selector: 'ark-checklist',
@@ -33,6 +34,7 @@ import { TestsUploaderComponent } from '../tests-uploader/tests-uploader.compone
 export class ChecklistComponent {
   @Input({ required: true }) items: ChecklistItem[] = [];
   @Input({ required: true }) form!: FormGroup;
+  @Input({ required: false }) activeRole: DeploymentRole = 'Technician';
   @Output() itemsChange = new EventEmitter<ChecklistItem[]>();
 
   protected onPhotoChange(item: ChecklistItem, ids: string[]): void {
@@ -44,6 +46,29 @@ export class ChecklistComponent {
 
   protected onFileChange(item: ChecklistItem, ids: string[]): void {
     this.onPhotoChange(item, ids);
+  }
+
+  protected classesFor(item: ChecklistItem): string[] {
+    return roleClassList(item.assignedRoles);
+  }
+
+  protected roleLabel(item: ChecklistItem): string | null {
+    return roleBadgeLabel(item.assignedRoles);
+  }
+
+  protected isDisabled(item: ChecklistItem): boolean {
+    return !!this.form.get(item.id)?.disabled;
+  }
+
+  protected classMap(item: ChecklistItem): Record<string, boolean> {
+    const map: Record<string, boolean> = {};
+    this.classesFor(item).forEach(cls => {
+      map[cls] = true;
+    });
+    if (this.isDisabled(item)) {
+      map['item-disabled'] = true;
+    }
+    return map;
   }
 
   protected controlFor(id: string): FormControl {
