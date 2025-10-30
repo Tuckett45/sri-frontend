@@ -2,10 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { ToastrService } from 'ngx-toastr';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { Expense, ExpenseListItem, ExpenseListResponse, ExpenseStatus } from 'src/app/models/expense.model';
 import { ExpenseApiService } from '../../../services/expense-api.service';
+import { ExpenseExportService, ExportOptions } from 'src/app/services/expense-export.service';
 import { Inject } from '@angular/core';
 import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
@@ -45,6 +44,7 @@ export class HrExpensesPageComponent implements OnInit {
   };
   constructor(
     @Inject(ExpenseApiService) private expenseApi: ExpenseApiService,
+    private exportService: ExpenseExportService,
     private toastr: ToastrService,
     private dialog: MatDialog
   ) {}
@@ -276,55 +276,53 @@ export class HrExpensesPageComponent implements OnInit {
     return fallback ?? NaN;
   }
 
-  exportCsv(): void {
+  exportCsv(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
     if (!this.expenses.length) {
       this.toastr.info('No expenses to export');
       return;
     }
 
-    const header = ['Employee', 'Date', 'Job', 'Amount', 'Status', 'Notes'];
-    const rows = this.expenses.map(exp => [
-      exp.createdBy ?? '',
-      new Date(exp.date ?? '').toLocaleDateString(),
-      exp.projectId ?? '',
-      exp.amount?.toString() ?? '',
-      exp.status ?? '',
-      exp.descriptionNotes ?? ''
-    ]);
+    const options: ExportOptions = {
+      groupBy,
+      includeSubtotals: groupBy !== 'none',
+      includeSummary: true,
+      title: 'Team Expenses Report (HR)',
+      dateRange: this.getDateRangeFromFilters()
+    };
 
-    const csvContent = [header, ...rows]
-      .map(row => row.map(value => `"${(value ?? '').replace(/"/g, '""')}"`).join(','))
-      .join('\r\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'team-expenses.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    this.exportService.exportToCSV(this.expenses, options);
+    this.toastr.success('CSV export downloaded');
   }
 
-  exportPdf(): void {
+  exportPdf(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
     if (!this.expenses.length) {
       this.toastr.info('No expenses to export');
       return;
     }
 
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [['Employee', 'Date', 'Job', 'Amount', 'Status']],
-      body: this.expenses.map(e => [
-        e.createdBy ?? '',
-        new Date(e.date ?? '').toLocaleDateString(),
-        e.projectId ?? '',
-        e.amount?.toString() ?? '',
-        e.status ?? ''
-      ])
-    });
-    doc.save('team-expenses.pdf');
+    const options: ExportOptions = {
+      groupBy,
+      includeSubtotals: groupBy !== 'none',
+      includeSummary: true,
+      title: 'Team Expenses Report (HR)',
+      dateRange: this.getDateRangeFromFilters()
+    };
+
+    this.exportService.exportToPDF(this.expenses, options);
+    this.toastr.success('PDF export downloaded');
+  }
+
+  private getDateRangeFromFilters(): { start: string; end: string } | undefined {
+    if (this.currentFilters.startDate && this.currentFilters.endDate) {
+      const start = this.currentFilters.startDate instanceof Date 
+        ? this.currentFilters.startDate.toISOString().split('T')[0] 
+        : this.currentFilters.startDate;
+      const end = this.currentFilters.endDate instanceof Date 
+        ? this.currentFilters.endDate.toISOString().split('T')[0] 
+        : this.currentFilters.endDate;
+      return { start, end };
+    }
+    return undefined;
   }
 
   openExpenseDetails(expense: Expense): void {

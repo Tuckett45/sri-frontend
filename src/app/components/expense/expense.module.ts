@@ -32,6 +32,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
+import { MatMenuModule } from '@angular/material/menu';
 import { Divider } from "primeng/divider";
 import { MatTooltip } from "@angular/material/tooltip";
 
@@ -69,11 +70,9 @@ import { MatTooltip } from "@angular/material/tooltip";
     MatSelectModule,
   MatTableModule,
   MatProgressSpinnerModule,
+  MatMenuModule,
   Divider,
   MatTooltip
 ]
 })
 export class ExpenseModule {}
-
-
-
