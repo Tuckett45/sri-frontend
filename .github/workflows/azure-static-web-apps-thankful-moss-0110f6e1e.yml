@@ -30,7 +30,10 @@ jobs:
           rm -rf node_modules
           rm package-lock.json
           npm cache clean --force
-          npm install --no-optional
+          npm install --force
+
+      - name: Build the application
+        run: npm run build
 
       - name: Build And Deploy
         id: builddeploy
@@ -41,6 +44,7 @@ jobs:
           action: "upload"
           app_location: "/"  # App source code path, adjust if necessary
           output_location: "dist/sri-frontend"  # Adjust to your build output directory
+          skip_app_build: true
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
