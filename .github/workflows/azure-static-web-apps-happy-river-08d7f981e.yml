@@ -31,9 +31,10 @@ jobs:
           submodules: true
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20.x' # Use a stable LTS version
+          cache: 'npm'
 
       - name: Clear npm cache and install dependencies
         run: |
