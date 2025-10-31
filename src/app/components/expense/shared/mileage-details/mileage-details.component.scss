@@ -1,170 +1,186 @@
-.mileage-details-container {
-  padding: 16px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  margin-top: 16px;
+﻿.mileage-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 
-  .mileage-header {
+  &__header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    justify-content: space-between;
+    gap: 12px;
 
-    h3 {
+    > h3 {
       margin: 0;
-      color: #333;
-      font-size: 1.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: .02em;
+      text-transform: uppercase;
     }
 
     button {
       mat-icon {
-        margin-right: 4px;
+        margin-right: 6px;
       }
     }
   }
 
-  .mileage-form {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  &__form {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 24px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 
-    h4 {
-      margin-top: 0;
-      color: #333;
-      font-size: 1.1rem;
-      margin-bottom: 16px;
+    &-title {
+      margin: 0 0 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #144f80;
     }
 
-    .form-row {
-      display: flex;
+    &-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
-      margin-bottom: 16px;
-      align-items: center;
 
-      .form-field {
-        flex: 1;
-
-        &.full-width {
-          flex: 1 1 100%;
-        }
-      }
-
-      .total-miles-display {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 12px 20px;
-        background: #e3f2fd;
-        border-radius: 4px;
-        min-width: 120px;
-
-        strong {
-          font-size: 0.875rem;
-          color: #666;
-          margin-bottom: 4px;
-        }
-
-        .miles-value {
-          font-size: 1.5rem;
-          font-weight: bold;
-          color: #1976d2;
-        }
+      mat-form-field {
+        margin: 0;
       }
     }
 
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid #e0e0e0;
+    &--stretch {
+      grid-column: 1 / -1;
     }
   }
 
-  .mileage-table-container {
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  &__total {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px dashed #cbd5f5;
+    background: #eff6ff;
+    color: #0f172a;
+    gap: 4px;
 
-    .mileage-table {
+    span {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: .08em;
+    }
+
+    strong {
+      font-size: 1.5rem;
+      line-height: 1.2;
+      color: #144f80;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+
+    button {
+      min-width: 140px;
+    }
+  }
+
+  &__table {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 8px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+
+    table {
       width: 100%;
+      border-collapse: collapse;
 
       th {
-        background: #f5f5f5;
         font-weight: 600;
-        color: #333;
-        padding: 12px 8px;
+        letter-spacing: .02em;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: #475569;
       }
 
       td {
-        padding: 12px 8px;
-        border-bottom: 1px solid #e0e0e0;
+        font-size: 0.9rem;
+        color: #0f172a;
       }
 
-      tr:last-child td {
-        border-bottom: none;
-      }
-
-      button mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-      }
-    }
-
-    .total-summary {
-      padding: 16px;
-      background: #f5f5f5;
-      text-align: right;
-      font-size: 1.1rem;
-      color: #333;
-      border-top: 2px solid #1976d2;
-
-      strong {
-        color: #1976d2;
+      button {
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
       }
     }
   }
 
-  .no-entries {
-    background: white;
+  &__summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: #f8fafc;
+    border-radius: 0 0 12px 12px;
+    border-top: 1px solid #e2e8f0;
+
+    span {
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    strong {
+      font-size: 1.1rem;
+      color: #144f80;
+      letter-spacing: .02em;
+    }
+  }
+
+  &__empty {
     padding: 32px;
-    border-radius: 8px;
     text-align: center;
-    color: #666;
+    border-radius: 12px;
+    border: 1px dashed #cbd5f5;
+    color: #475569;
+    background: #f8fafc;
     font-style: italic;
   }
 }
 
-// Responsive adjustments
 @media (max-width: 768px) {
-  .mileage-details-container {
-    .mileage-form {
-      .form-row {
-        flex-direction: column;
-        gap: 8px;
+  .mileage-details {
+    padding: 16px;
 
-        .form-field {
-          width: 100%;
-        }
+    &__form {
+      padding: 16px;
 
-        .total-miles-display {
-          width: 100%;
-        }
+      &-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       }
     }
 
-    .mileage-table-container {
-      overflow-x: auto;
+    &__actions {
+      flex-direction: column-reverse;
+      align-items: stretch;
 
-      .mileage-table {
-        min-width: 800px;
+      button {
+        width: 100%;
       }
     }
   }
 }
-

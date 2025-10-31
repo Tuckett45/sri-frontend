@@ -19,6 +19,16 @@
       <input matInput formControlName="job" />
     </mat-form-field>
 
+    <mat-form-field appearance="fill">
+      <mat-label>Category</mat-label>
+      <mat-select formControlName="category">
+        <mat-option value="">All Categories</mat-option>
+        <mat-option *ngFor="let category of categoryOptions" [value]="category">
+          {{ category }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
     <mat-form-field *ngIf="showEmployeeField" appearance="fill">
       <mat-label>Employee</mat-label>
       <input matInput formControlName="employee" />

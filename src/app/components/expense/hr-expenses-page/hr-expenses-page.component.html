@@ -62,6 +62,7 @@
   *ngIf="filtersOpen"
   id="hr-filters"
   [statusOptions]="statusOptions"
+  [categoryOptions]="categoryOptions"
   (filtersChange)="onFiltersChange($event)">
 </app-expense-filters>
 

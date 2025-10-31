@@ -59,6 +59,7 @@
   *ngIf="filtersOpen"
   id="employee-filters"
   [statusOptions]="statusOptions"
+  [categoryOptions]="categoryOptions"
   [showEmployeeField]="false"
   (filtersChange)="onFiltersChange($event)">
 </app-expense-filters>

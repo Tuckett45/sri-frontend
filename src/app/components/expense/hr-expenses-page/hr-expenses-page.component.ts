@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { ToastrService } from 'ngx-toastr';
-import { Expense, ExpenseListItem, ExpenseListResponse, ExpenseStatus } from 'src/app/models/expense.model';
+import { Expense, ExpenseListItem, ExpenseListResponse, ExpenseStatus, ExpenseCategory } from 'src/app/models/expense.model';
 import { ExpenseApiService } from '../../../services/expense-api.service';
 import { ExpenseExportService, ExportOptions } from 'src/app/services/expense-export.service';
 import { Inject } from '@angular/core';
@@ -30,6 +30,7 @@ export class HrExpensesPageComponent implements OnInit {
   pageSize = 10;
   pageSizeOptions: number[] = [10, 25, 50];
   statusOptions = Object.values(ExpenseStatus);
+  categoryOptions = Object.values(ExpenseCategory);
   loading = false;
   filtersOpen = false;
   readonly statusUpdatingIds = new Set<string>();
@@ -40,7 +41,8 @@ export class HrExpensesPageComponent implements OnInit {
     endDate: null,
     job: '',
     employee: '',
-    status: ''
+    status: '',
+    category: ''
   };
   constructor(
     @Inject(ExpenseApiService) private expenseApi: ExpenseApiService,
@@ -153,6 +155,9 @@ export class HrExpensesPageComponent implements OnInit {
     if (employeeInput) {
       request.employee = employeeInput;
     }
+    if (this.currentFilters.category) {
+      request.category = this.currentFilters.category as ExpenseCategory;
+    }
 
     return request;
   }
@@ -163,7 +168,8 @@ export class HrExpensesPageComponent implements OnInit {
     const hasJob = !!filters.job && filters.job.trim().length > 0;
     const hasEmployee = !!filters.employee && filters.employee.trim().length > 0;
     const hasStatus = !!filters.status;
-    return hasStart || hasEnd || hasJob || hasEmployee || hasStatus;
+    const hasCategory = !!filters.category;
+    return hasStart || hasEnd || hasJob || hasEmployee || hasStatus || hasCategory;
   }
 
   private handleResponse(
@@ -277,8 +283,8 @@ export class HrExpensesPageComponent implements OnInit {
   }
 
   exportCsv(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
-    if (!this.expenses.length) {
-      this.toastr.info('No expenses to export');
+    const exportExpenses = this.resolveExpensesForExport(groupBy);
+    if (!exportExpenses) {
       return;
     }
 
@@ -290,13 +296,13 @@ export class HrExpensesPageComponent implements OnInit {
       dateRange: this.getDateRangeFromFilters()
     };
 
-    this.exportService.exportToCSV(this.expenses, options);
+    this.exportService.exportToCSV(exportExpenses, options);
     this.toastr.success('CSV export downloaded');
   }
 
   exportPdf(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
-    if (!this.expenses.length) {
-      this.toastr.info('No expenses to export');
+    const exportExpenses = this.resolveExpensesForExport(groupBy);
+    if (!exportExpenses) {
       return;
     }
 
@@ -308,8 +314,38 @@ export class HrExpensesPageComponent implements OnInit {
       dateRange: this.getDateRangeFromFilters()
     };
 
-    this.exportService.exportToPDF(this.expenses, options);
+    this.exportService.exportToPDF(exportExpenses, options);
     this.toastr.success('PDF export downloaded');
+  }
+
+  private resolveExpensesForExport(
+    groupBy: 'employee' | 'job' | 'category' | 'none'
+  ): DisplayExpense[] | null {
+    if (!this.expenses.length) {
+      this.toastr.info('No expenses to export');
+      return null;
+    }
+
+    if (groupBy !== 'employee') {
+      return this.expenses;
+    }
+
+    const selectedEmployee = this.currentFilters.employee?.trim();
+    if (!selectedEmployee) {
+      this.toastr.warning('Select an employee before exporting by employee.');
+      this.filtersOpen = true;
+      return null;
+    }
+
+    const normalized = selectedEmployee.toLowerCase();
+    const employeeExpenses = this.expenses.filter(expense => (expense.createdBy ?? '').toLowerCase() === normalized);
+
+    if (!employeeExpenses.length) {
+      this.toastr.info(`No expenses found for ${selectedEmployee} on the current page.`);
+      return null;
+    }
+
+    return employeeExpenses;
   }
 
   private getDateRangeFromFilters(): { start: string; end: string } | undefined {

@@ -1,4 +1,4 @@
-// src/app/services/expense-api.service.ts
+﻿// src/app/services/expense-api.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
@@ -29,7 +29,7 @@ export class ExpenseApiService {
     })
   };
 
-  private baseUrl = `${environment.apiUrl}/expenses`;
+  private baseUrl = `${local_environment.apiUrl}/expenses`;
 
   constructor(private http: HttpClient) {}
 
@@ -187,7 +187,7 @@ export class ExpenseApiService {
     page?: number;
     pageSize?: number;
     includeImages?: boolean;
-    status?: ExpenseStatus; // NEW filter
+    status?: ExpenseStatus;
   } = {}): Observable<ExpenseListResponse> {
     let params = new HttpParams();
     Object.entries(opts).forEach(([k, v]) => {
@@ -209,6 +209,7 @@ export class ExpenseApiService {
     page?: number;
     pageSize?: number;
     status?: ExpenseStatus;
+    category?: ExpenseCategory;
   }): Observable<ExpenseListResponse> {
     let params = new HttpParams();
     Object.entries(request ?? {}).forEach(([key, value]) => {

@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { v4 as uuidv4 } from 'uuid';
 import { formatDate } from '@angular/common';
-
+import { MileageDetailsComponent } from '../../expense/shared/mileage-details/mileage-details.component';
 import {
   Expense,
   ExpenseImage,

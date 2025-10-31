@@ -1,7 +1,9 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ViewChild, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MileageDetail } from 'src/app/models/expense.model';
 import { v4 as uuidv4 } from 'uuid';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatSort } from '@angular/material/sort';
 
 @Component({
   selector: 'app-mileage-details',
@@ -9,15 +11,18 @@ import { v4 as uuidv4 } from 'uuid';
   styleUrls: ['./mileage-details.component.scss'],
   standalone: false
 })
-export class MileageDetailsComponent implements OnInit {
+export class MileageDetailsComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() mileageEntries: MileageDetail[] = [];
   @Input() expenseId: string = '';
   @Output() mileageChanged = new EventEmitter<MileageDetail[]>();
+
+  @ViewChild(MatSort) sort?: MatSort;
 
   mileageForm!: FormGroup;
   isEditing = false;
   editingIndex: number | null = null;
   displayedColumns: string[] = ['date', 'from', 'to', 'reason', 'beginning', 'ending', 'total', 'actions'];
+  dataSource = new MatTableDataSource<MileageDetail>([]);
 
   reasonOptions: string[] = [
     'Customer Visit',
@@ -34,6 +39,24 @@ export class MileageDetailsComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
+    this.mileageEntries = this.mileageEntries ? [...this.mileageEntries] : [];
+    this.refreshData();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['mileageEntries']) {
+      const nextValue = changes['mileageEntries'].currentValue as MileageDetail[] | null | undefined;
+      this.mileageEntries = nextValue ? [...nextValue] : [];
+      if (this.dataSource) {
+        this.refreshData();
+      }
+    }
+  }
+
+  ngAfterViewInit(): void {
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+    }
   }
 
   initForm(): void {
@@ -127,6 +150,7 @@ export class MileageDetailsComponent implements OnInit {
       this.mileageEntries.push(newEntry);
     }
 
+    this.refreshData();
     this.mileageChanged.emit([...this.mileageEntries]);
     this.cancelEdit();
   }
@@ -134,6 +158,7 @@ export class MileageDetailsComponent implements OnInit {
   deleteEntry(index: number): void {
     if (confirm('Are you sure you want to delete this mileage entry?')) {
       this.mileageEntries.splice(index, 1);
+      this.refreshData();
       this.mileageChanged.emit([...this.mileageEntries]);
     }
   }
@@ -145,7 +170,7 @@ export class MileageDetailsComponent implements OnInit {
   }
 
   getTotalMiles(): number {
-    return this.mileageEntries.reduce((sum, entry) => sum + entry.totalMiles, 0);
+    return this.dataSource.data.reduce((sum, entry) => sum + entry.totalMiles, 0);
   }
 
   hasError(fieldName: string, errorType?: string): boolean {
@@ -156,6 +181,13 @@ export class MileageDetailsComponent implements OnInit {
       return field.hasError(errorType) && (field.dirty || field.touched);
     }
     return field.invalid && (field.dirty || field.touched);
+  }
+
+  private refreshData(): void {
+    this.dataSource.data = [...this.mileageEntries];
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+    }
   }
 }
 

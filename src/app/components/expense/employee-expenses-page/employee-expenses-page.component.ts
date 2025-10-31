@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { Expense, ExpenseListItem, ExpenseStatus } from 'src/app/models/expense.model';
+﻿import { Component, OnInit } from '@angular/core';
+import { Expense, ExpenseListItem, ExpenseStatus, ExpenseCategory } from 'src/app/models/expense.model';
 import { ExpenseApiService } from 'src/app/services/expense-api.service';
 import { ExpenseExportService, ExportOptions } from 'src/app/services/expense-export.service';
 import { ToastrService } from 'ngx-toastr';
@@ -25,6 +25,7 @@ export class EmployeeExpensesPageComponent implements OnInit {
   expenses: DisplayExpense[] = [];
   filteredExpenses: DisplayExpense[] = [];
   statusOptions = Object.values(ExpenseStatus);
+  categoryOptions = Object.values(ExpenseCategory);
   loading = false;
   filtersOpen = false;
   private filtersInitialized = false;
@@ -36,7 +37,8 @@ export class EmployeeExpensesPageComponent implements OnInit {
     endDate: null,
     job: '',
     status: '',
-    employee: ''
+    employee: '',
+    category: ''
   };
 
   constructor(
@@ -169,6 +171,9 @@ export class EmployeeExpensesPageComponent implements OnInit {
     if (this.currentFilters.status) {
       request.status = this.currentFilters.status as ExpenseStatus;
     }
+    if (this.currentFilters.category) {
+      request.category = this.currentFilters.category as ExpenseCategory;
+    }
 
     return request;
   }
@@ -178,7 +183,8 @@ export class EmployeeExpensesPageComponent implements OnInit {
     const hasEnd = !!filters.endDate;
     const hasJob = !!filters.job && filters.job.trim().length > 0;
     const hasStatus = !!filters.status;
-    return hasStart || hasEnd || hasJob || hasStatus;
+    const hasCategory = !!filters.category;
+    return hasStart || hasEnd || hasJob || hasStatus || hasCategory;
   }
 
   exportCsv(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
