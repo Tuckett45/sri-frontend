@@ -1,13 +1,20 @@
 <div class="page-controls">
-  <button
-    mat-stroked-button
-    type="button"
-    class="toggle-filters-btn"
-    (click)="toggleFilters()"
-    aria-controls="hr-filters">
-    <mat-icon>{{ filtersOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
-    {{ filtersOpen ? 'Hide Filters' : 'Show Filters' }}
-  </button>
+  <div class="left-controls">
+    <button
+      mat-stroked-button
+      type="button"
+      class="toggle-filters-btn"
+      (click)="toggleFilters()"
+      aria-controls="hr-filters">
+      <mat-icon>{{ filtersOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
+      {{ filtersOpen ? 'Hide Filters' : 'Show Filters' }}
+    </button>
+    
+    <button mat-raised-button class="dashboard-btn" routerLink="/expense/hr-dashboard">
+      <mat-icon>dashboard</mat-icon>
+      Dashboard
+    </button>
+  </div>
 
   <div class="export-buttons">
     <button mat-raised-button class="header-btn" (click)="exportPdf()">
