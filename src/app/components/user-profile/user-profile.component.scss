@@ -1,59 +1,33 @@
-﻿:host {
-  display: block;
-}
+.profile-card {
+  background-color: #dddddd;
+  padding: 20px;
+  margin: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  box-sizing: border-box;
 
-.profile-wrapper {
-  display: grid;
-  gap: 1.5rem;
-
-  @media (min-width: 960px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
-}
-
-section {
-  padding: 1.5rem;
-}
-
-.section-header {
-  margin-bottom: 1.25rem;
-
-  h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: #144f80;
-  }
-}
-
-.profile-list {
-  display: grid;
-  gap: 0.75rem;
-  margin: 0;
-
-  .profile-row {
+  .header-section {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
+    align-items: center;
 
-    dt {
-      font-weight: 600;
-      color: #144f80;
-    }
-
-    dd {
-      margin: 0;
-      text-align: right;
-      color: #1f2937;
+    h2 {
+      font-size: 2rem;
     }
   }
-}
 
-.actions {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: flex-end;
-  button {
+  .profile-info {
+    margin-top: 8%;
+    margin-bottom: 10px;
+
+    .profile-text {
+      color: #000;
+      text-align: start;
+    }
+  }
+
+  mat-card {
+    button {
       align-items: center;
       background-color: #e18a25;
       color: #fff;
@@ -62,10 +36,34 @@ section {
         background-color: #b86404;
       }
     }
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: center;
+    button {
+      align-items: center;
+      background-color: #e18a25;
+      color: #fff;
+
+      &:hover {
+        background-color: #b86404;
+      }
+    }
+  }
+
 }
 
-.settings-card {
-  app-feature-flag-panel {
-    display: block;
+@media (max-width: 768px) {
+  .profile-card,
+  .modal-body,
+  .modal-header,
+  .modal-footer {
+    padding: 15px;
+  }
+
+  .save-btn,
+  .cancel-btn {
+    padding: 8px 15px;
   }
 }

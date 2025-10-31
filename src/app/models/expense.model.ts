@@ -26,6 +26,19 @@ export interface EntertainmentDetail {
   businessPurpose: string;
 }
 
+export interface MileageDetail {
+  id?: string;
+  expenseId: string;
+  date: string;              // ISO 'YYYY-MM-DD'
+  customerJobNumber?: string;
+  fromLocation: string;
+  toLocation: string;
+  reasonForTravel: string;
+  beginningMileage: number;
+  endingMileage: number;
+  totalMiles: number;
+}
+
 export enum ExpenseStatus {
   Pending  = 'Pending',
   Approved = 'Approved',
@@ -57,9 +70,11 @@ export interface Expense {
   descriptionNotes?: string | null;
   isEntertainment: boolean;
   mobilization: boolean;
+  weekEndingDate?: string | null;  // ISO 'YYYY-MM-DD' for mileage expenses
   status: ExpenseStatus;
   phase?: string | null;
   entertainment?: EntertainmentDetail | null;
+  mileage?: MileageDetail[] | null;
 
   images?: ExpenseImage[];
 
@@ -79,4 +94,3 @@ export interface ExpenseListResponse {
   items: ExpenseListItem[];
   total?: number;
 }
-
