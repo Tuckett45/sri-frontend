@@ -1,0 +1,298 @@
+.hr-dashboard {
+  padding: 2rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 0;
+    }
+
+    .date-filter {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+
+      label {
+        font-weight: 500;
+        color: #495057;
+      }
+
+      .date-separator {
+        margin: 0 0.5rem;
+        color: #6c757d;
+      }
+
+      ::ng-deep {
+        .p-calendar {
+          .p-inputtext {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+
+            &:focus {
+              border-color: #42A5F5;
+              box-shadow: 0 0 0 0.2rem rgba(66, 165, 245, 0.25);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: #42A5F5;
+
+    p {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      color: #6c757d;
+    }
+  }
+
+  .dashboard-content {
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+
+      .metric-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-icon {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.5rem;
+          flex-shrink: 0;
+
+          i {
+            color: white;
+          }
+        }
+
+        .metric-content {
+          flex: 1;
+
+          .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1.2;
+          }
+
+          .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+          }
+
+          .metric-sub {
+            font-size: 0.85rem;
+            color: #42A5F5;
+            margin-top: 0.25rem;
+            font-weight: 500;
+          }
+        }
+
+        &.total-expenses .metric-icon {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        &.total-amount .metric-icon {
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        &.average-expense .metric-icon {
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        &.pending-approval .metric-icon {
+          background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        &.approved .metric-icon {
+          background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        &.rejected .metric-icon {
+          background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+      }
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+
+      .chart-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+        &.full-width {
+          grid-column: 1 / -1;
+        }
+
+        h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #2c3e50;
+          margin: 0 0 1rem 0;
+        }
+
+        .chart-container {
+          height: 300px;
+          position: relative;
+        }
+      }
+    }
+
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+
+      .table-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+        &.full-width {
+          grid-column: 1 / -1;
+        }
+
+        h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #2c3e50;
+          margin: 0 0 1rem 0;
+        }
+
+        ::ng-deep {
+          .p-datatable {
+            .p-datatable-thead > tr > th {
+              background-color: #f8f9fa;
+              color: #495057;
+              font-weight: 600;
+              padding: 0.75rem;
+              border-bottom: 2px solid #dee2e6;
+            }
+
+            .p-datatable-tbody > tr > td {
+              padding: 0.75rem;
+              border-bottom: 1px solid #dee2e6;
+            }
+
+            .p-datatable-tbody > tr:hover {
+              background-color: #f8f9fa;
+            }
+          }
+
+          .p-paginator {
+            padding: 0.75rem 0;
+            border-top: 1px solid #dee2e6;
+          }
+        }
+
+        .status-badge {
+          padding: 0.25rem 0.75rem;
+          border-radius: 12px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          display: inline-block;
+
+          &.status-approved {
+            background-color: #d4edda;
+            color: #155724;
+          }
+
+          &.status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+          }
+
+          &.status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 1200px) {
+  .hr-dashboard {
+    .charts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tables-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .hr-dashboard {
+    padding: 1rem;
+
+    .dashboard-header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .date-filter {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
