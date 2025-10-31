@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import * as JSZip from 'jszip';
+import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Expense, ExpenseImage } from '../models/expense.model';
 
