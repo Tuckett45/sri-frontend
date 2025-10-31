@@ -75,7 +75,7 @@ export class ExpenseImageExportService {
         });
 
         // Generate and download ZIP file
-        return zip.generateAsync({ type: 'blob' }).then(zipBlob => {
+        return zip.generateAsync({ type: 'blob' }).then((zipBlob: Blob) => {
           const finalFileName = zipFileName || this.generateZipFileName();
           saveAs(zipBlob, finalFileName);
           
@@ -86,7 +86,7 @@ export class ExpenseImageExportService {
       map(promise => {
         // Wait for the promise to resolve
         let finalResult = result;
-        promise.then(r => finalResult = r);
+        promise.then((r: ImageExportResult) => finalResult = r);
         return finalResult;
       })
     );
