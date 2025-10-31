@@ -7,6 +7,7 @@ import { HrExpensesPageComponent } from './hr-expenses-page/hr-expenses-page.com
 import { EmployeeExpensesPageComponent } from './employee-expenses-page/employee-expenses-page.component';
 import { ExpenseFiltersComponent } from './shared/expense-filters/expense-filters.component';
 import { ExpenseTableComponent } from './shared/expense-table/expense-table.component';
+import { MileageDetailsComponent } from './shared/mileage-details/mileage-details.component';
 import { CalendarModule } from 'primeng/calendar';
 import { InputTextModule } from 'primeng/inputtext';
 import { Textarea } from 'primeng/inputtextarea';
@@ -37,7 +38,14 @@ import { Divider } from "primeng/divider";
 import { MatTooltip } from "@angular/material/tooltip";
 
 @NgModule({
-  declarations: [ExpenseComponent, HrExpensesPageComponent, EmployeeExpensesPageComponent, ExpenseFiltersComponent, ExpenseTableComponent],
+  declarations: [
+    ExpenseComponent, 
+    HrExpensesPageComponent, 
+    EmployeeExpensesPageComponent, 
+    ExpenseFiltersComponent, 
+    ExpenseTableComponent,
+    MileageDetailsComponent
+  ],
   imports: [
     CommonModule,
     FormsModule,
