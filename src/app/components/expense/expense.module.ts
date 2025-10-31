@@ -9,6 +9,7 @@ import { ExpenseFiltersComponent } from './shared/expense-filters/expense-filter
 import { ExpenseTableComponent } from './shared/expense-table/expense-table.component';
 import { MileageDetailsComponent } from './shared/mileage-details/mileage-details.component';
 import { ExpenseReportModalComponent } from '../modals/expense-report-modal/expense-report-modal.component';
+import { HrDashboardComponent } from './hr-dashboard/hr-dashboard.component';
 import { CalendarModule } from 'primeng/calendar';
 import { InputTextModule } from 'primeng/inputtext';
 import { Textarea } from 'primeng/inputtextarea';
@@ -84,7 +85,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
   MatMenuModule,
   Divider,
   MatTooltip,
-  MatCheckboxModule
+  MatCheckboxModule,
+  HrDashboardComponent
 ]
 })
 export class ExpenseModule {}

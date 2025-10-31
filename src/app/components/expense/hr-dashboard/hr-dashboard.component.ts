@@ -1,6 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ExpenseApiService } from '../../../services/expense-api.service';
 import { ExpenseListItem, ExpenseCategory, ExpenseStatus } from '../../../models/expense.model';
 import { ChartModule } from 'primeng/chart';
 import { CardModule } from 'primeng/card';
@@ -8,6 +7,8 @@ import { TableModule } from 'primeng/table';
 import { CalendarModule } from 'primeng/calendar';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { ExpenseStateService } from '../services/expense-state.service';
+import { Subject, takeUntil } from 'rxjs';
 
 // Dashboard interfaces for comprehensive expense analytics
 interface DashboardStats {
@@ -47,7 +48,7 @@ interface EmployeeStats {
   templateUrl: './hr-dashboard.component.html',
   styleUrls: ['./hr-dashboard.component.scss']
 })
-export class HrDashboardComponent implements OnInit {
+export class HrDashboardComponent implements OnInit, OnDestroy {
   // Data
   expenses: ExpenseListItem[] = [];
   stats: DashboardStats = {
@@ -82,9 +83,10 @@ export class HrDashboardComponent implements OnInit {
   recentExpenses: ExpenseListItem[] = [];
 
   loading = true;
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
-    private expenseService: ExpenseApiService,
+    private expenseState: ExpenseStateService,
     private toastr: ToastrService
   ) {}
 
@@ -95,25 +97,18 @@ export class HrDashboardComponent implements OnInit {
     this.endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     
     this.initializeChartOptions();
-    this.loadDashboardData();
+    this.expenseState.hrExpenses$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(items => {
+        this.expenses = items ?? [];
+        this.loading = false;
+        this.filterAndCalculateStats();
+      });
   }
 
-  loadDashboardData(): void {
-    this.loading = true;
-    
-    // Load all expenses for HR
-    this.expenseService.listAllExpensesForHR().subscribe({
-      next: (response: any) => {
-        this.expenses = response.items || [];
-        this.filterAndCalculateStats();
-        this.loading = false;
-      },
-      error: (err: any) => {
-        console.error('Error loading expenses:', err);
-        this.toastr.error('Failed to load expense data');
-        this.loading = false;
-      }
-    });
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   onDateRangeChange(): void {

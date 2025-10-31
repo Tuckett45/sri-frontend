@@ -10,6 +10,7 @@ import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/e
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
+import { ExpenseStateService } from '../services/expense-state.service';
 
 type DisplayExpense = Expense & {
   job?: string | null;
@@ -48,7 +49,8 @@ export class HrExpensesPageComponent implements OnInit {
     @Inject(ExpenseApiService) private expenseApi: ExpenseApiService,
     private exportService: ExpenseExportService,
     private toastr: ToastrService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private readonly expenseState: ExpenseStateService
   ) {}
 
   ngOnInit(): void {
@@ -192,6 +194,8 @@ export class HrExpensesPageComponent implements OnInit {
         return;
       }
     }
+
+    this.expenseState.setHrExpenses(items);
 
     this.totalItems = this.resolveTotal(response, items.length);
     this.expenses = items.map(item => this.toViewModel(item));
