@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import JSZip from 'jszip';
+import * as JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Expense, ExpenseImage } from '../models/expense.model';
 
@@ -74,20 +74,14 @@ export class ExpenseImageExportService {
           }
         });
 
-        // Generate and download ZIP file
-        return zip.generateAsync({ type: 'blob' }).then(zipBlob => {
+        // Generate and download ZIP file synchronously for the observable
+        zip.generateAsync({ type: 'blob' }).then((zipBlob: Blob) => {
           const finalFileName = zipFileName || this.generateZipFileName();
           saveAs(zipBlob, finalFileName);
-          
-          result.success = true;
-          return result;
         });
-      }),
-      map(promise => {
-        // Wait for the promise to resolve
-        let finalResult = result;
-        promise.then(r => finalResult = r);
-        return finalResult;
+        
+        result.success = true;
+        return result;
       })
     );
   }
