@@ -24,6 +24,7 @@ export interface EntertainmentDetail {
   numberInParty: number;
   businessRelationship: string;
   businessPurpose: string;
+  attendees?: string | null;
 }
 
 export interface MileageDetail {

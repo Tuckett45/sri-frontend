@@ -86,7 +86,8 @@ export class ExpenseReportModalComponent implements OnDestroy {
     'entertainment.nameOfEstablishment': 'Name of Establishment',
     'entertainment.numberInParty': 'Number in Party',
     'entertainment.businessRelationship': 'Business Relationship',
-    'entertainment.businessPurpose': 'Business Purpose'
+    'entertainment.businessPurpose': 'Business Purpose',
+    'entertainment.attendees': 'Attendees'
   };
 
   constructor(
@@ -120,7 +121,8 @@ export class ExpenseReportModalComponent implements OnDestroy {
         nameOfEstablishment: [data?.entertainment?.nameOfEstablishment ?? ''],
         numberInParty: [data?.entertainment?.numberInParty ?? null],
         businessRelationship: [data?.entertainment?.businessRelationship ?? ''],
-        businessPurpose: [data?.entertainment?.businessPurpose ?? '']
+        businessPurpose: [data?.entertainment?.businessPurpose ?? ''],
+        attendees: [data?.entertainment?.attendees ?? '']
       })
     });
 

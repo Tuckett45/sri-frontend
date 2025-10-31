@@ -169,6 +169,12 @@
         <input matInput formControlName="businessPurpose" />
         <mat-error *ngIf="hasNestedError('entertainment.businessPurpose', 'required')">Required.</mat-error>
       </mat-form-field>
+
+      <mat-form-field class="full" appearance="outline">
+        <mat-label>Attendees</mat-label>
+        <textarea matInput formControlName="attendees" rows="3" placeholder="List the names of attendees"></textarea>
+        <mat-hint>Enter names of all attendees (comma-separated or one per line)</mat-hint>
+      </mat-form-field>
       </div>
     </fieldset>
 
