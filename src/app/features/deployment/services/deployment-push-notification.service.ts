@@ -280,8 +280,8 @@ export class DeploymentPushNotificationService {
       endpoint: subscription.endpoint,
       expirationTime: subscriptionJson.expirationTime || null,
       keys: {
-        p256dh: subscriptionJson.keys?.p256dh || '',
-        auth: subscriptionJson.keys?.auth || ''
+        p256dh: subscriptionJson.keys?.['p256dh'] || '',
+        auth: subscriptionJson.keys?.['auth'] || ''
       },
       deviceType: this.detectDeviceType(),
       browser: this.detectBrowser()
