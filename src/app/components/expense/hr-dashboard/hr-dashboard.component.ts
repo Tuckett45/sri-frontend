@@ -102,12 +102,12 @@ export class HrDashboardComponent implements OnInit {
     
     // Load all expenses for HR
     this.expenseService.listAllExpensesForHR().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.expenses = response.items || [];
         this.filterAndCalculateStats();
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading expenses:', err);
         this.toastr.error('Failed to load expense data');
         this.loading = false;

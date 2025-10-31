@@ -246,6 +246,13 @@ export class ExpenseApiService {
   getTeamExpenses(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}): Observable<ExpenseListItem> {
     return this.getExpenses(opts).pipe(map(res => (res) as unknown as ExpenseListItem));
   }
+
+  // HR Dashboard method - gets all expenses for HR reporting
+  listAllExpensesForHR(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}): Observable<ExpenseListResponse> {
+    // For HR dashboard, we want all expenses with a large page size
+    const hrOpts = { ...opts, page: 1, pageSize: 1000 };
+    return this.getExpenses(hrOpts);
+  }
 }
 
 
