@@ -9,6 +9,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 
+// Dashboard interfaces for comprehensive expense analytics
 interface DashboardStats {
   totalExpenses: number;
   totalAmount: number;
