@@ -45,6 +45,9 @@ import { MatTooltip } from "@angular/material/tooltip";
     ExpenseTableComponent,
     MileageDetailsComponent
   ],
+  exports: [
+    MileageDetailsComponent
+  ],
   imports: [
     CommonModule,
     FormsModule,

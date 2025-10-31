@@ -86,6 +86,7 @@ import { provideEnvironmentNgxCurrency, NgxCurrencyInputMode } from 'ngx-currenc
 import 'leaflet-search'
 import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashboard/sri-dashboard.component';
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
+import { ExpenseModule } from './components/expense/expense.module';
 import '../charts-setup';
 
 export const customCurrencyMaskConfig = {
@@ -183,6 +184,7 @@ export const customCurrencyMaskConfig = {
     VendorDashboardComponent,
     SRIDashboardComponent,
     PreliminaryPunchListModule,
+    ExpenseModule,
     GoalsComponent,
     MeterGroupModule,
     DividerModule,
