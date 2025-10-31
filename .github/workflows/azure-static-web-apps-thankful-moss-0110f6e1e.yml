@@ -39,8 +39,8 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_THANKFUL_MOSS_0110F6E1E }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
           action: "upload"
-          app_location: "/"  # App source code path, adjust if necessary
-          output_location: "dist/sri-frontend"  # Adjust to your build output directory
+          app_location: "/"  # App source code path
+          output_location: "dist/sri-frontend"  # Build output directory
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
