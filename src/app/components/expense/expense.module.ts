@@ -47,7 +47,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     EmployeeExpensesPageComponent, 
     ExpenseFiltersComponent, 
     ExpenseTableComponent,
-    ExpenseReportModalComponent
+    ExpenseReportModalComponent,
     MileageDetailsComponent
   ],
   exports: [
