@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { Expense, ExpenseListItem, ExpenseListResponse, ExpenseStatus, ExpenseCategory } from 'src/app/models/expense.model';
 import { ExpenseApiService } from '../../../services/expense-api.service';
 import { ExpenseExportService, ExportOptions } from 'src/app/services/expense-export.service';
+import { ExpenseImageExportService } from '../../../services/expense-image-export.service';
 import { Inject } from '@angular/core';
 import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
@@ -48,6 +49,7 @@ export class HrExpensesPageComponent implements OnInit {
   constructor(
     @Inject(ExpenseApiService) private expenseApi: ExpenseApiService,
     private exportService: ExpenseExportService,
+    private imageExportService: ExpenseImageExportService,
     private toastr: ToastrService,
     private dialog: MatDialog,
     private readonly expenseState: ExpenseStateService
@@ -363,6 +365,43 @@ export class HrExpensesPageComponent implements OnInit {
       return { start, end };
     }
     return undefined;
+  }
+
+  exportReceipts(): void {
+    if (!this.expenses.length) {
+      this.toastr.info('No expenses to export');
+      return;
+    }
+
+    const expensesWithReceipts = this.imageExportService.getExpensesWithReceiptsCount(this.expenses);
+    const totalImages = this.imageExportService.getTotalImageCount(this.expenses);
+
+    if (expensesWithReceipts === 0) {
+      this.toastr.info('No expenses with receipts found');
+      return;
+    }
+
+    // Show confirmation with counts
+    this.toastr.info(`Preparing to download ${totalImages} receipt(s) from ${expensesWithReceipts} expense(s)...`, 'Downloading Receipts');
+
+    this.imageExportService.exportExpenseImages(this.expenses).subscribe({
+      next: (result) => {
+        if (result.success) {
+          const successMsg = `Successfully downloaded ${result.totalImages - result.failedImages} of ${result.totalImages} receipt(s)`;
+          if (result.failedImages > 0) {
+            this.toastr.warning(`${successMsg}. ${result.failedImages} failed.`, 'Download Complete');
+          } else {
+            this.toastr.success(successMsg, 'Download Complete');
+          }
+        } else {
+          this.toastr.error('Failed to export receipts. ' + result.errorMessages.join(', '));
+        }
+      },
+      error: (err) => {
+        console.error('Error exporting receipts:', err);
+        this.toastr.error('An error occurred while exporting receipts');
+      }
+    });
   }
 
   openExpenseDetails(expense: Expense): void {

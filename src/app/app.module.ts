@@ -78,9 +78,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextarea } from 'primeng/inputtextarea';
-import { CardModule } from 'primeng/card';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { BadgeModule } from 'primeng/badge';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import { NgxCurrencyDirective } from "ngx-currency";
@@ -88,10 +85,8 @@ import { provideEnvironmentNgxCurrency, NgxCurrencyInputMode } from 'ngx-currenc
 import 'leaflet-search'
 import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashboard/sri-dashboard.component';
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
+import { ExpenseModule } from './components/expense/expense.module';
 import '../charts-setup';
-import { FeatureFlagPanelComponent } from './components/feature-flags/feature-flag-panel.component';
-import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
-import { OverlayBadge } from "primeng/overlaybadge";
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -130,18 +125,16 @@ export const customCurrencyMaskConfig = {
     WidgetComponent,
     OspCoordinatorTrackerComponent,
     MarketControllerComponent,
-    MarketControllerModalComponent,
-    FeatureFlagPanelComponent,
-    UserNotificationsComponent
+    MarketControllerModalComponent
   ],
   imports: [
     NgxCurrencyDirective,
     BrowserModule,
     BrowserAnimationsModule,
     ToastrModule.forRoot({
-        timeOut: 3000,
-        positionClass: 'toast-top-right',
-        preventDuplicates: true,
+      timeOut: 3000, 
+      positionClass: 'toast-top-right',
+      preventDuplicates: true, 
     }),
     DialogModule,
     ButtonModule,
@@ -153,17 +146,14 @@ export const customCurrencyMaskConfig = {
     FloatLabel,
     DropdownModule,
     TagModule,
-    BadgeModule,
     TableModule,
-    CardModule,
-    InputSwitchModule,
     InputTextModule,
     CalendarModule,
     InputNumberModule,
     InputTextModule,
     HttpClientModule,
     FormsModule,
-    ReactiveFormsModule,
+    ReactiveFormsModule, 
     AppRoutingModule,
     GalleriaModule,
     MatDialogModule,
@@ -193,12 +183,12 @@ export const customCurrencyMaskConfig = {
     VendorDashboardComponent,
     SRIDashboardComponent,
     PreliminaryPunchListModule,
+    ExpenseModule,
     GoalsComponent,
     MeterGroupModule,
     DividerModule,
-    ChartComponent,
-    OverlayBadge
-],
+    ChartComponent
+  ],
   providers: [provideCharts(withDefaultRegisterables()),
     provideEnvironmentNgxCurrency({
       align: "right",

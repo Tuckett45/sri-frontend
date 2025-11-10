@@ -36,14 +36,14 @@
             </mat-error>
         </mat-form-field>
 
-        <!-- Company field visible when role requires manual company selection -->
-        <mat-form-field *ngIf="requiresCompanySelection(registerForm.get('role')?.value)" appearance="outline" class="full-width">
+        <!-- Company field only visible when role is 'PM' -->
+        <mat-form-field *ngIf="registerForm.get('role')?.value === 'PM'" appearance="outline" class="full-width">
             <mat-label>Select Company</mat-label>
             <mat-select formControlName="company" placeholder="Select a Company">
               <mat-option *ngFor="let company of companys" [value]="company">{{ company }}</mat-option>
             </mat-select>
             <mat-error *ngIf="registerForm.get('company')?.invalid && registerForm.get('company')?.touched">
-                Company is required for this role.
+                Company is required for PM's.
             </mat-error>
         </mat-form-field>
 

@@ -2,6 +2,7 @@
 import { Expense, ExpenseListItem, ExpenseStatus, ExpenseCategory } from 'src/app/models/expense.model';
 import { ExpenseApiService } from 'src/app/services/expense-api.service';
 import { ExpenseExportService, ExportOptions } from 'src/app/services/expense-export.service';
+import { ExpenseImageExportService } from 'src/app/services/expense-image-export.service';
 import { ToastrService } from 'ngx-toastr';
 import { MatDialog } from '@angular/material/dialog';
 import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
@@ -44,6 +45,7 @@ export class EmployeeExpensesPageComponent implements OnInit {
   constructor(
     private readonly expenseApi: ExpenseApiService,
     private readonly exportService: ExpenseExportService,
+    private readonly imageExportService: ExpenseImageExportService,
     private readonly toastr: ToastrService,
     private readonly dialog: MatDialog,
     private readonly authService: AuthService
@@ -234,6 +236,43 @@ export class EmployeeExpensesPageComponent implements OnInit {
       return { start, end };
     }
     return undefined;
+  }
+
+  exportReceipts(): void {
+    if (!this.filteredExpenses.length) {
+      this.toastr.info('No expenses to export');
+      return;
+    }
+
+    const expensesWithReceipts = this.imageExportService.getExpensesWithReceiptsCount(this.filteredExpenses);
+    const totalImages = this.imageExportService.getTotalImageCount(this.filteredExpenses);
+
+    if (expensesWithReceipts === 0) {
+      this.toastr.info('No expenses with receipts found');
+      return;
+    }
+
+    // Show confirmation with counts
+    this.toastr.info(`Preparing to download ${totalImages} receipt(s) from ${expensesWithReceipts} expense(s)...`, 'Downloading Receipts');
+
+    this.imageExportService.exportExpenseImages(this.filteredExpenses).subscribe({
+      next: (result) => {
+        if (result.success) {
+          const successMsg = `Successfully downloaded ${result.totalImages - result.failedImages} of ${result.totalImages} receipt(s)`;
+          if (result.failedImages > 0) {
+            this.toastr.warning(`${successMsg}. ${result.failedImages} failed.`, 'Download Complete');
+          } else {
+            this.toastr.success(successMsg, 'Download Complete');
+          }
+        } else {
+          this.toastr.error('Failed to export receipts. ' + result.errorMessages.join(', '));
+        }
+      },
+      error: (err) => {
+        console.error('Error exporting receipts:', err);
+        this.toastr.error('An error occurred while exporting receipts');
+      }
+    });
   }
 
   openAddExpense(): void {
