@@ -11,6 +11,7 @@ import {
   ExpenseCategory,
   PaymentMethod,
   EntertainmentDetail,
+  MileageDetail,
   ExpenseStatus
 } from 'src/app/models/expense.model';
 import { AuthService } from 'src/app/services/auth.service';
@@ -41,6 +42,10 @@ export class ExpenseReportModalComponent implements OnDestroy {
   isGalleryVisible = false;
   galleryImages: Array<{ itemImageSrc: string }> = [];
   private receiptObjectUrl?: string;
+
+  // Mileage tracking
+  mileageEntries: MileageDetail[] = [];
+  isMileageCategory = false;
 
   jobs: string[] = [
     '23471 - David Nottingham O/H',
@@ -109,6 +114,7 @@ export class ExpenseReportModalComponent implements OnDestroy {
       descriptionNotes: [data?.descriptionNotes ?? ''],
       isEntertainment: [data?.isEntertainment ?? false],
       mobilization: [data?.mobilization ?? false],
+      weekEndingDate: [data?.weekEndingDate ? this.toDateInput(data.weekEndingDate) : null],
       entertainment: this.fb.group({
         typeOfEntertainment: [data?.entertainment?.typeOfEntertainment ?? ''],
         nameOfEstablishment: [data?.entertainment?.nameOfEstablishment ?? ''],
@@ -117,6 +123,12 @@ export class ExpenseReportModalComponent implements OnDestroy {
         businessPurpose: [data?.entertainment?.businessPurpose ?? '']
       })
     });
+
+    // Initialize mileage entries from data
+    if (data?.mileage && Array.isArray(data.mileage)) {
+      this.mileageEntries = [...data.mileage];
+    }
+    this.isMileageCategory = data?.category === ExpenseCategory.Mileage;
 
     const projectControl = this.expenseForm.get('projectId');
     this.filteredJobs = this.filterJobs(projectControl?.value);
@@ -151,8 +163,13 @@ export class ExpenseReportModalComponent implements OnDestroy {
       if (this.expenseForm.get('isEntertainment')?.value !== isEnt) {
         this.expenseForm.get('isEntertainment')?.setValue(isEnt);
       }
+      
+      // Update mileage category flag
+      this.isMileageCategory = cat === ExpenseCategory.Mileage;
+      
       if (cat !== ExpenseCategory.Mileage) {
         this.expenseForm.get('mileageMiles')?.setValue(null);
+        this.expenseForm.get('weekEndingDate')?.setValue(null);
       }
     });
 
@@ -426,6 +443,9 @@ export class ExpenseReportModalComponent implements OnDestroy {
       descriptionNotes: v.descriptionNotes || '',
       isEntertainment: !!v.isEntertainment || v.category === ExpenseCategory.Entertainment,
       mobilization: v.mobilization || false,
+      weekEndingDate: v.category === ExpenseCategory.Mileage && v.weekEndingDate 
+        ? this.toDateInput(v.weekEndingDate) 
+        : null,
       status: this.data?.status || ExpenseStatus.Pending,
       entertainment: (!!v.isEntertainment || v.category === ExpenseCategory.Entertainment)
         ? {
@@ -435,6 +455,9 @@ export class ExpenseReportModalComponent implements OnDestroy {
             businessRelationship: v.entertainment?.businessRelationship || '',
             businessPurpose: v.entertainment?.businessPurpose || ''
           } as EntertainmentDetail
+        : null,
+      mileage: v.category === ExpenseCategory.Mileage && this.mileageEntries.length > 0
+        ? this.mileageEntries
         : null,
       images: (this.data?.images as ExpenseImage[]) ?? [],
       createdBy: resolvedCreatedBy ?? undefined,
@@ -453,6 +476,16 @@ export class ExpenseReportModalComponent implements OnDestroy {
 
   close() {
     this.dialogRef.close();
+  }
+
+  onMileageChanged(updatedEntries: MileageDetail[]): void {
+    this.mileageEntries = updatedEntries;
+    
+    // Optionally auto-calculate total miles and update amount
+    const totalMiles = this.mileageEntries.reduce((sum, entry) => sum + entry.totalMiles, 0);
+    // If you want to auto-populate amount based on mileage rate (e.g., $0.67 per mile):
+    // const mileageRate = 0.67;
+    // this.expenseForm.patchValue({ amount: totalMiles * mileageRate });
   }
 
   protected hasError(controlName: string, errorCode: string): boolean {

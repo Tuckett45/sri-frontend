@@ -1,0 +1,316 @@
+@use '../timecard-theme' as theme;
+
+:host {
+  display: block;
+  @include theme.theme-variables();
+  background: var(--timecard-surface);
+}
+
+.hr-timecards-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .page-header {
+    margin-bottom: 24px;
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 500;
+        color: var(--timecard-text-strong);
+      }
+
+      .header-stats {
+        display: flex;
+        gap: 16px;
+
+        .stat-card {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 20px;
+          border-radius: 8px;
+          @include theme.raised-card;
+
+          &.pending {
+            background: linear-gradient(135deg, #ff9800 0%, var(--timecard-accent) 100%);
+            color: #fff;
+
+            mat-icon {
+              font-size: 32px;
+              width: 32px;
+              height: 32px;
+            }
+          }
+
+          .stat-content {
+            display: flex;
+            flex-direction: column;
+
+            .stat-number {
+              font-size: 24px;
+              font-weight: 700;
+              line-height: 1;
+            }
+
+            .stat-label {
+              font-size: 12px;
+              opacity: 0.9;
+              margin-top: 4px;
+            }
+          }
+        }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      button {
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+
+  .filters-section {
+    background: var(--timecard-surface);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+
+      mat-form-field {
+        width: 100%;
+      }
+    }
+
+    .filter-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+
+  .bulk-actions-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: color-mix(in srgb, var(--timecard-primary) 15%, var(--timecard-card-bg));
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .selection-count {
+      font-weight: 600;
+      color: var(--timecard-primary);
+      font-size: 16px;
+    }
+
+    .bulk-buttons {
+      display: flex;
+      gap: 12px;
+
+      button mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+  }
+
+  .table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .timecards-table {
+      width: 100%;
+
+      th {
+        background: var(--timecard-surface);
+        font-weight: 600;
+        color: var(--timecard-text-strong);
+        padding: 16px;
+        border-bottom: 2px solid var(--timecard-status-draft-bg);
+      }
+
+      td {
+        padding: 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      tr:hover {
+        background: #fafafa;
+      }
+
+      .job-codes-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+
+        mat-chip {
+          font-size: 12px;
+          height: 24px;
+          padding: 0 8px;
+        }
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+
+        &.status-draft {
+          background: var(--timecard-status-draft-bg);
+          color: var(--timecard-text-muted);
+        }
+
+        &.status-submitted {
+          background: var(--timecard-status-submitted-bg);
+          color: var(--timecard-accent);
+        }
+
+        &.status-approved {
+          background: var(--timecard-status-approved-bg);
+          color: var(--timecard-success);
+        }
+
+        &.status-rejected {
+          background: var(--timecard-status-rejected-bg);
+          color: var(--timecard-danger);
+        }
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+
+        button {
+          position: relative;
+
+          mat-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+          }
+        }
+      }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      color: var(--timecard-text-soft);
+
+      mat-icon {
+        font-size: 72px;
+        width: 72px;
+        height: 72px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+      }
+
+      h3 {
+        margin: 0 0 8px 0;
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--timecard-text-muted);
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+  }
+
+  mat-paginator {
+    background: var(--timecard-card-bg);
+    border-radius: 0 0 8px 8px;
+    box-shadow: var(--timecard-shadow);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .hr-timecards-container {
+    padding: 16px;
+
+    .page-header {
+      .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+
+        .header-stats {
+          width: 100%;
+        }
+      }
+
+      .header-actions {
+        flex-direction: column;
+        width: 100%;
+
+        button {
+          width: 100%;
+        }
+      }
+    }
+
+    .filters-section .filter-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .bulk-actions-toolbar {
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+
+      .bulk-buttons {
+        flex-direction: column;
+
+        button {
+          width: 100%;
+        }
+      }
+    }
+
+    .table-container .timecards-table {
+      th, td {
+        padding: 8px;
+        font-size: 12px;
+      }
+    }
+  }
+}
+

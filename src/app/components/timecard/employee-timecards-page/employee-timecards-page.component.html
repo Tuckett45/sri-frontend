@@ -1,0 +1,232 @@
+<div class="employee-timecards-container">
+  <!-- Loading Spinner -->
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" [class.loading]="loading">
+    <!-- Header with Week Navigation -->
+    <div class="page-header">
+      <div class="header-left">
+        <h1>My TimeCard</h1>
+        <div class="week-info">
+          <span class="week-label">Week Ending:</span>
+          <span class="week-date">{{ formatDate(currentWeekEnding) }}</span>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button mat-icon-button (click)="changeWeek('prev')" [disabled]="loading">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button mat-stroked-button (click)="changeWeek('next')" [disabled]="loading">
+          <mat-icon>chevron_right</mat-icon>
+          Next Week
+        </button>
+      </div>
+    </div>
+
+    <!-- Automation Toolbar -->
+    <div class="automation-toolbar">
+      <div class="automation-buttons">
+        <button 
+          mat-raised-button 
+          color="accent"
+          (click)="copyFromPreviousWeek()"
+          [disabled]="loading || saving || previousWeekData.length === 0">
+          <mat-icon>content_copy</mat-icon>
+          Copy Previous Week
+        </button>
+        
+        <button 
+          mat-raised-button
+          (click)="applyToAllWeekdays()"
+          [disabled]="loading || saving || suggestions.length === 0">
+          <mat-icon>auto_fix_high</mat-icon>
+          Apply to Weekdays
+        </button>
+      </div>
+
+      <div class="status-info">
+        <mat-icon *ngIf="saving" class="saving-icon">sync</mat-icon>
+        <span *ngIf="saving" class="saving-text">Auto-saving...</span>
+        
+        <div class="total-hours">
+          <mat-icon>schedule</mat-icon>
+          <span>Total: <strong>{{ getTotalHours() }}</strong> hours</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Suggestions -->
+    <div class="suggestions-bar" *ngIf="suggestions.length > 0">
+      <span class="suggestions-label">Quick Apply:</span>
+      <button 
+        mat-button
+        *ngFor="let suggestion of suggestions.slice(0, 4)"
+        (click)="quickApplySuggestion(suggestion, 0)"
+        class="suggestion-chip">
+        <mat-icon>bolt</mat-icon>
+        {{ suggestion.jobCode }} - {{ suggestion.averageHours }}h
+      </button>
+    </div>
+
+    <!-- Weekly Grid -->
+    <div class="weekly-grid">
+      <form [formGroup]="timecardForm">
+        <div class="grid-columns">
+          <div 
+            class="day-column" 
+            *ngFor="let day of weekDays; let dayIndex = index"
+            [ngClass]="{ 'weekend': day.getDay() === 0 || day.getDay() === 6 }">
+            <div class="day-header">
+              <div class="day-name">{{ daysOfWeek[day.getDay() === 0 ? 6 : day.getDay() - 1] }}</div>
+              <div class="day-date">{{ day | date:'MMM d' }}</div>
+              <div class="day-total">{{ getDayHours(dayIndex) }}h</div>
+            </div>
+
+            <div class="day-entries">
+              <ng-container *ngFor="let entry of getEntriesForDay(dayIndex); let entryIndex = index">
+                <div class="entry-row" [formGroup]="entry">
+                  <mat-form-field appearance="outline" class="hours-input">
+                    <mat-label>Hours</mat-label>
+                    <input 
+                      matInput 
+                      type="number" 
+                      formControlName="hours" 
+                      min="0" 
+                      max="24" 
+                      step="0.5"
+                      placeholder="0">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="job-code-input">
+                    <mat-label>Job Code</mat-label>
+                    <input 
+                      matInput 
+                      formControlName="jobCode"
+                      placeholder="Code">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="project-input" *ngIf="entry.get('hours')?.value > 0">
+                    <mat-label>Project</mat-label>
+                    <input 
+                      matInput 
+                      formControlName="projectId"
+                      placeholder="Optional">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="notes-input" *ngIf="entry.get('hours')?.value > 0">
+                    <mat-label>Notes</mat-label>
+                    <input 
+                      matInput 
+                      formControlName="notes"
+                      placeholder="Optional">
+                  </mat-form-field>
+                </div>
+              </ng-container>
+
+              <button 
+                mat-icon-button 
+                class="add-row-btn"
+                (click)="addRowForDay(dayIndex)"
+                type="button"
+                matTooltip="Add another entry for this day">
+                <mat-icon>add_circle_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Submit Section -->
+    <div class="submit-section">
+      <div class="submit-info">
+        <mat-icon>info</mat-icon>
+        <span>Your changes are auto-saved. Click Submit when ready for approval.</span>
+      </div>
+      
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="saveAndSubmit()"
+        [disabled]="loading || saving || !hasAnyData()">
+        <mat-icon>send</mat-icon>
+        Submit for Approval
+      </button>
+    </div>
+  </div>
+
+  <!-- Sidebar: Recent TimeCards -->
+  <div class="sidebar">
+    <h3>Recent TimeCards</h3>
+    
+    <div class="recent-timecards">
+      <div 
+        class="recent-card"
+        *ngFor="let timecard of recentTimecards"
+        [class.active]="timecard.weekEnding === currentWeekEnding.toISOString().split('T')[0]"
+        (click)="loadTimeCard(timecard)">
+        
+        <div class="card-header">
+          <span class="week-ending">{{ formatDate(timecard.weekEnding) }}</span>
+          <span class="status-badge" [ngClass]="getStatusClass(timecard.status)">
+            {{ timecard.status }}
+          </span>
+        </div>
+        
+        <div class="card-content">
+          <div class="hours-display">
+            <mat-icon>schedule</mat-icon>
+            <span>{{ timecard.totalHours }}h</span>
+          </div>
+          
+          <div class="job-codes-display" *ngIf="timecard.jobCodes && timecard.jobCodes.length > 0">
+            <div class="job-codes-chips">
+              <span class="job-chip" *ngFor="let code of timecard.jobCodes.slice(0, 2)">
+                {{ code }}
+              </span>
+              <span class="job-chip" *ngIf="timecard.jobCodes.length > 2">
+                +{{ timecard.jobCodes.length - 2 }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button 
+            mat-icon-button 
+            (click)="copyTimeCard(timecard); $event.stopPropagation()"
+            matTooltip="Copy to next week">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+          
+          <button 
+            mat-icon-button 
+            *ngIf="canRecall(timecard)"
+            (click)="recallTimeCard(timecard); $event.stopPropagation()"
+            matTooltip="Recall">
+            <mat-icon>undo</mat-icon>
+          </button>
+          
+          <button 
+            mat-icon-button 
+            color="warn"
+            *ngIf="canDelete(timecard)"
+            (click)="deleteTimeCard(timecard); $event.stopPropagation()"
+            matTooltip="Delete">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State for Sidebar -->
+    <div class="sidebar-empty" *ngIf="recentTimecards.length === 0 && !loading">
+      <mat-icon>assignment</mat-icon>
+      <p>No recent timecards</p>
+    </div>
+  </div>
+</div>

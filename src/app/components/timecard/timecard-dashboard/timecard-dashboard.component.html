@@ -1,0 +1,37 @@
+<div class="timecard-dashboard">
+  <h1>TimeCard Dashboard</h1>
+  
+  <div *ngIf="loading" class="loading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && stats" class="dashboard-content">
+    <div class="stats-cards">
+      <div class="stat-card">
+        <h3>Pending Approvals</h3>
+        <p class="stat-number">{{ stats.totalPendingApprovals || 0 }}</p>
+      </div>
+      
+      <div class="stat-card">
+        <h3>Hours This Week</h3>
+        <p class="stat-number">{{ stats.totalHoursThisWeek || 0 }}</p>
+      </div>
+      
+      <div class="stat-card">
+        <h3>Hours This Month</h3>
+        <p class="stat-number">{{ stats.totalHoursThisMonth || 0 }}</p>
+      </div>
+      
+      <div class="stat-card">
+        <h3>Active Employees</h3>
+        <p class="stat-number">{{ stats.activeEmployees || 0 }}</p>
+      </div>
+    </div>
+
+    <div class="recent-submissions">
+      <h2>Recent Submissions</h2>
+      <p *ngIf="!stats.recentSubmissions?.length">No recent submissions</p>
+      <!-- TODO: Add table of recent submissions -->
+    </div>
+  </div>
+</div>

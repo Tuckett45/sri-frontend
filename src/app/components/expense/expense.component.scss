@@ -1,4 +1,4 @@
-.preliminary-punch-list-page {
+.finances-page {
   background-color: #e7e5e5 !important;
   padding: 20px;
   margin: 20px;
@@ -245,7 +245,7 @@
 
   /* Extra small phones */
 @media (max-width: 480px) {
-  .preliminary-punch-list-page {
+  .finances-page {
     padding: 8px;
     margin: 0;
 
@@ -313,7 +313,7 @@
 
 /* Small tablets / large phones */
 @media (min-width: 481px) and (max-width: 767px) {
-  .preliminary-punch-list-page {
+  .finances-page {
     .header-section {
       flex-direction: column;
       align-items: flex-start;

@@ -7,6 +7,7 @@ import { HrExpensesPageComponent } from './hr-expenses-page/hr-expenses-page.com
 import { EmployeeExpensesPageComponent } from './employee-expenses-page/employee-expenses-page.component';
 import { ExpenseFiltersComponent } from './shared/expense-filters/expense-filters.component';
 import { ExpenseTableComponent } from './shared/expense-table/expense-table.component';
+import { MileageDetailsComponent } from './shared/mileage-details/mileage-details.component';
 import { CalendarModule } from 'primeng/calendar';
 import { InputTextModule } from 'primeng/inputtext';
 import { Textarea } from 'primeng/inputtextarea';
@@ -34,9 +35,20 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { Divider } from "primeng/divider";
 import { MatTooltip } from "@angular/material/tooltip";
+import { TimeCardUiModule } from '../timecard/timecard-ui.module';
 
 @NgModule({
-  declarations: [ExpenseComponent, HrExpensesPageComponent, EmployeeExpensesPageComponent, ExpenseFiltersComponent, ExpenseTableComponent],
+  declarations: [
+    ExpenseComponent, 
+    HrExpensesPageComponent, 
+    EmployeeExpensesPageComponent, 
+    ExpenseFiltersComponent, 
+    ExpenseTableComponent,
+    MileageDetailsComponent
+  ],
+  exports: [
+    MileageDetailsComponent
+  ],
   imports: [
     CommonModule,
     FormsModule,
@@ -64,16 +76,14 @@ import { MatTooltip } from "@angular/material/tooltip";
     MatDatepickerModule,
     MatNativeDateModule,
     MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
+  MatFormFieldModule,
+  MatInputModule,
+  MatSelectModule,
   MatTableModule,
   MatProgressSpinnerModule,
   Divider,
-  MatTooltip
+  MatTooltip,
+  TimeCardUiModule
 ]
 })
 export class ExpenseModule {}
-
-
-

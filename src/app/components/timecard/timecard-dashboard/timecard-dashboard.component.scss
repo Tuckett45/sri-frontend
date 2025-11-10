@@ -1,0 +1,63 @@
+@use '../timecard-theme' as theme;
+
+:host {
+  display: block;
+  @include theme.theme-variables();
+  background: var(--timecard-surface);
+}
+
+.timecard-dashboard {
+  padding: 24px;
+  color: var(--timecard-text-muted);
+
+  h1 {
+    margin-bottom: 24px;
+    color: var(--timecard-text-strong);
+  }
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    padding: 48px;
+  }
+
+  .dashboard-content {
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+
+      .stat-card {
+        @include theme.raised-card;
+        padding: 24px;
+
+        h3 {
+          margin: 0 0 8px 0;
+          font-size: 13px;
+          color: var(--timecard-text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+
+        .stat-number {
+          margin: 0;
+          font-size: 32px;
+          font-weight: 600;
+          color: var(--timecard-text-strong);
+        }
+      }
+    }
+
+    .recent-submissions {
+      @include theme.raised-card;
+      padding: 24px;
+
+      h2 {
+        margin: 0 0 16px 0;
+        color: var(--timecard-text-strong);
+      }
+    }
+  }
+}
+

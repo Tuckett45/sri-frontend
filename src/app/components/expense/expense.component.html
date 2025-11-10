@@ -1,26 +1,85 @@
-﻿<div class="preliminary-punch-list-page surface-card shadow-4 p-3 border-round">
+<div class="finances-page surface-card shadow-4 p-3 border-round">
   <div class="header-section">
-    <h2>Expenses</h2><p-divider />
+    <h2>Finances</h2>
+    <p-divider />
   </div>
+
   <div class="card table-wrapper">
-    <p-tabs [(value)]="activeTab">
+    <p-tabs [(value)]="activeFinanceTab" class="finances-tabs">
       <p-tablist>
-        <p-tab *ngIf="canViewHrTab" [value]="hrTabValue" [ngClass]="{ 'active-tab': activeTab === hrTabValue }">
-          Expense List
+        <p-tab
+          [value]="financeExpensesTabValue"
+          [ngClass]="{ 'active-tab': activeFinanceTab === financeExpensesTabValue }">
+          Expenses
         </p-tab>
-        <p-tab [value]="myTabValue" [ngClass]="{ 'active-tab': activeTab === myTabValue }">
-          My Expenses
+        <p-tab
+          [value]="financeTimecardsTabValue"
+          [ngClass]="{ 'active-tab': activeFinanceTab === financeTimecardsTabValue }">
+          Timecards
         </p-tab>
       </p-tablist>
       <p-tabpanels>
-        <p-tabpanel *ngIf="canViewHrTab" [value]="hrTabValue">
-          <app-hr-expenses-page></app-hr-expenses-page>
+        <p-tabpanel [value]="financeExpensesTabValue">
+          <p-tabs [(value)]="activeExpenseTab">
+            <p-tablist>
+              <p-tab
+                *ngIf="canViewHrTab"
+                [value]="hrTabValue"
+                [ngClass]="{ 'active-tab': activeExpenseTab === hrTabValue }">
+                Expense List
+              </p-tab>
+              <p-tab
+                [value]="myTabValue"
+                [ngClass]="{ 'active-tab': activeExpenseTab === myTabValue }">
+                My Expenses
+              </p-tab>
+            </p-tablist>
+            <p-tabpanels>
+              <p-tabpanel *ngIf="canViewHrTab" [value]="hrTabValue">
+                <app-hr-expenses-page></app-hr-expenses-page>
+              </p-tabpanel>
+              <p-tabpanel [value]="myTabValue">
+                <app-employee-expenses-page></app-employee-expenses-page>
+              </p-tabpanel>
+            </p-tabpanels>
+          </p-tabs>
         </p-tabpanel>
-        <p-tabpanel [value]="myTabValue">
-          <app-employee-expenses-page></app-employee-expenses-page>
+
+        <p-tabpanel [value]="financeTimecardsTabValue">
+          <p-tabs [(value)]="activeTimecardTab">
+            <p-tablist>
+              <p-tab
+                [value]="timecardMyTabValue"
+                [ngClass]="{ 'active-tab': activeTimecardTab === timecardMyTabValue }">
+                My Timecards
+              </p-tab>
+              <p-tab
+                *ngIf="canManageTimecards"
+                [value]="timecardHrTabValue"
+                [ngClass]="{ 'active-tab': activeTimecardTab === timecardHrTabValue }">
+                HR Queue
+              </p-tab>
+              <p-tab
+                *ngIf="canManageTimecards"
+                [value]="timecardDashboardTabValue"
+                [ngClass]="{ 'active-tab': activeTimecardTab === timecardDashboardTabValue }">
+                Dashboard
+              </p-tab>
+            </p-tablist>
+            <p-tabpanels>
+              <p-tabpanel [value]="timecardMyTabValue">
+                <app-employee-timecards-page></app-employee-timecards-page>
+              </p-tabpanel>
+              <p-tabpanel *ngIf="canManageTimecards" [value]="timecardHrTabValue">
+                <app-hr-timecards-page [showDashboardShortcut]="false"></app-hr-timecards-page>
+              </p-tabpanel>
+              <p-tabpanel *ngIf="canManageTimecards" [value]="timecardDashboardTabValue">
+                <app-timecard-dashboard></app-timecard-dashboard>
+              </p-tabpanel>
+            </p-tabpanels>
+          </p-tabs>
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>
   </div>
-  
 </div>
