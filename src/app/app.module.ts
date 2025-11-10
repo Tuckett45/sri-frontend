@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+﻿import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
@@ -56,7 +56,6 @@ import { StreetSheetComponent } from './components/street-sheet/street-sheet.com
 import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { OspCoordinatorModalComponent } from './components/modals/osp-coordinator-modal/osp-coordinator-modal.component';
-import { ExpenseReportModalComponent } from './components/modals/expense-report-modal/expense-report-modal.component';
 import { MarketControllerComponent } from './components/market-controller/market-controller.component';
 import { MarketControllerModalComponent } from './components/modals/market-controller-modal/market-controller-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
@@ -79,9 +78,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextarea } from 'primeng/inputtextarea';
-import { CardModule } from 'primeng/card';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { BadgeModule } from 'primeng/badge';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import { NgxCurrencyDirective } from "ngx-currency";
@@ -89,10 +85,8 @@ import { provideEnvironmentNgxCurrency, NgxCurrencyInputMode } from 'ngx-currenc
 import 'leaflet-search'
 import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashboard/sri-dashboard.component';
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
+import { ExpenseModule } from './components/expense/expense.module';
 import '../charts-setup';
-import { FeatureFlagPanelComponent } from './components/feature-flags/feature-flag-panel.component';
-import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
-import { OverlayBadge } from "primeng/overlaybadge";
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -127,22 +121,20 @@ export const customCurrencyMaskConfig = {
     UserProfileComponent,
     UserProfileModalComponent,
     OspCoordinatorModalComponent,
-    ExpenseReportModalComponent,
+    
     WidgetComponent,
     OspCoordinatorTrackerComponent,
     MarketControllerComponent,
-    MarketControllerModalComponent,
-    FeatureFlagPanelComponent,
-    UserNotificationsComponent
+    MarketControllerModalComponent
   ],
   imports: [
     NgxCurrencyDirective,
     BrowserModule,
     BrowserAnimationsModule,
     ToastrModule.forRoot({
-        timeOut: 3000,
-        positionClass: 'toast-top-right',
-        preventDuplicates: true,
+      timeOut: 3000, 
+      positionClass: 'toast-top-right',
+      preventDuplicates: true, 
     }),
     DialogModule,
     ButtonModule,
@@ -154,17 +146,14 @@ export const customCurrencyMaskConfig = {
     FloatLabel,
     DropdownModule,
     TagModule,
-    BadgeModule,
     TableModule,
-    CardModule,
-    InputSwitchModule,
     InputTextModule,
     CalendarModule,
     InputNumberModule,
     InputTextModule,
     HttpClientModule,
     FormsModule,
-    ReactiveFormsModule,
+    ReactiveFormsModule, 
     AppRoutingModule,
     GalleriaModule,
     MatDialogModule,
@@ -194,12 +183,12 @@ export const customCurrencyMaskConfig = {
     VendorDashboardComponent,
     SRIDashboardComponent,
     PreliminaryPunchListModule,
+    ExpenseModule,
     GoalsComponent,
     MeterGroupModule,
     DividerModule,
-    ChartComponent,
-    OverlayBadge
-],
+    ChartComponent
+  ],
   providers: [provideCharts(withDefaultRegisterables()),
     provideEnvironmentNgxCurrency({
       align: "right",

@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { Expense, ExpenseListItem, ExpenseStatus } from 'src/app/models/expense.model';
+﻿import { Component, OnInit } from '@angular/core';
+import { Expense, ExpenseListItem, ExpenseStatus, ExpenseCategory } from 'src/app/models/expense.model';
 import { ExpenseApiService } from 'src/app/services/expense-api.service';
+import { ExpenseExportService, ExportOptions } from 'src/app/services/expense-export.service';
+import { ExpenseImageExportService } from 'src/app/services/expense-image-export.service';
 import { ToastrService } from 'ngx-toastr';
 import { MatDialog } from '@angular/material/dialog';
 import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
@@ -26,6 +26,7 @@ export class EmployeeExpensesPageComponent implements OnInit {
   expenses: DisplayExpense[] = [];
   filteredExpenses: DisplayExpense[] = [];
   statusOptions = Object.values(ExpenseStatus);
+  categoryOptions = Object.values(ExpenseCategory);
   loading = false;
   filtersOpen = false;
   private filtersInitialized = false;
@@ -37,11 +38,14 @@ export class EmployeeExpensesPageComponent implements OnInit {
     endDate: null,
     job: '',
     status: '',
-    employee: ''
+    employee: '',
+    category: ''
   };
 
   constructor(
     private readonly expenseApi: ExpenseApiService,
+    private readonly exportService: ExpenseExportService,
+    private readonly imageExportService: ExpenseImageExportService,
     private readonly toastr: ToastrService,
     private readonly dialog: MatDialog,
     private readonly authService: AuthService
@@ -91,8 +95,8 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
     this.expenseApi.getExpenses(params).subscribe({
       next: res => {
-        const items = Array.isArray(res?.items) ? res.items : [];
-        const mapped = items.map((item: ExpenseListItem) => this.toViewModel(item));
+        const list = this.extractItems(res);
+        const mapped = list.map((item: ExpenseListItem) => this.toViewModel(item));
         this.baseExpenses = mapped;
         if (hasFilters) {
           this.loading = false;
@@ -136,8 +140,8 @@ export class EmployeeExpensesPageComponent implements OnInit {
     this.loading = true;
     this.expenseApi.searchExpenses(searchRequest).subscribe({
       next: res => {
-        const items = Array.isArray(res?.items) ? res.items : [];
-        this.expenses = items.map((item: ExpenseListItem) => this.toViewModel(item));
+        const list = this.extractItems(res);
+        this.expenses = list.map((item: ExpenseListItem) => this.toViewModel(item));
         this.filteredExpenses = [...this.expenses];
         this.loading = false;
       },
@@ -169,6 +173,9 @@ export class EmployeeExpensesPageComponent implements OnInit {
     if (this.currentFilters.status) {
       request.status = this.currentFilters.status as ExpenseStatus;
     }
+    if (this.currentFilters.category) {
+      request.category = this.currentFilters.category as ExpenseCategory;
+    }
 
     return request;
   }
@@ -178,56 +185,94 @@ export class EmployeeExpensesPageComponent implements OnInit {
     const hasEnd = !!filters.endDate;
     const hasJob = !!filters.job && filters.job.trim().length > 0;
     const hasStatus = !!filters.status;
-    return hasStart || hasEnd || hasJob || hasStatus;
+    const hasCategory = !!filters.category;
+    return hasStart || hasEnd || hasJob || hasStatus || hasCategory;
   }
 
-  exportCsv(): void {
+  exportCsv(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
     if (!this.filteredExpenses.length) {
       this.toastr.info('No expenses to export');
       return;
     }
 
-    const header = ['Date', 'Job', 'Amount', 'Status', 'Notes'];
-    const rows = this.filteredExpenses.map(exp => [
-      exp.date ? new Date(exp.date).toLocaleDateString() : '',
-      exp.job ?? '',
-      exp.amount?.toString() ?? '',
-      exp.status ?? '',
-      exp.notes ?? ''
-    ]);
+    const options: ExportOptions = {
+      groupBy,
+      includeSubtotals: groupBy !== 'none',
+      includeSummary: true,
+      title: 'Employee Expenses Report',
+      dateRange: this.getDateRangeFromFilters()
+    };
 
-    const csvContent = [header, ...rows]
-      .map(row => row.map(value => `"${(value ?? '').replace(/"/g, '""')}"`).join(','))
-      .join('\r\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'expenses.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    this.exportService.exportToCSV(this.filteredExpenses, options);
+    this.toastr.success('CSV export downloaded');
   }
 
-  exportPdf(): void {
+  exportPdf(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
     if (!this.filteredExpenses.length) {
       this.toastr.info('No expenses to export');
       return;
     }
 
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [['Date', 'Job', 'Amount', 'Status']],
-      body: this.filteredExpenses.map(e => [
-        e.date ? new Date(e.date).toLocaleDateString() : '',
-        e.job ?? '',
-        e.amount?.toString() ?? '',
-        e.status ?? ''
-      ])
+    const options: ExportOptions = {
+      groupBy,
+      includeSubtotals: groupBy !== 'none',
+      includeSummary: true,
+      title: 'Employee Expenses Report',
+      dateRange: this.getDateRangeFromFilters()
+    };
+
+    this.exportService.exportToPDF(this.filteredExpenses, options);
+    this.toastr.success('PDF export downloaded');
+  }
+
+  private getDateRangeFromFilters(): { start: string; end: string } | undefined {
+    if (this.currentFilters.startDate && this.currentFilters.endDate) {
+      const start = this.currentFilters.startDate instanceof Date 
+        ? this.currentFilters.startDate.toISOString().split('T')[0] 
+        : this.currentFilters.startDate;
+      const end = this.currentFilters.endDate instanceof Date 
+        ? this.currentFilters.endDate.toISOString().split('T')[0] 
+        : this.currentFilters.endDate;
+      return { start, end };
+    }
+    return undefined;
+  }
+
+  exportReceipts(): void {
+    if (!this.filteredExpenses.length) {
+      this.toastr.info('No expenses to export');
+      return;
+    }
+
+    const expensesWithReceipts = this.imageExportService.getExpensesWithReceiptsCount(this.filteredExpenses);
+    const totalImages = this.imageExportService.getTotalImageCount(this.filteredExpenses);
+
+    if (expensesWithReceipts === 0) {
+      this.toastr.info('No expenses with receipts found');
+      return;
+    }
+
+    // Show confirmation with counts
+    this.toastr.info(`Preparing to download ${totalImages} receipt(s) from ${expensesWithReceipts} expense(s)...`, 'Downloading Receipts');
+
+    this.imageExportService.exportExpenseImages(this.filteredExpenses).subscribe({
+      next: (result) => {
+        if (result.success) {
+          const successMsg = `Successfully downloaded ${result.totalImages - result.failedImages} of ${result.totalImages} receipt(s)`;
+          if (result.failedImages > 0) {
+            this.toastr.warning(`${successMsg}. ${result.failedImages} failed.`, 'Download Complete');
+          } else {
+            this.toastr.success(successMsg, 'Download Complete');
+          }
+        } else {
+          this.toastr.error('Failed to export receipts. ' + result.errorMessages.join(', '));
+        }
+      },
+      error: (err) => {
+        console.error('Error exporting receipts:', err);
+        this.toastr.error('An error occurred while exporting receipts');
+      }
     });
-    doc.save('expenses.pdf');
   }
 
   openAddExpense(): void {
@@ -292,8 +337,19 @@ export class EmployeeExpensesPageComponent implements OnInit {
       error: () => this.toastr.error('Deletion failed')
     });
   }
+
+  private extractItems(response: unknown): ExpenseListItem[] {
+    if (Array.isArray(response)) {
+      return response as ExpenseListItem[];
+    }
+
+    const candidates = [response, (response as any)?.data, (response as any)?.result, (response as any)?.results];
+    for (const candidate of candidates) {
+      if (Array.isArray((candidate as any)?.items)) {
+        return ((candidate as any).items as ExpenseListItem[]) ?? [];
+      }
+    }
+
+    return [];
+  }
 }
-
-
-
-
