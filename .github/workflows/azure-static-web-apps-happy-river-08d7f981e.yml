@@ -47,7 +47,13 @@ jobs:
           npm install 
           npm run build --if-present
 
-      - name: Build And Deploy
+      - name: Debug Event Info
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Event action: ${{ github.event.action }}"
+
+      - name: Build And Deploy (Production Only)
         id: builddeploy
         if: github.event_name == 'push' && github.ref == 'refs/heads/master' # Only deploy to Azure for master branch pushes
         uses: Azure/static-web-apps-deploy@v1
