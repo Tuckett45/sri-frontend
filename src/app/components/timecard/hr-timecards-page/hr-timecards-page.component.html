@@ -18,7 +18,7 @@
         <mat-icon>filter_list</mat-icon>
         {{ showFilters ? 'Hide' : 'Show' }} Filters
       </button>
-      <button mat-raised-button [routerLink]="['/timecards/dashboard']">
+      <button mat-raised-button *ngIf="showDashboardShortcut" [routerLink]="['/timecards/dashboard']">
         <mat-icon>dashboard</mat-icon>
         Dashboard
       </button>

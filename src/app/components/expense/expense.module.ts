@@ -35,6 +35,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { Divider } from "primeng/divider";
 import { MatTooltip } from "@angular/material/tooltip";
+import { TimeCardUiModule } from '../timecard/timecard-ui.module';
 
 @NgModule({
   declarations: [
@@ -75,13 +76,14 @@ import { MatTooltip } from "@angular/material/tooltip";
     MatDatepickerModule,
     MatNativeDateModule,
     MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
+  MatFormFieldModule,
+  MatInputModule,
+  MatSelectModule,
   MatTableModule,
   MatProgressSpinnerModule,
   Divider,
-  MatTooltip
+  MatTooltip,
+  TimeCardUiModule
 ]
 })
 export class ExpenseModule {}

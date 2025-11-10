@@ -1,12 +1,17 @@
+@use '../timecard-theme' as theme;
+
+:host {
+  display: block;
+  @include theme.theme-variables();
+  background: var(--timecard-surface);
+}
+
 .employee-timecards-container {
   display: flex;
   gap: 24px;
   padding: 24px;
-  max-width: 1600px;
   margin: 0 auto;
-  position: relative;
 
-  // Loading overlay
   .loading-overlay {
     position: fixed;
     top: 0;
@@ -20,7 +25,6 @@
     z-index: 1000;
   }
 
-  // Main content area
   .main-content {
     flex: 1;
     min-width: 0;
@@ -30,7 +34,6 @@
       pointer-events: none;
     }
 
-    // Page header
     .page-header {
       display: flex;
       justify-content: space-between;
@@ -39,10 +42,10 @@
 
       .header-left {
         h1 {
-          margin: 0 0 8px 0;
+          margin: 0 0 8px;
           font-size: 28px;
           font-weight: 500;
-          color: #333;
+          color: var(--timecard-text-strong);
         }
 
         .week-info {
@@ -50,14 +53,14 @@
           align-items: center;
           gap: 8px;
           font-size: 14px;
-          color: #666;
+          color: var(--timecard-text-muted);
 
           .week-label {
             font-weight: 500;
           }
 
           .week-date {
-            color: #1976d2;
+            color: var(--timecard-primary);
             font-weight: 600;
           }
         }
@@ -74,14 +77,15 @@
       }
     }
 
-    // Automation toolbar
     .automation-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 16px;
-      background: #f5f5f5;
-      border-radius: 8px;
+      background: var(--timecard-muted-bg);
+      border-radius: 12px;
+      border: 1px solid var(--timecard-border);
+      box-shadow: var(--timecard-shadow);
       margin-bottom: 20px;
 
       .automation-buttons {
@@ -99,12 +103,12 @@
         gap: 16px;
 
         .saving-icon {
-          color: #1976d2;
+          color: var(--timecard-primary);
           animation: rotate 1s linear infinite;
         }
 
         .saving-text {
-          color: #1976d2;
+          color: var(--timecard-primary);
           font-size: 13px;
           font-weight: 500;
         }
@@ -114,219 +118,212 @@
           align-items: center;
           gap: 8px;
           padding: 8px 16px;
-          background: white;
+          background: var(--timecard-card-bg);
           border-radius: 20px;
-          border: 2px solid #1976d2;
+          border: 2px solid var(--timecard-primary);
 
           mat-icon {
-            color: #1976d2;
+            color: var(--timecard-primary);
             font-size: 20px;
             width: 20px;
             height: 20px;
           }
 
           strong {
-            color: #1976d2;
+            color: var(--timecard-primary);
             font-size: 18px;
           }
         }
       }
     }
 
-    // Quick suggestions bar
     .suggestions-bar {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 12px 16px;
-      background: #fff3e0;
+      background: var(--timecard-status-submitted-bg);
       border-radius: 8px;
       margin-bottom: 20px;
       overflow-x: auto;
 
       .suggestions-label {
         font-weight: 600;
-        color: #e65100;
+        color: #b45309;
         white-space: nowrap;
       }
 
       .suggestion-chip {
-        background: white;
-        border: 1px solid #ffb74d;
+        background: var(--timecard-card-bg);
+        border: 1px solid #f6b37c;
         white-space: nowrap;
 
         mat-icon {
           margin-right: 4px;
-          color: #ff9800;
+          color: var(--timecard-accent);
           font-size: 18px;
           width: 18px;
           height: 18px;
         }
 
         &:hover {
-          background: #fff8e1;
+          background: #fff4e8;
         }
       }
     }
 
-    // Weekly grid
     .weekly-grid {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
+      background: var(--timecard-card-bg);
+      border-radius: var(--timecard-card-radius);
+      border: 1px solid var(--timecard-border);
+      box-shadow: var(--timecard-shadow);
       margin-bottom: 20px;
+      overflow: hidden;
 
-      .grid-header {
+      form {
+        width: 100%;
+      }
+
+      .grid-columns {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        background: #1976d2;
-        color: white;
-        text-align: center;
+        grid-template-columns: repeat(7, minmax(140px, 1fr));
+        border-left: 1px solid var(--timecard-border);
+      }
 
-        .day-column {
-          padding: 16px 8px;
-          border-right: 1px solid rgba(255, 255, 255, 0.2);
+      .day-column {
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--timecard-border);
 
-          &:last-child {
-            border-right: none;
-          }
+        &:last-child {
+          border-right: none;
+        }
 
-          .day-name {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-          }
-
-          .day-date {
-            font-size: 20px;
-            font-weight: 500;
-            margin-bottom: 8px;
-          }
-
-          .day-total {
-            font-size: 12px;
-            padding: 4px 8px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            display: inline-block;
-          }
+        &.weekend .day-header {
+          background: #0c3b63;
         }
       }
 
-      .grid-body {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        min-height: 400px;
+      .day-header {
+        background: var(--timecard-primary);
+        color: #fff;
+        text-align: center;
+        padding: 16px 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 
-        .day-column {
-          border-right: 1px solid #e0e0e0;
-          padding: 12px 8px;
-          background: #fafafa;
+        .day-name {
+          font-weight: 600;
+          font-size: 14px;
+          margin-bottom: 4px;
+          text-transform: uppercase;
+        }
 
-          &:last-child {
-            border-right: none;
+        .day-date {
+          font-size: 18px;
+          font-weight: 500;
+          margin-bottom: 8px;
+        }
+
+        .day-total {
+          font-size: 12px;
+          padding: 4px 8px;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 10px;
+          display: inline-block;
+        }
+      }
+
+      .day-entries {
+        flex: 1;
+        background: var(--timecard-muted-bg);
+        padding: 12px 8px;
+        min-height: 320px;
+
+        .entry-row {
+          background: var(--timecard-card-bg);
+          border: 1px solid var(--timecard-border);
+          border-radius: 8px;
+          padding: 8px;
+          margin-bottom: 8px;
+          transition: all 0.2s;
+
+          &:hover {
+            box-shadow: 0 4px 12px rgba(15, 111, 222, 0.15);
+            border-color: var(--timecard-primary);
           }
 
-          &:nth-child(6),
-          &:nth-child(7) {
-            background: #f5f5f5;
+          mat-form-field {
+            width: 100%;
+            margin-bottom: 8px;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            ::ng-deep {
+              .mat-form-field-wrapper {
+                padding-bottom: 0;
+              }
+
+              .mat-form-field-infix {
+                padding: 8px 0;
+              }
+
+              .mat-form-field-label {
+                font-size: 11px;
+              }
+
+              input {
+                font-size: 13px;
+              }
+            }
           }
 
-          .day-entries {
-            .entry-row {
-              background: white;
-              border: 1px solid #e0e0e0;
-              border-radius: 6px;
-              padding: 8px;
-              margin-bottom: 8px;
-              transition: all 0.2s;
-
-              &:hover {
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                border-color: #1976d2;
-              }
-
-              mat-form-field {
-                width: 100%;
-                margin-bottom: 8px;
-
-                &:last-child {
-                  margin-bottom: 0;
-                }
-
-                ::ng-deep {
-                  .mat-form-field-wrapper {
-                    padding-bottom: 0;
-                  }
-
-                  .mat-form-field-infix {
-                    padding: 8px 0;
-                  }
-
-                  .mat-form-field-label {
-                    font-size: 11px;
-                  }
-
-                  input {
-                    font-size: 13px;
-                  }
-                }
-              }
-
-              .hours-input,
-              .job-code-input {
-                ::ng-deep .mat-form-field-infix {
-                  font-weight: 600;
-                }
-              }
-
-              .hours-input {
-                ::ng-deep input {
-                  color: #1976d2;
-                  font-size: 16px;
-                  font-weight: 700;
-                }
-              }
+          .hours-input,
+          .job-code-input {
+            ::ng-deep .mat-form-field-infix {
+              font-weight: 600;
             }
+          }
 
-            .add-row-btn {
-              width: 100%;
-              opacity: 0.6;
-              transition: opacity 0.2s;
-
-              &:hover {
-                opacity: 1;
-              }
-
-              mat-icon {
-                color: #1976d2;
-              }
+          .hours-input {
+            ::ng-deep input {
+              color: var(--timecard-primary);
+              font-size: 16px;
+              font-weight: 700;
             }
+          }
+        }
+
+        .add-row-btn {
+          width: 100%;
+          opacity: 0.6;
+          transition: opacity 0.2s;
+
+          &:hover {
+            opacity: 1;
           }
         }
       }
     }
 
-    // Submit section
     .submit-section {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 20px;
-      background: #e3f2fd;
+      background: #e5eef8;
       border-radius: 8px;
-      border: 2px solid #1976d2;
+      border: 2px solid var(--timecard-primary);
 
       .submit-info {
         display: flex;
         align-items: center;
         gap: 12px;
-        color: #0d47a1;
+        color: #0c3b63;
 
         mat-icon {
-          color: #1976d2;
+          color: var(--timecard-primary);
         }
 
         span {
@@ -341,16 +338,15 @@
     }
   }
 
-  // Sidebar
   .sidebar {
     width: 320px;
     flex-shrink: 0;
 
     h3 {
-      margin: 0 0 16px 0;
+      margin: 0 0 16px;
       font-size: 18px;
       font-weight: 600;
-      color: #333;
+      color: var(--timecard-text-strong);
     }
 
     .recent-timecards {
@@ -359,42 +355,41 @@
       gap: 12px;
       max-height: calc(100vh - 200px);
       overflow-y: auto;
-      padding-right: 4px;
 
       &::-webkit-scrollbar {
         width: 6px;
       }
 
       &::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: var(--timecard-muted-bg);
         border-radius: 3px;
       }
 
       &::-webkit-scrollbar-thumb {
-        background: #ccc;
+        background: #edf1f8;
         border-radius: 3px;
 
         &:hover {
-          background: #aaa;
+          background: #e1e7f3;
         }
       }
 
       .recent-card {
-        background: white;
-        border: 2px solid #e0e0e0;
+        background: var(--timecard-card-bg);
+        border: 2px solid var(--timecard-border);
         border-radius: 8px;
         padding: 12px;
         cursor: pointer;
         transition: all 0.2s;
 
         &:hover {
-          border-color: #1976d2;
+          border-color: var(--timecard-primary);
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         &.active {
-          border-color: #1976d2;
-          background: #e3f2fd;
+          border-color: var(--timecard-primary);
+          background: #e5eef8;
         }
 
         .card-header {
@@ -406,7 +401,7 @@
           .week-ending {
             font-weight: 600;
             font-size: 14px;
-            color: #333;
+            color: var(--timecard-text-strong);
           }
 
           .status-badge {
@@ -418,23 +413,23 @@
             text-transform: uppercase;
 
             &.status-draft {
-              background: #e0e0e0;
-              color: #616161;
+              background: var(--timecard-border);
+              color: var(--timecard-text-muted);
             }
 
             &.status-submitted {
-              background: #fff3e0;
-              color: #f57c00;
+              background: var(--timecard-status-submitted-bg);
+              color: var(--timecard-accent);
             }
 
             &.status-approved {
-              background: #e8f5e9;
-              color: #2e7d32;
+              background: var(--timecard-status-approved-bg);
+              color: var(--timecard-success);
             }
 
             &.status-rejected {
-              background: #ffebee;
-              color: #c62828;
+              background: var(--timecard-status-rejected-bg);
+              color: var(--timecard-danger);
             }
           }
         }
@@ -452,12 +447,12 @@
               font-size: 18px;
               width: 18px;
               height: 18px;
-              color: #666;
+              color: var(--timecard-text-muted);
             }
 
             span {
               font-weight: 600;
-              color: #333;
+              color: var(--timecard-text-strong);
             }
           }
 
@@ -472,9 +467,9 @@
               display: inline-block;
               font-size: 10px;
               padding: 4px 8px;
-              background: #e0e0e0;
+              background: var(--timecard-border);
               border-radius: 10px;
-              color: #616161;
+              color: var(--timecard-text-muted);
               font-weight: 500;
             }
           }
@@ -485,7 +480,7 @@
           gap: 4px;
           justify-content: flex-end;
           padding-top: 8px;
-          border-top: 1px solid #e0e0e0;
+          border-top: 1px solid var(--timecard-border);
 
           button {
             mat-icon {
@@ -504,7 +499,7 @@
       align-items: center;
       padding: 40px 20px;
       text-align: center;
-      color: #999;
+      color: var(--timecard-text-soft);
 
       mat-icon {
         font-size: 48px;
@@ -522,7 +517,6 @@
   }
 }
 
-// Animation
 @keyframes rotate {
   from {
     transform: rotate(0deg);
@@ -532,7 +526,6 @@
   }
 }
 
-// Responsive design
 @media (max-width: 1400px) {
   .employee-timecards-container {
     .sidebar {
@@ -603,16 +596,13 @@
       }
 
       .weekly-grid {
-        .grid-header,
-        .grid-body {
-          grid-template-columns: repeat(7, minmax(100px, 1fr));
+        .grid-columns {
+          grid-template-columns: repeat(7, minmax(120px, 1fr));
           overflow-x: auto;
         }
 
-        .grid-body {
-          .day-column {
-            min-width: 100px;
-          }
+        .day-column {
+          min-width: 120px;
         }
       }
 

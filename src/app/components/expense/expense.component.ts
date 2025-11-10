@@ -18,10 +18,18 @@ export class ExpenseComponent implements OnInit {
   loading = false;
   isReceiptGalleryVisible = false;
   galleryImages: any[] = [];
-  activeTab = 'hr';
   readonly canViewHrTab: boolean;
+  readonly canManageTimecards: boolean;
   readonly hrTabValue = 'hr';
   readonly myTabValue = 'my';
+  readonly financeExpensesTabValue = 'expenses';
+  readonly financeTimecardsTabValue = 'timecards';
+  readonly timecardHrTabValue = 'timecard-hr';
+  readonly timecardMyTabValue = 'timecard-my';
+  readonly timecardDashboardTabValue = 'timecard-dashboard';
+  activeFinanceTab = this.financeExpensesTabValue;
+  activeExpenseTab: string;
+  activeTimecardTab: string;
 
   constructor(
     private expenseApi: ExpenseApiService,
@@ -30,16 +38,18 @@ export class ExpenseComponent implements OnInit {
     private authService: AuthService
   ) {
     this.canViewHrTab = this.isHrUser();
-    if (!this.canViewHrTab) {
-      this.activeTab = this.myTabValue;
-    }
+    this.canManageTimecards = this.isHrUser() || this.authService.isAdmin();
+    this.activeExpenseTab = this.canViewHrTab ? this.hrTabValue : this.myTabValue;
+    this.activeTimecardTab = this.canManageTimecards ? this.timecardHrTabValue : this.timecardMyTabValue;
   }
 
   ngOnInit(): void {
     if (!this.canViewHrTab) {
-      this.activeTab = this.myTabValue;
+      this.activeExpenseTab = this.myTabValue;
     }
-    // this.loadExpenses();
+    if (!this.canManageTimecards) {
+      this.activeTimecardTab = this.timecardMyTabValue;
+    }
   }
 
   private isHrUser(): boolean {

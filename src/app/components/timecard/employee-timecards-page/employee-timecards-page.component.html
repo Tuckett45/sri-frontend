@@ -75,21 +75,20 @@
     <!-- Weekly Grid -->
     <div class="weekly-grid">
       <form [formGroup]="timecardForm">
-        <div class="grid-header">
-          <div class="day-column" *ngFor="let day of weekDays; let i = index">
-            <div class="day-name">{{ daysOfWeek[day.getDay() === 0 ? 6 : day.getDay() - 1] }}</div>
-            <div class="day-date">{{ day.getDate() }}</div>
-            <div class="day-total">{{ getDayHours(i) }}h</div>
-          </div>
-        </div>
+        <div class="grid-columns">
+          <div 
+            class="day-column" 
+            *ngFor="let day of weekDays; let dayIndex = index"
+            [ngClass]="{ 'weekend': day.getDay() === 0 || day.getDay() === 6 }">
+            <div class="day-header">
+              <div class="day-name">{{ daysOfWeek[day.getDay() === 0 ? 6 : day.getDay() - 1] }}</div>
+              <div class="day-date">{{ day | date:'MMM d' }}</div>
+              <div class="day-total">{{ getDayHours(dayIndex) }}h</div>
+            </div>
 
-        <div class="grid-body" formArrayName="entries">
-          <!-- Entries organized by day -->
-          <div class="day-column" *ngFor="let day of weekDays; let dayIndex = index">
             <div class="day-entries">
               <ng-container *ngFor="let entry of getEntriesForDay(dayIndex); let entryIndex = index">
                 <div class="entry-row" [formGroup]="entry">
-                  <!-- Hours Input -->
                   <mat-form-field appearance="outline" class="hours-input">
                     <mat-label>Hours</mat-label>
                     <input 
@@ -102,7 +101,6 @@
                       placeholder="0">
                   </mat-form-field>
 
-                  <!-- Job Code Input -->
                   <mat-form-field appearance="outline" class="job-code-input">
                     <mat-label>Job Code</mat-label>
                     <input 
@@ -111,7 +109,6 @@
                       placeholder="Code">
                   </mat-form-field>
 
-                  <!-- Project ID Input (Optional) -->
                   <mat-form-field appearance="outline" class="project-input" *ngIf="entry.get('hours')?.value > 0">
                     <mat-label>Project</mat-label>
                     <input 
@@ -120,7 +117,6 @@
                       placeholder="Optional">
                   </mat-form-field>
 
-                  <!-- Notes Input (Optional) -->
                   <mat-form-field appearance="outline" class="notes-input" *ngIf="entry.get('hours')?.value > 0">
                     <mat-label>Notes</mat-label>
                     <input 
@@ -131,7 +127,6 @@
                 </div>
               </ng-container>
 
-              <!-- Add Row Button -->
               <button 
                 mat-icon-button 
                 class="add-row-btn"

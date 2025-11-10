@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { TimeCardApiService } from '../../../services/timecard-api.service';
@@ -25,6 +25,7 @@ interface FilterCriteria {
 export class HrTimeCardsPageComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @Input() showDashboardShortcut = true;
 
   timecards: TimeCardListItem[] = [];
   loading = false;

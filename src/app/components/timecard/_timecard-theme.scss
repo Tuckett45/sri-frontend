@@ -1,0 +1,63 @@
+@use 'sass:map';
+
+$palette: (
+  primary: #144f80,
+  accent: #e18a25,
+  surface: #f5f7fb,
+  card: #ffffff,
+  border: #d8e0ef,
+  muted-bg: #f1f4fb,
+  text-strong: #1f2937,
+  text-muted: #4b5563,
+  text-soft: #94a3b8,
+  success: #1f9254,
+  warning: #c2410c,
+  danger: #b42318,
+  info: #0f6fde
+) !default;
+
+@mixin theme-variables($overrides: ()) {
+  $tokens: map.merge($palette, $overrides);
+
+  --timecard-primary: #{map.get($tokens, primary)};
+  --timecard-accent: #{map.get($tokens, accent)};
+  --timecard-surface: #{map.get($tokens, surface)};
+  --timecard-card-bg: #{map.get($tokens, card)};
+  --timecard-border: #{map.get($tokens, border)};
+  --timecard-muted-bg: #{map.get($tokens, muted-bg)};
+  --timecard-text-strong: #{map.get($tokens, text-strong)};
+  --timecard-text-muted: #{map.get($tokens, text-muted)};
+  --timecard-text-soft: #{map.get($tokens, text-soft)};
+  --timecard-success: #{map.get($tokens, success)};
+  --timecard-warning: #{map.get($tokens, warning)};
+  --timecard-danger: #{map.get($tokens, danger)};
+  --timecard-info: #{map.get($tokens, info)};
+  --timecard-shadow: 0 18px 32px rgba(20, 79, 128, 0.08);
+  --timecard-card-radius: 16px;
+
+  --timecard-status-draft-bg: #edf1f7;
+  --timecard-status-draft-text: #475467;
+  --timecard-status-submitted-bg: #fff4e6;
+  --timecard-status-submitted-text: #{map.get($tokens, warning)};
+  --timecard-status-approved-bg: #ecfdf3;
+  --timecard-status-approved-text: #{map.get($tokens, success)};
+  --timecard-status-rejected-bg: #fff1f3;
+  --timecard-status-rejected-text: #{map.get($tokens, danger)};
+}
+
+@mixin raised-card {
+  background: var(--timecard-card-bg);
+  border-radius: var(--timecard-card-radius);
+  box-shadow: var(--timecard-shadow);
+}
+
+@mixin badge($bg, $color) {
+  background: $bg;
+  color: $color;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

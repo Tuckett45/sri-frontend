@@ -1,3 +1,11 @@
+@use '../timecard-theme' as theme;
+
+:host {
+  display: block;
+  @include theme.theme-variables();
+  background: var(--timecard-surface);
+}
+
 .hr-timecards-container {
   padding: 24px;
   max-width: 1400px;
@@ -16,7 +24,7 @@
         margin: 0;
         font-size: 28px;
         font-weight: 500;
-        color: #333;
+        color: var(--timecard-text-strong);
       }
 
       .header-stats {
@@ -29,12 +37,11 @@
           gap: 12px;
           padding: 12px 20px;
           border-radius: 8px;
-          background: #fff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          @include theme.raised-card;
 
           &.pending {
-            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-            color: white;
+            background: linear-gradient(135deg, #ff9800 0%, var(--timecard-accent) 100%);
+            color: #fff;
 
             mat-icon {
               font-size: 32px;
@@ -77,7 +84,7 @@
   }
 
   .filters-section {
-    background: #f5f5f5;
+    background: var(--timecard-surface);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 24px;
@@ -103,7 +110,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #e3f2fd;
+    background: color-mix(in srgb, var(--timecard-primary) 15%, var(--timecard-card-bg));
     padding: 16px 20px;
     border-radius: 8px;
     margin-bottom: 16px;
@@ -111,7 +118,7 @@
 
     .selection-count {
       font-weight: 600;
-      color: #1976d2;
+      color: var(--timecard-primary);
       font-size: 16px;
     }
 
@@ -142,11 +149,11 @@
       width: 100%;
 
       th {
-        background: #f5f5f5;
+        background: var(--timecard-surface);
         font-weight: 600;
-        color: #333;
+        color: var(--timecard-text-strong);
         padding: 16px;
-        border-bottom: 2px solid #e0e0e0;
+        border-bottom: 2px solid var(--timecard-status-draft-bg);
       }
 
       td {
@@ -179,23 +186,23 @@
         text-transform: uppercase;
 
         &.status-draft {
-          background: #e0e0e0;
-          color: #616161;
+          background: var(--timecard-status-draft-bg);
+          color: var(--timecard-text-muted);
         }
 
         &.status-submitted {
-          background: #fff3e0;
-          color: #f57c00;
+          background: var(--timecard-status-submitted-bg);
+          color: var(--timecard-accent);
         }
 
         &.status-approved {
-          background: #e8f5e9;
-          color: #2e7d32;
+          background: var(--timecard-status-approved-bg);
+          color: var(--timecard-success);
         }
 
         &.status-rejected {
-          background: #ffebee;
-          color: #c62828;
+          background: var(--timecard-status-rejected-bg);
+          color: var(--timecard-danger);
         }
       }
 
@@ -223,7 +230,7 @@
       align-items: center;
       justify-content: center;
       padding: 80px 20px;
-      color: #999;
+      color: var(--timecard-text-soft);
 
       mat-icon {
         font-size: 72px;
@@ -237,7 +244,7 @@
         margin: 0 0 8px 0;
         font-size: 20px;
         font-weight: 500;
-        color: #666;
+        color: var(--timecard-text-muted);
       }
 
       p {
@@ -248,8 +255,9 @@
   }
 
   mat-paginator {
-    background: white;
+    background: var(--timecard-card-bg);
     border-radius: 0 0 8px 8px;
+    box-shadow: var(--timecard-shadow);
   }
 }
 
