@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { TimeCardRoutingModule } from './timecard-routing.module';
 
 // Material imports
@@ -57,6 +58,7 @@ import { TimeCardSummaryComponent } from './shared/timecard-summary/timecard-sum
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
+    RouterModule,
     TimeCardRoutingModule,
     // Material
     MatButtonModule,
@@ -86,4 +88,3 @@ import { TimeCardSummaryComponent } from './shared/timecard-summary/timecard-sum
   ]
 })
 export class TimeCardModule { }
-

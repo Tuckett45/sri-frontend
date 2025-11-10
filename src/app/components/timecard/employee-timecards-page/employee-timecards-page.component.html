@@ -1,0 +1,237 @@
+<div class="employee-timecards-container">
+  <!-- List View -->
+  <div class="list-view" *ngIf="!isEditing">
+    <div class="page-header">
+      <h1>My TimeCards</h1>
+      <button mat-raised-button color="primary" (click)="startNewTimeCard()">
+        <mat-icon>add</mat-icon>
+        New TimeCard
+      </button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-container" *ngIf="loading">
+      <mat-spinner></mat-spinner>
+    </div>
+
+    <!-- TimeCards List -->
+    <div class="timecards-grid" *ngIf="!loading && timecards.length > 0">
+      <mat-card *ngFor="let timecard of timecards" class="timecard-card">
+        <mat-card-header>
+          <mat-card-title>
+            Week Ending: {{ formatDate(timecard.weekEnding) }}
+          </mat-card-title>
+          <mat-card-subtitle>
+            <span class="status-badge" [ngClass]="getStatusClass(timecard.status)">
+              {{ timecard.status }}
+            </span>
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="timecard-details">
+            <div class="detail-row">
+              <mat-icon>schedule</mat-icon>
+              <span><strong>Total Hours:</strong> {{ timecard.totalHours }}</span>
+            </div>
+            <div class="detail-row" *ngIf="timecard.jobCodes && timecard.jobCodes.length > 0">
+              <mat-icon>work</mat-icon>
+              <div class="job-codes">
+                <strong>Job Codes:</strong>
+                <mat-chip *ngFor="let code of timecard.jobCodes">{{ code }}</mat-chip>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-button (click)="editTimeCard(timecard)" *ngIf="canEdit(timecard)">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <button mat-button color="primary" (click)="submitTimeCard(timecard.id)" *ngIf="timecard.status === 'Draft'">
+            <mat-icon>send</mat-icon>
+            Submit
+          </button>
+          <button mat-button (click)="copyTimeCard(timecard)">
+            <mat-icon>content_copy</mat-icon>
+            Copy
+          </button>
+          <button mat-button (click)="recallTimeCard(timecard)" *ngIf="canRecall(timecard)">
+            <mat-icon>undo</mat-icon>
+            Recall
+          </button>
+          <button mat-button color="warn" (click)="deleteTimeCard(timecard)" *ngIf="canDelete(timecard)">
+            <mat-icon>delete</mat-icon>
+            Delete
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loading && timecards.length === 0">
+      <mat-icon>assignment</mat-icon>
+      <h3>No TimeCards Yet</h3>
+      <p>Get started by creating your first timecard</p>
+      <button mat-raised-button color="primary" (click)="startNewTimeCard()">
+        <mat-icon>add</mat-icon>
+        Create First TimeCard
+      </button>
+    </div>
+
+    <!-- Paginator -->
+    <mat-paginator 
+      *ngIf="!loading && timecards.length > 0"
+      [length]="totalItems"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </div>
+
+  <!-- Form View -->
+  <div class="form-view" *ngIf="isEditing">
+    <div class="form-header">
+      <h2>{{ editingTimeCardId ? 'Edit' : 'Create' }} TimeCard</h2>
+      <button mat-icon-button (click)="cancelEdit()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <form [formGroup]="timecardForm" class="timecard-form">
+      <!-- Week Ending Date -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Week Ending Date</mat-label>
+          <input matInput [matDatepicker]="weekPicker" formControlName="weekEnding" required>
+          <mat-datepicker-toggle matSuffix [for]="weekPicker"></mat-datepicker-toggle>
+          <mat-datepicker #weekPicker></mat-datepicker>
+          <mat-error *ngIf="timecardForm.get('weekEnding')?.hasError('required')">
+            Week ending date is required
+          </mat-error>
+        </mat-form-field>
+
+        <div class="total-hours">
+          <mat-icon>schedule</mat-icon>
+          <span>Total: <strong>{{ getTotalHours() }}</strong> hours</span>
+        </div>
+      </div>
+
+      <!-- Smart Suggestions -->
+      <div class="suggestions-section" *ngIf="suggestions.length > 0">
+        <h3>Quick Apply</h3>
+        <div class="suggestions-grid">
+          <button 
+            mat-stroked-button 
+            type="button"
+            (click)="applyWeeklyPattern()"
+            class="pattern-btn">
+            <mat-icon>event_repeat</mat-icon>
+            Apply Weekly Pattern
+          </button>
+          <div class="suggestion-info">
+            <mat-icon>info</mat-icon>
+            <span>Based on your recent timecards</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entries Section -->
+      <div class="entries-section">
+        <h3>Time Entries</h3>
+        
+        <div formArrayName="entries" class="entries-list">
+          <div 
+            *ngFor="let entry of entriesArray.controls; let i = index" 
+            [formGroupName]="i" 
+            class="entry-row">
+            
+            <div class="entry-header">
+              <span class="day-label">{{ getDayName(entry.get('date')?.value) }}</span>
+              <span class="date-label">{{ formatDate(entry.get('date')?.value) }}</span>
+            </div>
+
+            <div class="entry-fields">
+              <mat-form-field appearance="outline" class="date-field">
+                <mat-label>Date</mat-label>
+                <input matInput type="date" formControlName="date" required>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="hours-field">
+                <mat-label>Hours</mat-label>
+                <input matInput type="number" formControlName="hours" min="0" max="24" step="0.5" required>
+                <mat-error *ngIf="entry.get('hours')?.hasError('required')">Required</mat-error>
+                <mat-error *ngIf="entry.get('hours')?.hasError('min')">Min 0</mat-error>
+                <mat-error *ngIf="entry.get('hours')?.hasError('max')">Max 24</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="job-field">
+                <mat-label>Job Code</mat-label>
+                <input matInput formControlName="jobCode" required>
+                <mat-error *ngIf="entry.get('jobCode')?.hasError('required')">Required</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="project-field">
+                <mat-label>Project ID</mat-label>
+                <input matInput formControlName="projectId">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="notes-field">
+                <mat-label>Notes</mat-label>
+                <input matInput formControlName="notes">
+              </mat-form-field>
+
+              <button 
+                mat-icon-button 
+                type="button"
+                color="warn"
+                (click)="removeEntry(i)"
+                class="delete-btn"
+                [disabled]="entriesArray.length === 1">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <!-- Suggestions for this entry -->
+            <div class="entry-suggestions" *ngIf="suggestions.length > 0 && entry.get('hours')?.value === 0">
+              <button 
+                mat-button 
+                type="button"
+                *ngFor="let suggestion of suggestions.slice(0, 3)"
+                (click)="applySuggestion(suggestion, i)"
+                class="suggestion-btn">
+                <mat-icon>schedule</mat-icon>
+                {{ suggestion.jobCode }} - {{ suggestion.averageHours }}h
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button 
+          mat-stroked-button 
+          type="button"
+          (click)="addEntryRow()"
+          class="add-entry-btn">
+          <mat-icon>add</mat-icon>
+          Add Another Day
+        </button>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button mat-button type="button" (click)="cancelEdit()">
+          Cancel
+        </button>
+        <button mat-raised-button type="button" (click)="saveTimeCard(false)" [disabled]="loading">
+          <mat-icon>save</mat-icon>
+          Save as Draft
+        </button>
+        <button mat-raised-button color="primary" type="button" (click)="saveTimeCard(true)" [disabled]="loading">
+          <mat-icon>send</mat-icon>
+          Submit for Approval
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
