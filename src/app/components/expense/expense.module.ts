@@ -8,6 +8,8 @@ import { EmployeeExpensesPageComponent } from './employee-expenses-page/employee
 import { ExpenseFiltersComponent } from './shared/expense-filters/expense-filters.component';
 import { ExpenseTableComponent } from './shared/expense-table/expense-table.component';
 import { MileageDetailsComponent } from './shared/mileage-details/mileage-details.component';
+import { ExpenseReportModalComponent } from '../modals/expense-report-modal/expense-report-modal.component';
+import { HrDashboardComponent } from './hr-dashboard/hr-dashboard.component';
 import { CalendarModule } from 'primeng/calendar';
 import { InputTextModule } from 'primeng/inputtext';
 import { Textarea } from 'primeng/inputtextarea';
@@ -33,8 +35,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
+import { MatMenuModule } from '@angular/material/menu';
 import { Divider } from "primeng/divider";
 import { MatTooltip } from "@angular/material/tooltip";
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @NgModule({
   declarations: [
@@ -43,6 +47,7 @@ import { MatTooltip } from "@angular/material/tooltip";
     EmployeeExpensesPageComponent, 
     ExpenseFiltersComponent, 
     ExpenseTableComponent,
+    ExpenseReportModalComponent
     MileageDetailsComponent
   ],
   exports: [
@@ -80,8 +85,11 @@ import { MatTooltip } from "@angular/material/tooltip";
     MatSelectModule,
   MatTableModule,
   MatProgressSpinnerModule,
+  MatMenuModule,
   Divider,
-  MatTooltip
+  MatTooltip,
+  MatCheckboxModule,
+  HrDashboardComponent
 ]
 })
 export class ExpenseModule {}

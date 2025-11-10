@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+﻿import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
@@ -56,7 +56,6 @@ import { StreetSheetComponent } from './components/street-sheet/street-sheet.com
 import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { OspCoordinatorModalComponent } from './components/modals/osp-coordinator-modal/osp-coordinator-modal.component';
-import { ExpenseReportModalComponent } from './components/modals/expense-report-modal/expense-report-modal.component';
 import { MarketControllerComponent } from './components/market-controller/market-controller.component';
 import { MarketControllerModalComponent } from './components/modals/market-controller-modal/market-controller-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
@@ -122,7 +121,7 @@ export const customCurrencyMaskConfig = {
     UserProfileComponent,
     UserProfileModalComponent,
     OspCoordinatorModalComponent,
-    ExpenseReportModalComponent,
+    
     WidgetComponent,
     OspCoordinatorTrackerComponent,
     MarketControllerComponent,

@@ -1,3 +1,4 @@
+
 name: Deploy web app to Azure Static Web Apps
 
 on:

@@ -10,14 +10,44 @@
   </button>
 
   <div class="export-buttons">
-    <button mat-raised-button class="header-btn" (click)="exportPdf()">
+    <button mat-raised-button [matMenuTriggerFor]="pdfMenu" class="header-btn">
       <mat-icon>picture_as_pdf</mat-icon>
       Export to PDF
     </button>
-    <button mat-raised-button class="export-btn" (click)="exportCsv()">
+    <mat-menu #pdfMenu="matMenu">
+      <button mat-menu-item (click)="exportPdf('none')">
+        <mat-icon>description</mat-icon>
+        Simple Export
+      </button>
+      <button mat-menu-item (click)="exportPdf('category')">
+        <mat-icon>category</mat-icon>
+        Group by Category
+      </button>
+      <button mat-menu-item (click)="exportPdf('job')">
+        <mat-icon>work</mat-icon>
+        Group by Job
+      </button>
+    </mat-menu>
+
+    <button mat-raised-button [matMenuTriggerFor]="csvMenu" class="export-btn">
       <mat-icon>table_view</mat-icon>
       Export to CSV
     </button>
+    <mat-menu #csvMenu="matMenu">
+      <button mat-menu-item (click)="exportCsv('none')">
+        <mat-icon>description</mat-icon>
+        Simple Export
+      </button>
+      <button mat-menu-item (click)="exportCsv('category')">
+        <mat-icon>category</mat-icon>
+        Group by Category
+      </button>
+      <button mat-menu-item (click)="exportCsv('job')">
+        <mat-icon>work</mat-icon>
+        Group by Job
+      </button>
+    </mat-menu>
+
     <button mat-raised-button class="receipt-export-btn" (click)="exportReceipts()">
       <mat-icon>download</mat-icon>
       Download Receipts
@@ -33,6 +63,7 @@
   *ngIf="filtersOpen"
   id="employee-filters"
   [statusOptions]="statusOptions"
+  [categoryOptions]="categoryOptions"
   [showEmployeeField]="false"
   (filtersChange)="onFiltersChange($event)">
 </app-expense-filters>

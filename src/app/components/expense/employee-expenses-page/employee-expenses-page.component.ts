@@ -1,12 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { Expense, ExpenseListItem, ExpenseStatus } from 'src/app/models/expense.model';
+﻿import { Component, OnInit } from '@angular/core';
+import { Expense, ExpenseListItem, ExpenseStatus, ExpenseCategory } from 'src/app/models/expense.model';
 import { ExpenseApiService } from 'src/app/services/expense-api.service';
+import { ExpenseExportService, ExportOptions } from 'src/app/services/expense-export.service';
 import { ExpenseImageExportService } from 'src/app/services/expense-image-export.service';
 import { ToastrService } from 'ngx-toastr';
 import { MatDialog } from '@angular/material/dialog';
 import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
@@ -27,6 +26,7 @@ export class EmployeeExpensesPageComponent implements OnInit {
   expenses: DisplayExpense[] = [];
   filteredExpenses: DisplayExpense[] = [];
   statusOptions = Object.values(ExpenseStatus);
+  categoryOptions = Object.values(ExpenseCategory);
   loading = false;
   filtersOpen = false;
   private filtersInitialized = false;
@@ -38,11 +38,13 @@ export class EmployeeExpensesPageComponent implements OnInit {
     endDate: null,
     job: '',
     status: '',
-    employee: ''
+    employee: '',
+    category: ''
   };
 
   constructor(
     private readonly expenseApi: ExpenseApiService,
+    private readonly exportService: ExpenseExportService,
     private readonly imageExportService: ExpenseImageExportService,
     private readonly toastr: ToastrService,
     private readonly dialog: MatDialog,
@@ -171,6 +173,9 @@ export class EmployeeExpensesPageComponent implements OnInit {
     if (this.currentFilters.status) {
       request.status = this.currentFilters.status as ExpenseStatus;
     }
+    if (this.currentFilters.category) {
+      request.category = this.currentFilters.category as ExpenseCategory;
+    }
 
     return request;
   }
@@ -180,56 +185,57 @@ export class EmployeeExpensesPageComponent implements OnInit {
     const hasEnd = !!filters.endDate;
     const hasJob = !!filters.job && filters.job.trim().length > 0;
     const hasStatus = !!filters.status;
-    return hasStart || hasEnd || hasJob || hasStatus;
+    const hasCategory = !!filters.category;
+    return hasStart || hasEnd || hasJob || hasStatus || hasCategory;
   }
 
-  exportCsv(): void {
+  exportCsv(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
     if (!this.filteredExpenses.length) {
       this.toastr.info('No expenses to export');
       return;
     }
 
-    const header = ['Date', 'Job', 'Amount', 'Status', 'Notes'];
-    const rows = this.filteredExpenses.map(exp => [
-      exp.date ? new Date(exp.date).toLocaleDateString() : '',
-      exp.job ?? '',
-      exp.amount?.toString() ?? '',
-      exp.status ?? '',
-      exp.notes ?? ''
-    ]);
+    const options: ExportOptions = {
+      groupBy,
+      includeSubtotals: groupBy !== 'none',
+      includeSummary: true,
+      title: 'Employee Expenses Report',
+      dateRange: this.getDateRangeFromFilters()
+    };
 
-    const csvContent = [header, ...rows]
-      .map(row => row.map(value => `"${(value ?? '').replace(/"/g, '""')}"`).join(','))
-      .join('\r\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'expenses.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    this.exportService.exportToCSV(this.filteredExpenses, options);
+    this.toastr.success('CSV export downloaded');
   }
 
-  exportPdf(): void {
+  exportPdf(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
     if (!this.filteredExpenses.length) {
       this.toastr.info('No expenses to export');
       return;
     }
 
-    const doc = new jsPDF();
-    autoTable(doc, {
-      head: [['Date', 'Job', 'Amount', 'Status']],
-      body: this.filteredExpenses.map(e => [
-        e.date ? new Date(e.date).toLocaleDateString() : '',
-        e.job ?? '',
-        e.amount?.toString() ?? '',
-        e.status ?? ''
-      ])
-    });
-    doc.save('expenses.pdf');
+    const options: ExportOptions = {
+      groupBy,
+      includeSubtotals: groupBy !== 'none',
+      includeSummary: true,
+      title: 'Employee Expenses Report',
+      dateRange: this.getDateRangeFromFilters()
+    };
+
+    this.exportService.exportToPDF(this.filteredExpenses, options);
+    this.toastr.success('PDF export downloaded');
+  }
+
+  private getDateRangeFromFilters(): { start: string; end: string } | undefined {
+    if (this.currentFilters.startDate && this.currentFilters.endDate) {
+      const start = this.currentFilters.startDate instanceof Date 
+        ? this.currentFilters.startDate.toISOString().split('T')[0] 
+        : this.currentFilters.startDate;
+      const end = this.currentFilters.endDate instanceof Date 
+        ? this.currentFilters.endDate.toISOString().split('T')[0] 
+        : this.currentFilters.endDate;
+      return { start, end };
+    }
+    return undefined;
   }
 
   exportReceipts(): void {
