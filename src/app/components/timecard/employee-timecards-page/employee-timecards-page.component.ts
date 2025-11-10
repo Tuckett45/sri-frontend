@@ -11,6 +11,8 @@ import {
   TimeCardSuggestion
 } from '../../../models/timecard.model';
 import { ToastrService } from 'ngx-toastr';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-employee-timecards-page',
@@ -18,22 +20,25 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: ['./employee-timecards-page.component.scss']
 })
 export class EmployeeTimeCardsPageComponent implements OnInit {
-  // List view
-  timecards: TimeCardListItem[] = [];
-  loading = false;
-  currentPage = 0;
-  pageSize = 10;
-  totalItems = 0;
-
-  // Form view
-  isEditing = false;
-  editingTimeCardId: string | null = null;
+  // Weekly grid view state
+  currentWeekEnding: Date = this.getNextSunday(new Date());
+  weekDays: Date[] = [];
   timecardForm!: FormGroup;
-
-  // Suggestions
+  currentTimeCardId: string | null = null;
+  
+  // List of recent timecards (sidebar)
+  recentTimecards: TimeCardListItem[] = [];
+  loading = false;
+  saving = false;
+  
+  // Auto-save functionality
+  private autoSaveSubject = new Subject<void>();
+  
+  // Suggestions and automation
   suggestions: TimeCardSuggestion[] = [];
   loadingSuggestions = false;
-
+  previousWeekData: TimeCardEntry[] = [];
+  
   // Days of the week
   daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -44,15 +49,58 @@ export class EmployeeTimeCardsPageComponent implements OnInit {
     private toastr: ToastrService
   ) {
     this.initForm();
+    this.setupAutoSave();
   }
 
   ngOnInit(): void {
-    this.loadMyTimeCards();
+    this.initializeWeek();
+    this.loadRecentTimeCards();
+    this.loadSuggestions();
+    this.loadPreviousWeekData();
+  }
+
+  // Auto-save setup with debounce
+  setupAutoSave(): void {
+    this.autoSaveSubject.pipe(
+      debounceTime(2000), // Wait 2 seconds after user stops typing
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.autoSave();
+    });
+  }
+
+  // Initialize weekly grid
+  initializeWeek(): void {
+    this.weekDays = this.getWeekDays(this.currentWeekEnding);
+    this.loadOrCreateTimeCard();
+  }
+
+  // Get array of dates for the week
+  getWeekDays(weekEnding: Date): Date[] {
+    const days: Date[] = [];
+    const sunday = new Date(weekEnding);
+    
+    for (let i = 6; i >= 0; i--) {
+      const day = new Date(sunday);
+      day.setDate(sunday.getDate() - i);
+      days.push(day);
+    }
+    
+    return days;
+  }
+
+  // Get next Sunday from given date
+  getNextSunday(date: Date): Date {
+    const result = new Date(date);
+    const day = result.getDay();
+    const diff = day === 0 ? 0 : 7 - day;
+    result.setDate(result.getDate() + diff);
+    return result;
   }
 
   initForm(): void {
     this.timecardForm = this.fb.group({
-      weekEnding: ['', Validators.required],
+      weekEnding: [this.currentWeekEnding, Validators.required],
       entries: this.fb.array([])
     });
   }
@@ -61,63 +109,142 @@ export class EmployeeTimeCardsPageComponent implements OnInit {
     return this.timecardForm.get('entries') as FormArray;
   }
 
-  loadMyTimeCards(): void {
+  // Load recent timecards for sidebar
+  loadRecentTimeCards(): void {
     this.loading = true;
     this.timecardApi.getMyTimeCards({
-      page: this.currentPage + 1,
-      pageSize: this.pageSize,
+      page: 1,
+      pageSize: 10,
       includeEntries: false
     }).subscribe({
       next: (response) => {
-        this.timecards = response.items;
-        this.totalItems = response.total || 0;
+        this.recentTimecards = response.items;
         this.loading = false;
       },
       error: (error) => {
         console.error('Error loading timecards:', error);
-        this.toastr.error('Failed to load timecards');
+        this.toastr.error('Failed to load recent timecards');
         this.loading = false;
       }
     });
   }
 
-  startNewTimeCard(): void {
-    this.isEditing = true;
-    this.editingTimeCardId = null;
-    this.initForm();
-    this.addDefaultWeekEntries();
-    this.loadSuggestions();
-  }
-
-  addDefaultWeekEntries(): void {
-    const weekEnding = this.timecardForm.get('weekEnding')?.value;
-    if (!weekEnding) {
-      // Add 7 empty entries for a standard week
-      for (let i = 0; i < 7; i++) {
-        this.addEntryRow();
+  // Load or create timecard for current week
+  loadOrCreateTimeCard(): void {
+    this.loading = true;
+    
+    // Try to find existing timecard for this week
+    const weekEndingStr = this.currentWeekEnding.toISOString().split('T')[0];
+    
+    this.timecardApi.getMyTimeCards({
+      page: 1,
+      pageSize: 1,
+      from: weekEndingStr,
+      to: weekEndingStr,
+      includeEntries: false
+    }).subscribe({
+      next: (response) => {
+        if (response.items && response.items.length > 0) {
+          // Load full timecard with entries
+          const timecardId = response.items[0].id;
+          this.currentTimeCardId = timecardId;
+          this.loadFullTimeCard(timecardId);
+        } else {
+          // Create new empty grid
+          this.currentTimeCardId = null;
+          this.createEmptyWeekGrid();
+          this.loading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading timecard:', error);
+        this.createEmptyWeekGrid();
+        this.loading = false;
       }
-      return;
-    }
-
-    // Calculate dates for the week
-    const endDate = new Date(weekEnding);
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(endDate);
-      date.setDate(date.getDate() - i);
-      this.addEntryRow(date.toISOString().split('T')[0]);
-    }
+    });
   }
 
+  // Load full timecard with entries
+  loadFullTimeCard(timecardId: string): void {
+    this.timecardApi.getTimeCardById(timecardId, true).subscribe({
+      next: (timecard) => {
+        this.populateFormFromTimeCard(timecard);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading timecard details:', error);
+        this.createEmptyWeekGrid();
+        this.loading = false;
+      }
+    });
+  }
+
+  // Create empty week grid with one row per day
+  createEmptyWeekGrid(): void {
+    this.entriesArray.clear();
+    
+    this.weekDays.forEach(date => {
+      this.addEntryRow(date.toISOString().split('T')[0]);
+    });
+  }
+
+  // Add a new entry row for a specific date
   addEntryRow(date?: string): void {
     const entryGroup = this.fb.group({
       date: [date || '', Validators.required],
       hours: [0, [Validators.required, Validators.min(0), Validators.max(24)]],
-      jobCode: ['', Validators.required],
+      jobCode: [''],
       projectId: [''],
       notes: ['']
     });
 
+    // Subscribe to value changes for auto-save
+    entryGroup.valueChanges.subscribe(() => {
+      this.triggerAutoSave();
+    });
+
     this.entriesArray.push(entryGroup);
+  }
+
+  // Populate form from existing timecard
+  populateFormFromTimeCard(timecard: any): void {
+    this.entriesArray.clear();
+    
+    // Create a map of existing entries by date
+    const entriesByDate = new Map<string, any>();
+    if (timecard.entries) {
+      timecard.entries.forEach((entry: any) => {
+        const dateStr = new Date(entry.date).toISOString().split('T')[0];
+        if (!entriesByDate.has(dateStr)) {
+          entriesByDate.set(dateStr, []);
+        }
+        entriesByDate.get(dateStr)!.push(entry);
+      });
+    }
+
+    // Create rows for each day of the week
+    this.weekDays.forEach(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      const dayEntries = entriesByDate.get(dateStr) || [];
+      
+      if (dayEntries.length > 0) {
+        // Add existing entries
+        dayEntries.forEach((entry: any) => {
+          this.addEntryRow(dateStr);
+          const lastIndex = this.entriesArray.length - 1;
+          this.entriesArray.at(lastIndex).patchValue({
+            date: dateStr,
+            hours: entry.hours,
+            jobCode: entry.jobCode,
+            projectId: entry.projectId || '',
+            notes: entry.notes || ''
+          });
+        });
+      } else {
+        // Add empty row for day
+        this.addEntryRow(dateStr);
+      }
+    });
   }
 
   removeEntry(index: number): void {
@@ -128,117 +255,21 @@ export class EmployeeTimeCardsPageComponent implements OnInit {
     }
   }
 
+  // Legacy methods kept for backward compatibility
   editTimeCard(timecard: TimeCardListItem): void {
-    this.loading = true;
-    this.timecardApi.getTimeCardById(timecard.id, true).subscribe({
-      next: (fullTimeCard) => {
-        this.isEditing = true;
-        this.editingTimeCardId = timecard.id;
-        this.populateForm(fullTimeCard);
-        this.loadSuggestions();
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading timecard details:', error);
-        this.toastr.error('Failed to load timecard details');
-        this.loading = false;
-      }
-    });
-  }
-
-  populateForm(timecard: TimeCard): void {
-    this.timecardForm.patchValue({
-      weekEnding: timecard.weekEnding
-    });
-
-    this.entriesArray.clear();
-    timecard.entries.forEach(entry => {
-      const entryGroup = this.fb.group({
-        date: [entry.date, Validators.required],
-        hours: [entry.hours, [Validators.required, Validators.min(0), Validators.max(24)]],
-        jobCode: [entry.jobCode, Validators.required],
-        projectId: [entry.projectId || ''],
-        notes: [entry.notes || '']
-      });
-      this.entriesArray.push(entryGroup);
-    });
+    this.loadTimeCard(timecard);
   }
 
   saveTimeCard(submit: boolean = false): void {
-    if (this.timecardForm.invalid) {
-      this.markFormGroupTouched(this.timecardForm);
-      this.toastr.error('Please fill in all required fields');
-      return;
+    if (submit) {
+      this.saveAndSubmit();
+    } else {
+      this.triggerAutoSave();
     }
-
-    const formValue = this.timecardForm.value;
-    const entries: TimeCardEntry[] = formValue.entries.filter((e: any) => e.hours > 0);
-
-    if (entries.length === 0) {
-      this.toastr.error('Please add at least one entry with hours');
-      return;
-    }
-
-    const userId = this.authService.currentUser?.id;
-    if (!userId) {
-      this.toastr.error('User not authenticated');
-      this.loading = false;
-      return;
-    }
-
-    const request: TimeCardRequest = {
-      userId: userId,
-      weekEnding: formValue.weekEnding,
-      entries: entries
-    };
-
-    this.loading = true;
-
-    const operation = this.editingTimeCardId
-      ? this.timecardApi.updateTimeCard(this.editingTimeCardId, request)
-      : this.timecardApi.createTimeCard(request);
-
-    operation.subscribe({
-      next: (response) => {
-        const message = this.editingTimeCardId ? 'TimeCard updated' : 'TimeCard created';
-        this.toastr.success(message);
-
-        // If user wants to submit right away
-        if (submit && response.timecard?.id) {
-          this.submitTimeCard(response.timecard.id);
-        } else {
-          this.cancelEdit();
-          this.loadMyTimeCards();
-        }
-      },
-      error: (error) => {
-        console.error('Error saving timecard:', error);
-        this.toastr.error('Failed to save timecard');
-        this.loading = false;
-      }
-    });
   }
 
   submitTimeCard(timecardId?: string): void {
-    const id = timecardId || this.editingTimeCardId;
-    if (!id) {
-      this.toastr.error('No timecard to submit');
-      return;
-    }
-
-    this.loading = true;
-    this.timecardApi.submitTimeCard(id).subscribe({
-      next: () => {
-        this.toastr.success('TimeCard submitted for approval');
-        this.cancelEdit();
-        this.loadMyTimeCards();
-      },
-      error: (error) => {
-        console.error('Error submitting timecard:', error);
-        this.toastr.error('Failed to submit timecard');
-        this.loading = false;
-      }
-    });
+    this.saveAndSubmit();
   }
 
   deleteTimeCard(timecard: TimeCardListItem): void {
@@ -255,7 +286,7 @@ export class EmployeeTimeCardsPageComponent implements OnInit {
     this.timecardApi.deleteTimeCard(timecard.id).subscribe({
       next: () => {
         this.toastr.success('TimeCard deleted');
-        this.loadMyTimeCards();
+        this.loadRecentTimeCards();
       },
       error: (error) => {
         console.error('Error deleting timecard:', error);
@@ -279,7 +310,10 @@ export class EmployeeTimeCardsPageComponent implements OnInit {
     this.timecardApi.recallTimeCard(timecard.id).subscribe({
       next: () => {
         this.toastr.success('TimeCard recalled');
-        this.loadMyTimeCards();
+        this.loadRecentTimeCards();
+        if (new Date(timecard.weekEnding).getTime() === this.currentWeekEnding.getTime()) {
+          this.initializeWeek();
+        }
       },
       error: (error) => {
         console.error('Error recalling timecard:', error);
@@ -290,23 +324,16 @@ export class EmployeeTimeCardsPageComponent implements OnInit {
   }
 
   copyTimeCard(timecard: TimeCardListItem): void {
-    const newWeekEnding = prompt('Enter new week ending date (YYYY-MM-DD):');
-    if (!newWeekEnding) {
-      return;
-    }
-
-    this.loading = true;
-    this.timecardApi.copyTimeCard(timecard.id, newWeekEnding).subscribe({
-      next: () => {
-        this.toastr.success('TimeCard copied successfully');
-        this.loadMyTimeCards();
-      },
-      error: (error) => {
-        console.error('Error copying timecard:', error);
-        this.toastr.error('Failed to copy timecard');
-        this.loading = false;
-      }
-    });
+    this.currentWeekEnding = new Date(timecard.weekEnding);
+    const nextWeek = new Date(this.currentWeekEnding);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    this.currentWeekEnding = nextWeek;
+    this.initializeWeek();
+    
+    setTimeout(() => {
+      this.loadPreviousWeekData();
+      setTimeout(() => this.copyFromPreviousWeek(), 300);
+    }, 500);
   }
 
   loadSuggestions(): void {
@@ -323,49 +350,290 @@ export class EmployeeTimeCardsPageComponent implements OnInit {
     });
   }
 
-  applySuggestion(suggestion: TimeCardSuggestion, index: number): void {
-    const entryGroup = this.entriesArray.at(index) as FormGroup;
+  // ============================================
+  // AUTOMATION FEATURES (ADP-style)
+  // ============================================
+
+  // Trigger auto-save
+  triggerAutoSave(): void {
+    this.autoSaveSubject.next();
+  }
+
+  // Auto-save current timecard
+  autoSave(): void {
+    if (this.saving || !this.hasAnyData()) {
+      return;
+    }
+
+    this.saving = true;
+    const formValue = this.timecardForm.value;
+    const entries: TimeCardEntry[] = formValue.entries.filter((e: any) => e.hours > 0 && e.jobCode);
+
+    if (entries.length === 0) {
+      this.saving = false;
+      return;
+    }
+
+    const userId = this.authService.currentUser?.id;
+    if (!userId) {
+      this.saving = false;
+      return;
+    }
+
+    const request: TimeCardRequest = {
+      userId: userId,
+      weekEnding: this.currentWeekEnding.toISOString().split('T')[0],
+      entries: entries
+    };
+
+    const operation = this.currentTimeCardId
+      ? this.timecardApi.updateTimeCard(this.currentTimeCardId, request)
+      : this.timecardApi.createTimeCard(request);
+
+    operation.subscribe({
+      next: (response) => {
+        if (!this.currentTimeCardId && response.timecard?.id) {
+          this.currentTimeCardId = response.timecard.id;
+        }
+        this.saving = false;
+        // Silent save - no toast notification
+      },
+      error: (error) => {
+        console.error('Auto-save failed:', error);
+        this.saving = false;
+      }
+    });
+  }
+
+  // Check if form has any data
+  hasAnyData(): boolean {
+    const entries = this.entriesArray.value;
+    return entries.some((e: any) => e.hours > 0 || e.jobCode || e.notes);
+  }
+
+  // Copy from previous week (ONE CLICK!)
+  copyFromPreviousWeek(): void {
+    if (this.previousWeekData.length === 0) {
+      this.toastr.info('No previous week data available');
+      return;
+    }
+
+    if (!confirm('Copy all entries from previous week? This will replace current entries.')) {
+      return;
+    }
+
+    this.entriesArray.clear();
+    
+    // Create entries for current week based on previous week's pattern
+    this.weekDays.forEach((date, index) => {
+      const dateStr = date.toISOString().split('T')[0];
+      const prevEntries = this.previousWeekData.filter(e => {
+        const prevDate = new Date(e.date);
+        return prevDate.getDay() === date.getDay(); // Same day of week
+      });
+
+      if (prevEntries.length > 0) {
+        prevEntries.forEach(entry => {
+          this.addEntryRow(dateStr);
+          const lastIndex = this.entriesArray.length - 1;
+          this.entriesArray.at(lastIndex).patchValue({
+            date: dateStr,
+            hours: entry.hours,
+            jobCode: entry.jobCode,
+            projectId: entry.projectId || '',
+            notes: '' // Don't copy notes
+          });
+        });
+      } else {
+        this.addEntryRow(dateStr);
+      }
+    });
+
+    this.toastr.success('Previous week copied! Data will auto-save.');
+    this.triggerAutoSave();
+  }
+
+  // Load previous week's data for copying
+  loadPreviousWeekData(): void {
+    const previousSunday = new Date(this.currentWeekEnding);
+    previousSunday.setDate(previousSunday.getDate() - 7);
+    const prevWeekStr = previousSunday.toISOString().split('T')[0];
+
+    this.timecardApi.getMyTimeCards({
+      page: 1,
+      pageSize: 1,
+      from: prevWeekStr,
+      to: prevWeekStr,
+      includeEntries: false
+    }).subscribe({
+      next: (response) => {
+        if (response.items && response.items.length > 0) {
+          // Load full timecard with entries
+          const timecardId = response.items[0].id;
+          this.timecardApi.getTimeCardById(timecardId, true).subscribe({
+            next: (timecard) => {
+              this.previousWeekData = timecard.entries;
+            },
+            error: (error) => {
+              console.error('Could not load previous week entries:', error);
+            }
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Could not load previous week data:', error);
+      }
+    });
+  }
+
+  // Quick-apply suggestion to a specific row
+  quickApplySuggestion(suggestion: TimeCardSuggestion, rowIndex: number): void {
+    const entryGroup = this.entriesArray.at(rowIndex) as FormGroup;
     entryGroup.patchValue({
       hours: suggestion.averageHours,
       jobCode: suggestion.jobCode,
       projectId: suggestion.projectId || ''
     });
-    this.toastr.success('Suggestion applied');
+    this.toastr.success(`Applied: ${suggestion.jobCode}`);
+    this.triggerAutoSave();
   }
 
-  applyWeeklyPattern(): void {
+  // Apply most common job code to all weekdays (Mon-Fri)
+  applyToAllWeekdays(): void {
     if (this.suggestions.length === 0) {
       this.toastr.info('No suggestions available');
       return;
     }
 
-    // Apply most frequent suggestion to all weekday entries (Mon-Fri)
-    const mainSuggestion = this.suggestions[0];
+    const topSuggestion = this.suggestions[0];
+    let applied = 0;
+
+    this.entriesArray.controls.forEach((control, index) => {
+      const date = new Date(control.get('date')?.value);
+      const dayOfWeek = date.getDay();
+      
+      // Apply to weekdays only (Mon-Fri)
+      if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+        const hours = control.get('hours')?.value;
+        if (!hours || hours === 0) {
+          control.patchValue({
+            hours: topSuggestion.averageHours,
+            jobCode: topSuggestion.jobCode,
+            projectId: topSuggestion.projectId || ''
+          });
+          applied++;
+        }
+      }
+    });
+
+    if (applied > 0) {
+      this.toastr.success(`Applied ${topSuggestion.jobCode} to ${applied} weekdays`);
+      this.triggerAutoSave();
+    } else {
+      this.toastr.info('All weekdays already have hours entered');
+    }
+  }
+
+  // Add row for specific day (for multiple entries per day)
+  addRowForDay(dayIndex: number): void {
+    const date = this.weekDays[dayIndex];
+    const dateStr = date.toISOString().split('T')[0];
     
-    for (let i = 0; i < Math.min(5, this.entriesArray.length); i++) {
-      const entryGroup = this.entriesArray.at(i) as FormGroup;
-      entryGroup.patchValue({
-        hours: mainSuggestion.averageHours,
-        jobCode: mainSuggestion.jobCode,
-        projectId: mainSuggestion.projectId || ''
-      });
+    // Find where to insert (after last entry for this day)
+    let insertIndex = this.entriesArray.length;
+    for (let i = 0; i < this.entriesArray.length; i++) {
+      const entryDate = this.entriesArray.at(i).get('date')?.value;
+      if (entryDate === dateStr) {
+        insertIndex = i + 1;
+      }
     }
 
-    this.toastr.success('Weekly pattern applied to weekdays');
+    const entryGroup = this.fb.group({
+      date: [dateStr, Validators.required],
+      hours: [0, [Validators.required, Validators.min(0), Validators.max(24)]],
+      jobCode: [''],
+      projectId: [''],
+      notes: ['']
+    });
+
+    entryGroup.valueChanges.subscribe(() => {
+      this.triggerAutoSave();
+    });
+
+    this.entriesArray.insert(insertIndex, entryGroup);
+    this.toastr.info('Row added - start typing to auto-save');
   }
 
-  cancelEdit(): void {
-    this.isEditing = false;
-    this.editingTimeCardId = null;
-    this.initForm();
+  // Navigate to different week
+  changeWeek(direction: 'prev' | 'next'): void {
+    const newDate = new Date(this.currentWeekEnding);
+    newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+    this.currentWeekEnding = newDate;
+    this.initializeWeek();
   }
 
-  getTotalHours(): number {
-    return this.entriesArray.controls.reduce((total, control) => {
-      const hours = control.get('hours')?.value || 0;
-      return total + hours;
-    }, 0);
+  // Manual save and submit
+  saveAndSubmit(): void {
+    if (!this.hasAnyData()) {
+      this.toastr.error('Please add at least one entry with hours');
+      return;
+    }
+
+    const userId = this.authService.currentUser?.id;
+    if (!userId) {
+      this.toastr.error('User not authenticated');
+      return;
+    }
+
+    this.saving = true;
+    const formValue = this.timecardForm.value;
+    const entries: TimeCardEntry[] = formValue.entries.filter((e: any) => e.hours > 0 && e.jobCode);
+
+    if (entries.length === 0) {
+      this.toastr.error('Please add job codes to entries before submitting');
+      this.saving = false;
+      return;
+    }
+
+    const request: TimeCardRequest = {
+      userId: userId,
+      weekEnding: this.currentWeekEnding.toISOString().split('T')[0],
+      entries: entries
+    };
+
+    const operation = this.currentTimeCardId
+      ? this.timecardApi.updateTimeCard(this.currentTimeCardId, request)
+      : this.timecardApi.createTimeCard(request);
+
+    operation.subscribe({
+      next: (response) => {
+        const id = this.currentTimeCardId || response.timecard?.id;
+        if (id) {
+          this.timecardApi.submitTimeCard(id).subscribe({
+            next: () => {
+              this.toastr.success('TimeCard submitted for approval!');
+              this.loadRecentTimeCards();
+              this.initializeWeek();
+            },
+            error: (error) => {
+              console.error('Error submitting:', error);
+              this.toastr.error('Failed to submit timecard');
+              this.saving = false;
+            }
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error saving:', error);
+        this.toastr.error('Failed to save timecard');
+        this.saving = false;
+      }
+    });
   }
+
+  // ============================================
+  // UTILITY METHODS
+  // ============================================
 
   canEdit(timecard: TimeCardListItem): boolean {
     return timecard.status === 'Draft' || timecard.status === 'Rejected';
@@ -401,10 +669,42 @@ export class EmployeeTimeCardsPageComponent implements OnInit {
     return statusMap[status] || '';
   }
 
-  onPageChange(event: any): void {
-    this.currentPage = event.pageIndex;
-    this.pageSize = event.pageSize;
-    this.loadMyTimeCards();
+  // Get total hours for the week
+  getTotalHours(): number {
+    return this.entriesArray.controls.reduce((sum, control) => {
+      const hours = control.get('hours')?.value || 0;
+      return sum + parseFloat(hours.toString());
+    }, 0);
+  }
+
+  // Get hours for a specific day
+  getDayHours(dayIndex: number): number {
+    const date = this.weekDays[dayIndex];
+    const dateStr = date.toISOString().split('T')[0];
+    
+    return this.entriesArray.controls
+      .filter(control => control.get('date')?.value === dateStr)
+      .reduce((sum, control) => {
+        const hours = control.get('hours')?.value || 0;
+        return sum + parseFloat(hours.toString());
+      }, 0);
+  }
+
+  // Get entries for a specific day
+  getEntriesForDay(dayIndex: number): FormGroup[] {
+    const date = this.weekDays[dayIndex];
+    const dateStr = date.toISOString().split('T')[0];
+    
+    return this.entriesArray.controls
+      .map((control, index) => ({ control: control as FormGroup, index }))
+      .filter(item => item.control.get('date')?.value === dateStr)
+      .map(item => item.control);
+  }
+
+  // Load a specific timecard from sidebar
+  loadTimeCard(timecard: TimeCardListItem): void {
+    this.currentWeekEnding = new Date(timecard.weekEnding);
+    this.initializeWeek();
   }
 
   private markFormGroupTouched(formGroup: FormGroup | FormArray): void {
