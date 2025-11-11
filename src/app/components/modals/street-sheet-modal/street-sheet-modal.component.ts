@@ -5,7 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { StreetSheetService } from 'src/app/services/street-sheet.service';
 import { StreetSheet } from 'src/app/models/street-sheet.model';
 import { v4 as uuidv4 } from 'uuid';
-import { debounceTime, switchMap, Observable, of, distinctUntilChanged, catchError } from 'rxjs';
+import { debounceTime, switchMap, Observable, of, distinctUntilChanged, catchError, startWith, map } from 'rxjs';
 import { MapMarker } from 'src/app/models/map-marker.model';
 import { StreetSheetMapComponent } from '../../street-sheet/street-sheet-map.component';
 import { GeocodingService } from 'src/app/services/geocoding.service';
@@ -32,6 +32,7 @@ export class StreetSheetModalComponent implements OnInit {
   imageFiles: { [key: string]: File } = {};               // actual files for submission
   imagePreviews: { [key: string]: string } = {}; 
   userData!: User;
+  filteredPmOptions!: Observable<{ name: string }[]>;
 
   streetSheet: StreetSheet | null = null;
   pmOptions: User[] = [];
@@ -66,16 +67,22 @@ export class StreetSheetModalComponent implements OnInit {
     this.isEditMode = !!this.data?.streetSheet;
     this.pmOptions = this.data?.pmOptions || [];
 
+    // ✅ Create the form first
     this.streetSheetForm = this.fb.group({
       id: [this.data?.streetSheet?.id || uuidv4()],
       segmentId: [this.data?.streetSheet?.segmentId || '', Validators.required],
-      pm: [this.data?.streetSheet?.pm || this.data.pmOptions],
+      pm: [this.data?.streetSheet?.pm || ''],
       vendorName: [this.data?.streetSheet?.vendorName || '', Validators.required],
       streetAddress: [this.data?.streetSheet?.streetAddress || '', Validators.required],
       city: [this.data?.streetSheet?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
       state: [this.data?.streetSheet?.state || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       deployment: [this.data?.streetSheet?.deployment || '', Validators.required],
-      equipment: [this.data?.streetSheet?.equipment ? this.data.streetSheet.equipment.split(',').map((e: string) => e.trim()) : [], Validators.required],
+      equipment: [
+        this.data?.streetSheet?.equipment 
+          ? this.data.streetSheet.equipment.split(',').map((e: string) => e.trim()) 
+          : [], 
+        Validators.required
+      ],
       date: [this.data?.streetSheet?.date ? new Date(this.data.streetSheet.date) : new Date(), Validators.required],
       additionalConcerns: [this.data?.streetSheet?.additionalConcerns || ''],
       swpppImage: [this.data?.streetSheet?.swpppImage || ''],
@@ -87,6 +94,19 @@ export class StreetSheetModalComponent implements OnInit {
       updatedBy: [this.data?.streetSheet?.updatedBy || ''],
       updatedDate: [this.data?.streetSheet?.updatedDate || '']
     });
+
+    // ✅ THEN define your filter observable
+    this.filteredPmOptions = this.streetSheetForm.get('pm')!.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(value || ''))
+    );
+  }
+
+  private _filter(value: string): User[] {
+    const filterValue = value.toLowerCase();
+    return this.pmOptions.filter(pm =>
+      pm.name?.toLowerCase().includes(filterValue)
+    );
   }
 
   triggerSWPPPImageUpload(): void {

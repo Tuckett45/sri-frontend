@@ -25,13 +25,21 @@
       <mat-grid-tile colspan="2">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>PM</mat-label>
-          <mat-select formControlName="pm" placeholder="Select PM">
-            <mat-option *ngFor="let pm of pmOptions" [value]="pm.name">
+          <input
+            type="text"
+            matInput
+            placeholder="Select or type PM"
+            formControlName="pm"
+            [matAutocomplete]="pmAuto"
+          />
+          <mat-autocomplete #pmAuto="matAutocomplete" autoActiveFirstOption>
+            <mat-option *ngFor="let pm of filteredPmOptions | async" [value]="pm.name">
               {{ pm.name }}
             </mat-option>
-          </mat-select>
+          </mat-autocomplete>
         </mat-form-field>
       </mat-grid-tile>
+
 
       <!-- Vendor Name -->
       <mat-grid-tile colspan="2">

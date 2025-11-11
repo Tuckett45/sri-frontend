@@ -141,9 +141,9 @@ export class StreetSheetMapComponent implements AfterViewInit {
             <b>Street:</b> ${address.street}<br>
             <b>City:</b> ${address.city}<br>
             <b>State:</b> ${address.state}<br>
-            Date Added: <b>${this.formattedDate} MST</b><br>
-            Created By: ${streetSheet.createdBy}<br>
-            <b>Marker ID:</b> ${marker.id}
+            <b>Date Added:</b> ${this.formattedDate} MST<br>
+            <b>Created By:</b> ${streetSheet.createdBy}<br>
+            <b>PM On Site:</b> ${streetSheet.pm}<br>
           `);
           this.mapMarkers.push({ id: marker.id, marker: newMarker });
         }
