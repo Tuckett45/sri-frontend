@@ -15,6 +15,7 @@ export class AuthService {
   currentUser: User | null = null;
   private loggedInStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
   private userRole: BehaviorSubject<UserRole> = new BehaviorSubject<UserRole>(UserRole.CM);
+  private readonly authTokenStorageKey = 'authToken';
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -108,12 +109,12 @@ export class AuthService {
       tap(user => {
         if (user) {
           localStorage.setItem('loggedIn', 'true');
-          localStorage.setItem('user', JSON.stringify(user));
-          const token = (user as { token?: string; accessToken?: string }).accessToken ?? (user as { token?: string }).token;
+          localStorage.setItem('user', JSON.stringify(user)); 
+          const token = user?.token ?? user?.accessToken ?? null;
           if (token) {
-            sessionStorage.setItem('authToken', token);
+            sessionStorage.setItem(this.authTokenStorageKey, token);
           }
-
+  
           this.loggedInStatus.next(true);
           this.setUserRole(user.role);
           this.setUser(user);
@@ -122,16 +123,37 @@ export class AuthService {
     );
   }
 
+  async getAccessToken(): Promise<string | null> {
+    const cachedToken = sessionStorage.getItem(this.authTokenStorageKey);
+    if (cachedToken) {
+      return cachedToken;
+    }
+
+    const userString = localStorage.getItem('user');
+    if (!userString) {
+      return null;
+    }
+
+    try {
+      const user = JSON.parse(userString);
+      const token = user?.token ?? user?.accessToken ?? null;
+      if (token) {
+        sessionStorage.setItem(this.authTokenStorageKey, token);
+        return token;
+      }
+    } catch (err) {
+      console.warn('Unable to parse stored user for access token.', err);
+    }
+
+    return null;
+  }
+
   private loadUserFromLocalStorage() {
     const user = localStorage.getItem('user');
     if (user) {
       const parsedUser = JSON.parse(user);
       this.setUserRole(parsedUser.role);
-      this.currentUser = parsedUser;
-      const token = parsedUser?.accessToken ?? parsedUser?.token;
-      if (token) {
-        sessionStorage.setItem('authToken', token);
-      }
+      this.currentUser = parsedUser; 
       this.loggedInStatus.next(true);
     }
   }
@@ -156,66 +178,42 @@ export class AuthService {
     this.resetCurrentUser();
     this.loggedInStatus.next(false);
     this.router.navigate(['/login']);
-  }
+}
 
-  private clearStorage(): void {
+private clearStorage(): void {
     localStorage.removeItem('loggedIn');
-    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem(this.authTokenStorageKey);
     localStorage.removeItem('user');
-  }
+}
 
-  private resetCurrentUser(): void {
+private resetCurrentUser(): void {
     const userString = localStorage.getItem('user');
 
     if (userString) {
-      try {
-        const userObj = JSON.parse(userString);
+        try {
+            const userObj = JSON.parse(userString);
 
-        if (userObj && userObj.id) {
-          this.currentUser = new User(
-            userObj.id,
-            userObj.name,
-            userObj.email,
-            userObj.password,
-            userObj.role,
-            userObj.market,
-            userObj.company,
-            new Date(userObj.createdDate),
-            userObj.isApproved,
-            userObj.approvalToken
-          );
+            if (userObj && userObj.id) {
+                this.currentUser = new User(
+                  userObj.id,
+                  userObj.name,
+                  userObj.email,
+                  userObj.password,
+                  userObj.role,
+                  userObj.market,
+                  userObj.company,
+                  new Date(userObj.createdDate),
+                  userObj.isApproved,
+                  userObj.approvalToken
+                );
+            }
+        } catch (error) {
+            console.error("Error parsing user data from localStorage:", error);
+            this.currentUser = null;
         }
-      } catch (error) {
-        console.error('Error parsing user data from localStorage:', error);
-        this.currentUser = null;
-      }
     } else {
-      this.currentUser = null;
+        this.currentUser = null;
     }
-  }
-
-  async getAccessToken(): Promise<string | null> {
-    const storedToken = sessionStorage.getItem('authToken');
-    if (storedToken) {
-      return storedToken;
-    }
-
-    const userString = localStorage.getItem('user');
-    if (!userString) {
-      return null;
-    }
-
-    try {
-      const parsedUser = JSON.parse(userString) as { accessToken?: string; token?: string };
-      const token = parsedUser.accessToken ?? parsedUser.token ?? null;
-      if (token) {
-        sessionStorage.setItem('authToken', token);
-      }
-      return token;
-    } catch (error) {
-      console.error('Error parsing user data when retrieving access token:', error);
-      return null;
-    }
-  }
+}
 
 }

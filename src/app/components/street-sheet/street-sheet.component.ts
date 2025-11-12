@@ -134,8 +134,20 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
             };
 
             return this.reversedAddresses[marker.id];
+        })
+        .catch(() => {
+            const fallback = this.reversedAddresses[marker.id];
+            if (fallback) {
+                return fallback;
+            }
+
+            return {
+                street: '',
+                city: '',
+                state: ''
+            };
         });
-}
+  }
 
   createStreetSheet(): void {
       const dialogRef = this.dialog.open(StreetSheetModalComponent, {

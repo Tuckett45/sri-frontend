@@ -1,0 +1,207 @@
+<div class="hr-dashboard">
+  <div class="dashboard-header">
+    <h1>HR Expense Dashboard</h1>
+    <div class="date-filter">
+      <label>Date Range:</label>
+      <p-calendar 
+        [(ngModel)]="startDate" 
+        [showIcon]="true" 
+        placeholder="Start Date"
+        dateFormat="mm/dd/yy"
+        (onSelect)="onDateRangeChange()">
+      </p-calendar>
+      <span class="date-separator">to</span>
+      <p-calendar 
+        [(ngModel)]="endDate" 
+        [showIcon]="true" 
+        placeholder="End Date"
+        dateFormat="mm/dd/yy"
+        (onSelect)="onDateRangeChange()">
+      </p-calendar>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+    <p>Loading dashboard data...</p>
+  </div>
+
+  <div *ngIf="!loading" class="dashboard-content">
+    <!-- Key Metrics Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card total-expenses">
+        <div class="metric-icon">
+          <i class="pi pi-file"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ stats.totalExpenses }}</div>
+          <div class="metric-label">Total Expenses</div>
+        </div>
+      </div>
+
+      <div class="metric-card total-amount">
+        <div class="metric-icon">
+          <i class="pi pi-dollar"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ formatCurrency(stats.totalAmount) }}</div>
+          <div class="metric-label">Total Amount</div>
+        </div>
+      </div>
+
+      <div class="metric-card average-expense">
+        <div class="metric-icon">
+          <i class="pi pi-chart-bar"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ formatCurrency(stats.averageExpense) }}</div>
+          <div class="metric-label">Average Expense</div>
+        </div>
+      </div>
+
+      <div class="metric-card pending-approval">
+        <div class="metric-icon">
+          <i class="pi pi-clock"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ stats.pendingCount }}</div>
+          <div class="metric-label">Pending Approval</div>
+          <div class="metric-sub">{{ formatCurrency(stats.pendingAmount) }}</div>
+        </div>
+      </div>
+
+      <div class="metric-card approved">
+        <div class="metric-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ stats.approvedCount }}</div>
+          <div class="metric-label">Approved</div>
+          <div class="metric-sub">{{ formatCurrency(stats.approvedAmount) }}</div>
+        </div>
+      </div>
+
+      <div class="metric-card rejected">
+        <div class="metric-icon">
+          <i class="pi pi-times-circle"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{ stats.rejectedCount }}</div>
+          <div class="metric-label">Rejected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+      <!-- Expenses by Category -->
+      <div class="chart-card">
+        <h3>Expenses by Category</h3>
+        <div class="chart-container">
+          <p-chart type="pie" [data]="categoryChartData" [options]="pieChartOptions"></p-chart>
+        </div>
+      </div>
+
+      <!-- Expenses by Status -->
+      <div class="chart-card">
+        <h3>Expenses by Status</h3>
+        <div class="chart-container">
+          <p-chart type="doughnut" [data]="statusChartData" [options]="pieChartOptions"></p-chart>
+        </div>
+      </div>
+
+      <!-- Monthly Trend -->
+      <div class="chart-card full-width">
+        <h3>Monthly Expense Trend</h3>
+        <div class="chart-container">
+          <p-chart type="line" [data]="trendChartData" [options]="chartOptions"></p-chart>
+        </div>
+      </div>
+
+      <!-- Top Employees by Spending -->
+      <div class="chart-card full-width">
+        <h3>Top 10 Employees by Spending</h3>
+        <div class="chart-container">
+          <p-chart type="bar" [data]="employeeChartData" [options]="barChartOptions"></p-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Tables Section -->
+    <div class="tables-grid">
+      <!-- Category Breakdown Table -->
+      <div class="table-card">
+        <h3>Category Breakdown</h3>
+        <p-table [value]="categoryStats" [paginator]="true" [rows]="5" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Category</th>
+              <th>Count</th>
+              <th>Total Amount</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-stat>
+            <tr>
+              <td>{{ stat.category }}</td>
+              <td>{{ stat.count }}</td>
+              <td>{{ formatCurrency(stat.amount) }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Employee Breakdown Table -->
+      <div class="table-card">
+        <h3>Employee Breakdown</h3>
+        <p-table [value]="employeeStats" [paginator]="true" [rows]="5" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Employee</th>
+              <th>Count</th>
+              <th>Total Amount</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-stat>
+            <tr>
+              <td>{{ stat.employeeName }}</td>
+              <td>{{ stat.count }}</td>
+              <td>{{ formatCurrency(stat.amount) }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Recent Expenses Table -->
+      <div class="table-card full-width">
+        <h3>Recent Expenses</h3>
+        <p-table [value]="recentExpenses" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Date</th>
+              <th>Employee</th>
+              <th>Vendor</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-expense>
+            <tr>
+              <td>{{ formatDate(expense.date) }}</td>
+              <td>{{ expense.createdBy }}</td>
+              <td>{{ expense.vendor }}</td>
+              <td>{{ expense.category }}</td>
+              <td>{{ formatCurrency(expense.amount) }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(expense.status)">
+                  {{ expense.status }}
+                </span>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+</div>
+

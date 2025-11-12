@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, AfterViewInit, OnDestroy, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PreliminaryPunchListModalComponent } from '../modals/preliminary-punch-list-modal/preliminary-punch-list-modal.component';
 import { PreliminaryPunchList } from 'src/app/models/preliminary-punch-list.model';
@@ -14,6 +14,7 @@ import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-lis
 import * as Papa from 'papaparse';
 import { DatePipe } from '@angular/common';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { TimelineItem } from 'src/app/models/timeline-item.model';
 
 // Child expects a searchParams bag; define a local type (no import needed)
 type ChildSearchParams = {
@@ -43,6 +44,14 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
   user!: User;
   activeTab = 0; // 0 = Resolved, 1 = Unresolved (adjust if your UI differs)
   filtersOpen = false;
+  selectedView: 'table' | 'timeline' = 'table';
+
+  readonly viewOptions = [
+    { label: 'Table view', value: 'table' },
+    { label: 'Timeline mode', value: 'timeline' }
+  ];
+
+  readonly timelineItems = signal<TimelineItem[]>([]);
 
   // Selected filters (multi-selects in the UI)
   selectedFilters: { column: string, values: string[] }[] = [];
@@ -162,6 +171,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
         // Role scoping first (this becomes "allData" for the top-level table)
         this.allData = this.scopeToUser(data);
         this.dataSource.data = this.allData;
+        this.applyFiltersToTimeline();
         // Children use server paging/filtering on their own; we just push filter state
         this.updateChildFilters();
       });
@@ -295,6 +305,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
     this.selectedFilter = { column: '', value: [] };
     this.unresolvedPunchListComponent?.clearAll();
     this.resolvedPunchListComponent?.clearAll();
+    this.applyFiltersToTimeline();
   }
 
   onUnresolvedCountChange(count: number): void {
@@ -347,6 +358,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
 
     this.dataSource.data.splice(idx, 1);
     this.dataSource.data = [...this.dataSource.data];
+    this.applyFiltersToTimeline();
 
     this.punchListService.removeEntry(report.id).subscribe({
       next: () => {
@@ -366,6 +378,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
     this.preliminaryPunchList$?.pipe(takeUntil(this.destroy$)).subscribe(entries => {
       this.allData = this.scopeToUser(entries);
       this.dataSource.data = this.allData;
+      this.applyFiltersToTimeline();
       this.updateChildFilters();
       this.loadFacetsForActiveTab();
     });
@@ -448,6 +461,8 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
         this.unresolvedPunchListComponent.applyFilters();
       }
     }
+
+    this.applyFiltersToTimeline();
   }
 
   // Back-compat entrypoint
@@ -496,6 +511,122 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
       resolvedStart: rzStart,
       resolvedEnd: rzEnd
     };
+  }
+
+  private applyFiltersToTimeline(): void {
+    if (!Array.isArray(this.allData) || this.allData.length === 0) {
+      this.timelineItems.set([]);
+      return;
+    }
+
+    const segmentFilter = new Set(this.selectedSegmentIds);
+    const vendorFilter = new Set(this.selectedVendors);
+    const stateFilter = new Set(this.selectedStates.map(s => (s ?? '').toUpperCase()));
+    const searchTerm = (this.currentSearchTerm || '').toLowerCase();
+
+    const reportedStart = this.parseDateValue(this.dateReportedStartDate || this.dateReportedSelectedDates[0]);
+    const reportedEnd = this.parseDateValue(this.dateReportedEndDate || this.dateReportedSelectedDates[1]);
+    const resolvedStart = this.parseDateValue(this.resolvedDateStartDate || this.resolvedDateSelectedDates[0]);
+    const resolvedEnd = this.parseDateValue(this.resolvedDateEndDate || this.resolvedDateSelectedDates[1]);
+
+    const filtered = this.allData.filter(entry => {
+      if (segmentFilter.size && !segmentFilter.has(entry.segmentId)) return false;
+      if (vendorFilter.size && !vendorFilter.has(entry.vendorName)) return false;
+      if (stateFilter.size && !stateFilter.has((entry.state ?? '').toUpperCase())) return false;
+
+      const reported = this.ensureDate(entry.dateReported);
+      if (reportedStart && (!reported || reported < this.startOfDay(reportedStart))) return false;
+      if (reportedEnd && (!reported || reported > this.endOfDay(reportedEnd))) return false;
+
+      const resolved = this.ensureDate(entry.resolvedDate ?? null);
+      if (resolvedStart && (!resolved || resolved < this.startOfDay(resolvedStart))) return false;
+      if (resolvedEnd && (!resolved || resolved > this.endOfDay(resolvedEnd))) return false;
+
+      if (searchTerm) {
+        const haystack = [
+          entry.segmentId,
+          entry.vendorName,
+          entry.streetAddress,
+          entry.city,
+          entry.state
+        ]
+          .map(value => (value ?? '').toString().toLowerCase());
+
+        if (!haystack.some(value => value.includes(searchTerm))) return false;
+      }
+
+      return true;
+    });
+
+    const nextItems = filtered.map(entry => this.toTimelineItem(entry));
+    const currentItems = this.timelineItems();
+    const unchanged = currentItems.length === nextItems.length && currentItems.every((item, idx) => {
+      const next = nextItems[idx];
+      return item.id === next.id &&
+        new Date(item.startDate).getTime() === new Date(next.startDate).getTime() &&
+        new Date((item.endDate ?? item.startDate)).getTime() === new Date((next.endDate ?? next.startDate)).getTime() &&
+        (item.status ?? '') === (next.status ?? '') &&
+        (item.color ?? '') === (next.color ?? '');
+    });
+
+    if (!unchanged) {
+      this.timelineItems.set(nextItems);
+    }
+  }
+
+  private toTimelineItem(entry: PreliminaryPunchList): TimelineItem {
+    const start = this.ensureDate(entry.dateReported) ?? new Date();
+    const resolved = this.ensureDate(entry.resolvedDate ?? null);
+    const updated = this.ensureDate(entry.updatedDate ?? null);
+    const fallbackEnd = updated ?? (entry.pmResolved || entry.cmResolved ? resolved : null) ?? new Date();
+    const end = fallbackEnd && fallbackEnd < start ? start : fallbackEnd;
+    const status = entry.cmResolved || entry.pmResolved ? 'resolved' : 'open';
+
+    return {
+      id: entry.id,
+      label: `${entry.segmentId} · ${entry.vendorName}`,
+      startDate: start,
+      endDate: end ?? start,
+      status,
+      color: status === 'resolved' ? 'var(--green-500)' : 'var(--red-500)',
+      metadata: {
+        segmentId: entry.segmentId,
+        vendor: entry.vendorName,
+        streetAddress: entry.streetAddress,
+        city: entry.city,
+        state: entry.state,
+        createdBy: entry.createdBy,
+        resolvedBy: entry.resolvedBy ?? entry.updatedBy ?? '',
+        pmResolved: entry.pmResolved,
+        cmResolved: entry.cmResolved,
+        issues: entry.issues?.map(issue => issue.category).filter(Boolean).join(', '),
+        additionalConcerns: entry.additionalConcerns
+      }
+    };
+  }
+
+  private parseDateValue(value: any): Date | null {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  private ensureDate(value: any): Date | null {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  private startOfDay(date: Date): Date {
+    const d = new Date(date.getTime());
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  private endOfDay(date: Date): Date {
+    const d = new Date(date.getTime());
+    d.setHours(23, 59, 59, 999);
+    return d;
   }
 
   exportToCSV(): void {

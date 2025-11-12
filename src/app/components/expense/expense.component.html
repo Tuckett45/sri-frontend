@@ -5,6 +5,9 @@
   <div class="card table-wrapper">
     <p-tabs [(value)]="activeTab">
       <p-tablist>
+        <p-tab *ngIf="canViewHrTab" [value]="hrDashboardTabValue" [ngClass]="{ 'active-tab': activeTab === hrDashboardTabValue }">
+          HR Dashboard
+        </p-tab>
         <p-tab *ngIf="canViewHrTab" [value]="hrTabValue" [ngClass]="{ 'active-tab': activeTab === hrTabValue }">
           Expense List
         </p-tab>
@@ -13,6 +16,9 @@
         </p-tab>
       </p-tablist>
       <p-tabpanels>
+        <p-tabpanel *ngIf="canViewHrTab" [value]="hrDashboardTabValue">
+          <app-hr-dashboard></app-hr-dashboard>
+        </p-tabpanel>
         <p-tabpanel *ngIf="canViewHrTab" [value]="hrTabValue">
           <app-hr-expenses-page></app-hr-expenses-page>
         </p-tabpanel>

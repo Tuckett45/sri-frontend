@@ -28,13 +28,13 @@ export class DeploymentsSocketService {
       .withAutomaticReconnect()
       .build();
 
-    this.hub.on('PhaseAdvanced',    p => this.phaseAdvanced$.next(p));
-    this.hub.on('ChecklistSaved',   p => this.checklistSaved$.next(p));
-    this.hub.on('SubPhaseCompleted',p => this.subPhaseCompleted$.next(p));
-    this.hub.on('EvidenceAdded',    p => this.evidenceAdded$.next(p));
-    this.hub.on('PunchUpdated',     p => this.punchUpdated$.next(p));
-    this.hub.on('HandoffSigned',    p => this.handoffSigned$.next(p));
-    this.hub.on('HandoffArchived',  p => this.handoffArchived$.next(p));
+    this.hub.on('PhaseAdvanced',    (p: { deploymentId: string; toPhase: number; }) => this.phaseAdvanced$.next(p));
+    this.hub.on('ChecklistSaved',   (p: { deploymentId: string; phase: number; subCode: string; }) => this.checklistSaved$.next(p));
+    this.hub.on('SubPhaseCompleted',(p: { deploymentId: string; phase: number; subCode: string; }) => this.subPhaseCompleted$.next(p));
+    this.hub.on('EvidenceAdded',    (p: { deploymentId: string; phase: number; subCode: string; mediaType: string; }) => this.evidenceAdded$.next(p));
+    this.hub.on('PunchUpdated',     (p: { deploymentId: string; punchId: string; status: string; }) => this.punchUpdated$.next(p));
+    this.hub.on('HandoffSigned',    (p: { deploymentId: string; role: string; }) => this.handoffSigned$.next(p));
+    this.hub.on('HandoffArchived',  (p: { deploymentId: string; packageUrl: string; }) => this.handoffArchived$.next(p));
 
     await this.hub.start();
   }
