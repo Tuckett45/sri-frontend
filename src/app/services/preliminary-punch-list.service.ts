@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { Injectable, effect } from '@angular/core';
+import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
 import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
 import { environment, local_environment } from '../../environments/environments';
 import { User } from '../models/user.model';
+import { OfflineCacheService } from './offline-cache.service';
 
 export interface PagedResponse<T> {
   total: number;
@@ -64,7 +65,20 @@ export class PreliminaryPunchListService {
     })
   };
 
-  constructor(private http: HttpClient) {}
+  private previousOnline = true;
+
+  constructor(private http: HttpClient, private offlineCache: OfflineCacheService) {
+    this.previousOnline = this.offlineCache.isOnline();
+
+    effect(() => {
+      const currentlyOnline = this.offlineCache.online();
+      if (currentlyOnline && !this.previousOnline) {
+        this.clearCaches();
+        this.triggerRefresh();
+      }
+      this.previousOnline = currentlyOnline;
+    });
+  }
 
   readonly refresh$ = this.refreshSubject.asObservable();
   triggerRefresh(): void { this.refreshSubject.next(); }
@@ -132,7 +146,20 @@ export class PreliminaryPunchListService {
   // ---------------- Basic lists (cached) ----------------
 
   getEntries(pageNumber = 0, pageSize = 25): Observable<PagedResponse<PreliminaryPunchList>> {
+    const offline$ = from(this.offlineCache.getPunchLists()).pipe(
+      map(items => this.buildOfflineResponse(items)),
+      tap(resp => (this.entriesCacheData = resp))
+    );
+
     if (!this.entriesCache$) {
+      if (!this.offlineCache.isOnline()) {
+        this.entriesCache$ = offline$.pipe(
+          catchError(error => this.handleError(error as HttpErrorResponse)),
+          shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 })
+        );
+        return this.entriesCache$;
+      }
+
       const params = new HttpParams()
         .set('pageNumber', String(pageNumber))
         .set('pageSize', String(pageSize));
@@ -151,11 +178,29 @@ export class PreliminaryPunchListService {
             })
           })),
           tap(resp => (this.entriesCacheData = resp)),
-          catchError(this.handleError),
+          tap(resp => { void this.offlineCache.savePunchLists(resp.items); }),
+          catchError(error =>
+            offline$.pipe(
+              catchError(() => this.handleError(error as HttpErrorResponse))
+            )
+          ),
           shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 })
         );
     }
     return this.entriesCache$;
+  }
+
+  private buildOfflineResponse(items: PreliminaryPunchList[]): PagedResponse<PreliminaryPunchList> {
+    const normalized = items ?? [];
+    const total = normalized.length;
+    const size = total === 0 ? 0 : total;
+    return {
+      total,
+      page: 0,
+      pageSize: size,
+      pageCount: total === 0 ? 0 : 1,
+      items: normalized
+    };
   }
 
   getUnresolvedPunchLists(

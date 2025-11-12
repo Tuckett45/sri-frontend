@@ -1,9 +1,10 @@
-import { Observable } from 'rxjs';
+import { Observable, from, throwError } from 'rxjs';
 import { environment } from 'src/environments/environments';
-import { StreetSheet } from '../models/street-sheet.model';
 import { MapMarker } from '../models/map-marker.model';
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { catchError, tap } from 'rxjs/operators';
+import { OfflineCacheService } from './offline-cache.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,7 @@ export class MapMarkerService {
     })
   };
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private offlineCache: OfflineCacheService) {}
 
   getMapMarkers(): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/MapMarker`);
@@ -28,7 +29,20 @@ export class MapMarkerService {
   }
 
   getMapMarkersForStreetSheet(streetSheetId: string): Observable<MapMarker[]> {
-    return this.http.get<MapMarker[]>(`${environment.apiUrl}/MapMarker/${streetSheetId}`);
+    const offline$ = from(this.offlineCache.getStreetSheetMarkers(streetSheetId));
+
+    if (!this.offlineCache.isOnline()) {
+      return offline$;
+    }
+
+    return this.http.get<MapMarker[]>(`${environment.apiUrl}/MapMarker/${streetSheetId}`).pipe(
+      tap(markers => { void this.offlineCache.saveStreetSheetMarkers(streetSheetId, markers); }),
+      catchError(error =>
+        offline$.pipe(
+          catchError(() => throwError(() => error))
+        )
+      )
+    );
   }
 
   editMapMarker(mapMarker: MapMarker): Observable<any> {

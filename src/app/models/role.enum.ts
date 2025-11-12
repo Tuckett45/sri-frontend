@@ -6,5 +6,10 @@ export enum UserRole {
     Temp = 'Temp',
     OSPCoordinator = 'OSP Coordinator',
     Controller = 'Controller',
-    HR = 'HR'
+    HR = 'HR',
+    // Deployment roles
+    DeploymentEngineer = 'Deployment Engineer',
+    DCOps = 'DC Ops',
+    VendorRep = 'Vendor Rep',
+    SRITech = 'SRI Tech'
 }

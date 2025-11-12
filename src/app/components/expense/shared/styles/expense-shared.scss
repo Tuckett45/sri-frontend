@@ -26,6 +26,12 @@ $page-controls-gap: 0.75rem;
   gap: $page-controls-gap;
   margin-bottom: 1rem;
 
+  .left-controls {
+    display: flex;
+    gap: $page-controls-gap;
+    flex-wrap: wrap;
+  }
+
   .export-buttons {
     flex: 1 1 auto;
     justify-content: flex-end;
@@ -56,6 +62,24 @@ $page-controls-gap: 0.75rem;
 
   &:hover {
     background-color: darken($expense-accent, 10%) !important;
+  }
+}
+
+.dashboard-btn {
+  background-color: #42A5F5 !important;
+  color: #fff !important;
+
+  &:hover {
+    background-color: #1E88E5 !important;
+  }
+}
+
+.receipt-export-btn {
+  background-color: #9C27B0 !important;
+  color: #fff !important;
+
+  &:hover {
+    background-color: #7B1FA2 !important;
   }
 }
 

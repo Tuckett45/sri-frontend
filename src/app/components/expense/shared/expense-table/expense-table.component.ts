@@ -258,7 +258,7 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     if (this.showEmployeeColumn) {
       base.push('employee');
     }
-    base.push('job', 'amount', 'notes', 'receipt', 'status');
+    base.push('job', 'category', 'amount', 'notes', 'receipt', 'status');
 
     if (this.shouldShowActionsColumn()) {
       base.push('actions');
@@ -333,6 +333,3 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     return 'file';
   }
 }
-
-
-

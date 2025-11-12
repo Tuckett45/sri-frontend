@@ -1,0 +1,20 @@
+<div class="photo-uploader">
+  <p-fileUpload
+    mode="basic"
+    name="photos"
+    chooseLabel="Upload photos"
+    [auto]="true"
+    [customUpload]="true"
+    [multiple]="true"
+    accept="image/*"
+    (uploadHandler)="onUpload($event)"
+  ></p-fileUpload>
+
+  <div class="preview" *ngIf="value?.length">
+    <span *ngFor="let id of value" class="chip">
+      <i class="pi pi-image"></i>
+      <span>{{ id }}</span>
+      <button pButton type="button" icon="pi pi-times" severity="danger" (click)="remove(id)" size="small"></button>
+    </span>
+  </div>
+</div>

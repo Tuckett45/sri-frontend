@@ -171,6 +171,23 @@
       </mat-form-field>
       </div>
     </fieldset>
+
+    <!-- Mileage Section -->
+    <div *ngIf="isMileageCategory" class="mileage-section">
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>Week Ending Date</mat-label>
+          <input matInput type="date" formControlName="weekEndingDate" />
+          <mat-hint>Select the Friday of the week this mileage applies to</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <app-mileage-details
+        [mileageEntries]="mileageEntries"
+        [expenseId]="data?.id || ''"
+        (mileageChanged)="onMileageChanged($event)">
+      </app-mileage-details>
+    </div>
   </form>
 </mat-dialog-content>
 

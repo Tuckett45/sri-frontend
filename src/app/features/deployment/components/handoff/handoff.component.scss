@@ -1,0 +1,357 @@
+.handoff-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: border-color 0.3s ease;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+}
+
+.role-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.handoff-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.documentation-section {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 0.5rem;
+  border-left: 4px solid #6c757d;
+
+  h3 {
+    margin: 0 0 1rem 0;
+    color: #495057;
+    font-size: 1.25rem;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  h4 {
+    margin: 0;
+    color: #6c757d;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+// Sign-Off Section Styles
+.signoff-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .signoff-description {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9375rem;
+    font-style: italic;
+  }
+}
+
+.signoff-card {
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  border: 2px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+
+  &.completed {
+    border-color: #27AE60;
+    background: linear-gradient(135deg, #eafbf3 0%, #d4f4e2 100%);
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+.signoff-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.signoff-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  i {
+    font-size: 1.5rem;
+  }
+
+  h4 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+}
+
+.signoff-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+
+  &.vendor-badge {
+    background-color: #27AE60;
+  }
+
+  &.tech-badge {
+    background-color: #2C3E50;
+  }
+
+  &.de-badge {
+    background-color: #9B59B6;
+  }
+}
+
+.signoff-instructions {
+  margin: 0 0 1rem 0;
+  color: #6c757d;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.signoff-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(39, 174, 96, 0.1);
+  border-radius: 0.25rem;
+  color: #27AE60;
+  font-weight: 500;
+
+  i {
+    font-size: 1.25rem;
+  }
+}
+
+.signoff-pending {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(149, 165, 166, 0.1);
+  border-radius: 0.25rem;
+  color: #95A5A6;
+  font-weight: 500;
+
+  i {
+    font-size: 1.25rem;
+  }
+}
+
+.signoff-button {
+  margin-top: 1rem;
+  width: 100%;
+  justify-content: center;
+
+  &.vendor-button {
+    background-color: #27AE60 !important;
+    border-color: #27AE60 !important;
+
+    &:hover:not(:disabled) {
+      background-color: #229954 !important;
+      border-color: #229954 !important;
+    }
+  }
+
+  &.tech-button {
+    background-color: #2C3E50 !important;
+    border-color: #2C3E50 !important;
+
+    &:hover:not(:disabled) {
+      background-color: #1a252f !important;
+      border-color: #1a252f !important;
+    }
+  }
+
+  &.de-button {
+    background-color: #9B59B6 !important;
+    border-color: #9B59B6 !important;
+
+    &:hover:not(:disabled) {
+      background-color: #8e44ad !important;
+      border-color: #8e44ad !important;
+    }
+  }
+}
+
+// Color-specific sign-off cards
+.vendor-signoff {
+  border-left: 4px solid #27AE60;
+
+  &.completed {
+    border-left-color: #27AE60;
+  }
+}
+
+.tech-signoff {
+  border-left: 4px solid #2C3E50;
+
+  &.completed {
+    border-left-color: #2C3E50;
+  }
+}
+
+.de-signoff {
+  border-left: 4px solid #9B59B6;
+
+  &.completed {
+    border-left-color: #9B59B6;
+  }
+}
+
+.completion-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #eafbf3 0%, #d4f4e2 100%);
+  border: 2px solid #27AE60;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+
+  h4 {
+    margin: 0 0 0.5rem 0;
+    color: #27AE60;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9375rem;
+  }
+}
+
+.archive-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 0.25rem;
+  border-left: 4px solid #3498DB;
+
+  i {
+    color: #3498DB;
+    font-size: 1.25rem;
+  }
+
+  span {
+    color: #495057;
+    font-size: 0.9375rem;
+  }
+
+  a {
+    color: #3498DB;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Access Denied Card
+.access-denied-card {
+  border-left: 4px solid #e74c3c;
+
+  .error-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+
+    h2 {
+      margin: 0;
+      color: #e74c3c;
+      font-weight: 600;
+    }
+  }
+
+  p {
+    margin: 1rem 0;
+    color: #6c757d;
+
+    strong {
+      color: #e74c3c;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .signoff-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .header-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+

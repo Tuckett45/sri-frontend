@@ -18,8 +18,9 @@ export class ExpenseComponent implements OnInit {
   loading = false;
   isReceiptGalleryVisible = false;
   galleryImages: any[] = [];
-  activeTab = 'hr';
+  activeTab = 'dashboard';
   readonly canViewHrTab: boolean;
+  readonly hrDashboardTabValue = 'dashboard';
   readonly hrTabValue = 'hr';
   readonly myTabValue = 'my';
 
@@ -30,9 +31,7 @@ export class ExpenseComponent implements OnInit {
     private authService: AuthService
   ) {
     this.canViewHrTab = this.isHrUser();
-    if (!this.canViewHrTab) {
-      this.activeTab = this.myTabValue;
-    }
+    this.activeTab = this.canViewHrTab ? this.hrDashboardTabValue : this.myTabValue;
   }
 
   ngOnInit(): void {
