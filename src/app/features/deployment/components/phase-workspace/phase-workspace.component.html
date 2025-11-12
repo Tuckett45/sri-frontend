@@ -1,0 +1,26 @@
+<p-toast></p-toast>
+
+<p-card class="phase-card" *ngIf="!loading(); else loadingState">
+  <ng-template pTemplate="header">
+    <div class="header">
+      <h2>{{ phaseLabel() }} Checklist</h2>
+      <div class="actions">
+        <button pButton type="button" label="Save" icon="pi pi-save" size="small" (click)="save()"></button>
+        <button pButton type="button" label="Advance Phase" icon="pi pi-arrow-right" severity="success" size="small" (click)="advance()"></button>
+      </div>
+    </div>
+  </ng-template>
+
+  <form [formGroup]="form" class="checklist-form">
+    <ark-checklist [form]="form" [items]="items()" (itemsChange)="onChecklistChange($event)"></ark-checklist>
+  </form>
+</p-card>
+
+
+<ark-label-generator *ngIf="phase() === DeploymentStatus.Labeling"></ark-label-generator>
+
+<ng-template #loadingState>
+  <p-card>
+    <p>Loading phase workspace...</p>
+  </p-card>
+</ng-template>

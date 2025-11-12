@@ -1,0 +1,72 @@
+<div class="checklist">
+  <div class="item" *ngFor="let item of items">
+    <label [attr.for]="item.id" class="item-label">
+      {{ item.label }}
+      <span *ngIf="item.required" class="required">*</span>
+    </label>
+    <p class="description" *ngIf="item.description">{{ item.description }}</p>
+
+    <ng-container [ngSwitch]="item.type">
+      <p-checkbox
+        *ngSwitchCase="'checkbox'"
+        [formControl]="controlFor(item.id)"
+        binary="true"
+        inputId="item.id"
+      ></p-checkbox>
+
+      <input
+        *ngSwitchCase="'text'"
+        pInputText
+        [formControl]="controlFor(item.id)"
+        [placeholder]="item.placeholder"
+        [id]="item.id"
+      />
+
+      <textarea
+        *ngSwitchCase="'textarea'"
+        pInputTextarea
+        [formControl]="controlFor(item.id)"
+        [placeholder]="item.placeholder"
+        [id]="item.id"
+        rows="3"
+      ></textarea>
+
+      <p-dropdown
+        *ngSwitchCase="'select'"
+        [options]="item.options ?? []"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="item.placeholder || 'Select'"
+        [formControl]="controlFor(item.id)"
+      ></p-dropdown>
+
+      <input
+        *ngSwitchCase="'number'"
+        type="number"
+        pInputText
+        [formControl]="controlFor(item.id)"
+        [placeholder]="item.placeholder"
+        [id]="item.id"
+      />
+
+      <p-calendar
+        *ngSwitchCase="'date'"
+        [formControl]="controlFor(item.id)"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+      ></p-calendar>
+
+      <ark-photo-uploader
+        *ngSwitchCase="'photo'"
+        [value]="form.get(item.id)?.value || []"
+        (valueChange)="onPhotoChange(item, $event)"
+      ></ark-photo-uploader>
+
+      <ark-tests-uploader
+        *ngSwitchCase="'file'"
+        [value]="form.get(item.id)?.value || []"
+        (valueChange)="onFileChange(item, $event)"
+      ></ark-tests-uploader>
+    </ng-container>
+  </div>
+</div>

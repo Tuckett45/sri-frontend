@@ -1,0 +1,144 @@
+<div class="deployment-page">
+  <section class="page-header">
+    <div class="page-title">
+      <h1>Deployment Workflow</h1>
+      <p class="subtitle">Monitor rollout progress across data centers and vendors.</p>
+    </div>
+    <div class="header-actions">
+      <button
+        mat-raised-button
+        color="primary"
+        class="filters-toggle"
+        type="button"
+        (click)="toggleFilters()"
+      >
+        <mat-icon>filter_list</mat-icon>
+        <span>{{ showFilters() ? 'Hide Filters' : 'View Filters' }}</span>
+      </button>
+      <button
+        mat-raised-button
+        color="accent"
+        class="cta-button"
+        type="button"
+        (click)="openDeploymentWizard()"
+      >
+        <mat-icon>assignment</mat-icon>
+        <span>Start Deployment</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="filters-container" *ngIf="showFilters()">
+    <form class="filters-form" [formGroup]="filterForm">
+      <div class="filter-grid">
+        <mat-form-field appearance="fill" class="filter-field">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="">All statuses</mat-option>
+            <mat-option *ngFor="let status of statusOptions" [value]="status">
+              {{ status }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="filter-field">
+          <mat-label>Vendor</mat-label>
+          <mat-icon matPrefix>business</mat-icon>
+          <input matInput type="text" placeholder="Search vendor" formControlName="vendor" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="filter-field">
+          <mat-label>Data Center</mat-label>
+          <mat-icon matPrefix>location_on</mat-icon>
+          <input matInput type="text" placeholder="Search data center" formControlName="dataCenter" />
+        </mat-form-field>
+      </div>
+
+      <div class="filter-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          class="reset-button"
+          type="button"
+          (click)="filterForm.reset()"
+        >
+          <mat-icon>refresh</mat-icon>
+          <span>Reset Filters</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="table-card">
+    <div class="table-card-header">
+      <h2>Active Deployments</h2>
+      <p class="table-subtitle">Select a project to drill into its workflow phases.</p>
+    </div>
+    <p-table
+      [value]="filtered()"
+      dataKey="id"
+      [paginator]="true"
+      [rows]="10"
+      class="deployment-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Name</th>
+          <th>Data Center</th>
+          <th>Vendor</th>
+          <th>Status</th>
+          <th>Progress</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-project>
+        <tr class="deployment-row">
+          <td data-label="Name">
+            <div class="cell-name">
+              <strong>{{ project.name }}</strong>
+              <span class="meta">{{ project.createdDate | date:'MMM d, y' }} - {{ project.targetCompletion | date:'MMM d, y' }}</span>
+            </div>
+          </td>
+          <td data-label="Data Center">
+            <div class="cell-meta">
+              <mat-icon>location_on</mat-icon>
+              <span>{{ project.dataCenter }}</span>
+            </div>
+          </td>
+          <td data-label="Vendor">
+            <div class="cell-meta">
+              <mat-icon>business</mat-icon>
+              <span>{{ project.vendorName }}</span>
+            </div>
+          </td>
+          <td data-label="Status">
+            <span class="status-chip" [ngClass]="statusSeverity(project.status)">{{ project.status }}</span>
+            <small class="status-meta">{{ describeStatus(project.status) }}</small>
+          </td>
+          <td data-label="Progress">
+            <div class="progress-wrapper">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="project.progressPercent ?? 0"></div>
+              </div>
+              <span class="progress-label">{{ project.progressPercent ?? 0 }}%</span>
+            </div>
+          </td>
+          <td data-label="Actions" class="actions-cell">
+            <button
+              mat-raised-button
+              color="accent"
+              class="open-button"
+              type="button"
+              (click)="openDeployment(project)"
+            >
+              <mat-icon>arrow_forward</mat-icon>
+              <span>Open</span>
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+</div>
+
+

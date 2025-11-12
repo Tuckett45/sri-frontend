@@ -1,0 +1,38 @@
+<p-card *ngIf="!loading(); else loadingState" class="handoff-card">
+  <ng-template pTemplate="header">
+    <h2>Handoff Package</h2>
+  </ng-template>
+
+  <form [formGroup]="form" class="handoff-form">
+    <div class="section">
+      <h3>Cabinet Photos ({{ form.value.cabinetPhotos?.length || 0 }}/{{ requiredPhotoCount }})</h3>
+      <ark-photo-uploader [value]="form.value.cabinetPhotos || []" (valueChange)="onPhotosChange($event)"></ark-photo-uploader>
+      <p-message severity="warn" text="Six cabinet photos required." *ngIf="(form.value.cabinetPhotos?.length || 0) < requiredPhotoCount"></p-message>
+    </div>
+
+    <div class="section">
+      <h3>As-Built Package</h3>
+      <ark-tests-uploader [value]="form.value.asBuilt || []" (valueChange)="onAsBuiltChange($event)"></ark-tests-uploader>
+    </div>
+
+    <div class="section">
+      <h3>Port Test Results</h3>
+      <ark-tests-uploader [value]="form.value.portTests || []" (valueChange)="onPortTestsChange($event)"></ark-tests-uploader>
+    </div>
+
+    <div class="section signatures">
+      <p-checkbox formControlName="vendorSigned" label="Vendor signature"></p-checkbox>
+      <p-checkbox formControlName="deSigned" label="DE signature"></p-checkbox>
+    </div>
+
+    <button pButton type="button" label="Sign & Complete" icon="pi pi-check" [disabled]="!canSign()" (click)="sign()"></button>
+
+    <ng-container *ngIf="package()?.packageUrl as link">
+      <p class="archive">Archive ready: <a [href]="link" target="_blank" rel="noopener">Download package</a></p>
+    </ng-container>
+  </form>
+</p-card>
+
+<ng-template #loadingState>
+  <p-card>Loading handoff...</p-card>
+</ng-template>
