@@ -5,7 +5,7 @@ import { environment } from 'src/environments/environments';
 import { FeatureFlagService } from 'src/app/services/feature-flag.service';
 import { ToastrService } from 'ngx-toastr';
 
-export interface PushSubscriptionData {
+export interface DeploymentPushSubscription {
   endpoint: string;
   expirationTime: number | null;
   keys: {
@@ -273,7 +273,7 @@ export class DeploymentPushNotificationService {
   /**
    * Convert PushSubscription to DTO format
    */
-  private convertSubscriptionToDTO(subscription: PushSubscription): PushSubscriptionData {
+  private convertSubscriptionToDTO(subscription: PushSubscription): DeploymentPushSubscription {
     const subscriptionJson = subscription.toJSON();
     
     return {
@@ -601,4 +601,3 @@ export class DeploymentPushNotificationService {
     });
   }
 }
-

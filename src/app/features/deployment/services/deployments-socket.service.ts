@@ -17,6 +17,12 @@ export class DeploymentsSocketService {
   punchUpdated$     = new Subject<{ deploymentId: string; punchId: string; status: string }>();
   handoffSigned$    = new Subject<{ deploymentId: string; role: string }>();
   handoffArchived$  = new Subject<{ deploymentId: string; packageUrl: string }>();
+  
+  // notification events
+  deploymentAssigned$ = new Subject<any>();
+  deploymentReadyForSignoff$ = new Subject<any>();
+  deploymentIssueCreated$ = new Subject<any>();
+  deploymentCompleted$ = new Subject<any>();
 
   async connect(hubUrl = '/hubs/deployments') {
     if (this.hub) return;
@@ -35,6 +41,12 @@ export class DeploymentsSocketService {
     this.hub.on('PunchUpdated',     p => this.punchUpdated$.next(p));
     this.hub.on('HandoffSigned',    p => this.handoffSigned$.next(p));
     this.hub.on('HandoffArchived',  p => this.handoffArchived$.next(p));
+    
+    // notification events
+    this.hub.on('DeploymentAssigned', p => this.deploymentAssigned$.next(p));
+    this.hub.on('DeploymentReadyForSignoff', p => this.deploymentReadyForSignoff$.next(p));
+    this.hub.on('DeploymentIssueCreated', p => this.deploymentIssueCreated$.next(p));
+    this.hub.on('DeploymentCompleted', p => this.deploymentCompleted$.next(p));
 
     await this.hub.start();
   }
