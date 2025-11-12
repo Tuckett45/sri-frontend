@@ -6,13 +6,15 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { DeploymentStatus, ChecklistItem } from '../../models/deployment.models';
+import { DeploymentStatus, ChecklistItem, DeploymentRole } from '../../models/deployment.models';
 import { ChecklistComponent } from '../checklist/checklist.component';
 import { LabelGeneratorComponent } from '../label-generator/label-generator.component';
 import { DeploymentService, ChecklistItemDto } from '../../services/deployment.service';
 import { ChecklistTemplates } from '../../models/checklist.config';
 import { isChecklistComplete } from '../../utils/checklist.utils';
 import { DeploymentStateService } from '../../services/deployment-state.service';
+import { DeploymentRoleService } from '../../services/deployment-role.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 interface SubPhaseSummary {
   code: string;
@@ -48,11 +50,21 @@ export class PhaseWorkspaceComponent implements OnInit {
   protected readonly subPhases = signal<SubPhaseSummary[]>([]);
   protected readonly activeSubPhase = signal<SubPhaseSummary | null>(null);
 
+  // Role-based UI signals
+  protected readonly canAccess = signal(true);
+  protected readonly canSignOff = signal(false);
+  protected readonly roleColor = signal('#95A5A6'); // Default gray
+  protected readonly roleDescription = signal('');
+  protected readonly currentUserRole = signal<DeploymentRole | null>(null);
+  protected readonly allowedRoles = signal<DeploymentRole[]>([]);
+
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly deploymentService = inject(DeploymentService);
   private readonly state = inject(DeploymentStateService);
   private readonly messageService = inject(MessageService);
+  private readonly roleService = inject(DeploymentRoleService);
+  protected readonly authService = inject(AuthService); // Public for template
 
   private currentPhaseCode = 0;
 
@@ -73,6 +85,20 @@ export class PhaseWorkspaceComponent implements OnInit {
     this.phase.set(phaseParam);
     this.currentPhaseCode = this.statusToIndex(phaseParam);
 
+    // Initialize role-based access control
+    this.initializeRoleAccess(phaseParam);
+
+    // Check if user can access this phase
+    if (!this.canAccess()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Access Denied',
+        detail: 'You do not have permission to access this phase'
+      });
+      this.loading.set(false);
+      return;
+    }
+
     const template = this.cloneTemplate(phaseParam);
     this.items.set(template);
     this.setupFormControls(template);
@@ -90,6 +116,42 @@ export class PhaseWorkspaceComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /**
+   * Initialize role-based access control for the current phase
+   */
+  private initializeRoleAccess(phase: DeploymentStatus): void {
+    const currentUser = this.authService.getUser();
+    if (!currentUser) {
+      this.canAccess.set(false);
+      return;
+    }
+
+    const userRole = this.authService.getUserRole();
+    const userCompany = currentUser.company;
+
+    // Map user role to deployment role
+    const deploymentRole = this.roleService.mapUserRoleToDeploymentRole(userRole, userCompany);
+    this.currentUserRole.set(deploymentRole);
+
+    // Check phase access
+    const hasAccess = this.roleService.canAccessPhase(userRole, userCompany, phase);
+    this.canAccess.set(hasAccess);
+
+    // Check sign-off permission
+    const canSign = this.roleService.canSignOffPhase(userRole, userCompany, phase);
+    this.canSignOff.set(canSign);
+
+    // Get role color and description
+    if (deploymentRole) {
+      this.roleColor.set(this.roleService.getRoleColor(deploymentRole));
+      this.roleDescription.set(this.roleService.getPhaseDescriptionForRole(phase, deploymentRole));
+    }
+
+    // Get allowed roles for this phase
+    const allowedRoles = this.roleService.getRolesForPhase(phase);
+    this.allowedRoles.set(allowedRoles);
   }
 
   protected onChecklistChange(items: ChecklistItem[]) {

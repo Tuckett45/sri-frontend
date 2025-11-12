@@ -1,5 +1,6 @@
 .phase-card {
   display: block;
+  transition: border-color 0.3s ease;
 }
 
 .header {
@@ -7,6 +8,62 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  padding: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.phase-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-grow: 1;
+  
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+}
+
+.role-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.role-description {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-left: 4px solid #6c757d;
+  border-radius: 0.25rem;
+  
+  i {
+    color: #6c757d;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+  
+  span {
+    color: #495057;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
 }
 
 .actions {
@@ -15,7 +72,33 @@
   flex-wrap: wrap;
 }
 
-
 .checklist-form {
   display: block;
+}
+
+.access-denied-card {
+  border-left: 4px solid #e74c3c;
+  
+  .error-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+    
+    h2 {
+      margin: 0;
+      color: #e74c3c;
+      font-weight: 600;
+    }
+  }
+  
+  p {
+    margin: 1rem 0;
+    color: #6c757d;
+    
+    strong {
+      color: #e74c3c;
+    }
+  }
 }

@@ -1,23 +1,78 @@
 <p-toast></p-toast>
 
-<p-card class="phase-card" *ngIf="!loading(); else loadingState">
+<!-- Access Denied Message -->
+<p-card *ngIf="!canAccess() && !loading()" class="access-denied-card">
   <ng-template pTemplate="header">
-    <div class="header">
-      <h2>{{ phaseLabel() }} Checklist</h2>
+    <div class="header error-header">
+      <i class="pi pi-lock" style="font-size: 2rem; color: #e74c3c;"></i>
+      <h2>Access Denied</h2>
+    </div>
+  </ng-template>
+  <p>You do not have permission to access the <strong>{{ phaseLabel() }}</strong> phase.</p>
+  <p *ngIf="allowedRoles().length > 0">
+    This phase is restricted to: 
+    <strong>{{ allowedRoles().join(', ') }}</strong>
+  </p>
+</p-card>
+
+<!-- Phase Workspace with Role-Based UI -->
+<p-card 
+  class="phase-card" 
+  *ngIf="canAccess() && !loading(); else loadingState"
+  [ngStyle]="{'border-left': '4px solid ' + roleColor()}">
+  
+  <ng-template pTemplate="header">
+    <div class="header" [ngStyle]="{'border-bottom': '2px solid ' + roleColor()}">
+      <div class="phase-info">
+        <h2 [ngStyle]="{'color': roleColor()}">{{ phaseLabel() }} Checklist</h2>
+        
+        <!-- Role Badge -->
+        <div class="role-badge" [ngStyle]="{'background-color': roleColor(), 'color': '#fff'}">
+          {{ currentUserRole() }}
+        </div>
+      </div>
+      
       <div class="actions">
-        <button pButton type="button" label="Save" icon="pi pi-save" size="small" (click)="save()"></button>
-        <button pButton type="button" label="Advance Phase" icon="pi pi-arrow-right" severity="success" size="small" (click)="advance()"></button>
+        <button 
+          pButton 
+          type="button" 
+          label="Save" 
+          icon="pi pi-save" 
+          size="small" 
+          (click)="save()"
+          [disabled]="!canAccess()">
+        </button>
+        <button 
+          pButton 
+          type="button" 
+          label="Advance Phase" 
+          icon="pi pi-arrow-right" 
+          severity="success" 
+          size="small" 
+          (click)="advance()"
+          [disabled]="!canSignOff()">
+        </button>
       </div>
     </div>
   </ng-template>
 
+  <!-- Role-Specific Description -->
+  <div class="role-description" *ngIf="roleDescription()">
+    <i class="pi pi-info-circle"></i>
+    <span>{{ roleDescription() }}</span>
+  </div>
+
   <form [formGroup]="form" class="checklist-form">
-    <ark-checklist [form]="form" [items]="items()" (itemsChange)="onChecklistChange($event)"></ark-checklist>
+    <ark-checklist 
+      [form]="form" 
+      [items]="items()" 
+      (itemsChange)="onChecklistChange($event)">
+    </ark-checklist>
   </form>
 </p-card>
 
-
-<ark-label-generator *ngIf="phase() === DeploymentStatus.Labeling"></ark-label-generator>
+<!-- Label Generator (Labeling Phase Only) -->
+<ark-label-generator *ngIf="phase() === DeploymentStatus.Labeling && canAccess()"></ark-label-generator>
 
 <ng-template #loadingState>
   <p-card>

@@ -161,6 +161,9 @@ export class DeploymentRoleService {
    */
   getPhaseDescriptionForRole(phase: DeploymentStatus, role: DeploymentRole): string {
     const descriptions: Record<DeploymentStatus, Partial<Record<DeploymentRole, string>>> = {
+      [DeploymentStatus.Planned]: {
+        [DeploymentRole.DeploymentEngineer]: 'Plan deployment strategy, assign resources, and schedule deployment timeline'
+      },
       [DeploymentStatus.Survey]: {
         [DeploymentRole.VendorRep]: 'Check data center and cabinets, verify rack requirements and patch panel ports',
         [DeploymentRole.DCOps]: 'Assist with site survey and facility access',
@@ -186,10 +189,12 @@ export class DeploymentRoleService {
         [DeploymentRole.VendorRep]: 'Configure management IPs, provide documentation and photos, sign handoff checklist',
         [DeploymentRole.DeploymentEngineer]: 'Validate connections, inspect work, perform final sign-off',
         [DeploymentRole.SRITech]: 'Complete final documentation and technician sign-off'
+      },
+      [DeploymentStatus.Complete]: {
+        [DeploymentRole.DeploymentEngineer]: 'Review final deployment documentation and archive project records'
       }
     };
 
     return descriptions[phase]?.[role] || 'Complete assigned tasks for this phase';
   }
 }
-

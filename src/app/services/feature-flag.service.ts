@@ -1,6 +1,12 @@
 import { Injectable, Signal, computed, signal } from '@angular/core';
 
-export type FeatureFlagKey = 'notifications' | 'liveUpdates' | 'offlineMode';
+export type FeatureFlagKey = 
+  | 'notifications' 
+  | 'liveUpdates' 
+  | 'offlineMode'
+  | 'roleBasedWorkflow'
+  | 'deploymentNotifications'
+  | 'signOffRequired';
 
 export interface FeatureFlagView {
   readonly key: FeatureFlagKey;
@@ -39,6 +45,24 @@ export class FeatureFlagService {
       label: 'Offline Mode',
       description: 'Allow limited access when internet connectivity is unavailable.',
       defaultValue: false
+    },
+    {
+      key: 'roleBasedWorkflow',
+      label: 'Role-Based Deployment Workflow',
+      description: 'Enable role-based access control and color-coded UI for deployment phases based on user roles (DE, DC Ops, Vendor Rep, SRI Tech).',
+      defaultValue: true
+    },
+    {
+      key: 'deploymentNotifications',
+      label: 'Deployment Workflow Notifications',
+      description: 'Enable real-time notifications for deployment assignments, sign-off requests, issues, and completion events.',
+      defaultValue: true
+    },
+    {
+      key: 'signOffRequired',
+      label: 'Require Sign-Offs for Deployment Handoff',
+      description: 'Enforce three-party sign-off workflow (Vendor Rep, SRI Tech, Deployment Engineer) before completing deployment handoff phase.',
+      defaultValue: true
     }
   ];
 
