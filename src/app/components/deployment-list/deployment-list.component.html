@@ -1,0 +1,259 @@
+<!-- Performance-optimized deployment list with virtual scrolling -->
+<div class="deployment-list-container">
+  <!-- Header with filters and actions -->
+  <div class="list-header">
+    <div class="header-title">
+      <h2>Deployments</h2>
+      <div class="performance-badge" *ngIf="cacheStats$ | async as stats">
+        <span class="cache-info">Cache: {{stats.size}} items</span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="refresh()"
+        [disabled]="loading$ | async">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filters-form">
+        <div class="filter-row">
+          <!-- Status Filter -->
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              <mat-option *ngFor="let option of statusOptions" [value]="option.value">
+                {{option.label}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Vendor Filter -->
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Vendor</mat-label>
+            <mat-select formControlName="vendor">
+              <mat-option *ngFor="let option of vendorOptions" [value]="option.value">
+                {{option.label}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Data Center Filter -->
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Data Center</mat-label>
+            <mat-select formControlName="dataCenter">
+              <mat-option *ngFor="let option of dataCenterOptions" [value]="option.value">
+                {{option.label}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Date Range Filters -->
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>From Date</mat-label>
+            <input matInput [matDatepicker]="fromPicker" formControlName="dateFrom">
+            <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+            <mat-datepicker #fromPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>To Date</mat-label>
+            <input matInput [matDatepicker]="toPicker" formControlName="dateTo">
+            <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+            <mat-datepicker #toPicker></mat-datepicker>
+          </mat-form-field>
+
+          <!-- Clear Filters Button -->
+          <button 
+            mat-stroked-button 
+            type="button" 
+            (click)="clearFilters()"
+            class="clear-filters-btn">
+            <mat-icon>clear</mat-icon>
+            Clear
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Indicator -->
+  <div class="loading-container" *ngIf="loading$ | async">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span class="loading-text">Loading deployments...</span>
+  </div>
+
+  <!-- Error Message -->
+  <mat-card class="error-card" *ngIf="error$ | async as error">
+    <mat-card-content>
+      <div class="error-content">
+        <mat-icon color="warn">error</mat-icon>
+        <span>{{error}}</span>
+        <button mat-button color="primary" (click)="refresh()">
+          Try Again
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Results Summary -->
+  <div class="results-summary" *ngIf="!loading$ | async">
+    <span class="total-count">
+      Showing {{deployments.length}} of {{totalItems}} deployments
+    </span>
+    <span class="performance-info" *ngIf="getPerformanceMetrics() as metrics">
+      Avg Response: {{metrics.averageResponseTime | number:'1.0-0'}}ms | 
+      Cache Hit Rate: {{metrics.cacheHitRate | number:'1.0-0'}}%
+    </span>
+  </div>
+
+  <!-- Virtual Scrolling List -->
+  <div class="deployments-container" *ngIf="deployments.length > 0">
+    <cdk-virtual-scroll-viewport 
+      itemSize="80" 
+      class="deployment-viewport"
+      #viewport>
+      
+      <div 
+        *cdkVirtualFor="let deployment of deployments; trackBy: trackByDeploymentId"
+        class="deployment-item"
+        [class.has-issues]="deployment.openIssues > 0"
+        [class.critical-issues]="deployment.criticalIssues > 0">
+        
+        <mat-card class="deployment-card">
+          <mat-card-content class="deployment-content">
+            
+            <!-- Main Info Row -->
+            <div class="deployment-main">
+              <div class="deployment-info">
+                <h3 class="deployment-name">{{deployment.name}}</h3>
+                <div class="deployment-meta">
+                  <span class="data-center">
+                    <mat-icon>location_on</mat-icon>
+                    {{deployment.dataCenter}}
+                  </span>
+                  <span class="vendor">
+                    <mat-icon>business</mat-icon>
+                    {{deployment.vendorName}}
+                  </span>
+                  <span class="target-date">
+                    <mat-icon>schedule</mat-icon>
+                    {{formatDate(deployment.targetHandoffDate)}}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Status and Progress -->
+              <div class="deployment-status">
+                <div class="status-badge" [ngClass]="getStatusClass(deployment.status)">
+                  {{deployment.status}}
+                </div>
+                <div class="progress-container">
+                  <mat-progress-bar 
+                    mode="determinate" 
+                    [value]="deployment.progressPercentage"
+                    [ngClass]="getProgressClass(deployment.progressPercentage)">
+                  </mat-progress-bar>
+                  <span class="progress-text">{{deployment.progressPercentage}}%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Secondary Info Row -->
+            <div class="deployment-secondary">
+              <!-- Deployment Engineer -->
+              <div class="engineer-info" *ngIf="deployment.deploymentEngineerName">
+                <mat-icon>person</mat-icon>
+                <span>DE: {{deployment.deploymentEngineerName}}</span>
+              </div>
+
+              <!-- Sign-off Status -->
+              <div class="signoff-status" *ngIf="deployment.isSignedOff">
+                <mat-icon color="primary">verified</mat-icon>
+                <span>Signed Off</span>
+                <small *ngIf="deployment.signedOffAt">({{formatDate(deployment.signedOffAt)}})</small>
+              </div>
+
+              <!-- Issues Summary -->
+              <div class="issues-summary" *ngIf="deployment.totalIssues > 0">
+                <div class="issue-count total-issues">
+                  <mat-icon>bug_report</mat-icon>
+                  <span>{{deployment.totalIssues}} total</span>
+                </div>
+                <div class="issue-count open-issues" *ngIf="deployment.openIssues > 0">
+                  <mat-icon color="warn">warning</mat-icon>
+                  <span>{{deployment.openIssues}} open</span>
+                </div>
+                <div class="issue-count critical-issues" *ngIf="deployment.criticalIssues > 0">
+                  <mat-icon color="accent">priority_high</mat-icon>
+                  <span>{{deployment.criticalIssues}} critical</span>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="deployment-actions">
+                <button 
+                  mat-icon-button 
+                  matTooltip="View Details"
+                  [routerLink]="['/deployments', deployment.id]">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
+                  matTooltip="Edit Deployment"
+                  [routerLink]="['/deployments', deployment.id, 'edit']">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
+                  matTooltip="View Issues"
+                  [routerLink]="['/deployments', deployment.id, 'issues']"
+                  *ngIf="deployment.totalIssues > 0">
+                  <mat-icon [color]="deployment.criticalIssues > 0 ? 'accent' : 'warn'">
+                    bug_report
+                  </mat-icon>
+                </button>
+              </div>
+            </div>
+
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </cdk-virtual-scroll-viewport>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="deployments.length === 0 && !(loading$ | async) && !(error$ | async)">
+    <mat-card>
+      <mat-card-content class="empty-content">
+        <mat-icon class="empty-icon">inbox</mat-icon>
+        <h3>No Deployments Found</h3>
+        <p>Try adjusting your filters or create a new deployment.</p>
+        <button mat-raised-button color="primary" routerLink="/deployments/new">
+          <mat-icon>add</mat-icon>
+          Create Deployment
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Performance Debug Panel (Development Only) -->
+  <div class="debug-panel" *ngIf="false"> <!-- Set to true for debugging -->
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Performance Metrics</mat-panel-title>
+      </mat-expansion-panel-header>
+      <div class="debug-content">
+        <pre>{{getPerformanceMetrics() | json}}</pre>
+      </div>
+    </mat-expansion-panel>
+  </div>
+</div>

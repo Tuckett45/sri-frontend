@@ -1,0 +1,76 @@
+<p-card *ngIf="project() as project" class="detail-card">
+  <ng-template pTemplate="header">
+    <div class="header">
+      <div>
+        <h2>{{ project.name }}</h2>
+        <p class="meta">{{ project.dataCenter }} • {{ project.vendorName }}</p>
+      </div>
+      <p-tag [value]="project.status" [severity]="statusSeverity(project.status)"></p-tag>
+    </div>
+  </ng-template>
+
+  <div class="body">
+    <section class="progress">
+      <p>Overall Progress</p>
+      <p-progressBar [value]="progress(project.status)"></p-progressBar>
+    </section>
+
+    <p-divider></p-divider>
+
+    <section class="phases">
+      <h3>Phases</h3>
+      <div class="phase-buttons">
+        <a
+          *ngFor="let step of statusSteps"
+          [routerLink]="['/deployments', project.id, 'phase', step.label]"
+          pButton
+          size="small"
+          [severity]="step.label === project.status ? 'info' : undefined"
+          [label]="step.label"
+        ></a>
+      </div>
+      <a
+        [routerLink]="['/deployments', project.id, 'handoff']"
+        pButton
+        severity="warn"
+        size="small"
+        label="Handoff"
+      ></a>
+    </section>
+
+    <p-divider></p-divider>
+
+    <section class="timeline" *ngIf="timelineEntries() as timeline">
+      <h3>Deployment Timeline</h3>
+      <p class="timeline-helper">Track where this deployment sits across the six major phases and what remains to finish.</p>
+
+      <p-timeline [value]="timeline" layout="vertical" styleClass="deployment-timeline">
+        <ng-template pTemplate="marker" let-step>
+          <span class="timeline-marker" [ngClass]="step.state">
+            <i class="pi" [ngClass]="{
+              'pi-check': step.state === 'complete',
+              'pi-play': step.state === 'current',
+              'pi-circle': step.state === 'pending'
+            }"></i>
+          </span>
+        </ng-template>
+
+        <ng-template pTemplate="content" let-step>
+          <div class="timeline-content" [ngClass]="step.state">
+            <div class="timeline-header">
+              <h4>{{ step.title }}</h4>
+              <p-tag
+                [severity]="step.state === 'complete' ? 'success' : step.state === 'current' ? 'info' : 'secondary'"
+                [value]="step.state === 'complete' ? 'Complete' : step.state === 'current' ? 'In Progress' : 'Queued'"
+              ></p-tag>
+            </div>
+            <p class="summary">{{ step.summary }}</p>
+            <ul>
+              <li *ngFor="let item of step.substeps">{{ item }}</li>
+            </ul>
+          </div>
+        </ng-template>
+      </p-timeline>
+    </section>
+  </div>
+</p-card>

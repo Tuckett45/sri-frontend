@@ -65,6 +65,50 @@ export interface Deployment {
 }
 
 /* ============================================================
+   Sign-Off Types and Status
+   ============================================================ */
+export enum SignOffType {
+  Vendor = 1,
+  DE = 2,
+  Tech = 3
+}
+
+export interface SignOffRequest {
+  deploymentId: Id;
+  userId: string;
+  type: SignOffType;
+}
+
+export interface SignOffStatus {
+  deploymentId: Id;
+  deploymentName: string;
+  
+  // Vendor sign-off
+  vendorSigned: boolean;
+  vendorSignedBy?: string;
+  vendorSignerName?: string;
+  vendorSignedAt?: string;
+  
+  // DE sign-off
+  deSigned: boolean;
+  deSignedBy?: string;
+  deSignerName?: string;
+  deSignedAt?: string;
+  
+  // Tech sign-off
+  techSigned: boolean;
+  techSignedBy?: string;
+  techSignerName?: string;
+  techSignedAt?: string;
+  
+  // Overall status
+  isFullySignedOff: boolean;
+  pendingSignOffFrom?: string;
+  completedSignOffs: string[];
+  pendingSignOffs: string[];
+}
+
+/* ============================================================
    Deployment Assets (dbo.DeploymentAssets)
    ============================================================ */
 export interface DeploymentAsset {
