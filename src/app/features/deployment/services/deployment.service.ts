@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, firstValueFrom, map, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { environment, local_environment } from '../../../../environments/environments';
-import { DeploymentHandoff, HandoffPackage, Deployment } from '../models/deployment.models';
+import { DeploymentHandoff, HandoffPackage, Deployment, SignOffRequest, SignOffStatus, SignOffType } from '../models/deployment.models';
 import { StartDeploymentProgressPayload } from '../models/deployment-progress.model';
 
 export enum DeploymentStatus {
@@ -159,6 +159,50 @@ export class DeploymentService {
 
   async signHandoff(id: string, payload: HandoffUpdateDto) {
     return firstValueFrom(this.http.post<HandoffPackage>(`${this.base}/${id}/handoff`, payload, { headers: this.httpOptions.headers }));
+  }
+
+  // ----- Three-Way Sign-Off (Run Book v7 Section 6) -----
+  
+  /**
+   * Record a sign-off from Vendor Rep, DE, or SRI Tech
+   * @param deploymentId - ID of the deployment
+   * @param signOffType - Type of sign-off (Vendor, DE, Tech)
+   * @param userId - ID of the user signing off
+   * @returns Updated sign-off status
+   */
+  async recordSignOff(deploymentId: string, signOffType: SignOffType, userId: string): Promise<SignOffStatus> {
+    const request: SignOffRequest = {
+      deploymentId,
+      userId,
+      type: signOffType
+    };
+    
+    const response = await firstValueFrom(
+      this.http.post<SignOffStatus>(
+        `${this.base}/${deploymentId}/signoff`,
+        request,
+        { headers: this.httpOptions.headers }
+      )
+    );
+    
+    // Invalidate cache after sign-off recorded
+    this.invalidateListCache();
+    
+    return response;
+  }
+
+  /**
+   * Get the current sign-off status for a deployment
+   * @param deploymentId - ID of the deployment
+   * @returns Current sign-off status
+   */
+  async getSignOffStatus(deploymentId: string): Promise<SignOffStatus> {
+    return firstValueFrom(
+      this.http.get<SignOffStatus>(
+        `${this.base}/${deploymentId}/signoffs`,
+        { headers: this.httpOptions.headers }
+      )
+    );
   }
 
   private buildQueryCacheKey(q: DeploymentQuery): string {

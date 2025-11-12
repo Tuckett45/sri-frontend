@@ -10,7 +10,7 @@ import { PhotoUploaderComponent } from '../photo-uploader/photo-uploader.compone
 import { TestsUploaderComponent } from '../tests-uploader/tests-uploader.component';
 import { MessageService } from 'primeng/api';
 import { DeploymentService, HandoffUpdateDto } from '../../services/deployment.service';
-import { HandoffPackage, DeploymentRole, Deployment, DeploymentStatus } from '../../models/deployment.models';
+import { HandoffPackage, DeploymentRole, Deployment, DeploymentStatus, SignOffType } from '../../models/deployment.models';
 import { DeploymentRoleService } from '../../services/deployment-role.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ToastModule } from 'primeng/toast';
@@ -158,28 +158,42 @@ export class HandoffComponent implements OnInit {
   }
 
   /**
-   * Load deployment data to get sign-off information
+   * Load deployment data and sign-off status
    */
   private async loadDeployment(id: string): Promise<void> {
     try {
+      // Load deployment basic info
       const deployment = await this.deploymentService.get(id);
       this.deployment.set(deployment);
 
-      // Update sign-off state from deployment data
-      if (deployment.vendorSignedBy) {
+      // Load detailed sign-off status from backend
+      try {
+        const signOffStatus = await this.deploymentService.getSignOffStatus(id);
+        
+        // Update sign-off state with detailed status
+        this.vendorSignedBy.set(signOffStatus.vendorSignedBy);
+        this.vendorSignedAt.set(signOffStatus.vendorSignedAt);
+        this.techSignedBy.set(signOffStatus.techSignedBy);
+        this.techSignedAt.set(signOffStatus.techSignedAt);
+        this.deSignedBy.set(signOffStatus.deSignedBy);
+        this.deSignedAt.set(signOffStatus.deSignedAt);
+      } catch (signOffError) {
+        // Fallback to deployment data if sign-off status endpoint fails
+        console.warn('Failed to load sign-off status, falling back to deployment data', signOffError);
         this.vendorSignedBy.set(deployment.vendorSignedBy);
         this.vendorSignedAt.set(deployment.vendorSignedAt);
-      }
-      if (deployment.techSignedBy) {
         this.techSignedBy.set(deployment.techSignedBy);
         this.techSignedAt.set(deployment.techSignedAt);
-      }
-      if (deployment.deSignedBy) {
         this.deSignedBy.set(deployment.deSignedBy);
         this.deSignedAt.set(deployment.deSignedAt);
       }
     } catch (error) {
       console.error('Failed to load deployment', error);
+      this.messageService.add({ 
+        severity: 'error', 
+        summary: 'Failed to load deployment data', 
+        detail: 'Please refresh the page' 
+      });
     }
   }
 
@@ -286,31 +300,56 @@ export class HandoffComponent implements OnInit {
   }
 
   /**
-   * Update deployment with sign-off information
+   * Update deployment with sign-off information via backend API
    */
   private async updateDeploymentSignOff(role: DeploymentRole | null, userId: string, timestamp: string): Promise<void> {
     if (!role || !this.projectId) return;
 
     try {
-      // This would call a backend endpoint to update deployment sign-off fields
-      // For now, we update local state
-      const deployment = this.deployment();
-      if (!deployment) return;
-
+      // Map deployment role to sign-off type
+      let signOffType: SignOffType;
       if (role === DeploymentRole.VendorRep) {
-        deployment.vendorSignedBy = userId;
-        deployment.vendorSignedAt = timestamp;
-      } else if (role === DeploymentRole.SRITech) {
-        deployment.techSignedBy = userId;
-        deployment.techSignedAt = timestamp;
+        signOffType = SignOffType.Vendor;
       } else if (role === DeploymentRole.DeploymentEngineer) {
-        deployment.deSignedBy = userId;
-        deployment.deSignedAt = timestamp;
+        signOffType = SignOffType.DE;
+      } else if (role === DeploymentRole.SRITech) {
+        signOffType = SignOffType.Tech;
+      } else {
+        console.warn('Unknown deployment role for sign-off:', role);
+        return;
       }
 
-      this.deployment.set(deployment);
+      // Call backend to record sign-off
+      const status = await this.deploymentService.recordSignOff(this.projectId, signOffType, userId);
+      
+      // Update local state with backend response
+      this.vendorSignedBy.set(status.vendorSignedBy);
+      this.vendorSignedAt.set(status.vendorSignedAt);
+      this.techSignedBy.set(status.techSignedBy);
+      this.techSignedAt.set(status.techSignedAt);
+      this.deSignedBy.set(status.deSignedBy);
+      this.deSignedAt.set(status.deSignedAt);
+
+      // Update deployment object
+      const deployment = this.deployment();
+      if (deployment) {
+        deployment.vendorSignedBy = status.vendorSignedBy;
+        deployment.vendorSignedAt = status.vendorSignedAt;
+        deployment.techSignedBy = status.techSignedBy;
+        deployment.techSignedAt = status.techSignedAt;
+        deployment.deSignedBy = status.deSignedBy;
+        deployment.deSignedAt = status.deSignedAt;
+        deployment.isFullySignedOff = status.isFullySignedOff;
+        this.deployment.set(deployment);
+      }
     } catch (error) {
-      console.error('Failed to update deployment sign-off', error);
+      console.error('Failed to record sign-off with backend', error);
+      this.messageService.add({ 
+        severity: 'error', 
+        summary: 'Failed to record sign-off', 
+        detail: 'Please try again or contact support' 
+      });
+      throw error; // Re-throw to be handled by the sign() method
     }
   }
 
