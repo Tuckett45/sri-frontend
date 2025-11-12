@@ -1,0 +1,214 @@
+:host {
+  display: block;
+}
+
+.timeline-mode {
+  .control-label {
+    font-weight: 600;
+    color: var(--surface-700);
+    font-size: 0.85rem;
+  }
+
+  .zoom-control,
+  .range-control {
+    background: var(--surface-ground);
+    border: 1px solid var(--surface-border);
+    border-radius: 1.5rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .zoom-slider {
+    flex: 1 1 220px;
+  }
+
+  .zoom-value {
+    font-size: 0.8rem;
+    color: var(--surface-600);
+    min-width: 4.5rem;
+  }
+
+  .range-calendar {
+    min-width: 220px;
+  }
+
+  .status-summary {
+    .p-tag.status-tag {
+      --tag-background: var(--primary-400);
+      border: none;
+      background: var(--tag-background);
+      color: var(--surface-a);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+  }
+
+  .timeline-shell {
+    position: relative;
+    border: 1px solid var(--surface-border);
+    border-radius: 1rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
+    padding: 2.75rem 1rem 1.5rem;
+    cursor: grab;
+    overflow: hidden;
+
+    &.dragging {
+      cursor: grabbing;
+    }
+  }
+
+  .timeline-axis {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    .axis-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(20, 79, 128, 0.2);
+    }
+
+    .axis-label {
+      position: absolute;
+      top: 0.25rem;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--surface-600);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 0.1rem 0.35rem;
+      border-radius: 1rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .today-marker {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--blue-400);
+
+      span {
+        position: absolute;
+        top: 0.25rem;
+        left: 50%;
+        transform: translate(-50%, -120%);
+        background: var(--blue-400);
+        color: var(--surface-a);
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.15rem 0.4rem;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .timeline-track {
+    position: relative;
+    width: 100%;
+  }
+
+  .timeline-item {
+    position: absolute;
+    min-width: 2.5%;
+    height: 36px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.9rem;
+    color: #fff;
+    box-shadow: 0 12px 25px -18px rgba(16, 38, 49, 0.65);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px -12px rgba(16, 38, 49, 0.55);
+    }
+
+    &.clipped-start::before,
+    &.clipped-end::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 0.5rem;
+      background: inherit;
+    }
+
+    &.clipped-start::before {
+      left: -0.5rem;
+      border-radius: 0.5rem 0 0 0.5rem;
+    }
+
+    &.clipped-end::after {
+      right: -0.5rem;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    .item-label {
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .item-dates {
+      font-size: 0.75rem;
+      opacity: 0.9;
+      white-space: nowrap;
+    }
+  }
+
+  :host ::ng-deep .timeline-tooltip {
+    white-space: pre;
+  }
+
+  .timeline-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2rem 1rem;
+    color: var(--surface-600);
+
+    i {
+      font-size: 2rem;
+      color: var(--surface-500);
+    }
+  }
+
+  .timeline-list {
+    .timeline-list-item {
+      border: 1px solid var(--surface-border);
+      background: rgba(255, 255, 255, 0.9);
+
+      .list-title {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .list-subtitle,
+      .list-location {
+        font-size: 0.85rem;
+        color: var(--surface-600);
+      }
+
+      .list-date {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--surface-600);
+      }
+
+      .status-pill {
+        color: #fff;
+        font-weight: 600;
+        padding: 0.2rem 0.75rem;
+        border-radius: 999px;
+        letter-spacing: 0.02em;
+      }
+    }
+  }
+}

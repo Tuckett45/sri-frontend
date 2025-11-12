@@ -1,0 +1,89 @@
+<div class="timeline-mode surface-card shadow-2 border-round p-3 flex flex-column gap-4">
+  <div class="timeline-controls flex flex-column xl:flex-row gap-3 align-items-stretch">
+    <div class="zoom-control flex align-items-center gap-3 flex-wrap">
+      <span class="control-label">Zoom</span>
+      <p-slider class="zoom-slider" [(ngModel)]="zoomModel" [min]="zoomBounds.min" [max]="zoomBounds.max" [step]="1"
+                (ngModelChange)="onZoomModelChange($event)"></p-slider>
+      <span class="zoom-value">{{ zoomModel }} days</span>
+    </div>
+    <div class="range-control flex align-items-center gap-3 flex-wrap">
+      <span class="control-label">Range</span>
+      <p-calendar [(ngModel)]="rangeModel" selectionMode="range" [showButtonBar]="true"
+                  [showIcon]="true" [touchUI]="true" dateFormat="M d, yy" placeholder="Select a date range"
+                  appendTo="body" (ngModelChange)="onRangeChange($event)"
+                  [maxDate]="today()" styleClass="range-calendar"></p-calendar>
+      <button pButton type="button" icon="pi pi-times" label="Clear" class="p-button-text" (click)="clearRange()"
+              *ngIf="rangeModel?.length"></button>
+    </div>
+    <div class="flex align-items-center justify-content-end flex-1">
+      <button pButton type="button" icon="pi pi-refresh" label="Reset view"
+              class="p-button-outlined" (click)="resetView()"></button>
+    </div>
+  </div>
+
+  <div class="status-summary flex flex-wrap gap-2" *ngIf="statusSummary().length">
+    <p-tag *ngFor="let summary of statusSummary()"
+           [value]="summary.label + ': ' + summary.count"
+           class="status-tag"
+           [style]="{ '--tag-background': summary.color }"></p-tag>
+  </div>
+
+  <div class="timeline-shell" [class.dragging]="dragging()" (wheel)="onWheel($event)">
+    <div class="timeline-axis">
+      <ng-container *ngFor="let tick of ticks()">
+        <div class="axis-line" [style.left]="tick.left"></div>
+        <span class="axis-label" [style.left]="tick.left">{{ tick.label }}</span>
+      </ng-container>
+      <div class="today-marker" *ngIf="todayMarker()" [style.left]="todayMarker()!.left">
+        <span>Today</span>
+      </div>
+    </div>
+
+    <div #timelineTrack class="timeline-track"
+         [style.height.px]="Math.max(rowCount() * rowHeight, rowHeight)"
+         (pointerdown)="onPointerDown($event)"
+         (pointermove)="onPointerMove($event)"
+         (pointerup)="onPointerUp($event)"
+         (pointercancel)="onPointerCancel($event)"
+         (pointerleave)="onPointerCancel($event)">
+      <div class="timeline-item"
+           *ngFor="let item of layoutItems(); trackBy: trackByItemId"
+           [ngClass]="['status-' + (item.status ?? 'open').toLowerCase(), item.isClippedStart ? 'clipped-start' : '', item.isClippedEnd ? 'clipped-end' : '']"
+           [style.left]="item.left"
+           [style.width]="item.width"
+           [style.top.px]="item.row * rowHeight + 6"
+           [style.background]="item.color ?? resolveColor(item.status ?? '')"
+           pTooltip="{{ buildTooltip(item) }}"
+           tooltipPosition="top"
+           tooltipStyleClass="timeline-tooltip">
+        <span class="item-label">{{ item.label }}</span>
+        <span class="item-dates">{{ item.start | date: 'MMM d' }} – {{ item.end | date: 'MMM d' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline-empty" *ngIf="!layoutItems().length">
+    <i class="pi pi-calendar-times"></i>
+    <p>{{ emptyStateMessage }}</p>
+  </div>
+
+  <div class="timeline-list flex flex-column gap-2" *ngIf="layoutItems().length">
+    <div class="timeline-list-item border-round surface-section px-3 py-2 flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-2"
+         *ngFor="let item of filteredItems()">
+      <div class="flex flex-column gap-1">
+        <span class="list-title">{{ item.label }}</span>
+        <span class="list-subtitle">{{ item.metadata?.['segmentId'] }} · {{ item.metadata?.['vendor'] }}</span>
+        <span class="list-location" *ngIf="item.metadata?.['city'] || item.metadata?.['state']">
+          {{ item.metadata?.['city'] }}<span *ngIf="item.metadata?.['city'] && item.metadata?.['state']">, </span>{{ item.metadata?.['state'] }}
+        </span>
+      </div>
+      <div class="flex flex-wrap align-items-center gap-3 text-sm">
+        <span class="list-date"><i class="pi pi-calendar"></i> {{ item.start | date: 'MMM d, y' }}</span>
+        <span class="list-date"><i class="pi pi-flag"></i> {{ item.end | date: 'MMM d, y' }}</span>
+        <span class="status-pill" [style.background]="item.color ?? resolveColor(item.status ?? '')">
+          {{ (item.status || openLabel) | titlecase }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

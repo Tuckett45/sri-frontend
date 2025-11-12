@@ -15,22 +15,26 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: false
           
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20.x'  # Ensure you use a compatible Node.js version
+          cache: 'npm'
 
       - name: Clean npm cache and install dependencies
         run: |
           rm -rf node_modules
           rm package-lock.json
           npm cache clean --force
-          npm install --no-optional
+          npm install --force
+
+      - name: Build the application
+        run: npm run build
 
       - name: Build And Deploy
         id: builddeploy
@@ -39,8 +43,9 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_THANKFUL_MOSS_0110F6E1E }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
           action: "upload"
-          app_location: "/"  # App source code path
-          output_location: "dist/sri-frontend"  # Build output directory
+          app_location: "/"  # App source code path, adjust if necessary
+          output_location: "dist/sri-frontend"  # Adjust to your build output directory
+          skip_app_build: true
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'

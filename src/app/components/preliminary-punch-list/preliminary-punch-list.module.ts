@@ -28,6 +28,8 @@ import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { OverlayBadgeModule } from 'primeng/overlaybadge';
 import { TabsModule } from 'primeng/tabs'
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TimelineModule } from '../timeline/timeline.module';
 import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
 import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 import { DatePipe } from '@angular/common';
@@ -51,7 +53,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
     DropdownModule,
     GalleriaModule,
     OverlayBadgeModule,
+    TimelineModule,
     ReactiveFormsModule,
+    SelectButtonModule,
     TabsModule,
     MatAutocompleteModule,
     MatToolbarModule,

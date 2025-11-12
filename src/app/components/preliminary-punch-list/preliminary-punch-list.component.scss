@@ -24,6 +24,21 @@
     align-items: center;
   }
 
+  .view-toggle {
+    background: rgba(255, 255, 255, 0.9);
+    margin-bottom: 1.5rem;
+
+    .p-selectbutton .p-button {
+      min-width: 10rem;
+      font-weight: 600;
+    }
+
+    .view-hint {
+      font-size: 0.85rem;
+      color: #4b5563;
+    }
+  }
+
   .export-btn {
     align-items: center;
     background-color: #0baa06;
@@ -355,6 +370,11 @@
       }
     }
   }
+
+  .timeline-wrapper {
+    margin-top: 1.5rem;
+    background: rgba(255, 255, 255, 0.9);
+  }
 }
 
 .modal-body {
@@ -412,15 +432,15 @@
   padding: .5rem .5rem;
 }
 
-:host ::ng-deep .p-overlaybadge .p-badge {
+::ng-deep .p-overlaybadge .p-badge {
   position: relative !important;
-  // transform: translate(50%, -50%);
+  transform: translate(50%, -50%);
   transform-origin: 100% 0;
   margin: 0;
   padding-left: 5px;
   outline-style: none !important;
 }
-:host ::ng-deep .p-badge {
+ ::ng-deep .p-badge {
   display: initial !important;
  }
 

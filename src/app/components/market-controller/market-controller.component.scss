@@ -677,6 +677,25 @@ button.mat-raised-button {
   border-style: none !important;
 }
 
+::ng-deep .p-overlaybadge {
+  position: relative !important;
+  color: black;
+  font-size: .85rem;
+  padding: .5rem .5rem;
+}
+
+::ng-deep .p-overlaybadge .p-badge {
+  position: relative !important;
+  transform: translate(50%, -50%);
+  transform-origin: 100% 0;
+  margin: 0;
+  padding-left: 5px;
+  outline-style: none !important;
+}
+ ::ng-deep .p-badge {
+  display: initial !important;
+ }
+
 ::ng-deep .p-galleria-mask {
   position: fixed !important;
   top: 0 !important;

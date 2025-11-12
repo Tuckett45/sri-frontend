@@ -1,0 +1,147 @@
+<section class="mileage-details">
+  <header class="mileage-details__header">
+    <h3 class="mileage-details__title">Mileage Log</h3>
+    <button
+      mat-stroked-button
+      color="primary"
+      type="button"
+      (click)="addEntry()"
+      *ngIf="!isEditing">
+      <mat-icon>add</mat-icon>
+      Add Entry
+    </button>
+  </header>
+
+  <div class="mileage-details__form" *ngIf="isEditing">
+    <h4 class="mileage-details__form-title">{{ editingIndex !== null ? 'Edit' : 'Add' }} Mileage Entry</h4>
+    <form [formGroup]="mileageForm" class="mileage-details__form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Date</mat-label>
+        <input matInput type="date" formControlName="date" required />
+        <mat-error *ngIf="hasError('date', 'required')">Date is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Customer / Job #</mat-label>
+        <input matInput formControlName="customerJobNumber" placeholder="Optional" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>From Location</mat-label>
+        <input matInput formControlName="fromLocation" placeholder="City, State or Hub" required />
+        <mat-error *ngIf="hasError('fromLocation', 'required')">From location is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>To Location</mat-label>
+        <input matInput formControlName="toLocation" placeholder="City, State or Hub" required />
+        <mat-error *ngIf="hasError('toLocation', 'required')">To location is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="mileage-details__form--stretch">
+        <mat-label>Reason for Travel</mat-label>
+        <mat-select formControlName="reasonForTravel" required>
+          <mat-option *ngFor="let reason of reasonOptions" [value]="reason">
+            {{ reason }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="hasError('reasonForTravel', 'required')">Reason is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Beginning Mileage</mat-label>
+        <input matInput type="number" formControlName="beginningMileage" min="0" required />
+        <mat-error *ngIf="hasError('beginningMileage', 'required')">Beginning mileage is required</mat-error>
+        <mat-error *ngIf="hasError('beginningMileage', 'min')">Must be 0 or greater</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Ending Mileage</mat-label>
+        <input matInput type="number" formControlName="endingMileage" min="0" required />
+        <mat-error *ngIf="hasError('endingMileage', 'required')">Ending mileage is required</mat-error>
+        <mat-error *ngIf="hasError('endingMileage', 'min')">Must be 0 or greater</mat-error>
+        <mat-error *ngIf="hasError('endingMileage', 'invalidMileage')">
+          Ending mileage must be greater than or equal to beginning mileage
+        </mat-error>
+      </mat-form-field>
+
+      <div class="mileage-details__total">
+        <span>Total Miles</span>
+        <strong>{{ calculateTotalMiles() }}</strong>
+      </div>
+    </form>
+
+    <div class="mileage-details__actions">
+      <button mat-stroked-button type="button" color="secondary" (click)="cancelEdit()">Cancel</button>
+      <button mat-flat-button type="button" color="primary" (click)="saveEntry()">
+        {{ editingIndex !== null ? 'Update Entry' : 'Add Entry' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="mileage-details__table" *ngIf="dataSource.data.length > 0">
+    <table mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.date | date: 'MM/dd/yyyy' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="from">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>From</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.fromLocation }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="to">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>To</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.toLocation }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="reason">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Reason</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.reasonForTravel }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="beginning">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Begin</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.beginningMileage | number:'1.0-0' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="ending">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>End</th>
+        <td mat-cell *matCellDef="let entry">{{ entry.endingMileage | number:'1.0-0' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="total">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Total</th>
+        <td mat-cell *matCellDef="let entry">
+          <strong>{{ entry.totalMiles | number:'1.0-0' }}</strong>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let entry; let i = index">
+          <button mat-icon-button (click)="editEntry(i)" [disabled]="isEditing" aria-label="Edit entry">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteEntry(i)" [disabled]="isEditing" aria-label="Delete entry">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <div class="mileage-details__summary">
+      <span>Total Miles for All Entries</span>
+      <strong>{{ getTotalMiles() }}</strong>
+    </div>
+  </div>
+
+  <div class="mileage-details__empty" *ngIf="dataSource.data.length === 0 && !isEditing">
+    <p>No mileage entries yet. Click “Add Entry” to get started.</p>
+  </div>
+</section>
+

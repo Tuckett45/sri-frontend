@@ -1,38 +1,18 @@
-﻿<div class="profile-wrapper">
-  <section class="profile-card surface-card border-round shadow-1">
-    <header class="section-header">
-      <h2>User Information</h2>
-    </header>
+<mat-card class="profile-card">
+  <div class="header-section">
+    <h2>User Profile</h2>
+  </div>
 
-    <dl class="profile-list">
-      <div class="profile-row">
-        <dt>Name</dt>
-        <dd>{{ profileData.name }}</dd>
-      </div>
-      <div class="profile-row">
-        <dt>Email</dt>
-        <dd>{{ profileData.email }}</dd>
-      </div>
-      <div class="profile-row">
-        <dt>Company</dt>
-        <dd>{{ profileData.company || '—' }}</dd>
-      </div>
-      <div class="profile-row">
-        <dt>Role</dt>
-        <dd>{{ profileData.role || '—' }}</dd>
-      </div>
-    </dl>
+  <mat-card-content>
+    <!-- Profile Information Section -->
+    <div class="profile-info">
+      <p><strong>Name:  </strong> <span class="profile-text">{{ profileData.name }}</span></p>
+      <p><strong>Email:  </strong> <span class="profile-text">{{ profileData.email }}</span></p>
+    </div>
 
-    <div class="actions">
+    <!-- Edit Profile Button -->
+    <div class="button-container">
       <button mat-raised-button (click)="openEditModal()">Edit Profile</button>
     </div>
-  </section>
-
-  <section class="settings-card surface-card border-round shadow-1">
-    <header class="section-header">
-      <h2>User Settings</h2>
-    </header>
-
-    <app-feature-flag-panel></app-feature-flag-panel>
-  </section>
-</div>
+  </mat-card-content>
+</mat-card>
