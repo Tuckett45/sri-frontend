@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -14,6 +14,8 @@ import { HandoffPackage, DeploymentRole, Deployment, DeploymentStatus, SignOffTy
 import { DeploymentRoleService } from '../../services/deployment-role.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ToastModule } from 'primeng/toast';
+import { DeploymentSignalRService } from '../../services/deployment-signalr.service';
+import { FeatureFlagService } from 'src/app/services/feature-flag.service';
 
 @Component({
   selector: 'ark-handoff',
@@ -35,7 +37,7 @@ import { ToastModule } from 'primeng/toast';
   styleUrls: ['./handoff.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HandoffComponent implements OnInit {
+export class HandoffComponent implements OnInit, OnDestroy {
   protected readonly form = inject(FormBuilder).nonNullable.group({
     cabinetPhotos: [[] as string[]],
     asBuilt: [[] as string[]],
@@ -93,7 +95,12 @@ export class HandoffComponent implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly roleService = inject(DeploymentRoleService);
   protected readonly authService = inject(AuthService);
+  private readonly signalRService = inject(DeploymentSignalRService);
+  private readonly featureFlagService = inject(FeatureFlagService);
   private projectId = '';
+  
+  // SignalR connection state
+  private signalRConnected = false;
 
   protected package(): HandoffPackage | null {
     return this.pkg();
@@ -124,6 +131,17 @@ export class HandoffComponent implements OnInit {
     // Load deployment and handoff data
     await this.loadDeployment(id);
     void this.loadHandoffPackage(id);
+
+    // Connect to SignalR for real-time updates (if notifications enabled)
+    await this.connectToSignalR();
+  }
+
+  ngOnDestroy(): void {
+    // Disconnect from SignalR when component is destroyed
+    if (this.signalRConnected) {
+      void this.signalRService.disconnect();
+      this.signalRConnected = false;
+    }
   }
 
   /**
@@ -378,5 +396,139 @@ export class HandoffComponent implements OnInit {
       },
       { emitEvent: false }
     );
+  }
+
+  // ===========================
+  // SignalR Real-Time Updates
+  // ===========================
+
+  /**
+   * Connect to SignalR hub for real-time sign-off notifications
+   */
+  private async connectToSignalR(): Promise<void> {
+    const currentUser = this.authService.getUser();
+    if (!currentUser) {
+      console.warn('Cannot connect to SignalR: No user logged in');
+      return;
+    }
+
+    // Check if deployment notifications feature flag is enabled
+    const notificationsEnabled = this.featureFlagService.flagEnabled('deploymentNotifications')();
+    if (!notificationsEnabled) {
+      console.log('SignalR notifications disabled via feature flag');
+      return;
+    }
+
+    try {
+      // Connect to SignalR hub
+      await this.signalRService.connect(currentUser.id);
+      this.signalRConnected = true;
+      console.log('✅ Connected to SignalR for handoff real-time updates');
+
+      // Set up event listeners for sign-off events
+      this.setupSignalRListeners();
+    } catch (error) {
+      console.error('Failed to connect to SignalR for handoff updates:', error);
+      // Don't show error to user - SignalR is enhancement, not critical
+    }
+  }
+
+  /**
+   * Set up SignalR event listeners for sign-off events
+   */
+  private setupSignalRListeners(): void {
+    // Get notifications observable from SignalR service
+    const notifications = this.signalRService.getNotifications();
+
+    // Subscribe to notifications and filter for this deployment
+    notifications().forEach(notification => {
+      // Only process notifications for this deployment
+      if (notification.deploymentId !== this.projectId) {
+        return;
+      }
+
+      // Handle SignOffRecorded event
+      if (notification.type === 'signoff_recorded') {
+        console.log('📢 SignalR: Sign-off recorded event received', notification);
+        this.handleSignOffRecordedEvent(notification);
+      }
+
+      // Handle ReadyForSignOff event
+      if (notification.type === 'ready_for_signoff') {
+        console.log('📢 SignalR: Ready for sign-off event received', notification);
+        this.handleReadyForSignOffEvent(notification);
+      }
+
+      // Handle DeploymentCompleted event
+      if (notification.type === 'completed') {
+        console.log('📢 SignalR: Deployment completed event received', notification);
+        this.handleDeploymentCompletedEvent(notification);
+      }
+    });
+  }
+
+  /**
+   * Handle SignOffRecorded event from SignalR
+   */
+  private async handleSignOffRecordedEvent(notification: any): Promise<void> {
+    try {
+      // Refresh sign-off status from backend
+      const status = await this.deploymentService.getSignOffStatus(this.projectId);
+      
+      // Update all sign-off signals with latest data
+      this.vendorSignedBy.set(status.vendorSignedBy);
+      this.vendorSignedAt.set(status.vendorSignedAt);
+      this.techSignedBy.set(status.techSignedBy);
+      this.techSignedAt.set(status.techSignedAt);
+      this.deSignedBy.set(status.deSignedBy);
+      this.deSignedAt.set(status.deSignedAt);
+
+      // Update deployment object
+      const deployment = this.deployment();
+      if (deployment) {
+        deployment.vendorSignedBy = status.vendorSignedBy;
+        deployment.vendorSignedAt = status.vendorSignedAt;
+        deployment.techSignedBy = status.techSignedBy;
+        deployment.techSignedAt = status.techSignedAt;
+        deployment.deSignedBy = status.deSignedBy;
+        deployment.deSignedAt = status.deSignedAt;
+        deployment.isFullySignedOff = status.isFullySignedOff;
+        this.deployment.set(deployment);
+      }
+
+      console.log('✅ Sign-off status updated from SignalR event');
+    } catch (error) {
+      console.error('Failed to refresh sign-off status after SignalR event:', error);
+    }
+  }
+
+  /**
+   * Handle ReadyForSignOff event from SignalR
+   */
+  private handleReadyForSignOffEvent(notification: any): void {
+    const currentUserRole = this.currentUserRole();
+    const nextPendingRole = this.nextPendingRole();
+
+    // Check if this notification is for the current user's role
+    if (currentUserRole === nextPendingRole) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Ready for Your Sign-Off',
+        detail: notification.message || 'The deployment is ready for your sign-off',
+        life: 8000 // Show for 8 seconds
+      });
+    }
+  }
+
+  /**
+   * Handle DeploymentCompleted event from SignalR
+   */
+  private handleDeploymentCompletedEvent(notification: any): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: '🎉 Deployment Complete!',
+      detail: notification.message || 'All sign-offs have been completed',
+      life: 10000 // Show for 10 seconds
+    });
   }
 }

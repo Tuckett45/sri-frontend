@@ -8,6 +8,8 @@ import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
 import { DeploymentRole, DeploymentStatus, SignOffType, SignOffStatus } from '../../models/deployment.models';
 import { signal } from '@angular/core';
+import { DeploymentSignalRService } from '../../services/deployment-signalr.service';
+import { FeatureFlagService } from 'src/app/services/feature-flag.service';
 
 describe('HandoffComponent', () => {
   let component: HandoffComponent;
@@ -16,6 +18,8 @@ describe('HandoffComponent', () => {
   let mockRoleService: jasmine.SpyObj<DeploymentRoleService>;
   let mockAuthService: jasmine.SpyObj<AuthService>;
   let mockMessageService: jasmine.SpyObj<MessageService>;
+  let mockSignalRService: jasmine.SpyObj<DeploymentSignalRService>;
+  let mockFeatureFlagService: jasmine.SpyObj<FeatureFlagService>;
 
   const mockUser = {
     id: 'user-123',
@@ -81,6 +85,15 @@ describe('HandoffComponent', () => {
 
     mockMessageService = jasmine.createSpyObj('MessageService', ['add']);
 
+    mockSignalRService = jasmine.createSpyObj('DeploymentSignalRService', [
+      'connect',
+      'disconnect',
+      'getNotifications',
+      'getConnectionState'
+    ]);
+
+    mockFeatureFlagService = jasmine.createSpyObj('FeatureFlagService', ['flagEnabled']);
+
     await TestBed.configureTestingModule({
       imports: [HandoffComponent],
       providers: [
@@ -88,6 +101,8 @@ describe('HandoffComponent', () => {
         { provide: DeploymentRoleService, useValue: mockRoleService },
         { provide: AuthService, useValue: mockAuthService },
         { provide: MessageService, useValue: mockMessageService },
+        { provide: DeploymentSignalRService, useValue: mockSignalRService },
+        { provide: FeatureFlagService, useValue: mockFeatureFlagService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -120,6 +135,13 @@ describe('HandoffComponent', () => {
     mockRoleService.canAccessPhase.and.returnValue(true);
     mockRoleService.canSignOffPhase.and.returnValue(true);
     mockRoleService.getRoleColor.and.returnValue('#95A5A6');
+    
+    // Setup SignalR and FeatureFlag mocks
+    mockSignalRService.connect.and.returnValue(Promise.resolve());
+    mockSignalRService.disconnect.and.returnValue(Promise.resolve());
+    mockSignalRService.getNotifications.and.returnValue(signal([]));
+    mockSignalRService.getConnectionState.and.returnValue(signal('Connected' as any));
+    mockFeatureFlagService.flagEnabled.and.returnValue(signal(true));
   });
 
   it('should create', () => {
@@ -389,4 +411,3 @@ describe('HandoffComponent', () => {
     });
   });
 });
-
