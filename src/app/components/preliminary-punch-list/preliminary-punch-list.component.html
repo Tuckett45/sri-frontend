@@ -8,13 +8,14 @@
     </div>
   </div>
 
-  <div class="view-toggle surface-section border-round p-3 flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
+  <!-- SELECTIVE VIEW/TIMELINE VIEW -->
+  <!-- <div class="view-toggle surface-section border-round p-3 flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
     <p-selectButton [options]="viewOptions" [(ngModel)]="selectedView" optionLabel="label" optionValue="value"
                     ariaLabel="Toggle between table and timeline views"></p-selectButton>
     <span class="view-hint" *ngIf="selectedView === 'timeline'">
       Drag to pan the timeline, use the slider to zoom, and your table filters carry over automatically.
     </span>
-  </div>
+  </div> -->
 
   <ng-container *ngIf="selectedView === 'table'; else timelineMode">
     <div class="filter-section">

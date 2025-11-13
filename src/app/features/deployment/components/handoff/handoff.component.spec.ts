@@ -6,10 +6,11 @@ import { AuthService } from 'src/app/services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
-import { DeploymentRole, DeploymentStatus, SignOffType, SignOffStatus } from '../../models/deployment.models';
+import { DeploymentRole, DeploymentStatus, SignOffType, SignOffStatus, HandoffPackage } from '../../models/deployment.models';
 import { signal } from '@angular/core';
 import { DeploymentSignalRService } from '../../services/deployment-signalr.service';
 import { FeatureFlagService } from 'src/app/services/feature-flag.service';
+import { UserRole } from 'src/app/models/role.enum';
 
 describe('HandoffComponent', () => {
   let component: HandoffComponent;
@@ -20,13 +21,26 @@ describe('HandoffComponent', () => {
   let mockMessageService: jasmine.SpyObj<MessageService>;
   let mockSignalRService: jasmine.SpyObj<DeploymentSignalRService>;
   let mockFeatureFlagService: jasmine.SpyObj<FeatureFlagService>;
+  const createHandoffPackage = (overrides: Partial<HandoffPackage> = {}): HandoffPackage => ({
+    id: 'handoff-123',
+    deploymentId: 'deploy-123',
+    requiredPhotos: [],
+    asBuiltFileId: null,
+    portTestFileId: null,
+    signedVendorBy: undefined,
+    signedVendorAt: null,
+    signedDeBy: undefined,
+    signedDeAt: null,
+    packageUrl: undefined,
+    ...overrides
+  });
 
   const mockUser = {
     id: 'user-123',
     name: 'Test User',
     email: 'test@example.com',
     company: 'SRI',
-    role: 'Technician'
+    role: UserRole.SRITech
   };
 
   const mockDeployment = {
@@ -121,16 +135,10 @@ describe('HandoffComponent', () => {
 
     // Setup default mock returns
     mockAuthService.getUser.and.returnValue(mockUser);
-    mockAuthService.getUserRole.and.returnValue('Technician');
+    mockAuthService.getUserRole.and.returnValue(UserRole.SRITech);
     mockDeploymentService.get.and.returnValue(Promise.resolve(mockDeployment));
     mockDeploymentService.getSignOffStatus.and.returnValue(Promise.resolve(mockSignOffStatus));
-    mockDeploymentService.getHandoff.and.returnValue(Promise.resolve({
-      requiredPhotos: [],
-      asBuiltFileId: null,
-      portTestFileId: null,
-      signedVendorAt: null,
-      signedDeAt: null
-    }));
+    mockDeploymentService.getHandoff.and.returnValue(Promise.resolve(createHandoffPackage()));
     mockRoleService.mapUserRoleToDeploymentRole.and.returnValue(DeploymentRole.SRITech);
     mockRoleService.canAccessPhase.and.returnValue(true);
     mockRoleService.canSignOffPhase.and.returnValue(true);
@@ -151,7 +159,7 @@ describe('HandoffComponent', () => {
   describe('Role-Based Access Control', () => {
     it('should initialize user role on component init', async () => {
       await component.ngOnInit();
-      expect(mockRoleService.mapUserRoleToDeploymentRole).toHaveBeenCalledWith('Technician', 'SRI');
+      expect(mockRoleService.mapUserRoleToDeploymentRole).toHaveBeenCalledWith(UserRole.SRITech, 'SRI');
       expect(component['currentUserRole']()).toBe(DeploymentRole.SRITech);
     });
 
@@ -237,13 +245,17 @@ describe('HandoffComponent', () => {
       };
       
       mockDeploymentService.recordSignOff.and.returnValue(Promise.resolve(mockStatus));
-      mockDeploymentService.signHandoff.and.returnValue(Promise.resolve({
-        requiredPhotos: ['photo1'],
-        asBuiltFileId: 'asbuilt1',
-        portTestFileId: 'porttest1',
-        signedVendorAt: new Date().toISOString(),
-        signedDeAt: null
-      }));
+      mockDeploymentService.signHandoff.and.returnValue(
+        Promise.resolve(
+          createHandoffPackage({
+            requiredPhotos: ['photo1'],
+            asBuiltFileId: 'asbuilt1',
+            portTestFileId: 'porttest1',
+            signedVendorAt: new Date().toISOString(),
+            signedDeAt: null
+          })
+        )
+      );
 
       await component['sign']();
 
@@ -275,13 +287,17 @@ describe('HandoffComponent', () => {
       };
       
       mockDeploymentService.recordSignOff.and.returnValue(Promise.resolve(mockStatus));
-      mockDeploymentService.signHandoff.and.returnValue(Promise.resolve({
-        requiredPhotos: ['photo1'],
-        asBuiltFileId: 'asbuilt1',
-        portTestFileId: 'porttest1',
-        signedVendorAt: new Date().toISOString(),
-        signedDeAt: null
-      }));
+      mockDeploymentService.signHandoff.and.returnValue(
+        Promise.resolve(
+          createHandoffPackage({
+            requiredPhotos: ['photo1'],
+            asBuiltFileId: 'asbuilt1',
+            portTestFileId: 'porttest1',
+            signedVendorAt: new Date().toISOString(),
+            signedDeAt: null
+          })
+        )
+      );
 
       await component['sign']();
 
@@ -311,13 +327,17 @@ describe('HandoffComponent', () => {
       };
       
       mockDeploymentService.recordSignOff.and.returnValue(Promise.resolve(mockStatus));
-      mockDeploymentService.signHandoff.and.returnValue(Promise.resolve({
-        requiredPhotos: ['photo1'],
-        asBuiltFileId: 'asbuilt1',
-        portTestFileId: 'porttest1',
-        signedVendorAt: new Date().toISOString(),
-        signedDeAt: new Date().toISOString()
-      }));
+      mockDeploymentService.signHandoff.and.returnValue(
+        Promise.resolve(
+          createHandoffPackage({
+            requiredPhotos: ['photo1'],
+            asBuiltFileId: 'asbuilt1',
+            portTestFileId: 'porttest1',
+            signedVendorAt: new Date().toISOString(),
+            signedDeAt: new Date().toISOString()
+          })
+        )
+      );
 
       await component['sign']();
 

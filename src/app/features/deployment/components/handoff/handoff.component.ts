@@ -98,6 +98,7 @@ export class HandoffComponent implements OnInit, OnDestroy {
   private readonly signalRService = inject(DeploymentSignalRService);
   private readonly featureFlagService = inject(FeatureFlagService);
   private projectId = '';
+  protected readonly DeploymentRole = DeploymentRole;
   
   // SignalR connection state
   private signalRConnected = false;

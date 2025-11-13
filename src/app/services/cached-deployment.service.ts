@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of, timer } from 'rxjs';
 import { map, shareReplay, switchMap, tap, catchError } from 'rxjs/operators';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environments';
 
 export interface DeploymentListItem {
   id: string;

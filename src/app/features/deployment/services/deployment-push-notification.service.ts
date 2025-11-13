@@ -60,11 +60,30 @@ export class DeploymentPushNotificationService {
   private isSubscribed$ = new BehaviorSubject<boolean>(false);
   private subscriptionError$ = new BehaviorSubject<string | null>(null);
   private currentSubscription$ = new BehaviorSubject<PushSubscription | null>(null);
+  private swRegistration: ServiceWorkerRegistration | null = null;
 
   // Public observables
   readonly initialized$ = this.isInitialized$.asObservable();
   readonly subscribed$ = this.isSubscribed$.asObservable();
   readonly error$ = this.subscriptionError$.asObservable();
+
+  isSupported(): boolean {
+    return typeof window !== 'undefined' &&
+      'Notification' in window &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window;
+  }
+
+  get permission(): NotificationPermission {
+    return this.isSupported() ? Notification.permission : 'default';
+  }
+
+  async requestPermission(): Promise<NotificationPermission> {
+    if (!this.isSupported()) {
+      throw new Error('Push notifications are not supported in this browser');
+    }
+    return Notification.requestPermission();
+  }
 
   /**
    * Initialize push notifications
@@ -135,6 +154,7 @@ export class DeploymentPushNotificationService {
       if (!registration) {
         registration = await navigator.serviceWorker.ready;
       }
+      this.swRegistration = registration;
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -211,6 +231,69 @@ export class DeploymentPushNotificationService {
    */
   getMySubscriptions(): Observable<PushSubscriptionResponse[]> {
     return this.http.get<PushSubscriptionResponse[]>(this.apiUrl);
+  }
+
+  async showLocalNotification(payload: PushNotificationPayload): Promise<void> {
+    if (!this.isSupported()) {
+      console.warn('Push notifications not supported in this environment.');
+      return;
+    }
+
+    if (this.permission !== 'granted') {
+      console.warn('Notification permission not granted');
+      return;
+    }
+
+    try {
+      const registration = await this.getServiceWorkerRegistration();
+      if (!registration) {
+        throw new Error('Service Worker not registered');
+      }
+
+      const options: NotificationOptions & { vibrate?: number[]; actions?: NotificationAction[] } = {
+        body: payload.body,
+        icon: payload.icon || '/assets/icons/icon-192x192.png',
+        badge: payload.badge || '/assets/icons/badge-72x72.png',
+        data: payload.data,
+        tag: payload.tag,
+        requireInteraction: payload.requireInteraction ?? false,
+        actions: payload.actions
+      };
+
+      if (payload.vibrate) {
+        options.vibrate = payload.vibrate;
+      }
+
+      await registration.showNotification(payload.title, options);
+    } catch (error) {
+      console.error('Failed to show notification:', error);
+      throw error;
+    }
+  }
+
+  async getCurrentSubscription(): Promise<PushSubscriptionJSON | null> {
+    const registration = await this.getServiceWorkerRegistration();
+    if (!registration) {
+      return null;
+    }
+    const subscription = await registration.pushManager.getSubscription();
+    return subscription ? subscription.toJSON() : null;
+  }
+
+  private async getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+    if (this.swRegistration) {
+      return this.swRegistration;
+    }
+    if (!('serviceWorker' in navigator)) {
+      return null;
+    }
+    try {
+      this.swRegistration = await navigator.serviceWorker.ready;
+      return this.swRegistration;
+    } catch (error) {
+      console.error('Failed to get service worker registration:', error);
+      return null;
+    }
   }
 
   /**

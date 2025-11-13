@@ -74,7 +74,7 @@
         </div>
         
         <button 
-          *ngIf="!isVendorSignedOff() && currentUserRole() === 'VendorRep'"
+          *ngIf="!isVendorSignedOff() && currentUserRole() === DeploymentRole.VendorRep"
           pButton 
           type="button" 
           label="Sign as Vendor Rep" 
@@ -108,7 +108,7 @@
         </div>
         
         <button 
-          *ngIf="!isTechSignedOff() && isVendorSignedOff() && currentUserRole() === 'SRITech'"
+          *ngIf="!isTechSignedOff() && isVendorSignedOff() && currentUserRole() === DeploymentRole.SRITech"
           pButton 
           type="button" 
           label="Sign as SRI Tech" 
@@ -142,7 +142,7 @@
         </div>
         
         <button 
-          *ngIf="!isDeSignedOff() && isTechSignedOff() && currentUserRole() === 'DeploymentEngineer'"
+          *ngIf="!isDeSignedOff() && isTechSignedOff() && currentUserRole() === DeploymentRole.DeploymentEngineer"
           pButton 
           type="button" 
           label="Sign as Deployment Engineer" 

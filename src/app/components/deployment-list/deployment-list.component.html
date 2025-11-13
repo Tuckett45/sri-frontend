@@ -105,7 +105,7 @@
   </mat-card>
 
   <!-- Results Summary -->
-  <div class="results-summary" *ngIf="!loading$ | async">
+  <div class="results-summary" *ngIf="!(loading$ | async)">
     <span class="total-count">
       Showing {{deployments.length}} of {{totalItems}} deployments
     </span>

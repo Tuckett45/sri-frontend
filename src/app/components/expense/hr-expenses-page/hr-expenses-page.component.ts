@@ -52,8 +52,11 @@ export class HrExpensesPageComponent implements OnInit {
     private imageExportService: ExpenseImageExportService,
     private toastr: ToastrService,
     private dialog: MatDialog,
-    private readonly expenseState: ExpenseStateService
+  private readonly expenseState: ExpenseStateService
   ) {}
+
+  protected employeeOptions: string[] = [];
+  private readonly employeeSet = new Set<string>();
 
   ngOnInit(): void {
     this.loadExpenses();
@@ -201,7 +204,23 @@ export class HrExpensesPageComponent implements OnInit {
 
     this.totalItems = this.resolveTotal(response, items.length);
     this.expenses = items.map(item => this.toViewModel(item));
+    this.addEmployeesFrom(this.expenses);
     this.loading = false;
+  }
+
+  private addEmployeesFrom(expenses: DisplayExpense[]): void {
+    let changed = false;
+    expenses.forEach(expense => {
+      const creator = expense.createdBy?.trim();
+      if (creator && !this.employeeSet.has(creator)) {
+        this.employeeSet.add(creator);
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      this.employeeOptions = Array.from(this.employeeSet).sort((a, b) => a.localeCompare(b));
+    }
   }
 
   private toViewModel(item: ExpenseListItem): DisplayExpense {

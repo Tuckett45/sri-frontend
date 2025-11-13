@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
 import { DeploymentFeatureFlagsService } from '../../services/deployment-feature-flags.service';
 import { DeploymentSignalRService } from '../../services/deployment-signalr.service';
+import * as signalR from '@microsoft/signalr';
 
 @Component({
   selector: 'ark-deployment-settings',
@@ -402,12 +403,12 @@ export class DeploymentSettingsComponent implements OnInit {
     const state = this.signalRService.getConnectionState()();
     
     switch (state) {
-      case 1: // Connected
+      case signalR.HubConnectionState.Connected:
         this.connectionStatus = 'connected';
         this.connectionStatusText = 'Connected to notification service';
         break;
-      case 2: // Connecting
-      case 3: // Reconnecting
+      case signalR.HubConnectionState.Connecting:
+      case signalR.HubConnectionState.Reconnecting:
         this.connectionStatus = 'connecting';
         this.connectionStatusText = 'Connecting to notification service...';
         break;

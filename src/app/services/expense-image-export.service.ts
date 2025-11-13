@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Expense, ExpenseImage } from '../models/expense.model';
+import { environment } from 'src/environments/environments';
 
 export interface ImageExportResult {
   success: boolean;
@@ -18,6 +19,14 @@ export interface ImageExportResult {
   providedIn: 'root'
 })
 export class ExpenseImageExportService {
+  private readonly subscriptionHeaders = new HttpHeaders({
+    'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+  });
+  private readonly apiBaseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
+  private readonly blobBaseUrl = environment.receiptBlobBaseUrl
+    ? String(environment.receiptBlobBaseUrl).replace(/\/$/, '')
+    : '';
+
   constructor(private http: HttpClient) {}
 
   /**
@@ -51,7 +60,7 @@ export class ExpenseImageExportService {
     expensesWithImages.forEach(expense => {
       expense.images?.forEach((image, index) => {
         result.totalImages++;
-        const downloadObs = this.downloadImage(image.blobUrl).pipe(
+        const downloadObs = this.downloadImage(image).pipe(
           map(blob => ({ expense, imageIndex: index, blob })),
           catchError(err => {
             result.failedImages++;
@@ -89,8 +98,33 @@ export class ExpenseImageExportService {
   /**
    * Download a single image from URL
    */
-  private downloadImage(url: string): Observable<Blob> {
-    return this.http.get(url, { responseType: 'blob' });
+  private downloadImage(image: ExpenseImage): Observable<Blob> {
+    const rawUrl = image?.blobUrl ?? '';
+    const trimmed = rawUrl?.trim?.() ?? '';
+
+    if (!trimmed) {
+      return of(new Blob());
+    }
+
+    if (trimmed.startsWith('data:')) {
+      return of(this.dataUrlToBlob(trimmed));
+    }
+
+    if (this.isBase64String(trimmed)) {
+      return of(this.base64ToBlob(trimmed, image.contentType));
+    }
+
+    const resolvedUrl = this.resolveUrl(trimmed);
+    const options: {
+      responseType: 'blob';
+      headers?: HttpHeaders;
+    } = { responseType: 'blob' as const };
+
+    if (this.shouldAttachApiHeaders(resolvedUrl)) {
+      options.headers = this.subscriptionHeaders;
+    }
+
+    return this.http.get(resolvedUrl, options);
   }
 
   /**
@@ -155,6 +189,65 @@ export class ExpenseImageExportService {
     return expenses.reduce((count, exp) => {
       return count + (exp.images?.length || 0);
     }, 0);
+  }
+
+  private resolveUrl(url: string): string {
+    if (!url) return url;
+    if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:')) {
+      return url;
+    }
+    if (url.startsWith('/')) {
+      if (this.blobBaseUrl) {
+        return `${this.blobBaseUrl}${url}`;
+      }
+      // keep relative so local dev proxy (or same-origin hosting) can handle routing
+      return url;
+    }
+    if (this.blobBaseUrl) {
+      return `${this.blobBaseUrl}/${url.replace(/^\/+/, '')}`;
+    }
+    return url;
+  }
+
+  private shouldAttachApiHeaders(url: string): boolean {
+    if (!url) return false;
+    if (this.blobBaseUrl && url.startsWith(this.blobBaseUrl)) {
+      return false;
+    }
+    if (url.startsWith('/')) {
+      return !this.blobBaseUrl;
+    }
+    const normalized = url.toLowerCase();
+    return normalized.startsWith(environment.apiUrl.toLowerCase()) ||
+      normalized.startsWith(this.apiBaseUrl.toLowerCase());
+  }
+
+  private dataUrlToBlob(dataUrl: string): Blob {
+    const [meta, data] = dataUrl.split(',');
+    const mimeMatch = /^data:([^;]+)/i.exec(meta ?? '');
+    const mime = mimeMatch?.[1] ?? 'application/octet-stream';
+    return this.base64ToBlob(data ?? '', mime);
+  }
+
+  private base64ToBlob(base64: string, mimeType?: string): Blob {
+    try {
+      const binary = window.atob(base64.replace(/\s+/g, ''));
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new Blob([bytes], { type: mimeType || 'application/octet-stream' });
+    } catch {
+      return new Blob();
+    }
+  }
+
+  private isBase64String(value: string): boolean {
+    if (!value || value.length < 40) {
+      return false;
+    }
+    return /^[A-Za-z0-9+/=\s]+$/.test(value) && !value.includes('://');
   }
 }
 

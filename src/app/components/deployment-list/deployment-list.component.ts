@@ -17,7 +17,8 @@ import {
   switchMap, 
   startWith,
   tap,
-  catchError
+  catchError,
+  map
 } from 'rxjs/operators';
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { 
@@ -82,7 +83,7 @@ export class DeploymentListComponent implements OnInit, OnDestroy, AfterViewInit
   
   // Performance metrics
   cacheStats$ = timer(0, 30000).pipe( // Update every 30 seconds
-    switchMap(() => this.deploymentService.getCacheStats()),
+    map(() => this.deploymentService.getCacheStats()),
     startWith({ size: 0, hitRate: 0 })
   );
 
@@ -168,46 +169,6 @@ export class DeploymentListComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   /**
-   * Clear all filters
-   */
-  clearFilters(): void {
-    this.filterForm.reset();
-  }
-
-  /**
-   * Get status badge class for styling
-   */
-  getStatusClass(status: string): string {
-    const statusClasses: { [key: string]: string } = {
-      'Planned': 'status-planned',
-      'InProgress': 'status-in-progress',
-      'Complete': 'status-complete',
-      'OnHold': 'status-on-hold'
-    };
-    return statusClasses[status] || 'status-default';
-  }
-
-  /**
-   * Get progress bar class based on percentage
-   */
-  getProgressClass(percentage: number): string {
-    if (percentage >= 100) return 'progress-complete';
-    if (percentage >= 75) return 'progress-high';
-    if (percentage >= 50) return 'progress-medium';
-    if (percentage >= 25) return 'progress-low';
-    return 'progress-none';
-  }
-
-  /**
-   * Format date for display
-   */
-  formatDate(date: Date | string | undefined): string {
-    if (!date) return 'N/A';
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString();
-  }
-
-  /**
    * Get performance metrics for debugging
    */
   getPerformanceMetrics(): any {
@@ -216,6 +177,53 @@ export class DeploymentListComponent implements OnInit, OnDestroy, AfterViewInit
       cacheHitRate: this.performanceService.getCacheHitRate(),
       totalOperations: this.performanceService.getMetrics().length
     };
+  }
+
+  clearFilters(): void {
+    this.filterForm.reset({
+      status: '',
+      vendor: '',
+      dataCenter: '',
+      dateFrom: '',
+      dateTo: '',
+      search: ''
+    });
+    // Trigger reload with cleared filters
+    this.currentPage = 1;
+    this.deployments = [];
+    this.loadInitialData();
+  }
+
+  formatDate(value?: string | Date | null): string {
+    if (!value) {
+      return 'N/A';
+    }
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+  }
+
+  getStatusClass(status: string): string {
+    switch ((status || '').toLowerCase()) {
+      case 'planned':
+        return 'status-planned';
+      case 'inprogress':
+      case 'in progress':
+        return 'status-in-progress';
+      case 'complete':
+        return 'status-complete';
+      case 'onhold':
+      case 'on hold':
+        return 'status-on-hold';
+      default:
+        return 'status-default';
+    }
+  }
+
+  getProgressClass(value: number | null | undefined): string {
+    const pct = typeof value === 'number' ? value : 0;
+    if (pct >= 80) return 'progress-high';
+    if (pct >= 50) return 'progress-medium';
+    return 'progress-low';
   }
 
   // Private methods

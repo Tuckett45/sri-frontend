@@ -31,7 +31,13 @@
 
     <mat-form-field *ngIf="showEmployeeField" appearance="fill">
       <mat-label>Employee</mat-label>
-      <input matInput formControlName="employee" />
+      <input matInput formControlName="employee" [matAutocomplete]="employeeAuto" />
+      <mat-autocomplete #employeeAuto="matAutocomplete" autoActiveFirstOption>
+        <mat-option *ngFor="let employee of filteredEmployeeOptions" [value]="employee">
+          {{ employee }}
+        </mat-option>
+        <mat-option *ngIf="!filteredEmployeeOptions.length" [disabled]="true">No matches</mat-option>
+      </mat-autocomplete>
     </mat-form-field>
 
     <mat-form-field appearance="fill">

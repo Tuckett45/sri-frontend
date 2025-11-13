@@ -2,12 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { DeploymentService } from './deployment.service';
 import { SignOffType, SignOffStatus, SignOffRequest } from '../models/deployment.models';
-import { local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 
 describe('DeploymentService - Sign-Off Methods', () => {
   let service: DeploymentService;
   let httpMock: HttpTestingController;
-  const baseUrl = `${local_environment.apiUrl}/deployments`;
+  const baseUrl = `${environment.apiUrl}/deployments`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({

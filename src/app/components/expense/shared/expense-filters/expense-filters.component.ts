@@ -22,6 +22,13 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
   @Input() statusOptions: ExpenseStatus[] = [];
   @Input() showEmployeeField = true;
   @Input() categoryOptions: string[] = [];
+  @Input() set employeeOptions(value: string[]) {
+    this._employeeOptions = Array.isArray(value) ? [...value] : [];
+    this.updateFilteredEmployees(this.form.get('employee')?.value ?? '');
+  }
+  get employeeOptions(): string[] {
+    return this._employeeOptions;
+  }
   @Input() set initialFilters(value: Partial<ExpenseFilters> | null) {
     if (!value) return;
     this.form.patchValue(value);
@@ -38,6 +45,9 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
     category: ['']
   });
 
+  filteredEmployeeOptions: string[] = [];
+  private _employeeOptions: string[] = [];
+
   private destroy$ = new Subject<void>();
 
   constructor(private fb: FormBuilder) {}
@@ -47,6 +57,11 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.emitFilters());
 
+    this.form.get('employee')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => this.updateFilteredEmployees(value ?? ''));
+
+    this.updateFilteredEmployees(this.form.get('employee')?.value ?? '');
     this.emitFilters();
   }
 
@@ -59,6 +74,7 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
       status: '',
       category: ''
     });
+    this.updateFilteredEmployees('');
     this.emitFilters();
   }
 
@@ -77,5 +93,17 @@ export class ExpenseFiltersComponent implements OnInit, OnDestroy {
       status: status ?? '',
       category: category ?? ''
     });
+  }
+
+  private updateFilteredEmployees(query: string): void {
+    const normalized = (query || '').toLowerCase().trim();
+    const base = [...this._employeeOptions].sort((a, b) => a.localeCompare(b));
+    if (!normalized) {
+      this.filteredEmployeeOptions = base;
+      return;
+    }
+    this.filteredEmployeeOptions = base.filter(option =>
+      option.toLowerCase().includes(normalized)
+    );
   }
 }

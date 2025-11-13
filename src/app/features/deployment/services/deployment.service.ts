@@ -53,7 +53,7 @@ export type StartDeploymentProgressBody =
 @Injectable({ providedIn: 'root' })
 export class DeploymentService {
   private http = inject(HttpClient);
-  private base = `${local_environment.apiUrl}/deployments`;
+  private base = `${environment.apiUrl}/deployments`;
   private listCache = new Map<string, Observable<Deployment[]>>();
 
   private httpOptions = {
@@ -137,7 +137,9 @@ export class DeploymentService {
   }
 
   getProgress(deploymentId: string): Observable<StartDeploymentProgressPayload> {
-    return this.http.get<StartDeploymentProgressPayload>(`${this.base}/${deploymentId}/progress`);
+    return this.http.get<StartDeploymentProgressPayload>(`${this.base}/${deploymentId}/progress`, {
+      headers: this.httpOptions.headers
+    });
   }
 
   saveProgress(id: string, payload: StartDeploymentProgressPayload): Observable<void> {

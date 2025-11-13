@@ -3,7 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { ToastrService } from 'ngx-toastr';
 import { DeploymentFeatureFlagsService } from './deployment-feature-flags.service';
 import { DeploymentPushNotificationService } from './deployment-push-notification.service';
-import { environment } from 'src/environments/environment';
+import { environment } from 'src/environments/environments';
 
 export interface DeploymentNotification {
   type: 'assigned' | 'ready_for_signoff' | 'signoff_recorded' | 'issues' | 'issue_created' | 

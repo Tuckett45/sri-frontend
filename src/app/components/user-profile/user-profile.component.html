@@ -1,18 +1,53 @@
-<mat-card class="profile-card">
-  <div class="header-section">
-    <h2>User Profile</h2>
-  </div>
-
-  <mat-card-content>
-    <!-- Profile Information Section -->
-    <div class="profile-info">
-      <p><strong>Name:  </strong> <span class="profile-text">{{ profileData.name }}</span></p>
-      <p><strong>Email:  </strong> <span class="profile-text">{{ profileData.email }}</span></p>
+<div class="profile-grid">
+  <mat-card class="profile-card">
+    <div class="header-section">
+      <h2>User Profile</h2>
+      <button mat-stroked-button color="primary" (click)="openEditModal()">Edit Profile</button>
     </div>
 
-    <!-- Edit Profile Button -->
-    <div class="button-container">
-      <button mat-raised-button (click)="openEditModal()">Edit Profile</button>
+    <mat-card-content>
+      <div class="profile-info">
+        <p><span class="label">Name</span><span class="value">{{ profileData?.name }}</span></p>
+        <p><span class="label">Email</span><span class="value">{{ profileData?.email }}</span></p>
+        <p><span class="label">Role</span><span class="value">{{ profileData?.role }}</span></p>
+        <p><span class="label">Company</span><span class="value">{{ profileData?.company || 'N/A' }}</span></p>
+        <p><span class="label">Market</span><span class="value">{{ profileData?.market || 'N/A' }}</span></p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="flags-card">
+    <div class="header-section">
+      <h2>Deployment Feature Flags</h2>
+      <div class="flags-actions">
+        <button mat-stroked-button color="primary" (click)="resetFlags()">Reset</button>
+        <button mat-raised-button color="accent" (click)="onFlagsSubmit()">Save</button>
+      </div>
     </div>
-  </mat-card-content>
-</mat-card>
+
+    <mat-card-content>
+      <form [formGroup]="featureFlagsForm" class="flags-form">
+        <div class="flag-row" *ngFor="let flag of flagControls">
+          <div class="flag-info">
+            <h4>{{ flag.title }}</h4>
+            <p>{{ flag.description }}</p>
+          </div>
+          <div class="flag-toggle">
+            <label class="toggle-label">
+              <input type="radio"
+                     [value]="true"
+                     [formControlName]="flag.controlName">
+              <span>On</span>
+            </label>
+            <label class="toggle-label">
+              <input type="radio"
+                     [value]="false"
+                     [formControlName]="flag.controlName">
+              <span>Off</span>
+            </label>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

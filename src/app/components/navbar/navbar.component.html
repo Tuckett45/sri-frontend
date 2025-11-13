@@ -11,31 +11,36 @@
   </div>
 
   <!-- Navigation Links -->
-  <div class="nav-links" [ngClass]="{ 'open': isMenuOpen, 'closed': !isMenuOpen }">
-    <button *ngIf="authService.isClient() || authService.isCM() || authService.isAdmin() || authService.isPM()" mat-button routerLink="/overview" routerLinkActive="active-link">
-      Overview
-    </button>
-    <button *ngIf="authService.isCM() || authService.isAdmin() || authService.isPM()"  mat-button routerLink="/preliminary-punch-list" routerLinkActive="active-link">
-      Prelim Punch List Tracker
-    </button>
-    <button *ngIf="authService.isCM() || authService.isAdmin() || authService.isTemp()"  mat-button routerLink="/street-sheet" routerLinkActive="active-link">
-      Street Sheet Tracker
-    </button>
-    <button *ngIf="authService.isCoordinator() || authService.isAdmin()"  mat-button routerLink="/osp-coordinator-tracker" routerLinkActive="active-link">
-      OSP Coordinator
-    </button>
-    <button *ngIf="authService.isMarketController() || authService.isAdmin()"  mat-button routerLink="/market-controller-tracker" routerLinkActive="active-link">
-      Market Controller
-    </button>
-    <button mat-button *ngIf="authService.isAdmin() || authService.isHR()"  routerLink="/expenses" routerLinkActive="active-link">
-      Expenses
-    </button>
-    <button mat-button *ngIf="authService.isAdmin() || authService.isClient()"  routerLink="/tps" routerLinkActive="active-link">
-      TPS
-    </button>
-    <button mat-button routerLink="/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
-      Profile
-    </button>
+  <div class="nav-links"
+       [ngClass]="{
+         'open': isMobile() && isMenuOpen,
+         'closed': isMobile() && !isMenuOpen,
+         'mobile': isMobile()
+       }">
+    <ng-container *ngFor="let link of primaryLinks">
+      <button mat-button
+              [routerLink]="link.route"
+              routerLinkActive="active-link"
+              [routerLinkActiveOptions]="getMatchOptions(link)">
+        {{ link.label }}
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="!isMobile() && extraLinks.length">
+      <button 
+        mat-button 
+        class="more-button"
+        [matMenuTriggerFor]="moreMenu">
+        More
+        <mat-icon>expand_more</mat-icon>
+      </button>
+    </ng-container>
     <button mat-button (click)="logout()">Logout</button>
   </div>
+  <mat-menu *ngIf="!isMobile()" #moreMenu="matMenu">
+    <button mat-menu-item *ngFor="let link of extraLinks"
+            [routerLink]="link.route">
+      {{ link.label }}
+    </button>
+  </mat-menu>
 </mat-toolbar>

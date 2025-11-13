@@ -9,11 +9,6 @@
       <mat-icon>{{ filtersOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
       {{ filtersOpen ? 'Hide Filters' : 'Show Filters' }}
     </button>
-    
-    <button mat-raised-button class="dashboard-btn" routerLink="/expense/hr-dashboard">
-      <mat-icon>dashboard</mat-icon>
-      Dashboard
-    </button>
   </div>
 
   <div class="export-buttons">
@@ -74,6 +69,7 @@
   id="hr-filters"
   [statusOptions]="statusOptions"
   [categoryOptions]="categoryOptions"
+  [employeeOptions]="employeeOptions"
   (filtersChange)="onFiltersChange($event)">
 </app-expense-filters>
 

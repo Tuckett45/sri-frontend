@@ -35,10 +35,15 @@ mat-toolbar {
   .nav-links {
     padding-top: 5px;
     display: flex;
-    gap: 15px;
-    justify-content: center; /* Center the links on larger screens */
-    align-items: center; /* Center items vertically */
-    margin: 0 auto; /* Center horizontally */
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 0 auto;
+    max-width: 1100px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
 
     button {
       align-items: center !important;
@@ -56,6 +61,40 @@ mat-toolbar {
         width: fit-content;
         background-color: #e18a25;
         color: white;
+      }
+    }
+
+    &.mobile {
+      display: none;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      position: absolute;
+      top: 60px;
+      left: 0;
+      background-color: #144f80;
+      padding: 16px;
+      gap: 12px;
+      white-space: normal;
+      overflow-y: auto;
+      max-height: 80vh;
+    }
+
+    &.mobile.open {
+      display: flex;
+    }
+
+    &.mobile.closed {
+      display: none;
+    }
+
+    .more-button {
+      display: inline-flex;
+      align-items: center;
+      column-gap: 4px;
+
+      mat-icon {
+        font-size: 20px;
       }
     }
   }
@@ -85,59 +124,18 @@ mat-toolbar {
 
 /* For screens smaller than 768px */
 @media (max-width: 768px) {
-  /* Show hamburger icon and hide nav links */
   .menu-toggle {
-    display: flex;  /* Show hamburger menu on small screens */
+    display: flex;
   }
 
-  .nav-links {
-    align-items: center !important;
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-    background-color: #144f80;
+  .nav-links.mobile button {
     width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    position: absolute;
-    top: 60px;
-    left: 0;
-    z-index: 999;
-    overflow-y: auto;  /* Prevents overflow of links */
-    max-height: 80vh;  /* Restrict max height to allow scrolling if needed */
-    justify-content: center; /* Keep links centered vertically */
-  }
-
-  /* Link styling and active link border */
-  .nav-links a, .nav-links button {
-    width: 100%;  /* Ensure buttons take up the full width */
     padding: 12px;
-    text-align: center; /* Center text in the buttons */
-    font-size: 1.2rem;
-    text-decoration: none;
-    color: white;
-
-    &:hover {
-      background-color: #207bc5;
-    }
-
-    &.active-link {
-      background-color: #e18a25;
-      color: white;
-    }
-  }
-
-  /* When the menu is open, show the nav links */
-  .nav-links.open {
-    display: flex; /* Show the nav links when hamburger is clicked */
-  }
-
-  .nav-links.closed {
-    display: none !important;
+    text-align: left;
   }
 
   .spacer {
-    display: none; /* Hide the spacer on mobile */
+    display: none;
   }
 }
 
