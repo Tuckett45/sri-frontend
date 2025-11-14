@@ -53,7 +53,7 @@ export type StartDeploymentProgressBody = StartDeploymentProgressPayload & {
 @Injectable({ providedIn: 'root' })
 export class DeploymentService {
   private http = inject(HttpClient);
-  private base = `${local_environment.apiUrl}/deployments`;
+  private base = `${environment.apiUrl}/deployments`;
   private listCache = new Map<string, Observable<Deployment[]>>();
 
   private httpOptions = {
