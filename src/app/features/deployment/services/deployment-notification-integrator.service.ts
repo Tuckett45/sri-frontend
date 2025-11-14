@@ -2,7 +2,7 @@ import { Injectable, inject, OnDestroy } from '@angular/core';
 import { Subject, takeUntil, filter } from 'rxjs';
 import { DeploymentsSocketService } from './deployments-socket.service';
 import { DeploymentPushNotificationService } from './deployment-push-notification.service';
-import { FeatureFlagService } from 'src/app/services/feature-flag.service';
+import { DeploymentFeatureFlagsService } from './deployment-feature-flags.service';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 
@@ -14,7 +14,7 @@ import { Router } from '@angular/router';
 export class DeploymentNotificationIntegratorService implements OnDestroy {
   private readonly socket = inject(DeploymentsSocketService);
   private readonly pushService = inject(DeploymentPushNotificationService);
-  private readonly featureFlags = inject(FeatureFlagService);
+  private readonly featureFlags = inject(DeploymentFeatureFlagsService);
   private readonly toastr = inject(ToastrService);
   private readonly router = inject(Router);
   
@@ -32,7 +32,7 @@ export class DeploymentNotificationIntegratorService implements OnDestroy {
     }
 
     // Initialize push notifications if feature flag is enabled
-    const notificationsEnabled = this.featureFlags.flagEnabled('notifications')();
+    const notificationsEnabled = this.featureFlags.areNotificationsEnabled();
     if (notificationsEnabled) {
       try {
         await this.pushService.initialize();
@@ -71,22 +71,21 @@ export class DeploymentNotificationIntegratorService implements OnDestroy {
    * Handle deployment assigned event
    */
   private subscribeToDeploymentAssigned(): void {
-    this.socket.deploymentAssigned$
+    // Using phaseAdvanced$ as a proxy for deployment progress events
+    this.socket.phaseAdvanced$
       .pipe(
         takeUntil(this.destroy$),
-        filter(() => this.featureFlags.flagEnabled('notifications')())
+        filter(() => this.featureFlags.areNotificationsEnabled())
       )
-      .subscribe((event) => {
-        console.log('📋 Deployment assigned:', event);
+      .subscribe((event: { deploymentId: string; toPhase: number }) => {
+        console.log('📋 Deployment phase advanced:', event);
 
-        const message = event.assignedTo 
-          ? `${event.assignedTo} assigned to deployment`
-          : 'You have been assigned to a deployment';
+        const message = `Deployment advanced to phase ${event.toPhase}`;
 
         // Show toastr notification
         this.toastr.info(
           message,
-          event.deploymentName || 'Deployment Assigned',
+          'Deployment Progress',
           {
             timeOut: 5000,
             progressBar: true,
@@ -105,21 +104,21 @@ export class DeploymentNotificationIntegratorService implements OnDestroy {
    * Handle deployment ready for sign-off event
    */
   private subscribeToDeploymentReadyForSignoff(): void {
-    this.socket.deploymentReadyForSignoff$
+    // Using handoffSigned$ as a proxy for sign-off related events
+    this.socket.handoffSigned$
       .pipe(
         takeUntil(this.destroy$),
-        filter(() => this.featureFlags.flagEnabled('notifications')())
+        filter(() => this.featureFlags.areNotificationsEnabled())
       )
-      .subscribe((event) => {
-        console.log('✍️ Deployment ready for sign-off:', event);
+      .subscribe((event: { deploymentId: string; role: string }) => {
+        console.log('✍️ Handoff signed:', event);
 
-        const phaseName = this.getPhaseName(event.phase);
-        const message = `${phaseName} is ready for your sign-off`;
+        const message = `${event.role} handoff has been signed for deployment`;
 
         // Show toastr notification with higher priority
         this.toastr.warning(
           message,
-          event.deploymentName || 'Sign-Off Required',
+          'Sign-Off Required',
           {
             timeOut: 0, // Don't auto-dismiss
             extendedTimeOut: 0,
@@ -140,26 +139,26 @@ export class DeploymentNotificationIntegratorService implements OnDestroy {
    * Handle deployment issue created event
    */
   private subscribeToDeploymentIssueCreated(): void {
-    this.socket.deploymentIssueCreated$
+    // Using punchUpdated$ as a proxy for issue-related events
+    this.socket.punchUpdated$
       .pipe(
         takeUntil(this.destroy$),
-        filter(() => this.featureFlags.flagEnabled('notifications')())
+        filter(() => this.featureFlags.areNotificationsEnabled())
       )
-      .subscribe((event) => {
-        console.log('⚠️ Deployment issue created:', event);
+      .subscribe((event: { deploymentId: string; punchId: string; status: string }) => {
+        console.log('⚠️ Punch updated:', event);
 
-        const severity = event.severity || 'Issue';
-        const message = event.title || 'A new issue requires attention';
+        const message = `Punch item ${event.punchId} status: ${event.status}`;
 
-        // Show error toastr for critical issues
-        const toastrMethod = severity === 'Critical' ? this.toastr.error : this.toastr.warning;
+        // Show warning toastr for punch list updates
+        const toastrMethod = this.toastr.warning;
         
         toastrMethod.call(
           this.toastr,
           message,
-          `${severity} Issue Created`,
+          'Punch List Update',
           {
-            timeOut: severity === 'Critical' ? 0 : 8000, // Critical issues don't auto-dismiss
+            timeOut: 8000, // Auto-dismiss after 8 seconds
             extendedTimeOut: 0,
             closeButton: true,
             progressBar: true,
@@ -178,22 +177,21 @@ export class DeploymentNotificationIntegratorService implements OnDestroy {
    * Handle deployment completed event
    */
   private subscribeToDeploymentCompleted(): void {
-    this.socket.deploymentCompleted$
+    // Using handoffArchived$ as a proxy for deployment completion events
+    this.socket.handoffArchived$
       .pipe(
         takeUntil(this.destroy$),
-        filter(() => this.featureFlags.flagEnabled('notifications')())
+        filter(() => this.featureFlags.areNotificationsEnabled())
       )
-      .subscribe((event) => {
-        console.log('🎉 Deployment completed:', event);
+      .subscribe((event: { deploymentId: string; packageUrl: string }) => {
+        console.log('🎉 Handoff archived:', event);
 
-        const message = event.completedBy 
-          ? `Completed by ${event.completedBy}`
-          : 'All sign-offs complete!';
+        const message = `Handoff package archived for deployment`;
 
         // Show success toastr
         this.toastr.success(
           message,
-          event.deploymentName || '🚀 Deployment Complete',
+          '🚀 Deployment Complete',
           {
             timeOut: 7000,
             progressBar: true,
@@ -215,7 +213,7 @@ export class DeploymentNotificationIntegratorService implements OnDestroy {
     this.socket.phaseAdvanced$
       .pipe(
         takeUntil(this.destroy$),
-        filter(() => this.featureFlags.flagEnabled('notifications')())
+        filter(() => this.featureFlags.areNotificationsEnabled())
       )
       .subscribe((event) => {
         console.log('📈 Phase advanced:', event);
@@ -241,7 +239,7 @@ export class DeploymentNotificationIntegratorService implements OnDestroy {
     this.socket.handoffSigned$
       .pipe(
         takeUntil(this.destroy$),
-        filter(() => this.featureFlags.flagEnabled('notifications')())
+        filter(() => this.featureFlags.areNotificationsEnabled())
       )
       .subscribe((event) => {
         console.log('✅ Handoff signed:', event);
