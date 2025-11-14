@@ -1,8 +1,11 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { UserPreferencesApiService, UpdateUserPreferencesDTO } from './user-preferences-api.service';
 
 /**
  * Feature flags for deployment workflow
  * Allows users to toggle notifications and other features
+ * Now syncs with backend for cross-device support
  */
 export interface DeploymentFeatureFlags {
   notificationsEnabled: boolean;
@@ -14,7 +17,7 @@ export interface DeploymentFeatureFlags {
 const DEFAULT_FLAGS: DeploymentFeatureFlags = {
   notificationsEnabled: true,
   autoAssignEnabled: true,
-  strictRoleEnforcement: false, // Can be enabled for strict role checks
+  strictRoleEnforcement: false,
   showRoleColors: true
 };
 
@@ -26,10 +29,16 @@ const STORAGE_KEY = 'deployment_feature_flags';
 export class DeploymentFeatureFlagsService {
   
   private readonly flags = signal<DeploymentFeatureFlags>(this.loadFlags());
+  private readonly preferencesApi = inject(UserPreferencesApiService);
+  private isOnline = signal<boolean>(navigator.onLine);
+  private isSyncing = false;
 
   constructor() {
-    // Auto-save whenever flags change
-    this.watchForChanges();
+    // Monitor online/offline status
+    this.setupOnlineStatusMonitoring();
+    
+    // Load preferences from backend if online
+    this.syncFromBackend();
   }
 
   /**
@@ -48,30 +57,47 @@ export class DeploymentFeatureFlagsService {
 
   /**
    * Set a specific flag
+   * Syncs with backend if online, falls back to localStorage
    */
-  setFlag<K extends keyof DeploymentFeatureFlags>(key: K, value: boolean): void {
+  async setFlag<K extends keyof DeploymentFeatureFlags>(key: K, value: boolean): Promise<void> {
+    // Update local state immediately for responsive UI
     this.flags.update(current => ({
       ...current,
       [key]: value
     }));
+    
+    // Save to localStorage as backup
     this.saveFlags();
+    
+    // Sync with backend
+    await this.syncToBackend();
   }
 
   /**
    * Toggle a specific flag
    */
-  toggleFlag<K extends keyof DeploymentFeatureFlags>(key: K): boolean {
+  async toggleFlag<K extends keyof DeploymentFeatureFlags>(key: K): Promise<boolean> {
     const newValue = !this.flags()[key];
-    this.setFlag(key, newValue);
+    await this.setFlag(key, newValue);
     return newValue;
   }
 
   /**
    * Reset all flags to defaults
    */
-  resetFlags(): void {
+  async resetFlags(): Promise<void> {
     this.flags.set({ ...DEFAULT_FLAGS });
     this.saveFlags();
+    
+    // Delete from backend
+    if (this.isOnline()) {
+      try {
+        await firstValueFrom(this.preferencesApi.deleteUserPreferences());
+        console.log('✅ Reset preferences on backend');
+      } catch (error) {
+        console.warn('⚠️ Failed to reset preferences on backend, using local only:', error);
+      }
+    }
   }
 
   /**
@@ -103,6 +129,68 @@ export class DeploymentFeatureFlagsService {
   }
 
   /**
+   * Force sync from backend
+   * Useful when user logs in or comes back online
+   */
+  async syncFromBackend(): Promise<void> {
+    if (!this.isOnline() || this.isSyncing) {
+      return;
+    }
+
+    this.isSyncing = true;
+    try {
+      const preferences = await firstValueFrom(this.preferencesApi.getUserPreferences());
+      
+      // Update local state with backend values
+      this.flags.set({
+        notificationsEnabled: preferences.notificationsEnabled,
+        autoAssignEnabled: preferences.autoAssignEnabled,
+        strictRoleEnforcement: preferences.strictRoleEnforcement,
+        showRoleColors: preferences.showRoleColors
+      });
+      
+      // Update localStorage cache
+      this.saveFlags();
+      
+      console.log('✅ Synced preferences from backend');
+    } catch (error) {
+      console.warn('⚠️ Failed to sync from backend, using localStorage:', error);
+      // Keep using localStorage values on error
+    } finally {
+      this.isSyncing = false;
+    }
+  }
+
+  /**
+   * Sync current flags to backend
+   */
+  private async syncToBackend(): Promise<void> {
+    if (!this.isOnline() || this.isSyncing) {
+      console.log('📴 Offline or already syncing - will sync when online');
+      return;
+    }
+
+    this.isSyncing = true;
+    try {
+      const currentFlags = this.flags();
+      const dto: UpdateUserPreferencesDTO = {
+        notificationsEnabled: currentFlags.notificationsEnabled,
+        autoAssignEnabled: currentFlags.autoAssignEnabled,
+        strictRoleEnforcement: currentFlags.strictRoleEnforcement,
+        showRoleColors: currentFlags.showRoleColors
+      };
+      
+      await firstValueFrom(this.preferencesApi.updateUserPreferences(dto));
+      console.log('✅ Synced preferences to backend');
+    } catch (error) {
+      console.warn('⚠️ Failed to sync to backend, saved locally only:', error);
+      // Local changes are already saved to localStorage
+    } finally {
+      this.isSyncing = false;
+    }
+  }
+
+  /**
    * Load flags from localStorage
    */
   private loadFlags(): DeploymentFeatureFlags {
@@ -130,10 +218,20 @@ export class DeploymentFeatureFlagsService {
   }
 
   /**
-   * Watch for changes (for future reactive features)
+   * Setup online/offline status monitoring
+   * Syncs with backend when coming back online
    */
-  private watchForChanges(): void {
-    // Future: Could emit events or trigger side effects
+  private setupOnlineStatusMonitoring(): void {
+    window.addEventListener('online', () => {
+      console.log('🌐 Connection restored - syncing with backend');
+      this.isOnline.set(true);
+      this.syncFromBackend();
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('📴 Connection lost - using local cache');
+      this.isOnline.set(false);
+    });
   }
 }
 
