@@ -1,0 +1,207 @@
+<!-- src/app/components/deployments/deployment-list/deployment-list.component.html -->
+<div class="deployment-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>My Deployments</h1>
+    <p class="subtitle">View and manage your assigned deployments</p>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-grid">
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label for="status-filter">Status</label>
+        <select 
+          id="status-filter" 
+          [(ngModel)]="selectedStatus" 
+          (change)="applyFilters()"
+          class="filter-select">
+          <option value="">All Statuses</option>
+          <option *ngFor="let status of statusOptions" [value]="status">
+            {{ status }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Vendor Filter -->
+      <div class="filter-group">
+        <label for="vendor-filter">Vendor</label>
+        <input 
+          id="vendor-filter"
+          type="text" 
+          [(ngModel)]="selectedVendor" 
+          (change)="applyFilters()"
+          placeholder="Filter by vendor"
+          class="filter-input">
+      </div>
+
+      <!-- Data Center Filter -->
+      <div class="filter-group">
+        <label for="datacenter-filter">Data Center</label>
+        <input 
+          id="datacenter-filter"
+          type="text" 
+          [(ngModel)]="selectedDataCenter" 
+          (change)="applyFilters()"
+          placeholder="Filter by data center"
+          class="filter-input">
+      </div>
+
+      <!-- Date From Filter -->
+      <div class="filter-group">
+        <label for="date-from-filter">From Date</label>
+        <input 
+          id="date-from-filter"
+          type="date" 
+          [(ngModel)]="dateFrom" 
+          (change)="applyFilters()"
+          class="filter-input">
+      </div>
+
+      <!-- Date To Filter -->
+      <div class="filter-group">
+        <label for="date-to-filter">To Date</label>
+        <input 
+          id="date-to-filter"
+          type="date" 
+          [(ngModel)]="dateTo" 
+          (change)="applyFilters()"
+          class="filter-input">
+      </div>
+
+      <!-- Clear Filters Button -->
+      <div class="filter-group filter-actions">
+        <button 
+          (click)="clearFilters()" 
+          class="btn btn-clear"
+          type="button">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary" *ngIf="!loading">
+    <p>Showing {{ deployments.length }} of {{ totalDeployments }} deployment(s)</p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading deployments...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error && !loading">
+    <div class="error-icon">⚠️</div>
+    <p class="error-message">{{ error }}</p>
+    <button (click)="loadDeployments()" class="btn btn-retry">Retry</button>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-container" *ngIf="!loading && !error && deployments.length === 0">
+    <div class="empty-icon">📋</div>
+    <h3>No Deployments Found</h3>
+    <p>You don't have any deployments assigned to you yet.</p>
+  </div>
+
+  <!-- Deployments Grid -->
+  <div class="deployments-grid" *ngIf="!loading && !error && deployments.length > 0">
+    <div 
+      *ngFor="let deployment of deployments" 
+      class="deployment-card"
+      [ngClass]="getUserRoleClass(deployment)"
+      (click)="viewDeploymentDetails(deployment.id)">
+      
+      <!-- Role Badge -->
+      <div class="role-badge">
+        {{ getUserRoleLabel(deployment) }}
+      </div>
+
+      <!-- Deployment Header -->
+      <div class="card-header">
+        <h3 class="deployment-name">{{ deployment.name }}</h3>
+        <span class="status-badge" [ngClass]="getStatusBadgeClass(deployment.status)">
+          {{ deployment.status }}
+        </span>
+      </div>
+
+      <!-- Deployment Info -->
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Data Center:</span>
+          <span class="info-value">{{ deployment.dataCenter }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Vendor:</span>
+          <span class="info-value">{{ deployment.vendorName }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Start Date:</span>
+          <span class="info-value">{{ formatDate(deployment.startDate) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Target Handoff:</span>
+          <span class="info-value">{{ formatDate(deployment.targetHandoffDate) }}</span>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-section">
+          <div class="progress-header">
+            <span class="progress-label">Progress</span>
+            <span class="progress-percentage">{{ getProgressPercent(deployment.status) }}%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div 
+              class="progress-bar-fill" 
+              [style.width.%]="getProgressPercent(deployment.status)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Issue Counts (if available) -->
+        <div class="issues-section" *ngIf="deployment.progressPercent !== undefined">
+          <div class="issue-badge">
+            <span class="issue-count">{{ deployment.progressPercent || 0 }}</span>
+            <span class="issue-label">Total Issues</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!loading && !error && totalPages > 1">
+    <button 
+      (click)="previousPage()" 
+      [disabled]="currentPage === 1"
+      class="btn btn-pagination">
+      ← Previous
+    </button>
+
+    <div class="page-numbers">
+      <button 
+        *ngFor="let page of getPageNumbers()"
+        (click)="goToPage(page)"
+        [class.active]="page === currentPage"
+        class="btn btn-page-number">
+        {{ page }}
+      </button>
+    </div>
+
+    <button 
+      (click)="nextPage()" 
+      [disabled]="currentPage === totalPages"
+      class="btn btn-pagination">
+      Next →
+    </button>
+  </div>
+
+  <!-- Pagination Info -->
+  <div class="pagination-info" *ngIf="!loading && !error && deployments.length > 0">
+    <p>Page {{ currentPage }} of {{ totalPages }}</p>
+  </div>
+</div>
+

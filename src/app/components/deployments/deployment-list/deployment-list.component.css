@@ -1,0 +1,526 @@
+/* src/app/components/deployments/deployment-list/deployment-list.component.css */
+
+/* Container */
+.deployment-list-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Header */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+}
+
+.page-header .subtitle {
+  font-size: 1rem;
+  color: #7f8c8d;
+  margin: 0;
+}
+
+/* Filters Section */
+.filters-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.filter-select,
+.filter-input {
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  transition: border-color 0.15s;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.filter-actions {
+  justify-content: flex-end;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-clear {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-clear:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.btn-retry {
+  background: #007bff;
+  color: white;
+}
+
+.btn-retry:hover {
+  background: #0056b3;
+}
+
+.btn-pagination {
+  background: white;
+  border: 1px solid #dee2e6;
+  color: #495057;
+}
+
+.btn-pagination:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.btn-page-number {
+  background: white;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  min-width: 40px;
+}
+
+.btn-page-number:hover {
+  background: #f8f9fa;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.btn-page-number.active {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+/* Results Summary */
+.results-summary {
+  margin-bottom: 1rem;
+}
+
+.results-summary p {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Loading State */
+.loading-container {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+/* Error State */
+.error-container {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Empty State */
+.empty-container {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-container h3 {
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.empty-container p {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+/* Deployments Grid */
+.deployments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Deployment Card - Role-Based Color Coding */
+.deployment-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  border-left: 4px solid #e9ecef;
+}
+
+.deployment-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Role-Based Colors */
+.deployment-card.deployment-engineer {
+  border-left-color: #6f42c1;
+}
+
+.deployment-card.dc-ops {
+  border-left-color: #007bff;
+}
+
+.deployment-card.vendor-rep {
+  border-left-color: #28a745;
+}
+
+.deployment-card.sri-tech {
+  border-left-color: #343a40;
+}
+
+/* Role Badge */
+.role-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #f8f9fa;
+  color: #495057;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.deployment-engineer .role-badge {
+  background: #e7d9f7;
+  color: #6f42c1;
+}
+
+.dc-ops .role-badge {
+  background: #cfe2ff;
+  color: #007bff;
+}
+
+.vendor-rep .role-badge {
+  background: #d1e7dd;
+  color: #28a745;
+}
+
+.sri-tech .role-badge {
+  background: #e2e3e5;
+  color: #343a40;
+}
+
+/* Card Header */
+.card-header {
+  margin-bottom: 1rem;
+  padding-right: 5rem;
+}
+
+.deployment-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-planned {
+  background: #e7f3ff;
+  color: #0056b3;
+}
+
+.status-survey {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-inventory {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-install {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-cabling {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-labeling {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.status-handoff {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.status-complete {
+  background: #d1e7dd;
+  color: #0a3622;
+}
+
+/* Card Body */
+.card-body {
+  margin-top: 1rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.info-label {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #495057;
+  font-weight: 600;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.progress-percentage {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  transition: width 0.3s ease;
+}
+
+/* Issues Section */
+.issues-section {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.issue-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  min-width: 60px;
+}
+
+.issue-count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #495057;
+}
+
+.issue-label {
+  font-size: 0.625rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Pagination */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.pagination-info {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.pagination-info p {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .deployments-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .deployment-list-container {
+    padding: 1rem;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .deployments-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .pagination-container {
+    flex-wrap: wrap;
+  }
+
+  .page-numbers {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .deployment-card {
+    padding: 1rem;
+  }
+
+  .card-header {
+    padding-right: 4rem;
+  }
+
+  .deployment-name {
+    font-size: 1rem;
+  }
+
+  .role-badge {
+    font-size: 0.625rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
