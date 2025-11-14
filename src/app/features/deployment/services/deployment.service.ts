@@ -44,16 +44,16 @@ export interface HandoffUpdateDto {
   signedDeAt?: string | null;
 }
 
-export type StartDeploymentProgressBody =
-  Omit<StartDeploymentProgressPayload, 'projectId'> & {
-    receiving: StartDeploymentProgressPayload['receiving'] | null;
-    submittedSiteSurvey: StartDeploymentProgressPayload['submittedSiteSurvey'] | null;
-  };
+export type StartDeploymentProgressBody = StartDeploymentProgressPayload & {
+  receiving: StartDeploymentProgressPayload['receiving'] | null;
+  submittedSiteSurvey: StartDeploymentProgressPayload['submittedSiteSurvey'] | null;
+  projectId: string | null;
+};
 
 @Injectable({ providedIn: 'root' })
 export class DeploymentService {
   private http = inject(HttpClient);
-  private base = `${environment.apiUrl}/deployments`;
+  private base = `${local_environment.apiUrl}/deployments`;
   private listCache = new Map<string, Observable<Deployment[]>>();
 
   private httpOptions = {
@@ -137,17 +137,18 @@ export class DeploymentService {
   }
 
   getProgress(deploymentId: string): Observable<StartDeploymentProgressPayload> {
-    return this.http.get<StartDeploymentProgressPayload>(`${this.base}/${deploymentId}/progress`, {
+    const normalizedId = this.stripBraces(deploymentId);
+    return this.http.get<StartDeploymentProgressPayload>(`${this.base}/${normalizedId}/progress`, {
       headers: this.httpOptions.headers
     });
   }
 
   saveProgress(id: string, payload: StartDeploymentProgressPayload): Observable<void> {
-    const { projectId: _ignore, receiving, submittedSiteSurvey, ...rest } = payload;
     const body: StartDeploymentProgressBody = {
-      ...rest,
-      receiving: receiving ?? null,
-      submittedSiteSurvey: submittedSiteSurvey ?? null,
+      ...payload,
+      projectId: payload.projectId ?? id,
+      receiving: payload.receiving ?? { responses: [] },
+      submittedSiteSurvey: payload.submittedSiteSurvey ?? null,
     };
     return this.http.post<void>(`${this.base}/${id}/progress`, body, { headers: this.httpOptions.headers }).pipe(
       tap(() => this.invalidateListCache())
@@ -216,5 +217,9 @@ export class DeploymentService {
 
   private invalidateListCache(): void {
     this.listCache.clear();
+  }
+
+  private stripBraces(id: string | null | undefined): string {
+    return (id ?? '').replace(/[{}]/g, '');
   }
 }

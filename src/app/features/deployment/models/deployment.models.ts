@@ -54,6 +54,11 @@ export interface Deployment {
   updatedDate?: string;
   progressPercent?: number;
   nextStatus?: DeploymentStatus | null;
+  pendingSignOffFrom?: string | null;
+  requiresSignoff?: boolean;
+  hasAllSignOffs?: boolean;
+  isReadyForCompletion?: boolean;
+  isSignedOff?: boolean;
   // Sign-off fields
   vendorSignedBy?: string;
   vendorSignedAt?: string;

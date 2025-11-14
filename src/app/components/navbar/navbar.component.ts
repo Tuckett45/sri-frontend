@@ -20,6 +20,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   userData!: User;
   readonly exactMatchOptions = { exact: true };
   readonly partialMatchOptions = { exact: false };
+  private readonly maxInlineLinks = 4;
 
   public readonly navLinksConfig: NavLink[] = [
     {
@@ -70,7 +71,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   ];
 
-  private readonly maxInlineLinks = 4;
   private isMobileView = false;
 
   constructor(public authService: AuthService) {}
@@ -118,7 +118,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   private updateViewMode(): void {
     const wasMobile = this.isMobileView;
-    this.isMobileView = window.innerWidth <= 768;
+    const width = window.innerWidth;
+    this.isMobileView = width <= 768;
+
     if (!this.isMobileView && wasMobile) {
       this.isMenuOpen = false;
     }

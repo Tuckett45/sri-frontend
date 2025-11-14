@@ -26,21 +26,22 @@
       </button>
     </ng-container>
 
-    <ng-container *ngIf="!isMobile() && extraLinks.length">
-      <button 
-        mat-button 
-        class="more-button"
-        [matMenuTriggerFor]="moreMenu">
-        More
-        <mat-icon>expand_more</mat-icon>
-      </button>
-    </ng-container>
+    <button 
+      mat-button 
+      class="more-button"
+      *ngIf="!isMobile() && extraLinks.length"
+      [matMenuTriggerFor]="moreMenu">
+      More
+      <mat-icon>expand_more</mat-icon>
+    </button>
     <button mat-button (click)="logout()">Logout</button>
   </div>
-  <mat-menu *ngIf="!isMobile()" #moreMenu="matMenu">
-    <button mat-menu-item *ngFor="let link of extraLinks"
-            [routerLink]="link.route">
-      {{ link.label }}
-    </button>
+  <mat-menu #moreMenu="matMenu">
+    <ng-container *ngIf="!isMobile() && extraLinks.length">
+      <button mat-menu-item *ngFor="let link of extraLinks"
+              [routerLink]="link.route">
+        {{ link.label }}
+      </button>
+    </ng-container>
   </mat-menu>
 </mat-toolbar>

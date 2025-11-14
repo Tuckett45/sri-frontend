@@ -69,10 +69,10 @@ export class DeploymentDashboardComponent implements OnInit {
   private readonly severityMap = new Map<DeploymentStatus, 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast'>([
     [DeploymentStatus.Planned, 'secondary'],
     [DeploymentStatus.Survey, 'secondary'],
-    [DeploymentStatus.Inventory, 'secondary'],
+    [DeploymentStatus.Inventory, 'info'],
     [DeploymentStatus.Install, 'warn'],
     [DeploymentStatus.Cabling, 'warn'],
-    [DeploymentStatus.Labeling, 'info'],
+    [DeploymentStatus.Labeling, 'contrast'],
     [DeploymentStatus.Handoff, 'info'],
     [DeploymentStatus.Complete, 'success'],
   ]);
@@ -95,6 +95,16 @@ export class DeploymentDashboardComponent implements OnInit {
     DeploymentStatus.Cabling,
     DeploymentStatus.Labeling,
     DeploymentStatus.Handoff,
+  ];
+  private readonly orderedStatuses: DeploymentStatus[] = [
+    DeploymentStatus.Planned,
+    DeploymentStatus.Survey,
+    DeploymentStatus.Inventory,
+    DeploymentStatus.Install,
+    DeploymentStatus.Cabling,
+    DeploymentStatus.Labeling,
+    DeploymentStatus.Handoff,
+    DeploymentStatus.Complete,
   ];
 
   protected readonly filterForm = this.fb.nonNullable.group({
@@ -238,6 +248,14 @@ export class DeploymentDashboardComponent implements OnInit {
 
   protected statusSeverity(status: DeploymentStatus): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
     return this.severityMap.get(status) ?? 'secondary';
+  }
+
+  protected nextStatusFor(project: Deployment): DeploymentStatus | null {
+    const currentIdx = this.orderedStatuses.indexOf(project.status);
+    if (currentIdx === -1 || currentIdx >= this.orderedStatuses.length - 1) {
+      return null;
+    }
+    return this.orderedStatuses[currentIdx + 1];
   }
 
   private calculateProgressPercentage(progress: StartDeploymentProgressPayload | null): number {
@@ -483,6 +501,12 @@ export class DeploymentDashboardComponent implements OnInit {
       : null;
 
     const createdDate = new Date().toISOString();
+    const creatorId = this.user?.id ?? null;
+    if (!creatorId) {
+      this.cacheProgress('__new', normalized);
+      this.toastr.error('Unable to determine current user. Please sign in again before creating deployments.');
+      return;
+    }
 
     try {
       const createPayload: Partial<Deployment> = {
@@ -491,6 +515,7 @@ export class DeploymentDashboardComponent implements OnInit {
         vendorName: metadata.vendorName,
         status: phaseStatus,
         createdDate,
+        createdBy: creatorId,
       };
       const created = await this.deploymentService.create(createPayload);
       const newId = created?.id;
@@ -507,7 +532,7 @@ export class DeploymentDashboardComponent implements OnInit {
         id: newId,
         status: phaseStatus,
         progressPercent,
-        createdBy: this.user.id,
+        createdBy: creatorId,
         createdDate,
       };
 

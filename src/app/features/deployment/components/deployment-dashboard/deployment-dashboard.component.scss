@@ -4,13 +4,13 @@
 
 .deployment-page {
   background-color: #e7e5e5;
-  padding: 24px;
-  margin: 20px;
+  padding: 18px;
+  margin: 16px;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
   color: #111827;
 }
 
@@ -30,19 +30,19 @@
 }
 
 .header-actions button {
-  min-width: 160px;
+  min-width: 140px;
 }
 
 .page-title h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: #144f80;
 }
 
 .subtitle {
   margin: 0;
   color: #4b5563;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   max-width: 46ch;
 }
 
@@ -139,69 +139,59 @@
   justify-content: flex-end;
 }
 
-.table-card {
+.deployment-grid {
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
-.table-card-header h2 {
+.deployment-grid-header h2 {
   margin: 0;
   color: #144f80;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
 }
 
 .table-subtitle {
-  margin: 0.35rem 0 0;
+  margin: 0.25rem 0 0;
   color: #4b5563;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
-::ng-deep .deployment-table.p-table {
-  border-radius: 10px;
-  overflow: hidden;
+.deployment-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+  background: #f5f7fb;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, 0.08);
 }
 
-::ng-deep .deployment-table .p-datatable-thead > tr > th {
-  background-color: #0f172a;
-  color: #ffffff;
+.card-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-::ng-deep .deployment-table .p-datatable-tbody > tr:nth-child(even) {
-  background-color: #f3f4f6;
+.card-column--info {
+  flex: 1;
+  min-width: 230px;
 }
 
-::ng-deep .deployment-table .p-datatable-tbody > tr:hover {
-  background-color: rgba(20, 79, 128, 0.08);
+.card-column--status {
+  flex: 1.2;
+  min-width: 280px;
 }
 
-::ng-deep .deployment-table .p-tag.p-tag-info {
-  background-color: #144f80;
-}
-
-::ng-deep .deployment-table .p-tag.p-tag-warn {
-  background-color: #e18a25;
-}
-
-::ng-deep .deployment-table .p-tag.p-tag-success {
-  background-color: #0baa06;
-}
-
-::ng-deep .deployment-table .p-tag.p-tag-secondary {
-  background-color: #6b7280;
-}
-
-::ng-deep .deployment-table .p-progressbar {
-  height: 0.75rem;
-  border-radius: 999px;
-}
-
-::ng-deep .deployment-table .p-progressbar .p-progressbar-value {
-  background: linear-gradient(90deg, #144f80, #2481c9);
+.card-column--progress {
+  flex: 0.8;
+  min-width: 240px;
+  justify-content: center;
 }
 
 .cell-name {
@@ -211,20 +201,29 @@
 
   strong {
     color: #0f172a;
-    font-size: 1.02rem;
+    font-size: 0.95rem;
   }
 
   .meta {
     color: #64748b;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
   }
 }
 
-.cell-meta {
+.location-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.location-line {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  color: #1f2937;
+  gap: 0.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #102a43;
 
   mat-icon {
     font-size: 1.2rem;
@@ -244,25 +243,36 @@
   font-size: 0.85rem;
   color: #0f172a;
   background-color: #e2e8f0;
+  border: 1px solid transparent;
 
   &.success {
-    background-color: rgba(16, 185, 129, 0.15);
+    background-color: #d1fae5;
     color: #047857;
+    border-color: #34d399;
   }
 
   &.secondary {
-    background-color: rgba(148, 163, 184, 0.2);
+    background-color: #e2e8f0;
     color: #1f2937;
+    border-color: #cbd5f5;
   }
 
   &.info {
-    background-color: rgba(30, 64, 175, 0.18);
-    color: #1e3a8a;
+    background-color: #dbeafe;
+    color: #1d4ed8;
+    border-color: #93c5fd;
   }
 
   &.warn {
-    background-color: rgba(225, 138, 37, 0.16);
-    color: #b86404;
+    background-color: #fde2cf;
+    color: #b45309;
+    border-color: #fbbf24;
+  }
+
+  &.contrast {
+    background-color: #ede9fe;
+    color: #6d28d9;
+    border-color: #c4b5fd;
   }
 }
 
@@ -273,36 +283,133 @@
   font-size: 0.75rem;
 }
 
-.progress-wrapper {
+.status-panel {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 0.55rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.progress-bar {
-  flex: 1 1 auto;
-  height: 8px;
+.status-panel-header {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.status-chip--outline {
+  background: transparent;
+  color: #0f4c81;
+  border: 1px solid rgba(20, 79, 128, 0.35);
+}
+
+.status-panel-description {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.status-panel-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(225, 138, 37, 0.12);
+  color: #a04a06;
+  border-radius: 6px;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.75rem;
+
+  mat-icon {
+    font-size: 1rem;
+    height: 1rem;
+    width: 1rem;
+  }
+}
+
+.status-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.status-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(148, 163, 184, 0.45);
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(20, 79, 128, 0.15), rgba(148, 163, 184, 0.25));
+  padding: 0.25rem 0.75rem;
+  font-size: 0.78rem;
+  color: #475569;
+
+  &-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+
+  &-value {
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  &--active {
+    border-color: rgba(20, 79, 128, 0.45);
+    background: rgba(20, 79, 128, 0.08);
+
+    .status-metric-value {
+      color: #0f4c81;
+    }
+  }
+}
+
+.progress-panel {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.progress-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.progress-percentage {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #144f80;
+}
+
+.progress-track {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(20, 79, 128, 0.15), rgba(148, 163, 184, 0.2));
   overflow: hidden;
 }
 
-.progress-fill {
+.progress-track .progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #144f80, #2481c9);
+  background: linear-gradient(90deg, #144f80, #3ba9ff);
   transition: width 0.3s ease;
 }
 
-.progress-label {
-  min-width: 3ch;
-  font-size: 0.8rem;
-  color: #1f2937;
-  font-weight: 600;
-}
-
-.actions-cell {
-  text-align: right;
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #475569;
 }
 
 @media (max-width: 1024px) {
@@ -311,13 +418,17 @@
     margin: 12px;
   }
 
-  .table-card {
-    padding: 16px;
+  .deployment-card {
+    flex-direction: column;
+  }
+
+  .card-column {
+    width: 100%;
   }
 }
 
 @media (max-width: 768px) {
-  .table-card-header {
+  .deployment-grid-header {
     text-align: center;
 
     h2 {
@@ -326,82 +437,12 @@
 
     .table-subtitle {
       margin-top: 0.35rem;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
   }
 
-  ::ng-deep .deployment-table .p-datatable-wrapper {
-    padding-bottom: 0.5rem;
-  }
-
-  ::ng-deep .deployment-table .p-datatable-table {
-    width: 100%;
-  }
-
-  ::ng-deep .deployment-table .p-datatable-thead {
-    display: none;
-  }
-
-  ::ng-deep .deployment-table .p-datatable-tbody > tr {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
-    background-color: #ffffff;
-  }
-
-  ::ng-deep .deployment-table .p-datatable-tbody > tr:last-child {
-    margin-bottom: 0.5rem;
-  }
-
-  ::ng-deep .deployment-table .p-datatable-tbody > tr > td {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    border: none;
-    padding: 0;
-  }
-
-  ::ng-deep .deployment-table .p-datatable-tbody > tr > td::before {
-    content: attr(data-label);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #64748b;
-    font-weight: 600;
-  }
-
-  .cell-meta,
-  .cell-name,
-  .progress-wrapper {
-    align-items: flex-start;
-  }
-
-  .progress-wrapper {
-    flex-direction: column;
-    align-items: stretch;
-
-    .progress-label {
-      align-self: flex-end;
-    }
-  }
-
-  .actions-cell {
-    text-align: left;
-
-    .open-button {
-      width: 100%;
-      justify-content: center;
-    }
-  }
-
-  ::ng-deep .deployment-table .p-paginator {
-    justify-content: center;
-    padding-top: 0.75rem;
+  .deployment-card {
+    padding: 1rem;
   }
 }
 
@@ -419,12 +460,14 @@
     flex: 1 1 auto;
   }
 
-  .filters-container,
-  .table-card {
+  .deployment-grid {
     padding: 14px;
   }
 
-  ::ng-deep .deployment-table .p-datatable-tbody > tr {
-    padding: 1rem;
+  .progress-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
+

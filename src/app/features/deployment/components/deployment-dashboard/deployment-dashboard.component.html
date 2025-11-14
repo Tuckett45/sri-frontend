@@ -69,61 +69,81 @@
     </form>
   </section>
 
-  <section class="table-card">
-    <div class="table-card-header">
+  <section class="deployment-grid">
+    <div class="deployment-grid-header">
       <h2>Active Deployments</h2>
       <p class="table-subtitle">Select a project to drill into its workflow phases.</p>
     </div>
-    <p-table
-      [value]="filtered()"
-      dataKey="id"
-      [paginator]="true"
-      [rows]="10"
-      class="deployment-table"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Name</th>
-          <th>Data Center</th>
-          <th>Vendor</th>
-          <th>Status</th>
-          <th>Progress</th>
-          <th></th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-project>
-        <tr class="deployment-row">
-          <td data-label="Name">
-            <div class="cell-name">
-              <strong>{{ project.name }}</strong>
-              <span class="meta">{{ project.createdDate | date:'MMM d, y' }} - {{ project.targetCompletion | date:'MMM d, y' }}</span>
-            </div>
-          </td>
-          <td data-label="Data Center">
-            <div class="cell-meta">
-              <mat-icon>location_on</mat-icon>
-              <span>{{ project.dataCenter }}</span>
-            </div>
-          </td>
-          <td data-label="Vendor">
-            <div class="cell-meta">
-              <mat-icon>business</mat-icon>
-              <span>{{ project.vendorName }}</span>
-            </div>
-          </td>
-          <td data-label="Status">
+
+    <div class="deployment-card" *ngFor="let project of filtered()">
+      <div class="card-column card-column--info">
+        <div class="cell-name">
+          <strong>{{ project.name }}</strong>
+          <span class="meta">
+            Created
+            {{ project.createdDate ? (project.createdDate | date:'MMM d, y, h:mm a') : '—' }}
+            <ng-container *ngIf="project.createdBy"> · by {{ project.createdBy }}</ng-container>
+          </span>
+          <span class="meta" *ngIf="project.targetHandoffDate">
+            Target handoff {{ project.targetHandoffDate | date:'MMM d, y' }}
+          </span>
+        </div>
+        <div class="location-details">
+          <div class="location-line">
+            <mat-icon>location_on</mat-icon>
+            <span>{{ project.dataCenter }}</span>
+          </div>
+          <div class="location-line">
+            <mat-icon>apartment</mat-icon>
+            <span>{{ project.vendorName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-column card-column--status">
+        <div class="status-panel">
+          <div class="status-panel-header">
             <span class="status-chip" [ngClass]="statusSeverity(project.status)">{{ project.status }}</span>
-            <small class="status-meta">{{ describeStatus(project.status) }}</small>
-          </td>
-          <td data-label="Progress">
-            <div class="progress-wrapper">
-              <div class="progress-bar">
-                <div class="progress-fill" [style.width.%]="project.progressPercent ?? 0"></div>
-              </div>
-              <span class="progress-label">{{ project.progressPercent ?? 0 }}%</span>
+            <ng-container *ngIf="nextStatusFor(project) as nextStatus">
+              <span class="status-chip status-chip--outline">Next: {{ nextStatus }}</span>
+            </ng-container>
+          </div>
+          <p class="status-panel-description" *ngIf="describeStatus(project.status) as statusDescription">
+            {{ statusDescription }}
+          </p>
+          <div class="status-panel-alert" *ngIf="project.pendingSignOffFrom">
+            <mat-icon>pending_actions</mat-icon>
+            Waiting on {{ project.pendingSignOffFrom }}
+          </div>
+          <div class="status-metrics">
+            <div class="status-metric" [class.status-metric--active]="project.requiresSignoff !== false">
+              <span class="status-metric-label">Sign-off</span>
+              <span class="status-metric-value">{{ project.requiresSignoff === false ? 'Optional' : 'Required' }}</span>
             </div>
-          </td>
-          <td data-label="Actions" class="actions-cell">
+            <div class="status-metric" [class.status-metric--active]="project.hasAllSignOffs">
+              <span class="status-metric-label">Approvals</span>
+              <span class="status-metric-value">{{ project.hasAllSignOffs ? 'All collected' : 'Outstanding' }}</span>
+            </div>
+            <div class="status-metric" [class.status-metric--active]="project.isReadyForCompletion">
+              <span class="status-metric-label">Readiness</span>
+              <span class="status-metric-value">{{ project.isReadyForCompletion ? 'Ready to close' : 'Work remaining' }}</span>
+            </div>
+            <div class="status-metric" [class.status-metric--active]="project.isSignedOff">
+              <span class="status-metric-label">Phase</span>
+              <span class="status-metric-value">{{ project.isSignedOff ? 'Signed' : 'Awaiting signature' }}</span>
+            </div>
+            <div class="status-metric" [class.status-metric--active]="project.isFullySignedOff">
+              <span class="status-metric-label">Final state</span>
+              <span class="status-metric-value">{{ project.isFullySignedOff ? 'Fully signed' : 'Partial approval' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-column card-column--progress">
+        <div class="progress-panel">
+          <div class="progress-panel-header">
+            <div class="progress-percentage">{{ project.progressPercent ?? 0 }}%</div>
             <button
               mat-raised-button
               color="accent"
@@ -134,10 +154,17 @@
               <mat-icon>arrow_forward</mat-icon>
               <span>Open</span>
             </button>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="project.progressPercent ?? 0"></div>
+          </div>
+          <div class="progress-meta">
+            <span>Phase: {{ project.status }}</span>
+            <span *ngIf="nextStatusFor(project) as nextStatus">Up next: {{ nextStatus }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 </div>
 

@@ -78,7 +78,18 @@ mat-toolbar {
       white-space: normal;
       overflow-y: auto;
       max-height: 80vh;
+
+      button {
+        width: 100%;
+        justify-content: flex-start;
+        text-align: left;
+      }
     }
+
+    &.mobile .more-button {
+      display: none;
+    }
+
 
     &.mobile.open {
       display: flex;
