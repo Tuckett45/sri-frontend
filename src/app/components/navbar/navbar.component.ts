@@ -1,6 +1,7 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from 'src/app/models/user.model';
+import { FeatureFlagService } from '../../services/feature-flag.service';
 
 interface NavLink {
   label: string;
@@ -20,7 +21,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   userData!: User;
   readonly exactMatchOptions = { exact: true };
   readonly partialMatchOptions = { exact: false };
-  private readonly maxInlineLinks = 4;
+  private readonly maxInlineLinks = 5;
+  private readonly pinnedRoutes: ReadonlyArray<string> = ['/notifications'];
+  private readonly featureFlags = inject(FeatureFlagService);
 
   public readonly navLinksConfig: NavLink[] = [
     {
@@ -64,6 +67,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.authService.isAdmin() || this.authService.isHR()
     },
     {
+      label: 'Notifications',
+      route: '/notifications',
+      shouldShow: () => this.featureFlags.flagEnabled('notifications')()
+    },
+    {
       label: 'Profile',
       route: '/profile',
       shouldShow: () => true,
@@ -86,15 +94,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   get primaryLinks(): NavLink[] {
-    return this.isMobileView
-      ? this.visibleLinks
-      : this.visibleLinks.slice(0, this.maxInlineLinks);
+    if (this.isMobileView) {
+      return this.visibleLinks;
+    }
+
+    const visible = this.visibleLinks;
+    const pinned = visible.filter(link => this.pinnedRoutes.includes(link.route));
+    const remainingSlots = Math.max(this.maxInlineLinks - pinned.length, 0);
+    const nonPinned = visible.filter(link => !this.pinnedRoutes.includes(link.route));
+
+    return [...pinned, ...nonPinned.slice(0, remainingSlots)];
   }
 
   get extraLinks(): NavLink[] {
-    return this.isMobileView
-      ? []
-      : this.visibleLinks.slice(this.maxInlineLinks);
+    if (this.isMobileView) {
+      return [];
+    }
+
+    const primarySet = new Set(this.primaryLinks.map(link => link.route));
+    return this.visibleLinks.filter(link => !primarySet.has(link.route));
   }
 
   private get visibleLinks(): NavLink[] {

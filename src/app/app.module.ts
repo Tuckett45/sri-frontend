@@ -87,6 +87,7 @@ import { SRIDashboardComponent } from './components/overview/dashboard/sri-dashb
 import { ClientDashboardComponent } from './components/overview/dashboard/client-dashboard/client-dashboard.component';
 import { ExpenseModule } from './components/expense/expense.module';
 import '../charts-setup';
+import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -125,7 +126,8 @@ export const customCurrencyMaskConfig = {
     WidgetComponent,
     OspCoordinatorTrackerComponent,
     MarketControllerComponent,
-    MarketControllerModalComponent
+    MarketControllerModalComponent,
+    UserNotificationsComponent
   ],
   imports: [
     NgxCurrencyDirective,

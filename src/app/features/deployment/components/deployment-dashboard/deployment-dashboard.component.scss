@@ -330,23 +330,24 @@
 }
 
 .status-metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
 }
 
 .status-metric {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
   border: 1px solid rgba(148, 163, 184, 0.45);
-  border-radius: 999px;
-  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  padding: 0.5rem 0.85rem;
   font-size: 0.78rem;
   color: #475569;
 
   &-label {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #94a3b8;
@@ -448,6 +449,8 @@
 
 @media (max-width: 480px) {
   .deployment-page {
+    margin: 8px;
+    padding: 12px;
     gap: 16px;
   }
 
@@ -461,13 +464,44 @@
   }
 
   .deployment-grid {
-    padding: 14px;
+    padding: 10px;
   }
 
   .progress-panel-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+
+  .deployment-card {
+    padding: 0.85rem;
+    border-radius: 12px;
+  }
+
+  .card-column,
+  .card-column--info,
+  .card-column--status,
+  .card-column--progress {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .status-panel-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .status-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .progress-panel {
+    padding: 0.85rem;
+  }
+
+  .progress-panel-header .open-button {
+    width: 100%;
+    justify-content: center;
   }
 }
 

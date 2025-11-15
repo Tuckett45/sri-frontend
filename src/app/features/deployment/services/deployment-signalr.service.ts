@@ -1,9 +1,9 @@
 import { Injectable, inject, signal } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { ToastrService } from 'ngx-toastr';
-import { DeploymentFeatureFlagsService } from './deployment-feature-flags.service';
 import { DeploymentPushNotificationService } from './deployment-push-notification.service';
 import { environment } from 'src/environments/environments';
+import { FeatureFlagService } from 'src/app/services/feature-flag.service';
 
 export interface DeploymentNotification {
   type: 'assigned' | 'ready_for_signoff' | 'signoff_recorded' | 'issues' | 'issue_created' | 
@@ -23,7 +23,8 @@ export interface DeploymentNotification {
 })
 export class DeploymentSignalRService {
   private readonly toastr = inject(ToastrService);
-  private readonly featureFlags = inject(DeploymentFeatureFlagsService);
+  private readonly featureFlags = inject(FeatureFlagService);
+  private readonly deploymentNotificationsFlag = this.featureFlags.flagEnabled('deploymentNotifications');
   private readonly pushNotifications = inject(DeploymentPushNotificationService);
 
   private hubConnection: signalR.HubConnection | null = null;
@@ -50,7 +51,7 @@ export class DeploymentSignalRService {
    * Initialize SignalR connection for deployment notifications
    */
   async connect(userId: string): Promise<void> {
-    if (!this.featureFlags.areNotificationsEnabled()) {
+    if (!this.notificationsEnabled()) {
       console.log('Deployment notifications are disabled');
       return;
     }
@@ -398,7 +399,7 @@ export class DeploymentSignalRService {
     // Add to notification list
     this.notifications.update(current => [notification, ...current].slice(0, 50)); // Keep last 50
 
-    if (!this.featureFlags.areNotificationsEnabled()) {
+      if (!this.notificationsEnabled()) {
       return;
     }
 
@@ -550,5 +551,9 @@ export class DeploymentSignalRService {
   private getReconnectAttempts(): number {
     // This would be tracked internally by SignalR's reconnect policy
     return 0;
+  }
+
+  private notificationsEnabled(): boolean {
+    return this.deploymentNotificationsFlag();
   }
 }

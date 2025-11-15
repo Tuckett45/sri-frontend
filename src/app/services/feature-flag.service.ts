@@ -6,7 +6,10 @@ export type FeatureFlagKey =
   | 'offlineMode'
   | 'roleBasedWorkflow'
   | 'deploymentNotifications'
-  | 'signOffRequired';
+  | 'signOffRequired'
+  | 'deploymentAutoAssign'
+  | 'deploymentStrictRoles'
+  | 'deploymentRoleColors';
 
 export interface FeatureFlagView {
   readonly key: FeatureFlagKey;
@@ -62,6 +65,24 @@ export class FeatureFlagService {
       key: 'signOffRequired',
       label: 'Require Sign-Offs for Deployment Handoff',
       description: 'Enforce three-party sign-off workflow (Vendor Rep, SRI Tech, Deployment Engineer) before completing deployment handoff phase.',
+      defaultValue: true
+    },
+    {
+      key: 'deploymentAutoAssign',
+      label: 'Auto-Assign Deployment Roles',
+      description: 'Automatically assign deployment roles as phases progress.',
+      defaultValue: true
+    },
+    {
+      key: 'deploymentStrictRoles',
+      label: 'Strict Role Enforcement',
+      description: 'Restrict access to phases based on runbook role assignments.',
+      defaultValue: false
+    },
+    {
+      key: 'deploymentRoleColors',
+      label: 'Role Color Highlights',
+      description: 'Display deployment roles using the runbook color palette.',
       defaultValue: true
     }
   ];
