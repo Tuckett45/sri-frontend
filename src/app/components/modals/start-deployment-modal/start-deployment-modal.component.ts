@@ -21,6 +21,8 @@ import {
   PhaseQuestionProgress,
 } from 'src/app/features/deployment/models/deployment-progress.model';
 import { DeploymentMediaApiService } from 'src/app/features/deployment/services/deployment-media-api.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { User } from 'src/app/models/user.model';
 
 interface SiteSurveyQuestion {
   id: string;
@@ -151,6 +153,7 @@ export class StartDeploymentModalComponent implements OnInit {
   private readonly data = inject<StartDeploymentDialogData | null>(MAT_DIALOG_DATA, { optional: true }) ?? null;
   private readonly toastr = inject(ToastrService);
   private readonly mediaApi = inject(DeploymentMediaApiService);
+  private readonly authService = inject(AuthService);
 
   protected readonly project = this.data?.project ?? null;
   private existingProgress: StartDeploymentProgressPayload | null = null;
@@ -543,10 +546,12 @@ export class StartDeploymentModalComponent implements OnInit {
     { id: 'ss-1-5', displayId: '1.5', title: 'Confirm DE provided pictures of equipment showing port name & NIC card placement and rack elevations.', requireNotesWhenNo: true, detailsPrompt: 'If "No", list missing images or documentation.' }
   ];
 
+  userData!: User;
   private phaseTaskGroupsMap!: Record<PhaseType, PhaseTaskGroup[]>;
   private phaseTaskFormsMap!: Record<PhaseType, FormGroup>;
 
   ngOnInit(): void {
+    this.loadUserProfile();
     // ---- Deployment metadata form (only used for NEW deployments) ----
     this.metaForm = this.fb.nonNullable.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -598,6 +603,26 @@ export class StartDeploymentModalComponent implements OnInit {
     if (this.project?.id) {
       void this.refreshMedia('receiving');
       void this.refreshMedia('handoff');
+    }
+  }
+
+  loadUserProfile(): void {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const userObj = JSON.parse(userString);
+
+      this.userData = new User(
+        userObj.id,
+        userObj.name,
+        userObj.email,
+        userObj.password,
+        userObj.role,
+        userObj.market,
+        userObj.company,
+        new Date(userObj.createdDate),
+        userObj.isApproved,
+        userObj.approvalToken 
+      );
     }
   }
 
@@ -745,6 +770,27 @@ export class StartDeploymentModalComponent implements OnInit {
     return this.uploadingMediaPhase() === phase;
   }
 
+  protected async removeMedia(phase: MediaPhase, media: DeploymentMedia): Promise<void> {
+    if (!this.project?.id) {
+      return;
+    }
+
+    try {
+      await firstValueFrom(this.mediaApi.deleteMedia(this.project.id, media.id));
+      this.mediaByPhase.update(current => {
+        const list = current[phase] ?? [];
+        return {
+          ...current,
+          [phase]: list.filter(item => item.id !== media.id)
+        };
+      });
+      this.toastr.info('Photo removed.');
+    } catch (error) {
+      console.error('Failed to delete media', media, error);
+      this.toastr.error('Unable to delete the selected photo.');
+    }
+  }
+
   protected async onMediaSelected(phase: MediaPhase, event: Event): Promise<void> {
     const input = event.target as HTMLInputElement | null;
     const files = input?.files ? Array.from(input.files) : [];
@@ -768,6 +814,7 @@ export class StartDeploymentModalComponent implements OnInit {
           beMediaType: 'image',
           businessKind: config.kind,
           files,
+          userId: this.userData.id,
         })
       );
       this.toastr.success(

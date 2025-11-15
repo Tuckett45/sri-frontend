@@ -3,19 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, firstValueFrom, map, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { environment, local_environment } from '../../../../environments/environments';
-import { DeploymentHandoff, HandoffPackage, Deployment, SignOffRequest, SignOffStatus, SignOffType } from '../models/deployment.models';
+import { DeploymentHandoff, HandoffPackage, Deployment, SignOffRequest, SignOffStatus, SignOffType, DeploymentStatus } from '../models/deployment.models';
 import { StartDeploymentProgressPayload } from '../models/deployment-progress.model';
-
-export enum DeploymentStatus {
-  Planned = 'Planned',
-  Survey = 'Survey',
-  Inventory = 'Inventory',
-  Install = 'Install',
-  Cabling = 'Cabling',
-  Labeling = 'Labeling',
-  Handoff = 'Handoff',
-  Complete = 'Complete'
-}
 
 export interface DeploymentQuery {
   status?: DeploymentStatus;
@@ -53,7 +42,7 @@ export type StartDeploymentProgressBody = StartDeploymentProgressPayload & {
 @Injectable({ providedIn: 'root' })
 export class DeploymentService {
   private http = inject(HttpClient);
-  private base = `${environment.apiUrl}/deployments`;
+  private base = `${local_environment.apiUrl}/deployments`;
   private listCache = new Map<string, Observable<Deployment[]>>();
 
   private httpOptions = {
@@ -94,13 +83,15 @@ export class DeploymentService {
   }
 
   async create(payload: Partial<Deployment>) {
-    const result = await firstValueFrom(this.http.post<{ id: string }>(this.base, payload, { headers: this.httpOptions.headers }));
+    const body = this.normalizePayload(payload);
+    const result = await firstValueFrom(this.http.post<{ id: string }>(this.base, body, { headers: this.httpOptions.headers }));
     this.invalidateListCache();
     return result;
   }
 
   async update(id: string, payload: Partial<Deployment>) {
-    const result = await firstValueFrom(this.http.put<void>(`${this.base}/${id}`, payload, { headers: this.httpOptions.headers }));
+    const body = this.normalizePayload(payload);
+    const result = await firstValueFrom(this.http.put<void>(`${this.base}/${id}`, body, { headers: this.httpOptions.headers }));
     this.invalidateListCache();
     return result;
   }
@@ -221,5 +212,27 @@ export class DeploymentService {
 
   private stripBraces(id: string | null | undefined): string {
     return (id ?? '').replace(/[{}]/g, '');
+  }
+
+  private normalizePayload(payload: Partial<Deployment>): {
+    id: string | null;
+    name: string;
+    dataCenter: string;
+    vendorName: string;
+    status: DeploymentStatus | '';
+    startDate: string | null | undefined;
+    targetHandoffDate: string | null | undefined;
+    updatedBy: string | null | undefined;
+  } {
+    return {
+      id: payload.id ?? null,
+      name: payload.name ?? '',
+      dataCenter: payload.dataCenter ?? '',
+      vendorName: payload.vendorName ?? '',
+      status: payload.status ?? '',
+      startDate: payload.startDate ?? null,
+      targetHandoffDate: payload.targetHandoffDate ?? null,
+      updatedBy: payload.updatedBy ?? null
+    };
   }
 }

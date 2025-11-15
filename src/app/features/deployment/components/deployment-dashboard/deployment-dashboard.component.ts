@@ -77,6 +77,17 @@ export class DeploymentDashboardComponent implements OnInit {
     [DeploymentStatus.Complete, 'success'],
   ]);
 
+  private readonly backendStatusCode: Record<DeploymentStatus, number> = {
+    [DeploymentStatus.Planned]: 0,
+    [DeploymentStatus.Survey]: 1,
+    [DeploymentStatus.Inventory]: 2,
+    [DeploymentStatus.Install]: 3,
+    [DeploymentStatus.Cabling]: 4,
+    [DeploymentStatus.Labeling]: 5,
+    [DeploymentStatus.Handoff]: 6,
+    [DeploymentStatus.Complete]: 7,
+  };
+
   private readonly phaseIndexByStatus: Record<DeploymentStatus, number> = {
     [DeploymentStatus.Planned]: 0,
     [DeploymentStatus.Survey]: 0,
@@ -327,6 +338,7 @@ export class DeploymentDashboardComponent implements OnInit {
 
   protected async openDeployment(project: Deployment): Promise<void> {
     const initialPhaseIndex = this.phaseIndexByStatus[project.status] ?? 0;
+    const safeInitialPhaseIndex = Math.min(initialPhaseIndex, this.wizardPhaseCount - 1);
     let progress = this.getCachedProgress(project.id);
     const mediaPromise = project.id ? this.fetchDeploymentMedia(project.id) : Promise.resolve(this.emptyMedia());
 
@@ -355,7 +367,7 @@ export class DeploymentDashboardComponent implements OnInit {
     }
 
     const media = await mediaPromise;
-    this.openDeploymentDialog(project, initialPhaseIndex, progress, media);
+    this.openDeploymentDialog(project, safeInitialPhaseIndex, progress, media);
   }
 
   private emptyMedia(): Record<MediaPhase, DeploymentMedia[]> {
@@ -586,7 +598,21 @@ export class DeploymentDashboardComponent implements OnInit {
       return;
     }
     try {
-      await this.deploymentService.update(projectId, { status });
+      const project = this.deployments().find(item => item.id === projectId);
+      if (!project) {
+        console.warn('Deployment not found when attempting to update status', projectId);
+        return;
+      }
+
+      await this.deploymentService.update(projectId, {
+        id: projectId,
+        name: project.name,
+        dataCenter: project.dataCenter,
+        vendorName: project.vendorName,
+        status,
+        startDate: project.createdDate,
+        updatedBy: this.user?.id || ''
+      });
     } catch (error) {
       console.warn('Failed to update deployment status', projectId, error);
     }
@@ -600,12 +626,12 @@ export class DeploymentDashboardComponent implements OnInit {
     if (!projectId) {
       return;
     }
-    const toIndex = this.phaseIndexByStatus[nextStatus];
+    const toIndex = this.backendStatusCode[nextStatus];
     if (toIndex === undefined) {
       return;
     }
     const fromIndex =
-      previousStatus != null ? this.phaseIndexByStatus[previousStatus] : undefined;
+      previousStatus != null ? this.backendStatusCode[previousStatus] : undefined;
     if (fromIndex === undefined || fromIndex === toIndex || fromIndex > toIndex) {
       return;
     }

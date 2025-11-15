@@ -25,7 +25,7 @@
 
     <div class="card-body">
       <ng-container *ngIf="notificationsEnabled(); else disabledFlag">
-        <div *ngIf="notifications().length > 0; else emptyState" class="feed">
+        <div *ngIf="notificationsAvailable(); else emptyState" class="feed">
           <div
             class="notification-card unread"
             *ngFor="let notification of unreadNotifications(); trackBy: trackByNotificationId"
@@ -35,7 +35,7 @@
                 <p-tag [value]="notification.category | titlecase" [severity]="tagSeverity(notification.category)"></p-tag>
                 <span class="title">{{ notification.title }}</span>
               </div>
-              <span class="timestamp">{{ notification.createdAt | date: 'short' }}</span>
+              <span class="timestamp">{{ notification.timestamp | date: 'short' }}</span>
             </div>
             <p class="message">{{ notification.message }}</p>
             <div class="notification-actions">
@@ -65,7 +65,7 @@
                 <p-tag [value]="notification.category | titlecase" [severity]="tagSeverity(notification.category)"></p-tag>
                 <span class="title">{{ notification.title }}</span>
               </div>
-              <span class="timestamp">{{ notification.createdAt | date: 'short' }}</span>
+              <span class="timestamp">{{ notification.timestamp | date: 'short' }}</span>
             </div>
             <p class="message">{{ notification.message }}</p>
             <div class="notification-actions">

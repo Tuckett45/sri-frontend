@@ -11,7 +11,7 @@ import { environment, local_environment } from '../../../../environments/environ
 
 @Injectable({ providedIn: 'root' })
 export class DeploymentMediaApiService {
-  private base = `${environment.apiUrl}/deployments`;
+  private base = `${local_environment.apiUrl}/deployments`;
   private readonly apiHeaders = new HttpHeaders({
     'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
   });
@@ -26,7 +26,8 @@ export class DeploymentMediaApiService {
     businessKind: string;                 
     files: File[];
     caption?: string | null;
-    takenAt?: string | null;        
+    takenAt?: string | null;    
+    userId: string;    
   }): Observable<DeploymentMediaUploadResponse[]> {
     const form = new FormData();
     if (opts.phaseCode != null) form.append('phaseCode', String(opts.phaseCode));
@@ -35,6 +36,7 @@ export class DeploymentMediaApiService {
     form.append('kind', opts.businessKind);
     if (opts.caption) form.append('caption', opts.caption);
     if (opts.takenAt) form.append('takenAt', opts.takenAt);
+    if (opts.userId) form.append('userId', opts.userId);
     for (const f of opts.files) form.append('files', f, f.name);
 
     return this.http.post<DeploymentMediaUploadResponse[]>(

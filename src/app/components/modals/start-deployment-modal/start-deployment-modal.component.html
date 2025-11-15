@@ -455,7 +455,13 @@
       <div class="media-thumbnails" *ngIf="mediaFor(phase).length; else noMedia">
         <figure class="media-thumb" *ngFor="let media of mediaFor(phase); trackBy: trackMedia">
           <img [src]="media.url" [alt]="media.fileName" />
-          <figcaption>{{ media.fileName }}</figcaption>
+          <figcaption>
+            <span>{{ media.fileName }}</span>
+            <button mat-icon-button type="button" aria-label="Remove photo"
+                    (click)="removeMedia(phase, media)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </figcaption>
         </figure>
       </div>
       <ng-template #noMedia>

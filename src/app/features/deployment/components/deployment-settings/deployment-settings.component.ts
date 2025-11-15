@@ -7,9 +7,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
-import { DeploymentFeatureFlagsService } from '../../services/deployment-feature-flags.service';
+import { FeatureFlagService } from 'src/app/services/feature-flag.service';
+import {
+  DEFAULT_DEPLOYMENT_FEATURE_FLAGS,
+  DEPLOYMENT_FEATURE_FLAG_MAP,
+  DeploymentFeatureFlagKey
+} from '../../services/deployment-feature-flags.config';
 import { DeploymentSignalRService } from '../../services/deployment-signalr.service';
 import * as signalR from '@microsoft/signalr';
+
+type DeploymentSettingsFlags = Record<DeploymentFeatureFlagKey, boolean>;
 
 @Component({
   selector: 'ark-deployment-settings',
@@ -309,11 +316,11 @@ import * as signalR from '@microsoft/signalr';
   `]
 })
 export class DeploymentSettingsComponent implements OnInit {
-  private readonly flagsService = inject(DeploymentFeatureFlagsService);
+  private readonly featureFlags = inject(FeatureFlagService);
   private readonly signalRService = inject(DeploymentSignalRService);
   private readonly toastr = inject(ToastrService);
 
-  protected flags = this.flagsService.getFlags()();
+  protected flags: DeploymentSettingsFlags = this.readDeploymentFlags();
   protected connectionStatus = 'disconnected';
   protected connectionStatusText = 'Disconnected';
   protected notifications = this.signalRService.getNotifications();
@@ -331,8 +338,8 @@ export class DeploymentSettingsComponent implements OnInit {
     this.onFlagChange('notificationsEnabled');
   }
 
-  protected onFlagChange(key: keyof typeof this.flags): void {
-    this.flagsService.setFlag(key as any, this.flags[key]);
+  protected onFlagChange(key: DeploymentFeatureFlagKey): void {
+    this.setDeploymentFeatureFlag(key, this.flags[key]);
     this.toastr.info(`Setting updated: ${this.getFlagLabel(key)}`, 'Settings');
   }
 
@@ -341,8 +348,8 @@ export class DeploymentSettingsComponent implements OnInit {
   }
 
   protected onReset(): void {
-    this.flagsService.resetFlags();
-    this.flags = this.flagsService.getFlags()();
+    this.applyDefaultDeploymentFlags();
+    this.flags = this.readDeploymentFlags();
     this.toastr.info('Settings have been reset to defaults', 'Reset');
   }
 
@@ -426,6 +433,33 @@ export class DeploymentSettingsComponent implements OnInit {
       showRoleColors: 'Role Colors'
     };
     return labels[key] || key;
+  }
+
+  private readDeploymentFlags(): DeploymentSettingsFlags {
+    const result: DeploymentSettingsFlags = {
+      notificationsEnabled: false,
+      autoAssignEnabled: false,
+      strictRoleEnforcement: false,
+      showRoleColors: false
+    };
+
+    (Object.keys(DEPLOYMENT_FEATURE_FLAG_MAP) as DeploymentFeatureFlagKey[]).forEach(flagKey => {
+      const signalValue = this.featureFlags.flagEnabled(DEPLOYMENT_FEATURE_FLAG_MAP[flagKey]);
+      result[flagKey] = signalValue();
+    });
+
+    return result;
+  }
+
+  private setDeploymentFeatureFlag(key: DeploymentFeatureFlagKey, value: boolean): void {
+    this.featureFlags.setFlag(DEPLOYMENT_FEATURE_FLAG_MAP[key], value);
+  }
+
+  private applyDefaultDeploymentFlags(): void {
+    (Object.keys(DEFAULT_DEPLOYMENT_FEATURE_FLAGS) as DeploymentFeatureFlagKey[]).forEach(flagKey => {
+      const defaultValue = DEFAULT_DEPLOYMENT_FEATURE_FLAGS[flagKey];
+      this.setDeploymentFeatureFlag(flagKey, defaultValue);
+    });
   }
 }
 

@@ -29,7 +29,7 @@ export class DeploymentApiService {
     })
   };
 
-  private baseUrl = `${local_environment.apiUrl}/deployments`;
+  private baseUrl = `${environment.apiUrl}/deployments`;
 
   constructor(private http: HttpClient) {}
 

@@ -27,22 +27,22 @@
 
     <mat-card-content>
       <form [formGroup]="featureFlagsForm" class="flags-form">
-        <div class="flag-row" *ngFor="let flag of flagControls">
+        <div class="flag-row" *ngFor="let flag of flagViews()">
           <div class="flag-info">
-            <h4>{{ flag.title }}</h4>
+            <h4>{{ flag.label }}</h4>
             <p>{{ flag.description }}</p>
           </div>
           <div class="flag-toggle">
             <label class="toggle-label">
               <input type="radio"
                      [value]="true"
-                     [formControlName]="flag.controlName">
+                     [formControlName]="flag.key">
               <span>On</span>
             </label>
             <label class="toggle-label">
               <input type="radio"
                      [value]="false"
-                     [formControlName]="flag.controlName">
+                     [formControlName]="flag.key">
               <span>Off</span>
             </label>
           </div>

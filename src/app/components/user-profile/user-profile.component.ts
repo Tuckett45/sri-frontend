@@ -1,10 +1,10 @@
 import { Component, TemplateRef, ViewChild, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { UserProfileModalComponent } from '../modals/user-profile-modal/user-profile-modal.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { User } from 'src/app/models/user.model';
-import { DeploymentFeatureFlagsService, DeploymentFeatureFlags } from 'src/app/features/deployment/services/deployment-feature-flags.service';
+import { FeatureFlagService, FeatureFlagKey, FeatureFlagView } from 'src/app/services/feature-flag.service';
 
 @Component({
   selector: 'app-user-profile',
@@ -17,36 +17,14 @@ export class UserProfileComponent implements OnInit {
   @ViewChild('editProfileModal')
   editProfileModal!: TemplateRef<any>;
   dialogRef!: MatDialogRef<any>;
-  profileData!: User;
-  featureFlagsForm!: FormGroup;
-  featureFlags!: DeploymentFeatureFlags;
-  flagControls = [
-    {
-      controlName: 'notificationsEnabled',
-      title: 'Deployment Notifications',
-      description: 'Receive real-time deployment alerts and SignalR messages.'
-    },
-    {
-      controlName: 'autoAssignEnabled',
-      title: 'Auto-Assign Roles',
-      description: 'Automatically assign deployment roles as phases progress.'
-    },
-    {
-      controlName: 'strictRoleEnforcement',
-      title: 'Strict Role Enforcement',
-      description: 'Restrict access to phases based on runbook role assignments.'
-    },
-    {
-      controlName: 'showRoleColors',
-      title: 'Role Color Highlights',
-      description: 'Display deployment roles using the runbook color palette.'
-    }
-  ];
+  profileData: User | null = null;
+  featureFlagsForm!: FormGroup<Record<FeatureFlagKey, FormControl<boolean>>>;
+  readonly flagViews = this.featureFlagsService.flags;
 
   constructor(
     private dialog: MatDialog,
     public authService: AuthService,
-    private featureFlagsService: DeploymentFeatureFlagsService,
+    private featureFlagsService: FeatureFlagService,
     private fb: FormBuilder
   ) {}
 
@@ -99,26 +77,35 @@ export class UserProfileComponent implements OnInit {
   }
 
   private initFeatureFlagsForm(): void {
-    this.featureFlags = this.featureFlagsService.getFlags()();
-    this.featureFlagsForm = this.fb.group({
-      notificationsEnabled: [this.featureFlags.notificationsEnabled],
-      autoAssignEnabled: [this.featureFlags.autoAssignEnabled],
-      strictRoleEnforcement: [this.featureFlags.strictRoleEnforcement],
-      showRoleColors: [this.featureFlags.showRoleColors]
+    const flags = this.readFeatureFlagValues();
+    const controls: Partial<Record<FeatureFlagKey, FormControl<boolean>>> = {};
+    (Object.keys(flags) as FeatureFlagKey[]).forEach(key => {
+      controls[key] = this.fb.nonNullable.control(flags[key]);
     });
+    this.featureFlagsForm = new FormGroup(controls as Record<FeatureFlagKey, FormControl<boolean>>);
   }
 
   onFlagsSubmit(): void {
-    const updated = this.featureFlagsForm.value as DeploymentFeatureFlags;
-    (Object.keys(updated) as (keyof DeploymentFeatureFlags)[]).forEach(key => {
+    const updated = this.featureFlagsForm.getRawValue();
+    (Object.keys(updated) as FeatureFlagKey[]).forEach(key => {
       this.featureFlagsService.setFlag(key, updated[key]);
     });
-    this.featureFlags = this.featureFlagsService.getFlags()();
   }
 
   resetFlags(): void {
-    this.featureFlagsService.resetFlags();
-    this.featureFlags = this.featureFlagsService.getFlags()();
-    this.featureFlagsForm.patchValue(this.featureFlags);
+    this.featureFlagsService.reset();
+    const refreshed = this.readFeatureFlagValues();
+    this.featureFlagsForm.patchValue(refreshed);
+  }
+
+  private readFeatureFlagValues(): Record<FeatureFlagKey, boolean> {
+    const result = {} as Record<FeatureFlagKey, boolean>;
+
+    (this.flagViews() as FeatureFlagView[]).forEach(view => {
+      const valueSignal = this.featureFlagsService.flagEnabled(view.key);
+      result[view.key] = valueSignal();
+    });
+
+    return result;
   }
 }
