@@ -65,6 +65,12 @@ export class ExpenseApiService {
     if (e.category === ExpenseCategory.Mileage && e.mileageMiles != null) {
       fd.append('MileageMiles', String(e.mileageMiles));
     }
+    
+    // Add weekEndingDate for mileage expenses
+    if (e.category === ExpenseCategory.Mileage && e.weekEndingDate) {
+      fd.append('WeekEndingDate', this.toDateInput(e.weekEndingDate));
+    }
+    
     fd.append('DescriptionNotes', e.descriptionNotes ?? '');
 
     const isMOB = !!e.mobilization;
@@ -102,6 +108,9 @@ export class ExpenseApiService {
         category: expense.category,
         paymentMethod: expense.paymentMethod,
         mileageMiles: expense.mileageMiles ?? null,
+        weekEndingDate: expense.category === ExpenseCategory.Mileage && expense.weekEndingDate 
+          ? this.toDateInput(expense.weekEndingDate) 
+          : null,
         descriptionNotes: expense.descriptionNotes ?? null,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
         mobilization: expense.mobilization,
@@ -139,6 +148,9 @@ export class ExpenseApiService {
         category: expense.category,
         paymentMethod: expense.paymentMethod,
         mileageMiles: expense.mileageMiles ?? null,
+        weekEndingDate: expense.category === ExpenseCategory.Mileage && expense.weekEndingDate 
+          ? this.toDateInput(expense.weekEndingDate) 
+          : null,
         descriptionNotes: expense.descriptionNotes ?? null,
         mobilization: expense.mobilization,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
@@ -255,13 +267,3 @@ export class ExpenseApiService {
     return this.getExpenses(hrOpts);
   }
 }
-
-
-
-
-
-
-
-
-
-
