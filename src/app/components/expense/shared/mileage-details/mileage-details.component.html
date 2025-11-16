@@ -17,7 +17,15 @@
     <form [formGroup]="mileageForm" class="mileage-details__form-grid">
       <mat-form-field appearance="outline">
         <mat-label>Date</mat-label>
-        <input matInput type="date" formControlName="date" required />
+        <input
+          matInput
+          [matDatepicker]="mileageDatePicker"
+          formControlName="date"
+          placeholder="Select date"
+          required
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="mileageDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #mileageDatePicker></mat-datepicker>
         <mat-error *ngIf="hasError('date', 'required')">Date is required</mat-error>
       </mat-form-field>
 
@@ -72,8 +80,8 @@
     </form>
 
     <div class="mileage-details__actions">
-      <button mat-stroked-button type="button" color="secondary" (click)="cancelEdit()">Cancel</button>
-      <button mat-flat-button type="button" color="primary" (click)="saveEntry()">
+      <button mat-flat-button type="button" class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+      <button mat-flat-button type="button" class="save-btn" (click)="saveEntry()">
         {{ editingIndex !== null ? 'Update Entry' : 'Add Entry' }}
       </button>
     </div>

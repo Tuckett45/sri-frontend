@@ -177,7 +177,14 @@
       <div class="row">
         <mat-form-field appearance="outline">
           <mat-label>Week Ending Date</mat-label>
-          <input matInput type="date" formControlName="weekEndingDate" />
+          <input
+            matInput
+            [matDatepicker]="weekEndingDatePicker"
+            formControlName="weekEndingDate"
+            placeholder="Select week ending date"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="weekEndingDatePicker"></mat-datepicker-toggle>
+          <mat-datepicker #weekEndingDatePicker></mat-datepicker>
           <mat-hint>Select the Friday of the week this mileage applies to</mat-hint>
         </mat-form-field>
       </div>
