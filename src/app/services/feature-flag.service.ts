@@ -2,8 +2,8 @@ import { Injectable, Signal, computed, signal } from '@angular/core';
 
 export type FeatureFlagKey = 
   | 'notifications' 
-  | 'liveUpdates' 
   | 'offlineMode'
+  | 'liveUpdates' 
   | 'roleBasedWorkflow'
   | 'deploymentNotifications'
   | 'signOffRequired'
@@ -35,54 +35,12 @@ export class FeatureFlagService {
       key: 'notifications',
       label: 'Notifications',
       description: 'Enable in-app and email notifications to keep teams aware of project changes.',
-      defaultValue: true
-    },
-    {
-      key: 'liveUpdates',
-      label: 'Live Updates',
-      description: 'Turn on live-refresh dashboards and tables without manual reloads.',
       defaultValue: false
     },
     {
       key: 'offlineMode',
       label: 'Offline Mode',
       description: 'Allow limited access when internet connectivity is unavailable.',
-      defaultValue: false
-    },
-    {
-      key: 'roleBasedWorkflow',
-      label: 'Role-Based Deployment Workflow',
-      description: 'Enable role-based access control and color-coded UI for deployment phases based on user roles (DE, DC Ops, Vendor Rep, SRI Tech).',
-      defaultValue: true
-    },
-    {
-      key: 'deploymentNotifications',
-      label: 'Deployment Workflow Notifications',
-      description: 'Enable real-time notifications for deployment assignments, sign-off requests, issues, and completion events.',
-      defaultValue: true
-    },
-    {
-      key: 'signOffRequired',
-      label: 'Require Sign-Offs for Deployment Handoff',
-      description: 'Enforce three-party sign-off workflow (Vendor Rep, SRI Tech, Deployment Engineer) before completing deployment handoff phase.',
-      defaultValue: true
-    },
-    {
-      key: 'deploymentAutoAssign',
-      label: 'Auto-Assign Deployment Roles',
-      description: 'Automatically assign deployment roles as phases progress.',
-      defaultValue: true
-    },
-    {
-      key: 'deploymentStrictRoles',
-      label: 'Strict Role Enforcement',
-      description: 'Restrict access to phases based on runbook role assignments.',
-      defaultValue: false
-    },
-    {
-      key: 'deploymentRoleColors',
-      label: 'Role Color Highlights',
-      description: 'Display deployment roles using the runbook color palette.',
       defaultValue: true
     }
   ];
@@ -114,7 +72,7 @@ export class FeatureFlagService {
   );
 
   flagEnabled(key: FeatureFlagKey): Signal<boolean> {
-    return computed(() => this.flagState()[key]);
+    return computed(() => !!this.flagState()[key]);
   }
 
   toggleFlag(key: FeatureFlagKey): void {

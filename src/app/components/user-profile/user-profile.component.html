@@ -2,7 +2,7 @@
   <mat-card class="profile-card">
     <div class="header-section">
       <h2>User Profile</h2>
-      <button mat-stroked-button color="primary" (click)="openEditModal()">Edit Profile</button>
+      <button mat-stroked-button class="accent-btn" (click)="openEditModal()">Edit Profile</button>
     </div>
 
     <mat-card-content>
@@ -18,10 +18,10 @@
 
   <mat-card class="flags-card">
     <div class="header-section">
-      <h2>Deployment Feature Flags</h2>
+      <h2>Feature Flags</h2>
       <div class="flags-actions">
-        <button mat-stroked-button color="primary" (click)="resetFlags()">Reset</button>
-        <button mat-raised-button color="accent" (click)="onFlagsSubmit()">Save</button>
+        <button mat-stroked-button class="accent-btn" (click)="resetFlags()">Reset</button>
+        <button mat-raised-button class="save-btn" (click)="onFlagsSubmit()">Save</button>
       </div>
     </div>
 

@@ -1,16 +1,24 @@
 .profile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 24px;
-  padding: 24px;
+  padding: 28px;
+  background: linear-gradient(145deg, rgba(20, 79, 128, 0.06), rgba(225, 138, 37, 0.08));
 }
 
 .profile-card,
 .flags-card {
-  box-shadow: 0 15px 35px rgba(20, 79, 128, 0.15);
-  border-radius: 20px;
-  background: #fdfbf8;
-  border: 1px solid rgba(20, 79, 128, 0.08);
+  box-shadow:
+    0 10px 30px rgba(20, 79, 128, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(20, 79, 128, 0.12);
+  overflow: hidden;
+}
+
+.card-body {
+  padding: 20px 24px 24px;
 }
 
 .header-section {
@@ -18,8 +26,9 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid rgba(225, 138, 37, 0.2);
+  padding: 20px 24px 14px;
+  border-bottom: 3px solid rgba(225, 138, 37, 0.35);
+  background: linear-gradient(90deg, rgba(20, 79, 128, 0.08), rgba(225, 138, 37, 0.1));
 
   h2 {
     font-size: 1.4rem;
@@ -30,14 +39,21 @@
 
   button {
     border-radius: 20px;
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(225, 138, 37, 0.25);
+    
+
+    &:hover {
+      background-color: #b86404;
+    }
   }
 }
 
 .profile-info {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 16px;
+  gap: 12px;
+  padding: 12px 0 4px;
 
   p {
     display: flex;
@@ -45,11 +61,11 @@
     margin: 0;
     font-size: 1rem;
     color: #273240;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(20, 79, 128, 0.1);
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(20, 79, 128, 0.08);
 
     .label {
-      font-weight: 600;
+      font-weight: 700;
       color: #0f2c46;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -57,7 +73,7 @@
 
     .value {
       color: #144f80;
-      font-weight: 500;
+      font-weight: 600;
     }
   }
 }
@@ -65,15 +81,17 @@
 .flags-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
+  padding: 12px 0 8px;
 }
 
 .flag-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid rgba(20, 79, 128, 0.1);
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(20, 79, 128, 0.08);
 
   &:last-child {
     border-bottom: none;
@@ -86,7 +104,7 @@
   h4 {
     margin: 0;
     color: #0f2c46;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   p {
@@ -98,7 +116,7 @@
 
 .flag-toggle {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .toggle-label {
@@ -107,7 +125,7 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(20, 79, 128, 0.2);
+  border: 1px solid rgba(20, 79, 128, 0.28);
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -117,7 +135,7 @@
 
   span {
     color: #144f80;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -134,13 +152,37 @@
 
   button {
     min-width: 120px;
+    border-radius: 18px;
+  }
+
+
+
+  .save-btn {
+    background-color: #e18a25 !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(225, 138, 37, 0.25);
+
+    &:hover {
+      background-color: #b86404 !important;
+    }
   }
 }
+
+.accent-btn {
+    background-color: #fbfcfd !important;
+    color: #144f80 !important;
+    border-color: rgba(20, 79, 128, 0.4) !important;
+
+    &:hover {
+      background-color: #144f80 !important;
+      color: #fff !important;
+    }
+  }
 
 @media (max-width: 768px) {
   .profile-grid {
     grid-template-columns: 1fr;
-    padding: 16px;
+    padding: 18px;
   }
 
   .header-section {
@@ -151,7 +193,7 @@
   .flag-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
   }
 
   .flag-info {
