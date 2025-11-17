@@ -11,7 +11,7 @@ import { environment, local_environment } from '../../../../environments/environ
 
 @Injectable({ providedIn: 'root' })
 export class DeploymentMediaApiService {
-  private base = `${local_environment.apiUrl}/deployments`;
+  private base = `${environment.apiUrl}/deployments`;
   private readonly apiHeaders = new HttpHeaders({
     'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
   });
