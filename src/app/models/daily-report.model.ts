@@ -1,6 +1,6 @@
 export interface DailyReport {
   id?: number;
-  userId?: string;
+  userId: string;
   userName?: string;
   userEmail?: string;
   segmentId: string;

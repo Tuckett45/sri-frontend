@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { Observable, map, startWith } from 'rxjs';
 import { DailyReport } from 'src/app/models/daily-report.model';
 import { DailyReportService } from 'src/app/services/daily-report.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-daily-report-modal',
@@ -38,7 +39,8 @@ export class DailyReportModalComponent implements OnInit {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<DailyReportModalComponent>,
     private dailyReportService: DailyReportService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -135,8 +137,18 @@ export class DailyReportModalComponent implements OnInit {
       return;
     }
 
+    // Get current user ID from auth service
+    const currentUser = this.authService.getUser();
+    if (!currentUser || !currentUser.id) {
+      this.toastr.error('Unable to identify current user', 'Error');
+      return;
+    }
+
     this.isSubmitting = true;
-    const report: DailyReport = this.dailyReportForm.value;
+    const report: DailyReport = {
+      ...this.dailyReportForm.value,
+      userId: currentUser.id
+    };
 
     this.dailyReportService.submitDailyReport(report).subscribe({
       next: (response) => {
@@ -175,4 +187,3 @@ export class DailyReportModalComponent implements OnInit {
     return '';
   }
 }
-
