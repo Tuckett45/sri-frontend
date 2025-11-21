@@ -86,7 +86,8 @@ export class ExpenseReportModalComponent implements OnDestroy {
     'entertainment.nameOfEstablishment': 'Name of Establishment',
     'entertainment.numberInParty': 'Number in Party',
     'entertainment.businessRelationship': 'Business Relationship',
-    'entertainment.businessPurpose': 'Business Purpose'
+    'entertainment.businessPurpose': 'Business Purpose',
+    'entertainment.attendees': 'Attendees'
   };
 
   constructor(
@@ -102,6 +103,8 @@ export class ExpenseReportModalComponent implements OnDestroy {
     const initialDateIso = this.toDateInput(data?.date);
     this.currentUserId = this.resolveCurrentUserId();
 
+    const initialIsEntertainment = !!data?.isEntertainment || data?.category === ExpenseCategory.Entertainment;
+
     this.expenseForm = this.fb.group({
       date: [initialDateIso, Validators.required],
       projectId: [data?.projectId ?? '', Validators.required],
@@ -112,7 +115,7 @@ export class ExpenseReportModalComponent implements OnDestroy {
       paymentMethod: [data?.paymentMethod ?? PaymentMethod.EmployeePaid, Validators.required],
       mileageMiles: [data?.mileageMiles ?? null],
       descriptionNotes: [data?.descriptionNotes ?? ''],
-      isEntertainment: [data?.isEntertainment ?? false],
+      isEntertainment: [initialIsEntertainment],
       mobilization: [data?.mobilization ?? false],
       weekEndingDate: [data?.weekEndingDate ? this.toDateInput(data.weekEndingDate) : null],
       entertainment: this.fb.group({
@@ -120,7 +123,8 @@ export class ExpenseReportModalComponent implements OnDestroy {
         nameOfEstablishment: [data?.entertainment?.nameOfEstablishment ?? ''],
         numberInParty: [data?.entertainment?.numberInParty ?? null],
         businessRelationship: [data?.entertainment?.businessRelationship ?? ''],
-        businessPurpose: [data?.entertainment?.businessPurpose ?? '']
+        businessPurpose: [data?.entertainment?.businessPurpose ?? ''],
+        attendees: [data?.entertainment?.attendees ?? '']
       })
     });
 
@@ -145,6 +149,7 @@ export class ExpenseReportModalComponent implements OnDestroy {
         g.get('numberInParty')?.setValidators([Validators.required, Validators.min(1)]);
         g.get('businessRelationship')?.setValidators([Validators.required]);
         g.get('businessPurpose')?.setValidators([Validators.required]);
+        g.get('attendees')?.setValidators([Validators.required]);
       } else {
         g.reset();
         g.get('typeOfEntertainment')?.clearValidators();
@@ -152,6 +157,7 @@ export class ExpenseReportModalComponent implements OnDestroy {
         g.get('numberInParty')?.clearValidators();
         g.get('businessRelationship')?.clearValidators();
         g.get('businessPurpose')?.clearValidators();
+        g.get('attendees')?.clearValidators();
         Object.values(g.controls).forEach(control => control.updateValueAndValidity({ emitEvent: false }));
       }
       g.updateValueAndValidity({ emitEvent: false });
@@ -169,7 +175,6 @@ export class ExpenseReportModalComponent implements OnDestroy {
       
       if (cat !== ExpenseCategory.Mileage) {
         this.expenseForm.get('mileageMiles')?.setValue(null);
-        this.expenseForm.get('weekEndingDate')?.setValue(null);
       }
     });
 
@@ -193,16 +198,16 @@ export class ExpenseReportModalComponent implements OnDestroy {
       if (m) return `${m[1]}-${m[2]}-${m[3]}`;
       const d = new Date(value);
       if (!Number.isNaN(d.getTime())) {
-        return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       }
     }
 
     if (value instanceof Date && !Number.isNaN(value.getTime())) {
-      return `${value.getUTCFullYear()}-${pad(value.getUTCMonth() + 1)}-${pad(value.getUTCDate())}`;
+      return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
     }
 
     const t = new Date();
-    return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`;
+    return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
   }
 
   private resolveCurrentUserId(): string | null {
@@ -368,14 +373,15 @@ export class ExpenseReportModalComponent implements OnDestroy {
           paymentMethod: this.mapPaymentMethodEnum(data.paymentMethod),
           descriptionNotes: data.descriptionNotes || '',
           locationText: fullAddress || '',
-          isEntertainment: data.isEntertainment ?? false,
+          isEntertainment: data.isEntertainment ?? data.category === ExpenseCategory.Entertainment,
           entertainment: (!!data.isEntertainment || data.category === ExpenseCategory.Entertainment)
             ? {
                 typeOfEntertainment: data.entertainment.typeOfEntertainment || '',
                 nameOfEstablishment: data.vendor || '',
                 numberInParty: Number(data.entertainment.numberInParty ?? 1),
                 businessRelationship: data.businessRelationship || 'Team Building',
-                businessPurpose: data.category || ''
+                businessPurpose: data.category || '',
+                attendees: data.entertainment.attendees || ''
               } as EntertainmentDetail
             : null,
         });
@@ -443,17 +449,18 @@ export class ExpenseReportModalComponent implements OnDestroy {
       descriptionNotes: v.descriptionNotes || '',
       isEntertainment: !!v.isEntertainment || v.category === ExpenseCategory.Entertainment,
       mobilization: v.mobilization || false,
-      weekEndingDate: v.category === ExpenseCategory.Mileage && v.weekEndingDate 
+      weekEndingDate: v.weekEndingDate 
         ? this.toDateInput(v.weekEndingDate) 
         : null,
       status: this.data?.status || ExpenseStatus.Pending,
       entertainment: (!!v.isEntertainment || v.category === ExpenseCategory.Entertainment)
         ? {
             typeOfEntertainment: v.entertainment?.typeOfEntertainment || '',
-            nameOfEstablishment: v.vendor || '',
+            nameOfEstablishment: v.entertainment?.nameOfEstablishment || v.vendor || '',
             numberInParty: Number(v.entertainment?.numberInParty ?? 0),
             businessRelationship: v.entertainment?.businessRelationship || '',
-            businessPurpose: v.entertainment?.businessPurpose || ''
+            businessPurpose: v.entertainment?.businessPurpose || '',
+            attendees: v.entertainment?.attendees || ''
           } as EntertainmentDetail
         : null,
       mileage: v.category === ExpenseCategory.Mileage && this.mileageEntries.length > 0

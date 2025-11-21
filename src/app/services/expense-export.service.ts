@@ -169,7 +169,7 @@ export class ExpenseExportService {
       header += `"Date Range: ${dateRange.start} to ${dateRange.end}"\n`;
     }
     header += '\n';
-    header += '"Date","Employee","Job","Category","Vendor","Amount","Notes"\n';
+    header += '"Date","Week Ending","Employee","Job","Category","Vendor","Amount","Notes","Details"\n';
     return header;
   }
 
@@ -178,15 +178,17 @@ export class ExpenseExportService {
    */
   private generateCSVRows(expenses: Expense[]): string {
     return expenses.map(exp => {
-      const date = exp.date || '';
+      const date = (exp.date || '').replace(/"/g, '""');
+      const weekEnding = (exp.weekEndingDate || '').replace(/"/g, '""');
       const employee = (exp.createdBy || '').replace(/"/g, '""');
       const job = (exp.projectId || '').replace(/"/g, '""');
       const category = (exp.category || '').replace(/"/g, '""');
       const vendor = (exp.vendor || '').replace(/"/g, '""');
       const amount = (exp.amount || 0).toFixed(2);
       const notes = (exp.descriptionNotes || '').replace(/"/g, '""');
+      const details = this.buildDetails(exp).replace(/"/g, '""');
       
-      return `"${date}","${employee}","${job}","${category}","${vendor}",${amount},"${notes}"`;
+      return `"${date}","${weekEnding}","${employee}","${job}","${category}","${vendor}",${amount},"${notes}","${details}"`;
     }).join('\n') + '\n';
   }
 
@@ -225,6 +227,7 @@ export class ExpenseExportService {
   private addPDFTable(doc: jsPDF, expenses: Expense[], startY: number): void {
     const tableData = expenses.map(exp => [
       exp.date || '',
+      exp.weekEndingDate || '',
       exp.createdBy || '',
       exp.projectId || '',
       exp.category || '',
@@ -235,16 +238,19 @@ export class ExpenseExportService {
 
     autoTable(doc, {
       startY,
-      head: [['Date', 'Employee', 'Job', 'Category', 'Vendor', 'Amount', 'Notes']],
+      head: [['Date', 'Week Ending', 'Employee', 'Job', 'Category', 'Vendor', 'Amount', 'Notes']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [66, 139, 202], textColor: 255 },
       columnStyles: {
-        5: { halign: 'right' }
+        6: { halign: 'right' }
       },
       margin: { left: 14, right: 14 }
     });
+
+    const detailsStartY = ((doc as any).lastAutoTable?.finalY ?? startY) + 10;
+    this.addPDFDetailsSection(doc, expenses, detailsStartY);
   }
 
   /**
@@ -294,6 +300,97 @@ export class ExpenseExportService {
       },
       margin: { left: 14, right: 14 }
     });
+  }
+
+  /**
+   * Render detailed sections for entertainment / mileage data on PDF
+   */
+  private addPDFDetailsSection(doc: jsPDF, expenses: Expense[], startY: number): void {
+    let yPosition = startY;
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const addSectionHeader = () => {
+      doc.setFontSize(12);
+      doc.text('Expense Details', 14, yPosition);
+      yPosition += 6;
+    };
+
+    addSectionHeader();
+
+    expenses.forEach(exp => {
+      const detail = this.buildDetails(exp);
+      if (!detail) {
+        return;
+      }
+
+      if (yPosition > pageHeight - 30) {
+        doc.addPage();
+        yPosition = 20;
+        addSectionHeader();
+      }
+
+      const label = `${this.formatDisplayDate(exp.date)} • ${exp.vendor || 'Unknown Vendor'}`;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(label, 14, yPosition);
+      yPosition += 5;
+
+      doc.setFont('helvetica', 'normal');
+      const detailLines = doc.splitTextToSize(detail, doc.internal.pageSize.getWidth() - 28);
+      doc.text(detailLines, 14, yPosition);
+      yPosition += detailLines.length * 5 + 6;
+    });
+  }
+
+  /**
+   * Build a detail string combining entertainment + mileage info
+   */
+  private buildDetails(expense: Expense): string {
+    const sections: string[] = [];
+
+    if (expense.entertainment) {
+      const ent = expense.entertainment;
+      const entParts: string[] = [];
+      if (ent.typeOfEntertainment) entParts.push(`Type: ${ent.typeOfEntertainment}`);
+      if (ent.nameOfEstablishment) entParts.push(`Establishment: ${ent.nameOfEstablishment}`);
+      if (ent.numberInParty != null) entParts.push(`Party: ${ent.numberInParty}`);
+      if (ent.businessRelationship) entParts.push(`Relationship: ${ent.businessRelationship}`);
+      if (ent.attendees) entParts.push(`Attendees: ${ent.attendees}`);
+      if (ent.businessPurpose) entParts.push(`Purpose: ${ent.businessPurpose}`);
+      if (entParts.length) {
+        sections.push(`Entertainment (${entParts.join(', ')})`);
+      }
+    }
+
+    if (expense.mileage && expense.mileage.length) {
+      const totalMiles = expense.mileage.reduce((sum, entry) => sum + (entry.totalMiles || 0), 0);
+      const entryDetails = expense.mileage.map(entry => {
+        const segments: string[] = [];
+        if (entry.date) segments.push(entry.date);
+        const route = [entry.fromLocation, entry.toLocation].filter(Boolean).join(' → ');
+        if (route) segments.push(route);
+        if (entry.totalMiles != null) segments.push(`${entry.totalMiles} mi`);
+        if (entry.reasonForTravel) segments.push(entry.reasonForTravel);
+        return segments.join(' | ');
+      }).filter(Boolean);
+
+      const mileageParts = [`Total: ${totalMiles} mi`];
+      if (entryDetails.length) {
+        mileageParts.push(entryDetails.join(' || '));
+      }
+      sections.push(`Mileage (${mileageParts.join(' | ')})`);
+    }
+
+    return sections.join(' | ');
+  }
+
+  private formatDisplayDate(value?: string | Date | null): string {
+    if (!value) return 'Unknown Date';
+    const parsed = value instanceof Date ? value : new Date(value);
+    if (!parsed || Number.isNaN(parsed.getTime())) {
+      return typeof value === 'string' ? value : 'Unknown Date';
+    }
+    return parsed.toLocaleDateString();
   }
 
   /**

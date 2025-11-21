@@ -9,6 +9,8 @@ import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/e
 import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 type DisplayExpense = Expense & {
   job?: string | null;
@@ -289,21 +291,34 @@ export class EmployeeExpensesPageComponent implements OnInit {
   }
 
   openEditExpense(expense: Expense): void {
-    const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
-      width: '500px',
-      data: expense
-    });
+    if (!expense?.id) {
+      this.toastr.error('Expense is missing an identifier');
+      return;
+    }
 
-    dialogRef.afterClosed().subscribe((result: ExpenseDialogResult | undefined) => {
-      if (result?.expense) {
-        this.expenseApi.updateExpense(result.expense, result.file ?? undefined, result.receiptData ?? undefined).subscribe({
-          next: () => {
-            this.toastr.success('Expense updated');
-            this.loadExpenses();
-          },
-          error: () => this.toastr.error('Update failed')
-        });
-      }
+    this.expenseApi.getExpense(expense.id).pipe(
+      catchError(err => {
+        console.error('Failed to load expense details', err);
+        this.toastr.warning('Could not load the latest details. Showing cached data instead.');
+        return of(expense);
+      })
+    ).subscribe(expensePayload => {
+      const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
+        width: '500px',
+        data: expensePayload
+      });
+
+      dialogRef.afterClosed().subscribe((result: ExpenseDialogResult | undefined) => {
+        if (result?.expense) {
+          this.expenseApi.updateExpense(result.expense, result.file ?? undefined, result.receiptData ?? undefined).subscribe({
+            next: () => {
+              this.toastr.success('Expense updated');
+              this.loadExpenses();
+            },
+            error: () => this.toastr.error('Update failed')
+          });
+        }
+      });
     });
   }
 
