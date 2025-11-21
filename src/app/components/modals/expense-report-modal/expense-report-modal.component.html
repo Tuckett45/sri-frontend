@@ -128,6 +128,21 @@
       </mat-form-field>
     </div>
 
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Week Ending Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="weekEndingDatePicker"
+          formControlName="weekEndingDate"
+          placeholder="Select week ending date"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="weekEndingDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #weekEndingDatePicker></mat-datepicker>
+        <mat-hint>Select the Friday of the week this expense applies to</mat-hint>
+      </mat-form-field>
+    </div>
+
     <mat-checkbox formControlName="mobilization">
       Mobilization/MOB
     </mat-checkbox>
@@ -165,6 +180,12 @@
       </mat-form-field>
 
         <mat-form-field class="full" appearance="outline">
+        <mat-label>Attendees</mat-label>
+        <input matInput formControlName="attendees" />
+        <mat-error *ngIf="hasNestedError('entertainment.attendees', 'required')">Required.</mat-error>
+      </mat-form-field>
+
+        <mat-form-field class="full" appearance="outline">
         <mat-label>Business Purpose</mat-label>
         <input matInput formControlName="businessPurpose" />
         <mat-error *ngIf="hasNestedError('entertainment.businessPurpose', 'required')">Required.</mat-error>
@@ -174,21 +195,6 @@
 
     <!-- Mileage Section -->
     <div *ngIf="isMileageCategory" class="mileage-section">
-      <div class="row">
-        <mat-form-field appearance="outline">
-          <mat-label>Week Ending Date</mat-label>
-          <input
-            matInput
-            [matDatepicker]="weekEndingDatePicker"
-            formControlName="weekEndingDate"
-            placeholder="Select week ending date"
-          />
-          <mat-datepicker-toggle matIconSuffix [for]="weekEndingDatePicker"></mat-datepicker-toggle>
-          <mat-datepicker #weekEndingDatePicker></mat-datepicker>
-          <mat-hint>Select the Friday of the week this mileage applies to</mat-hint>
-        </mat-form-field>
-      </div>
-
       <app-mileage-details
         [mileageEntries]="mileageEntries"
         [expenseId]="data?.id || ''"

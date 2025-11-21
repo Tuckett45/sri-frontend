@@ -424,6 +424,21 @@ export class HrExpensesPageComponent implements OnInit {
   }
 
   openExpenseDetails(expense: Expense): void {
+    if (!expense?.id) {
+      this.toastr.error('Expense is missing an identifier');
+      return;
+    }
+
+    this.expenseApi.getExpense(expense.id).pipe(
+      catchError(err => {
+        console.error('Failed to load expense details', err);
+        this.toastr.warning('Could not load the latest expense details. Showing cached data instead.');
+        return of(expense);
+      })
+    ).subscribe(resolvedExpense => this.launchExpenseDialog(resolvedExpense));
+  }
+
+  private launchExpenseDialog(expense: Expense): void {
     const dialogRef = this.dialog.open(ExpenseReportModalComponent, {
       width: '500px',
       data: expense,

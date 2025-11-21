@@ -10,7 +10,8 @@ import {
   ExpenseCategory,
   PaymentMethod,
   ExpenseImage,
-  ExpenseStatus
+  ExpenseStatus,
+  EntertainmentDetail
 } from '../models/expense.model';
 
 @Injectable({ providedIn: 'root' })
@@ -66,8 +67,7 @@ export class ExpenseApiService {
       fd.append('MileageMiles', String(e.mileageMiles));
     }
     
-    // Add weekEndingDate for mileage expenses
-    if (e.category === ExpenseCategory.Mileage && e.weekEndingDate) {
+    if (e.weekEndingDate) {
       fd.append('WeekEndingDate', this.toDateInput(e.weekEndingDate));
     }
     
@@ -78,11 +78,12 @@ export class ExpenseApiService {
     const isEnt = !!e.isEntertainment || e.category === ExpenseCategory.Entertainment;
     fd.append('IsEntertainment', String(isEnt));
     if (isEnt && e.entertainment) {
-      if (e.entertainment.typeOfEntertainment) fd.append('TypeOfEntertainment', e.entertainment.typeOfEntertainment);
-      if (e.entertainment.nameOfEstablishment) fd.append('NameOfEstablishment', e.entertainment.nameOfEstablishment);
-      if (e.entertainment.numberInParty != null) fd.append('NumberInParty', String(e.entertainment.numberInParty));
-      if (e.entertainment.businessRelationship) fd.append('BusinessRelationship', e.entertainment.businessRelationship);
-      if (e.entertainment.businessPurpose) fd.append('BusinessPurpose', e.entertainment.businessPurpose);
+      fd.append('TypeOfEntertainment', e.entertainment.typeOfEntertainment ?? '');
+      fd.append('NameOfEstablishment', e.entertainment.nameOfEstablishment ?? '');
+      fd.append('NumberInParty', String(e.entertainment.numberInParty ?? 0));
+      fd.append('BusinessRelationship', e.entertainment.businessRelationship ?? '');
+      fd.append('BusinessPurpose', e.entertainment.businessPurpose ?? '');
+      fd.append('Attendees', e.entertainment.attendees ?? '');
     }
 
     // NEW: pass status when present
@@ -91,6 +92,31 @@ export class ExpenseApiService {
 
     if (file) fd.append('Attachment', file, file.name);
     return fd;
+  }
+
+  private buildEntertainmentPayload(expense: Expense): EntertainmentDetail | null {
+    if (!expense.isEntertainment && expense.category !== ExpenseCategory.Entertainment) {
+      return null;
+    }
+    if (!expense.entertainment) {
+      return {
+        typeOfEntertainment: '',
+        nameOfEstablishment: '',
+        numberInParty: 0,
+        businessRelationship: '',
+        businessPurpose: '',
+        attendees: ''
+      };
+    }
+
+    return {
+      typeOfEntertainment: expense.entertainment.typeOfEntertainment ?? '',
+      nameOfEstablishment: expense.entertainment.nameOfEstablishment ?? '',
+      numberInParty: expense.entertainment.numberInParty ?? 0,
+      businessRelationship: expense.entertainment.businessRelationship ?? '',
+      businessPurpose: expense.entertainment.businessPurpose ?? '',
+      attendees: expense.entertainment.attendees ?? ''
+    };
   }
 
   // --- create/update/delete --------------------------------------------------
@@ -108,19 +134,13 @@ export class ExpenseApiService {
         category: expense.category,
         paymentMethod: expense.paymentMethod,
         mileageMiles: expense.mileageMiles ?? null,
-        weekEndingDate: expense.category === ExpenseCategory.Mileage && expense.weekEndingDate 
+        weekEndingDate: expense.weekEndingDate 
           ? this.toDateInput(expense.weekEndingDate) 
           : null,
         descriptionNotes: expense.descriptionNotes ?? null,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
         mobilization: expense.mobilization,
-        entertainment: expense.isEntertainment && expense.entertainment ? {
-          typeOfEntertainment: expense.entertainment.typeOfEntertainment,
-          nameOfEstablishment: expense.entertainment.nameOfEstablishment,
-          numberInParty: expense.entertainment.numberInParty,
-          businessRelationship: expense.entertainment.businessRelationship,
-          businessPurpose: expense.entertainment.businessPurpose
-        } : null
+        entertainment: this.buildEntertainmentPayload(expense)
       };
       if (expense.createdBy) payload.createdBy = expense.createdBy;
       // NEW: send status if set
@@ -148,19 +168,13 @@ export class ExpenseApiService {
         category: expense.category,
         paymentMethod: expense.paymentMethod,
         mileageMiles: expense.mileageMiles ?? null,
-        weekEndingDate: expense.category === ExpenseCategory.Mileage && expense.weekEndingDate 
+        weekEndingDate: expense.weekEndingDate 
           ? this.toDateInput(expense.weekEndingDate) 
           : null,
         descriptionNotes: expense.descriptionNotes ?? null,
         mobilization: expense.mobilization,
         isEntertainment: !!expense.isEntertainment || expense.category === ExpenseCategory.Entertainment,
-        entertainment: expense.isEntertainment && expense.entertainment ? {
-          typeOfEntertainment: expense.entertainment.typeOfEntertainment,
-          nameOfEstablishment: expense.entertainment.nameOfEstablishment,
-          numberInParty: expense.entertainment.numberInParty,
-          businessRelationship: expense.entertainment.businessRelationship,
-          businessPurpose: expense.entertainment.businessPurpose
-        } : null
+        entertainment: this.buildEntertainmentPayload(expense)
       };
       if (expense.createdBy) payload.createdBy = expense.createdBy;
       // NEW: send status if set
@@ -206,6 +220,11 @@ export class ExpenseApiService {
       if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
     });
     return this.http.get<ExpenseListResponse>(this.baseUrl, { ...this.authOnlyOptions, params });
+  }
+
+  getExpense(id: string): Observable<Expense> {
+    if (!id) throw new Error('Expense id is required');
+    return this.http.get<Expense>(`${this.baseUrl}/${id}`, this.authOnlyOptions);
   }
 
   getExpensesFlat(opts: Parameters<ExpenseApiService['getExpenses']>[0] = {}) {
