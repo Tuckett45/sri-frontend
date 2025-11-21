@@ -29,9 +29,13 @@
       margin-bottom: -1.25em; // Offset Material form field bottom margin
     }
 
-    button {
-      mat-icon {
-        margin-right: 8px;
+    .header-btn {
+      align-items: center;
+      background-color: #e18a25;
+      color: #fff;
+
+      &:hover {
+        background-color: #b86404;
       }
     }
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { DailyReport, UserSubmissionStatus } from 'src/app/models/daily-report.model';
@@ -10,12 +10,14 @@ import { DailyReportService } from 'src/app/services/daily-report.service';
   styleUrls: ['./daily-report-dashboard.component.scss'],
   standalone: false
 })
-export class DailyReportDashboardComponent implements OnInit {
+export class DailyReportDashboardComponent implements OnInit, OnChanges {
   selectedDate = new FormControl(new Date());
   userStatuses: UserSubmissionStatus[] = [];
   dailyReports: DailyReport[] = [];
   isLoading = false;
   isValidating: { [key: number]: boolean } = {};
+  @Input() marketFilter?: string | null;
+  private normalizedMarketFilter: string | null = null;
 
   // Summary statistics
   totalUsers = 0;
@@ -33,12 +35,22 @@ export class DailyReportDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.normalizedMarketFilter = this.normalizeMarket(this.marketFilter);
     this.loadDashboardData();
     
     // Reload data when date changes
     this.selectedDate.valueChanges.subscribe(() => {
       this.loadDashboardData();
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['marketFilter']) {
+      this.normalizedMarketFilter = this.normalizeMarket(changes['marketFilter'].currentValue);
+      if (!changes['marketFilter'].firstChange) {
+        this.loadDashboardData();
+      }
+    }
   }
 
   loadDashboardData(): void {
@@ -48,7 +60,7 @@ export class DailyReportDashboardComponent implements OnInit {
     // Load user submission status
     this.dailyReportService.getUserSubmissionStatus(date).subscribe({
       next: (statuses) => {
-        this.userStatuses = statuses;
+        this.userStatuses = this.applyMarketFilterToStatuses(statuses);
         this.calculateStatistics();
       },
       error: (error) => {
@@ -60,7 +72,7 @@ export class DailyReportDashboardComponent implements OnInit {
     // Load daily reports
     this.dailyReportService.getReportsByDate(date).subscribe({
       next: (reports) => {
-        this.dailyReports = reports;
+        this.dailyReports = this.applyMarketFilterToReports(reports);
         this.isLoading = false;
       },
       error: (error) => {
@@ -196,5 +208,25 @@ export class DailyReportDashboardComponent implements OnInit {
     // TODO: Implement detail view modal if needed
     console.log('View report details:', report);
   }
-}
 
+  private normalizeMarket(value?: string | null): string | null {
+    const trimmed = (value ?? '').trim();
+    return trimmed ? trimmed.toUpperCase() : null;
+  }
+
+  private applyMarketFilterToStatuses(statuses: UserSubmissionStatus[]): UserSubmissionStatus[] {
+    if (!this.normalizedMarketFilter) {
+      return statuses;
+    }
+
+    return statuses.filter(status => this.normalizeMarket(status.market) === this.normalizedMarketFilter);
+  }
+
+  private applyMarketFilterToReports(reports: DailyReport[]): DailyReport[] {
+    if (!this.normalizedMarketFilter) {
+      return reports;
+    }
+
+    return reports.filter(report => this.normalizeMarket(report.market) === this.normalizedMarketFilter);
+  }
+}

@@ -1,26 +1,38 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { environment } from 'src/environments/environments';
+import { Observable, from } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+import { environment, local_environment } from 'src/environments/environments';
 import {
   DailyReport,
   DailyReportSubmissionStatus,
   UserSubmissionStatus
 } from '../models/daily-report.model';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class DailyReportService {
-  private jsonOptions = {
-    headers: new HttpHeaders({
+  private baseUrl = `${local_environment.apiUrl}/dailyreport`;
+
+  constructor(private http: HttpClient, private authService: AuthService) {}
+
+  private buildHeaders(token?: string | null): HttpHeaders {
+    let headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
-    })
-  };
+    });
+    if (token) {
+      const value = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      headers = headers.set('Authorization', value);
+    }
+    return headers;
+  }
 
-  private baseUrl = `${environment.apiUrl}/dailyreport`;
-
-  constructor(private http: HttpClient) {}
+  private withAuth<T>(callback: (options: { headers: HttpHeaders }) => Observable<T>): Observable<T> {
+    return from(this.authService.getAccessToken()).pipe(
+      switchMap(token => callback({ headers: this.buildHeaders(token) }))
+    );
+  }
 
   /**
    * Submit a daily report for the current user
@@ -28,10 +40,12 @@ export class DailyReportService {
    * @returns Observable with the response message and report ID
    */
   submitDailyReport(report: DailyReport): Observable<{ message: string; reportId: number }> {
-    return this.http.post<{ message: string; reportId: number }>(
-      this.baseUrl,
-      report,
-      this.jsonOptions
+    return this.withAuth(options =>
+      this.http.post<{ message: string; reportId: number }>(
+        this.baseUrl,
+        report,
+        options
+      )
     );
   }
 
@@ -40,9 +54,11 @@ export class DailyReportService {
    * @returns Observable with submission status
    */
   getSubmissionStatus(): Observable<DailyReportSubmissionStatus> {
-    return this.http.get<DailyReportSubmissionStatus>(
-      `${this.baseUrl}/submission-status`,
-      this.jsonOptions
+    return this.withAuth(options =>
+      this.http.get<DailyReportSubmissionStatus>(
+        `${this.baseUrl}/submission-status`,
+        options
+      )
     ).pipe(
       map(status => ({
         ...status,
@@ -74,7 +90,7 @@ export class DailyReportService {
       url += `?${params.join('&')}`;
     }
 
-    return this.http.get<DailyReport[]>(url, this.jsonOptions).pipe(
+    return this.withAuth(options => this.http.get<DailyReport[]>(url, options)).pipe(
       map(reports =>
         reports.map(report => ({
           ...report,
@@ -96,7 +112,7 @@ export class DailyReportService {
       url += `?date=${date.toISOString()}`;
     }
 
-    return this.http.get<DailyReport[]>(url, this.jsonOptions).pipe(
+    return this.withAuth(options => this.http.get<DailyReport[]>(url, options)).pipe(
       map(reports =>
         reports.map(report => ({
           ...report,
@@ -118,7 +134,7 @@ export class DailyReportService {
       url += `?date=${date.toISOString()}`;
     }
 
-    return this.http.get<UserSubmissionStatus[]>(url, this.jsonOptions).pipe(
+    return this.withAuth(options => this.http.get<UserSubmissionStatus[]>(url, options)).pipe(
       map(statuses =>
         statuses.map(status => ({
           ...status,
@@ -136,7 +152,7 @@ export class DailyReportService {
    * @returns Observable with the daily report details
    */
   getReportById(id: number): Observable<DailyReport> {
-    return this.http.get<DailyReport>(`${this.baseUrl}/${id}`, this.jsonOptions).pipe(
+    return this.withAuth(options => this.http.get<DailyReport>(`${this.baseUrl}/${id}`, options)).pipe(
       map(report => ({
         ...report,
         submittedDate: report.submittedDate ? new Date(report.submittedDate) : undefined,
@@ -151,10 +167,12 @@ export class DailyReportService {
    * @returns Observable with validation response
    */
   validateReport(id: number): Observable<{ message: string }> {
-    return this.http.put<{ message: string }>(
-      `${this.baseUrl}/${id}/validate`,
-      {},
-      this.jsonOptions
+    return this.withAuth(options =>
+      this.http.put<{ message: string }>(
+        `${this.baseUrl}/${id}/validate`,
+        {},
+        options
+      )
     );
   }
 
@@ -164,10 +182,11 @@ export class DailyReportService {
    * @returns Observable with array of option values
    */
   getLookupOptions(fieldName: string): Observable<string[]> {
-    return this.http.get<string[]>(
-      `${this.baseUrl}/lookups/${fieldName}`,
-      this.jsonOptions
+    return this.withAuth(options =>
+      this.http.get<string[]>(
+        `${this.baseUrl}/lookups/${fieldName}`,
+        options
+      )
     );
   }
 }
-

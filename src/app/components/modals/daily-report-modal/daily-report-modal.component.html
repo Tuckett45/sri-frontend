@@ -1,6 +1,10 @@
-<div class="modal-container">
-  <h2 mat-dialog-title>Daily Report</h2>
-  
+<div mat-dialog-title class="modal-header">
+  <h5 mat-dialog-title>Daily Report</h5>
+  <button mat-icon-button (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+<div class="modal-body">
   <mat-dialog-content class="dialog-content">
     <form [formGroup]="dailyReportForm" class="daily-report-form">
       
@@ -146,14 +150,17 @@
 
     </form>
   </mat-dialog-content>
+</div>
 
+<div class="modal-footer">
   <mat-dialog-actions align="end" class="dialog-actions">
-    <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
+    <button mat-stroked-button color="primary" class="cancel-btn" (click)="onCancel()" [disabled]="isSubmitting">
       Cancel
     </button>
     <button
       mat-raised-button
       color="primary"
+      class="save-btn"
       (click)="onSubmit()"
       [disabled]="isSubmitting || dailyReportForm.invalid">
       <span *ngIf="!isSubmitting">Submit Report</span>

@@ -30,5 +30,5 @@ export interface UserSubmissionStatus {
   userEmail: string;
   hasSubmittedToday: boolean;
   lastSubmissionDate?: Date;
+  market?: string;
 }
-

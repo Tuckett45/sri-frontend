@@ -90,7 +90,7 @@ import { ExpenseModule } from './components/expense/expense.module';
 import '../charts-setup';
 import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
 import { DailyReportModalComponent } from './components/modals/daily-report-modal/daily-report-modal.component';
-import { DailyReportDashboardComponent } from './components/daily-report-dashboard/daily-report-dashboard.component';
+import { DailyReportDashboardModule } from './components/daily-report-dashboard/daily-report-dashboard.module';
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -131,8 +131,7 @@ export const customCurrencyMaskConfig = {
     MarketControllerComponent,
     MarketControllerModalComponent,
     UserNotificationsComponent,
-    DailyReportModalComponent,
-    DailyReportDashboardComponent
+    DailyReportModalComponent
   ],
   imports: [
     NgxCurrencyDirective,
@@ -187,6 +186,7 @@ export const customCurrencyMaskConfig = {
     MatNativeDateModule,
     MatSortModule,
     MatTooltipModule,
+    DailyReportDashboardModule,
     ClientDashboardComponent,
     VendorDashboardComponent,
     SRIDashboardComponent,

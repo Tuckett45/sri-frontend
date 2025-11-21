@@ -156,6 +156,10 @@ export class DailyReportModalComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
+  close(): void {
+    this.dialogRef.close();
+  }
+
   // Helper method to check if a field has errors and is touched
   hasError(fieldName: string): boolean {
     const field = this.dailyReportForm.get(fieldName);

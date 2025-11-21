@@ -1,153 +1,513 @@
-.modal-container {
-  padding: 0;
-  max-width: 700px;
-  width: 100%;
-
-  h2 {
-    margin: 0;
-    padding: 24px;
-    background-color: #f5f5f5;
-    border-bottom: 1px solid #e0e0e0;
-    font-size: 24px;
-    font-weight: 500;
-    color: #333;
-  }
-}
-
-.dialog-content {
-  padding: 24px;
+.modal-body {
+  background-color: #fff;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  color: #000000;
   max-height: 70vh;
   overflow-y: auto;
 
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
+  .issue-btn {
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #e18a25;
+    border-color: #e18a25;
+    margin-right: 15px;
 
     &:hover {
-      background: #555;
+      background-color: #b86404;
+      color: #ffffff;
+    }
+  }
+
+  .delete-icon {
+    cursor: pointer;
+    color: #f44336;
+
+    &:hover {
+      color: #e53935;
     }
   }
 }
 
-.daily-report-form {
+/* Ensure text field colors are properly set */
+::ng-deep .mat-mdc-input-element {
+  color: #000000 !important; /* Set the input text color */
+}
+
+/* Ensure select input label color is set properly */
+::ng-deep .mat-mdc-select .mdc-label {
+  color: #000000 !important; /* Set the label text color */
+}
+
+::ng-deep .mat-mdc-checkbox .mat-internal-form-field {
+  color: #000000 !important; /* Set the label text color */
+}
+
+::ng-deep .mat-mdc-select {
+  color: #000000 !important;
+}
+
+/* Style the checkbox */
+::ng-deep .mat-checkbox-inner-container {
+  background-color: rgba(20, 79, 128, 0.2) !important; /* Light version of the primary color for the unchecked state */
+}
+
+::ng-deep .mat-checkbox-checked .mat-checkbox-background {
+  background-color: #144f80 !important; /* Checked state matches the primary color */
+}
+
+/* Checkbox border on hover */
+::ng-deep .mat-checkbox:not(.mat-checkbox-checked):hover .mat-checkbox-frame {
+  border-color: #b86404 !important; /* Border color on hover */
+}
+
+/* Style the label for the checkbox */
+::ng-deep .mat-checkbox-label {
+  color: #144f80 !important; /* Label text color */
+}
+
+::ng-deep .mat-sort-header-container {
+  justify-content: center !important;
+}
+
+::ng-deep .mat-mdc-cell{
+  justify-content: center !important;
+}
+
+:ng-deep .p-galleria-mask {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+::ng-deep .p-overlay-mask {
+  background: rgba(0,0,0,0.4) !important;
+  color: #e2e8f0 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:ng-deep .p-galleria-content {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+::ng-deep .p-galleria {
+  overflow: hidden !important;
+  border-style: solid !important;
+  border-color: white !important;
+  border-radius: 5px !important;
+}
+
+::ng-deep .p-galleria-thumbnails-content {
+  display: flex !important;
+  flex-direction: row !important;
+  border-color: white !important;
+  padding: 1rem 0.25rem !important;
+}
+
+::ng-deep .p-galleria-item {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100% !important;
+  width: 100% !important;
+  background-color: white !important;
+}
+
+::ng-deep .p-galleria-thumbnails-viewport {
+  overflow: hidden !important;
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+::ng-deep .p-galleria-close-button {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0.5rem !important;
+  background: rgba(255,255,255,0.1) !important;
+  color: #f8fafc !important;
+  width: 3rem !important;
+  height: 3rem !important;
+  padding: 0 !important;
+  border: none !important;
+  user-select: none !important;
+  cursor: pointer !important;
+  border-radius: 50% !important;
+  outline-color: transparent !important;
+  transition: background 0.2s, color 0.2s, outline-color 0.2s !important;
+}
+
+:ng-deep .p-galleria-close-icon {
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+:ng-deep .p-galleria-close-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+:ng-deep .p-galleria-close-button:focus-visible {
+  box-shadow: none;
+  outline: 1px solid #020617;
+  outline-offset: 2px;
+}
+
+::ng-deep .p-galleria-mask .p-galleria-nav-button {
+  position: fixed !important;
+  background-color: #144f80 !important; /* Customize next/back button color */
+  color: #e18a25 !important;
+  border-radius: 50% !important;
+  width: 55px !important;
+  height: 55px !important;
+  margin-left: 25px !important;
+  margin-right: 25px !important;
+
+  &:hover{
+    &:hover {
+      color: #ffffff;
+    } 
+  }
+}
+
+::ng-deep .p-overlay-mask-enter {
+  animation: p-overlay-mask-enter-animation 0.15s forwards;
+}
+
+:ng-deep .p-galleria-thumbnail-nav-button {
+  align-self: center !important;
+  flex: 0 0 auto !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  overflow: hidden !important;
+  position: relative !important;
+  margin: 0 0.5rem !important;
+  padding: 0 !important;
+  border: none !important;
+  user-select: none !important;
+  cursor: pointer !important;
+  color: #272727 !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  transition: background 0.2s, color 0.2s, outline-color 0.2s !important;
+  outline-color: transparent !important;
+  border-radius: 6px !important;
+}
+
+::ng-deep .p-galleria-thumbnails {
+  display: flex !important;
+  background: #f8fafc !important;
+  padding: 1rem 0.25rem !important;
+  flex-direction: column !important;
+  overflow: auto !important;
+  flex-shrink: 0 !important;
+  justify-content: center !important;
+}
+
+:ng-deep .p-galleria-thumbnail-items {
+  display: flex !important;
+  justify-content: center !important;
+}
+
+:ng-deep .p-galleria-thumbnail-item {
+    overflow: auto !important;
+    display: flex!important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    opacity: 0.5 !important;
+}
+
+@media screen and (max-width: 1500px) {
+  .p-galleria-thumbnail-item {
+      flex: 1 0 20%;
+  }
+  .p-galleria-item {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 80% !important; /* Ensure the images are vertically aligned */
+    width: 80% !important;
+  }
+}
+
+:root{
+  --p-galleria-close-button-size: 3rem;
+    --p-galleria-close-button-gutter: 0.5rem;
+    --p-galleria-close-button-background: rgba(255, 255, 255, 0.1);
+    --p-galleria-close-button-hover-background: rgba(255, 255, 255, 0.2);
+    --p-galleria-close-button-color: #144f80;
+    --p-galleria-close-button-hover-color: #ffffff;
+    --p-galleria-close-button-border-radius: 50%;
+    --p-galleria-close-button-focus-ring-width: 1px;
+    --p-galleria-close-button-focus-ring-style: solid;
+    --p-galleria-close-button-focus-ring-color: #020617;
+    --p-galleria-close-button-focus-ring-offset: 2px;
+    --p-galleria-close-button-focus-ring-shadow: none;
+    --p-galleria-close-button-icon-size: 1.5rem;
+}
+
+/* General mat-form-field styles */
+mat-form-field {
+  width: 100%;
+  margin-bottom: 10px;
+  margin-top: 10px;
+
+  mat-form-field-wrapper {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    padding: 5px;
+  }
+
+  mat-label {
+    color: #525252;
+  }
+}
+
+/* Modal header styles */
+.modal-header {
+  background-color: #144f80;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .modal-title {
+    font-size: 1.2rem;
+    color: #fff;
+  }
+
+  button {
+    color: #ffffff;
+
+    &:hover {
+      color: #000;
+    }
+  }
+}
+
+/* Modal footer styles */
+.modal-footer {
+  background-color: #144f80;
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 25px;
+
+  .save-btn,
+  .cancel-btn {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #fff;
+  }
+
+  .save-btn {
+    background-color: #e18a25;
+    margin-right: 15px;
+
+    &:hover {
+      background-color: #b86404;
+    }
+  }
+
+  .cancel-btn {
+    background-color: #f44336;
+
+    &:hover {
+      background-color: #e53935;
+    }
+  }
+}
+
+/* Button styling */
+button.mat-raised-button {
+  color: #fff;
+
+  &.mat-primary {
+    background-color: #144f80;
+  }
+
+  &.mat-accent {
+    background-color: #ff4081;
+  }
+
+  &.mat-warn {
+    background-color: #f44336;
+  }
+}
+
+.file-preview {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.preview-image {
+  width: 100px;   // Set the desired width
+  height: auto;   // Keep the aspect ratio
+  border: 1px solid #ddd;   // Optional: add a border around the image
+  border-radius: 4px;       // Optional: make the edges rounded
+  object-fit: cover;        // Ensures the image fits nicely within the set width
+}
+
+.image-btn {
+  font-size: small;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #fff;
+  background-color: #144f80;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+
+  &:disabled{
+    background-color: #88827a;
+  }
+}
+
+.upload-btn {
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #fff;
+  background-color: #144f80;
+
+  &:hover {
+    background-color: #0e3453;
+  }
+
+  &:disabled{
+    background-color: #88827a;
+  }
+}
+
+
+/* File input styling */
+.file-input-wrapper {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  margin-top: 10px;
 
-  .full-width {
+  .custom-label {
+    margin-bottom: 5px;
+  }
+
+  .file-input {
+    padding: 8px;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+}
+
+::ng-deep .mat-autocomplete-panel {
+  z-index: 9999 !important; /* Ensure it's on top */
+  position: relative;
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  background-color: white;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  max-height: 150px;
+  overflow-y: auto;
+  width: 100%;
+  z-index: 9999;
+}
+
+::ng-deep .mat-mdc-option .mdc-list-item__primary-text{
+  padding-top: 10px !important;
+}
+
+.autocomplete-suggestions mat-option {
+  cursor: pointer;
+  padding: 10px;
+  color: #000 !important;
+}
+
+.autocomplete-suggestions mat-option:hover {
+  padding-top: 10px;
+  background-color: #f5f5f5;
+}
+
+.loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999; /* Ensure spinner is on top */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .modal-body,
+  .modal-header,
+  .modal-footer {
+    padding: 15px;
+  }
+
+  /* Adjust font size in the modal */
+  .modal-title {
+    font-size: 1.1rem;  /* Smaller font size for mobile */
+  }
+
+  /* Button size adjustments */
+  .save-btn,
+  .cancel-btn {
+    padding: 8px 15px;
+    font-size: 1rem;  /* Smaller font size for mobile */
+  }
+
+  /* Image preview adjustments */
+  .preview-image {
+    width: 80px;  /* Adjust image size for mobile */
+  }
+
+  /* File input adjustment */
+  .file-input-wrapper {
     width: 100%;
   }
 
-  mat-form-field {
-    font-size: 14px;
-
-    ::ng-deep {
-      .mat-form-field-wrapper {
-        padding-bottom: 0;
-      }
-
-      .mat-form-field-subscript-wrapper {
-        margin-top: 4px;
-      }
-
-      .mat-hint {
-        font-size: 12px;
-        color: #666;
-      }
-
-      .mat-error {
-        font-size: 12px;
-      }
-    }
-  }
-
-  textarea {
-    resize: vertical;
-    min-height: 60px;
+  .file-input {
+    padding: 10px;
+    width: 100%;
   }
 }
 
-.dialog-actions {
-  padding: 16px 24px;
-  border-top: 1px solid #e0e0e0;
-  background-color: #fafafa;
-  margin: 0;
-
-  button {
-    margin-left: 8px;
-
-    &:first-child {
-      margin-left: 0;
-    }
+@media (max-width: 500px) {
+  .modal-body {
+    max-height: 60vh;  /* Adjust max height for very small screens */
   }
 
-  .inline-spinner {
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 8px;
+  .modal-header,
+  .modal-footer {
+    padding: 10px 15px;
+  }
 
-    ::ng-deep circle {
-      stroke: white;
-    }
+  .save-btn,
+  .cancel-btn {
+    padding: 8px 12px;  /* Further decrease padding for smaller screens */
+    font-size: 0.9rem;  /* Reduce font size */
   }
 }
-
-// Responsive design
-@media (max-width: 768px) {
-  .modal-container {
-    max-width: 100%;
-    
-    h2 {
-      padding: 16px;
-      font-size: 20px;
-    }
-  }
-
-  .dialog-content {
-    padding: 16px;
-    max-height: 60vh;
-  }
-
-  .dialog-actions {
-    padding: 12px 16px;
-    flex-direction: column;
-
-    button {
-      width: 100%;
-      margin-left: 0 !important;
-      margin-top: 8px;
-
-      &:first-child {
-        margin-top: 0;
-      }
-    }
-  }
-}
-
-// Material autocomplete panel customization
-::ng-deep {
-  .mat-autocomplete-panel {
-    max-height: 256px;
-
-    .mat-option {
-      font-size: 14px;
-      line-height: 1.5;
-      height: auto;
-      padding: 12px 16px;
-
-      &:hover {
-        background-color: #f5f5f5;
-      }
-    }
-  }
-}
-

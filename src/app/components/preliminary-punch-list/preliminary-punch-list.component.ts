@@ -11,10 +11,14 @@ import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-
 import { User } from 'src/app/models/user.model';
 import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-list-unresolved/preliminary-punch-list-unresolved.component';
+import { DailyReportDashboardComponent } from '../daily-report-dashboard/daily-report-dashboard.component';
+import { DailyReportModalComponent } from '../modals/daily-report-modal/daily-report-modal.component';
 import * as Papa from 'papaparse';
 import { DatePipe } from '@angular/common';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { TimelineItem } from 'src/app/models/timeline-item.model';
+import { DailyReportService } from 'src/app/services/daily-report.service';
+import { DailyReport, DailyReportSubmissionStatus } from 'src/app/models/daily-report.model';
 
 // Child expects a searchParams bag; define a local type (no import needed)
 type ChildSearchParams = {
@@ -42,7 +46,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
   isIssueGalleryVisible = false;
   isResolutionGalleryVisible = false;
   user!: User;
-  activeTab = 0; // 0 = Resolved, 1 = Unresolved (adjust if your UI differs)
+  activeTab = 0; // 0 = Resolved, 1 = Unresolved, 2 = Daily Report
   filtersOpen = false;
   selectedView: 'table' | 'timeline' = 'table';
 
@@ -73,11 +77,18 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
 
   @ViewChild(PreliminaryPunchListUnresolvedComponent) unresolvedPunchListComponent!: PreliminaryPunchListUnresolvedComponent;
   @ViewChild(PreliminaryPunchListResolvedComponent) resolvedPunchListComponent!: PreliminaryPunchListResolvedComponent;
+  @ViewChild(DailyReportDashboardComponent) dailyReportDashboardComponent?: DailyReportDashboardComponent;
 
   @Input() unresolvedPunchListCount = 0;
   @Input() resolvedPunchListCount = 0;
 
   galleryImages: any[] = [];
+
+  // Daily report tracking for CM users
+  isCmUser = false;
+  dailyReportSubmission?: DailyReportSubmissionStatus;
+  cmDailyReportLoading = false;
+  todaysDailyReport: DailyReport | null = null;
 
   // Distinct options populated from the backend facets endpoint
   filterOptions: { segmentId: string[]; vendorName: string[]; state: string[] } = {
@@ -118,10 +129,12 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
     private toastr: ToastrService,
     public authService: AuthService,
     public datePipe: DatePipe,
+    private dailyReportService: DailyReportService,
   ) {}
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
+    this.initializeDailyReportContext();
 
     // Load the main list (for top-level table) and the global facets for the active tab/scope
     this.loadPunchLists();
@@ -157,6 +170,75 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private initializeDailyReportContext(): void {
+    this.isCmUser = (this.user?.role || '').toUpperCase() === 'CM';
+
+    if (this.isCmUser) {
+      this.refreshDailyReportStatus();
+      this.fetchUserDailyReport();
+    } else {
+      this.dailyReportSubmission = undefined;
+      this.todaysDailyReport = null;
+    }
+  }
+
+  private refreshDailyReportStatus(): void {
+    this.dailyReportService.getSubmissionStatus()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: status => this.dailyReportSubmission = status,
+        error: () => this.dailyReportSubmission = undefined
+      });
+  }
+
+  private fetchUserDailyReport(): void {
+    this.cmDailyReportLoading = true;
+    const today = new Date();
+    this.dailyReportService.getReportsByDate(today)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: reports => {
+          this.todaysDailyReport = this.findTodaysReportForCurrentUser(reports);
+          this.cmDailyReportLoading = false;
+        },
+        error: () => {
+          this.todaysDailyReport = null;
+          this.cmDailyReportLoading = false;
+        }
+      });
+  }
+
+  private findTodaysReportForCurrentUser(reports: DailyReport[]): DailyReport | null {
+    const userId = this.normalizeUserIdentifier(this.user?.id);
+    const userEmail = this.normalizeUserIdentifier(this.user?.email);
+
+    return reports.find(report => {
+      const reportUserId = this.normalizeUserIdentifier(report.userId);
+      const reportEmail = this.normalizeUserIdentifier(report.userEmail);
+      return (userId && reportUserId && reportUserId === userId)
+        || (userEmail && reportEmail && reportEmail === userEmail);
+    }) || null;
+  }
+
+  private normalizeUserIdentifier(value?: string | null): string {
+    return (value ?? '').trim().toLowerCase();
+  }
+
+  openDailyReportModal(): void {
+    const dialogRef = this.dialog.open(DailyReportModalComponent, {
+      width: '640px'
+    });
+
+    dialogRef.afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(result => {
+        if (result) {
+          this.fetchUserDailyReport();
+          this.refreshDailyReportStatus();
+        }
+      });
   }
 
   /** Fetch everything (whatever getEntries() returns) and scope to the current user's vendor/market. */
@@ -630,6 +712,15 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
   }
 
   exportToCSV(): void {
+    if (this.activeTab === 2) {
+      if ((this.user?.role || '').toUpperCase() === 'ADMIN') {
+        this.dailyReportDashboardComponent?.exportToCSV();
+      } else {
+        this.toastr.info('Daily report export is available to administrators only.');
+      }
+      return;
+    }
+
     if (this.activeTab === 0) {
       this.dataSource.data = this.resolvedPunchListComponent.dataSource.data;
       const csvData = this.dataSource.data.map((entry: PreliminaryPunchList) => ({
