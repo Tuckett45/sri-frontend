@@ -27,6 +27,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatSortModule } from '@angular/material/sort';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { DialogModule } from 'primeng/dialog';
 import { ImageModule } from 'primeng/image';
@@ -88,6 +89,8 @@ import { ClientDashboardComponent } from './components/overview/dashboard/client
 import { ExpenseModule } from './components/expense/expense.module';
 import '../charts-setup';
 import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
+import { DailyReportModalComponent } from './components/modals/daily-report-modal/daily-report-modal.component';
+import { DailyReportDashboardModule } from './components/daily-report-dashboard/daily-report-dashboard.module';
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -127,7 +130,8 @@ export const customCurrencyMaskConfig = {
     OspCoordinatorTrackerComponent,
     MarketControllerComponent,
     MarketControllerModalComponent,
-    UserNotificationsComponent
+    UserNotificationsComponent,
+    DailyReportModalComponent
   ],
   imports: [
     NgxCurrencyDirective,
@@ -181,6 +185,8 @@ export const customCurrencyMaskConfig = {
     MatDatepickerModule,
     MatNativeDateModule,
     MatSortModule,
+    MatTooltipModule,
+    DailyReportDashboardModule,
     ClientDashboardComponent,
     VendorDashboardComponent,
     SRIDashboardComponent,

@@ -1,0 +1,174 @@
+<div mat-dialog-title class="modal-header">
+  <h5 mat-dialog-title>Daily Report</h5>
+  <button mat-icon-button (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+<div class="modal-body">
+  <mat-dialog-content class="dialog-content">
+    <form [formGroup]="dailyReportForm" class="daily-report-form">
+      
+      <!-- Segment ID -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Segment ID *</mat-label>
+        <input
+          type="text"
+          matInput
+          formControlName="segmentId"
+          [matAutocomplete]="segmentIdAuto"
+          placeholder="Enter or select segment ID">
+        <mat-autocomplete #segmentIdAuto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredSegmentIds | async" [value]="option">
+            {{ option }}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="hasError('segmentId')">{{ getErrorMessage('segmentId') }}</mat-error>
+      </mat-form-field>
+
+      <!-- Current Location -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Current Location *</mat-label>
+        <input
+          type="text"
+          matInput
+          formControlName="currentLocation"
+          [matAutocomplete]="locationAuto"
+          placeholder="Enter or select location">
+        <mat-autocomplete #locationAuto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredLocations | async" [value]="option">
+            {{ option }}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="hasError('currentLocation')">{{ getErrorMessage('currentLocation') }}</mat-error>
+      </mat-form-field>
+
+      <!-- Description of Work Performed -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description of Work Performed *</mat-label>
+        <textarea
+          matInput
+          formControlName="descriptionOfWork"
+          [matAutocomplete]="descriptionAuto"
+          placeholder="Enter or select work description"
+          rows="3"></textarea>
+        <mat-autocomplete #descriptionAuto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredDescriptions | async" [value]="option">
+            {{ option }}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="hasError('descriptionOfWork')">{{ getErrorMessage('descriptionOfWork') }}</mat-error>
+      </mat-form-field>
+
+      <!-- Forward Production Completed -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Forward Production Completed *</mat-label>
+        <textarea
+          matInput
+          formControlName="forwardProductionCompleted"
+          [matAutocomplete]="productionAuto"
+          placeholder="Enter or select production details"
+          rows="3"></textarea>
+        <mat-autocomplete #productionAuto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredProduction | async" [value]="option">
+            {{ option }}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="hasError('forwardProductionCompleted')">{{ getErrorMessage('forwardProductionCompleted') }}</mat-error>
+      </mat-form-field>
+
+      <!-- Safety Concerns -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Safety Concerns *</mat-label>
+        <textarea
+          matInput
+          formControlName="safetyConcerns"
+          [matAutocomplete]="safetyAuto"
+          placeholder="Enter or select safety concerns"
+          rows="3"></textarea>
+        <mat-autocomplete #safetyAuto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredSafety | async" [value]="option">
+            {{ option }}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="hasError('safetyConcerns')">{{ getErrorMessage('safetyConcerns') }}</mat-error>
+      </mat-form-field>
+
+      <!-- Incident/Delay Concerns -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Incident/Delay Concerns *</mat-label>
+        <textarea
+          matInput
+          formControlName="incidentDelayConcerns"
+          [matAutocomplete]="incidentAuto"
+          placeholder="Enter or select incident/delay concerns"
+          rows="3"></textarea>
+        <mat-autocomplete #incidentAuto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredIncidents | async" [value]="option">
+            {{ option }}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="hasError('incidentDelayConcerns')">{{ getErrorMessage('incidentDelayConcerns') }}</mat-error>
+      </mat-form-field>
+
+      <!-- Additional Comments (Optional) -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Additional Comments</mat-label>
+        <textarea
+          matInput
+          formControlName="additionalComments"
+          placeholder="Enter any additional comments"
+          rows="3"></textarea>
+      </mat-form-field>
+
+      <!-- CM Punch List Link (Optional) -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>CM Punch List Link</mat-label>
+        <input
+          type="url"
+          matInput
+          formControlName="cmPunchListLink"
+          placeholder="Enter punch list URL">
+        <mat-hint>Link to the related punch list entry</mat-hint>
+      </mat-form-field>
+
+      <!-- Next Steps and Following Up -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Next Steps and Following Up *</mat-label>
+        <textarea
+          matInput
+          formControlName="nextStepsAndFollowUp"
+          [matAutocomplete]="nextStepsAuto"
+          placeholder="Enter or select next steps"
+          rows="3"></textarea>
+        <mat-autocomplete #nextStepsAuto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredNextSteps | async" [value]="option">
+            {{ option }}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="hasError('nextStepsAndFollowUp')">{{ getErrorMessage('nextStepsAndFollowUp') }}</mat-error>
+      </mat-form-field>
+
+    </form>
+  </mat-dialog-content>
+</div>
+
+<div class="modal-footer">
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-stroked-button color="primary" class="cancel-btn" (click)="onCancel()" [disabled]="isSubmitting">
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      class="save-btn"
+      (click)="onSubmit()"
+      [disabled]="isSubmitting || dailyReportForm.invalid">
+      <span *ngIf="!isSubmitting">Submit Report</span>
+      <span *ngIf="isSubmitting">
+        <mat-spinner diameter="20" class="inline-spinner"></mat-spinner>
+        Submitting...
+      </span>
+    </button>
+  </mat-dialog-actions>
+</div>
+

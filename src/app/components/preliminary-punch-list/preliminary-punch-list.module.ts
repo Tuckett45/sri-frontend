@@ -34,6 +34,7 @@ import { PreliminaryPunchListUnresolvedComponent } from './preliminary-punch-lis
 import { PreliminaryPunchListResolvedComponent } from './preliminary-punch-list-resolved/preliminary-punch-list-resolved.component';
 import { DatePipe } from '@angular/common';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { DailyReportDashboardModule } from '../daily-report-dashboard/daily-report-dashboard.module';
 
 
 @NgModule({
@@ -76,7 +77,8 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
     MatCheckboxModule,
     MatPaginatorModule,
     MatSortModule,
-    MatDatepickerModule
+    MatDatepickerModule,
+    DailyReportDashboardModule
   ],
   providers: [DatePipe],
   exports: [PreliminaryPunchListComponent]

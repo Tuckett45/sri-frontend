@@ -136,6 +136,10 @@
               <i class="pi pi-wrench"></i>
             </p-overlaybadge>
           </p-tab>
+          <p-tab [value]="2" [ngClass]="{ 'active-tab': activeTab === 2 }">
+            <span class="tabs-class">Daily Report</span>
+            <i class="pi pi-calendar" style="padding-right: 8px;"></i>
+          </p-tab>
         </p-tablist>
         <p-tabpanels>
           <p-tabpanel [value]="0">
@@ -145,6 +149,60 @@
           <p-tabpanel [value]="1">
             <preliminary-punch-list-unresolved [selectedFilters]="selectedFilters"
                                                (unresolvedCountChange)="onUnresolvedCountChange($event)"/>
+          </p-tabpanel>
+          <p-tabpanel [value]="2">
+            <ng-container *ngIf="isAdminUser; else cmDailyReportTab">
+              <ng-container *ngIf="showAdminDailyReportDashboard; else adminDailyReportUnavailable">
+                <app-daily-report-dashboard [marketFilter]="adminDailyReportMarketFilter"></app-daily-report-dashboard>
+              </ng-container>
+              <ng-template #adminDailyReportUnavailable>
+                <p class="m-0">Daily report dashboard is available for NV, CO, or AZ markets.</p>
+              </ng-template>
+            </ng-container>
+            <ng-template #cmDailyReportTab>
+              <ng-container *ngIf="isCmUser; else dailyReportUnavailable">
+                <div class="daily-report-cm-panel surface-card border-round p-3 flex flex-column gap-3">
+                  <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+                    <h3 class="m-0">Today's Daily Report</h3>
+                    <button mat-raised-button class="header-btn"
+                            (click)="openDailyReportModal()"
+                            [disabled]="dailyReportSubmission?.hasSubmittedToday">
+                      {{ dailyReportSubmission?.hasSubmittedToday ? 'Report Submitted' : 'Submit Daily Report' }}
+                    </button>
+                  </div>
+
+                  <p *ngIf="cmDailyReportLoading" class="m-0">Loading your daily report...</p>
+
+                  <ng-container *ngIf="!cmDailyReportLoading">
+                    <div *ngIf="todaysDailyReport; else cmNoDailyReport" class="daily-report-details">
+                      <div><strong>Segment ID:</strong> {{ todaysDailyReport.segmentId }}</div>
+                      <div><strong>Location:</strong> {{ todaysDailyReport.currentLocation }}</div>
+                      <div><strong>Description:</strong> {{ todaysDailyReport.descriptionOfWork }}</div>
+                      <div><strong>Forward Production:</strong> {{ todaysDailyReport.forwardProductionCompleted }}</div>
+                      <div><strong>Safety Concerns:</strong> {{ todaysDailyReport.safetyConcerns }}</div>
+                      <div><strong>Incident / Delay:</strong> {{ todaysDailyReport.incidentDelayConcerns }}</div>
+                      <div *ngIf="todaysDailyReport.additionalComments"><strong>Additional Comments:</strong> {{ todaysDailyReport.additionalComments }}</div>
+                      <div><strong>Next Steps:</strong> {{ todaysDailyReport.nextStepsAndFollowUp }}</div>
+                      <div *ngIf="todaysDailyReport.submittedDate"><strong>Submitted:</strong> {{ todaysDailyReport.submittedDate | date:'short' }}</div>
+                    </div>
+                    <ng-template #cmNoDailyReport>
+                      <p class="m-0">
+                        {{ dailyReportSubmission?.hasSubmittedToday
+                          ? 'Your daily report was submitted and is being processed.'
+                          : 'You have not submitted a daily report today.' }}
+                      </p>
+                    </ng-template>
+                  </ng-container>
+
+                  <span *ngIf="dailyReportSubmission?.lastSubmissionDate" class="daily-report-note">
+                    Last submitted {{ dailyReportSubmission?.lastSubmissionDate | date:'short' }}
+                  </span>
+                </div>
+              </ng-container>
+              <ng-template #dailyReportUnavailable>
+                <p class="m-0">Daily report submission is available to CM users in NV, CO, or AZ markets.</p>
+              </ng-template>
+            </ng-template>
           </p-tabpanel>
         </p-tabpanels>
       </p-tabs>

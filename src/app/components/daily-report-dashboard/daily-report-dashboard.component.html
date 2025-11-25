@@ -1,0 +1,194 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Daily Report Dashboard</h1>
+    <div class="header-actions">
+      <mat-form-field appearance="fill" class="date-picker">
+        <mat-label>Select Date</mat-label>
+        <input matInput [matDatepicker]="picker" [formControl]="selectedDate">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <button mat-raised-button class="header-btn" (click)="exportToCSV()" [disabled]="dailyReports.length === 0">
+        <mat-icon>download</mat-icon>
+        Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading dashboard data...</p>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <!-- Summary Statistics -->
+    <div class="stats-container">
+      <div class="stat-card total">
+        <div class="stat-icon">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ totalUsers }}</h3>
+          <p>Total CM Users</p>
+        </div>
+      </div>
+
+      <div class="stat-card submitted">
+        <div class="stat-icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ submittedCount }}</h3>
+          <p>Reports Submitted</p>
+        </div>
+      </div>
+
+      <div class="stat-card not-submitted">
+        <div class="stat-icon">
+          <mat-icon>error</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ notSubmittedCount }}</h3>
+          <p>Not Submitted</p>
+        </div>
+      </div>
+
+      <div class="stat-card rate">
+        <div class="stat-icon">
+          <mat-icon>percent</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ submissionRate }}%</h3>
+          <p>Submission Rate</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Submission Status Table -->
+    <div class="table-section">
+      <h2>User Submission Status</h2>
+      <div class="table-container">
+        <table mat-table [dataSource]="userStatuses" class="submission-status-table">
+          
+          <!-- User Name Column -->
+          <ng-container matColumnDef="userName">
+            <th mat-header-cell *matHeaderCellDef>User Name</th>
+            <td mat-cell *matCellDef="let user">{{ user.userName }}</td>
+          </ng-container>
+
+          <!-- User Email Column -->
+          <ng-container matColumnDef="userEmail">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let user">{{ user.userEmail }}</td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let user">
+              <span [class]="getSubmissionStatusClass(user.hasSubmittedToday)" class="status-badge">
+                {{ getSubmissionStatusText(user.hasSubmittedToday) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Last Submission Column -->
+          <ng-container matColumnDef="lastSubmission">
+            <th mat-header-cell *matHeaderCellDef>Last Submission</th>
+            <td mat-cell *matCellDef="let user">{{ formatDate(user.lastSubmissionDate) }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="userStatusColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: userStatusColumns;"></tr>
+
+          <!-- No Data Row -->
+          <tr class="mat-row no-data-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="userStatusColumns.length">
+              No user data available for the selected date
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Daily Reports Table -->
+    <div class="table-section">
+      <h2>Daily Reports</h2>
+      <div class="table-container">
+        <table mat-table [dataSource]="dailyReports" class="reports-table">
+          
+          <!-- User Name Column -->
+          <ng-container matColumnDef="userName">
+            <th mat-header-cell *matHeaderCellDef>User</th>
+            <td mat-cell *matCellDef="let report">{{ report.userName }}</td>
+          </ng-container>
+
+          <!-- Segment ID Column -->
+          <ng-container matColumnDef="segmentId">
+            <th mat-header-cell *matHeaderCellDef>Segment ID</th>
+            <td mat-cell *matCellDef="let report">{{ report.segmentId }}</td>
+          </ng-container>
+
+          <!-- Current Location Column -->
+          <ng-container matColumnDef="currentLocation">
+            <th mat-header-cell *matHeaderCellDef>Location</th>
+            <td mat-cell *matCellDef="let report">{{ report.currentLocation }}</td>
+          </ng-container>
+
+          <!-- Submitted Date Column -->
+          <ng-container matColumnDef="submittedDate">
+            <th mat-header-cell *matHeaderCellDef>Submitted</th>
+            <td mat-cell *matCellDef="let report">{{ formatDate(report.submittedDate) }}</td>
+          </ng-container>
+
+          <!-- Validated Column -->
+          <ng-container matColumnDef="isValidated">
+            <th mat-header-cell *matHeaderCellDef>Validated</th>
+            <td mat-cell *matCellDef="let report">
+              <mat-icon *ngIf="report.isValidated" class="validated-icon" matTooltip="Validated by {{ report.validatedBy }}">
+                check_circle
+              </mat-icon>
+              <mat-icon *ngIf="!report.isValidated" class="not-validated-icon">
+                pending
+              </mat-icon>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let report">
+              <button
+                mat-icon-button
+                color="primary"
+                (click)="validateReport(report.id!)"
+                [disabled]="report.isValidated || isValidating[report.id!]"
+                matTooltip="Validate Report">
+                <mat-icon *ngIf="!isValidating[report.id!]">verified</mat-icon>
+                <mat-spinner *ngIf="isValidating[report.id!]" diameter="20"></mat-spinner>
+              </button>
+              <button
+                mat-icon-button
+                (click)="viewReportDetails(report)"
+                matTooltip="View Details">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="reportColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: reportColumns;" class="report-row"></tr>
+
+          <!-- No Data Row -->
+          <tr class="mat-row no-data-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="reportColumns.length">
+              No reports submitted for the selected date
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
