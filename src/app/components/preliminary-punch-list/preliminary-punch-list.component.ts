@@ -89,6 +89,10 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
   dailyReportSubmission?: DailyReportSubmissionStatus;
   cmDailyReportLoading = false;
   todaysDailyReport: DailyReport | null = null;
+  private readonly dailyReportEligibleMarkets = ['NV', 'CO', 'AZ'];
+  isAdminUser = false;
+  showAdminDailyReportDashboard = false;
+  adminDailyReportMarketFilter: string | null = null;
 
   // Distinct options populated from the backend facets endpoint
   filterOptions: { segmentId: string[]; vendorName: string[]; state: string[] } = {
@@ -173,7 +177,16 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
   }
 
   private initializeDailyReportContext(): void {
-    this.isCmUser = (this.user?.role || '').toUpperCase() === 'CM';
+    const role = (this.user?.role || '').toUpperCase();
+    const market = this.normUpper(this.user?.market || '');
+    const isEligibleMarket = this.dailyReportEligibleMarkets.includes(market);
+
+    this.isCmUser = role === 'CM' && isEligibleMarket;
+    this.isAdminUser = role === 'ADMIN';
+    this.showAdminDailyReportDashboard = this.isAdminUser && (market === 'RG' || isEligibleMarket);
+    this.adminDailyReportMarketFilter = this.showAdminDailyReportDashboard
+      ? (market === 'RG' ? null : (market || null))
+      : null;
 
     if (this.isCmUser) {
       this.refreshDailyReportStatus();
@@ -196,11 +209,11 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
   private fetchUserDailyReport(): void {
     this.cmDailyReportLoading = true;
     const today = new Date();
-    this.dailyReportService.getReportsByDate(today)
+    this.dailyReportService.getMyDailyReport(today)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: reports => {
-          this.todaysDailyReport = this.findTodaysReportForCurrentUser(reports);
+        next: report => {
+          this.todaysDailyReport = report;
           this.cmDailyReportLoading = false;
         },
         error: () => {
@@ -208,22 +221,6 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
           this.cmDailyReportLoading = false;
         }
       });
-  }
-
-  private findTodaysReportForCurrentUser(reports: DailyReport[]): DailyReport | null {
-    const userId = this.normalizeUserIdentifier(this.user?.id);
-    const userEmail = this.normalizeUserIdentifier(this.user?.email);
-
-    return reports.find(report => {
-      const reportUserId = this.normalizeUserIdentifier(report.userId);
-      const reportEmail = this.normalizeUserIdentifier(report.userEmail);
-      return (userId && reportUserId && reportUserId === userId)
-        || (userEmail && reportEmail && reportEmail === userEmail);
-    }) || null;
-  }
-
-  private normalizeUserIdentifier(value?: string | null): string {
-    return (value ?? '').trim().toLowerCase();
   }
 
   openDailyReportModal(): void {
@@ -713,7 +710,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
 
   exportToCSV(): void {
     if (this.activeTab === 2) {
-      if ((this.user?.role || '').toUpperCase() === 'ADMIN') {
+      if (this.isAdminUser) {
         this.dailyReportDashboardComponent?.exportToCSV();
       } else {
         this.toastr.info('Daily report export is available to administrators only.');

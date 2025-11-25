@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, from } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment, local_environment } from 'src/environments/environments';
 import {
   DailyReport,
@@ -12,7 +12,7 @@ import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class DailyReportService {
-  private baseUrl = `${local_environment.apiUrl}/dailyreport`;
+  private baseUrl = `${environment.apiUrl}/dailyreport`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -21,11 +21,41 @@ export class DailyReportService {
       'Content-Type': 'application/json',
       'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
     });
+
+    const currentUserId = this.authService.getUser()?.id;
+    if (currentUserId) {
+      headers = headers.set('X-User-Id', currentUserId);
+    }
+
     if (token) {
       const value = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       headers = headers.set('Authorization', value);
     }
     return headers;
+  }
+
+  /**
+   * Get the current user's daily report for a given date (defaults to today)
+   */
+  getMyDailyReport(date?: Date): Observable<DailyReport | null> {
+    let url = `${this.baseUrl}/my`;
+    if (date) {
+      url += `?date=${date.toISOString()}`;
+    }
+
+    return this.withAuth(options => this.http.get<DailyReport>(url, options)).pipe(
+      map(report => ({
+        ...report,
+        submittedDate: report.submittedDate ? new Date(report.submittedDate) : undefined,
+        validatedDate: report.validatedDate ? new Date(report.validatedDate) : undefined
+      })),
+      catchError(error => {
+        if (error.status === 404) {
+          return of(null);
+        }
+        throw error;
+      })
+    );
   }
 
   private withAuth<T>(callback: (options: { headers: HttpHeaders }) => Observable<T>): Observable<T> {
@@ -128,8 +158,8 @@ export class DailyReportService {
    * @param date - Date to check submission status for (defaults to today)
    * @returns Observable with user submission status list
    */
-  getUserSubmissionStatus(date?: Date): Observable<UserSubmissionStatus[]> {
-    let url = `${this.baseUrl}/admin/user-status`;
+  getUserSubmissionStatus(date?: Date, market?: string): Observable<UserSubmissionStatus[]> {
+    let url = `${this.baseUrl}/admin/user-status/${market}`;
     if (date) {
       url += `?date=${date.toISOString()}`;
     }

@@ -1,7 +1,10 @@
 import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { saveAs } from 'file-saver';
 import { DailyReport, UserSubmissionStatus } from 'src/app/models/daily-report.model';
+import { User } from 'src/app/models/user.model';
+import { AuthService } from 'src/app/services/auth.service';
 import { DailyReportService } from 'src/app/services/daily-report.service';
 
 @Component({
@@ -18,6 +21,7 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
   isValidating: { [key: number]: boolean } = {};
   @Input() marketFilter?: string | null;
   private normalizedMarketFilter: string | null = null;
+  user!: User;
 
   // Summary statistics
   totalUsers = 0;
@@ -31,6 +35,7 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
 
   constructor(
     private dailyReportService: DailyReportService,
+    public authService: AuthService,
     private toastr: ToastrService
   ) {}
 
@@ -56,9 +61,10 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
   loadDashboardData(): void {
     const date = this.selectedDate.value || new Date();
     this.isLoading = true;
+    this.user = this.authService.getUser();
 
     // Load user submission status
-    this.dailyReportService.getUserSubmissionStatus(date).subscribe({
+    this.dailyReportService.getUserSubmissionStatus(date, this.user.market).subscribe({
       next: (statuses) => {
         this.userStatuses = this.applyMarketFilterToStatuses(statuses);
         this.calculateStatistics();
@@ -118,66 +124,70 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
   }
 
   exportToCSV(): void {
-    if (this.dailyReports.length === 0) {
+    if (!this.dailyReports?.length) {
       this.toastr.warning('No reports to export', 'Warning');
       return;
     }
 
-    const csvHeaders = [
-      'User Name',
-      'User Email',
-      'Segment ID',
-      'Current Location',
-      'Description of Work',
-      'Forward Production',
-      'Safety Concerns',
-      'Incident/Delay Concerns',
-      'Additional Comments',
-      'CM Punch List Link',
-      'Next Steps',
-      'Submitted Date',
-      'Validated',
-      'Validated By',
-      'Validated Date'
-    ];
+    try {
+      const csvHeaders = [
+        'User Name',
+        'User Email',
+        'Segment ID',
+        'Current Location',
+        'Description of Work',
+        'Forward Production',
+        'Safety Concerns',
+        'Incident/Delay Concerns',
+        'Additional Comments',
+        'CM Punch List Link',
+        'Next Steps',
+        'Submitted Date',
+        'Validated',
+        'Validated By',
+        'Validated Date'
+      ];
 
-    const csvRows = this.dailyReports.map(report => [
-      this.escapeCsvValue(report.userName || ''),
-      this.escapeCsvValue(report.userEmail || ''),
-      this.escapeCsvValue(report.segmentId),
-      this.escapeCsvValue(report.currentLocation),
-      this.escapeCsvValue(report.descriptionOfWork),
-      this.escapeCsvValue(report.forwardProductionCompleted),
-      this.escapeCsvValue(report.safetyConcerns),
-      this.escapeCsvValue(report.incidentDelayConcerns),
-      this.escapeCsvValue(report.additionalComments || ''),
-      this.escapeCsvValue(report.cmPunchListLink || ''),
-      this.escapeCsvValue(report.nextStepsAndFollowUp),
-      report.submittedDate ? report.submittedDate.toLocaleString() : '',
-      report.isValidated ? 'Yes' : 'No',
-      this.escapeCsvValue(report.validatedBy || ''),
-      report.validatedDate ? report.validatedDate.toLocaleString() : ''
-    ]);
+      const csvRows = this.dailyReports.map(report => [
+        this.escapeCsvValue(report.userName || ''),
+        this.escapeCsvValue(report.userEmail || ''),
+        this.escapeCsvValue(report.segmentId),
+        this.escapeCsvValue(report.currentLocation),
+        this.escapeCsvValue(report.descriptionOfWork),
+        this.escapeCsvValue(report.forwardProductionCompleted),
+        this.escapeCsvValue(report.safetyConcerns),
+        this.escapeCsvValue(report.incidentDelayConcerns),
+        this.escapeCsvValue(report.additionalComments || ''),
+        this.escapeCsvValue(report.cmPunchListLink || ''),
+        this.escapeCsvValue(report.nextStepsAndFollowUp),
+        report.submittedDate ? report.submittedDate.toLocaleString() : '',
+        report.isValidated ? 'Yes' : 'No',
+        this.escapeCsvValue(report.validatedBy || ''),
+        report.validatedDate ? report.validatedDate.toLocaleString() : ''
+      ]);
 
-    const csvContent = [
-      csvHeaders.join(','),
-      ...csvRows.map(row => row.join(','))
-    ].join('\n');
+      const csvContent = [
+        csvHeaders.join(','),
+        ...csvRows.map(row => row.join(','))
+      ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    const dateStr = (this.selectedDate.value || new Date()).toISOString().split('T')[0];
-    link.setAttribute('href', url);
-    link.setAttribute('download', `daily-reports-${dateStr}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const dateStr = this.getSelectedDateForExport().toISOString().split('T')[0];
+      saveAs(blob, `daily-reports-${dateStr}.csv`);
 
-    this.toastr.success('Reports exported successfully', 'Success');
+      this.toastr.success('Reports exported successfully', 'Success');
+    } catch (error) {
+      console.error('Failed to export CSV', error);
+      this.toastr.error('Failed to export reports', 'Error');
+    }
+  }
+
+  private getSelectedDateForExport(): Date {
+    const selected = this.selectedDate.value;
+    if (selected instanceof Date) {
+      return selected;
+    }
+    return selected ? new Date(selected) : new Date();
   }
 
   private escapeCsvValue(value: string): string {

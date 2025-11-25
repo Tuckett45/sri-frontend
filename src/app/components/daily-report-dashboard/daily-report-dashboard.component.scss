@@ -25,8 +25,22 @@
     align-items: center;
 
     .date-picker {
+      display: flex;
+      justify-content: flex-start;
       width: 200px;
-      margin-bottom: -1.25em; // Offset Material form field bottom margin
+
+      mat-form-field {
+        width: 50%;
+
+        input {
+          padding-left: 2px;
+          color: white;
+        }
+
+        mat-icon {
+          color: #e18a25;
+        }
+      } // Offset Material form field bottom margin
     }
 
     .header-btn {
@@ -162,41 +176,55 @@
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    padding: 0 8px;
 
-    table {
+    .mat-mdc-table {
       width: 100%;
+      background: #fff;
+      border-collapse: collapse;
+    }
 
-      th {
-        background-color: #f7fafc;
-        color: #4a5568;
-        font-weight: 600;
-        font-size: 14px;
-        padding: 16px;
-        text-align: left;
-      }
+    .mat-mdc-header-row {
+      background-color: #f7fafc;
+    }
 
+    .mat-mdc-header-cell {
+      color: #1f2933;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      padding: 18px 12px;
+    }
+
+    .mat-mdc-row {
+      transition: background-color 0.2s;
+      background: #fff;
+    }
+
+    .mat-mdc-row:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .mat-mdc-row:hover {
+      background-color: #f1f5f9;
+    }
+
+    .mat-mdc-cell {
+      padding: 16px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+      color: #1a202c;
+    }
+
+    .mat-mdc-table .mat-mdc-no-data-row,
+    .no-data-row {
       td {
-        padding: 16px;
-        border-bottom: 1px solid #e2e8f0;
-        font-size: 14px;
-        color: #2d3748;
-      }
-
-      .mat-row {
-        transition: background-color 0.2s;
-
-        &:hover {
-          background-color: #f7fafc;
-        }
-      }
-
-      .no-data-row {
-        td {
-          text-align: center;
-          padding: 32px;
-          color: #a0aec0;
-          font-style: italic;
-        }
+        text-align: center;
+        padding: 32px;
+        color: #4a5568;
+        font-style: italic;
+        background: #fff;
       }
     }
   }
@@ -318,4 +346,5 @@
     }
   }
 }
+
 

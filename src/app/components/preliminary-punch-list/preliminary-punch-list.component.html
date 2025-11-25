@@ -138,7 +138,7 @@
           </p-tab>
           <p-tab [value]="2" [ngClass]="{ 'active-tab': activeTab === 2 }">
             <span class="tabs-class">Daily Report</span>
-            <i class="pi pi-calendar"></i>
+            <i class="pi pi-calendar" style="padding-right: 8px;"></i>
           </p-tab>
         </p-tablist>
         <p-tabpanels>
@@ -151,8 +151,13 @@
                                                (unresolvedCountChange)="onUnresolvedCountChange($event)"/>
           </p-tabpanel>
           <p-tabpanel [value]="2">
-            <ng-container *ngIf="user.role === 'Admin'; else cmDailyReportTab">
-              <app-daily-report-dashboard marketFilter="NV"></app-daily-report-dashboard>
+            <ng-container *ngIf="isAdminUser; else cmDailyReportTab">
+              <ng-container *ngIf="showAdminDailyReportDashboard; else adminDailyReportUnavailable">
+                <app-daily-report-dashboard [marketFilter]="adminDailyReportMarketFilter"></app-daily-report-dashboard>
+              </ng-container>
+              <ng-template #adminDailyReportUnavailable>
+                <p class="m-0">Daily report dashboard is available for NV, CO, or AZ markets.</p>
+              </ng-template>
             </ng-container>
             <ng-template #cmDailyReportTab>
               <ng-container *ngIf="isCmUser; else dailyReportUnavailable">
@@ -181,7 +186,11 @@
                       <div *ngIf="todaysDailyReport.submittedDate"><strong>Submitted:</strong> {{ todaysDailyReport.submittedDate | date:'short' }}</div>
                     </div>
                     <ng-template #cmNoDailyReport>
-                      <p class="m-0">You have not submitted a daily report today.</p>
+                      <p class="m-0">
+                        {{ dailyReportSubmission?.hasSubmittedToday
+                          ? 'Your daily report was submitted and is being processed.'
+                          : 'You have not submitted a daily report today.' }}
+                      </p>
                     </ng-template>
                   </ng-container>
 
@@ -191,7 +200,7 @@
                 </div>
               </ng-container>
               <ng-template #dailyReportUnavailable>
-                <p class="m-0">Daily report submission is available to CM users only.</p>
+                <p class="m-0">Daily report submission is available to CM users in NV, CO, or AZ markets.</p>
               </ng-template>
             </ng-template>
           </p-tabpanel>

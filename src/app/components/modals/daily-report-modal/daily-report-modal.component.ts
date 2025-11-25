@@ -147,7 +147,10 @@ export class DailyReportModalComponent implements OnInit {
     this.isSubmitting = true;
     const report: DailyReport = {
       ...this.dailyReportForm.value,
-      userId: currentUser.id
+      userId: currentUser.id,
+      userName: currentUser.name ?? currentUser.userName ?? undefined,
+      userEmail: currentUser.email ?? currentUser.userEmail ?? undefined,
+      market: currentUser.market ?? currentUser.marketName ?? undefined
     };
 
     this.dailyReportService.submitDailyReport(report).subscribe({
