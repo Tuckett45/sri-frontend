@@ -1,6 +1,21 @@
 <div class="tps-page surface-card shadow-4 border-round">
   <div class="header-section">
-    <h2>TPS Reports</h2><p-divider />
+    <div class="header-content">
+      <h2>TPS Reports</h2>
+      <div class="city-selector">
+        <label for="citySelect">City:</label>
+        <p-select 
+          id="citySelect"
+          [options]="cities" 
+          [(ngModel)]="selectedCity"
+          (onChange)="onCityChange($event.value)"
+          optionLabel="displayName"
+          [style]="{'width': '250px'}"
+          placeholder="Select a city">
+        </p-select>
+      </div>
+    </div>
+    <p-divider />
   </div>
 
   <!-- add class="tps-tabs" so we can target these styles safely -->

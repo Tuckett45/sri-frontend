@@ -1,16 +1,18 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder } from '@angular/forms';
 import { TpsService } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
 import { MatSort } from '@angular/material/sort';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-violations',
   templateUrl: './violations.component.html',
   styleUrls: ['./violations.component.scss']
 })
-export class ViolationsComponent implements OnInit {
+export class ViolationsComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   displayedColumns: string[] = [
     'monthYear',
     'vendor',
@@ -43,12 +45,30 @@ export class ViolationsComponent implements OnInit {
       }
       return (item as any)[property];
     };
+    
+    // Load violations for initial city
     this.loadViolations();
-    this.filterForm.valueChanges.subscribe(() => this.applyFilters());
+    
+    // Subscribe to city changes
+    this.tpsService.selectedCity$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadViolations();
+      });
+    
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadViolations() {
-    this.tpsService.getViolations().subscribe(res => {
+    const city = this.tpsService.selectedCity.name;
+    this.tpsService.getViolations(city).subscribe(res => {
       this.violations = res;
       this.applyFilters();
     });

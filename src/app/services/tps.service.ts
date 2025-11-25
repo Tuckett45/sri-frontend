@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, map, shareReplay } from 'rxjs';
+import { Observable, map, shareReplay, BehaviorSubject } from 'rxjs';
 import { environment, local_environment } from 'src/environments/environments';
 import { WPViolation } from '../models/wp-violation.model';
 import { CityScorecard } from '../models/city-scorecard.model';
@@ -16,9 +16,31 @@ export interface BudgetTracker {
   pageSize?: number;
 }
 
+export interface CityOption {
+  name: string;
+  displayName: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class TpsService {
+  // Available cities for TPS data
+  readonly cities: CityOption[] = [
+    { name: 'Salt Lake City, UT', displayName: 'Salt Lake City, UT' },
+    { name: 'Phoenix, AZ', displayName: 'Phoenix, AZ' },
+    { name: 'Las Vegas, NV', displayName: 'Las Vegas, NV' }
+  ];
+
+  // Observable for currently selected city
+  private selectedCitySubject = new BehaviorSubject<CityOption>(this.cities[0]);
+  selectedCity$ = this.selectedCitySubject.asObservable();
+
+  get selectedCity(): CityOption {
+    return this.selectedCitySubject.value;
+  }
+
+  setSelectedCity(city: CityOption): void {
+    this.selectedCitySubject.next(city);
+  }
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
@@ -31,9 +53,14 @@ export class TpsService {
 
   constructor(private http: HttpClient) {}
 
-  getViolations(): Observable<WPViolation[]> {
+  getViolations(city?: string): Observable<WPViolation[]> {
+    let params = new HttpParams();
+    if (city) {
+      params = params.set('city', city);
+    }
+    
     return this.http
-      .get<any>(`${this.baseUrl}/violations`, this.httpOptions)
+      .get<any>(`${this.baseUrl}/violations`, { ...this.httpOptions, params })
       .pipe(map(res => this.asArray<WPViolation>(res)));
   }
 
@@ -41,9 +68,14 @@ export class TpsService {
     return this.http.post<void>(`${this.baseUrl}/violations/import`, {}, this.httpOptions);
   }
 
-  getCityScorecard(): Observable<CityScorecard[]> {
+  getCityScorecard(city?: string): Observable<CityScorecard[]> {
+    let params = new HttpParams();
+    if (city) {
+      params = params.set('city', city);
+    }
+    
     return this.http
-      .get<any>(`${this.baseUrl}/city-scorecard`, this.httpOptions)
+      .get<any>(`${this.baseUrl}/city-scorecard`, { ...this.httpOptions, params })
       .pipe(map(res => this.asArray<CityScorecard>(res)));
   }
 
