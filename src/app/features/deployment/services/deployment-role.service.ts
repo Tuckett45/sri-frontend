@@ -161,6 +161,12 @@ export class DeploymentRoleService {
    */
   getPhaseDescriptionForRole(phase: DeploymentStatus, role: DeploymentRole): string {
     const descriptions: Record<DeploymentStatus, Partial<Record<DeploymentRole, string>>> = {
+      [DeploymentStatus.Planned]: {
+        [DeploymentRole.DeploymentEngineer]: 'Review deployment plan and coordinate with team',
+        [DeploymentRole.DCOps]: 'Prepare site access and facility arrangements',
+        [DeploymentRole.VendorRep]: 'Review equipment list and deployment schedule',
+        [DeploymentRole.SRITech]: 'Prepare tools and review deployment documentation'
+      },
       [DeploymentStatus.Survey]: {
         [DeploymentRole.VendorRep]: 'Check data center and cabinets, verify rack requirements and patch panel ports',
         [DeploymentRole.DCOps]: 'Assist with site survey and facility access',
@@ -186,6 +192,12 @@ export class DeploymentRoleService {
         [DeploymentRole.VendorRep]: 'Configure management IPs, provide documentation and photos, sign handoff checklist',
         [DeploymentRole.DeploymentEngineer]: 'Validate connections, inspect work, perform final sign-off',
         [DeploymentRole.SRITech]: 'Complete final documentation and technician sign-off'
+      },
+      [DeploymentStatus.Complete]: {
+        [DeploymentRole.DeploymentEngineer]: 'Review deployment completion and archive documentation',
+        [DeploymentRole.DCOps]: 'Verify site cleanup and access restoration',
+        [DeploymentRole.VendorRep]: 'Provide final documentation and deployment summary',
+        [DeploymentRole.SRITech]: 'Complete post-deployment cleanup and documentation'
       }
     };
 

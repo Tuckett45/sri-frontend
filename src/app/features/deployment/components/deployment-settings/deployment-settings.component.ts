@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
+import { HubConnectionState } from '@microsoft/signalr';
 import { DeploymentFeatureFlagsService } from '../../services/deployment-feature-flags.service';
 import { DeploymentSignalRService } from '../../services/deployment-signalr.service';
 
@@ -402,12 +403,12 @@ export class DeploymentSettingsComponent implements OnInit {
     const state = this.signalRService.getConnectionState()();
     
     switch (state) {
-      case 1: // Connected
+      case HubConnectionState.Connected:
         this.connectionStatus = 'connected';
         this.connectionStatusText = 'Connected to notification service';
         break;
-      case 2: // Connecting
-      case 3: // Reconnecting
+      case HubConnectionState.Connecting:
+      case HubConnectionState.Reconnecting:
         this.connectionStatus = 'connecting';
         this.connectionStatusText = 'Connecting to notification service...';
         break;

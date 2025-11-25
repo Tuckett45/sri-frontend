@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
-import { environment } from 'src/environments/environments';
+import { environment } from '../../../../environments/environments';
 import { DeploymentFeatureFlagsService } from './deployment-feature-flags.service';
 import { ToastrService } from 'ngx-toastr';
 
@@ -65,6 +65,50 @@ export class DeploymentPushNotificationService {
   readonly initialized$ = this.isInitialized$.asObservable();
   readonly subscribed$ = this.isSubscribed$.asObservable();
   readonly error$ = this.subscriptionError$.asObservable();
+
+  /**
+   * Check if push notifications are supported in the browser
+   */
+  isSupported(): boolean {
+    return 'Notification' in window && 'serviceWorker' in navigator;
+  }
+
+  /**
+   * Get current notification permission status
+   */
+  get permission(): NotificationPermission {
+    return Notification.permission;
+  }
+
+  /**
+   * Show a local notification
+   */
+  async showLocalNotification(payload: PushNotificationPayload): Promise<void> {
+    if (!this.isSupported()) {
+      console.warn('❌ Notifications not supported');
+      return;
+    }
+
+    if (Notification.permission !== 'granted') {
+      console.warn('❌ Notification permission not granted');
+      return;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(payload.title, {
+        body: payload.body,
+        icon: payload.icon || '/assets/icons/notification-icon.png',
+        badge: payload.badge || '/assets/icons/notification-badge.png',
+        tag: payload.tag,
+        requireInteraction: payload.requireInteraction || false,
+        data: payload.data
+      });
+    } catch (error) {
+      console.error('❌ Failed to show notification:', error);
+      throw error;
+    }
+  }
 
   /**
    * Initialize push notifications
