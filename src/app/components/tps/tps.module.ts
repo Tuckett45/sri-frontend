@@ -30,6 +30,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { CalendarModule } from 'primeng/calendar';
 import { ButtonModule } from 'primeng/button';
 import { AccordionModule } from 'primeng/accordion';
+import { SelectModule } from 'primeng/select';
 // Ensure Chart.js registerables are available when this lazy module loads
 import '../../../charts-setup';
 
@@ -67,6 +68,7 @@ import '../../../charts-setup';
     CalendarModule,
     ButtonModule,
     AccordionModule,
+    SelectModule,
     ChartModule,
     DividerModule,
     MatOptgroup,

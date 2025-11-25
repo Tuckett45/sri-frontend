@@ -1,17 +1,19 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder } from '@angular/forms';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
 import { TpsService } from 'src/app/services/tps.service';
 import { MatSort } from '@angular/material/sort';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-city-scorecard',
   templateUrl: './city-scorecard.component.html',
   styleUrls: ['./city-scorecard.component.scss']
 })
-export class CityScorecardComponent implements OnInit {
+export class CityScorecardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   displayedColumns: string[] = [
     'city',
     'forecastedHHP',
@@ -48,11 +50,27 @@ export class CityScorecardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadScorecard();
-    this.filterForm.valueChanges.subscribe(() => this.applyFilters());
+    
+    // Subscribe to city changes
+    this.tpsService.selectedCity$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadScorecard();
+      });
+    
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadScorecard() {
-    this.tpsService.getCityScorecard().subscribe(res => {
+    const city = this.tpsService.selectedCity.name;
+    this.tpsService.getCityScorecard(city).subscribe(res => {
       this.scorecards = res;
       this.applyFilters();
     });
