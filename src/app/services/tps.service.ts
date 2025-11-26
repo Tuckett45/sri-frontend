@@ -55,6 +55,6 @@ export class TpsService {
     params = params.set('page', String(query.page ?? 1));
     params = params.set('pageSize', String(query.pageSize ?? 25));
 
-    return this.http.get<PaginatedResponse<BudgetTrackerRow>>(`${this.baseUrl}/budget-tracker`, { params });
+    return this.http.get<PaginatedResponse<BudgetTrackerRow>>(`${this.baseUrl}/budget-tracker`, { params, ...this.httpOptions });
   }
 }
