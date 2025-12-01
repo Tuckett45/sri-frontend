@@ -6,6 +6,49 @@
   max-height: 70vh;
   overflow-y: auto;
 
+  .submission-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    margin-bottom: 8px;
+
+    mat-icon {
+      color: #144f80;
+    }
+
+    .submission-banner__text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .title {
+        font-weight: 600;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .subtitle {
+        font-size: 13px;
+        color: #475569;
+      }
+
+      .badge {
+        background: #e18a25;
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+    }
+  }
+
   .issue-btn {
     padding: 10px 20px;
     cursor: pointer;
@@ -358,6 +401,18 @@ button.mat-raised-button {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.location-btn {
+  color: #e18a25 !important;
+  mat-icon {
+    color: inherit;
+  }
+}
+
+.location-hint {
+  color: #e18a25;
+  font-weight: 600;
 }
 
 .preview-image {

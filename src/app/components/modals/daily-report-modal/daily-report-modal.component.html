@@ -7,6 +7,16 @@
 <div class="modal-body">
   <mat-dialog-content class="dialog-content">
     <form [formGroup]="dailyReportForm" class="daily-report-form">
+      <div class="submission-banner" *ngIf="submissionUserName || submissionUserEmail">
+        <mat-icon>assignment_ind</mat-icon>
+        <div class="submission-banner__text">
+          <div class="title">
+            Submitting for {{ submissionUserName || 'selected user' }}
+            <span *ngIf="isSubmittingForAnotherUser" class="badge">Admin</span>
+          </div>
+          <div class="subtitle" *ngIf="submissionUserEmail">{{ submissionUserEmail }}</div>
+        </div>
+      </div>
       
       <!-- Segment ID -->
       <mat-form-field appearance="outline" class="full-width">
@@ -34,12 +44,25 @@
           formControlName="currentLocation"
           [matAutocomplete]="locationAuto"
           placeholder="Enter or select location">
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          class="location-btn"
+          matTooltip="Use my location (county, state)"
+          matTooltipPosition="above"
+          (click)="autofillLocationFromBrowser()"
+          [disabled]="isLocating">
+          <mat-icon *ngIf="!isLocating">my_location</mat-icon>
+          <mat-spinner *ngIf="isLocating" diameter="20"></mat-spinner>
+        </button>
         <mat-autocomplete #locationAuto="matAutocomplete">
           <mat-option *ngFor="let option of filteredLocations | async" [value]="option">
             {{ option }}
           </mat-option>
         </mat-autocomplete>
         <mat-error *ngIf="hasError('currentLocation')">{{ getErrorMessage('currentLocation') }}</mat-error>
+        <mat-hint align="end" class="location-hint">Click the target to auto-fill your county/state</mat-hint>
       </mat-form-field>
 
       <!-- Description of Work Performed -->

@@ -267,6 +267,18 @@
   cursor: pointer;
 }
 
+.upload-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #144f80;
+  border-color: #144f80;
+
+  &:hover {
+    background: rgba(20, 79, 128, 0.08);
+  }
+}
+
 // Responsive design
 @media (max-width: 1024px) {
   .dashboard-container {

@@ -8,6 +8,15 @@
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
+      <button
+        *ngIf="canSubmitReports"
+        mat-raised-button
+        class="header-btn"
+        color="primary"
+        (click)="openDailyReportModal()">
+        <mat-icon>cloud_upload</mat-icon>
+        Upload Daily Report
+      </button>
       <button mat-raised-button class="header-btn" (click)="exportToCSV()" [disabled]="dailyReports.length === 0">
         <mat-icon>download</mat-icon>
         Export CSV
@@ -97,6 +106,22 @@
           <ng-container matColumnDef="lastSubmission">
             <th mat-header-cell *matHeaderCellDef>Last Submission</th>
             <td mat-cell *matCellDef="let user">{{ formatDate(user.lastSubmissionDate) }}</td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions" *ngIf="canSubmitReports">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let user">
+              <button
+                mat-stroked-button
+                color="primary"
+                class="upload-action"
+                (click)="openDailyReportModal(user)"
+                [disabled]="user.hasSubmittedToday">
+                <mat-icon>upload</mat-icon>
+                Upload
+              </button>
+            </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="userStatusColumns"></tr>
