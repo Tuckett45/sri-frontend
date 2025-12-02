@@ -19,15 +19,16 @@ export interface BudgetTracker {
 export interface CityOption {
   name: string;
   displayName: string;
+  segmentPrefix: string;  // e.g., "SLC", "PHX", "LAS"
 }
 
 @Injectable({ providedIn: 'root' })
 export class TpsService {
   // Available cities for TPS data
   readonly cities: CityOption[] = [
-    { name: 'Salt Lake City, UT', displayName: 'Salt Lake City, UT' },
-    { name: 'Phoenix, AZ', displayName: 'Phoenix, AZ' },
-    { name: 'Las Vegas, NV', displayName: 'Las Vegas, NV' }
+    { name: 'Salt Lake City, UT', displayName: 'Salt Lake City, UT', segmentPrefix: 'SLC' },
+    { name: 'Phoenix, AZ', displayName: 'Phoenix, AZ', segmentPrefix: 'PHX' },
+    { name: 'Las Vegas, NV', displayName: 'Las Vegas, NV', segmentPrefix: 'LAS' }
   ];
 
   // Observable for currently selected city
@@ -53,10 +54,10 @@ export class TpsService {
 
   constructor(private http: HttpClient) {}
 
-  getViolations(city?: string): Observable<WPViolation[]> {
+  getViolations(segmentPrefix?: string): Observable<WPViolation[]> {
     let params = new HttpParams();
-    if (city) {
-      params = params.set('city', city);
+    if (segmentPrefix) {
+      params = params.set('segmentPrefix', segmentPrefix);
     }
     
     return this.http
@@ -68,10 +69,10 @@ export class TpsService {
     return this.http.post<void>(`${this.baseUrl}/violations/import`, {}, this.httpOptions);
   }
 
-  getCityScorecard(city?: string): Observable<CityScorecard[]> {
+  getCityScorecard(segmentPrefix?: string): Observable<CityScorecard[]> {
     let params = new HttpParams();
-    if (city) {
-      params = params.set('city', city);
+    if (segmentPrefix) {
+      params = params.set('segmentPrefix', segmentPrefix);
     }
     
     return this.http

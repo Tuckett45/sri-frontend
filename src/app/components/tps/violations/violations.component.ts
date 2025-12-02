@@ -67,8 +67,8 @@ export class ViolationsComponent implements OnInit, OnDestroy {
   }
 
   loadViolations() {
-    const city = this.tpsService.selectedCity.name;
-    this.tpsService.getViolations(city).subscribe(res => {
+    const segmentPrefix = this.tpsService.selectedCity.segmentPrefix;
+    this.tpsService.getViolations(segmentPrefix).subscribe(res => {
       this.violations = res;
       this.applyFilters();
     });

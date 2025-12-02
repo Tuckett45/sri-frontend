@@ -69,8 +69,8 @@ export class CityScorecardComponent implements OnInit, OnDestroy {
   }
 
   loadScorecard() {
-    const city = this.tpsService.selectedCity.name;
-    this.tpsService.getCityScorecard(city).subscribe(res => {
+    const segmentPrefix = this.tpsService.selectedCity.segmentPrefix;
+    this.tpsService.getCityScorecard(segmentPrefix).subscribe(res => {
       this.scorecards = res;
       this.applyFilters();
     });
