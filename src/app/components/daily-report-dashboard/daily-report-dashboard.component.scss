@@ -279,6 +279,31 @@
   }
 }
 
+.view-action {
+  color: #144f80 !important;
+}
+
+.report-details-content {
+  min-width: 0;
+
+  .report-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px 16px;
+
+    strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #1f2937;
+    }
+
+    div {
+      color: #374151;
+      word-break: break-word;
+    }
+  }
+}
+
 // Responsive design
 @media (max-width: 1024px) {
   .dashboard-container {

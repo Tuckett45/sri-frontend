@@ -1,5 +1,5 @@
 <div mat-dialog-title class="modal-header">
-  <h5 mat-dialog-title>Daily Report</h5>
+  <h5 mat-dialog-title>{{ isViewMode ? 'Daily Report Details' : 'Daily Report' }}</h5>
   <button mat-icon-button (click)="close()">
     <mat-icon>close</mat-icon>
   </button>
@@ -7,7 +7,7 @@
 <div class="modal-body">
   <mat-dialog-content class="dialog-content">
     <form [formGroup]="dailyReportForm" class="daily-report-form">
-      <div class="submission-banner" *ngIf="submissionUserName || submissionUserEmail">
+      <div class="submission-banner" *ngIf="!isViewMode && (submissionUserName || submissionUserEmail)">
         <mat-icon>assignment_ind</mat-icon>
         <div class="submission-banner__text">
           <div class="title">
@@ -43,7 +43,7 @@
           matInput
           formControlName="currentLocation"
           [matAutocomplete]="locationAuto"
-          placeholder="Enter or select location">
+            placeholder="Enter or select location">
         <button
           mat-icon-button
           matSuffix
@@ -52,7 +52,7 @@
           matTooltip="Use my location (county, state)"
           matTooltipPosition="above"
           (click)="autofillLocationFromBrowser()"
-          [disabled]="isLocating">
+          [disabled]="isLocating || isViewMode">
           <mat-icon *ngIf="!isLocating">my_location</mat-icon>
           <mat-spinner *ngIf="isLocating" diameter="20"></mat-spinner>
         </button>
@@ -177,10 +177,11 @@
 
 <div class="modal-footer">
   <mat-dialog-actions align="end" class="dialog-actions">
-    <button mat-stroked-button color="primary" class="cancel-btn" (click)="onCancel()" [disabled]="isSubmitting">
-      Cancel
+    <button mat-stroked-button color="primary" class="cancel-btn" (click)="onCancel()">
+      Close
     </button>
     <button
+      *ngIf="!isViewMode"
       mat-raised-button
       color="primary"
       class="save-btn"

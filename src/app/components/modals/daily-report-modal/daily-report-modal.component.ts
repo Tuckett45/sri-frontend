@@ -76,6 +76,7 @@ export class DailyReportModalComponent implements OnInit {
   submissionUserMarket?: string | null;
   isSubmittingForAnotherUser = false;
   isLocating = false;
+  isViewMode = false;
 
   constructor(
     private fb: FormBuilder,
@@ -84,12 +85,19 @@ export class DailyReportModalComponent implements OnInit {
     private toastr: ToastrService,
     private authService: AuthService,
     private geocodingService: GeocodingService,
-    @Inject(MAT_DIALOG_DATA) public data?: { targetUser?: UserSubmissionStatus | User | any }
+    @Inject(MAT_DIALOG_DATA) public data?: { targetUser?: UserSubmissionStatus | User | any; report?: DailyReport; viewOnly?: boolean }
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
     this.resolveSubmissionUser();
+    this.isViewMode = !!this.data?.['viewOnly'];
+    if (this.data?.['report']) {
+      this.hydrateFromReport(this.data['report']);
+    }
+    if (this.isViewMode) {
+      this.dailyReportForm.disable();
+    }
     this.loadLookupOptions();
     this.setupAutocompleteFilters();
   }
@@ -309,5 +317,19 @@ export class DailyReportModalComponent implements OnInit {
     this.submissionUserEmail = target?.userEmail || target?.email || currentUser?.email || currentUser?.userEmail;
     this.submissionUserMarket = target?.market ?? currentUser?.market ?? (currentUser as any)?.marketName ?? null;
     this.isSubmittingForAnotherUser = !!(target && resolvedId !== currentUser?.id);
+  }
+
+  private hydrateFromReport(report: DailyReport): void {
+    this.dailyReportForm.patchValue({
+      segmentId: report.segmentId,
+      currentLocation: report.currentLocation,
+      descriptionOfWork: report.descriptionOfWork,
+      forwardProductionCompleted: report.forwardProductionCompleted,
+      safetyConcerns: report.safetyConcerns,
+      incidentDelayConcerns: report.incidentDelayConcerns,
+      additionalComments: report.additionalComments,
+      cmPunchListLink: report.cmPunchListLink,
+      nextStepsAndFollowUp: report.nextStepsAndFollowUp
+    });
   }
 }

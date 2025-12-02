@@ -249,8 +249,10 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
   }
 
   viewReportDetails(report: DailyReport): void {
-    // TODO: Implement detail view modal if needed
-    console.log('View report details:', report);
+    this.dialog.open(DailyReportModalComponent, {
+      width: '720px',
+      data: { report, viewOnly: true }
+    });
   }
 
   private resetUserStatusColumns(): void {

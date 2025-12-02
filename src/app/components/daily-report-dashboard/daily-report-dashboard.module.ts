@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatNativeDateModule } from '@angular/material/core';
 import { DailyReportDashboardComponent } from './daily-report-dashboard.component';
+import { MatDialogContent, MatDialogActions } from "@angular/material/dialog";
 
 @NgModule({
   declarations: [DailyReportDashboardComponent],
@@ -25,8 +26,10 @@ import { DailyReportDashboardComponent } from './daily-report-dashboard.componen
     MatIconModule,
     MatTableModule,
     MatTooltipModule,
-    MatProgressSpinnerModule
-  ],
+    MatProgressSpinnerModule,
+    MatDialogContent,
+    MatDialogActions
+],
   exports: [DailyReportDashboardComponent]
 })
 export class DailyReportDashboardModule {}
