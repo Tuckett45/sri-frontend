@@ -2,10 +2,12 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/cor
 import { FormControl } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { saveAs } from 'file-saver';
+import { MatDialog } from '@angular/material/dialog';
 import { DailyReport, UserSubmissionStatus } from 'src/app/models/daily-report.model';
 import { User } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { DailyReportService } from 'src/app/services/daily-report.service';
+import { DailyReportModalComponent } from '../modals/daily-report-modal/daily-report-modal.component';
 
 @Component({
   selector: 'app-daily-report-dashboard',
@@ -28,6 +30,8 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
   submittedCount = 0;
   notSubmittedCount = 0;
   submissionRate = 0;
+  canSubmitReports = false;
+  private readonly submissionMarkets = ['NV', 'CO', 'AZ', 'RG'];
 
   // Table columns
   userStatusColumns: string[] = ['userName', 'userEmail', 'status', 'lastSubmission'];
@@ -36,11 +40,15 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
   constructor(
     private dailyReportService: DailyReportService,
     public authService: AuthService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.normalizedMarketFilter = this.normalizeMarket(this.marketFilter);
+    this.user = this.authService.getUser();
+    this.canSubmitReports = this.canCurrentUserSubmit();
+    this.resetUserStatusColumns();
     this.loadDashboardData();
     
     // Reload data when date changes
@@ -62,6 +70,14 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
     const date = this.selectedDate.value || new Date();
     this.isLoading = true;
     this.user = this.authService.getUser();
+    this.canSubmitReports = this.canCurrentUserSubmit();
+    this.resetUserStatusColumns();
+
+    if (!this.user) {
+      this.toastr.error('Unable to load user context for daily reports.', 'Error');
+      this.isLoading = false;
+      return;
+    }
 
     // Load user submission status
     this.dailyReportService.getUserSubmissionStatus(date, this.user.market).subscribe({
@@ -85,6 +101,24 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
         console.error('Error loading daily reports:', error);
         this.toastr.error('Failed to load daily reports', 'Error');
         this.isLoading = false;
+      }
+    });
+  }
+
+  openDailyReportModal(targetUser?: UserSubmissionStatus): void {
+    if (!this.canSubmitReports) {
+      this.toastr.warning('You are not allowed to submit daily reports for this market.', 'Not allowed');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DailyReportModalComponent, {
+      width: '640px',
+      data: targetUser ? { targetUser } : undefined
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadDashboardData();
       }
     });
   }
@@ -215,8 +249,25 @@ export class DailyReportDashboardComponent implements OnInit, OnChanges {
   }
 
   viewReportDetails(report: DailyReport): void {
-    // TODO: Implement detail view modal if needed
-    console.log('View report details:', report);
+    this.dialog.open(DailyReportModalComponent, {
+      width: '720px',
+      data: { report, viewOnly: true }
+    });
+  }
+
+  private resetUserStatusColumns(): void {
+    this.userStatusColumns = ['userName', 'userEmail', 'status', 'lastSubmission'];
+    if (this.canSubmitReports) {
+      this.userStatusColumns = [...this.userStatusColumns, 'actions'];
+    }
+  }
+
+  private canCurrentUserSubmit(): boolean {
+    if (!this.user) return false;
+    const role = (this.user.role || '').toUpperCase();
+    const market = this.normalizeMarket(this.user.market);
+    const isAllowedMarket = market ? this.submissionMarkets.includes(market) : false;
+    return role === 'ADMIN' && isAllowedMarket;
   }
 
   private normalizeMarket(value?: string | null): string | null {
