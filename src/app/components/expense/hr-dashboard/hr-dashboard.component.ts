@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExpenseListItem, ExpenseCategory, ExpenseStatus } from '../../../models/expense.model';
 import { ChartModule } from 'primeng/chart';
@@ -7,8 +7,8 @@ import { TableModule } from 'primeng/table';
 import { CalendarModule } from 'primeng/calendar';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { ExpenseStateService } from '../services/expense-state.service';
-import { Subject, takeUntil } from 'rxjs';
+import { ExpenseApiService } from 'src/app/services/expense-api.service';
+import { firstValueFrom } from 'rxjs';
 
 // Dashboard interfaces for comprehensive expense analytics
 interface DashboardStats {
@@ -48,7 +48,7 @@ interface EmployeeStats {
   templateUrl: './hr-dashboard.component.html',
   styleUrls: ['./hr-dashboard.component.scss']
 })
-export class HrDashboardComponent implements OnInit, OnDestroy {
+export class HrDashboardComponent implements OnInit {
   // Data
   expenses: ExpenseListItem[] = [];
   stats: DashboardStats = {
@@ -83,10 +83,10 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
   recentExpenses: ExpenseListItem[] = [];
 
   loading = true;
-  private readonly destroy$ = new Subject<void>();
+  private readonly pageSize = 200;
 
   constructor(
-    private expenseState: ExpenseStateService,
+    private expenseApi: ExpenseApiService,
     private toastr: ToastrService
   ) {}
 
@@ -97,22 +97,126 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
     this.endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     
     this.initializeChartOptions();
-    this.expenseState.hrExpenses$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(items => {
-        this.expenses = items ?? [];
-        this.loading = false;
-        this.filterAndCalculateStats();
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.loadAllExpenses();
   }
 
   onDateRangeChange(): void {
-    this.filterAndCalculateStats();
+    this.loadAllExpenses();
+  }
+
+  private async loadAllExpenses(): Promise<void> {
+    this.loading = true;
+    try {
+      const all = await this.fetchAllExpensePages();
+      this.expenses = all;
+      this.filterAndCalculateStats();
+    } catch (error) {
+      console.error('Failed to load HR expenses for dashboard', error);
+      this.toastr.error('Failed to load expenses for the dashboard');
+      // Show an empty state instead of leaving the view blank
+      this.expenses = [];
+      this.filterAndCalculateStats();
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  private async fetchAllExpensePages(): Promise<ExpenseListItem[]> {
+    // Prefer the backend helper that returns a large page for HR; fall back to manual paging
+    const primary = await this.tryListAllForHr();
+    if (primary.length) {
+      return primary;
+    }
+
+    const byId = new Map<string, ExpenseListItem>();
+    let page = 1;
+    const maxPages = 50; // safety guard to avoid accidental infinite loops
+    const from = this.toQueryDate(this.startDate);
+    const to = this.toQueryDate(this.endDate);
+
+    while (page <= maxPages) {
+      const res = await firstValueFrom(
+        this.expenseApi.getExpenses({
+          includeImages: true,
+          page,
+          pageSize: this.pageSize,
+          from,
+          to
+        })
+      );
+
+      const items = this.extractItems(res);
+      let addedCount = 0;
+      items.forEach(item => {
+        if (item?.id && !byId.has(item.id)) {
+          byId.set(item.id, item);
+          addedCount++;
+        } else if (!item?.id) {
+          // keep items without ids to avoid dropping data, but dedupe by index
+          const syntheticKey = `no-id-${page}-${addedCount}`;
+          byId.set(syntheticKey, item);
+          addedCount++;
+        }
+      });
+
+      const total = this.extractTotal(res);
+      const reachedEnd =
+        items.length < this.pageSize ||
+        (total !== undefined && byId.size >= total) ||
+        addedCount === 0;
+
+      if (reachedEnd) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    return Array.from(byId.values());
+  }
+
+  private async tryListAllForHr(): Promise<ExpenseListItem[]> {
+    try {
+      const res = await firstValueFrom(
+        this.expenseApi.listAllExpensesForHR({
+          includeImages: true,
+          from: this.toQueryDate(this.startDate),
+          to: this.toQueryDate(this.endDate)
+        })
+      );
+      return this.extractItems(res);
+    } catch (err) {
+      // swallow and fall back to paged approach
+      console.warn('listAllExpensesForHR failed, falling back to paging', err);
+      return [];
+    }
+  }
+
+  private extractItems(response: any): ExpenseListItem[] {
+    if (Array.isArray(response)) {
+      return response as ExpenseListItem[];
+    }
+    const candidates = [
+      response,
+      response?.items,
+      response?.data,
+      response?.data?.items,
+      response?.result,
+      response?.result?.items,
+      response?.results,
+      response?.results?.items
+    ];
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) {
+        return candidate as ExpenseListItem[];
+      }
+    }
+    return [];
+  }
+
+  private extractTotal(response: any): number | undefined {
+    const maybeTotal = response?.total ?? response?.data?.total ?? response?.result?.total ?? response?.results?.total;
+    return typeof maybeTotal === 'number' && Number.isFinite(maybeTotal) ? maybeTotal : undefined;
   }
 
   filterAndCalculateStats(): void {
@@ -359,6 +463,14 @@ export class HrDashboardComponent implements OnInit, OnDestroy {
       default:
         return '';
     }
+  }
+
+  private toQueryDate(value: Date | string | null): string | undefined {
+    if (!value) return undefined;
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   }
 }
 
