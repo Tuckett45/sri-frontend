@@ -52,24 +52,36 @@ export class ExpenseImageExportService {
       return of(result);
     }
 
+    // Deduplicate identical images (same id/blobUrl/fileName/contentType) to avoid duplicate files
+    const seenImages = new Set<string>();
+    const uniqueImages: Array<{ expense: Expense; image: ExpenseImage; index: number }> = [];
+    expensesWithImages.forEach(expense => {
+      expense.images?.forEach((image, index) => {
+        const key = this.getImageKey(image);
+        if (!key) return;
+        if (seenImages.has(key)) return;
+        seenImages.add(key);
+        uniqueImages.push({ expense, image, index });
+      });
+    });
+
+    result.totalImages = uniqueImages.length;
+
     // Create a ZIP file
     const zip = new JSZip();
     const downloadPromises: Observable<{ expense: Expense; imageIndex: number; blob: Blob | null }>[] = [];
 
     // Collect all image download promises
-    expensesWithImages.forEach(expense => {
-      expense.images?.forEach((image, index) => {
-        result.totalImages++;
-        const downloadObs = this.downloadImage(image).pipe(
-          map(blob => ({ expense, imageIndex: index, blob })),
-          catchError(err => {
-            result.failedImages++;
-            result.errorMessages.push(`Failed to download image for expense ${expense.id}: ${err.message}`);
-            return of({ expense, imageIndex: index, blob: null });
-          })
-        );
-        downloadPromises.push(downloadObs);
-      });
+    uniqueImages.forEach(({ expense, image, index }) => {
+      const downloadObs = this.downloadImage(image).pipe(
+        map(blob => ({ expense, imageIndex: index, blob })),
+        catchError(err => {
+          result.failedImages++;
+          result.errorMessages.push(`Failed to download image for expense ${expense.id}: ${err.message}`);
+          return of({ expense, imageIndex: index, blob: null });
+        })
+      );
+      downloadPromises.push(downloadObs);
     });
 
     // Download all images in parallel
@@ -179,16 +191,30 @@ export class ExpenseImageExportService {
    * Get count of expenses with receipts
    */
   getExpensesWithReceiptsCount(expenses: Expense[]): number {
-    return expenses.filter(exp => exp.images && exp.images.length > 0).length;
+    const seen = new Set<string>();
+    return expenses.filter(exp => {
+      const hasUniqueImage = (exp.images ?? []).some(img => {
+        const key = this.getImageKey(img);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      return hasUniqueImage;
+    }).length;
   }
 
   /**
    * Get total count of receipt images
    */
   getTotalImageCount(expenses: Expense[]): number {
-    return expenses.reduce((count, exp) => {
-      return count + (exp.images?.length || 0);
-    }, 0);
+    const seen = new Set<string>();
+    expenses.forEach(exp => {
+      (exp.images ?? []).forEach(img => {
+        const key = this.getImageKey(img);
+        if (key) seen.add(key);
+      });
+    });
+    return seen.size;
   }
 
   private resolveUrl(url: string): string {
@@ -196,30 +222,42 @@ export class ExpenseImageExportService {
     if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:')) {
       return url;
     }
-    if (url.startsWith('/')) {
-      if (this.blobBaseUrl) {
-        return `${this.blobBaseUrl}${url}`;
-      }
-      // keep relative so local dev proxy (or same-origin hosting) can handle routing
-      return url;
+    const normalized = url.replace(/\\/g, '/');
+
+    // If this is an API-style path (e.g. "/api/..." or "api/..."), leave it
+    // relative so same-origin/proxy requests continue to work.
+    if (this.isApiUrl(normalized)) {
+      return normalized.startsWith('/') ? normalized : `/${normalized}`;
     }
+
+    // Otherwise treat as blob storage path when a base is provided.
     if (this.blobBaseUrl) {
-      return `${this.blobBaseUrl}/${url.replace(/^\/+/, '')}`;
+      const base = this.blobBaseUrl.replace(/\/+$/, '');
+      const path = normalized.replace(/^\/+/, '');
+      return `${base}/${path}`;
     }
-    return url;
+
+    // keep relative so local dev proxy (or same-origin hosting) can handle routing
+    return normalized.startsWith('/') ? normalized : `/${normalized}`;
   }
 
   private shouldAttachApiHeaders(url: string): boolean {
     if (!url) return false;
-    if (this.blobBaseUrl && url.startsWith(this.blobBaseUrl)) {
+    const normalized = url.toLowerCase();
+    if (this.blobBaseUrl && normalized.startsWith(this.blobBaseUrl.toLowerCase())) {
       return false;
     }
-    if (url.startsWith('/')) {
-      return !this.blobBaseUrl;
-    }
+    return this.isApiUrl(normalized);
+  }
+
+  private isApiUrl(url: string): boolean {
+    if (!url) return false;
     const normalized = url.toLowerCase();
-    return normalized.startsWith(environment.apiUrl.toLowerCase()) ||
-      normalized.startsWith(this.apiBaseUrl.toLowerCase());
+    if (/^(https?:)?\/\//.test(normalized)) {
+      return normalized.startsWith(environment.apiUrl.toLowerCase()) ||
+        normalized.startsWith(this.apiBaseUrl.toLowerCase());
+    }
+    return normalized.startsWith('/api/') || normalized.startsWith('api/');
   }
 
   private dataUrlToBlob(dataUrl: string): Blob {
@@ -248,6 +286,18 @@ export class ExpenseImageExportService {
       return false;
     }
     return /^[A-Za-z0-9+/=\s]+$/.test(value) && !value.includes('://');
+  }
+
+  private getImageKey(image: ExpenseImage | undefined | null): string | null {
+    if (!image) return null;
+    const parts = [
+      image.id?.trim(),
+      image.blobUrl?.trim(),
+      image.fileName?.trim(),
+      image.contentType?.trim()
+    ].filter(Boolean);
+    if (!parts.length) return null;
+    return parts.join('|');
   }
 }
 

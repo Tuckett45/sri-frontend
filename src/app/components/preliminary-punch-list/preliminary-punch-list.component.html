@@ -164,12 +164,12 @@
                 <div class="daily-report-cm-panel surface-card border-round p-3 flex flex-column gap-3">
                   <div class="flex align-items-center justify-content-between flex-wrap gap-2">
                     <h3 class="m-0">Today's Daily Report</h3>
-                    <button mat-raised-button class="header-btn"
-                            (click)="openDailyReportModal()"
-                            [disabled]="dailyReportSubmission?.hasSubmittedToday">
-                      {{ dailyReportSubmission?.hasSubmittedToday ? 'Report Submitted' : 'Submit Daily Report' }}
+                    <button mat-raised-button class="header-btn" (click)="openDailyReportModal()">
+                      Submit Daily Report
                     </button>
                   </div>
+
+                  <p class="m-0">You can submit multiple reports per day. The most recent submission is shown below.</p>
 
                   <p *ngIf="cmDailyReportLoading" class="m-0">Loading your daily report...</p>
 
@@ -186,11 +186,7 @@
                       <div *ngIf="todaysDailyReport.submittedDate"><strong>Submitted:</strong> {{ todaysDailyReport.submittedDate | date:'short' }}</div>
                     </div>
                     <ng-template #cmNoDailyReport>
-                      <p class="m-0">
-                        {{ dailyReportSubmission?.hasSubmittedToday
-                          ? 'Your daily report was submitted and is being processed.'
-                          : 'You have not submitted a daily report today.' }}
-                      </p>
+                      <p class="m-0">You have not submitted a daily report yet today.</p>
                     </ng-template>
                   </ng-container>
 
