@@ -41,17 +41,40 @@ export class TpsService {
     {
       code: 'UT',
       label: 'Utah (UT)',
-      cities: [{ name: 'Salt Lake City, UT', displayName: 'Salt Lake City, UT', market: 'UT', segmentPrefix: 'SLC' }]
+      cities: [
+        { name: 'Salt Lake City, UT', displayName: 'Salt Lake City', market: 'UT', segmentPrefix: 'SLC' },
+        { name: 'Bluffdale, UT', displayName: 'Bluffdale', market: 'UT', segmentPrefix: 'BLF' },
+        { name: 'Chubbuck, ID', displayName: 'Chubbuck', market: 'UT', segmentPrefix: 'CBK' },
+        { name: 'Draper, UT', displayName: 'Draper', market: 'UT', segmentPrefix: 'DRP' },
+        { name: 'Holladay, UT', displayName: 'Holladay', market: 'UT', segmentPrefix: 'HLD' },
+        { name: 'Hyde Park, UT', displayName: 'Hyde Park', market: 'UT', segmentPrefix: 'HPK' },
+        { name: 'Kearns, UT', displayName: 'Kearns', market: 'UT', segmentPrefix: 'KNS' },
+        { name: 'Logan, UT', displayName: 'Logan', market: 'UT', segmentPrefix: 'LGU' },
+        { name: 'Magna, UT', displayName: 'Magna', market: 'UT', segmentPrefix: 'MAG' },
+        { name: 'Millcreek, UT', displayName: 'Millcreek', market: 'UT', segmentPrefix: 'MLL' },
+        { name: 'North Logan, UT', displayName: 'North Logan', market: 'UT', segmentPrefix: 'NLG' },
+        { name: 'North Salt Lake, UT', displayName: 'North Salt Lake', market: 'UT', segmentPrefix: 'NSL' },
+        { name: 'Pocatello, ID', displayName: 'Pocatello', market: 'UT', segmentPrefix: 'PIH' },
+        { name: 'Provo, UT', displayName: 'Provo', market: 'UT', segmentPrefix: 'PVU' },
+        { name: 'Riverton, UT', displayName: 'Riverton', market: 'UT', segmentPrefix: 'RVN' },
+        { name: 'Sandy, UT', displayName: 'Sandy', market: 'UT', segmentPrefix: 'SDY' },
+        { name: 'South Jordan, UT', displayName: 'South Jordan', market: 'UT', segmentPrefix: 'SJC' },
+        { name: 'South Salt Lake, UT', displayName: 'South Salt Lake', market: 'UT', segmentPrefix: 'SSL' },
+        { name: 'Springville, UT', displayName: 'Springville', market: 'UT', segmentPrefix: 'SPV' },
+        { name: 'Taylorsville, UT', displayName: 'Taylorsville', market: 'UT', segmentPrefix: 'TLV' },
+        { name: 'West Jordan, UT', displayName: 'West Jordan', market: 'UT', segmentPrefix: 'WJR' },
+        { name: 'Woods Cross, UT', displayName: 'Woods Cross', market: 'UT', segmentPrefix: 'WXC' }
+      ]
     },
     {
       code: 'AZ',
       label: 'Arizona (AZ)',
-      cities: [{ name: 'Phoenix, AZ', displayName: 'Phoenix, AZ', market: 'AZ', segmentPrefix: 'PHX' }]
+      cities: [{ name: 'Phoenix, AZ', displayName: 'Phoenix', market: 'AZ', segmentPrefix: 'PHX' }]
     },
     {
       code: 'NV',
       label: 'Nevada (NV)',
-      cities: [{ name: 'Las Vegas, NV', displayName: 'Las Vegas, NV', market: 'NV', segmentPrefix: 'LAS' }]
+      cities: [{ name: 'Las Vegas, NV', displayName: 'Las Vegas', market: 'NV', segmentPrefix: 'LAS' }]
     }
   ];
 
