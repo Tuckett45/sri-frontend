@@ -6,21 +6,22 @@ import {
   QueryList,
   HostListener,
   NgZone,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  OnDestroy
 } from '@angular/core';
 import { UIChart } from 'primeng/chart';
 import { TpsService } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
 import { SelectItem } from 'primeng/api';
-import { combineLatest } from 'rxjs';
+import { Subscription, combineLatest, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-tps-summary',
   templateUrl: './summary.component.html',
   styleUrls: ['./summary.component.scss']
 })
-export class SummaryComponent implements OnInit, AfterViewInit {
+export class SummaryComponent implements OnInit, AfterViewInit, OnDestroy {
   // ===== KPIs =====
   violationsCount = 0;
   cityCount = 0;
@@ -64,6 +65,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   // ===== Data stores =====
   private violations: WPViolation[] = [];
   private cities: CityScorecard[] = [];
+  private dataSub?: Subscription;
 
   // ===== Chart data =====
   overSpentChartData: any = { labels: [], datasets: [] };
@@ -191,13 +193,17 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.setIsMobile();
     this.applyOptionProfiles();
-    this.loadData();
+    this.subscribeToData();
   }
 
   ngAfterViewInit(): void {
     const reinit = () => setTimeout(() => this.charts.forEach(c => c.reinit()));
     reinit();
     this.charts.changes.subscribe(() => reinit());
+  }
+
+  ngOnDestroy(): void {
+    this.dataSub?.unsubscribe();
   }
 
   @HostListener('window:resize')
@@ -340,32 +346,36 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   }
 
   // ===== Data fetching & shaping =====
-  loadData() {
-    combineLatest([
-      this.tpsService.getViolations(),
-      this.tpsService.getCityScorecard()
-    ]).subscribe({
-      next: ([violations, cities]) => {
-        this.violations = violations ?? [];
-        this.cities = cities ?? [];
+  private subscribeToData(): void {
+    this.dataSub?.unsubscribe();
+    this.dataSub = combineLatest([this.tpsService.selectedMarket$, this.tpsService.selectedCity$])
+      .pipe(
+        switchMap(([market, city]) =>
+          combineLatest([
+            this.tpsService.getViolations({ market: market.code, segmentPrefix: city.segmentPrefix, metro: city.name }),
+            this.tpsService.getCityScorecard({ market: market.code, segmentPrefix: city.segmentPrefix, metro: city.name })
+          ])
+        )
+      )
+      .subscribe({
+        next: ([violations, cities]) => this.processData(violations, cities),
+        error: _ => this.processData([], [])
+      });
+  }
 
-        // build select options
-        const vendors  = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
-        const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
-        const cityList = Array.from(new Set(this.cities.map(c => c.city).filter(Boolean)));
+  private processData(violations: WPViolation[], cities: CityScorecard[]): void {
+    this.violations = violations ?? [];
+    this.cities = cities ?? [];
 
-        this.vendorOptions  = vendors.map(v => ({ label: v!, value: v! }));
-        this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
-        this.cityOptions    = cityList.map(c => ({ label: c!, value: c! }));  // NEW
+    const vendors  = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
+    const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
+    const cityList = Array.from(new Set(this.cities.map(c => c.city).filter(Boolean)));
 
-        this.applyFilters();
-      },
-      error: _ => {
-        this.violations = [];
-        this.cities = [];
-        this.applyFilters();
-      }
-    });
+    this.vendorOptions  = vendors.map(v => ({ label: v!, value: v! }));
+    this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
+    this.cityOptions    = cityList.map(c => ({ label: c!, value: c! }));
+
+    this.applyFilters();
   }
 
   applyFilters() {

@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder } from '@angular/forms';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
-import { TpsService } from 'src/app/services/tps.service';
+import { CityOption, MarketOption, TpsService } from 'src/app/services/tps.service';
 import { MatSort } from '@angular/material/sort';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-city-scorecard',
@@ -49,14 +49,9 @@ export class CityScorecardComponent implements OnInit, OnDestroy {
   constructor(private tpsService: TpsService, private fb: FormBuilder) {}
 
   ngOnInit(): void {
-    this.loadScorecard();
-    
-    // Subscribe to city changes
-    this.tpsService.selectedCity$
+    combineLatest([this.tpsService.selectedMarket$, this.tpsService.selectedCity$])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.loadScorecard();
-      });
+      .subscribe(([market, city]) => this.loadScorecard(market, city));
     
     this.filterForm.valueChanges
       .pipe(takeUntil(this.destroy$))
@@ -68,9 +63,9 @@ export class CityScorecardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadScorecard() {
-    const segmentPrefix = this.tpsService.selectedCity.segmentPrefix;
-    this.tpsService.getCityScorecard(segmentPrefix).subscribe(res => {
+  loadScorecard(market: MarketOption, city: CityOption) {
+    const segmentPrefix = city.segmentPrefix;
+    this.tpsService.getCityScorecard({ market: market.code, segmentPrefix, metro: city.name }).subscribe(res => {
       this.scorecards = res;
       this.applyFilters();
     });

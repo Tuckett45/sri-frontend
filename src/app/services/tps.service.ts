@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, map, shareReplay, BehaviorSubject } from 'rxjs';
-import { environment, local_environment } from 'src/environments/environments';
+import { environment } from 'src/environments/environments';
 import { WPViolation } from '../models/wp-violation.model';
 import { CityScorecard } from '../models/city-scorecard.model';
 import { BudgetTrackerRow, PaginatedResponse, BudgetTrackerApiRow, toBudgetTrackerRow } from '../models/budget-tracker.model';
@@ -10,38 +10,92 @@ import { MetroYearSummary, MetroByMonthOverview, MetroByMunicipalityOverview } f
 export interface BudgetTracker {
   segment?: string | null;
   city?: string | null;
+  market?: string | null;
+  metro?: string | null;
+  segmentPrefix?: string | null;
   claimMonthFrom?: Date | null;
   claimMonthTo?: Date | null;
   page?: number;
   pageSize?: number;
 }
 
+export type MarketCode = 'UT' | 'AZ' | 'NV';
+
 export interface CityOption {
   name: string;
   displayName: string;
+  market: MarketCode;
   segmentPrefix: string;  // e.g., "SLC", "PHX", "LAS"
+}
+
+export interface MarketOption {
+  code: MarketCode;
+  label: string;
+  cities: CityOption[];
 }
 
 @Injectable({ providedIn: 'root' })
 export class TpsService {
-  // Available cities for TPS data
-  readonly cities: CityOption[] = [
-    { name: 'Salt Lake City, UT', displayName: 'Salt Lake City, UT', segmentPrefix: 'SLC' },
-    { name: 'Phoenix, AZ', displayName: 'Phoenix, AZ', segmentPrefix: 'PHX' },
-    { name: 'Las Vegas, NV', displayName: 'Las Vegas, NV', segmentPrefix: 'LAS' }
+  // Available markets and their metro/city options
+  readonly markets: MarketOption[] = [
+    {
+      code: 'UT',
+      label: 'Utah (UT)',
+      cities: [{ name: 'Salt Lake City, UT', displayName: 'Salt Lake City, UT', market: 'UT', segmentPrefix: 'SLC' }]
+    },
+    {
+      code: 'AZ',
+      label: 'Arizona (AZ)',
+      cities: [{ name: 'Phoenix, AZ', displayName: 'Phoenix, AZ', market: 'AZ', segmentPrefix: 'PHX' }]
+    },
+    {
+      code: 'NV',
+      label: 'Nevada (NV)',
+      cities: [{ name: 'Las Vegas, NV', displayName: 'Las Vegas, NV', market: 'NV', segmentPrefix: 'LAS' }]
+    }
   ];
 
+  // Flattened list for legacy uses
+  readonly cities: CityOption[] = this.markets.flatMap(m => m.cities);
+
   // Observable for currently selected city
-  private selectedCitySubject = new BehaviorSubject<CityOption>(this.cities[0]);
+  private selectedMarketSubject = new BehaviorSubject<MarketOption>(this.markets[0]);
+  selectedMarket$ = this.selectedMarketSubject.asObservable();
+
+  private selectedCitySubject = new BehaviorSubject<CityOption>(this.markets[0].cities[0]);
   selectedCity$ = this.selectedCitySubject.asObservable();
 
   get selectedCity(): CityOption {
     return this.selectedCitySubject.value;
   }
 
+  get selectedMarket(): MarketOption {
+    return this.selectedMarketSubject.value;
+  }
+
+  setSelectedMarket(market: MarketOption): void {
+    this.selectedMarketSubject.next(market);
+    // Keep city in sync with market selection
+    const currentCity = this.selectedCitySubject.value;
+    const citiesForMarket = market.cities;
+    if (!citiesForMarket.find(c => c.name === currentCity.name)) {
+      this.selectedCitySubject.next(citiesForMarket[0]);
+    }
+  }
+
   setSelectedCity(city: CityOption): void {
+    const targetMarket = this.markets.find(m => m.code === city.market);
+    if (targetMarket) {
+      this.selectedMarketSubject.next(targetMarket);
+    }
     this.selectedCitySubject.next(city);
   }
+
+  getCitiesForMarket(code: MarketCode): CityOption[] {
+    const m = this.markets.find(x => x.code === code);
+    return m ? [...m.cities] : [];
+  }
+
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
@@ -54,10 +108,16 @@ export class TpsService {
 
   constructor(private http: HttpClient) {}
 
-  getViolations(segmentPrefix?: string): Observable<WPViolation[]> {
+  getViolations(filters?: { segmentPrefix?: string; market?: MarketCode; metro?: string }): Observable<WPViolation[]> {
     let params = new HttpParams();
-    if (segmentPrefix) {
-      params = params.set('segmentPrefix', segmentPrefix);
+    if (filters?.segmentPrefix) {
+      params = params.set('segmentPrefix', filters.segmentPrefix);
+    }
+    if (filters?.market) {
+      params = params.set('market', filters.market);
+    }
+    if (filters?.metro) {
+      params = params.set('metro', filters.metro);
     }
     
     return this.http
@@ -69,10 +129,16 @@ export class TpsService {
     return this.http.post<void>(`${this.baseUrl}/violations/import`, {}, this.httpOptions);
   }
 
-  getCityScorecard(segmentPrefix?: string): Observable<CityScorecard[]> {
+  getCityScorecard(filters?: { segmentPrefix?: string; market?: MarketCode; metro?: string }): Observable<CityScorecard[]> {
     let params = new HttpParams();
-    if (segmentPrefix) {
-      params = params.set('segmentPrefix', segmentPrefix);
+    if (filters?.segmentPrefix) {
+      params = params.set('segmentPrefix', filters.segmentPrefix);
+    }
+    if (filters?.market) {
+      params = params.set('market', filters.market);
+    }
+    if (filters?.metro) {
+      params = params.set('metro', filters.metro);
     }
     
     return this.http
@@ -89,6 +155,9 @@ export class TpsService {
 
     if (query.segment) params = params.set('segment', query.segment);
     if (query.city) params = params.set('city', query.city);
+    if (query.market) params = params.set('market', query.market);
+    if (query.metro) params = params.set('metro', query.metro);
+    if (query.segmentPrefix) params = params.set('segmentPrefix', query.segmentPrefix);
     if (query.claimMonthFrom) params = params.set('claimMonthFrom', query.claimMonthFrom.toISOString());
     if (query.claimMonthTo) params = params.set('claimMonthTo', query.claimMonthTo.toISOString());
     params = params.set('page', String(query.page ?? 1));

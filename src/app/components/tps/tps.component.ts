@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { SummaryComponent } from './summary/summary.component';
-import { TpsService, CityOption } from 'src/app/services/tps.service';
+import { TpsService, CityOption, MarketOption } from 'src/app/services/tps.service';
 
 @Component({
   selector: 'app-tps',
@@ -9,13 +9,24 @@ import { TpsService, CityOption } from 'src/app/services/tps.service';
 })
 export class TpsComponent {
   activeTab = 0;
+  markets: MarketOption[] = [];
   cities: CityOption[] = [];
+  selectedMarket!: MarketOption;
   selectedCity: CityOption | null = null;
 
   @ViewChild(SummaryComponent) dashboard?: SummaryComponent;
 
   constructor(public tpsService: TpsService) {
-    this.cities = this.tpsService.cities;
+    this.markets = this.tpsService.markets;
+    this.selectedMarket = this.tpsService.selectedMarket;
+    this.cities = this.tpsService.getCitiesForMarket(this.selectedMarket.code);
+    this.selectedCity = this.tpsService.selectedCity;
+  }
+
+  onMarketChange(market: MarketOption): void {
+    this.selectedMarket = market;
+    this.cities = this.tpsService.getCitiesForMarket(market.code);
+    this.tpsService.setSelectedMarket(market);
     this.selectedCity = this.tpsService.selectedCity;
   }
 

@@ -2,17 +2,31 @@
   <div class="header-section">
     <div class="header-content">
       <h2>TPS Reports</h2>
-      <div class="city-selector">
-        <label for="citySelect">City:</label>
-        <p-select 
-          id="citySelect"
-          [options]="cities" 
-          [(ngModel)]="selectedCity"
-          (onChange)="onCityChange($event.value)"
-          optionLabel="displayName"
-          [style]="{'width': '250px'}"
-          placeholder="Select a city">
-        </p-select>
+      <div class="selectors">
+        <div class="selector">
+          <label for="marketSelect">Market:</label>
+          <p-select
+            id="marketSelect"
+            [options]="markets"
+            [(ngModel)]="selectedMarket"
+            (onChange)="onMarketChange($event.value)"
+            optionLabel="label"
+            [style]="{ 'width': '170px' }"
+            placeholder="Select market">
+          </p-select>
+        </div>
+        <div class="selector">
+          <label for="citySelect">City/Metro:</label>
+          <p-select 
+            id="citySelect"
+            [options]="cities" 
+            [(ngModel)]="selectedCity"
+            (onChange)="onCityChange($event.value)"
+            optionLabel="displayName"
+            [style]="{'width': '250px'}"
+            placeholder="Select a city/metro">
+          </p-select>
+        </div>
       </div>
     </div>
     <p-divider />

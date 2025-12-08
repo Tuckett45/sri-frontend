@@ -1,10 +1,10 @@
 import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder } from '@angular/forms';
-import { TpsService } from 'src/app/services/tps.service';
+import { TpsService, MarketOption, CityOption } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
 import { MatSort } from '@angular/material/sort';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-violations',
@@ -46,15 +46,9 @@ export class ViolationsComponent implements OnInit, OnDestroy {
       return (item as any)[property];
     };
     
-    // Load violations for initial city
-    this.loadViolations();
-    
-    // Subscribe to city changes
-    this.tpsService.selectedCity$
+    combineLatest([this.tpsService.selectedMarket$, this.tpsService.selectedCity$])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.loadViolations();
-      });
+      .subscribe(([market, city]) => this.loadViolations(market, city));
     
     this.filterForm.valueChanges
       .pipe(takeUntil(this.destroy$))
@@ -66,9 +60,9 @@ export class ViolationsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadViolations() {
-    const segmentPrefix = this.tpsService.selectedCity.segmentPrefix;
-    this.tpsService.getViolations(segmentPrefix).subscribe(res => {
+  loadViolations(market: MarketOption, city: CityOption) {
+    const segmentPrefix = city.segmentPrefix;
+    this.tpsService.getViolations({ market: market.code, segmentPrefix, metro: city.name }).subscribe(res => {
       this.violations = res;
       this.applyFilters();
     });

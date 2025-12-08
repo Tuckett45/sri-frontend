@@ -2,9 +2,9 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
-import { Subject, startWith, switchMap, takeUntil, tap } from 'rxjs';
+import { Subject, combineLatest, startWith, switchMap, takeUntil, tap } from 'rxjs';
 import { BudgetTrackerRow } from '../../../models/budget-tracker.model';
-import { TpsService } from 'src/app/services/tps.service';
+import { CityOption, MarketOption, TpsService } from 'src/app/services/tps.service';
 import { SelectItem } from 'primeng/api';
 
 @Component({
@@ -52,10 +52,14 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
 
   private reload$ = new Subject<void>();
   private destroy$ = new Subject<void>();
+  private activeMarket?: MarketOption;
+  private activeCity?: CityOption;
 
   constructor(private fb: FormBuilder, private tpsService: TpsService) {}
 
   ngOnInit(): void {
+    this.activeMarket = this.tpsService.selectedMarket;
+    this.activeCity = this.tpsService.selectedCity;
     this.loadOptions();
 
     this.reload$
@@ -72,6 +76,9 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
               Array.isArray(this.form.value.city) && this.form.value.city.length
                 ? this.form.value.city.join(',')
                 : undefined,
+            market: this.activeMarket?.code ?? undefined,
+            metro: this.activeCity?.name ?? undefined,
+            segmentPrefix: this.activeCity?.segmentPrefix ?? undefined,
             claimMonthFrom: this.form.value.claimMonthFrom || undefined,
             claimMonthTo: this.form.value.claimMonthTo || undefined,
             page: this.page,
@@ -116,12 +123,27 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
           this.loading = false;
         }
       });
+
+    combineLatest([this.tpsService.selectedMarket$, this.tpsService.selectedCity$])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([market, city]) => {
+        this.activeMarket = market;
+        this.activeCity = city;
+        this.applyFilters();
+        this.loadOptions(); // refresh dropdowns to match market/city scope
+      });
   }
 
   // Pull distinct filter options once
   private loadOptions(): void {
     this.tpsService
-      .get({ page: 1, pageSize: 1000 } as any)
+      .get({
+        page: 1,
+        pageSize: 1000,
+        market: this.activeMarket?.code ?? undefined,
+        metro: this.activeCity?.name ?? undefined,
+        segmentPrefix: this.activeCity?.segmentPrefix ?? undefined
+      } as any)
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         const items = res.items ?? [];
