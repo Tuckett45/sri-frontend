@@ -65,35 +65,35 @@ export class AuthService {
   }
 
   isClient() {
-      return this.userRole.getValue() === 'Client';
+      return this.userRole.getValue() === UserRole.Client;
   }
 
   isTemp(){
-    return this.userRole.getValue() === 'Temp';
+    return this.userRole.getValue() === UserRole.Temp;
   }
 
   isPM() {
-      return this.userRole.getValue() === 'PM';
+      return this.userRole.getValue() === UserRole.PM;
   }
 
   isCM() {
-      return this.userRole.getValue() === 'CM';
+      return this.userRole.getValue() === UserRole.CM;
   }
 
   isCoordinator() {
-    return this.userRole.getValue() === 'OSP Coordinator';
+    return this.userRole.getValue() === UserRole.OSPCoordinator;
   }
 
   isMarketController() {
-    return this.userRole.getValue() === 'Controller';
+    return this.userRole.getValue() === UserRole.Controller;
   }
 
   isAdmin() {
-    return this.userRole.getValue() === 'Admin';
+    return this.userRole.getValue() === UserRole.Admin;
   }
 
   isHR() {
-      return this.userRole.getValue() === 'HR';
+      return this.userRole.getValue() === UserRole.HR;
   }
 
   isLoggedIn(): boolean {
@@ -214,6 +214,6 @@ private resetCurrentUser(): void {
     } else {
         this.currentUser = null;
     }
-}
+  }
 
 }
