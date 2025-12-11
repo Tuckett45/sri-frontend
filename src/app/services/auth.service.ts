@@ -217,7 +217,7 @@ private resetCurrentUser(): void {
   }
 
   getPendingUsers(market?: string): Observable<any[]> {
-    let url = `${environment.apiUrl}/auth/users/pending`;
+    let url = `${local_environment.apiUrl}/auth/users/pending`;
     if (market) {
       url += `?market=${market}`;
     }
@@ -225,12 +225,12 @@ private resetCurrentUser(): void {
   }
 
   approveUser(userId: string): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/auth/users/${userId}/approve`, {}, this.httpOptions);
+    return this.http.post(`${local_environment.apiUrl}/auth/users/${userId}/approve`, {}, this.httpOptions);
   }
 
   rejectUser(userId: string, reason?: string): Observable<any> {
     const body = reason || '';
-    return this.http.post(`${environment.apiUrl}/auth/users/${userId}/reject`, JSON.stringify(body), this.httpOptions);
+    return this.http.post(`${local_environment.apiUrl}/auth/users/${userId}/reject`, JSON.stringify(body), this.httpOptions);
   }
 
 }

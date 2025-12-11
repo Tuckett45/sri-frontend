@@ -72,6 +72,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.featureFlags.flagEnabled('notifications')()
     },
     {
+      label: 'Approvals',
+      route: '/admin/user-approvals',
+      shouldShow: () => this.authService.isAdmin() || this.authService.isHR()
+    },
+    {
       label: 'Profile',
       route: '/profile',
       shouldShow: () => true,

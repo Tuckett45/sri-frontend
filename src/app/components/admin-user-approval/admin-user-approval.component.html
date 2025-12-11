@@ -35,8 +35,8 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <div *ngIf="!loading && filteredUsers.length > 0" class="table-container">
-    <table mat-table [dataSource]="filteredUsers" class="user-table">
+  <div *ngIf="!loading && filteredUsers.length > 0" class="table-wrapper card">
+    <table mat-table [dataSource]="filteredUsers" class="user-table mat-elevation-z8">
       <!-- Name Column -->
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef>Name</th>
@@ -81,14 +81,16 @@
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>Actions</th>
         <td mat-cell *matCellDef="let user">
-          <button mat-raised-button color="primary" (click)="approveUser(user)" class="action-btn">
-            <mat-icon>check_circle</mat-icon>
-            Approve
-          </button>
-          <button mat-raised-button color="warn" (click)="rejectUser(user)" class="action-btn">
-            <mat-icon>cancel</mat-icon>
-            Reject
-          </button>
+          <div class="actions-cell">
+            <button mat-raised-button color="primary" (click)="approveUser(user)" class="action-btn approve-btn">
+              <mat-icon>check_circle</mat-icon>
+              Approve
+            </button>
+            <button mat-raised-button color="warn" (click)="rejectUser(user)" class="action-btn reject-btn">
+              <mat-icon>cancel</mat-icon>
+              Reject
+            </button>
+          </div>
         </td>
       </ng-container>
 
