@@ -50,8 +50,8 @@ export class AdminUserApprovalComponent implements OnInit {
     if (this.searchTerm) {
       const search = this.searchTerm.toLowerCase();
       filtered = filtered.filter(user => 
-        user.name?.toLowerCase().includes(search) ||
-        user.email?.toLowerCase().includes(search)
+        user.Name?.toLowerCase().includes(search) ||
+        user.Email?.toLowerCase().includes(search)
       );
     }
     
@@ -67,10 +67,10 @@ export class AdminUserApprovalComponent implements OnInit {
   }
 
   approveUser(user: any): void {
-    if (confirm(`Are you sure you want to approve ${user.name}?`)) {
-      this.authService.approveUser(user.id).subscribe({
+    if (confirm(`Are you sure you want to approve ${user.Name}?`)) {
+      this.authService.approveUser(user.Id).subscribe({
         next: () => {
-          this.toastr.success(`${user.name} has been approved`);
+          this.toastr.success(`${user.Name} has been approved`);
           this.loadPendingUsers();
         },
         error: (error) => {
@@ -82,11 +82,11 @@ export class AdminUserApprovalComponent implements OnInit {
   }
 
   rejectUser(user: any): void {
-    const reason = prompt(`Enter a reason for rejecting ${user.name} (optional):`);
+    const reason = prompt(`Enter a reason for rejecting ${user.Name} (optional):`);
     if (reason !== null) { // null means cancelled, empty string is ok
-      this.authService.rejectUser(user.id, reason).subscribe({
+      this.authService.rejectUser(user.Id, reason).subscribe({
         next: () => {
-          this.toastr.success(`${user.name} has been rejected`);
+          this.toastr.success(`${user.Name} has been rejected`);
           this.loadPendingUsers();
         },
         error: (error) => {
@@ -109,19 +109,19 @@ export class AdminUserApprovalComponent implements OnInit {
 
   getRoleDisplayName(role: number): string {
     const roleMap: { [key: number]: string } = {
-      0: 'Admin',
-      1: 'Project Manager',
-      2: 'Superintendent',
-      3: 'Foreman',
-      4: 'Lead Technician',
-      5: 'Technician',
-      6: 'Warehouse',
-      7: 'Accounting',
-      8: 'Sales',
-      9: 'Engineering',
-      10: 'Customer Service',
-      11: 'HR',
-      12: 'Other'
+      0: 'User',
+      1: 'Technician',
+      2: 'Deployment Engineer',
+      3: 'PM',
+      4: 'CM',
+      5: 'Admin',
+      6: 'DCOps',
+      7: 'VendorRep',
+      8: 'SRITech',
+      9: 'HR',
+      10: 'Client',
+      11: 'OSP Coordinator',
+      12: 'Controller'
     };
     return roleMap[role] || 'Unknown';
   }

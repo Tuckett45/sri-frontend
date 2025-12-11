@@ -40,20 +40,20 @@
       <!-- Name Column -->
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef>Name</th>
-        <td mat-cell *matCellDef="let user">{{ user.name }}</td>
+        <td mat-cell *matCellDef="let user">{{ user.Name || 'N/A' }}</td>
       </ng-container>
 
       <!-- Email Column -->
       <ng-container matColumnDef="email">
         <th mat-header-cell *matHeaderCellDef>Email</th>
-        <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+        <td mat-cell *matCellDef="let user">{{ user.Email || 'N/A' }}</td>
       </ng-container>
 
       <!-- Role Column -->
       <ng-container matColumnDef="role">
         <th mat-header-cell *matHeaderCellDef>Role</th>
         <td mat-cell *matCellDef="let user">
-          <span class="role-badge">{{ getRoleDisplayName(user.role) }}</span>
+          <span class="role-badge">{{ getRoleDisplayName(user.Role) }}</span>
         </td>
       </ng-container>
 
@@ -61,20 +61,20 @@
       <ng-container matColumnDef="market">
         <th mat-header-cell *matHeaderCellDef>Market</th>
         <td mat-cell *matCellDef="let user">
-          <span class="market-badge">{{ user.market }}</span>
+          <span class="market-badge">{{ user.Market || 'N/A' }}</span>
         </td>
       </ng-container>
 
       <!-- Company Column -->
       <ng-container matColumnDef="company">
         <th mat-header-cell *matHeaderCellDef>Company</th>
-        <td mat-cell *matCellDef="let user">{{ user.company || 'N/A' }}</td>
+        <td mat-cell *matCellDef="let user">{{ user.Company || 'N/A' }}</td>
       </ng-container>
 
       <!-- Created Date Column -->
       <ng-container matColumnDef="createdDate">
         <th mat-header-cell *matHeaderCellDef>Registration Date</th>
-        <td mat-cell *matCellDef="let user">{{ formatDate(user.createdDate) }}</td>
+        <td mat-cell *matCellDef="let user">{{ formatDate(user.CreatedDate) || 'N/A' }}</td>
       </ng-container>
 
       <!-- Actions Column -->

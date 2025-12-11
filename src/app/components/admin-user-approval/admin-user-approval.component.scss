@@ -154,7 +154,7 @@
   td {
     padding: 12px 14px;
     text-align: center;
-    color: #f5f5f5;
+    color: #fefefe;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
@@ -181,10 +181,18 @@
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
-    background: rgba(255, 255, 255, 0.08);
-    color: #f5f5f5;
-    border: 1px solid rgba(255, 255, 255, 0.15);
     min-width: 86px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .role-badge {
+    background: #e3f2fd;
+    color: #144f80;
+  }
+
+  .market-badge {
+    background: #f3e5f5;
+    color: #7b1fa2;
   }
 
   .actions-cell {
