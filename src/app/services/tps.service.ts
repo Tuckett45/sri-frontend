@@ -69,7 +69,10 @@ export class TpsService {
     {
       code: 'AZ',
       label: 'Arizona (AZ)',
-      cities: [{ name: 'Phoenix, AZ', displayName: 'Phoenix', market: 'AZ', segmentPrefix: 'PHX' }]
+      cities: [
+        { name: 'Phoenix, AZ', displayName: 'Phoenix', market: 'AZ', segmentPrefix: 'PHX' },
+        { name: 'Mesa, AZ', displayName: 'Mesa', market: 'AZ', segmentPrefix: 'MES' }
+      ]
     },
     {
       code: 'NV',
