@@ -1,0 +1,527 @@
+.user-approval-container {
+  max-width: 1400px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #e7e5e5 !important;
+  box-sizing: border-box;
+}
+
+.header {
+  margin-bottom: 32px;
+  
+  h1 {
+    font-size: 32px;
+    color: #1a1a1a;
+    margin: 0 0 8px 0;
+    background: #144f80;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .subtitle {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+  }
+}
+
+.filter-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  .search-field {
+    display: flex;
+    background-color: #525252; 
+
+    mat-form-field {
+      width: 50%;
+
+      input {
+        padding-left: 2px;
+      }
+
+      mat-icon {
+        color: #e18a25;
+      }
+    }
+  }
+  
+  .market-filter {
+    display: flex;
+    background-color: #525252; 
+
+    mat-form-field {
+      width: 50%;
+
+      input {
+        padding-left: 2px;
+      }
+
+      mat-icon {
+        color: #e18a25;
+      }
+    }
+  }
+  
+  .refresh-btn {
+    height: 56px;
+    min-width: 140px;
+    border-radius: 999px;
+    background-color: #e18a25; /* Use accent color for the chip background */
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    letter-spacing: 0.2px;
+
+    &:hover {
+      background-color: #b86404;
+    }
+
+    mat-icon {
+      margin-right: 8px;
+      color: #ffffff;
+    }
+  }
+
+  mat-form-field {
+    height: 56px;
+    --mdc-filled-text-field-container-color: transparent;
+    --mdc-outlined-text-field-outline-color: #c7c7c7;
+
+    mat-label {
+      color: #e18a25;
+    }
+  }
+}
+
+.stats-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #144f80 0%, #e18a25 100%);
+  color: white;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 18px;
+  font-weight: 500;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 0;
+}
+
+.table-wrapper {
+  margin-top: 8px;
+  overflow-x: auto;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
+  table {
+    width: 100%;
+    min-width: 960px;
+    border-spacing: 0;
+  }
+
+  th {
+    background-color: #e18a25;
+    color: #ffffff;
+    padding: 12px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    text-align: center;
+  }
+
+  td {
+    padding: 12px 14px;
+    text-align: center;
+    color: #fefefe;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  tr:nth-child(odd) {
+    background-color: #000000;
+  }
+
+  tr:nth-child(even) {
+    background-color: #525252;
+  }
+
+  .user-row {
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #3a3a3a;
+    }
+  }
+
+  .role-badge,
+  .market-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 86px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .role-badge {
+    background: #e3f2fd;
+    color: #144f80;
+  }
+
+  .market-badge {
+    background: #f3e5f5;
+    color: #7b1fa2;
+  }
+
+  .actions-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    min-width: 110px;
+    border-radius: 999px;
+
+    mat-icon {
+      margin-right: 6px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .approve-btn {
+    background-color: #0baa06;
+    color: #ffffff;
+
+    &:hover {
+      background-color: #066303;
+    }
+  }
+
+  .reject-btn {
+    background-color: #f44336;
+    color: #ffffff;
+
+    &:hover {
+      background-color: #d32f2f;
+    }
+  }
+
+  ::ng-deep .mat-mdc-paginator-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding: 0 8px;
+    flex-wrap: wrap;
+    width: 100%;
+    min-height: var(--mat-paginator-container-size);
+  }
+
+  ::ng-deep .mat-mdc-raised-button .mat-icon {
+    display: inline-block;
+    position: relative;
+    vertical-align: top;
+    font-size: 1.125rem;
+    height: 1.125rem;
+    width: 1.3rem !important;
+    padding-right: 10px;
+  }
+
+  ::ng-deep .mat-sort-header-container {
+    justify-content: center !important;
+  }
+
+  ::ng-deep .mat-mdc-cell{
+    justify-content: center !important;
+  }
+
+  ::ng-deep .p-tab{
+    flex-shrink: 2 !important;
+    white-space: pre-wrap !important;
+  }
+
+  ::ng-deep .p-tablist-tab-list {
+    position: relative;
+    display: flex;
+    border-style: none !important;
+  }
+
+  ::ng-deep .p-overlaybadge {
+    position: relative !important;
+    color: black;
+    font-size: .85rem;
+    padding: .5rem .5rem;
+  }
+
+  ::ng-deep .p-overlaybadge .p-badge {
+    position: relative !important;
+    transform: translate(50%, -50%);
+    transform-origin: 100% 0;
+    margin: 0;
+    padding-left: 5px;
+    outline-style: none !important;
+  }
+  ::ng-deep .p-badge {
+    display: initial !important;
+  }
+
+  ::ng-deep .p-galleria-mask {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  ::ng-deep .p-overlay-mask {
+    background: rgba(0,0,0,0.4) !important;
+    color: #e2e8f0 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  ::ng-deep .p-galleria-content {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  ::ng-deep .p-galleria {
+    overflow: hidden !important;
+    border-style: solid !important;
+    border-color: white !important;
+    border-radius: 5px !important;
+  }
+
+  ::ng-deep .p-galleria-thumbnails-content {
+    display: flex !important;
+    flex-direction: row !important;
+    border-color: white !important;
+    padding: 1rem 0.25rem !important;
+  }
+
+  ::ng-deep .p-galleria-item {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 100% !important;
+    width: 100% !important;
+    background-color: white !important;
+  }
+
+  ::ng-deep .p-galleria-thumbnails-viewport {
+    overflow: hidden !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  ::ng-deep .p-galleria-close-button {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0.5rem !important;
+    background: rgba(255,255,255,0.1) !important;
+    color: #f8fafc !important;
+    width: 3rem !important;
+    height: 3rem !important;
+    padding: 0 !important;
+    border: none !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    border-radius: 50% !important;
+    outline-color: transparent !important;
+    transition: background 0.2s, color 0.2s, outline-color 0.2s !important;
+  }
+
+  ::ng-deep .p-galleria-close-icon {
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  ::ng-deep .p-galleria-close-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+  }
+
+  ::ng-deep .p-galleria-close-button:focus-visible {
+    box-shadow: none;
+    outline: 1px solid #020617;
+    outline-offset: 2px;
+  }
+
+  ::ng-deep .p-galleria-mask .p-galleria-nav-button {
+    position: fixed !important;
+    background-color: #144f80 !important; /* Customize next/back button color */
+    color: #e18a25 !important;
+    border-radius: 50% !important;
+    width: 55px !important;
+    height: 55px !important;
+    margin-left: 25px !important;
+    margin-right: 25px !important;
+
+    &:hover{
+      &:hover {
+        color: #ffffff;
+      } 
+    }
+  }
+
+  ::ng-deep .p-overlay-mask-enter {
+    animation: p-overlay-mask-enter-animation 0.15s forwards;
+  }
+
+  ::ng-deep .p-galleria-thumbnail-nav-button {
+    align-self: center !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    position: relative !important;
+    margin: 0 0.5rem !important;
+    padding: 0 !important;
+    border: none !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    color: #272727 !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    transition: background 0.2s, color 0.2s, outline-color 0.2s !important;
+    outline-color: transparent !important;
+    border-radius: 6px !important;
+  }
+
+  ::ng-deep .p-galleria-thumbnails {
+    display: flex !important;
+    background: #f8fafc !important;
+    padding: 1rem 0.25rem !important;
+    flex-direction: column !important;
+    overflow: auto !important;
+    flex-shrink: 0 !important;
+    justify-content: center !important;
+  }
+
+  :ng-deep .p-galleria-thumbnail-items {
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  ::ng-deep .p-galleria-thumbnail-item {
+      overflow: auto !important;
+      display: flex!important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      opacity: 0.5 !important;
+  }
+
+  :root{
+    --p-galleria-close-button-size: 3rem;
+      --p-galleria-close-button-gutter: 0.5rem;
+      --p-galleria-close-button-background: rgba(255, 255, 255, 0.1);
+      --p-galleria-close-button-hover-background: rgba(255, 255, 255, 0.2);
+      --p-galleria-close-button-color: #144f80;
+      --p-galleria-close-button-hover-color: #ffffff;
+      --p-galleria-close-button-border-radius: 50%;
+      --p-galleria-close-button-focus-ring-width: 1px;
+      --p-galleria-close-button-focus-ring-style: solid;
+      --p-galleria-close-button-focus-ring-color: #020617;
+      --p-galleria-close-button-focus-ring-offset: 2px;
+      --p-galleria-close-button-focus-ring-shadow: none;
+      --p-galleria-close-button-icon-size: 1.5rem;
+
+    ::ng-deep .mat-mdc-table {
+      background: transparent;
+    }
+
+    ::ng-deep .mat-mdc-header-row {
+      background: transparent;
+    }
+
+    ::ng-deep .mat-mdc-row {
+      border: none;
+    }
+
+    ::ng-deep .mat-mdc-cell,
+    ::ng-deep .mat-mdc-header-cell {
+      text-align: center;
+    }
+  }
+
+.empty-state {
+  text-align: center;
+  padding: 80px 24px;
+  color: #666;
+  
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #4caf50;
+    margin-bottom: 16px;
+  }
+  
+  h2 {
+    font-size: 24px;
+    font-weight: 500;
+    margin: 0 0 8px 0;
+    color: #1a1a1a;
+  }
+  
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-container {
+    flex-direction: column;
+    
+    .search-field,
+    .market-filter,
+    .refresh-btn {
+      width: 100%;
+    }
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+  }
+}
+}

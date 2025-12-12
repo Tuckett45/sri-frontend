@@ -58,6 +58,7 @@ import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { OspCoordinatorModalComponent } from './components/modals/osp-coordinator-modal/osp-coordinator-modal.component';
 import { MarketControllerComponent } from './components/market-controller/market-controller.component';
+import { AdminUserApprovalComponent } from './components/admin-user-approval/admin-user-approval.component';
 import { MarketControllerModalComponent } from './components/modals/market-controller-modal/market-controller-modal.component';
 import { PreliminaryPunchListModule } from './components/preliminary-punch-list/preliminary-punch-list.module';
 import { GoalsComponent } from './components/overview/goals/goals.component';
@@ -131,7 +132,8 @@ export const customCurrencyMaskConfig = {
     MarketControllerComponent,
     MarketControllerModalComponent,
     UserNotificationsComponent,
-    DailyReportModalComponent
+    DailyReportModalComponent,
+    AdminUserApprovalComponent
   ],
   imports: [
     NgxCurrencyDirective,
