@@ -49,6 +49,7 @@ export class ExpenseReportModalComponent implements OnDestroy {
 
   jobs: string[] = [
     '23471 - David Nottingham O/H',
+    '23476 - Pete Bruno O/H',
     '44346 GFIBER-UT-SLC-RM-OLT',
     '44384 GFIBER-NV-LAS-PERMIT PCKG',
     '44562 GFIBER-UT-SLC-RM-LIGHTC...',
