@@ -11,6 +11,7 @@ import { MarketControllerComponent } from './components/market-controller/market
 import { DeploymentListComponent } from './components/deployments/deployment-list/deployment-list.component';
 import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
 import { AdminUserApprovalComponent } from './components/admin-user-approval/admin-user-approval.component';
+import { TechniciansListComponent } from './components/ark/technicians-list.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -23,6 +24,7 @@ const routes: Routes = [
   { path: 'market-controller-tracker', component: MarketControllerComponent, canActivate: [AuthGuard] },
   { path: 'my-deployments', component: DeploymentListComponent, canActivate: [AuthGuard] },
   { path: 'admin/user-approvals', component: AdminUserApprovalComponent, canActivate: [AuthGuard] },
+  { path: 'ark/technicians', component: TechniciansListComponent, canActivate: [AuthGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'preliminary-punch-list', loadChildren: () => import('./components/preliminary-punch-list/preliminary-punch-list.module').then(m => m.PreliminaryPunchListModule), canActivate: [AuthGuard] },
   { path: 'expenses', loadChildren: () => import('./components/expense/expense.module').then(m => m.ExpenseModule), canActivate: [AuthGuard] },
