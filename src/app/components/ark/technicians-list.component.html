@@ -1,0 +1,149 @@
+<div class="technicians-container">
+  <div class="card">
+    <div class="card-header">
+      <h2>Technicians Management</h2>
+      <button pButton type="button" label="Add Technician" icon="pi pi-plus" (click)="showCreateDialog()"></button>
+    </div>
+
+    <p-table 
+      [value]="technicians" 
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [globalFilterFields]="['fullName', 'email', 'employeeId', 'department', 'assignedRegion']"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="caption">
+        <div class="flex">
+          <span class="p-input-icon-left ml-auto">
+            <i class="pi pi-search"></i>
+            <input 
+              pInputText 
+              type="text" 
+              placeholder="Search technicians..."
+              (input)="$any($event.target).value"
+            />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="fullName">Name <p-sortIcon field="fullName"></p-sortIcon></th>
+          <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+          <th pSortableColumn="employeeId">Employee ID <p-sortIcon field="employeeId"></p-sortIcon></th>
+          <th pSortableColumn="department">Department <p-sortIcon field="department"></p-sortIcon></th>
+          <th pSortableColumn="assignedRegion">Region <p-sortIcon field="assignedRegion"></p-sortIcon></th>
+          <th pSortableColumn="employmentStatus">Status <p-sortIcon field="employmentStatus"></p-sortIcon></th>
+          <th>Available</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-tech>
+        <tr>
+          <td>{{ tech.fullName }}</td>
+          <td>{{ tech.email }}</td>
+          <td>{{ tech.employeeId }}</td>
+          <td>{{ tech.department }}</td>
+          <td>{{ tech.assignedRegion }}</td>
+          <td>
+            <span [class]="'status-badge status-' + tech.employmentStatus.toLowerCase()">
+              {{ tech.employmentStatus }}
+            </span>
+          </td>
+          <td>
+            <i [class]="tech.isAvailable ? 'pi pi-check-circle text-green' : 'pi pi-times-circle text-red'"></i>
+          </td>
+          <td>
+            <button 
+              pButton 
+              type="button" 
+              icon="pi pi-pencil" 
+              class="p-button-rounded p-button-text p-button-primary"
+              (click)="showEditDialog(tech)"
+            ></button>
+            <button 
+              pButton 
+              type="button" 
+              icon="pi pi-trash" 
+              class="p-button-rounded p-button-text p-button-danger"
+              (click)="deleteTechnician(tech)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" style="text-align: center;">No technicians found</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog 
+  [(visible)]="displayDialog" 
+  [header]="isEditing ? 'Edit Technician' : 'Create Technician'"
+  [modal]="true"
+  [style]="{width: '50vw'}"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="form-grid">
+    <div class="field">
+      <label for="firstName">First Name *</label>
+      <input id="firstName" type="text" pInputText [(ngModel)]="technicianForm.firstName" class="w-full" required />
+    </div>
+
+    <div class="field">
+      <label for="lastName">Last Name *</label>
+      <input id="lastName" type="text" pInputText [(ngModel)]="technicianForm.lastName" class="w-full" required />
+    </div>
+
+    <div class="field">
+      <label for="email">Email *</label>
+      <input id="email" type="email" pInputText [(ngModel)]="technicianForm.email" class="w-full" required />
+    </div>
+
+    <div class="field">
+      <label for="phoneNumber">Phone Number</label>
+      <input id="phoneNumber" type="tel" pInputText [(ngModel)]="technicianForm.phoneNumber" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label for="employeeId">Employee ID</label>
+      <input id="employeeId" type="text" pInputText [(ngModel)]="technicianForm.employeeId" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label for="hireDate">Hire Date *</label>
+      <p-calendar id="hireDate" [(ngModel)]="technicianForm.hireDate" dateFormat="yy-mm-dd" class="w-full"></p-calendar>
+    </div>
+
+    <div class="field">
+      <label for="department">Department</label>
+      <input id="department" type="text" pInputText [(ngModel)]="technicianForm.department" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label for="homeBase">Home Base</label>
+      <input id="homeBase" type="text" pInputText [(ngModel)]="technicianForm.homeBase" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label for="assignedRegion">Assigned Region</label>
+      <input id="assignedRegion" type="text" pInputText [(ngModel)]="technicianForm.assignedRegion" class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" icon="pi pi-times" class="p-button-text" (click)="displayDialog = false"></button>
+    <button pButton type="button" label="Save" icon="pi pi-check" (click)="saveTechnician()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
+
