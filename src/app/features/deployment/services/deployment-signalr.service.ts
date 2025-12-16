@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { ToastrService } from 'ngx-toastr';
 import { DeploymentPushNotificationService } from './deployment-push-notification.service';
-import { environment } from 'src/environments/environments';
+import { environment, local_environment } from 'src/environments/environments';
 import { FeatureFlagService } from 'src/app/services/feature-flag.service';
 
 export interface DeploymentNotification {
@@ -63,10 +63,11 @@ export class DeploymentSignalRService {
 
     try {
       // Build the SignalR hub connection
+      const hubUrl = this.getHubUrl();
+
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(`${environment.apiUrl}/deploymentHub`, {
-          skipNegotiation: true,
-          transport: signalR.HttpTransportType.WebSockets,
+        .withUrl(hubUrl, {
+          // allow negotiation so the correct transport is chosen and the negotiate route exists
           accessTokenFactory: () => this.getAuthToken()
         })
         .withAutomaticReconnect({
@@ -543,6 +544,16 @@ export class DeploymentSignalRService {
     // Get token from localStorage or auth service
     const token = localStorage.getItem('token') || '';
     return token;
+  }
+
+  /**
+   * Build the SignalR hub URL based on environment, ensuring we hit the real hub path
+   * (the hub is not behind the /api route).
+   */
+  private getHubUrl(): string {
+    const apiRoot = environment.production ? environment.apiUrl : local_environment.apiUrl;
+    const base = apiRoot.replace(/\/api\/?$/, '');
+    return `${base}/hubs/deployments`;
   }
 
   /**

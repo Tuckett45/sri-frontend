@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, map, shareReplay, BehaviorSubject } from 'rxjs';
-import { environment } from 'src/environments/environments';
+import { environment, local_environment } from 'src/environments/environments';
 import { WPViolation } from '../models/wp-violation.model';
 import { CityScorecard } from '../models/city-scorecard.model';
 import { BudgetTrackerRow, PaginatedResponse, BudgetTrackerApiRow, toBudgetTrackerRow } from '../models/budget-tracker.model';
@@ -130,7 +130,7 @@ export class TpsService {
   };
 
   // Use the active build environment's API base URL
-  private baseUrl = `${environment.apiUrl}/tps`;
+  private baseUrl = `${local_environment.apiUrl}/tps`;
 
   constructor(private http: HttpClient) {}
 
