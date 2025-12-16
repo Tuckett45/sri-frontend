@@ -77,8 +77,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
                 ? this.form.value.city.join(',')
                 : undefined,
             market: this.activeMarket?.code ?? undefined,
-            metro: this.activeCity?.name ?? undefined,
-            segmentPrefix: this.activeCity?.segmentPrefix ?? undefined,
+            metro: this.activeCity && !this.activeCity.isAll ? this.activeCity.name : undefined,
+            segmentPrefix: this.activeCity && !this.activeCity.isAll ? this.activeCity.segmentPrefix : undefined,
             claimMonthFrom: this.form.value.claimMonthFrom || undefined,
             claimMonthTo: this.form.value.claimMonthTo || undefined,
             page: this.page,
@@ -141,8 +141,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
         page: 1,
         pageSize: 1000,
         market: this.activeMarket?.code ?? undefined,
-        metro: this.activeCity?.name ?? undefined,
-        segmentPrefix: this.activeCity?.segmentPrefix ?? undefined
+        metro: this.activeCity && !this.activeCity.isAll ? this.activeCity.name : undefined,
+        segmentPrefix: this.activeCity && !this.activeCity.isAll ? this.activeCity.segmentPrefix : undefined
       } as any)
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {

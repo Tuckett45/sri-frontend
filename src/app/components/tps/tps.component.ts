@@ -20,14 +20,18 @@ export class TpsComponent {
     this.markets = this.tpsService.markets;
     this.selectedMarket = this.tpsService.selectedMarket;
     this.cities = this.tpsService.getCitiesForMarket(this.selectedMarket.code);
-    this.selectedCity = this.tpsService.selectedCity;
+    this.selectedCity = this.tpsService.selectedCity ?? this.tpsService.getDefaultCityForMarket(this.selectedMarket.code);
   }
 
   onMarketChange(market: MarketOption): void {
+    this.tpsService.setSelectedMarket(market);
     this.selectedMarket = market;
     this.cities = this.tpsService.getCitiesForMarket(market.code);
-    this.tpsService.setSelectedMarket(market);
-    this.selectedCity = this.tpsService.selectedCity;
+    const fallbackCity = this.tpsService.getDefaultCityForMarket(market.code);
+    if (fallbackCity) {
+      this.selectedCity = fallbackCity;
+      this.tpsService.setSelectedCity(fallbackCity);
+    }
   }
 
   onCityChange(city: CityOption): void {

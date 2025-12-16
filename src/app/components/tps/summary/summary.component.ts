@@ -15,6 +15,7 @@ import { WPViolation } from 'src/app/models/wp-violation.model';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
 import { SelectItem } from 'primeng/api';
 import { Subscription, combineLatest, switchMap } from 'rxjs';
+import { CityOption, MarketOption } from 'src/app/services/tps.service';
 
 @Component({
   selector: 'app-tps-summary',
@@ -83,6 +84,11 @@ export class SummaryComponent implements OnInit, AfterViewInit, OnDestroy {
   doughnutChartOptions: any;
   chartOptions: any;
   refreshTick = 0;
+
+  // Context labels for the dashboard header
+  marketLabel = '';
+  cityLabel = '';
+  viewingLabel = '';
 
   // --- Base profile (desktop-ish) ---
   private baseOptions: any = {
@@ -348,28 +354,33 @@ export class SummaryComponent implements OnInit, AfterViewInit, OnDestroy {
   // ===== Data fetching & shaping =====
   private subscribeToData(): void {
     this.dataSub?.unsubscribe();
-    this.dataSub = combineLatest([this.tpsService.selectedMarket$, this.tpsService.selectedCity$])
-      .pipe(
-        switchMap(([market, city]) =>
-          combineLatest([
-            this.tpsService.getViolations({ market: market.code, segmentPrefix: city.segmentPrefix, metro: city.name }),
-            this.tpsService.getCityScorecard({ market: market.code, segmentPrefix: city.segmentPrefix, metro: city.name })
-          ])
-        )
-      )
-      .subscribe({
-        next: ([violations, cities]) => this.processData(violations, cities),
-        error: _ => this.processData([], [])
-      });
+    this.dataSub = combineLatest([this.tpsService.selectedMarket$, this.tpsService.selectedCity$]).pipe(
+      switchMap(([market, city]) => {
+        this.updateContextLabels(market, city);
+        const filters: { market: MarketOption['code']; segmentPrefix?: string; metro?: string } = { market: market.code };
+        if (city && !city.isAll) {
+          filters.segmentPrefix = city.segmentPrefix;
+          filters.metro = city.name;
+        }
+        return combineLatest([
+          this.tpsService.getViolations(filters),
+          this.tpsService.getCityScorecard(filters)
+        ]);
+      })
+    )
+    .subscribe({
+      next: ([violations, cities]) => this.processData(violations, cities),
+      error: _ => this.processData([], [])
+    });
   }
 
   private processData(violations: WPViolation[], cities: CityScorecard[]): void {
     this.violations = violations ?? [];
     this.cities = cities ?? [];
 
-    const vendors  = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
-    const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
-    const cityList = Array.from(new Set(this.cities.map(c => c.city).filter(Boolean)));
+    const vendors  = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean))).sort((a, b) => a!.localeCompare(b!));
+    const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean))).sort((a, b) => a!.localeCompare(b!));
+    const cityList = Array.from(new Set(this.cities.map(c => c.city).filter(Boolean))).sort((a, b) => a!.localeCompare(b!));
 
     this.vendorOptions  = vendors.map(v => ({ label: v!, value: v! }));
     this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
@@ -487,6 +498,7 @@ export class SummaryComponent implements OnInit, AfterViewInit, OnDestroy {
         : true;
       return matchesVendor && matchesCity;
     });
+    const sortedCities = [...filteredCities].sort((a, b) => (a.city ?? '').localeCompare(b.city ?? ''));
 
     this.cityCount = filteredCities.length;
     this.forecastedAllInTotal = filteredCities.reduce((sum, c) => sum + this.num(c.forecastedAllIn), 0);
@@ -526,9 +538,9 @@ export class SummaryComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     // Bar chart: All-In by City
-    const allInLabels     = filteredCities.map(c => c.city ?? '');
-    const allInForecasted = filteredCities.map(c => this.num(c.forecastedAllIn));
-    const allInActual     = filteredCities.map(c => this.num(c.actualAllIn));
+    const allInLabels     = sortedCities.map(c => c.city ?? '');
+    const allInForecasted = sortedCities.map(c => this.num(c.forecastedAllIn));
+    const allInActual     = sortedCities.map(c => this.num(c.actualAllIn));
     const allInRemaining  = allInForecasted.map((f, i) => f - (allInActual[i] || 0));
     const remBg           = allInRemaining.map(v => v >= 0 ? '#42A5F5' : '#EF5350');
     const remBorder       = allInRemaining.map(v => v >= 0 ? '#1d1e1fff' : '#C62828');
@@ -578,6 +590,15 @@ export class SummaryComponent implements OnInit, AfterViewInit, OnDestroy {
   private getPercentChange(forecasted: number, actual: number): number {
     if (forecasted === 0) return 0;
     return ((actual - forecasted) / forecasted) * 100;
+  }
+
+  private updateContextLabels(market: MarketOption, city: CityOption | null): void {
+    this.marketLabel = market?.label ?? '';
+    const cityName = city?.isAll ? 'All Cities' : (city?.displayName ?? 'All Cities');
+    this.cityLabel = cityName;
+    this.viewingLabel = city?.isAll || !city
+      ? `${this.marketLabel} — all cities`
+      : `${this.marketLabel} — ${cityName}`;
   }
 
   calculateOverspent(v: WPViolation): number {

@@ -2,6 +2,7 @@
   <div class="header-section">
     <div class="header-content">
       <h2>TPS Reports</h2>
+      <span class="context-note">Data is organized by market; add a city to narrow the view.</span>
       <div class="selectors">
         <div class="selector">
           <label for="marketSelect">Market:</label>
@@ -16,7 +17,7 @@
           </p-select>
         </div>
         <div class="selector">
-          <label for="citySelect">City/Metro:</label>
+          <label for="citySelect">City/Metro (optional):</label>
           <p-select 
             id="citySelect"
             [options]="cities" 

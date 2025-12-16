@@ -26,6 +26,7 @@ export interface CityOption {
   displayName: string;
   market: MarketCode;
   segmentPrefix: string;  // e.g., "SLC", "PHX", "LAS"
+  isAll?: boolean;
 }
 
 export interface MarketOption {
@@ -36,8 +37,8 @@ export interface MarketOption {
 
 @Injectable({ providedIn: 'root' })
 export class TpsService {
-  // Available markets and their metro/city options
-  readonly markets: MarketOption[] = [
+  // Base markets and their metro/city options (unsorted/raw)
+  private readonly baseMarkets: MarketOption[] = [
     {
       code: 'UT',
       label: 'Utah (UT)',
@@ -81,14 +82,22 @@ export class TpsService {
     }
   ];
 
-  // Flattened list for legacy uses
-  readonly cities: CityOption[] = this.markets.flatMap(m => m.cities);
+  // Sorted markets with "All Cities" option and alphabetized cities
+  readonly markets: MarketOption[] = this.baseMarkets
+    .map(m => ({
+      ...m,
+      cities: this.decorateMarketCities(m)
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  // Flattened list for legacy uses (real cities only, no "all" option)
+  readonly cities: CityOption[] = this.markets.flatMap(m => m.cities.filter(c => !c.isAll));
 
   // Observable for currently selected city
   private selectedMarketSubject = new BehaviorSubject<MarketOption>(this.markets[0]);
-  selectedMarket$ = this.selectedMarketSubject.asObservable();
+  readonly selectedMarket$ = this.selectedMarketSubject.asObservable();
 
-  private selectedCitySubject = new BehaviorSubject<CityOption>(this.markets[0].cities[0]);
+  private selectedCitySubject = new BehaviorSubject<CityOption>(this.getDefaultCityForMarket(this.markets[0].code)!);
   selectedCity$ = this.selectedCitySubject.asObservable();
 
   get selectedCity(): CityOption {
@@ -101,11 +110,12 @@ export class TpsService {
 
   setSelectedMarket(market: MarketOption): void {
     this.selectedMarketSubject.next(market);
-    // Keep city in sync with market selection
     const currentCity = this.selectedCitySubject.value;
-    const citiesForMarket = market.cities;
-    if (!citiesForMarket.find(c => c.name === currentCity.name)) {
-      this.selectedCitySubject.next(citiesForMarket[0]);
+    const citiesForMarket = this.getCitiesForMarket(market.code);
+    const cityStillValid = citiesForMarket.some(c => c.name === currentCity.name && c.market === market.code);
+    if (!cityStillValid) {
+      const fallback = this.getDefaultCityForMarket(market.code);
+      if (fallback) this.selectedCitySubject.next(fallback);
     }
   }
 
@@ -117,9 +127,18 @@ export class TpsService {
     this.selectedCitySubject.next(city);
   }
 
-  getCitiesForMarket(code: MarketCode): CityOption[] {
+  getCitiesForMarket(code: MarketCode, opts?: { includeAll?: boolean }): CityOption[] {
     const m = this.markets.find(x => x.code === code);
-    return m ? [...m.cities] : [];
+    if (!m) return [];
+    const includeAll = opts?.includeAll !== false;
+    const cities = includeAll ? m.cities : m.cities.filter(c => !c.isAll);
+    return [...cities];
+  }
+
+  getDefaultCityForMarket(code: MarketCode): CityOption | null {
+    const m = this.markets.find(x => x.code === code);
+    if (!m) return null;
+    return m.cities.find(c => c.isAll) ?? m.cities[0] ?? null;
   }
 
   private httpOptions = {
@@ -250,5 +269,18 @@ export class TpsService {
     if (Array.isArray(res?.results)) return res.results as T[];
     if (Array.isArray(res?.value)) return res.value as T[];
     return [] as T[];
+  }
+
+  // Insert a market-level "All Cities" option and sort by display name
+  private decorateMarketCities(market: MarketOption): CityOption[] {
+    const sortedCities = [...market.cities].sort((a, b) => a.displayName.localeCompare(b.displayName));
+    const allCity: CityOption = {
+      name: `${market.label} - All Cities`,
+      displayName: 'All Cities',
+      market: market.code,
+      segmentPrefix: '',
+      isAll: true
+    };
+    return [allCity, ...sortedCities];
   }
 }

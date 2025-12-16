@@ -161,11 +161,11 @@ export class MetricsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.updateIsMobile();
-    this.metroText = this.tps.selectedCity?.name ?? '';
+    this.metroText = this.tps.selectedCity && !this.tps.selectedCity.isAll ? this.tps.selectedCity.name : '';
     combineLatest([this.tps.selectedMarket$, this.tps.selectedCity$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(([_, city]) => {
-        this.metroText = city?.name ?? '';
+        this.metroText = city && !city.isAll ? city.name : '';
         this.applyFilters();
       });
   }
