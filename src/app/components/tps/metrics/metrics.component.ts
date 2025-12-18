@@ -208,6 +208,20 @@ export class MetricsComponent implements OnInit, OnDestroy {
     return names[(n ?? 0) - 1] ?? '';
     }
 
+  isPositive(value: number | null | undefined): boolean {
+    return typeof value === 'number' && value > 0;
+  }
+
+  isNegative(value: number | null | undefined): boolean {
+    return typeof value === 'number' && value < 0;
+  }
+
+  signClass(value: number | null | undefined): string {
+    if (this.isPositive(value)) return 'is-positive';
+    if (this.isNegative(value)) return 'is-negative';
+    return 'is-neutral';
+  }
+
   async applyFilters(): Promise<void> {
     const view = this.selectedView;
     // Clear all to avoid showing stale data when switching views

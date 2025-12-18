@@ -1,11 +1,9 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { Sort } from '@angular/material/sort';
 import { Subject, combineLatest, startWith, switchMap, takeUntil, tap } from 'rxjs';
 import { BudgetTrackerRow } from '../../../models/budget-tracker.model';
 import { CityOption, MarketOption, TpsService } from 'src/app/services/tps.service';
-import { SelectItem } from 'primeng/api';
+import { SelectItem, SortEvent } from 'primeng/api';
 
 @Component({
   selector: 'app-budget-tracker',
@@ -13,15 +11,12 @@ import { SelectItem } from 'primeng/api';
   styleUrls: ['./budget-tracker.component.scss']
 })
 export class BudgetTrackerComponent implements OnInit, OnDestroy {
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-
   loading = false;
   rows: BudgetTrackerRow[] = [];
   total = 0;
 
   // Expanded state
-  expandedRowId: string | null = null;
-  expandedElement: BudgetTrackerRow | null = null;
+  expandedRowKeys: Record<string, boolean> = {};
 
   displayedColumns = [
     'expand',
@@ -48,7 +43,8 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
   cityOptions: SelectItem[] = [];
 
   private page = 1;
-  private pageSize = 25;
+  pageSize = 25;
+  first = 0;
 
   private reload$ = new Subject<void>();
   private destroy$ = new Subject<void>();
@@ -92,29 +88,33 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
           const v = this.form.value;
           const segs = v.segment ?? [];
           const cities = v.city ?? [];
+          const startYm = this.toYearMonth(v.claimMonthFrom ?? null);
+          const endYm = this.toYearMonth(v.claimMonthTo ?? null);
 
           let items = (res.items ?? []).filter(r => {
             const seg = r.Header?.Segment ?? '';
             const city = r.Header?.City ?? '';
             const cm = r.Header?.ClaimMonthYear ? new Date(r.Header.ClaimMonthYear) : null;
+            const cmYm = this.toYearMonth(cm);
             return (
               (segs.length === 0 || segs.includes(seg)) &&
               (cities.length === 0 || cities.includes(city)) &&
-              (!v.claimMonthFrom || (cm && cm >= v.claimMonthFrom)) &&
-              (!v.claimMonthTo || (cm && cm <= v.claimMonthTo))
+              (startYm == null || (cmYm != null ? cmYm >= startYm : false)) &&
+              (endYm == null || (cmYm != null ? cmYm <= endYm : false))
             );
           });
 
-          this.rows = items;
+          this.rows = items.map((item, idx) => ({
+            ...item,
+            __rowId: this.rowKey(item, idx)
+          })) as BudgetTrackerRow[];
           this.total = res.total ?? items.length;
 
           // If expanded row no longer exists, clear expansion
-          if (
-            this.expandedRowId &&
-            !this.rows.some((r, i) => this.rowKey(r, i) === this.expandedRowId)
-          ) {
-            this.expandedRowId = null;
-            this.expandedElement = null;
+          const expandedIds = Object.keys(this.expandedRowKeys || {});
+          if (expandedIds.length) {
+            const exists = this.rows.some(r => (r as any).__rowId && expandedIds.includes((r as any).__rowId));
+            if (!exists) this.expandedRowKeys = {};
           }
 
           this.loading = false;
@@ -164,23 +164,15 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     );
   }
 
-  /** Keep DOM nodes stable across sort/paginate/filter so expansion stays put */
-  trackByRow = (index: number, row: BudgetTrackerRow) => this.rowKey(row, index);
-
-  toggleRow(row: BudgetTrackerRow): void {
-    const idx = this.rows.indexOf(row);
-    const id = this.rowKey(row, idx);
-    if (this.expandedRowId === id) {
-      this.expandedRowId = null;
-      this.expandedElement = null;
-    } else {
-      this.expandedRowId = id;
-      this.expandedElement = row;
-    }
+  onRowExpand(event: { data: BudgetTrackerRow }): void {
+    const id = (event.data as any).__rowId;
+    if (!id) return;
+    this.expandedRowKeys = { [id]: true };
   }
 
-  isExpandedRow = (_: number, row: BudgetTrackerRow) =>
-    this.expandedRowId === this.rowKey(row, this.rows.indexOf(row));
+  onRowCollapse(): void {
+    this.expandedRowKeys = {};
+  }
 
   // ---------- UI helpers ----------
   toggleFilters(): void {
@@ -206,6 +198,18 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
       this.selectedFilters.push({ column, values });
     }
     this.applyFilters();
+  }
+
+  setClaimMonthFrom(date: Date, picker: any): void {
+    this.form.patchValue({ claimMonthFrom: this.normalizeMonth(date) });
+    picker.close();
+    this.onFilterChange('claimMonth');
+  }
+
+  setClaimMonthTo(date: Date, picker: any): void {
+    this.form.patchValue({ claimMonthTo: this.normalizeMonth(date) });
+    picker.close();
+    this.onFilterChange('claimMonth');
   }
 
   removeChip(filter: { column: 'segment' | 'city' | 'claimMonth'; value: string }): void {
@@ -237,34 +241,77 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
 
   private applyFilters(): void {
     this.page = 1;
-    if (this.paginator) this.paginator.firstPage();
+    this.first = 0;
     this.reload$.next();
   }
 
   formatDate(chip: string): string {
     const d = new Date(chip);
-    return isNaN(d.getTime()) ? chip : d.toLocaleDateString();
+    return isNaN(d.getTime()) ? chip : d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
   }
 
-  onPage(e: PageEvent): void {
-    this.page = e.pageIndex + 1;
-    this.pageSize = e.pageSize;
-    // Optional: collapse when paging
-    // this.expandedRowId = null;
-    // this.expandedElement = null;
+  private normalizeMonth(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  }
+
+  private toYearMonth(value?: string | Date | null): number | null {
+    if (!value) return null;
+    if (value instanceof Date) return value.getFullYear() * 12 + (value.getMonth() + 1);
+
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.getFullYear() * 12 + (parsed.getMonth() + 1);
+    }
+
+    const text = String(value).trim().toLowerCase();
+    if (!text) return null;
+
+    const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','sept','oct','nov','dec'];
+    const nameMatch = text.match(/([a-z]{3,})\s*[-/ ]\s*(\d{4})/);
+    if (nameMatch) {
+      const monthToken = nameMatch[1];
+      const monthIndex = monthNames.findIndex(m => monthToken.startsWith(m));
+      if (monthIndex >= 0) {
+        const year = Number(nameMatch[2]);
+        return year * 12 + (monthIndex + 1);
+      }
+    }
+
+    const yearFirst = text.match(/(\d{4})\s*[-/ ]\s*(\d{1,2})/);
+    if (yearFirst) {
+      const year = Number(yearFirst[1]);
+      const month = Number(yearFirst[2]);
+      if (month >= 1 && month <= 12) return year * 12 + month;
+    }
+
+    const monthFirst = text.match(/(\d{1,2})\s*[-/ ]\s*(\d{4})/);
+    if (monthFirst) {
+      const month = Number(monthFirst[1]);
+      const year = Number(monthFirst[2]);
+      if (month >= 1 && month <= 12) return year * 12 + month;
+    }
+
+    return null;
+  }
+
+  onPage(event: { first: number; rows: number }): void {
+    this.first = event.first;
+    this.pageSize = event.rows;
+    this.page = Math.floor(event.first / event.rows) + 1;
+    this.expandedRowKeys = {};
     this.reload$.next();
   }
 
-  onSort(sort: Sort): void {
+  onSort(event: SortEvent): void {
     const data = this.rows.slice();
-    if (!sort.active || sort.direction === '') {
+    if (!event.field || !event.order) {
       this.rows = data;
       return;
     }
 
     this.rows = data.sort((a, b) => {
-      const valueA = this.getSortValue(a, sort.active);
-      const valueB = this.getSortValue(b, sort.active);
+      const valueA = this.getSortValue(a, event.field || '');
+      const valueB = this.getSortValue(b, event.field || '');
 
       const numA = typeof valueA === 'number' ? valueA : (isNaN(+valueA as any) ? null : +(<any>valueA));
       const numB = typeof valueB === 'number' ? valueB : (isNaN(+valueB as any) ? null : +(<any>valueB));
@@ -277,15 +324,9 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
         const bStr = String(valueB ?? '').toLowerCase();
         cmp = aStr < bStr ? -1 : aStr > bStr ? 1 : 0;
       }
-      return sort.direction === 'asc' ? cmp : -cmp;
+      return event.order === 1 ? cmp : -cmp;
     });
-
-    // Keep expansion attached to the same element if it's still present
-    if (this.expandedElement) {
-      const newIdx = this.rows.indexOf(this.expandedElement);
-      this.expandedRowId = newIdx >= 0 ? this.rowKey(this.expandedElement, newIdx) : null;
-      if (newIdx < 0) this.expandedElement = null;
-    }
+    this.expandedRowKeys = {};
   }
 
   private getSortValue(row: BudgetTrackerRow, column: string): any {
@@ -342,6 +383,16 @@ export class BudgetTrackerComponent implements OnInit, OnDestroy {
     ];
 
     return sections.filter(s => s.data && this.objectEntries(s.data).length > 0);
+  }
+
+  detailEntries(row: BudgetTrackerRow): { key: string; value: any; isLink: boolean }[] {
+    return this.detailSections(row).flatMap(section =>
+      this.objectEntries(section.data).map(item => ({
+        key: item.key,
+        value: item.value,
+        isLink: this.isLink(item.key)
+      }))
+    );
   }
 
   objectEntries(obj: any): { key: string; value: any }[] {

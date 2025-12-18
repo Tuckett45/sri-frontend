@@ -51,7 +51,7 @@
     <span>Claim Month Range Filter</span>
     <div class="filter-selections" [formGroup]="form">
       <mat-form-field appearance="fill" class="half-width">
-        <mat-label>Start Date</mat-label>
+        <mat-label>Start Month</mat-label>
         <input
           matInput
           [matDatepicker]="fromPicker"
@@ -59,11 +59,11 @@
           (dateChange)="onFilterChange('claimMonth')"
         />
         <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
-        <mat-datepicker #fromPicker></mat-datepicker>
+        <mat-datepicker #fromPicker startView="multi-year" (monthSelected)="setClaimMonthFrom($event, fromPicker)"></mat-datepicker>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="half-width">
-        <mat-label>End Date</mat-label>
+        <mat-label>End Month</mat-label>
         <input
           matInput
           [matDatepicker]="toPicker"
@@ -71,7 +71,7 @@
           (dateChange)="onFilterChange('claimMonth')"
         />
         <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
-        <mat-datepicker #toPicker></mat-datepicker>
+        <mat-datepicker #toPicker startView="multi-year" (monthSelected)="setClaimMonthTo($event, toPicker)"></mat-datepicker>
       </mat-form-field>
     </div>
   </div>
@@ -79,142 +79,115 @@
   <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
 
   <div class="table-wrapper" *ngIf="rows.length; else empty">
-    <table
-      mat-table
-      [dataSource]="rows"
-      class="mat-elevation-z8"
-      multiTemplateDataRows
-      matSort
-      (matSortChange)="onSort($event)"
+    <p-table
+      [value]="rows"
+      dataKey="__rowId"
+      [expandedRowKeys]="expandedRowKeys"
+      [paginator]="true"
+      [rows]="pageSize"
+      [rowsPerPageOptions]="[10, 25, 50, 100]"
+      [totalRecords]="total"
+      [lazy]="true"
+      [first]="first"
+      [customSort]="true"
+      (onPage)="onPage($event)"
+      (sortFunction)="onSort($event)"
+      (onRowExpand)="onRowExpand($event)"
+      (onRowCollapse)="onRowCollapse()"
+      styleClass="poseidon-table"
     >
-      <!-- Expand toggle -->
-      <ng-container matColumnDef="expand">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let r">
-          <button
-            mat-icon-button
-            (click)="toggleRow(r); $event.stopPropagation()"
-            aria-label="Toggle details"
-            [attr.aria-expanded]="isExpandedRow(0, r)"
-          >
-            <mat-icon [class.rotated]="isExpandedRow(0, r)">expand_more</mat-icon>
-          </button>
-        </td>
-      </ng-container>
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 3rem"></th>
+          <th pSortableColumn="ClaimMonthYear">
+            Claim Month
+            <p-sortIcon field="ClaimMonthYear"></p-sortIcon>
+          </th>
+          <th pSortableColumn="Segment">
+            Segment
+            <p-sortIcon field="Segment"></p-sortIcon>
+          </th>
+          <th pSortableColumn="City">
+            City
+            <p-sortIcon field="City"></p-sortIcon>
+          </th>
+          <th>Conlog</th>
+          <th pSortableColumn="Vendor">
+            Vendor
+            <p-sortIcon field="Vendor"></p-sortIcon>
+          </th>
+          <th pSortableColumn="FinalCost">
+            Final Cost
+            <p-sortIcon field="FinalCost"></p-sortIcon>
+          </th>
+        </tr>
+      </ng-template>
 
-      <!-- Claim Month -->
-      <ng-container matColumnDef="claim_month_year">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="ClaimMonthYear">Claim Month</th>
-        <td mat-cell *matCellDef="let r">{{ asDate(r.Header?.ClaimMonthYear) }}</td>
-      </ng-container>
+      <ng-template pTemplate="body" let-r let-expanded="expanded">
+        <tr>
+          <td>
+            <button
+              type="button"
+              pButton
+              pRipple
+              [pRowToggler]="r"
+              class="p-button-text p-button-rounded p-button-plain"
+            >
+              <i [ngClass]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+            </button>
+          </td>
+          <td>{{ asDate(r.Header?.ClaimMonthYear) }}</td>
+          <td>{{ r.Header?.Segment }}</td>
+          <td>{{ r.Header?.City }}</td>
+          <td>
+            <a
+              *ngIf="r.Header?.ConlogLink"
+              [href]="r.Header.ConlogLink"
+              target="_blank"
+              rel="noopener"
+              (click)="$event.stopPropagation()"
+              >Open</a
+            >
+            <span *ngIf="!r.Header?.ConlogLink" class="muted">-</span>
+          </td>
+          <td>{{ r.FT?.Vendor }}</td>
+          <td>{{ r.DUEJ?.FinalCost | currency }}</td>
+        </tr>
+      </ng-template>
 
-      <!-- Segment -->
-      <ng-container matColumnDef="segment">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="Segment">Segment</th>
-        <td mat-cell *matCellDef="let r">{{ r.Header?.Segment }}</td>
-      </ng-container>
-
-      <!-- City -->
-      <ng-container matColumnDef="city">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="City">City</th>
-        <td mat-cell *matCellDef="let r">{{ r.Header?.City }}</td>
-      </ng-container>
-
-      <!-- Conlog link -->
-      <ng-container matColumnDef="conlog">
-        <th mat-header-cell *matHeaderCellDef>Conlog</th>
-        <td mat-cell *matCellDef="let r">
-          <a
-            *ngIf="r.Header?.ConlogLink"
-            [href]="r.Header.ConlogLink"
-            target="_blank"
-            rel="noopener"
-            (click)="$event.stopPropagation()"
-            >Open</a
-          >
-          <span *ngIf="!r.Header?.ConlogLink" class="muted">—</span>
-        </td>
-      </ng-container>
-
-      <!-- Vendor -->
-      <ng-container matColumnDef="vendor">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="Vendor">Vendor</th>
-        <td mat-cell *matCellDef="let r">{{ r.FT?.Vendor }}</td>
-      </ng-container>
-
-      <!-- Final Cost -->
-      <ng-container matColumnDef="final_cost">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="FinalCost">Final Cost</th>
-        <td mat-cell *matCellDef="let r">{{ r.DUEJ?.FinalCost | currency }}</td>
-      </ng-container>
-
-      <!-- Expanded detail row -->
-      <ng-container matColumnDef="expandedDetail">
-        <td mat-cell *matCellDef="let r" [attr.colspan]="displayedColumns.length">
-          <div class="detail-container" *ngIf="isExpandedRow(0, r)" (click)="$event.stopPropagation()">
-            <ng-container *ngIf="detailSections(r).length; else noDetails">
-              <div class="detail-grid">
-                <div class="detail-card" *ngFor="let section of detailSections(r)">
-                  <header class="detail-card__header">
-                    <h3 class="detail-card__title">{{ section.title }}</h3>
-                  </header>
-                  <div class="detail-card__content">
-                    <div class="detail-field" *ngFor="let item of objectEntries(section.data)">
-                      <span class="detail-field__label">{{ labelize(item.key) }}</span>
-                      <span class="detail-field__value" *ngIf="!isLink(item.key)">{{ item.value }}</span>
-                      <a
-                        *ngIf="isLink(item.key)"
-                        class="detail-field__link"
-                        [href]="item.value"
-                        target="_blank"
-                        rel="noopener"
-                        (click)="$event.stopPropagation()"
-                        >Open Link</a
-                      >
+      <ng-template pTemplate="rowexpansion" let-r>
+        <tr>
+          <td [attr.colspan]="7" class="detail-row">
+            <div class="detail-container">
+              <ng-container *ngIf="detailEntries(r).length; else noDetails">
+                <div class="detail-grid">
+                  <div class="detail-card">
+                    <div class="detail-card__content">
+                      <div class="detail-field" *ngFor="let item of detailEntries(r)">
+                        <span class="detail-field__label">{{ labelize(item.key) }}</span>
+                        <span class="detail-field__value" *ngIf="!item.isLink">{{ item.value }}</span>
+                        <a
+                          *ngIf="item.isLink"
+                          class="detail-field__link"
+                          [href]="item.value"
+                          target="_blank"
+                          rel="noopener"
+                          (click)="$event.stopPropagation()"
+                          >Open Link</a
+                        >
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </ng-container>
-            <ng-template #noDetails>
-              <div class="no-details">No additional data for this row.</div>
-            </ng-template>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Header row -->
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-
-      <!-- Data row (toggleable + keyboard accessible) -->
-      <tr
-        mat-row
-        *matRowDef="let r; columns: displayedColumns"
-        class="element-row"
-        (click)="toggleRow(r)"
-        (keydown.enter)="toggleRow(r)"
-        (keydown.space)="toggleRow(r)"
-        tabindex="0"
-        role="button"
-        [attr.aria-expanded]="isExpandedRow(0, r)"
-      ></tr>
-
-      <!-- Detail row (when expanded) -->
-      <tr
-        mat-row
-        *matRowDef="let r; columns: ['expandedDetail']; when: isExpandedRow"
-        class="detail-row"
-      ></tr>
-    </table>
-
-    <mat-paginator
-      [length]="total"
-      [pageIndex]="0"
-      [pageSize]="25"
-      [pageSizeOptions]="[10, 25, 50, 100]"
-      (page)="onPage($event)"
-    >
-    </mat-paginator>
+              </ng-container>
+              <ng-template #noDetails>
+                <div class="no-details">No additional data for this row.</div>
+              </ng-template>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 
   <ng-template #empty>

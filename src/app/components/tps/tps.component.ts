@@ -1,5 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { SummaryComponent } from './summary/summary.component';
+import { ViolationsComponent } from './violations/violations.component';
 import { TpsService, CityOption, MarketOption } from 'src/app/services/tps.service';
 
 @Component({
@@ -13,8 +14,10 @@ export class TpsComponent {
   cities: CityOption[] = [];
   selectedMarket!: MarketOption;
   selectedCity: CityOption | null = null;
+  readonly loading$ = this.tpsService.loading$;
 
   @ViewChild(SummaryComponent) dashboard?: SummaryComponent;
+  @ViewChild(ViolationsComponent) violations?: ViolationsComponent;
 
   constructor(public tpsService: TpsService) {
     this.markets = this.tpsService.markets;
@@ -45,6 +48,9 @@ export class TpsComponent {
       if (idx === 0) {
         // Refresh charts when the Dashboard tab is active
         this.dashboard?.refreshCharts();
+      }
+      if (idx === 1) {
+        setTimeout(() => this.violations?.refresh());
       }
   }
 }

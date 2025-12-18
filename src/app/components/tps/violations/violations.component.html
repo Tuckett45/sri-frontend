@@ -1,15 +1,15 @@
 <form [formGroup]="filterForm" class="filter-section mb-2">
   <mat-form-field appearance="fill">
-    <mat-label>Start Date</mat-label>
+    <mat-label>Start Month</mat-label>
     <input matInput [matDatepicker]="vstart" formControlName="startDate">
     <mat-datepicker-toggle matSuffix [for]="vstart"></mat-datepicker-toggle>
-    <mat-datepicker #vstart></mat-datepicker>
+    <mat-datepicker #vstart startView="multi-year" (monthSelected)="setStartMonth($event, vstart)"></mat-datepicker>
   </mat-form-field>
   <mat-form-field appearance="fill">
-    <mat-label>End Date</mat-label>
+    <mat-label>End Month</mat-label>
     <input matInput [matDatepicker]="vend" formControlName="endDate">
     <mat-datepicker-toggle matSuffix [for]="vend"></mat-datepicker-toggle>
-    <mat-datepicker #vend></mat-datepicker>
+    <mat-datepicker #vend startView="multi-year" (monthSelected)="setEndMonth($event, vend)"></mat-datepicker>
   </mat-form-field>
   <mat-form-field appearance="fill">
     <mat-label>Vendor</mat-label>

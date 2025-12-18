@@ -328,6 +328,62 @@ export class SummaryComponent implements OnInit, AfterViewInit, OnDestroy {
     return chunks.join('\n');
   }
 
+  private normalizeMonth(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  }
+
+  setStartMonth(date: Date, picker: any): void {
+    this.startDate = this.normalizeMonth(date);
+    picker.close();
+    this.applyFilters();
+  }
+
+  setEndMonth(date: Date, picker: any): void {
+    this.endDate = this.normalizeMonth(date);
+    picker.close();
+    this.applyFilters();
+  }
+
+  private toYearMonth(value?: string | Date | null): number | null {
+    if (!value) return null;
+    if (value instanceof Date) return value.getFullYear() * 12 + (value.getMonth() + 1);
+
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.getFullYear() * 12 + (parsed.getMonth() + 1);
+    }
+
+    const text = String(value).trim().toLowerCase();
+    if (!text) return null;
+
+    const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','sept','oct','nov','dec'];
+    const nameMatch = text.match(/([a-z]{3,})\s*[-/ ]\s*(\d{4})/);
+    if (nameMatch) {
+      const monthToken = nameMatch[1];
+      const monthIndex = monthNames.findIndex(m => monthToken.startsWith(m));
+      if (monthIndex >= 0) {
+        const year = Number(nameMatch[2]);
+        return year * 12 + (monthIndex + 1);
+      }
+    }
+
+    const yearFirst = text.match(/(\d{4})\s*[-/ ]\s*(\d{1,2})/);
+    if (yearFirst) {
+      const year = Number(yearFirst[1]);
+      const month = Number(yearFirst[2]);
+      if (month >= 1 && month <= 12) return year * 12 + month;
+    }
+
+    const monthFirst = text.match(/(\d{1,2})\s*[-/ ]\s*(\d{4})/);
+    if (monthFirst) {
+      const month = Number(monthFirst[1]);
+      const year = Number(monthFirst[2]);
+      if (month >= 1 && month <= 12) return year * 12 + month;
+    }
+
+    return null;
+  }
+
   private num(v: any): number {
     if (v == null) return 0;
     if (typeof v === 'number') return isFinite(v) ? v : 0;
@@ -394,20 +450,22 @@ export class SummaryComponent implements OnInit, AfterViewInit, OnDestroy {
     const vendorSet  = new Set(this.selectedVendorsGlobal || []);
     const segmentSet = new Set(this.selectedSegmentsGlobal || []);
     const citySet    = new Set(this.selectedCitiesGlobal || []);
+    const startYm = this.toYearMonth(this.startDate);
+    const endYm = this.toYearMonth(this.endDate);
 
     const baseViolations = this.violations.filter(v => {
-      const date = v.monthYear ? new Date(v.monthYear) : null;
-      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
-      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
+      const rowYm = this.toYearMonth(v.monthYear ?? null);
+      const afterStart = startYm != null ? (rowYm != null ? rowYm >= startYm : false) : true;
+      const beforeEnd = endYm != null ? (rowYm != null ? rowYm <= endYm : false) : true;
       const vendorOk = vendorSet.size ? (v.vendor ? vendorSet.has(v.vendor) : false) : true;
       const segmentOk = segmentSet.size ? (v.segment ? segmentSet.has(v.segment) : false) : true;
       return afterStart && beforeEnd && vendorOk && segmentOk;
     });
 
     const baseCities = this.cities.filter(c => {
-      const date = c.ta_Date ? new Date(c.ta_Date) : null;
-      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
-      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
+      const rowYm = this.toYearMonth(c.ta_Date ?? null);
+      const afterStart = startYm != null ? (rowYm != null ? rowYm >= startYm : true) : true;
+      const beforeEnd = endYm != null ? (rowYm != null ? rowYm <= endYm : true) : true;
       const cityName = c.city ?? '';
       const cityOk = citySet.size ? citySet.has(cityName) : true;
       return afterStart && beforeEnd && cityOk;

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, map, shareReplay, BehaviorSubject } from 'rxjs';
+import { Observable, map, shareReplay, BehaviorSubject, finalize } from 'rxjs';
 import { environment, local_environment } from 'src/environments/environments';
 import { WPViolation } from '../models/wp-violation.model';
 import { CityScorecard } from '../models/city-scorecard.model';
@@ -100,6 +100,10 @@ export class TpsService {
   private selectedCitySubject = new BehaviorSubject<CityOption>(this.getDefaultCityForMarket(this.markets[0].code)!);
   selectedCity$ = this.selectedCitySubject.asObservable();
 
+  private loadingCount = 0;
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  readonly loading$ = this.loadingSubject.asObservable();
+
   get selectedCity(): CityOption {
     return this.selectedCitySubject.value;
   }
@@ -165,13 +169,17 @@ export class TpsService {
       params = params.set('metro', filters.metro);
     }
     
-    return this.http
-      .get<any>(`${this.baseUrl}/violations`, { ...this.httpOptions, params })
-      .pipe(map(res => this.asArray<WPViolation>(res)));
+    return this.withLoading(
+      this.http
+        .get<any>(`${this.baseUrl}/violations`, { ...this.httpOptions, params })
+        .pipe(map(res => this.asArray<WPViolation>(res)))
+    );
   }
 
   importViolations(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/violations/import`, {}, this.httpOptions);
+    return this.withLoading(
+      this.http.post<void>(`${this.baseUrl}/violations/import`, {}, this.httpOptions)
+    );
   }
 
   getCityScorecard(filters?: { segmentPrefix?: string; market?: MarketCode; metro?: string }): Observable<CityScorecard[]> {
@@ -186,13 +194,17 @@ export class TpsService {
       params = params.set('metro', filters.metro);
     }
     
-    return this.http
-      .get<any>(`${this.baseUrl}/city-scorecard`, { ...this.httpOptions, params })
-      .pipe(map(res => this.asArray<CityScorecard>(res)));
+    return this.withLoading(
+      this.http
+        .get<any>(`${this.baseUrl}/city-scorecard`, { ...this.httpOptions, params })
+        .pipe(map(res => this.asArray<CityScorecard>(res)))
+    );
   }
 
   importCityScorecard(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/city-scorecard/import`, {}, this.httpOptions);
+    return this.withLoading(
+      this.http.post<void>(`${this.baseUrl}/city-scorecard/import`, {}, this.httpOptions)
+    );
   }
 
   get(query: BudgetTracker): Observable<PaginatedResponse<BudgetTrackerRow>> {
@@ -208,14 +220,16 @@ export class TpsService {
     params = params.set('page', String(query.page ?? 1));
     params = params.set('pageSize', String(query.pageSize ?? 25));
 
-    return this.http
-      .get<PaginatedResponse<BudgetTrackerApiRow>>(`${this.baseUrl}/budget-tracker`, { params })
-      .pipe(
-        map(res => ({
-          ...res,
-          items: res.items?.map(toBudgetTrackerRow) ?? []
-        }))
-      );
+    return this.withLoading(
+      this.http
+        .get<PaginatedResponse<BudgetTrackerApiRow>>(`${this.baseUrl}/budget-tracker`, { params })
+        .pipe(
+          map(res => ({
+            ...res,
+            items: res.items?.map(toBudgetTrackerRow) ?? []
+          }))
+        )
+    );
   }
 
   getMetroYearSummary(params: {
@@ -228,9 +242,11 @@ export class TpsService {
     if (params.metro) p = p.set('metro', params.metro);
     if (params.includeAverages != null) p = p.set('includeAverages', String(params.includeAverages));
 
-    return this.http
-      .get<MetroYearSummary[]>(`${this.baseUrl}/kpis/metro-year-summary`, { params: p })
-      .pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    return this.withLoading(
+      this.http
+        .get<MetroYearSummary[]>(`${this.baseUrl}/kpis/metro-year-summary`, { params: p })
+        .pipe(shareReplay({ bufferSize: 1, refCount: true }))
+    );
   }
 
   getMetroByMonth(params: {
@@ -243,9 +259,11 @@ export class TpsService {
     if (params.metro) p = p.set('metro', params.metro);
     if (params.includeTotals != null) p = p.set('includeTotals', String(params.includeTotals));
 
-    return this.http
-      .get<MetroByMonthOverview[]>(`${this.baseUrl}/kpis/metro-by-month`, { params: p })
-      .pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    return this.withLoading(
+      this.http
+        .get<MetroByMonthOverview[]>(`${this.baseUrl}/kpis/metro-by-month`, { params: p })
+        .pipe(shareReplay({ bufferSize: 1, refCount: true }))
+    );
   }
 
   getMetroByMunicipality(params: {
@@ -256,9 +274,11 @@ export class TpsService {
     if (params.year != null) p = p.set('year', String(params.year));
     if (params.includeTotals != null) p = p.set('includeTotals', String(params.includeTotals));
 
-    return this.http
-      .get<MetroByMunicipalityOverview[]>(`${this.baseUrl}/kpis/metro-by-municipality`, { params: p })
-      .pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    return this.withLoading(
+      this.http
+        .get<MetroByMunicipalityOverview[]>(`${this.baseUrl}/kpis/metro-by-municipality`, { params: p })
+        .pipe(shareReplay({ bufferSize: 1, refCount: true }))
+    );
   }
 
   // Normalize common API envelope shapes into arrays
@@ -282,5 +302,24 @@ export class TpsService {
       isAll: true
     };
     return [allCity, ...sortedCities];
+  }
+
+  private beginLoading(): void {
+    this.loadingCount += 1;
+    if (this.loadingCount === 1) {
+      this.loadingSubject.next(true);
+    }
+  }
+
+  private endLoading(): void {
+    this.loadingCount = Math.max(0, this.loadingCount - 1);
+    if (this.loadingCount === 0) {
+      this.loadingSubject.next(false);
+    }
+  }
+
+  private withLoading<T>(obs: Observable<T>): Observable<T> {
+    this.beginLoading();
+    return obs.pipe(finalize(() => this.endLoading()));
   }
 }

@@ -1,46 +1,42 @@
 .table-wrapper {
   overflow-x: auto;
+}
 
-  table {
-    width: 100%;
-    min-width: 600px;
-
-    th {
-      background-color: #e18a25;
-      color: white;
-      padding: 10px 0 10px 10px;
-    }
-
-    td {
-      text-align: center;
-      padding: 10px;
-    }
-
-    td .muted { opacity: 0.6; }
-
-    tr:nth-child(odd) {
-      background-color: #000000;
-    }
-
-    tr:nth-child(even) {
-      background-color: #525252;
-    }
+.poseidon-table {
+  ::ng-deep .p-datatable-thead > tr > th {
+    background-color: #e18a25;
+    color: #fff;
+    padding: 10px 12px;
   }
+
+  ::ng-deep .p-datatable-tbody > tr > td {
+    text-align: center;
+    padding: 10px 12px;
+  }
+
+  ::ng-deep .p-datatable-tbody > tr:nth-child(odd) {
+    background-color: #000000;
+    color: #fff;
+  }
+
+  ::ng-deep .p-datatable-tbody > tr:nth-child(even) {
+    background-color: #525252;
+    color: #fff;
+  }
+
+  ::ng-deep .p-sortable-column-icon {
+    color: #fff;
+  }
+}
+
+.muted {
+  opacity: 0.6;
 }
 
 .header-section {
   justify-content: space-between;
   align-items: center;
   margin-top: 20px;
-}
-
-.mat-header-cell {
-  background-color: #e18a25;
-  color: white;
-}
-
-.mat-cell {
-  padding: 16px;
 }
 
 .export-btn {
@@ -135,7 +131,6 @@
   outline: none;
 }
 
-
 .half-width {
   flex: 1 1;
   width: 100%;
@@ -148,15 +143,9 @@
   width: 100%;
 }
 
-.element-row {
-  cursor: pointer;
-}
-
 .detail-row {
-  td {
-    padding: 0;
-    border: 0;
-  }
+  padding: 0;
+  border: 0;
 }
 
 .detail-container {
@@ -195,24 +184,25 @@
 }
 
 .detail-card__content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem 1.25rem;
   padding: 1rem;
 }
 
 .detail-field {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: space-between;
 }
 
 .detail-field__label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  text-transform: uppercase;
   color: #f9b56a;
+  white-space: nowrap;
 }
 
 .detail-field__value,
@@ -230,16 +220,6 @@
 .detail-field__link:hover,
 .detail-field__link:focus {
   color: #9ad8ff;
-}
-
-/* Rotate expand icon when open */
-.mat-icon.rotated {
-  transform: rotate(180deg);
-  transition: transform 150ms ease;
-}
-
-::ng-deep .mat-sort-header-container {
-  justify-content: center !important;
 }
 
 .no-details {
@@ -261,18 +241,6 @@
 ::ng-deep .detail-container .p-accordion .p-accordion-content {
   background-color: #525252;
   color: #fff;
-}
-
-/* Angular Material expansion styles to mirror PrimeNG look */
-::ng-deep .detail-container .mat-expansion-panel-header {
-  background-color: #e18a25 !important;
-  color: #fff !important;
-}
-
-::ng-deep .detail-container .mat-expansion-panel-content,
-::ng-deep .detail-container .mat-expansion-panel-body {
-  background-color: #525252 !important;
-  color: #fff !important;
 }
 
 /* Solid dropdown look to match other tabs */

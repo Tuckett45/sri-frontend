@@ -21,7 +21,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BudgetTrackerComponent } from './budget-tracker/budget-tracker.component';
 import { MetricsComponent } from './metrics/metrics.component';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { ChipModule } from 'primeng/chip';
 import { RippleModule } from 'primeng/ripple';
@@ -31,6 +30,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { ButtonModule } from 'primeng/button';
 import { AccordionModule } from 'primeng/accordion';
 import { SelectModule } from 'primeng/select';
+import { TableModule } from 'primeng/table';
 // Ensure Chart.js registerables are available when this lazy module loads
 import '../../../charts-setup';
 
@@ -58,7 +58,6 @@ import '../../../charts-setup';
     MatNativeDateModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,
-    MatPaginatorModule,
     MatExpansionModule,
     ChipModule,
     RippleModule,
@@ -69,6 +68,7 @@ import '../../../charts-setup';
     ButtonModule,
     AccordionModule,
     SelectModule,
+    TableModule,
     ChartModule,
     DividerModule,
     MatOptgroup,
