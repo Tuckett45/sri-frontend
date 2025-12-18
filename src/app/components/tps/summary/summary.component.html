@@ -1,33 +1,45 @@
 <div class="summary-dashboard surface-ground md:px-6 lg:px-8">
-
-  <div>
-    <button mat-raised-button color="primary" class="filters-btn" (click)="toggleFilters()">
-      <span *ngIf="!filtersOpen">
-        View Filters
-      </span>
-      <span *ngIf="filtersOpen">
-        Close Filters
-      </span>
-      <mat-icon>filter_list</mat-icon>
-    </button>
+  <div class="poseidon-hero surface-card shadow-2 border-round">
+    <div class="hero-left">
+      <p class="eyebrow">TPS Dashboard</p>
+      <h2>Market-first overview</h2>
+      <p class="lede">Poseidon-inspired shell with primary sort by market and optional city drill-in.</p>
+      <div class="hero-tags">
+        <span class="hero-chip">Market: {{ marketLabel }}</span>
+        <span class="hero-chip">City: {{ cityLabel }}</span>
+      </div>
+      <div class="viewing-label">Showing {{ viewingLabel }}.</div>
+    </div>
+    <div class="hero-actions">
+      <button mat-raised-button color="primary" class="filters-btn" (click)="toggleFilters()">
+        <mat-icon class="mr-2">filter_list</mat-icon>
+        <span *ngIf="!filtersOpen">View Filters</span>
+        <span *ngIf="filtersOpen">Close Filters</span>
+      </button>
+      <div class="hero-callout">
+        <div class="callout-label">Active Scope</div>
+        <div class="callout-value">{{ marketLabel }}</div>
+        <small class="text-500">{{ cityLabel }}</small>
+      </div>
+    </div>
   </div>
-  <div class="filter-section mb-3" *ngIf="filtersOpen">
-    <div class="filter-selections flex align-items-center gap-1">
+
+  <div class="filter-card surface-card shadow-2 border-round" *ngIf="filtersOpen">
+    <div class="filter-grid">
       <mat-form-field appearance="fill">
-        <mat-label>Start Date</mat-label>
+        <mat-label>Start Month</mat-label>
         <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="applyFilters()" />
         <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-        <mat-datepicker #startPicker></mat-datepicker>
+        <mat-datepicker #startPicker startView="multi-year" (monthSelected)="setStartMonth($event, startPicker)"></mat-datepicker>
       </mat-form-field>
 
       <mat-form-field appearance="fill">
-        <mat-label>End Date</mat-label>
+        <mat-label>End Month</mat-label>
         <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="applyFilters()" />
         <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-        <mat-datepicker #endPicker></mat-datepicker>
+        <mat-datepicker #endPicker startView="multi-year" (monthSelected)="setEndMonth($event, endPicker)"></mat-datepicker>
       </mat-form-field>
 
-      <a pRipple *ngIf="startDate || endDate" tabindex="0" class="clear-all" (click)="clearFilters()">Clear All</a>
       <mat-form-field appearance="fill">
         <mat-label>Vendor(s)</mat-label>
         <mat-select multiple [(ngModel)]="selectedVendorsGlobal" (selectionChange)="applyFilters()">
@@ -48,45 +60,63 @@
           <mat-option *ngFor="let option of cityOptions" [value]="option.value">{{ option.label }}</mat-option>
         </mat-select>
       </mat-form-field>
-
-      <a pRipple *ngIf="startDate || endDate || selectedVendorsGlobal.length || selectedSegmentsGlobal.length || selectedCitiesGlobal.length" tabindex="0" class="clear-all" (click)="clearFilters()">Clear All</a>
+    </div>
+    <div class="filter-footer" *ngIf="startDate || endDate || selectedVendorsGlobal.length || selectedSegmentsGlobal.length || selectedCitiesGlobal.length">
+      <a pRipple tabindex="0" class="clear-all" (click)="clearFilters()">Clear all filters</a>
     </div>
   </div>
 
   <!-- KPI cards -->
   <div class="summary-items">
     <div class="summary-item surface-card shadow-2 border-round">
-      Total Overspent: {{ totalOverspent | currency:'USD':'symbol':'1.0-2' }}
+      <span class="kpi-label">Total Overspent</span>
+      <span class="kpi-value">{{ totalOverspent | currency:'USD':'symbol':'1.0-2' }}</span>
+      <small class="kpi-hint">Across current selection</small>
     </div>
     <div class="summary-item surface-card shadow-2 border-round">
-      Forecasted All-In: {{ forecastedAllInTotal | currency:'USD':'symbol':'1.0-2' }}
+      <span class="kpi-label">Forecasted All-In</span>
+      <span class="kpi-value">{{ forecastedAllInTotal | currency:'USD':'symbol':'1.0-2' }}</span>
+      <small class="kpi-hint">Projected spend</small>
     </div>
     <div class="summary-item surface-card shadow-2 border-round">
-      Actual All-In: {{ actualAllInTotal | currency:'USD':'symbol':'1.0-2' }}
+      <span class="kpi-label">Actual All-In</span>
+      <span class="kpi-value">{{ actualAllInTotal | currency:'USD':'symbol':'1.0-2' }}</span>
+      <small class="kpi-hint">Recorded spend</small>
     </div>
     <div class="summary-item surface-card shadow-2 border-round">
-      Avg Overspent: {{ avgOverspent | currency:'USD':'symbol':'1.0-2' }}
+      <span class="kpi-label">Avg Overspent</span>
+      <span class="kpi-value">{{ avgOverspent | currency:'USD':'symbol':'1.0-2' }}</span>
+      <small class="kpi-hint">Per violation</small>
     </div>
     <div class="summary-item surface-card shadow-2 border-round">
-      Avg Actual All-In: {{ avgActualAllIn | currency:'USD':'symbol':'1.0-2' }}
+      <span class="kpi-label">Avg Actual All-In</span>
+      <span class="kpi-value">{{ avgActualAllIn | currency:'USD':'symbol':'1.0-2' }}</span>
+      <small class="kpi-hint">Per city</small>
     </div>
     <div class="summary-item surface-card shadow-2 border-round">
-      Min Overspent: {{ minOverspent | currency:'USD':'symbol':'1.0-2' }}
+      <span class="kpi-label">Min Overspent</span>
+      <span class="kpi-value">{{ minOverspent | currency:'USD':'symbol':'1.0-2' }}</span>
+      <small class="kpi-hint">Lowest overage</small>
     </div>
     <div class="summary-item surface-card shadow-2 border-round">
-      Max Overspent: {{ maxOverspent | currency:'USD':'symbol':'1.0-2' }}
+      <span class="kpi-label">Max Overspent</span>
+      <span class="kpi-value">{{ maxOverspent | currency:'USD':'symbol':'1.0-2' }}</span>
+      <small class="kpi-hint">Highest overage</small>
     </div>
     <div class="summary-item surface-card shadow-2 border-round">
-      Avg Forecasted All-In: {{ avgForecastedAllIn | currency:'USD':'symbol':'1.0-2' }}
+      <span class="kpi-label">Avg Forecasted All-In</span>
+      <span class="kpi-value">{{ avgForecastedAllIn | currency:'USD':'symbol':'1.0-2' }}</span>
+      <small class="kpi-hint">Per city</small>
     </div>
     <div class="summary-item surface-card shadow-2 border-round">
-      All-In Difference: {{ allInDifference | currency:'USD':'symbol':'1.0-2' }}
+      <span class="kpi-label">All-In Difference</span>
+      <span class="kpi-value">{{ allInDifference | currency:'USD':'symbol':'1.0-2' }}</span>
+      <small class="kpi-hint">Actual vs forecast</small>
     </div>
   </div>
 
-  <!-- Donuts row -->
-  <div class="grid">
-    <div class="donut-wrapper col-12 md:col-4">
+  <div class="chart-lanes">
+    <div class="chart-column">
       <div class="surface-card shadow-2 p-3 border-round chart-card">
         <h4 class="chart-title">HHP</h4>
         <div class="chart-inner">
@@ -100,9 +130,40 @@
           </p-chart>
         </div>
       </div>
+
+      <div class="surface-card shadow-2 p-3 border-round chart-card">
+        <div class="chart-filters mb-2">
+          <mat-form-field appearance="fill" class="mr-2">
+            <mat-label>Vendor</mat-label>
+            <mat-select [(ngModel)]="selectedVendorOverspent" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Segment</mat-label>
+            <mat-select [(ngModel)]="selectedSegmentOverspent" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <span class="block text-500 font-medium mb-3 chart-title">Overspent by Vendor</span>
+        <div class="chart-inner tall">
+          <p-chart
+            *ngIf="overSpentChartData?.labels?.length"
+            class="p-chart"
+            type="bar"
+            [data]="overSpentChartData"
+            [options]="chartOptions"
+            [responsive]="true"
+            [attr.data-r]="refreshTick">
+          </p-chart>
+        </div>
+      </div>
     </div>
 
-    <div class="donut-wrapper col-12 md:col-4">
+    <div class="chart-column">
       <div class="surface-card shadow-2 p-3 border-round chart-card">
         <h4 class="chart-title">Dollar Per HHP</h4>
         <div class="chart-inner">
@@ -116,9 +177,41 @@
           </p-chart>
         </div>
       </div>
+
+      <div class="surface-card shadow-2 p-3 border-round chart-card">
+        <div class="chart-filters mb-2">
+          <mat-form-field appearance="fill" class="mr-2">
+            <mat-label>Vendor</mat-label>
+            <mat-select [(ngModel)]="selectedVendorSegmentChart" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Segment</mat-label>
+            <mat-select [(ngModel)]="selectedSegmentSegmentChart" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <span class="block text-500 font-medium mb-3 chart-title">Violations by Segment</span>
+        <div class="chart-inner tall">
+          <p-chart
+            *ngIf="violationsBySegmentChartData?.labels?.length"
+            class="p-chart"
+            type="bar"
+            [data]="violationsBySegmentChartData"
+            [options]="violationChartOptions"
+            [responsive]="true"
+            [attr.data-r]="refreshTick">
+          </p-chart>
+        </div>
+      </div>
     </div>
 
-    <div class="donut-wrapper col-12 md:col-4">
+    <div class="chart-column">
       <div class="surface-card shadow-2 p-3 border-round chart-card">
         <h4 class="chart-title">Linear Foot</h4>
         <div class="chart-inner">
@@ -132,109 +225,36 @@
           </p-chart>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Overspent by Vendor -->
-  <div class="chart-wrapper tall col-12">
-    <div class="surface-card shadow-2 p-3 border-round chart-card">
-      <div class="chart-filters mb-2">
-        <mat-form-field appearance="fill" class="mr-2">
-          <mat-label>Vendor</mat-label>
-          <mat-select [(ngModel)]="selectedVendorOverspent" (selectionChange)="applyFilters()">
-            <mat-option [value]="null">All</mat-option>
-            <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="fill">
-          <mat-label>Segment</mat-label>
-          <mat-select [(ngModel)]="selectedSegmentOverspent" (selectionChange)="applyFilters()">
-            <mat-option [value]="null">All</mat-option>
-            <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+      <div class="surface-card shadow-2 p-3 border-round chart-card">
+        <div class="chart-filters mb-2">
+          <mat-form-field appearance="fill" class="mr-2">
+            <mat-label>Vendor</mat-label>
+            <mat-select [(ngModel)]="selectedVendorAllIn" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>City(ies)</mat-label>
+            <mat-select multiple [(ngModel)]="selectedCityAllIn" (selectionChange)="applyFilters()">
+              <mat-option *ngFor="let option of cityOptions" [value]="option.value">{{ option.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <span class="block text-500 font-medium mb-3 chart-title">Overspent by Vendor</span>
-      <div class="chart-inner tall">
-        <p-chart
-          *ngIf="overSpentChartData?.labels?.length"
-          class="p-chart"
-          type="bar"
-          [data]="overSpentChartData"
-          [options]="chartOptions"
-          [responsive]="true"
-          [attr.data-r]="refreshTick">
-        </p-chart>
-      </div>
-    </div>
-  </div>
-
-  <!-- Violations by Segment (mixed) -->
-  <div class="chart-wrapper tall col-12">
-    <div class="surface-card shadow-2 p-3 border-round chart-card">
-      <div class="chart-filters mb-2">
-        <mat-form-field appearance="fill" class="mr-2">
-          <mat-label>Vendor</mat-label>
-          <mat-select [(ngModel)]="selectedVendorSegmentChart" (selectionChange)="applyFilters()">
-            <mat-option [value]="null">All</mat-option>
-            <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="fill">
-          <mat-label>Segment</mat-label>
-          <mat-select [(ngModel)]="selectedSegmentSegmentChart" (selectionChange)="applyFilters()">
-            <mat-option [value]="null">All</mat-option>
-            <mat-option *ngFor="let option of segmentOptions" [value]="option.value">{{ option.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <span class="block text-500 font-medium mb-3 chart-title">Violations by Segment</span>
-      <div class="chart-inner tall">
-        <p-chart
-          *ngIf="violationsBySegmentChartData?.labels?.length"
-          class="p-chart"
-          type="bar"
-          [data]="violationsBySegmentChartData"
-          [options]="violationChartOptions"
-          [responsive]="true"
-          [attr.data-r]="refreshTick">
-        </p-chart>
-      </div>
-    </div>
-  </div>
-
-  <!-- All-In -->
-  <div class="chart-wrapper tall col-12">
-    <div class="surface-card shadow-2 p-3 border-round chart-card">
-      <div class="chart-filters mb-2">
-        <mat-form-field appearance="fill" class="mr-2">
-          <mat-label>Vendor</mat-label>
-          <mat-select [(ngModel)]="selectedVendorAllIn" (selectionChange)="applyFilters()">
-            <mat-option [value]="null">All</mat-option>
-            <mat-option *ngFor="let option of vendorOptions" [value]="option.value">{{ option.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="fill">
-          <mat-label>City(ies)</mat-label>
-          <mat-select multiple [(ngModel)]="selectedCityAllIn" (selectionChange)="applyFilters()">
-            <mat-option *ngFor="let option of cityOptions" [value]="option.value">{{ option.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <span class="block text-500 font-medium mb-3 chart-title">Forecasted vs Actual All-In vs Remaining</span>
-      <div class="chart-inner tall">
-        <p-chart
-          *ngIf="cityAllInChartData?.labels?.length"
-          class="p-chart"
-          type="bar"
-          [data]="cityAllInChartData"
-          [options]="chartOptions"
-          [responsive]="true"
-          [attr.data-r]="refreshTick">
-        </p-chart>
+        <span class="block text-500 font-medium mb-3 chart-title">Forecasted vs Actual All-In vs Remaining</span>
+        <div class="chart-inner tall">
+          <p-chart
+            *ngIf="cityAllInChartData?.labels?.length"
+            class="p-chart"
+            type="bar"
+            [data]="cityAllInChartData"
+            [options]="chartOptions"
+            [responsive]="true"
+            [attr.data-r]="refreshTick">
+          </p-chart>
+        </div>
       </div>
     </div>
   </div>

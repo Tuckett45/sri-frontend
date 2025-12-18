@@ -46,57 +46,135 @@
 
       <ng-container matColumnDef="planned_Avg_Per_HHP">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Planned $/HHP (Avg) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.planned_Avg_Per_HHP | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.planned_Avg_Per_HHP)">
+            <mat-icon *ngIf="isPositive(r.planned_Avg_Per_HHP)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.planned_Avg_Per_HHP)" class="signed-icon">trending_down</mat-icon>
+            {{ r.planned_Avg_Per_HHP | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="laborCostToDate_Avg_Per_HHP">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Labor to Date $/HHP (Avg) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.laborCostToDate_Avg_Per_HHP | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.laborCostToDate_Avg_Per_HHP)">
+            <mat-icon *ngIf="isPositive(r.laborCostToDate_Avg_Per_HHP)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.laborCostToDate_Avg_Per_HHP)" class="signed-icon">trending_down</mat-icon>
+            {{ r.laborCostToDate_Avg_Per_HHP | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="plan_AvgLabor_Per_HHP">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Plan Labor $/HHP (Avg) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.plan_AvgLabor_Per_HHP | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.plan_AvgLabor_Per_HHP)">
+            <mat-icon *ngIf="isPositive(r.plan_AvgLabor_Per_HHP)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.plan_AvgLabor_Per_HHP)" class="signed-icon">trending_down</mat-icon>
+            {{ r.plan_AvgLabor_Per_HHP | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="actualToDate_AllIn_Per_HHP">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Actual All-In $/HHP </th>
-        <td mat-cell *matCellDef="let r"> {{ r.actualToDate_AllIn_Per_HHP | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.actualToDate_AllIn_Per_HHP)">
+            <mat-icon *ngIf="isPositive(r.actualToDate_AllIn_Per_HHP)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.actualToDate_AllIn_Per_HHP)" class="signed-icon">trending_down</mat-icon>
+            {{ r.actualToDate_AllIn_Per_HHP | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="plan_AllIn_Per_HHP">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Plan All-In $/HHP </th>
-        <td mat-cell *matCellDef="let r"> {{ r.plan_AllIn_Per_HHP | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.plan_AllIn_Per_HHP)">
+            <mat-icon *ngIf="isPositive(r.plan_AllIn_Per_HHP)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.plan_AllIn_Per_HHP)" class="signed-icon">trending_down</mat-icon>
+            {{ r.plan_AllIn_Per_HHP | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="actualToDate_Median_Per_HHP">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Actual Median $/HHP </th>
-        <td mat-cell *matCellDef="let r"> {{ r.actualToDate_Median_Per_HHP | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.actualToDate_Median_Per_HHP)">
+            <mat-icon *ngIf="isPositive(r.actualToDate_Median_Per_HHP)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.actualToDate_Median_Per_HHP)" class="signed-icon">trending_down</mat-icon>
+            {{ r.actualToDate_Median_Per_HHP | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="plan_Median_Per_HHP">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Plan Median $/HHP </th>
-        <td mat-cell *matCellDef="let r"> {{ r.plan_Median_Per_HHP | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.plan_Median_Per_HHP)">
+            <mat-icon *ngIf="isPositive(r.plan_Median_Per_HHP)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.plan_Median_Per_HHP)" class="signed-icon">trending_down</mat-icon>
+            {{ r.plan_Median_Per_HHP | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="planned_Avg_Per_LFT">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Planned $/LFT (Avg) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.planned_Avg_Per_LFT | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.planned_Avg_Per_LFT)">
+            <mat-icon *ngIf="isPositive(r.planned_Avg_Per_LFT)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.planned_Avg_Per_LFT)" class="signed-icon">trending_down</mat-icon>
+            {{ r.planned_Avg_Per_LFT | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="actualToDate_Avg_Per_LFT">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Actual to Date $/LFT (Avg) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.actualToDate_Avg_Per_LFT | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.actualToDate_Avg_Per_LFT)">
+            <mat-icon *ngIf="isPositive(r.actualToDate_Avg_Per_LFT)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.actualToDate_Avg_Per_LFT)" class="signed-icon">trending_down</mat-icon>
+            {{ r.actualToDate_Avg_Per_LFT | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="plan_Avg_Per_LFT">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Plan $/LFT (Avg) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.plan_Avg_Per_LFT | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.plan_Avg_Per_LFT)">
+            <mat-icon *ngIf="isPositive(r.plan_Avg_Per_LFT)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.plan_Avg_Per_LFT)" class="signed-icon">trending_down</mat-icon>
+            {{ r.plan_Avg_Per_LFT | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="actualToDate_Median_Per_LFT">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Actual Median $/LFT </th>
-        <td mat-cell *matCellDef="let r"> {{ r.actualToDate_Median_Per_LFT | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.actualToDate_Median_Per_LFT)">
+            <mat-icon *ngIf="isPositive(r.actualToDate_Median_Per_LFT)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.actualToDate_Median_Per_LFT)" class="signed-icon">trending_down</mat-icon>
+            {{ r.actualToDate_Median_Per_LFT | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="plan_Median_Per_LFT">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Plan Median $/LFT </th>
-        <td mat-cell *matCellDef="let r"> {{ r.plan_Median_Per_LFT | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.plan_Median_Per_LFT)">
+            <mat-icon *ngIf="isPositive(r.plan_Median_Per_LFT)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.plan_Median_Per_LFT)" class="signed-icon">trending_down</mat-icon>
+            {{ r.plan_Median_Per_LFT | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="sXU_Percent">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> SXU % </th>
-        <td mat-cell *matCellDef="let r"> {{ (r.sXU_Percent || 0) * 10000 | number:'1.0-2' }}% </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass((r.sXU_Percent || 0) * 10000)">
+            <mat-icon *ngIf="isPositive((r.sXU_Percent || 0) * 10000)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative((r.sXU_Percent || 0) * 10000)" class="signed-icon">trending_down</mat-icon>
+            {{ (r.sXU_Percent || 0) * 10000 | number:'1.0-2' }}%
+          </span>
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="yearDisplayedColumns"></tr>
@@ -132,74 +210,176 @@
 
       <ng-container matColumnDef="segmentCount">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Segments </th>
-        <td mat-cell *matCellDef="let r"> {{ r.segmentCount }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.segmentCount)">
+            <mat-icon *ngIf="isPositive(r.segmentCount)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.segmentCount)" class="signed-icon">trending_down</mat-icon>
+            {{ r.segmentCount }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="eng_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Eng ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.eng_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.eng_Dollars)">
+            <mat-icon *ngIf="isPositive(r.eng_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.eng_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.eng_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="permit_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Permit ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.permit_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.permit_Dollars)">
+            <mat-icon *ngIf="isPositive(r.permit_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.permit_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.permit_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="material_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Material ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.material_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.material_Dollars)">
+            <mat-icon *ngIf="isPositive(r.material_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.material_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.material_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="plannedCost_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Planned Cost ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.plannedCost_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.plannedCost_Dollars)">
+            <mat-icon *ngIf="isPositive(r.plannedCost_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.plannedCost_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.plannedCost_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="current_TotalAllIn_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Current All-In ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.current_TotalAllIn_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.current_TotalAllIn_Dollars)">
+            <mat-icon *ngIf="isPositive(r.current_TotalAllIn_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.current_TotalAllIn_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.current_TotalAllIn_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="hhp">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> HHP </th>
-        <td mat-cell *matCellDef="let r"> {{ r.hhp }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.hhp)">
+            <mat-icon *ngIf="isPositive(r.hhp)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.hhp)" class="signed-icon">trending_down</mat-icon>
+            {{ r.hhp }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="sfu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> SFU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.sfu }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.sfu)">
+            <mat-icon *ngIf="isPositive(r.sfu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.sfu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.sfu }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="mdu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> MDU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.mdu }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.mdu)">
+            <mat-icon *ngIf="isPositive(r.mdu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.mdu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.mdu }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="sbu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> SBU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.sbu }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.sbu)">
+            <mat-icon *ngIf="isPositive(r.sbu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.sbu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.sbu }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="mtu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> MTU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.mtu }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.mtu)">
+            <mat-icon *ngIf="isPositive(r.mtu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.mtu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.mtu }}
+          </span>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="allIn_Per_HHP">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> All-In $/HHP </th>
-        <td mat-cell *matCellDef="let r"> {{ r.allIn_Per_HHP | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.allIn_Per_HHP)">
+            <mat-icon *ngIf="isPositive(r.allIn_Per_HHP)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.allIn_Per_HHP)" class="signed-icon">trending_down</mat-icon>
+            {{ r.allIn_Per_HHP | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="hhp_Delta">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> HHP Delta </th>
-        <td mat-cell *matCellDef="let r"> {{ r.hhp_Delta | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.hhp_Delta)">
+            <mat-icon *ngIf="isPositive(r.hhp_Delta)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.hhp_Delta)" class="signed-icon">trending_down</mat-icon>
+            {{ r.hhp_Delta | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="sxu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> SXU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.sxu | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.sxu)">
+            <mat-icon *ngIf="isPositive(r.sxu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.sxu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.sxu | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="sxu_Percent">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> SXU % </th>
-        <td mat-cell *matCellDef="let r"> {{ (r.sxu_Percent || 0) * 10000 | number:'1.0-2' }}% </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass((r.sxu_Percent || 0) * 10000)">
+            <mat-icon *ngIf="isPositive((r.sxu_Percent || 0) * 10000)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative((r.sxu_Percent || 0) * 10000)" class="signed-icon">trending_down</mat-icon>
+            {{ (r.sxu_Percent || 0) * 10000 | number:'1.0-2' }}%
+          </span>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="avg_LFT_Per_Day">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Avg LFT/Day </th>
-        <td mat-cell *matCellDef="let r"> {{ r.avg_LFT_Per_Day | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.avg_LFT_Per_Day)">
+            <mat-icon *ngIf="isPositive(r.avg_LFT_Per_Day)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.avg_LFT_Per_Day)" class="signed-icon">trending_down</mat-icon>
+            {{ r.avg_LFT_Per_Day | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="avg_Dollars_Per_Material">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Avg $/Material </th>
-        <td mat-cell *matCellDef="let r"> {{ r.avg_Dollars_Per_Material | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.avg_Dollars_Per_Material)">
+            <mat-icon *ngIf="isPositive(r.avg_Dollars_Per_Material)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.avg_Dollars_Per_Material)" class="signed-icon">trending_down</mat-icon>
+            {{ r.avg_Dollars_Per_Material | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="monthDisplayedColumns"></tr>
@@ -238,74 +418,176 @@
 
       <ng-container matColumnDef="segmentCount">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Segments </th>
-        <td mat-cell *matCellDef="let r"> {{ r.segmentCount }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.segmentCount)">
+            <mat-icon *ngIf="isPositive(r.segmentCount)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.segmentCount)" class="signed-icon">trending_down</mat-icon>
+            {{ r.segmentCount }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="eng_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Eng ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.eng_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.eng_Dollars)">
+            <mat-icon *ngIf="isPositive(r.eng_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.eng_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.eng_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="permit_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Permit ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.permit_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.permit_Dollars)">
+            <mat-icon *ngIf="isPositive(r.permit_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.permit_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.permit_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="material_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Material ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.material_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.material_Dollars)">
+            <mat-icon *ngIf="isPositive(r.material_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.material_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.material_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="plannedCost_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Planned Cost ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.plannedCost_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.plannedCost_Dollars)">
+            <mat-icon *ngIf="isPositive(r.plannedCost_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.plannedCost_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.plannedCost_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="current_TotalAllIn_Dollars">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Current All-In ($) </th>
-        <td mat-cell *matCellDef="let r"> {{ r.current_TotalAllIn_Dollars | currency:'USD' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.current_TotalAllIn_Dollars)">
+            <mat-icon *ngIf="isPositive(r.current_TotalAllIn_Dollars)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.current_TotalAllIn_Dollars)" class="signed-icon">trending_down</mat-icon>
+            {{ r.current_TotalAllIn_Dollars | currency:'USD' }}
+          </span>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="hhp">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> HHP </th>
-        <td mat-cell *matCellDef="let r"> {{ r.hhp }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.hhp)">
+            <mat-icon *ngIf="isPositive(r.hhp)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.hhp)" class="signed-icon">trending_down</mat-icon>
+            {{ r.hhp }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="sfu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> SFU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.sfu }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.sfu)">
+            <mat-icon *ngIf="isPositive(r.sfu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.sfu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.sfu }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="mdu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> MDU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.mdu }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.mdu)">
+            <mat-icon *ngIf="isPositive(r.mdu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.mdu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.mdu }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="sbu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> SBU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.sbu }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.sbu)">
+            <mat-icon *ngIf="isPositive(r.sbu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.sbu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.sbu }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="mtu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> MTU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.mtu }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.mtu)">
+            <mat-icon *ngIf="isPositive(r.mtu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.mtu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.mtu }}
+          </span>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="allIn_Per_HHP">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> All-In $/HHP </th>
-        <td mat-cell *matCellDef="let r"> {{ r.allIn_Per_HHP | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.allIn_Per_HHP)">
+            <mat-icon *ngIf="isPositive(r.allIn_Per_HHP)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.allIn_Per_HHP)" class="signed-icon">trending_down</mat-icon>
+            {{ r.allIn_Per_HHP | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="hhp_Delta">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> HHP Delta </th>
-        <td mat-cell *matCellDef="let r"> {{ r.hhp_Delta | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.hhp_Delta)">
+            <mat-icon *ngIf="isPositive(r.hhp_Delta)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.hhp_Delta)" class="signed-icon">trending_down</mat-icon>
+            {{ r.hhp_Delta | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="sxu">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> SXU </th>
-        <td mat-cell *matCellDef="let r"> {{ r.sxu | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.sxu)">
+            <mat-icon *ngIf="isPositive(r.sxu)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.sxu)" class="signed-icon">trending_down</mat-icon>
+            {{ r.sxu | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="sxu_Percent">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> SXU % </th>
-        <td mat-cell *matCellDef="let r"> {{ (r.sxu_Percent || 0) * 10000 | number:'1.0-2' }}% </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass((r.sxu_Percent || 0) * 10000)">
+            <mat-icon *ngIf="isPositive((r.sxu_Percent || 0) * 10000)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative((r.sxu_Percent || 0) * 10000)" class="signed-icon">trending_down</mat-icon>
+            {{ (r.sxu_Percent || 0) * 10000 | number:'1.0-2' }}%
+          </span>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="avg_LFT_Per_Day">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Avg LFT/Day </th>
-        <td mat-cell *matCellDef="let r"> {{ r.avg_LFT_Per_Day | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.avg_LFT_Per_Day)">
+            <mat-icon *ngIf="isPositive(r.avg_LFT_Per_Day)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.avg_LFT_Per_Day)" class="signed-icon">trending_down</mat-icon>
+            {{ r.avg_LFT_Per_Day | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
       <ng-container matColumnDef="avg_Dollars_Per_Material">
         <th mat-header-cell mat-sort-header *matHeaderCellDef> Avg $/Material </th>
-        <td mat-cell *matCellDef="let r"> {{ r.avg_Dollars_Per_Material | number:'1.0-2' }} </td>
+        <td mat-cell *matCellDef="let r">
+          <span class="signed-value" [ngClass]="signClass(r.avg_Dollars_Per_Material)">
+            <mat-icon *ngIf="isPositive(r.avg_Dollars_Per_Material)" class="signed-icon">trending_up</mat-icon>
+            <mat-icon *ngIf="isNegative(r.avg_Dollars_Per_Material)" class="signed-icon">trending_down</mat-icon>
+            {{ r.avg_Dollars_Per_Material | number:'1.0-2' }}
+          </span>
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="muniDisplayedColumns"></tr>

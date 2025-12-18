@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { TpsService } from 'src/app/services/tps.service';
 import { MetroByMonthOverview, MetroByMunicipalityOverview } from 'src/app/models/kpi.models';
 import { MatSort } from '@angular/material/sort';
@@ -107,7 +108,7 @@ interface MuniSummaryRow {
   templateUrl: './metrics.component.html',
   styleUrls: ['./metrics.component.scss']
 })
-export class MetricsComponent implements OnInit {
+export class MetricsComponent implements OnInit, OnDestroy {
   // ===== Tables =====
   yearSummaryRows: YearSummaryRow[] = [];
   monthSummaryRows: MonthSummaryRow[] = [];
@@ -153,13 +154,25 @@ export class MetricsComponent implements OnInit {
     'allIn_Per_HHP','hhp_Delta','sxu','sxu_Percent',
     'avg_LFT_Per_Day','avg_Dollars_Per_Material'
   ];
-  
+
+  private destroy$ = new Subject<void>();
 
   constructor(private tps: TpsService) {}
 
   ngOnInit(): void {
     this.updateIsMobile();
-    this.applyFilters();
+    this.metroText = this.tps.selectedCity && !this.tps.selectedCity.isAll ? this.tps.selectedCity.name : '';
+    combineLatest([this.tps.selectedMarket$, this.tps.selectedCity$])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([_, city]) => {
+        this.metroText = city && !city.isAll ? city.name : '';
+        this.applyFilters();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   @HostListener('window:resize')
@@ -194,6 +207,20 @@ export class MetricsComponent implements OnInit {
     const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return names[(n ?? 0) - 1] ?? '';
     }
+
+  isPositive(value: number | null | undefined): boolean {
+    return typeof value === 'number' && value > 0;
+  }
+
+  isNegative(value: number | null | undefined): boolean {
+    return typeof value === 'number' && value < 0;
+  }
+
+  signClass(value: number | null | undefined): string {
+    if (this.isPositive(value)) return 'is-positive';
+    if (this.isNegative(value)) return 'is-negative';
+    return 'is-neutral';
+  }
 
   async applyFilters(): Promise<void> {
     const view = this.selectedView;

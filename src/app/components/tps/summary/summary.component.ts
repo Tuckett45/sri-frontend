@@ -6,21 +6,23 @@ import {
   QueryList,
   HostListener,
   NgZone,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  OnDestroy
 } from '@angular/core';
 import { UIChart } from 'primeng/chart';
 import { TpsService } from 'src/app/services/tps.service';
 import { WPViolation } from 'src/app/models/wp-violation.model';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
 import { SelectItem } from 'primeng/api';
-import { combineLatest } from 'rxjs';
+import { Subscription, combineLatest, switchMap } from 'rxjs';
+import { CityOption, MarketOption } from 'src/app/services/tps.service';
 
 @Component({
   selector: 'app-tps-summary',
   templateUrl: './summary.component.html',
   styleUrls: ['./summary.component.scss']
 })
-export class SummaryComponent implements OnInit, AfterViewInit {
+export class SummaryComponent implements OnInit, AfterViewInit, OnDestroy {
   // ===== KPIs =====
   violationsCount = 0;
   cityCount = 0;
@@ -64,6 +66,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   // ===== Data stores =====
   private violations: WPViolation[] = [];
   private cities: CityScorecard[] = [];
+  private dataSub?: Subscription;
 
   // ===== Chart data =====
   overSpentChartData: any = { labels: [], datasets: [] };
@@ -81,6 +84,11 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   doughnutChartOptions: any;
   chartOptions: any;
   refreshTick = 0;
+
+  // Context labels for the dashboard header
+  marketLabel = '';
+  cityLabel = '';
+  viewingLabel = '';
 
   // --- Base profile (desktop-ish) ---
   private baseOptions: any = {
@@ -191,13 +199,17 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.setIsMobile();
     this.applyOptionProfiles();
-    this.loadData();
+    this.subscribeToData();
   }
 
   ngAfterViewInit(): void {
     const reinit = () => setTimeout(() => this.charts.forEach(c => c.reinit()));
     reinit();
     this.charts.changes.subscribe(() => reinit());
+  }
+
+  ngOnDestroy(): void {
+    this.dataSub?.unsubscribe();
   }
 
   @HostListener('window:resize')
@@ -316,6 +328,62 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     return chunks.join('\n');
   }
 
+  private normalizeMonth(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  }
+
+  setStartMonth(date: Date, picker: any): void {
+    this.startDate = this.normalizeMonth(date);
+    picker.close();
+    this.applyFilters();
+  }
+
+  setEndMonth(date: Date, picker: any): void {
+    this.endDate = this.normalizeMonth(date);
+    picker.close();
+    this.applyFilters();
+  }
+
+  private toYearMonth(value?: string | Date | null): number | null {
+    if (!value) return null;
+    if (value instanceof Date) return value.getFullYear() * 12 + (value.getMonth() + 1);
+
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.getFullYear() * 12 + (parsed.getMonth() + 1);
+    }
+
+    const text = String(value).trim().toLowerCase();
+    if (!text) return null;
+
+    const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','sept','oct','nov','dec'];
+    const nameMatch = text.match(/([a-z]{3,})\s*[-/ ]\s*(\d{4})/);
+    if (nameMatch) {
+      const monthToken = nameMatch[1];
+      const monthIndex = monthNames.findIndex(m => monthToken.startsWith(m));
+      if (monthIndex >= 0) {
+        const year = Number(nameMatch[2]);
+        return year * 12 + (monthIndex + 1);
+      }
+    }
+
+    const yearFirst = text.match(/(\d{4})\s*[-/ ]\s*(\d{1,2})/);
+    if (yearFirst) {
+      const year = Number(yearFirst[1]);
+      const month = Number(yearFirst[2]);
+      if (month >= 1 && month <= 12) return year * 12 + month;
+    }
+
+    const monthFirst = text.match(/(\d{1,2})\s*[-/ ]\s*(\d{4})/);
+    if (monthFirst) {
+      const month = Number(monthFirst[1]);
+      const year = Number(monthFirst[2]);
+      if (month >= 1 && month <= 12) return year * 12 + month;
+    }
+
+    return null;
+  }
+
   private num(v: any): number {
     if (v == null) return 0;
     if (typeof v === 'number') return isFinite(v) ? v : 0;
@@ -340,32 +408,41 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   }
 
   // ===== Data fetching & shaping =====
-  loadData() {
-    combineLatest([
-      this.tpsService.getViolations(),
-      this.tpsService.getCityScorecard()
-    ]).subscribe({
-      next: ([violations, cities]) => {
-        this.violations = violations ?? [];
-        this.cities = cities ?? [];
-
-        // build select options
-        const vendors  = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean)));
-        const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean)));
-        const cityList = Array.from(new Set(this.cities.map(c => c.city).filter(Boolean)));
-
-        this.vendorOptions  = vendors.map(v => ({ label: v!, value: v! }));
-        this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
-        this.cityOptions    = cityList.map(c => ({ label: c!, value: c! }));  // NEW
-
-        this.applyFilters();
-      },
-      error: _ => {
-        this.violations = [];
-        this.cities = [];
-        this.applyFilters();
-      }
+  private subscribeToData(): void {
+    this.dataSub?.unsubscribe();
+    this.dataSub = combineLatest([this.tpsService.selectedMarket$, this.tpsService.selectedCity$]).pipe(
+      switchMap(([market, city]) => {
+        this.updateContextLabels(market, city);
+        const filters: { market: MarketOption['code']; segmentPrefix?: string; metro?: string } = { market: market.code };
+        if (city && !city.isAll) {
+          filters.segmentPrefix = city.segmentPrefix;
+          filters.metro = city.name;
+        }
+        return combineLatest([
+          this.tpsService.getViolations(filters),
+          this.tpsService.getCityScorecard(filters)
+        ]);
+      })
+    )
+    .subscribe({
+      next: ([violations, cities]) => this.processData(violations, cities),
+      error: _ => this.processData([], [])
     });
+  }
+
+  private processData(violations: WPViolation[], cities: CityScorecard[]): void {
+    this.violations = violations ?? [];
+    this.cities = cities ?? [];
+
+    const vendors  = Array.from(new Set(this.violations.map(v => v.vendor).filter(Boolean))).sort((a, b) => a!.localeCompare(b!));
+    const segments = Array.from(new Set(this.violations.map(v => v.segment).filter(Boolean))).sort((a, b) => a!.localeCompare(b!));
+    const cityList = Array.from(new Set(this.cities.map(c => c.city).filter(Boolean))).sort((a, b) => a!.localeCompare(b!));
+
+    this.vendorOptions  = vendors.map(v => ({ label: v!, value: v! }));
+    this.segmentOptions = segments.map(s => ({ label: s!, value: s! }));
+    this.cityOptions    = cityList.map(c => ({ label: c!, value: c! }));
+
+    this.applyFilters();
   }
 
   applyFilters() {
@@ -373,20 +450,22 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     const vendorSet  = new Set(this.selectedVendorsGlobal || []);
     const segmentSet = new Set(this.selectedSegmentsGlobal || []);
     const citySet    = new Set(this.selectedCitiesGlobal || []);
+    const startYm = this.toYearMonth(this.startDate);
+    const endYm = this.toYearMonth(this.endDate);
 
     const baseViolations = this.violations.filter(v => {
-      const date = v.monthYear ? new Date(v.monthYear) : null;
-      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
-      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
+      const rowYm = this.toYearMonth(v.monthYear ?? null);
+      const afterStart = startYm != null ? (rowYm != null ? rowYm >= startYm : false) : true;
+      const beforeEnd = endYm != null ? (rowYm != null ? rowYm <= endYm : false) : true;
       const vendorOk = vendorSet.size ? (v.vendor ? vendorSet.has(v.vendor) : false) : true;
       const segmentOk = segmentSet.size ? (v.segment ? segmentSet.has(v.segment) : false) : true;
       return afterStart && beforeEnd && vendorOk && segmentOk;
     });
 
     const baseCities = this.cities.filter(c => {
-      const date = c.ta_Date ? new Date(c.ta_Date) : null;
-      const afterStart = this.startDate ? (date ? date >= this.startDate : false) : true;
-      const beforeEnd = this.endDate ? (date ? date <= this.endDate : false) : true;
+      const rowYm = this.toYearMonth(c.ta_Date ?? null);
+      const afterStart = startYm != null ? (rowYm != null ? rowYm >= startYm : true) : true;
+      const beforeEnd = endYm != null ? (rowYm != null ? rowYm <= endYm : true) : true;
       const cityName = c.city ?? '';
       const cityOk = citySet.size ? citySet.has(cityName) : true;
       return afterStart && beforeEnd && cityOk;
@@ -477,6 +556,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
         : true;
       return matchesVendor && matchesCity;
     });
+    const sortedCities = [...filteredCities].sort((a, b) => (a.city ?? '').localeCompare(b.city ?? ''));
 
     this.cityCount = filteredCities.length;
     this.forecastedAllInTotal = filteredCities.reduce((sum, c) => sum + this.num(c.forecastedAllIn), 0);
@@ -516,9 +596,9 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     };
 
     // Bar chart: All-In by City
-    const allInLabels     = filteredCities.map(c => c.city ?? '');
-    const allInForecasted = filteredCities.map(c => this.num(c.forecastedAllIn));
-    const allInActual     = filteredCities.map(c => this.num(c.actualAllIn));
+    const allInLabels     = sortedCities.map(c => c.city ?? '');
+    const allInForecasted = sortedCities.map(c => this.num(c.forecastedAllIn));
+    const allInActual     = sortedCities.map(c => this.num(c.actualAllIn));
     const allInRemaining  = allInForecasted.map((f, i) => f - (allInActual[i] || 0));
     const remBg           = allInRemaining.map(v => v >= 0 ? '#42A5F5' : '#EF5350');
     const remBorder       = allInRemaining.map(v => v >= 0 ? '#1d1e1fff' : '#C62828');
@@ -568,6 +648,15 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   private getPercentChange(forecasted: number, actual: number): number {
     if (forecasted === 0) return 0;
     return ((actual - forecasted) / forecasted) * 100;
+  }
+
+  private updateContextLabels(market: MarketOption, city: CityOption | null): void {
+    this.marketLabel = market?.label ?? '';
+    const cityName = city?.isAll ? 'All Cities' : (city?.displayName ?? 'All Cities');
+    this.cityLabel = cityName;
+    this.viewingLabel = city?.isAll || !city
+      ? `${this.marketLabel} — all cities`
+      : `${this.marketLabel} — ${cityName}`;
   }
 
   calculateOverspent(v: WPViolation): number {

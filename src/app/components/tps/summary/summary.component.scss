@@ -1,5 +1,5 @@
 /* ===========================
-   TPS Summary / Dashboard
+   TPS Summary / Dashboard (Poseidon-inspired)
    =========================== */
 
 .summary-dashboard {
@@ -7,45 +7,161 @@
   flex-direction: column;
   gap: 1rem;
 
-  /* SUMMARY ITEMS — pure CSS Grid (don’t mix with PrimeFlex cols here) */
-  .summary-items {
+  .poseidon-hero {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr)); /* phones: 2 cols */
-    gap: 0.75rem;
+    grid-template-columns: 1.4fr 0.9fr;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(120deg, #143b5f 0%, #1a5789 40%, #0c243d 100%);
+    color: #f5f9ff;
+    overflow: hidden;
+
+    .hero-left {
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .eyebrow {
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #9fd4ff;
+      margin: 0;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.5rem, 1.2rem + 0.8vw, 2rem);
+      font-weight: 800;
+    }
+
+    .lede {
+      margin: 0;
+      color: #dbe8f7;
+      line-height: 1.4;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.35rem;
+    }
+
+    .hero-chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f5f9ff;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      line-height: 1.1;
+    }
+
+    .viewing-label {
+      color: #c1d8f4;
+      font-size: 0.95rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.75rem;
+      justify-content: center;
+      text-align: right;
+    }
+
+    .hero-callout {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      min-width: 200px;
+    }
+
+    .callout-label {
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #9fd4ff;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+
+    .callout-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
   }
 
-  @media (min-width: 576px) {   /* sm */
-    .summary-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filter-card {
+    padding: 1rem 1.25rem;
+    border: 1px solid #e8ecf3;
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .filter-footer {
+      margin-top: 0.5rem;
+    }
   }
-  @media (min-width: 992px) {   /* lg */
-    .summary-items { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  /* SUMMARY ITEMS — fluid CSS Grid */
+  .summary-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.9rem;
   }
 
   .summary-item {
-    text-align: center;
-    padding: 1rem 1.25rem;
-    line-height: 1.35;
-    word-break: break-word;
-    font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1rem);
-    height: 100%;
+    padding: 1rem 1.15rem;
+    display: grid;
+    gap: 0.15rem;
+    align-items: flex-start;
+    border: 1px solid #e8ecf3;
+
+    .kpi-label {
+      font-weight: 700;
+      color: #1b2e3e;
+    }
+
+    .kpi-value {
+      font-size: clamp(1.15rem, 1rem + 0.4vw, 1.35rem);
+      font-weight: 800;
+      color: #0f3c5d;
+    }
+
+    .kpi-hint {
+      color: #607184;
+      font-size: 0.9rem;
+    }
   }
 
   /* CHARTS AREA */
-  .chart-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
+  .chart-lanes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
   }
 
-  /* (Removed global wrapper heights; the single height anchor is .chart-inner) */
+  .chart-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
 }
 
 /* one chart per card */
 .chart-card {
   position: relative;
-  z-index: 0;                  /* keep below neighbors that might be sticky */
+  z-index: 0;
   display: block;
-  margin-bottom: 1.5rem;       /* space between charts */
+  margin-bottom: 0; /* spacing handled by grid gaps */
   border-radius: inherit;
 }
 
@@ -53,10 +169,10 @@
 .chart-wrapper .surface-card {
   height: 100%;
   display: grid;
-  grid-template-rows: auto auto 1fr; /* title (auto), filters (auto), chart (1fr) */
-  overflow: hidden;            /* contain canvas paints inside the card */
-  isolation: isolate;          /* new stacking context */
-  contain: paint;              /* prevent paint bleed across siblings */
+  grid-template-rows: auto auto 1fr;
+  overflow: hidden;
+  isolation: isolate;
+  contain: paint;
 }
 
 .chart-card .chart-title {
@@ -67,7 +183,7 @@
 .chart-inner {
   position: relative;
   width: 100%;
-  height: 480px;               /* responsive height anchor — adjust as you like */
+  height: 480px;
   min-height: 320px;
   border-radius: inherit;
 }
@@ -87,8 +203,6 @@
   height: 100% !important;
 }
 
-/* (Removed host-wide p-chart height:100% rule to avoid re-expansion) */
-
 /* Dashboard surface */
 .surface-ground {
   background: #f4f7fa;
@@ -98,81 +212,10 @@
 /* Cards */
 :host ::ng-deep .surface-card {
   background-color: #fff !important;
-  padding: 24px; /* inner spacing */
-  border-radius: 12px; /* softer corners */
+  padding: 24px;
+  border-radius: 12px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
   margin-bottom: 1.25rem;
-}
-
-h1 {
-  font-size: 2rem;
-  color: #144f80;
-}
-
-.grid {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-/* Filters (top row) */
-.filter-section {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-
-  p-calendar { flex: 1 1 200px; }
-
-  .filter-selections {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1rem;
-  }
-}
-
-/* Chart filter row (dropdowns above charts) */
-.chart-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-
-  /* avoid built-in min-widths pushing layout */
-  > * { min-width: 0; }
-
-  :where(.p-dropdown, .p-select, .p-calendar) {
-    flex: 1 1 180px; /* desktop/tablet: two per row nicely */
-    min-width: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .filter-section {
-    flex-direction: column;
-    align-items: stretch;
-    .filter-selections {
-      flex-direction: column;
-      align-items: stretch;
-      width: 100%;
-      gap: 0.75rem;
-    }
-    .clear-all {
-      align-self: flex-start;
-    }
-  }
-  .chart-filters {
-    flex-direction: column;
-    :where(.p-dropdown, .p-select, .p-calendar) {
-      flex: 1 1 auto;
-      width: 100%;
-    }
-  }
-  .chart-inner {
-    height: clamp(420px, 65vh, 680px);
-    min-height: 360px;
-  }
 }
 
 /* Buttons */
@@ -180,7 +223,6 @@ h1 {
   align-items: center;
   background-color: #144f80 !important;
   color: #fff !important;
-  margin-bottom: 10px;
 
   &:hover { background-color: #0e3453; }
 }
@@ -198,7 +240,7 @@ mat-form-field {
   mat-label { color: #e18a25; }
 }
 
-/* “Clear All” link */
+/* "Clear All" link */
 .clear-all {
   text-align: center;
   display: inline-block;
@@ -209,7 +251,6 @@ mat-form-field {
   border-radius: 50px;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-top: 10px;
 
   &:hover { background-color: #e18a25; }
 }
@@ -230,12 +271,11 @@ mat-form-field {
   align-items: center;
   background-color: #144f80 !important;
   color: #fff !important;
-  margin-bottom: 10px;
 
   &:hover { background-color: #0e3453; }
 }
 
-/* “Solid” dropdown look */
+/* "Solid" dropdown look */
 :host ::ng-deep .solid-dropdown .p-select-overlay { background: #ffffff; }
 
 :host ::ng-deep .solid-dropdown .p-select,
@@ -276,6 +316,19 @@ mat-form-field {
 /* ===========================
    Mobile micro-tweaks
    =========================== */
+@media (max-width: 768px) {
+  .summary-dashboard .poseidon-hero {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .chart-inner {
+    height: clamp(420px, 65vh, 680px);
+    min-height: 360px;
+  }
+}
+
 @media (max-width: 480px) {
   .summary-item { padding: 0.875rem 1rem; }
 
@@ -288,4 +341,3 @@ mat-form-field {
 
 /* Safety: chart cards inside chart-section never enforce min-width */
 .summary-dashboard .chart-section > * { min-width: 0; }
-

@@ -1,6 +1,42 @@
 <div class="tps-page surface-card shadow-4 border-round">
+  <div class="tps-loading-overlay" *ngIf="loading$ | async">
+    <div class="tps-loading-card">
+      <mat-spinner diameter="48"></mat-spinner>
+      <div class="loading-text">Loading market data...</div>
+    </div>
+  </div>
   <div class="header-section">
-    <h2>TPS Reports</h2><p-divider />
+    <div class="header-content">
+      <h2>TPS Reports</h2>
+      <span class="context-note">Data is organized by market; add a city to narrow the view.</span>
+      <div class="selectors">
+        <div class="selector">
+          <label for="marketSelect">Market:</label>
+          <p-select
+            id="marketSelect"
+            [options]="markets"
+            [(ngModel)]="selectedMarket"
+            (onChange)="onMarketChange($event.value)"
+            optionLabel="label"
+            [style]="{ 'width': '170px' }"
+            placeholder="Select market">
+          </p-select>
+        </div>
+        <div class="selector">
+          <label for="citySelect">City/Metro (optional):</label>
+          <p-select 
+            id="citySelect"
+            [options]="cities" 
+            [(ngModel)]="selectedCity"
+            (onChange)="onCityChange($event.value)"
+            optionLabel="displayName"
+            [style]="{'width': '250px'}"
+            placeholder="Select a city/metro">
+          </p-select>
+        </div>
+      </div>
+    </div>
+    <p-divider />
   </div>
 
   <!-- add class="tps-tabs" so we can target these styles safely -->

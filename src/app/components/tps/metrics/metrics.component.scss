@@ -32,6 +32,31 @@
     td, th { padding-right: 12px; }
   }
 
+  .signed-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+  }
+
+  .signed-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  .signed-value.is-positive {
+    color: #1b7f3f;
+  }
+
+  .signed-value.is-negative {
+    color: #c62828;
+  }
+
+  .signed-value.is-neutral {
+    color: inherit;
+  }
+
   .empty td {
     padding: 12px;
     text-align: center;

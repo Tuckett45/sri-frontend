@@ -1,17 +1,19 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormBuilder } from '@angular/forms';
 import { CityScorecard } from 'src/app/models/city-scorecard.model';
-import { TpsService } from 'src/app/services/tps.service';
+import { CityOption, MarketOption, TpsService } from 'src/app/services/tps.service';
 import { MatSort } from '@angular/material/sort';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-city-scorecard',
   templateUrl: './city-scorecard.component.html',
   styleUrls: ['./city-scorecard.component.scss']
 })
-export class CityScorecardComponent implements OnInit {
+export class CityScorecardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   displayedColumns: string[] = [
     'city',
     'forecastedHHP',
@@ -47,12 +49,27 @@ export class CityScorecardComponent implements OnInit {
   constructor(private tpsService: TpsService, private fb: FormBuilder) {}
 
   ngOnInit(): void {
-    this.loadScorecard();
-    this.filterForm.valueChanges.subscribe(() => this.applyFilters());
+    combineLatest([this.tpsService.selectedMarket$, this.tpsService.selectedCity$])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([market, city]) => this.loadScorecard(market, city));
+    
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
   }
 
-  loadScorecard() {
-    this.tpsService.getCityScorecard().subscribe(res => {
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadScorecard(market: MarketOption, city: CityOption) {
+    const filters: any = { market: market.code };
+    if (city && !city.isAll) {
+      filters.segmentPrefix = city.segmentPrefix;
+      filters.metro = city.name;
+    }
+    this.tpsService.getCityScorecard(filters).subscribe(res => {
       this.scorecards = res;
       this.applyFilters();
     });

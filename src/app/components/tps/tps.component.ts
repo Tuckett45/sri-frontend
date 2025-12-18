@@ -1,5 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { SummaryComponent } from './summary/summary.component';
+import { ViolationsComponent } from './violations/violations.component';
+import { TpsService, CityOption, MarketOption } from 'src/app/services/tps.service';
 
 @Component({
   selector: 'app-tps',
@@ -8,8 +10,37 @@ import { SummaryComponent } from './summary/summary.component';
 })
 export class TpsComponent {
   activeTab = 0;
+  markets: MarketOption[] = [];
+  cities: CityOption[] = [];
+  selectedMarket!: MarketOption;
+  selectedCity: CityOption | null = null;
+  readonly loading$ = this.tpsService.loading$;
 
   @ViewChild(SummaryComponent) dashboard?: SummaryComponent;
+  @ViewChild(ViolationsComponent) violations?: ViolationsComponent;
+
+  constructor(public tpsService: TpsService) {
+    this.markets = this.tpsService.markets;
+    this.selectedMarket = this.tpsService.selectedMarket;
+    this.cities = this.tpsService.getCitiesForMarket(this.selectedMarket.code);
+    this.selectedCity = this.tpsService.selectedCity ?? this.tpsService.getDefaultCityForMarket(this.selectedMarket.code);
+  }
+
+  onMarketChange(market: MarketOption): void {
+    this.tpsService.setSelectedMarket(market);
+    this.selectedMarket = market;
+    this.cities = this.tpsService.getCitiesForMarket(market.code);
+    const fallbackCity = this.tpsService.getDefaultCityForMarket(market.code);
+    if (fallbackCity) {
+      this.selectedCity = fallbackCity;
+      this.tpsService.setSelectedCity(fallbackCity);
+    }
+  }
+
+  onCityChange(city: CityOption): void {
+    this.selectedCity = city;
+    this.tpsService.setSelectedCity(city);
+  }
 
   onTabChange(index: number | string): void {
     const idx = Number(index);
@@ -17,6 +48,9 @@ export class TpsComponent {
       if (idx === 0) {
         // Refresh charts when the Dashboard tab is active
         this.dashboard?.refreshCharts();
+      }
+      if (idx === 1) {
+        setTimeout(() => this.violations?.refresh());
       }
   }
 }
