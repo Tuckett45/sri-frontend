@@ -153,7 +153,7 @@ export class TpsService {
   };
 
   // Use the active build environment's API base URL
-  private baseUrl = `${local_environment.apiUrl}/tps`;
+  private baseUrl = `${environment.apiUrl}/tps`;
 
   constructor(private http: HttpClient) {}
 
