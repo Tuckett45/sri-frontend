@@ -92,6 +92,13 @@ import '../charts-setup';
 import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
 import { DailyReportModalComponent } from './components/modals/daily-report-modal/daily-report-modal.component';
 import { DailyReportDashboardModule } from './components/daily-report-dashboard/daily-report-dashboard.module';
+import { TechniciansListComponent } from './components/ark/technicians-list.component';
+import { JobsListComponent } from './components/ark/jobs-list.component';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { TooltipModule } from 'primeng/tooltip';
+import { InputGroupModule } from 'primeng/inputgroup';
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -133,7 +140,9 @@ export const customCurrencyMaskConfig = {
     MarketControllerModalComponent,
     UserNotificationsComponent,
     DailyReportModalComponent,
-    AdminUserApprovalComponent
+    AdminUserApprovalComponent,
+    TechniciansListComponent,
+    JobsListComponent
   ],
   imports: [
     NgxCurrencyDirective,
@@ -197,9 +206,15 @@ export const customCurrencyMaskConfig = {
     GoalsComponent,
     MeterGroupModule,
     DividerModule,
-    ChartComponent
+    ChartComponent,
+    ToastModule,
+    ProgressBarModule,
+    TooltipModule,
+    InputGroupModule
   ],
-  providers: [provideCharts(withDefaultRegisterables()),
+  providers: [
+    MessageService,
+    provideCharts(withDefaultRegisterables()),
     provideEnvironmentNgxCurrency({
       align: "right",
       allowNegative: true,

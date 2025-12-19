@@ -77,6 +77,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.authService.isAdmin() || this.authService.isHR()
     },
     {
+      label: 'ARK Technicians',
+      route: '/ark/technicians',
+      shouldShow: () => this.authService.isAdmin() || this.authService.isCM()
+    },
+    {
+      label: 'ARK Jobs',
+      route: '/ark/jobs',
+      shouldShow: () => this.authService.isAdmin() || this.authService.isCM()
+    },
+    {
       label: 'Profile',
       route: '/profile',
       shouldShow: () => true,
