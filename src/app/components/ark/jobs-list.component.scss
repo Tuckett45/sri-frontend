@@ -1,0 +1,153 @@
+.jobs-container {
+  padding: 1rem;
+
+  .card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+
+      h2 {
+        margin: 0;
+        color: #333;
+        font-size: 1.75rem;
+      }
+    }
+
+    .filters-section {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 200px;
+
+        label {
+          font-weight: 600;
+          font-size: 0.875rem;
+          color: #555;
+        }
+      }
+    }
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1rem;
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      &.col-4 {
+        grid-column: span 4;
+      }
+
+      &.col-6 {
+        grid-column: span 6;
+      }
+
+      &.col-8 {
+        grid-column: span 8;
+      }
+
+      &.col-12 {
+        grid-column: span 12;
+      }
+
+      label {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #333;
+      }
+    }
+  }
+
+  .text-muted {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  ::ng-deep {
+    .p-datatable .p-datatable-tbody > tr > td {
+      vertical-align: middle;
+    }
+
+    .p-progressbar {
+      height: 1rem;
+      width: 100px;
+    }
+
+    .p-tag {
+      font-weight: 600;
+    }
+
+    .p-button-rounded {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .p-inputnumber {
+      width: 100%;
+
+      input {
+        width: 100%;
+      }
+    }
+
+    .p-calendar {
+      width: 100%;
+
+      input {
+        width: 100%;
+      }
+    }
+
+    .p-dropdown {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .jobs-container {
+    .card {
+      .filters-section {
+        flex-direction: column;
+
+        .filter-group {
+          width: 100%;
+        }
+      }
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+
+      .field {
+        &.col-4,
+        &.col-6,
+        &.col-8,
+        &.col-12 {
+          grid-column: span 1;
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,293 @@
+<div class="jobs-container">
+  <div class="card">
+    <div class="card-header">
+      <h2>Jobs Management</h2>
+      <button pButton type="button" label="Add Job" icon="pi pi-plus" (click)="showCreateDialog()"></button>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+      <div class="filter-group">
+        <label for="statusFilter">Status:</label>
+        <p-dropdown 
+          id="statusFilter"
+          [options]="statuses" 
+          [(ngModel)]="selectedStatus" 
+          placeholder="All Statuses"
+          [showClear]="true"
+          (onChange)="filterByStatus()"
+        ></p-dropdown>
+      </div>
+
+      <div class="filter-group">
+        <label for="priorityFilter">Priority:</label>
+        <p-dropdown 
+          id="priorityFilter"
+          [options]="priorities" 
+          [(ngModel)]="selectedPriority" 
+          placeholder="All Priorities"
+          [showClear]="true"
+          (onChange)="filterByPriority()"
+        ></p-dropdown>
+      </div>
+
+      <div class="filter-group">
+        <label for="customerSearch">Customer:</label>
+        <div class="p-inputgroup">
+          <input 
+            id="customerSearch"
+            type="text" 
+            pInputText 
+            placeholder="Search by customer name..."
+            [(ngModel)]="searchCustomer"
+            (keyup.enter)="searchByCustomer()"
+          />
+          <button 
+            pButton 
+            type="button" 
+            icon="pi pi-search" 
+            (click)="searchByCustomer()"
+          ></button>
+        </div>
+      </div>
+
+      <button 
+        pButton 
+        type="button" 
+        label="Clear Filters" 
+        icon="pi pi-filter-slash" 
+        class="p-button-secondary"
+        (click)="clearFilters()"
+      ></button>
+    </div>
+
+    <!-- Jobs Table -->
+    <p-table 
+      [value]="jobs" 
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [globalFilterFields]="['jobNumber', 'customerName', 'jobTitle', 'jobType', 'siteCity']"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="jobNumber">Job # <p-sortIcon field="jobNumber"></p-sortIcon></th>
+          <th pSortableColumn="customerName">Customer <p-sortIcon field="customerName"></p-sortIcon></th>
+          <th pSortableColumn="jobTitle">Title <p-sortIcon field="jobTitle"></p-sortIcon></th>
+          <th pSortableColumn="jobType">Type <p-sortIcon field="jobType"></p-sortIcon></th>
+          <th pSortableColumn="priority">Priority <p-sortIcon field="priority"></p-sortIcon></th>
+          <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+          <th pSortableColumn="siteCity">Location <p-sortIcon field="siteCity"></p-sortIcon></th>
+          <th pSortableColumn="requestedStartDate">Start Date <p-sortIcon field="requestedStartDate"></p-sortIcon></th>
+          <th>Completion</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-job>
+        <tr>
+          <td><strong>{{ job.jobNumber }}</strong></td>
+          <td>
+            <div>{{ job.customerName }}</div>
+            <small class="text-muted" *ngIf="job.customerEmail">{{ job.customerEmail }}</small>
+          </td>
+          <td>{{ job.jobTitle }}</td>
+          <td>{{ job.jobType }}</td>
+          <td>
+            <p-tag [severity]="getPrioritySeverity(job.priority)" [value]="job.priority"></p-tag>
+          </td>
+          <td>
+            <p-tag [severity]="getStatusSeverity(job.status)" [value]="job.status"></p-tag>
+          </td>
+          <td>{{ job.siteCity || 'N/A' }}</td>
+          <td>{{ job.requestedStartDate | date: 'MMM d, y' }}</td>
+          <td>
+            <p-progressBar [value]="job.completionPercentage" [showValue]="true"></p-progressBar>
+          </td>
+          <td>
+            <button 
+              pButton 
+              type="button" 
+              icon="pi pi-pencil" 
+              class="p-button-rounded p-button-text p-button-primary"
+              (click)="showEditDialog(job)"
+              pTooltip="Edit Job"
+            ></button>
+            <button 
+              pButton 
+              type="button" 
+              icon="pi pi-trash" 
+              class="p-button-rounded p-button-text p-button-danger"
+              (click)="deleteJob(job)"
+              pTooltip="Delete Job"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" style="text-align: center;">No jobs found</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Create/Edit Job Dialog -->
+<p-dialog 
+  [(visible)]="displayDialog" 
+  [header]="isEditing ? 'Edit Job' : 'Create Job'"
+  [modal]="true"
+  [style]="{width: '70vw'}"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="form-grid">
+    <div class="field col-6">
+      <label for="jobNumber">Job Number *</label>
+      <input id="jobNumber" type="text" pInputText [(ngModel)]="jobForm.jobNumber" class="w-full" required />
+    </div>
+
+    <div class="field col-6">
+      <label for="jobType">Job Type *</label>
+      <p-dropdown 
+        id="jobType"
+        [options]="jobTypes" 
+        [(ngModel)]="jobForm.jobType" 
+        placeholder="Select Job Type"
+        class="w-full"
+      ></p-dropdown>
+    </div>
+
+    <div class="field col-12">
+      <label for="jobTitle">Job Title *</label>
+      <input id="jobTitle" type="text" pInputText [(ngModel)]="jobForm.jobTitle" class="w-full" required />
+    </div>
+
+    <div class="field col-12">
+      <label for="jobDescription">Job Description</label>
+      <textarea 
+        id="jobDescription" 
+        pInputTextarea 
+        [(ngModel)]="jobForm.jobDescription" 
+        rows="3"
+        class="w-full"
+      ></textarea>
+    </div>
+
+    <div class="field col-6">
+      <label for="customerName">Customer Name *</label>
+      <input id="customerName" type="text" pInputText [(ngModel)]="jobForm.customerName" class="w-full" required />
+    </div>
+
+    <div class="field col-6">
+      <label for="customerEmail">Customer Email</label>
+      <input id="customerEmail" type="email" pInputText [(ngModel)]="jobForm.customerEmail" class="w-full" />
+    </div>
+
+    <div class="field col-6">
+      <label for="customerPhone">Customer Phone</label>
+      <input id="customerPhone" type="tel" pInputText [(ngModel)]="jobForm.customerPhone" class="w-full" />
+    </div>
+
+    <div class="field col-6">
+      <label for="priority">Priority *</label>
+      <p-dropdown 
+        id="priority"
+        [options]="priorities" 
+        [(ngModel)]="jobForm.priority" 
+        placeholder="Select Priority"
+        class="w-full"
+      ></p-dropdown>
+    </div>
+
+    <div class="field col-8">
+      <label for="siteAddress">Site Address *</label>
+      <input id="siteAddress" type="text" pInputText [(ngModel)]="jobForm.siteAddress" class="w-full" required />
+    </div>
+
+    <div class="field col-4">
+      <label for="siteCity">City</label>
+      <input id="siteCity" type="text" pInputText [(ngModel)]="jobForm.siteCity" class="w-full" />
+    </div>
+
+    <div class="field col-6">
+      <label for="latitude">Latitude</label>
+      <p-inputNumber 
+        id="latitude"
+        [(ngModel)]="jobForm.latitude" 
+        mode="decimal" 
+        [minFractionDigits]="6"
+        [maxFractionDigits]="8"
+        class="w-full"
+      ></p-inputNumber>
+    </div>
+
+    <div class="field col-6">
+      <label for="longitude">Longitude</label>
+      <p-inputNumber 
+        id="longitude"
+        [(ngModel)]="jobForm.longitude" 
+        mode="decimal" 
+        [minFractionDigits]="6"
+        [maxFractionDigits]="8"
+        class="w-full"
+      ></p-inputNumber>
+    </div>
+
+    <div class="field col-6">
+      <label for="requestedStartDate">Requested Start Date</label>
+      <p-calendar 
+        id="requestedStartDate" 
+        [(ngModel)]="jobForm.requestedStartDate" 
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        class="w-full"
+      ></p-calendar>
+    </div>
+
+    <div class="field col-6">
+      <label for="requestedCompletionDate">Requested Completion Date</label>
+      <p-calendar 
+        id="requestedCompletionDate" 
+        [(ngModel)]="jobForm.requestedCompletionDate" 
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        class="w-full"
+      ></p-calendar>
+    </div>
+
+    <div class="field col-6">
+      <label for="requiredTechnicians">Required Technicians *</label>
+      <p-inputNumber 
+        id="requiredTechnicians"
+        [(ngModel)]="jobForm.requiredTechnicians" 
+        [min]="1"
+        [showButtons]="true"
+        class="w-full"
+      ></p-inputNumber>
+    </div>
+
+    <div class="field col-6">
+      <label for="estimatedCost">Estimated Cost</label>
+      <p-inputNumber 
+        id="estimatedCost"
+        [(ngModel)]="jobForm.estimatedCost" 
+        mode="currency" 
+        currency="USD"
+        class="w-full"
+      ></p-inputNumber>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" icon="pi pi-times" class="p-button-text" (click)="displayDialog = false"></button>
+    <button pButton type="button" label="Save" icon="pi pi-check" (click)="saveJob()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
+

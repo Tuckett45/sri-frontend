@@ -93,8 +93,12 @@ import { UserNotificationsComponent } from './components/notifications/user-noti
 import { DailyReportModalComponent } from './components/modals/daily-report-modal/daily-report-modal.component';
 import { DailyReportDashboardModule } from './components/daily-report-dashboard/daily-report-dashboard.module';
 import { TechniciansListComponent } from './components/ark/technicians-list.component';
+import { JobsListComponent } from './components/ark/jobs-list.component';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { TooltipModule } from 'primeng/tooltip';
+import { InputGroupModule } from 'primeng/inputgroup';
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -137,7 +141,8 @@ export const customCurrencyMaskConfig = {
     UserNotificationsComponent,
     DailyReportModalComponent,
     AdminUserApprovalComponent,
-    TechniciansListComponent
+    TechniciansListComponent,
+    JobsListComponent
   ],
   imports: [
     NgxCurrencyDirective,
@@ -202,7 +207,10 @@ export const customCurrencyMaskConfig = {
     MeterGroupModule,
     DividerModule,
     ChartComponent,
-    ToastModule
+    ToastModule,
+    ProgressBarModule,
+    TooltipModule,
+    InputGroupModule
   ],
   providers: [
     MessageService,

@@ -55,16 +55,66 @@ export interface Job {
   jobId: number;
   jobNumber: string;
   customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
   jobTitle: string;
+  jobDescription?: string;
   jobType: string;
   priority: string;
   siteAddress: string;
   siteCity?: string;
-  status: string;
+  latitude?: number;
+  longitude?: number;
   requestedStartDate?: Date;
   requestedCompletionDate?: Date;
   requiredTechnicians: number;
+  status: string;
   completionPercentage: number;
+  estimatedCost?: number;
+  createdAt: Date;
+  updatedAt: Date;
+  isDeleted: boolean;
+  isOpen: boolean;
+  isCompleted: boolean;
+}
+
+export interface CreateJobDto {
+  jobNumber: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  jobTitle: string;
+  jobDescription?: string;
+  jobType: string;
+  priority: string;
+  siteAddress: string;
+  siteCity?: string;
+  latitude?: number;
+  longitude?: number;
+  requestedStartDate?: Date;
+  requestedCompletionDate?: Date;
+  requiredTechnicians: number;
+  estimatedCost?: number;
+}
+
+export interface UpdateJobDto {
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  jobTitle?: string;
+  jobDescription?: string;
+  jobType?: string;
+  priority?: string;
+  siteAddress?: string;
+  siteCity?: string;
+  latitude?: number;
+  longitude?: number;
+  requestedStartDate?: Date;
+  requestedCompletionDate?: Date;
+  requiredTechnicians?: number;
+  status?: string;
+  completionPercentage?: number;
+  estimatedCost?: number;
 }
 
 export interface WorkOrder {
