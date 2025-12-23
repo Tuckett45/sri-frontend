@@ -77,7 +77,8 @@ mat-toolbar {
       gap: 12px;
       white-space: normal;
       overflow-y: auto;
-      max-height: 80vh;
+      max-height: calc(100vh - 60px);
+      box-sizing: border-box;
 
       button {
         width: 100%;

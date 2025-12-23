@@ -419,6 +419,12 @@
   white-space: pre-wrap !important;
 }
 
+::ng-deep .p-tablist {
+    display: flex;
+    position: relative;
+    overflow: auto;
+}
+
 ::ng-deep .p-tablist-tab-list {
   position: relative;
   display: flex;

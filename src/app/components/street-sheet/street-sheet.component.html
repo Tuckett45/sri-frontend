@@ -1,144 +1,222 @@
 <div class="street-sheet-page">
-  <mat-sidenav-container class="sidenav-container">
-    <mat-sidenav #sidenav mode="side" [ngClass]="{ 'open': sidenavOpen, 'closed': !sidenavOpen }" opened="false" class="side-panel">
-      <div class="side-panel-header">
-        <div class="header-title-container">
-          <h2 class="modal-title">Added Street Markers</h2>
-          <button mat-icon-button class="close-btn" (click)="toggleSidePanel(sidenav)">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
-        <div class="header-button-container">
-          <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleSearchBar()">
-            <mat-icon>search</mat-icon>
-          </button>
-          <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleUserSearch()">
-            <mat-icon>account_circle</mat-icon>
-          </button>
-          <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleDateRange()">
-            <mat-icon>calendar_today</mat-icon>
-          </button>
-          <button style="background-color: #144f80" mat-icon-button matSuffix (click)="toggleLocation()">
-            <mat-icon>location_on</mat-icon>
-          </button>
-        </div>
-        <div class="filter-section" *ngIf="dateRangeOpen">
-          <mat-form-field appearance="fill" class="w-full">
-            <mat-label>Start Date</mat-label>
-            <input matInput [matDatepicker]="startDatePicker" [(ngModel)]="startDate" (change)="applyFilters()">
-            <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
-            <mat-datepicker #startDatePicker></mat-datepicker>
-          </mat-form-field>
-          
-          <!-- End Date Filter -->
-          <mat-form-field appearance="fill" class="w-full">
-            <mat-label>End Date</mat-label>
-            <input matInput [matDatepicker]="endDatePicker" [(ngModel)]="endDate" (change)="applyFilters()">
-            <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
-            <mat-datepicker #endDatePicker></mat-datepicker>
-          </mat-form-field>
-        
-          <button mat-raised-button style="background-color: #144f80" (click)="applyFilters()">Apply Filter</button>
-          <button mat-raised-button style="align-self: flex-end; background-color: #a50000" (click)="removeFilter()">Remove Filter</button>
-        </div>
-        
-        <div class="filter-section" *ngIf="userSearchOpen">
-          <mat-form-field appearance="fill" class="filter-input">
-            <mat-label>Filter by Created By</mat-label>
-            <mat-select placeholder="Select User" [(ngModel)]="filterUser" (selectionChange)="applyLocalFilters()">
-              <mat-option value="">-- Clear Filter --</mat-option>
-              <mat-option *ngFor="let user of uniqueCreatedByUsers" [value]="user">
-                {{ user }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-        
-        <div class="filter-section" *ngIf="searchBarOpen">
-          <mat-form-field appearance="fill" class="filter-input">
-            <mat-label>Search by Segment ID</mat-label>
-            <input matInput [(ngModel)]="filterText" (keyup)="applyLocalFilters()" placeholder="Search...">
-          </mat-form-field>
-        </div>
-        
-        <div class="filter-section" *ngIf="locationOpen">
-          <mat-form-field appearance="fill" class="filter-input">
-            <mat-label>Filter Location</mat-label>
-            <mat-select placeholder="Select a Location" [(ngModel)]="filterSheetsByLocation" (selectionChange)="applyLocalFilters()">
-              <mat-option value="">-- Clear Filter --</mat-option>
-              <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
-                {{ location }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
+  <div class="dashboard-view">
+    <div class="dashboard-header">
+      <div>
+        <h2>Street Sheet Dashboard</h2>
+        <p class="muted-text">Daily snapshot of CM submissions and gaps</p>
       </div>
-        
-
-      <div class="border-round select-none">
-        <ul class="list-none p-2 m-0">
-          <li *ngFor="let streetSheet of filteredStreetSheets">
-            <a pRipple class="flex align-items-center cursor-pointer p-1 border-round transition-colors transition-duration-150"
-            pStyleClass="@next" enterClass="hidden" enterActiveClass="slidedown" leaveToClass="hidden" leaveActiveClass="slideup" style="background-color: #144f80; color: azure;">
-            <i class="pi pi-chevron-down text-500 pl-2"></i>
-              <div class="flex-grow" (click)="selectStreetSheet(streetSheet)">
-                <h5><b style="font-weight: 400;">{{ streetSheet.segmentId }}</b></h5>
-              </div>
-              <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="editStreetSheet(streetSheet)" class="edit-icon ml-2">edit</mat-icon>
-              <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialog(streetSheet)" class="delete-icon ml-2">delete</mat-icon>
-              <span *ngIf="this.user.role !== 'CM'" class="ml-3"></span>
-            </a>
-            <ul style="align-items: start; display: flex; flex-direction: column; background-color: lightgray;" 
-                class="list-none py-0 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out">
-              <li class="w-full overflow-y-hidden" *ngFor="let marker of streetSheet.marker" (click)="selectMarker(marker, streetSheet, sidenav)">
-                <a pRipple class="flex align-items-center cursor-pointer p-1 hover:surface-100 border-round transition-colors transition-duration-150">
-                  <i class="pi pi-map-marker mr-2 text-700"></i>
-                  <span class="font-medium text-700">
-                    {{ reversedAddresses[marker.id].street || marker.longitude + '-' + marker.longitude}}
-                  </span>
-                  <mat-icon *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="openDeleteConfirmationDialogMapMarker(marker)" class="delete-icon ml-2">delete</mat-icon>
-                </a>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </mat-sidenav>
-
-    <mat-sidenav-content>
-      <div row class="header-section">
-        <div class="col-lg-3 location-filter">
-          <mat-form-field appearance="outline" class="filter-input">
-            <mat-label>Go to Location</mat-label>
-            <mat-select placeholder="Select a Location" [(ngModel)]="filterLocation" (selectionChange)="goToLocation($event.value)">
-              <mat-option value="">-- Clear Filter --</mat-option>
-              <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
-                {{ location }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-        <div class="col-lg-9 header-title">
-          <h2>Street Sheets</h2>
-        </div>
-      </div>
-
-      <div class="marker-btns">
-        <button (click)="toggleSidePanel(sidenav)" mat-raised-button>
-          <mat-icon> list_alt</mat-icon> 
-          Show Markers
+      <div class="dashboard-actions">
+        <button mat-stroked-button class="toggle-btn" (click)="toggleDashboardFilters()">
+          {{ showDashboardFilters ? 'Hide filters' : 'Show filters' }}
         </button>
-        <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" mat-raised-button (click)="addMapMarker()">
-          <mat-icon>add_location</mat-icon> 
-          Add Map Marker
+        <button mat-stroked-button class="reset-btn" (click)="clearDashboardFilters()">Reset</button>
+        <button mat-raised-button class="refresh-btn" (click)="applyDashboardFilters()">Refresh</button>
+        <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" 
+                mat-raised-button class="map-btn" (click)="addMapMarker()">
+          <mat-icon>add_location</mat-icon>
+          Add Marker
         </button>
-        <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" (click)="createStreetSheet()" mat-raised-button>
-          <mat-icon>note_add</mat-icon> 
+        <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" 
+                mat-raised-button class="map-btn" (click)="createStreetSheet()">
+          <mat-icon>note_add</mat-icon>
           New Street Sheet
         </button>
       </div>
-      
-      <street-sheet-map></street-sheet-map>
-    </mat-sidenav-content>
-  </mat-sidenav-container>
+    </div>
+
+    <div class="dashboard-filters" *ngIf="showDashboardFilters">
+      <mat-form-field appearance="outline">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="dashStart" [(ngModel)]="dashboardStartDate" (dateChange)="onDashboardDateChange()">
+        <mat-datepicker-toggle matSuffix [for]="dashStart"></mat-datepicker-toggle>
+        <mat-datepicker #dashStart></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="dashEnd" [(ngModel)]="dashboardEndDate" (dateChange)="onDashboardDateChange()">
+        <mat-datepicker-toggle matSuffix [for]="dashEnd"></mat-datepicker-toggle>
+        <mat-datepicker #dashEnd></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Market</mat-label>
+        <mat-select [(ngModel)]="dashboardMarketFilter" (selectionChange)="applyDashboardFilters()">
+          <mat-option value="">All markets</mat-option>
+          <mat-option *ngFor="let market of marketOptions" [value]="market">
+            {{ market }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Vendor</mat-label>
+        <mat-select [(ngModel)]="dashboardVendorFilter" (selectionChange)="applyDashboardFilters()">
+          <mat-option value="">All vendors</mat-option>
+          <mat-option *ngFor="let vendor of vendorOptions" [value]="vendor">
+            {{ vendor }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>PM</mat-label>
+        <mat-select [(ngModel)]="dashboardPmFilter" (selectionChange)="applyDashboardFilters()">
+          <mat-option value="">All PMs</mat-option>
+          <mat-option *ngFor="let pm of pmNameOptions" [value]="pm">
+            {{ pm }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>CM</mat-label>
+        <mat-select [(ngModel)]="dashboardCmFilter" (selectionChange)="applyDashboardFilters()">
+          <mat-option value="">All CMs</mat-option>
+          <mat-option *ngFor="let cm of filteredCmOptions" [value]="cm.id">
+            {{ cm.name }} <span *ngIf="cm.market">({{ cm.market }})</span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="dashboard-metrics">
+      <div class="metric-card primary">
+        <span class="metric-label">Sheets in range</span>
+        <div class="metric-value">{{ dashboardMetrics.total }}</div>
+        <span class="metric-sub">After filters</span>
+      </div>
+      <div class="metric-card success">
+        <span class="metric-label">CMs submitted</span>
+        <div class="metric-value">{{ dashboardMetrics.withEntries }}</div>
+        <span class="metric-sub">At least one sheet</span>
+      </div>
+      <div class="metric-card warning">
+        <span class="metric-label">CMs missing</span>
+        <div class="metric-value">{{ dashboardMetrics.withoutEntries }}</div>
+        <span class="metric-sub">No sheets in range</span>
+      </div>
+      <div class="metric-card muted">
+        <span class="metric-label">Last refresh</span>
+        <div class="metric-value small">{{ dashboardMetrics.lastRefreshed | date:'MMM d, h:mm a' }}</div>
+        <span class="metric-sub">Local time</span>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="left-column">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Submitted</h3>
+            <span class="muted-text">CMs with sheets in range</span>
+          </div>
+          <table class="dashboard-table compact">
+            <thead>
+              <tr>
+                <th>CM</th>
+                <th>Market</th>
+                <th>Count</th>
+                <th>Last Submitted</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of pagedSubmitted">
+                <td>{{ row.user.name }}</td>
+                <td>{{ row.user.market || 'N/A' }}</td>
+                <td>{{ row.sheetCount }}</td>
+                <td>{{ row.lastSubmitted | date:'MMM d, h:mm a' }}</td>
+              </tr>
+              <tr *ngIf="!cmsWithEntries.length">
+                <td colspan="4" class="muted-text">No CM submissions for the selected window.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-pagination" *ngIf="cmsWithEntries.length">
+            <button mat-stroked-button class="reset-btn" (click)="prevSubmittedPage()" [disabled]="submittedPageIndex === 0">Prev</button>
+            <span>Page {{ submittedPageIndex + 1 }} of {{ submittedPageCount }}</span>
+            <button mat-stroked-button class="refresh-btn" (click)="nextSubmittedPage()" [disabled]="submittedPageIndex + 1 >= submittedPageCount">Next</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Missing</h3>
+            <span class="muted-text">CMs without sheets in range</span>
+          </div>
+        <ul class="missing-list">
+          <li *ngFor="let row of pagedMissing">
+            <div>
+              <div class="name">{{ row.user.name }}</div>
+              <div class="muted-text">{{ row.user.market || 'N/A' }}</div>
+            </div>
+            <span class="chip warning-chip">No entry</span>
+          </li>
+          <li *ngIf="!cmsWithoutEntries.length" class="muted-text">All tracked CMs have submitted.</li>
+        </ul>
+        <div class="table-pagination" *ngIf="cmsWithoutEntries.length">
+          <button mat-stroked-button class="reset-btn" (click)="prevMissingPage()" [disabled]="missingPageIndex === 0">Prev</button>
+          <span>Page {{ missingPageIndex + 1 }} of {{ missingPageCount }}</span>
+          <button mat-stroked-button class="refresh-btn" (click)="nextMissingPage()" [disabled]="missingPageIndex + 1 >= missingPageCount">Next</button>
+        </div>
+      </div>
+
+        <div class="panel table-panel">
+          <div class="panel-header">
+            <div>
+              <h3>Street Sheets in range</h3>
+              <span class="muted-text">Filtered list for the dashboard window</span>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table class="dashboard-table">
+              <thead>
+                <tr>
+                <th (click)="changeSort('segmentId')" class="sortable">Segment <span *ngIf="sortField === 'segmentId'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+                <th (click)="changeSort('vendorName')" class="sortable">Vendor <span *ngIf="sortField === 'vendorName'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+                <th (click)="changeSort('pm')" class="sortable">PM <span *ngIf="sortField === 'pm'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+                <th (click)="changeSort('city')" class="sortable">Location <span *ngIf="sortField === 'city'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+                <th (click)="changeSort('createdBy')" class="sortable">Created By <span *ngIf="sortField === 'createdBy'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+                <th (click)="changeSort('date')" class="sortable">Date <span *ngIf="sortField === 'date'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let sheet of pagedDashboardStreetSheets" (click)="selectStreetSheet(sheet)" class="clickable-row">
+                  <td>{{ sheet.segmentId }}</td>
+                  <td>{{ sheet.vendorName }}</td>
+                  <td>{{ sheet.pm || 'N/A' }}</td>
+                  <td>{{ sheet.city }}, {{ sheet.state }}</td>
+                  <td>{{ sheet.createdBy || 'Unknown' }}</td>
+                  <td>{{ sheet.date | date:'MMM d, y' }}</td>
+                </tr>
+                <tr *ngIf="!dashboardStreetSheets.length">
+                  <td colspan="6" class="muted-text">No street sheets match the selected filters.</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="table-pagination" *ngIf="dashboardStreetSheets.length">
+              <button mat-stroked-button class="reset-btn" (click)="prevPage()" [disabled]="pageIndex === 0">Prev</button>
+              <span>Page {{ pageIndex + 1 }} of {{ pageCount }}</span>
+              <button mat-stroked-button class="refresh-btn" (click)="nextPage()" [disabled]="pageIndex + 1 >= pageCount">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel map-panel">
+        <div class="panel-header">
+          <h3 style="color: white;">Street Sheet Map</h3>
+          <div class="map-controls">
+            <mat-form-field appearance="outline" class="map-location-select">
+              <mat-label>Go to Location</mat-label>
+              <mat-select placeholder="Select a Location" [(ngModel)]="filterLocation" (selectionChange)="goToLocation($event.value)">
+                <mat-option value="">Reset view</mat-option>
+                <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
+                  {{ location }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="mini-map-container">
+          <street-sheet-map></street-sheet-map>
+        </div>
+        <div class="map-hint muted-text">Select rows to focus the map on that street sheet.</div>
+      </div>
+    </div>
+  </div>
 </div>

@@ -18,7 +18,12 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { GeocodingService } from 'src/app/services/geocoding.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { StateLocation } from 'src/app/models/state-location.enum';
-import { marker } from 'leaflet';
+
+interface CmDashboardRow {
+  user: Partial<User>;
+  sheetCount: number;
+  lastSubmitted?: Date;
+}
 
 @Component({
   selector: 'app-street-sheet',
@@ -53,9 +58,36 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   filterSheetsByLocation: string = '';
   filteredLocations: string[] = [];
   uniqueCreatedByUsers: string[] = [];
+  vendorOptions: string[] = [];
+  pmNameOptions: string[] = [];
+  marketOptions: string[] = [];
 
   @ViewChild(StreetSheetMapComponent) streetSheetMapComponent!: StreetSheetMapComponent;
   dataSource: MatTableDataSource<StreetSheet> = new MatTableDataSource();
+
+  // Dashboard state
+  isAdmin = false;
+  tabIndex = 0;
+  dashboardStartDate!: Date;
+  dashboardEndDate!: Date;
+  dashboardVendorFilter = '';
+  dashboardPmFilter = '';
+  dashboardMarketFilter = '';
+  dashboardCmFilter = '';
+  dashboardStreetSheets: StreetSheet[] = [];
+  cmsWithEntries: CmDashboardRow[] = [];
+  cmsWithoutEntries: CmDashboardRow[] = [];
+  cmUsers: User[] = [];
+  dashboardMetrics = { total: 0, withEntries: 0, withoutEntries: 0, lastRefreshed: new Date() };
+  showDashboardFilters = true;
+  pageSize = 5;
+  pageIndex = 0;
+  submittedPageSize = 5;
+  submittedPageIndex = 0;
+  missingPageSize = 5;
+  missingPageIndex = 0;
+  sortField: keyof StreetSheet | '' = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
 
   constructor(
     private dialog: MatDialog, 
@@ -69,6 +101,14 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.fetchPMOptions();
     this.user = this.authService.getUser();
+    this.isAdmin = this.user?.role === 'Admin';
+    this.dashboardStartDate = this.startOfDay(new Date());
+    this.dashboardEndDate = this.endOfDay(new Date());
+    if (this.isAdmin) {
+      this.loadCmUsers();
+    } else if (this.user) {
+      this.cmUsers = [this.user];
+    }
     this.getStreetSheets();
   }
 
@@ -101,6 +141,8 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
             this.filteredStreetSheets = this.streetSheets;
             this.getLocationFilter();
             this.getUniqueCreatedByUsers();
+            this.refreshLookupOptions();
+            this.refreshDashboardData();
         });
     });
   }
@@ -171,12 +213,26 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
       this.authService.getUserByRole('PM').subscribe({
         next: (users) => {
           this.pmOptions = users;
+          this.pmNameOptions = users.map(pm => pm.name).filter(name => !!name);
           resolve(users);
         },
         error: (error) => {
           reject(error);
         }
       });
+    });
+  }
+
+  private loadCmUsers(): void {
+    this.authService.getUserByRole('CM').subscribe({
+      next: users => {
+        this.cmUsers = users || [];
+        this.setMarketOptions();
+        this.refreshDashboardData();
+      },
+      error: () => {
+        this.cmUsers = [];
+      }
     });
   }
 
@@ -187,8 +243,12 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   }
 
   selectStreetSheet(streetSheet: StreetSheet): void {
+    if (!streetSheet) {
+      return;
+    }
     this.selectedStreetSheet = streetSheet;
     this.streetSheetMapComponent.centerMapOnStreetSheet(streetSheet); 
+    this.streetSheetMapComponent.openStreetSheetPopup(streetSheet);
   }
 
   selectMarker(marker: MapMarker, streetSheet: StreetSheet, sidenav: any): void {
@@ -332,6 +392,39 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.filteredLocations = Array.from(locationSet); 
   }
 
+  private refreshLookupOptions(): void {
+    const vendors = new Set<string>();
+    const markets = new Set<string>(this.marketOptions.map(m => m.toUpperCase()));
+
+    this.streetSheets.forEach(streetSheet => {
+      if (streetSheet.vendorName) {
+        vendors.add(streetSheet.vendorName);
+      }
+      if (streetSheet.state) {
+        markets.add((streetSheet.state || '').toUpperCase());
+      }
+    });
+
+    this.cmUsers.forEach(user => {
+      if (user.market) {
+        markets.add((user.market || '').toUpperCase());
+      }
+    });
+
+    this.vendorOptions = Array.from(vendors);
+    this.marketOptions = Array.from(markets);
+  }
+
+  private setMarketOptions(): void {
+    const markets = new Set<string>(this.marketOptions.map(m => m.toUpperCase()));
+    this.cmUsers.forEach(cm => {
+      if (cm.market) {
+        markets.add(cm.market.toUpperCase());
+      }
+    });
+    this.marketOptions = Array.from(markets);
+  }
+
   goToLocation(location: string): void {
     this.streetSheetMapComponent.goToLocation(location);
   }
@@ -378,6 +471,8 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
             this.filteredStreetSheets = this.streetSheets;
             this.getLocationFilter();
             this.getUniqueCreatedByUsers();
+            this.refreshLookupOptions();
+            this.refreshDashboardData();
         });
     });
     } else {
@@ -413,6 +508,377 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     }
   
     this.filteredStreetSheets = filteredStreetSheets;
+  }
+
+  applyDashboardFilters(): void {
+    this.dashboardStreetSheets = this.applyDashboardFiltersInternal();
+    this.pageIndex = 0;
+    this.submittedPageIndex = 0;
+    this.missingPageIndex = 0;
+    this.sortDashboardSheets();
+    this.loadCmStats();
+  }
+
+  onDashboardDateChange(): void {
+    if (this.dashboardStartDate) {
+      this.dashboardStartDate = this.startOfDay(this.dashboardStartDate);
+    }
+    if (this.dashboardEndDate) {
+      this.dashboardEndDate = this.endOfDay(this.dashboardEndDate);
+    }
+    this.pageIndex = 0;
+    this.submittedPageIndex = 0;
+    this.missingPageIndex = 0;
+    this.applyDashboardFilters();
+  }
+
+  clearDashboardFilters(): void {
+    this.dashboardVendorFilter = '';
+    this.dashboardPmFilter = '';
+    this.dashboardMarketFilter = '';
+    this.dashboardCmFilter = '';
+    this.dashboardStartDate = this.startOfDay(new Date());
+    this.dashboardEndDate = this.endOfDay(new Date());
+    this.pageIndex = 0;
+    this.submittedPageIndex = 0;
+    this.missingPageIndex = 0;
+    this.applyDashboardFilters();
+  }
+
+  toggleDashboardFilters(): void {
+    this.showDashboardFilters = !this.showDashboardFilters;
+  }
+
+  private refreshDashboardData(): void {
+    this.dashboardStreetSheets = this.applyDashboardFiltersInternal();
+    this.sortDashboardSheets();
+    this.loadCmStats();
+  }
+
+  private applyDashboardFiltersInternal(): StreetSheet[] {
+    if (!this.streetSheets) {
+      return [];
+    }
+    let filtered = [...this.streetSheets];
+
+    if (!this.isAdmin && this.user) {
+      filtered = filtered.filter(sheet => this.sheetCreatedByUser(sheet, this.user));
+    }
+
+    filtered = filtered.filter(streetSheet =>
+      this.isWithinRange(streetSheet.date, this.dashboardStartDate, this.dashboardEndDate)
+    );
+
+    if (this.dashboardVendorFilter) {
+      filtered = filtered.filter(sheet => (sheet.vendorName || '').toLowerCase() === this.dashboardVendorFilter.toLowerCase());
+    }
+
+    if (this.dashboardPmFilter) {
+      filtered = filtered.filter(sheet => (sheet.pm || '').toLowerCase() === this.dashboardPmFilter.toLowerCase());
+    }
+
+    if (this.dashboardMarketFilter) {
+      filtered = filtered.filter(sheet => (sheet.state || '').toLowerCase() === this.dashboardMarketFilter.toLowerCase());
+    }
+
+    if (this.dashboardCmFilter) {
+      const cm = this.cmUsers.find(user => user.id === this.dashboardCmFilter);
+      if (cm) {
+        filtered = filtered.filter(sheet => this.sheetCreatedByUser(sheet, cm));
+      }
+    }
+
+    return filtered;
+  }
+
+  private loadCmStats(): void {
+    if (this.isAdmin && this.dashboardStartDate && this.dashboardEndDate) {
+      const filters = {
+        market: this.dashboardMarketFilter || undefined,
+        vendor: this.dashboardVendorFilter || undefined,
+        pm: this.dashboardPmFilter || undefined,
+        cmId: this.dashboardCmFilter || undefined
+      };
+
+      this.streetSheetService.getCmSubmissionStats(this.dashboardStartDate, this.dashboardEndDate, filters).subscribe({
+        next: stats => {
+          const submitted = stats?.submittedCms || [];
+          const notSubmitted = stats?.notSubmittedCms || [];
+
+          this.cmsWithEntries = submitted.map((cm: any) => ({
+            user: { id: cm.id, name: cm.name, market: cm.market },
+            sheetCount: cm.sheetCount ?? 1,
+            lastSubmitted: cm.lastSubmitted ? new Date(cm.lastSubmitted) : undefined
+          }));
+
+          this.cmsWithoutEntries = (notSubmitted as any[]).map((cm: any) => ({
+            user: { id: cm.id, name: cm.name, market: cm.market },
+            sheetCount: 0
+          }));
+
+          this.mergeCmOptionsFromStats([...submitted, ...notSubmitted]);
+
+          const withCount = stats?.submittedCount ?? this.cmsWithEntries.length;
+          const withoutCount = stats?.notSubmittedCount ?? this.cmsWithoutEntries.length;
+
+          this.submittedPageIndex = 0;
+          this.missingPageIndex = 0;
+
+          // Merge PMs returned from stats (if present) into the PM filter options
+          if (Array.isArray(stats?.pms)) {
+            const merged = new Set<string>(this.pmNameOptions);
+            stats.pms.filter((p: string) => !!p).forEach((p: string) => merged.add(p));
+            this.pmNameOptions = Array.from(merged);
+          }
+
+          this.dashboardMetrics = {
+            total: withCount + withoutCount,
+            withEntries: withCount,
+            withoutEntries: withoutCount,
+            lastRefreshed: new Date()
+          };
+        },
+        error: () => {
+          this.computeCmMetrics();
+        }
+      });
+      return;
+    }
+    this.computeCmMetrics();
+  }
+
+  changeSort(field: keyof StreetSheet): void {
+    if (this.sortField === field) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDirection = 'asc';
+    }
+    this.sortDashboardSheets();
+  }
+
+  private sortDashboardSheets(): void {
+    if (!this.sortField) {
+      return;
+    }
+    const dir = this.sortDirection === 'asc' ? 1 : -1;
+    this.dashboardStreetSheets = [...this.dashboardStreetSheets].sort((a, b) => {
+      const field = this.sortField as keyof StreetSheet;
+      const aVal = this.getSortableValue(a, field);
+      const bVal = this.getSortableValue(b, field);
+      if (aVal < bVal) { return -1 * dir; }
+      if (aVal > bVal) { return 1 * dir; }
+      return 0;
+    });
+  }
+
+  private getSortableValue(sheet: StreetSheet, field: keyof StreetSheet): any {
+    const val = (sheet as any)[field];
+    if (field === 'date') {
+      const d = this.toDate(val);
+      return d ? d.getTime() : 0;
+    }
+    return (val ?? '').toString().toLowerCase();
+  }
+
+  get pagedDashboardStreetSheets(): StreetSheet[] {
+    const start = this.pageIndex * this.pageSize;
+    return this.dashboardStreetSheets.slice(start, start + this.pageSize);
+  }
+
+  get pageCount(): number {
+    return this.dashboardStreetSheets.length
+      ? Math.ceil(this.dashboardStreetSheets.length / this.pageSize)
+      : 1;
+  }
+
+  nextPage(): void {
+    if ((this.pageIndex + 1) < this.pageCount) {
+      this.pageIndex += 1;
+    }
+  }
+
+  prevPage(): void {
+    if (this.pageIndex > 0) {
+      this.pageIndex -= 1;
+    }
+  }
+
+  get pagedMissing(): CmDashboardRow[] {
+    const start = this.missingPageIndex * this.missingPageSize;
+    return this.cmsWithoutEntries.slice(start, start + this.missingPageSize);
+  }
+
+  get missingPageCount(): number {
+    return this.cmsWithoutEntries.length
+      ? Math.ceil(this.cmsWithoutEntries.length / this.missingPageSize)
+      : 1;
+  }
+
+  nextMissingPage(): void {
+    if ((this.missingPageIndex + 1) < this.missingPageCount) {
+      this.missingPageIndex += 1;
+    }
+  }
+
+  prevMissingPage(): void {
+    if (this.missingPageIndex > 0) {
+      this.missingPageIndex -= 1;
+    }
+  }
+
+  get pagedSubmitted(): CmDashboardRow[] {
+    const start = this.submittedPageIndex * this.submittedPageSize;
+    return this.cmsWithEntries.slice(start, start + this.submittedPageSize);
+  }
+
+  get submittedPageCount(): number {
+    return this.cmsWithEntries.length
+      ? Math.ceil(this.cmsWithEntries.length / this.submittedPageSize)
+      : 1;
+  }
+
+  nextSubmittedPage(): void {
+    if ((this.submittedPageIndex + 1) < this.submittedPageCount) {
+      this.submittedPageIndex += 1;
+    }
+  }
+
+  prevSubmittedPage(): void {
+    if (this.submittedPageIndex > 0) {
+      this.submittedPageIndex -= 1;
+    }
+  }
+
+  private computeCmMetrics(): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
+    const cmPool = this.filteredCmOptions;
+    const sheets = this.dashboardStreetSheets;
+    const withEntries: CmDashboardRow[] = [];
+    const withoutEntries: CmDashboardRow[] = [];
+
+    cmPool.forEach(cm => {
+      const userSheets = sheets.filter(sheet => this.sheetCreatedByUser(sheet, cm));
+      if (userSheets.length) {
+        withEntries.push({
+          user: cm,
+          sheetCount: userSheets.length,
+          lastSubmitted: this.getLatestDate(userSheets)
+        });
+      } else {
+        withoutEntries.push({ user: cm, sheetCount: 0 });
+      }
+    });
+
+    withEntries.sort((a, b) => {
+      if (b.sheetCount !== a.sheetCount) {
+        return b.sheetCount - a.sheetCount;
+      }
+      const bTime = b.lastSubmitted ? b.lastSubmitted.getTime() : 0;
+      const aTime = a.lastSubmitted ? a.lastSubmitted.getTime() : 0;
+      return bTime - aTime;
+    });
+    withoutEntries.sort((a, b) => (a.user.name || '').localeCompare(b.user.name || ''));
+
+    this.cmsWithEntries = withEntries;
+    this.cmsWithoutEntries = withoutEntries;
+    this.submittedPageIndex = 0;
+    this.missingPageIndex = 0;
+    this.dashboardMetrics = {
+      total: sheets.length,
+      withEntries: withEntries.length,
+      withoutEntries: withoutEntries.length,
+      lastRefreshed: new Date()
+    };
+  }
+
+  private mergeCmOptionsFromStats(cms: any[]): void {
+    if (!Array.isArray(cms) || !cms.length) {
+      return;
+    }
+    const existing = new Map<string, Partial<User>>();
+    this.cmUsers.forEach(cm => {
+      const key = (cm.id || cm.email || cm.name || '').toLowerCase();
+      if (key) {
+        existing.set(key, cm);
+      }
+    });
+
+    cms.forEach(cm => {
+      const key = (cm.id || cm.email || cm.name || '').toLowerCase();
+      if (!key) {
+        return;
+      }
+      if (!existing.has(key)) {
+        existing.set(key, { id: cm.id, name: cm.name, market: cm.market });
+      }
+    });
+
+    this.cmUsers = Array.from(existing.values()) as User[];
+    this.setMarketOptions();
+  }
+
+  get filteredCmOptions(): User[] {
+    if (!this.dashboardMarketFilter) {
+      return this.cmUsers;
+    }
+    return this.cmUsers.filter(cm => (cm.market || '').toLowerCase() === this.dashboardMarketFilter.toLowerCase());
+  }
+
+  private sheetCreatedByUser(sheet: StreetSheet, user: Partial<User>): boolean {
+    const createdBy = (sheet.createdBy || '').toLowerCase();
+    return createdBy === (user.id || '').toLowerCase()
+      || createdBy === (user.email || '').toLowerCase()
+      || createdBy === (user.name || '').toLowerCase();
+  }
+
+  private isWithinRange(dateValue: any, start?: Date, end?: Date): boolean {
+    const date = this.toDate(dateValue);
+    if (!date) {
+      return false;
+    }
+
+    if (start && date < this.startOfDay(start)) {
+      return false;
+    }
+    if (end && date > this.endOfDay(end)) {
+      return false;
+    }
+    return true;
+  }
+
+  private toDate(value: any): Date | null {
+    if (!value) {
+      return null;
+    }
+    const date = value instanceof Date ? value : new Date(value);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  private startOfDay(date: Date): Date {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  private endOfDay(date: Date): Date {
+    const d = new Date(date);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }
+
+  private getLatestDate(sheets: StreetSheet[]): Date | undefined {
+    const dates = sheets
+      .map(sheet => this.toDate(sheet.date))
+      .filter((d): d is Date => !!d)
+      .map(d => d.getTime());
+    if (!dates.length) {
+      return undefined;
+    }
+    return new Date(Math.max(...dates));
   }
   
   

@@ -1,8 +1,8 @@
 import { Injectable, effect } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, from, throwError } from 'rxjs';
 import { catchError, map, shareReplay, tap } from 'rxjs/operators';
-import { environment } from 'src/environments/environments';
+import { environment, local_environment } from 'src/environments/environments';
 import { StreetSheet } from '../models/street-sheet.model';
 import { User } from '../models/user.model';
 import { OfflineCacheService } from './offline-cache.service';
@@ -139,6 +139,34 @@ export class StreetSheetService {
   deleteStreetSheet(streetSheet: StreetSheet): Observable<any> {
     this.streetSheetsCache$ = null;
     return this.http.delete<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.id}`, this.httpOptions);
+  }
+
+  getCmSubmissionStats(
+    startDate: Date,
+    endDate: Date,
+    filters?: { market?: string; vendor?: string; pm?: string; cmId?: string }
+  ): Observable<any> {
+    const start = startDate.toISOString();
+    const end = endDate.toISOString();
+
+    let params = new HttpParams()
+      .set('startDate', start)
+      .set('endDate', end);
+
+    if (filters?.market) {
+      params = params.set('market', filters.market);
+    }
+    if (filters?.vendor) {
+      params = params.set('vendor', filters.vendor);
+    }
+    if (filters?.pm) {
+      params = params.set('pm', filters.pm);
+    }
+    if (filters?.cmId) {
+      params = params.set('cmId', filters.cmId);
+    }
+
+    return this.http.get<any>(`${environment.apiUrl}/StreetSheet/cm-submission-stats`, { params });
   }
 
   isSegmentIdUnique(segmentId: string): Observable<boolean> {

@@ -181,19 +181,30 @@ export class StreetSheetMapComponent implements AfterViewInit {
   
       this.map.fitBounds(bounds);
       const center = bounds.getCenter();
-      this.map.flyTo(center, 13, { animate: true, duration: 1 });
+      this.map.flyTo(center, 17, { animate: true, duration: 1 });
     }
   }
   
   async centerMapOnMarker(marker: MapMarker, streetSheet: StreetSheet): Promise<void> {
     if (this.map) {
       const latLng = new L.LatLng(marker.latitude, marker.longitude);
-      this.map.flyTo(latLng, 15, { animate: true, duration: 1 });
+      this.map.flyTo(latLng, 18, { animate: true, duration: 1 });
       const existingMarker = this.mapMarkers.find(m => m.id == marker.id);
       
       if (existingMarker) {
         existingMarker.marker.openPopup();
       }
+    }
+  }
+
+  openStreetSheetPopup(streetSheet: StreetSheet): void {
+    if (!streetSheet || !streetSheet.marker || !streetSheet.marker.length) {
+      return;
+    }
+    const firstMarker = streetSheet.marker[0];
+    const existingMarker = this.mapMarkers.find(m => m.id === firstMarker.id);
+    if (existingMarker) {
+      existingMarker.marker.openPopup();
     }
   }
 

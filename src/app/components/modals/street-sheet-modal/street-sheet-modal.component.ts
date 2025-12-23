@@ -27,6 +27,7 @@ export class StreetSheetModalComponent implements OnInit {
   filteredAddresses: any[] = [];
   isAddressLoading: boolean = false;
   isDisabled: boolean = false;
+  isLocating = false;
 
   galleryImages: Image[] = [];
   imageFiles: { [key: string]: File } = {};               // actual files for submission
@@ -284,6 +285,92 @@ export class StreetSheetModalComponent implements OnInit {
     }
   }
 
+  autofillLocationFromBrowser(): void {
+    if (!navigator.geolocation) {
+      this.toastr.warning('Geolocation is not supported in this browser.');
+      return;
+    }
+
+    this.isLocating = true;
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const { latitude, longitude } = position.coords;
+        this.geocodingService.reverseGeocode(latitude, longitude).subscribe({
+          next: response => {
+            this.isLocating = false;
+            const parts = this.extractAddressParts(response);
+            if (parts) {
+              this.streetSheetForm.patchValue({
+                streetAddress: parts.street,
+                city: parts.city,
+                state: parts.state
+              });
+              this.attachMarkerFromCoords(latitude, longitude);
+            } else {
+              this.toastr.warning('Could not determine your address.');
+            }
+          },
+          error: () => {
+            this.isLocating = false;
+            this.toastr.error('Unable to fetch your location.');
+          }
+        });
+      },
+      () => {
+        this.isLocating = false;
+        this.toastr.warning('Location access was denied.');
+      }
+    );
+  }
+
+  private extractAddressParts(geoResponse: any): { street: string; city: string; state: string } | null {
+    const candidates = geoResponse?.results || [];
+    if (!candidates.length) {
+      return null;
+    }
+
+    const bestResult = candidates.find((result: any) => (result.geometry?.location_type || '') === 'ROOFTOP') || candidates[0];
+    const address = bestResult.address_components || [];
+
+    const streetAddress =
+      (address.find((component: any) => (component.types || []).includes('street_number'))?.long_name || '') +
+      ' ' +
+      (address.find((component: any) => (component.types || []).includes('route'))?.long_name || '');
+    const city = address.find((component: any) => (component.types || []).includes('locality'))?.long_name || '';
+    const stateName =
+      address.find((component: any) => (component.types || []).includes('administrative_area_level_1'))?.long_name || '';
+    const abbreviatedState = StateAbbreviation[stateName as keyof typeof StateAbbreviation] || stateName || '';
+
+    if (!streetAddress.trim() && !city && !abbreviatedState) {
+      return null;
+    }
+
+    return {
+      street: streetAddress.trim(),
+      city,
+      state: abbreviatedState
+    };
+  }
+
+  private attachMarkerFromCoords(latitude: number, longitude: number): void {
+    const segmentId = this.streetSheetForm.controls['segmentId'].value || 'Pending Segment';
+    const marker = new MapMarker(
+      uuidv4(),
+      this.streetSheetForm.controls['id'].value,
+      segmentId,
+      latitude,
+      longitude,
+      true,
+      new Date(),
+      this.userData?.id
+    );
+
+    this.mapMarker = marker;
+    this.streetSheetForm.patchValue({
+      marker: [marker]
+    });
+  }
+
   save(): void {
     if (this.streetSheetForm.valid) {
 
@@ -306,6 +393,13 @@ export class StreetSheetModalComponent implements OnInit {
       const formData = new FormData();
   
       const formValue = streetSheet;
+      const normalizedMarkers = Array.isArray(formValue.marker)
+        ? formValue.marker.map((marker: MapMarker) => ({
+            ...marker,
+            segmentId: formValue.segmentId || marker.segmentId || 'Pending Segment',
+            streetSheetId: formValue.id
+          }))
+        : [];
       // Append text fields
       formData.append('Id', formValue.id);
       formData.append('SegmentId', formValue.segmentId);
@@ -321,7 +415,7 @@ export class StreetSheetModalComponent implements OnInit {
       formData.append('CreatedBy', formValue.createdBy || this.userData.id);
       formData.append('UpdatedBy', formValue.updatedBy || null);
       formData.append('updatedDate', formValue.updatedDate || new Date().toISOString());
-      formData.append('MarkerJson', JSON.stringify(formValue.marker));
+      formData.append('MarkerJson', JSON.stringify(normalizedMarkers));
       // Append files if selected
       formData.append('SWPPPImage', this.imageFiles['SWPPPImage']);
       formData.append('PPEImage', this.imageFiles['PPEImage']);

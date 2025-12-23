@@ -28,6 +28,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
 
 import { DialogModule } from 'primeng/dialog';
 import { ImageModule } from 'primeng/image';
@@ -188,6 +189,7 @@ export const customCurrencyMaskConfig = {
     MatNativeDateModule,
     MatSortModule,
     MatTooltipModule,
+    MatTabsModule,
     DailyReportDashboardModule,
     ClientDashboardComponent,
     VendorDashboardComponent,

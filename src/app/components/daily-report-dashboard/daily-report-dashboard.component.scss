@@ -220,6 +220,7 @@
     .mat-mdc-table .mat-mdc-no-data-row,
     .no-data-row {
       td {
+        overflow-x: auto;
         text-align: center;
         padding: 32px;
         color: #4a5568;
