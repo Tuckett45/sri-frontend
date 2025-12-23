@@ -132,29 +132,6 @@
             <button mat-stroked-button class="refresh-btn" (click)="nextSubmittedPage()" [disabled]="submittedPageIndex + 1 >= submittedPageCount">Next</button>
           </div>
         </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Missing</h3>
-            <span class="muted-text">CMs without sheets in range</span>
-          </div>
-        <ul class="missing-list">
-          <li *ngFor="let row of pagedMissing">
-            <div>
-              <div class="name">{{ row.user.name }}</div>
-              <div class="muted-text">{{ row.user.market || 'N/A' }}</div>
-            </div>
-            <span class="chip warning-chip">No entry</span>
-          </li>
-          <li *ngIf="!cmsWithoutEntries.length" class="muted-text">All tracked CMs have submitted.</li>
-        </ul>
-        <div class="table-pagination" *ngIf="cmsWithoutEntries.length">
-          <button mat-stroked-button class="reset-btn" (click)="prevMissingPage()" [disabled]="missingPageIndex === 0">Prev</button>
-          <span>Page {{ missingPageIndex + 1 }} of {{ missingPageCount }}</span>
-          <button mat-stroked-button class="refresh-btn" (click)="nextMissingPage()" [disabled]="missingPageIndex + 1 >= missingPageCount">Next</button>
-        </div>
-      </div>
-
         <div class="panel table-panel">
           <div class="panel-header">
             <div>
@@ -217,6 +194,27 @@
         </div>
         <div class="map-hint muted-text">Select rows to focus the map on that street sheet.</div>
       </div>
+      <div class="panel">
+          <div class="panel-header">
+            <h3>Missing</h3>
+            <span class="muted-text">CMs without sheets in range</span>
+          </div>
+        <ul class="missing-list">
+          <li *ngFor="let row of pagedMissing">
+            <div>
+              <div class="name">{{ row.user.name }}</div>
+              <div class="muted-text">{{ row.user.market || 'N/A' }}</div>
+            </div>
+            <span class="chip warning-chip">No entry</span>
+          </li>
+          <li *ngIf="!cmsWithoutEntries.length" class="muted-text">All tracked CMs have submitted.</li>
+        </ul>
+        <div class="table-pagination" *ngIf="cmsWithoutEntries.length">
+          <button mat-stroked-button class="reset-btn" (click)="prevMissingPage()" [disabled]="missingPageIndex === 0">Prev</button>
+          <span>Page {{ missingPageIndex + 1 }} of {{ missingPageCount }}</span>
+          <button mat-stroked-button class="refresh-btn" (click)="nextMissingPage()" [disabled]="missingPageIndex + 1 >= missingPageCount">Next</button>
+        </div>
+        </div>
     </div>
   </div>
 </div>
