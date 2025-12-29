@@ -3,3 +3,25 @@
 :host {
   display: block;
 }
+
+.page-controls {
+  .export-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .export-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      .range-inputs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+    }
+  }
+}
