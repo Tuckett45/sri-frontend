@@ -9,7 +9,7 @@ import { ExpenseImageExportService } from '../../../services/expense-image-expor
 import { Inject } from '@angular/core';
 import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin, of, firstValueFrom } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { ExpenseStateService } from '../services/expense-state.service';
 
@@ -36,6 +36,9 @@ export class HrExpensesPageComponent implements OnInit {
   loading = false;
   filtersOpen = false;
   readonly statusUpdatingIds = new Set<string>();
+  exportUseRange = false;
+  exportStartDate: Date | null = null;
+  exportEndDate: Date | null = null;
   private filtersInitialized = false;
   private isUsingFilters = false;
   private currentFilters: ExpenseFilters = {
@@ -307,11 +310,9 @@ export class HrExpensesPageComponent implements OnInit {
     return fallback ?? NaN;
   }
 
-  exportCsv(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
-    const exportExpenses = this.resolveExpensesForExport(groupBy);
-    if (!exportExpenses) {
-      return;
-    }
+  async exportCsv(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): Promise<void> {
+    const exportExpenses = await this.getExpensesForExport(groupBy);
+    if (!exportExpenses) return;
 
     const options: ExportOptions = {
       groupBy,
@@ -325,11 +326,9 @@ export class HrExpensesPageComponent implements OnInit {
     this.toastr.success('CSV export downloaded');
   }
 
-  exportPdf(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
-    const exportExpenses = this.resolveExpensesForExport(groupBy);
-    if (!exportExpenses) {
-      return;
-    }
+  async exportPdf(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): Promise<void> {
+    const exportExpenses = await this.getExpensesForExport(groupBy);
+    if (!exportExpenses) return;
 
     const options: ExportOptions = {
       groupBy,
@@ -344,15 +343,16 @@ export class HrExpensesPageComponent implements OnInit {
   }
 
   private resolveExpensesForExport(
-    groupBy: 'employee' | 'job' | 'category' | 'none'
+    groupBy: 'employee' | 'job' | 'category' | 'none',
+    source: DisplayExpense[]
   ): DisplayExpense[] | null {
-    if (!this.expenses.length) {
+    if (!source.length) {
       this.toastr.info('No expenses to export');
       return null;
     }
 
     if (groupBy !== 'employee') {
-      return this.expenses;
+      return source;
     }
 
     const selectedEmployee = this.currentFilters.employee?.trim();
@@ -363,7 +363,7 @@ export class HrExpensesPageComponent implements OnInit {
     }
 
     const normalized = selectedEmployee.toLowerCase();
-    const employeeExpenses = this.expenses.filter(expense => (expense.createdBy ?? '').toLowerCase() === normalized);
+    const employeeExpenses = source.filter(expense => (expense.createdBy ?? '').toLowerCase() === normalized);
 
     if (!employeeExpenses.length) {
       this.toastr.info(`No expenses found for ${selectedEmployee} on the current page.`);
@@ -371,6 +371,109 @@ export class HrExpensesPageComponent implements OnInit {
     }
 
     return employeeExpenses;
+  }
+
+  private async getExpensesForExport(
+    groupBy: 'employee' | 'job' | 'category' | 'none'
+  ): Promise<DisplayExpense[] | null> {
+    if (!this.validateExportRange()) {
+      return null;
+    }
+    const all = await this.fetchAllExpenses();
+    if (!all) {
+      return null;
+    }
+    return this.resolveExpensesForExport(groupBy, all);
+  }
+
+  private async fetchAllExpenses(): Promise<DisplayExpense[] | null> {
+    const pageSize = 1000;
+    const useSearch = this.isUsingFilters;
+    let page = 1;
+    let total = Infinity;
+    const collected: DisplayExpense[] = [];
+
+    try {
+      while (collected.length < total) {
+        let response: ExpenseListResponse;
+
+        if (useSearch) {
+          const request = this.buildSearchRequest(page - 1, pageSize);
+          this.applyExportRangeToRequest(request);
+          response = await firstValueFrom(this.expenseApi.searchExpenses(request));
+        } else {
+          const request: Parameters<ExpenseApiService['getExpenses']>[0] = {
+            includeImages: true,
+            page,
+            pageSize
+          };
+          this.applyExportRangeToRequest(request);
+          response = await firstValueFrom(this.expenseApi.getExpenses(request));
+        }
+
+        const normalized = this.normalizeResponse(response, page - 1, pageSize);
+        const items = (normalized.items ?? []).map(item => this.toViewModel(item));
+
+        collected.push(...items);
+        total = this.resolveTotal(normalized, items.length);
+
+        if (!items.length || items.length < pageSize || collected.length >= total) {
+          break;
+        }
+        page += 1;
+      }
+    } catch (err) {
+      console.error('Failed to fetch all expenses for export', err);
+      this.toastr.error('Unable to load all expenses for export');
+      return null;
+    }
+
+    if (!collected.length) {
+      this.toastr.info('No expenses to export');
+      return null;
+    }
+
+    return collected;
+  }
+
+  private applyExportRangeToRequest(
+    request: { from?: string; to?: string } & Record<string, any>
+  ): void {
+    const range = this.getExportDateRange();
+    if (range.from) {
+      request.from = range.from;
+    }
+    if (range.to) {
+      request.to = range.to;
+    }
+  }
+
+  private getExportDateRange(): { from?: string; to?: string } {
+    if (!this.exportUseRange) {
+      return {};
+    }
+    const from = this.toQueryDate(this.exportStartDate);
+    const to = this.toQueryDate(this.exportEndDate);
+    const range: { from?: string; to?: string } = {};
+    if (from) range.from = from;
+    if (to) range.to = to;
+    return range;
+  }
+
+  private validateExportRange(): boolean {
+    if (!this.exportUseRange) {
+      return true;
+    }
+    if (!this.exportStartDate || !this.exportEndDate) {
+      this.toastr.warning('Select both start and end dates for export.');
+      this.filtersOpen = true;
+      return false;
+    }
+    if (this.exportStartDate > this.exportEndDate) {
+      this.toastr.warning('Export start date must be on or before the end date.');
+      return false;
+    }
+    return true;
   }
 
   private getDateRangeFromFilters(): { start: string; end: string } | undefined {

@@ -12,6 +12,24 @@
   </div>
 
   <div class="export-buttons">
+    <div class="export-range">
+      <mat-checkbox style="color: black;" [(ngModel)]="exportUseRange">Export by date range</mat-checkbox>
+      <div class="range-inputs" *ngIf="exportUseRange">
+        <mat-form-field style="color: black;" appearance="outline">
+          <mat-label>Start</mat-label>
+          <input matInput [matDatepicker]="exportStart" [(ngModel)]="exportStartDate">
+          <mat-datepicker-toggle matSuffix [for]="exportStart"></mat-datepicker-toggle>
+          <mat-datepicker #exportStart></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>End</mat-label>
+          <input matInput [matDatepicker]="exportEnd" [(ngModel)]="exportEndDate">
+          <mat-datepicker-toggle matSuffix [for]="exportEnd"></mat-datepicker-toggle>
+          <mat-datepicker #exportEnd></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </div>
+
     <button mat-raised-button [matMenuTriggerFor]="pdfMenu" class="header-btn">
       <mat-icon>picture_as_pdf</mat-icon>
       Export to PDF

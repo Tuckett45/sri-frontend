@@ -16,12 +16,88 @@
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
+      color: #1f2937;
 
       .range-inputs {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+
+        mat-form-field {
+          min-width: 170px;
+          margin: 0;
+        }
+
+        /* Ensure visibility on the neutral background */
+        ::ng-deep .mdc-text-field--outlined {
+          background: #ffffff;
+        }
+
+        ::ng-deep .mdc-text-field--outlined .mdc-notched-outline__leading,
+        ::ng-deep .mdc-text-field--outlined .mdc-notched-outline__notch,
+        ::ng-deep .mdc-text-field--outlined .mdc-notched-outline__trailing {
+          border-color: #94a3b8;
+        }
+
+        ::ng-deep .mdc-text-field--outlined:hover .mdc-notched-outline__leading,
+        ::ng-deep .mdc-text-field--outlined:hover .mdc-notched-outline__notch,
+        ::ng-deep .mdc-text-field--outlined:hover .mdc-notched-outline__trailing {
+          border-color: #0e3c61;
+        }
+
+        ::ng-deep .mat-mdc-form-field-infix {
+          padding: 12px 12px 8px 12px;
+        }
+
+        ::ng-deep .mat-mdc-input-element {
+          color: #1f2937;
+        }
+
+        ::ng-deep .mat-mdc-input-element::placeholder {
+          color: #4b5563;
+          opacity: 1;
+        }
+
+        ::ng-deep .mat-mdc-floating-label {
+          color: #1f2937 !important;
+          opacity: 1 !important;
+        }
+
+        ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+          display: none;
+        }
+      }
+
+      mat-checkbox {
+        font-weight: 600;
+
+        /* Make the checkbox border visible in MDC */
+        ::ng-deep .mdc-checkbox__background {
+          border-color: #1f2937 !important;
+          background: #fff;
+        }
+
+        ::ng-deep .mdc-checkbox__checkmark-path {
+          stroke: #1f2937 !important;
+        }
+
+        ::ng-deep .mdc-checkbox--selected .mdc-checkbox__background {
+          background: #1f2937 !important;
+        }
+
+        ::ng-deep .mdc-checkbox__ripple {
+          display: none;
+        }
       }
     }
   }
+}
+
+ ::ng-deep .mat-internal-form-field {
+   color: #000000 !important; /* Set the label text color */  
+}
+
+::ng-deep .mdc-checkbox .mdc-checkbox__native-control{
+  color: #000000 !important;
+  border: #000000 !important;
 }
