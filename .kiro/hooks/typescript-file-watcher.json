@@ -1,0 +1,14 @@
+{
+  "name": "TypeScript File Watcher",
+  "description": "Watches TypeScript files and runs type checking and linting when files are saved",
+  "trigger": {
+    "type": "fileSave",
+    "filePattern": "src/**/*.{ts,tsx}"
+  },
+  "action": {
+    "type": "command",
+    "command": "npm run lint",
+    "message": "TypeScript file {{filePath}} was saved. Running linting and type checks."
+  },
+  "enabled": true
+}

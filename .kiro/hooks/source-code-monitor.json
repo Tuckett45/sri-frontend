@@ -1,0 +1,13 @@
+{
+  "name": "Source Code Monitor",
+  "description": "Monitors changes to source code files and can trigger automated actions",
+  "trigger": {
+    "type": "fileSave",
+    "filePattern": "**/*.{ts,js,tsx,jsx,html,css,scss,json}"
+  },
+  "action": {
+    "type": "message",
+    "message": "Source code file updated: {{filePath}}. Running automated checks and updates."
+  },
+  "enabled": true
+}

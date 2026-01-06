@@ -1,0 +1,13 @@
+{
+  "name": "Angular Component Watcher",
+  "description": "Monitors Angular component files and can trigger build or test updates",
+  "trigger": {
+    "type": "fileSave",
+    "filePattern": "src/app/**/*.{component.ts,component.html,component.scss}"
+  },
+  "action": {
+    "type": "message",
+    "message": "Angular component {{filePath}} was updated. Consider running tests to ensure functionality is preserved."
+  },
+  "enabled": true
+}

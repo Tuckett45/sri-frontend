@@ -1,4 +1,5 @@
 {
     "appService.defaultWebAppToDeploy": "undefined/subscriptions/96bc77b8-5118-4b8e-a91d-7d4a1b1f9f8e/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/ark-proxy-server",
-    "appService.deploySubpath": "."
+    "appService.deploySubpath": ".",
+    "kiroAgent.configureMCP": "Disabled"
 }
