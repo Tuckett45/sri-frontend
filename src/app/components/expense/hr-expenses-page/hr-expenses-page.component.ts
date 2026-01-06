@@ -390,11 +390,10 @@ export class HrExpensesPageComponent implements OnInit {
     const pageSize = 1000;
     const useSearch = this.isUsingFilters;
     let page = 1;
-    let total = Infinity;
     const collected: DisplayExpense[] = [];
 
     try {
-      while (collected.length < total) {
+      while (true) {
         let response: ExpenseListResponse;
 
         if (useSearch) {
@@ -415,9 +414,8 @@ export class HrExpensesPageComponent implements OnInit {
         const items = (normalized.items ?? []).map(item => this.toViewModel(item));
 
         collected.push(...items);
-        total = this.resolveTotal(normalized, items.length);
 
-        if (!items.length || items.length < pageSize || collected.length >= total) {
+        if (!items.length || items.length < pageSize) {
           break;
         }
         page += 1;
@@ -490,23 +488,30 @@ export class HrExpensesPageComponent implements OnInit {
   }
 
   exportReceipts(): void {
-    if (!this.expenses.length) {
+    this.exportReceiptsAsync().catch(err => {
+      console.error('Error exporting receipts', err);
+      this.toastr.error('An error occurred while exporting receipts');
+    });
+  }
+
+  private async exportReceiptsAsync(): Promise<void> {
+    const all = await this.fetchAllExpenses();
+    if (!all || !all.length) {
       this.toastr.info('No expenses to export');
       return;
     }
 
-    const expensesWithReceipts = this.imageExportService.getExpensesWithReceiptsCount(this.expenses);
-    const totalImages = this.imageExportService.getTotalImageCount(this.expenses);
+    const expensesWithReceipts = this.imageExportService.getExpensesWithReceiptsCount(all);
+    const totalImages = this.imageExportService.getTotalImageCount(all);
 
     if (expensesWithReceipts === 0) {
       this.toastr.info('No expenses with receipts found');
       return;
     }
 
-    // Show confirmation with counts
     this.toastr.info(`Preparing to download ${totalImages} receipt(s) from ${expensesWithReceipts} expense(s)...`, 'Downloading Receipts');
 
-    this.imageExportService.exportExpenseImages(this.expenses).subscribe({
+    this.imageExportService.exportExpenseImages(all).subscribe({
       next: (result) => {
         if (result.success) {
           const successMsg = `Successfully downloaded ${result.totalImages - result.failedImages} of ${result.totalImages} receipt(s)`;
