@@ -17,8 +17,8 @@ export class StreetSheetService {
 
   private httpOptions = {
     headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Content-Type': 'application/json'
+      // API subscription key will be added automatically by ConfigurationInterceptor
     })
   };
 
@@ -123,8 +123,9 @@ export class StreetSheetService {
   }
 
   saveStreetSheet(formData: FormData): Observable<any> {
+    // API subscription key will be added automatically by ConfigurationInterceptor
     const headers = new HttpHeaders({
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      // Don't set Content-Type for FormData - browser will set it with boundary
     });
 
     this.streetSheetsCache$ = null;

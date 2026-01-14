@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
-import { environment } from 'src/environments/environments';
+import { switchMap } from 'rxjs/operators';
+import { ConfigurationService } from 'src/app/services/configuration.service';
 import { FeatureFlagService } from 'src/app/services/feature-flag.service';
 import { ToastrService } from 'ngx-toastr';
 
@@ -50,11 +51,9 @@ export interface NotificationAction {
 @Injectable({ providedIn: 'root' })
 export class DeploymentPushNotificationService {
   private readonly http = inject(HttpClient);
+  private readonly configService = inject(ConfigurationService);
   private readonly featureFlags = inject(FeatureFlagService);
   private readonly toastr = inject(ToastrService);
-  
-  private readonly apiUrl = `${environment.apiUrl}/push-subscriptions`;
-  private readonly vapidPublicKey = environment.vapidPublicKey;
   
   private isInitialized$ = new BehaviorSubject<boolean>(false);
   private isSubscribed$ = new BehaviorSubject<boolean>(false);
@@ -98,6 +97,21 @@ export class DeploymentPushNotificationService {
         return;
       }
 
+      // Wait for configuration to be available
+      const config = await firstValueFrom(this.configService.getConfig());
+      if (!config) {
+        this.subscriptionError$.next('Configuration not available');
+        console.error('❌ Configuration service not available');
+        return;
+      }
+
+      // Check if VAPID key is available
+      if (!config.vapidPublicKey) {
+        this.subscriptionError$.next('VAPID public key not configured');
+        console.warn('⚠️ VAPID public key not available - push notifications disabled');
+        return;
+      }
+
       // Check browser support
       if (!('Notification' in window)) {
         this.subscriptionError$.next('Browser does not support notifications');
@@ -130,12 +144,12 @@ export class DeploymentPushNotificationService {
       const existingSubscription = await registration.pushManager.getSubscription();
       if (existingSubscription) {
         console.log('✅ Found existing push subscription');
-        await this.syncSubscriptionWithBackend(existingSubscription);
+        await this.syncSubscriptionWithBackend(existingSubscription, config);
         this.currentSubscription$.next(existingSubscription);
         this.isSubscribed$.next(true);
       } else {
         // Create new subscription
-        await this.subscribe(registration);
+        await this.subscribe(registration, config);
       }
 
       this.isInitialized$.next(true);
@@ -149,21 +163,29 @@ export class DeploymentPushNotificationService {
   /**
    * Subscribe to push notifications
    */
-  async subscribe(registration?: ServiceWorkerRegistration): Promise<void> {
+  async subscribe(registration?: ServiceWorkerRegistration, config?: any): Promise<void> {
     try {
       if (!registration) {
         registration = await navigator.serviceWorker.ready;
       }
       this.swRegistration = registration;
 
+      if (!config) {
+        config = await firstValueFrom(this.configService.getConfig());
+      }
+
+      if (!config?.vapidPublicKey) {
+        throw new Error('VAPID public key not available');
+      }
+
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
+        applicationServerKey: this.urlBase64ToUint8Array(config.vapidPublicKey)
       });
 
       console.log('✅ Created new push subscription');
       
-      await this.syncSubscriptionWithBackend(subscription);
+      await this.syncSubscriptionWithBackend(subscription, config);
       
       this.currentSubscription$.next(subscription);
       this.isSubscribed$.next(true);
@@ -196,7 +218,8 @@ export class DeploymentPushNotificationService {
       console.log('✅ Unsubscribed from push notifications');
 
       // Remove from backend
-      await this.removeSubscriptionFromBackend(subscription);
+      const config = await firstValueFrom(this.configService.getConfig());
+      await this.removeSubscriptionFromBackend(subscription, config);
 
       this.currentSubscription$.next(null);
       this.isSubscribed$.next(false);
@@ -216,8 +239,13 @@ export class DeploymentPushNotificationService {
    */
   async sendTestNotification(): Promise<void> {
     try {
+      const config = await firstValueFrom(this.configService.getConfig());
+      if (!config?.pushSubscriptionEndpoint) {
+        throw new Error('Push subscription endpoint not configured');
+      }
+
       await firstValueFrom(
-        this.http.post(`${this.apiUrl}/test`, {})
+        this.http.post(`${config.pushSubscriptionEndpoint}/test`, {})
       );
       console.log('✅ Test notification sent');
     } catch (error) {
@@ -230,7 +258,14 @@ export class DeploymentPushNotificationService {
    * Get current user's subscriptions from backend
    */
   getMySubscriptions(): Observable<PushSubscriptionResponse[]> {
-    return this.http.get<PushSubscriptionResponse[]>(this.apiUrl);
+    return this.configService.getConfig().pipe(
+      switchMap(config => {
+        if (!config?.pushSubscriptionEndpoint) {
+          throw new Error('Push subscription endpoint not configured');
+        }
+        return this.http.get<PushSubscriptionResponse[]>(config.pushSubscriptionEndpoint);
+      })
+    );
   }
 
   async showLocalNotification(payload: PushNotificationPayload): Promise<void> {
@@ -301,7 +336,8 @@ export class DeploymentPushNotificationService {
    */
   private async registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
     try {
-      const registration = await navigator.serviceWorker.register('/ngsw-worker.js', {
+      // Use custom service worker for push notifications
+      const registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/'
       });
       
@@ -320,12 +356,20 @@ export class DeploymentPushNotificationService {
   /**
    * Sync subscription with backend
    */
-  private async syncSubscriptionWithBackend(subscription: PushSubscription): Promise<void> {
+  private async syncSubscriptionWithBackend(subscription: PushSubscription, config?: any): Promise<void> {
     try {
+      if (!config) {
+        config = await firstValueFrom(this.configService.getConfig());
+      }
+
+      if (!config?.pushSubscriptionEndpoint) {
+        throw new Error('Push subscription endpoint not configured');
+      }
+
       const subscriptionData = this.convertSubscriptionToDTO(subscription);
       
       const response = await firstValueFrom(
-        this.http.post<PushSubscriptionResponse>(this.apiUrl, subscriptionData)
+        this.http.post<PushSubscriptionResponse>(config.pushSubscriptionEndpoint, subscriptionData)
       );
       
       console.log('✅ Subscription synced with backend:', response.status);
@@ -338,12 +382,20 @@ export class DeploymentPushNotificationService {
   /**
    * Remove subscription from backend
    */
-  private async removeSubscriptionFromBackend(subscription: PushSubscription): Promise<void> {
+  private async removeSubscriptionFromBackend(subscription: PushSubscription, config?: any): Promise<void> {
     try {
+      if (!config) {
+        config = await firstValueFrom(this.configService.getConfig());
+      }
+
+      if (!config?.pushSubscriptionEndpoint) {
+        throw new Error('Push subscription endpoint not configured');
+      }
+
       const subscriptionData = this.convertSubscriptionToDTO(subscription);
       
       await firstValueFrom(
-        this.http.request('DELETE', this.apiUrl, { body: subscriptionData })
+        this.http.request('DELETE', config.pushSubscriptionEndpoint, { body: subscriptionData })
       );
       
       console.log('✅ Subscription removed from backend');

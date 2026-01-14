@@ -6,9 +6,9 @@
   <span class="spacer"></span>
 
   <!-- Hamburger Menu Icon -->
-  <div aria-label="Toggle menu">
-    <mat-icon mat-button class="menu-toggle" (click)="toggleMenu()">{{ isMenuOpen ? 'close' : 'menu' }}</mat-icon>  <!-- Toggle between 'menu' and 'close' icon -->
-  </div>
+  <button mat-icon-button aria-label="Toggle menu" class="menu-toggle" (click)="toggleMenu()">
+    <mat-icon>{{ isMenuOpen ? 'close' : 'menu' }}</mat-icon>
+  </button>
 
   <!-- Navigation Links -->
   <div class="nav-links"

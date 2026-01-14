@@ -17,9 +17,9 @@ export class DailyReportService {
   constructor(private http: HttpClient, private authService: AuthService) {}
 
   private buildHeaders(token?: string | null): HttpHeaders {
+    // API subscription key will be added automatically by ConfigurationInterceptor
     let headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Content-Type': 'application/json'
     });
 
     const currentUserId = this.authService.getUser()?.id;

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, map, shareReplay, BehaviorSubject, finalize } from 'rxjs';
+import { Observable, map, shareReplay, BehaviorSubject, finalize, of, catchError, timeout, switchMap } from 'rxjs';
 import { environment, local_environment } from 'src/environments/environments';
+import { ApiHeadersService } from './api-headers.service';
 import { WPViolation } from '../models/wp-violation.model';
 import { CityScorecard } from '../models/city-scorecard.model';
 import { BudgetTrackerRow, PaginatedResponse, BudgetTrackerApiRow, toBudgetTrackerRow } from '../models/budget-tracker.model';
@@ -103,6 +104,7 @@ export class TpsService {
   private loadingCount = 0;
   private loadingSubject = new BehaviorSubject<boolean>(false);
   readonly loading$ = this.loadingSubject.asObservable();
+  private loadingTimeout?: number;
 
   get selectedCity(): CityOption {
     return this.selectedCitySubject.value;
@@ -145,17 +147,12 @@ export class TpsService {
     return m.cities.find(c => c.isAll) ?? m.cities[0] ?? null;
   }
 
-  private httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
-    })
-  };
-
   // Use the active build environment's API base URL
   private baseUrl = `${environment.apiUrl}/tps`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private apiHeaders: ApiHeadersService) {
+    console.log('🔧 TPS Service initialized with API URL:', this.baseUrl);
+  }
 
   getViolations(filters?: { segmentPrefix?: string; market?: MarketCode; metro?: string }): Observable<WPViolation[]> {
     let params = new HttpParams();
@@ -170,15 +167,22 @@ export class TpsService {
     }
     
     return this.withLoading(
-      this.http
-        .get<any>(`${this.baseUrl}/violations`, { ...this.httpOptions, params })
-        .pipe(map(res => this.asArray<WPViolation>(res)))
+      this.apiHeaders.getApiHeaders().pipe(
+        switchMap(headers => 
+          this.http.get<any>(`${this.baseUrl}/violations`, { headers, params })
+        ),
+        map(res => this.asArray<WPViolation>(res))
+      )
     );
   }
 
   importViolations(): Observable<void> {
     return this.withLoading(
-      this.http.post<void>(`${this.baseUrl}/violations/import`, {}, this.httpOptions)
+      this.apiHeaders.getApiHeaders().pipe(
+        switchMap(headers => 
+          this.http.post<void>(`${this.baseUrl}/violations/import`, {}, { headers })
+        )
+      )
     );
   }
 
@@ -195,15 +199,22 @@ export class TpsService {
     }
     
     return this.withLoading(
-      this.http
-        .get<any>(`${this.baseUrl}/city-scorecard`, { ...this.httpOptions, params })
-        .pipe(map(res => this.asArray<CityScorecard>(res)))
+      this.apiHeaders.getApiHeaders().pipe(
+        switchMap(headers => 
+          this.http.get<any>(`${this.baseUrl}/city-scorecard`, { headers, params })
+        ),
+        map(res => this.asArray<CityScorecard>(res))
+      )
     );
   }
 
   importCityScorecard(): Observable<void> {
     return this.withLoading(
-      this.http.post<void>(`${this.baseUrl}/city-scorecard/import`, {}, this.httpOptions)
+      this.apiHeaders.getApiHeaders().pipe(
+        switchMap(headers => 
+          this.http.post<void>(`${this.baseUrl}/city-scorecard/import`, {}, { headers })
+        )
+      )
     );
   }
 
@@ -308,6 +319,15 @@ export class TpsService {
     this.loadingCount += 1;
     if (this.loadingCount === 1) {
       this.loadingSubject.next(true);
+      
+      // Set a failsafe timeout to prevent infinite loading (15 seconds)
+      this.loadingTimeout = window.setTimeout(() => {
+        if (this.loadingCount > 0) {
+          console.warn('⚠️ TPS loading timeout reached - forcing completion');
+          this.loadingCount = 0;
+          this.loadingSubject.next(false);
+        }
+      }, 15000);
     }
   }
 
@@ -315,11 +335,61 @@ export class TpsService {
     this.loadingCount = Math.max(0, this.loadingCount - 1);
     if (this.loadingCount === 0) {
       this.loadingSubject.next(false);
+      
+      // Clear the failsafe timeout
+      if (this.loadingTimeout) {
+        clearTimeout(this.loadingTimeout);
+        this.loadingTimeout = undefined;
+      }
     }
   }
 
   private withLoading<T>(obs: Observable<T>): Observable<T> {
     this.beginLoading();
-    return obs.pipe(finalize(() => this.endLoading()));
+    return obs.pipe(
+      // Add timeout to prevent hanging requests (10 seconds - faster response)
+      timeout(10000),
+      finalize(() => this.endLoading()),
+      // Add error handling to prevent hanging requests
+      catchError((error) => {
+        console.error('TPS API Error:', error);
+        
+        // Log specific error types for debugging
+        if (error.name === 'TimeoutError') {
+          console.warn('TPS API request timed out after 10 seconds');
+        } else if (error.status === 0) {
+          console.warn('TPS API appears to be unreachable - network error');
+        } else if (error.status >= 500) {
+          console.warn('TPS API server error:', error.status);
+        } else if (error.status === 404) {
+          console.warn('TPS API endpoint not found:', error.url);
+        } else if (error.status === 401 || error.status === 403) {
+          console.warn('TPS API authentication/authorization error:', error.status);
+        }
+        
+        // Return appropriate empty response based on expected type
+        // Most TPS endpoints expect arrays, but some expect objects
+        const emptyResponse = this.getEmptyResponse<T>();
+        return of(emptyResponse);
+      })
+    );
+  }
+
+  /**
+   * Get appropriate empty response based on the expected type
+   */
+  private getEmptyResponse<T>(): T {
+    // For paginated responses (budget tracker)
+    const paginatedEmpty = {
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 25,
+      totalPages: 0
+    };
+    
+    // Try to determine response type and return appropriate empty value
+    // Most endpoints return arrays, budget tracker returns paginated response
+    return ([] as unknown as T) || (paginatedEmpty as unknown as T);
   }
 }

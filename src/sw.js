@@ -57,29 +57,52 @@ self.addEventListener('notificationclick', (event) => {
   
   event.notification.close();
 
-  // Handle different actions
   if (event.action === 'dismiss') {
     return;
   }
 
-  // Open the app or focus existing window
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // If there's an open window, focus it
-        for (const client of clientList) {
-          if ('focus' in client) {
-            return client.focus();
-          }
-        }
+  // Handle notification click - navigate to relevant page
+  const data = event.notification.data || {};
+  let url = '/';
 
-        // Otherwise open a new window
-        if (clients.openWindow) {
-          const urlToOpen = event.notification.data?.url || '/deployments';
-          return clients.openWindow(urlToOpen);
+  // Check if navigateOnClick is specified (for Magic 8 Ball and other features)
+  if (data.navigateOnClick && Array.isArray(data.navigateOnClick)) {
+    url = data.navigateOnClick.join('/');
+  } else if (data.deploymentId) {
+    // Legacy deployment notification handling
+    if (data.type === 'signoff') {
+      url = `/deployments/${data.deploymentId}/handoff`;
+    } else if (data.type === 'issue') {
+      url = `/deployments/${data.deploymentId}/issues`;
+    } else {
+      url = `/deployments/${data.deploymentId}`;
+    }
+  } else if (data.type === 'magic-8-ball') {
+    // Magic 8 Ball notifications navigate to notifications page
+    url = '/notifications';
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      // Check if there's already a window/tab open with the target URL
+      for (const client of clientList) {
+        if (client.url.includes(url) && 'focus' in client) {
+          return client.focus();
         }
-      })
+      }
+      
+      // If no existing window, open a new one
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
   );
+});
+
+// Handle notification close
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification closed:', event);
+  // Could track analytics here
 });
 
 // Handle notification close
@@ -109,4 +132,3 @@ self.addEventListener('message', (event) => {
     self.registration.showNotification(title, options);
   }
 });
-

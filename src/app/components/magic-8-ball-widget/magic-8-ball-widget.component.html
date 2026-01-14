@@ -1,0 +1,35 @@
+<div class="magic-8-ball-widget">
+  <div class="widget-header">
+    <h4>🎱 Quick Magic 8 Ball</h4>
+    <button 
+      type="button" 
+      class="btn btn-sm btn-outline-primary"
+      (click)="onNavigateToFullMagic8Ball()"
+      title="Open full Magic 8 Ball"
+    >
+      ⚡
+    </button>
+  </div>
+  
+  <div class="quick-questions">
+    <p class="widget-description">Get instant mystical guidance for your deployment decisions!</p>
+    
+    <div class="question-buttons">
+      <button 
+        *ngFor="let question of quickQuestions"
+        type="button"
+        class="btn btn-sm btn-outline-secondary question-btn"
+        (click)="onQuickQuestion(question)"
+        [title]="question"
+      >
+        {{ question }}
+      </button>
+    </div>
+    
+    <div class="widget-footer">
+      <small class="text-muted">
+        💡 Responses will appear as toast notifications
+      </small>
+    </div>
+  </div>
+</div>

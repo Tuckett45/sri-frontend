@@ -2,9 +2,9 @@ import { Injectable, Signal, computed, signal } from '@angular/core';
 
 export type FeatureFlagKey = 
   | 'notifications' 
-  | 'offlineMode'
-  | 'liveUpdates' 
-  | 'roleBasedWorkflow'
+  // | 'offlineMode'  // TODO: Not yet implemented
+  // | 'liveUpdates'  // TODO: Not yet implemented
+  // | 'roleBasedWorkflow'  // TODO: Not yet implemented
   | 'deploymentNotifications'
   | 'signOffRequired'
   | 'deploymentAutoAssign'
@@ -34,15 +34,58 @@ export class FeatureFlagService {
     {
       key: 'notifications',
       label: 'Notifications',
-      description: 'Enable in-app and email notifications to keep teams aware of project changes.',
-      defaultValue: false
-    },
-    {
-      key: 'offlineMode',
-      label: 'Offline Mode',
-      description: 'Allow limited access when internet connectivity is unavailable.',
+      description: 'Enable in-app and push notifications to keep teams aware of project changes.',
       defaultValue: true
     }
+    // {
+    //   key: 'deploymentNotifications',
+    //   label: 'Deployment Notifications',
+    //   description: 'Enable SignalR real-time notifications for deployment events.',
+    //   defaultValue: true
+    // },
+    // TODO: Uncomment when backend support is added
+    // {
+    //   key: 'offlineMode',
+    //   label: 'Offline Mode',
+    //   description: 'Allow limited access when internet connectivity is unavailable.',
+    //   defaultValue: true
+    // },
+    // {
+    //   key: 'liveUpdates',
+    //   label: 'Live Updates',
+    //   description: 'Enable real-time updates via SignalR connections.',
+    //   defaultValue: true
+    // },
+    // {
+    //   key: 'roleBasedWorkflow',
+    //   label: 'Role-Based Workflow',
+    //   description: 'Enable role-based access control and workflow restrictions.',
+    //   defaultValue: true
+    // },
+    // {
+    //   key: 'signOffRequired',
+    //   label: 'Sign-Off Required',
+    //   description: 'Require explicit sign-offs for deployment phase completion.',
+    //   defaultValue: true
+    // },
+    // {
+    //   key: 'deploymentAutoAssign',
+    //   label: 'Auto-Assignment',
+    //   description: 'Automatically assign deployments based on availability and skills.',
+    //   defaultValue: false
+    // },
+    // {
+    //   key: 'deploymentStrictRoles',
+    //   label: 'Strict Role Enforcement',
+    //   description: 'Enforce strict role-based permissions for deployment actions.',
+    //   defaultValue: true
+    // },
+    // {
+    //   key: 'deploymentRoleColors',
+    //   label: 'Role Color Coding',
+    //   description: 'Use color coding to distinguish different roles in the UI.',
+    //   defaultValue: true
+    // }
   ];
 
   private readonly defaultState: Record<FeatureFlagKey, boolean> = this.definitions.reduce(

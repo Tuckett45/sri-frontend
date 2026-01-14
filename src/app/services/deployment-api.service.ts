@@ -24,8 +24,8 @@ export interface DeploymentQueryParams {
 export class DeploymentApiService {
   private jsonOptions = {
     headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Content-Type': 'application/json'
+      // API subscription key will be added automatically by ConfigurationInterceptor
     })
   };
 

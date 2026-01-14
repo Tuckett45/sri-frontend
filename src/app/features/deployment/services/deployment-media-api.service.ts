@@ -12,8 +12,9 @@ import { environment, local_environment } from '../../../../environments/environ
 @Injectable({ providedIn: 'root' })
 export class DeploymentMediaApiService {
   private base = `${environment.apiUrl}/deployments`;
+  // API subscription key will be added automatically by ConfigurationInterceptor
   private readonly apiHeaders = new HttpHeaders({
-    'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+    // Headers will be managed by interceptor
   });
 
   constructor(private http: HttpClient) {}

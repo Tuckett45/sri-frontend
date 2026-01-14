@@ -6,6 +6,11 @@ import {
 } from 'src/app/features/deployment/services/deployment-signalr.service';
 import { FeatureFlagService } from 'src/app/services/feature-flag.service';
 import { AuthService } from 'src/app/services/auth.service';
+import { Magic8BallService, Magic8BallResponse } from 'src/app/services/magic-8-ball.service';
+import { NotificationPreferencesService } from 'src/app/services/notification-preferences.service';
+import { NotificationIntegratorService } from 'src/app/services/notification-integrator.service';
+import { DeploymentPushNotificationService } from 'src/app/features/deployment/services/deployment-push-notification.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 type NotificationCategory = 'assignment' | 'signoff' | 'issue' | 'status' | 'general';
 
@@ -25,6 +30,19 @@ interface NotificationViewModel {
   readonly raw: DeploymentNotification;
 }
 
+/**
+ * User Notifications Component
+ * 
+ * This component provides a comprehensive notification interface that includes:
+ * - Deployment notifications via SignalR
+ * - Magic 8 Ball interactive feature with notification support
+ * - Notification preference management
+ * - Push notification permission handling
+ * - Read/unread notification tracking
+ * 
+ * The component integrates with multiple services to provide a unified
+ * notification experience across different notification types.
+ */
 @Component({
   selector: 'app-user-notifications',
   templateUrl: './user-notifications.component.html',
@@ -36,9 +54,25 @@ export class UserNotificationsComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly featureFlags = inject(FeatureFlagService);
   private readonly signalRService = inject(DeploymentSignalRService);
+  private readonly magic8Ball = inject(Magic8BallService);
+  private readonly notificationPreferences = inject(NotificationPreferencesService);
+  private readonly notificationIntegrator = inject(NotificationIntegratorService);
+  private readonly pushService = inject(DeploymentPushNotificationService);
+  private readonly fb = inject(FormBuilder);
   private readonly READ_STORAGE_KEY = 'sri-notifications-read-ids';
 
   private readonly readIds = signal<Set<string>>(this.loadReadState());
+
+  // Magic 8 Ball properties
+  protected readonly magic8BallForm: FormGroup;
+  protected readonly isShaking = signal(false);
+  protected readonly currentResponse = signal<Magic8BallResponse | null>(null);
+  protected readonly responseHistory = signal<Magic8BallResponse[]>([]);
+  
+  // Permission handling
+  protected readonly permissionStatus = signal<NotificationPermission>('default');
+  protected readonly showPermissionEducation = signal(false);
+  protected readonly isRequestingPermission = signal(false);
 
   protected readonly notifications = this.signalRService.getNotifications();
   protected readonly notificationsEnabled = this.featureFlags.flagEnabled('notifications');
@@ -54,6 +88,34 @@ export class UserNotificationsComponent implements OnInit {
   protected readonly readNotifications = computed<NotificationViewModel[]>(() =>
     this.viewModels().filter((notification) => this.isNotificationRead(notification.id))
   );
+
+  constructor() {
+    // Load Magic 8 Ball preferences
+    const magic8BallPrefs = this.notificationPreferences.getPreferences('magic-8-ball');
+
+    // Initialize Magic 8 Ball form with loaded preferences
+    this.magic8BallForm = this.fb.group({
+      question: ['', [Validators.required, Validators.minLength(3)]],
+      showToast: [magic8BallPrefs.toastEnabled],
+      sendPush: [magic8BallPrefs.pushEnabled],
+      toastType: [magic8BallPrefs.defaultToastType]
+    });
+
+    // Subscribe to form changes to save preferences
+    this.magic8BallForm.valueChanges.subscribe((formValue) => {
+      this.savePreferences(formValue);
+    });
+    
+    // Subscribe to sendPush changes to handle permission requests
+    this.magic8BallForm.get('sendPush')?.valueChanges.subscribe((enabled) => {
+      if (enabled) {
+        this.handlePushNotificationToggle();
+      }
+    });
+    
+    // Update permission status
+    this.updatePermissionStatus();
+  }
 
   async ngOnInit(): Promise<void> {
     if (!this.notificationsEnabled()) {
@@ -283,6 +345,257 @@ export class UserNotificationsComponent implements OnInit {
       window.localStorage.setItem(this.READ_STORAGE_KEY, serialized);
     } catch (error) {
       console.warn('Failed to persist notification read state:', error);
+    }
+  }
+
+  /**
+   * Save Magic 8 Ball notification preferences to localStorage
+   * Only saves preference-related fields (toast/push enabled, toast type)
+   * Does not save the question text
+   */
+  private savePreferences(formValue: any): void {
+    // Only save preference-related fields, not the question
+    this.notificationPreferences.updatePreferences('magic-8-ball', {
+      toastEnabled: formValue.showToast,
+      pushEnabled: formValue.sendPush,
+      defaultToastType: formValue.toastType
+    });
+  }
+
+  /**
+   * Handle Magic 8 Ball question submission
+   * Validates form, starts shaking animation, and sends notifications
+   * based on user preferences
+   */
+  protected onAskQuestion(): void {
+    if (this.magic8BallForm.invalid) {
+      return;
+    }
+
+    const formValue = this.magic8BallForm.value;
+    const question = formValue.question.trim();
+    
+    if (!question) {
+      return;
+    }
+
+    // Start shaking animation
+    this.isShaking.set(true);
+
+    const options = {
+      showToast: formValue.showToast,
+      sendPush: formValue.sendPush,
+      toastType: formValue.toastType
+    };
+
+    // Ask the Magic 8 Ball
+    this.magic8Ball.askQuestion(question, options).subscribe({
+      next: (response) => {
+        // Stop shaking and show response
+        this.isShaking.set(false);
+        this.currentResponse.set(response);
+        
+        // Add to history
+        const history = this.responseHistory();
+        this.responseHistory.set([response, ...history.slice(0, 4)]); // Keep last 5
+        
+        // Clear the question form
+        this.magic8BallForm.patchValue({ question: '' });
+      },
+      error: (error) => {
+        console.error('Magic 8 Ball error:', error);
+        this.isShaking.set(false);
+      }
+    });
+  }
+
+  /**
+   * Clear Magic 8 Ball response history
+   */
+  protected onClearHistory(): void {
+    this.responseHistory.set([]);
+    this.currentResponse.set(null);
+  }
+
+  /**
+   * Ask the same question again
+   * Populates the form with the previous question and submits it
+   */
+  protected onAskAgain(): void {
+    if (this.currentResponse()) {
+      this.magic8BallForm.patchValue({ 
+        question: this.currentResponse()!.question 
+      });
+      this.onAskQuestion();
+    }
+  }
+
+  /**
+   * Get CSS class for Magic 8 Ball response based on category
+   * @param category - The response category (positive, negative, neutral)
+   * @returns CSS class name for styling
+   */
+  protected getResponseClass(category: Magic8BallResponse['category']): string {
+    switch (category) {
+      case 'positive': return 'response-positive';
+      case 'negative': return 'response-negative';
+      case 'neutral': return 'response-neutral';
+      default: return '';
+    }
+  }
+
+  /**
+   * Get emoji icon for Magic 8 Ball response based on category
+   * @param category - The response category (positive, negative, neutral)
+   * @returns Emoji string for display
+   */
+  protected getResponseIcon(category: Magic8BallResponse['category']): string {
+    switch (category) {
+      case 'positive': return '✅';
+      case 'negative': return '❌';
+      case 'neutral': return '🤔';
+      default: return '🎱';
+    }
+  }
+
+  /**
+   * Track by function for Magic 8 Ball response history
+   * Uses timestamp as unique identifier for Angular change detection
+   */
+  protected trackByTimestamp(_index: number, response: Magic8BallResponse): string {
+    return response.timestamp.toISOString();
+  }
+  
+  // Permission handling methods
+  
+  /**
+   * Update the current permission status
+   */
+  private updatePermissionStatus(): void {
+    if (this.pushService.isSupported()) {
+      this.permissionStatus.set(this.pushService.permission);
+    } else {
+      this.permissionStatus.set('denied');
+    }
+  }
+  
+  /**
+   * Handle push notification toggle
+   * Request permission if not granted
+   */
+  private async handlePushNotificationToggle(): Promise<void> {
+    // Check if push notifications are supported
+    if (!this.pushService.isSupported()) {
+      this.showPermissionEducation.set(true);
+      this.magic8BallForm.patchValue({ sendPush: false }, { emitEvent: false });
+      return;
+    }
+    
+    // Check current permission status
+    const currentPermission = this.pushService.permission;
+    
+    if (currentPermission === 'granted') {
+      // Permission already granted, initialize subscription if needed
+      await this.initializePushSubscription();
+      return;
+    }
+    
+    if (currentPermission === 'denied') {
+      // Permission was denied, show educational message
+      this.showPermissionEducation.set(true);
+      this.magic8BallForm.patchValue({ sendPush: false }, { emitEvent: false });
+      return;
+    }
+    
+    // Permission is 'default', request it
+    await this.requestNotificationPermission();
+  }
+  
+  /**
+   * Request notification permission from the browser
+   */
+  protected async requestNotificationPermission(): Promise<void> {
+    if (this.isRequestingPermission()) {
+      return;
+    }
+    
+    this.isRequestingPermission.set(true);
+    
+    try {
+      const permission = await this.notificationIntegrator.requestPermissions();
+      this.permissionStatus.set(permission);
+      
+      if (permission === 'granted') {
+        // Permission granted, initialize push subscription
+        await this.initializePushSubscription();
+        this.showPermissionEducation.set(false);
+      } else if (permission === 'denied') {
+        // Permission denied, show educational message
+        this.showPermissionEducation.set(true);
+        this.magic8BallForm.patchValue({ sendPush: false }, { emitEvent: false });
+      }
+    } catch (error) {
+      console.error('Failed to request notification permission:', error);
+      this.showPermissionEducation.set(true);
+      this.magic8BallForm.patchValue({ sendPush: false }, { emitEvent: false });
+    } finally {
+      this.isRequestingPermission.set(false);
+    }
+  }
+  
+  /**
+   * Initialize push notification subscription after permission is granted
+   */
+  private async initializePushSubscription(): Promise<void> {
+    try {
+      await this.pushService.initialize();
+      console.log('✅ Push notification subscription initialized');
+    } catch (error) {
+      console.error('❌ Failed to initialize push subscription:', error);
+    }
+  }
+  
+  /**
+   * Dismiss the permission education message
+   */
+  protected dismissPermissionEducation(): void {
+    this.showPermissionEducation.set(false);
+  }
+  
+  /**
+   * Check if push notifications are supported
+   */
+  protected isPushSupported(): boolean {
+    return this.pushService.isSupported();
+  }
+  
+  /**
+   * Get permission status display text
+   */
+  protected getPermissionStatusText(): string {
+    const status = this.permissionStatus();
+    switch (status) {
+      case 'granted':
+        return 'Enabled';
+      case 'denied':
+        return 'Blocked';
+      default:
+        return 'Not set';
+    }
+  }
+  
+  /**
+   * Get permission status severity for UI styling
+   */
+  protected getPermissionStatusSeverity(): 'success' | 'danger' | 'warn' {
+    const status = this.permissionStatus();
+    switch (status) {
+      case 'granted':
+        return 'success';
+      case 'denied':
+        return 'danger';
+      default:
+        return 'warn';
     }
   }
 }

@@ -1,0 +1,136 @@
+<div class="magic-8-ball-container">
+  <div class="magic-8-ball-header">
+    <h2>🎱 Magic 8 Ball</h2>
+    <p>Ask a yes/no question and receive mystical guidance!</p>
+  </div>
+
+  <!-- Question Form -->
+  <form [formGroup]="questionForm" (ngSubmit)="onAskQuestion()" class="question-form">
+    <div class="form-group">
+      <label for="question">Your Question:</label>
+      <input 
+        type="text" 
+        id="question"
+        formControlName="question"
+        placeholder="Will my deployment be successful?"
+        class="form-control"
+        [class.is-invalid]="questionForm.get('question')?.invalid && questionForm.get('question')?.touched"
+      >
+      <div class="invalid-feedback" *ngIf="questionForm.get('question')?.invalid && questionForm.get('question')?.touched">
+        Please enter a question (at least 3 characters)
+      </div>
+    </div>
+
+    <!-- Notification Options -->
+    <div class="notification-options">
+      <h4>Notification Settings</h4>
+      
+      <div class="form-check">
+        <input 
+          type="checkbox" 
+          id="showToast" 
+          formControlName="showToast"
+          class="form-check-input"
+        >
+        <label for="showToast" class="form-check-label">
+          Show Toast Notification
+        </label>
+      </div>
+
+      <div class="form-check">
+        <input 
+          type="checkbox" 
+          id="sendPush" 
+          formControlName="sendPush"
+          class="form-check-input"
+        >
+        <label for="sendPush" class="form-check-label">
+          Send Push Notification
+        </label>
+      </div>
+
+      <div class="form-group" *ngIf="questionForm.get('showToast')?.value">
+        <label for="toastType">Toast Type:</label>
+        <select id="toastType" formControlName="toastType" class="form-control">
+          <option value="info">Info (Blue)</option>
+          <option value="success">Success (Green)</option>
+          <option value="warning">Warning (Orange)</option>
+          <option value="error">Error (Red)</option>
+        </select>
+      </div>
+    </div>
+
+    <button 
+      type="submit" 
+      class="btn btn-primary ask-button"
+      [disabled]="questionForm.invalid || isShaking()"
+    >
+      <span *ngIf="!isShaking()">🎱 Ask the Magic 8 Ball</span>
+      <span *ngIf="isShaking()" class="shaking-text">🎱 Consulting the spirits...</span>
+    </button>
+  </form>
+
+  <!-- Magic 8 Ball Visual -->
+  <div class="magic-8-ball-visual" [class.shaking]="isShaking()">
+    <div class="ball">
+      <div class="window" *ngIf="currentResponse() && !isShaking()">
+        <div class="response-text" [ngClass]="getResponseClass(currentResponse()!.category)">
+          {{ currentResponse()!.answer }}
+        </div>
+      </div>
+      <div class="window thinking" *ngIf="isShaking()">
+        <div class="dots">
+          <span>.</span><span>.</span><span>.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Current Response -->
+  <div class="current-response" *ngIf="currentResponse() && !isShaking()">
+    <div class="response-card" [ngClass]="getResponseClass(currentResponse()!.category)">
+      <div class="response-header">
+        <span class="response-icon">{{ getResponseIcon(currentResponse()!.category) }}</span>
+        <span class="response-category">{{ currentResponse()!.category | titlecase }}</span>
+      </div>
+      <div class="response-question">
+        <strong>Q:</strong> {{ currentResponse()!.question }}
+      </div>
+      <div class="response-answer">
+        <strong>A:</strong> {{ currentResponse()!.answer }}
+      </div>
+      <div class="response-actions">
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="onAskAgain()">
+          🔄 Ask Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Response History -->
+  <div class="response-history" *ngIf="responseHistory().length > 0">
+    <div class="history-header">
+      <h4>Recent Questions</h4>
+      <button type="button" class="btn btn-sm btn-outline-danger" (click)="onClearHistory()">
+        🗑️ Clear History
+      </button>
+    </div>
+    
+    <div class="history-list">
+      <div 
+        class="history-item" 
+        *ngFor="let response of responseHistory(); trackBy: trackByTimestamp"
+        [ngClass]="getResponseClass(response.category)"
+      >
+        <div class="history-question">{{ response.question }}</div>
+        <div class="history-answer">
+          <span class="history-icon">{{ getResponseIcon(response.category) }}</span>
+          {{ response.answer }}
+        </div>
+        <div class="history-timestamp">
+          {{ response.timestamp | date:'short' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

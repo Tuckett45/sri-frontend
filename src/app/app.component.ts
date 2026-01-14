@@ -1,7 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from './services/auth.service';
+import { ConfigurationService } from './services/configuration.service';
+import { SecureAuthService } from './services/secure-auth.service';
 import { DeploymentNotificationIntegratorService } from './features/deployment/services/deployment-notification-integrator.service';
+import { environment } from 'src/environments/environments';
 
 @Component({
   selector: 'app-root',
@@ -12,21 +14,40 @@ import { DeploymentNotificationIntegratorService } from './features/deployment/s
 export class AppComponent {
   title = 'SRI Tools';
   isUserLoggedIn: boolean = false;
+  showConfigStatus = !environment.production; // Show config status in development
 
+  private readonly configService = inject(ConfigurationService);
+  private readonly authService = inject(SecureAuthService);
   private readonly notificationIntegrator = inject(DeploymentNotificationIntegratorService);
 
-  constructor(public router: Router, private authService: AuthService) {}
+  constructor(public router: Router) {}
 
-  ngOnInit(): void {
-    this.authService.getLoginStatus().subscribe(status => {
-      this.isUserLoggedIn = status;
-      
-      // Initialize notification integrator when user is logged in
-      if (status) {
-        this.notificationIntegrator.initialize().catch(error => {
-          console.error('Failed to initialize notifications:', error);
-        });
-      }
-    });
+  async ngOnInit(): Promise<void> {
+    try {
+      // Initialize configuration service first
+      console.log('🔧 Initializing application...');
+      await this.configService.initialize();
+
+      // Initialize auth service after configuration is ready
+      console.log('🔐 Initializing authentication...');
+      await this.authService.initialize();
+
+      // Subscribe to authentication state changes
+      this.authService.getAuthState().subscribe(authState => {
+        this.isUserLoggedIn = authState.isAuthenticated;
+        
+        // Initialize notification integrator when user is logged in
+        if (authState.isAuthenticated) {
+          this.notificationIntegrator.initialize().catch(error => {
+            console.error('Failed to initialize notifications:', error);
+          });
+        }
+      });
+
+      console.log('✅ Application initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize application:', error);
+      // Application can still function with degraded capabilities
+    }
   }
 }

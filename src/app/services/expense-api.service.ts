@@ -18,15 +18,15 @@ import {
 export class ExpenseApiService {
   private jsonOptions = {
     headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Content-Type': 'application/json'
+      // API subscription key will be added automatically by ConfigurationInterceptor
     })
   };
 
   // For multipart, do not set Content-Type (browser sets boundary)
   private authOnlyOptions = {
     headers: new HttpHeaders({
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      // API subscription key will be added automatically by ConfigurationInterceptor
     })
   };
 

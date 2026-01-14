@@ -13,18 +13,18 @@ import { UserRole } from '../models/role.enum';
 })
 export class AuthService {
   currentUser: User | null = null;
-  private loggedInStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
+  protected loggedInStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
   private userRole: BehaviorSubject<UserRole> = new BehaviorSubject<UserRole>(UserRole.CM);
   private readonly authTokenStorageKey = 'authToken';
 
-  private httpOptions = {
+  protected httpOptions = {
     headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Content-Type': 'application/json'
+      // Note: Ocp-Apim-Subscription-Key is now handled by ConfigurationInterceptor
     })
   };
   
-  constructor(private router: Router, private http: HttpClient) {
+  constructor(protected router: Router, protected http: HttpClient) {
     this.loadUserFromLocalStorage();
    }
 
@@ -180,7 +180,7 @@ export class AuthService {
     this.router.navigate(['/login']);
 }
 
-private clearStorage(): void {
+protected clearStorage(): void {
     localStorage.removeItem('loggedIn');
     sessionStorage.removeItem(this.authTokenStorageKey);
     localStorage.removeItem('user');

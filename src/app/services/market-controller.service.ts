@@ -10,8 +10,8 @@ import { MarketControllerEntry } from '../models/market-controller-entry.model';
 export class MarketControllerService {
   private httpOptions = {
     headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Content-Type': 'application/json'
+      // API subscription key will be added automatically by ConfigurationInterceptor
     })
   };
 

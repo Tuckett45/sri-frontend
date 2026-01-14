@@ -111,25 +111,30 @@ mat-toolbar {
     }
   }
 
-  /* Hamburger Menu (hidden by default) */
+  /* Hamburger Menu (visible on mobile by default) */
   .menu-toggle {
+    display: flex; /* Show by default, will be hidden on desktop via media query */
     flex-direction: column;
-    justify-content: space-around;
-    height: 24px;
-    width: 30px;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    width: 40px;
     background: transparent;
     border: none;
     cursor: pointer;
+    color: white;
 
     mat-icon {
       color: white;
-      font-size: 30px;
-      transition: transform 0.5s ease;  /* Smooth transition */
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      transition: transform 0.3s ease;
     }
 
-    /* Rotate hamburger icon when menu is open */
-    &.open mat-icon.menu-icon {
-      transform: rotate(90deg);  /* Rotate the hamburger icon */
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
     }
   }
 }
@@ -137,7 +142,11 @@ mat-toolbar {
 /* For screens smaller than 768px */
 @media (max-width: 768px) {
   .menu-toggle {
-    display: flex;
+    display: flex !important; /* Ensure hamburger menu is visible on mobile */
+  }
+
+  .nav-links:not(.mobile) {
+    display: none; /* Hide regular nav links on mobile */
   }
 
   .nav-links.mobile button {
@@ -155,14 +164,24 @@ mat-toolbar {
 @media (min-width: 769px) {
   /* Hide the hamburger menu on larger screens */
   .menu-toggle {
-    display: none;  /* Hide the hamburger button on screens larger than 768px */
+    display: none !important;  /* Hide the hamburger button on screens larger than 768px */
   }
 
   /* Ensure the nav links are visible on larger screens */
   .nav-links {
-    display: flex; /* Make sure the nav links are visible and centered */
+    display: flex !important; /* Make sure the nav links are visible and centered */
     flex-direction: row; /* Align the nav links horizontally */
     gap: 15px; /* Keep the space between the links */
+  }
+
+  .nav-links.mobile {
+    display: flex !important; /* Override mobile hiding on desktop */
+    flex-direction: row;
+    position: static;
+    background: transparent;
+    padding: 0;
+    max-height: none;
+    width: auto;
   }
 }
 

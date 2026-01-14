@@ -11,8 +11,8 @@ import { environment } from 'src/environments/environments';
 export class OspCoordinatorService {
   private httpOptions = {
     headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Content-Type': 'application/json'
+      // API subscription key will be added automatically by ConfigurationInterceptor
     })
   };
 

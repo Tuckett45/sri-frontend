@@ -47,8 +47,8 @@ export class DeploymentService {
 
   private httpOptions = {
     headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+      'Content-Type': 'application/json'
+      // Note: Ocp-Apim-Subscription-Key is now handled by ConfigurationInterceptor
     })
   };
 

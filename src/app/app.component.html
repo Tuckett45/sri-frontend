@@ -4,6 +4,9 @@
     <img width="100" alt="SRI Logo" src="assets/images/SRI_IntegrationServices-logo-white-small-2.png"/>
 </mat-toolbar>
 
+<!-- Configuration Status (Development Only) -->
+<app-configuration-status *ngIf="showConfigStatus"></app-configuration-status>
+
 <div class="main-content" role="main">
     <router-outlet></router-outlet>
 </div>

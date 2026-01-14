@@ -1,12 +1,14 @@
 ﻿import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 
 import { AppComponent } from './app.component';
+import { ConfigurationInterceptor } from './interceptors/configuration.interceptor';
+import { ConfigurationStatusComponent } from './components/configuration-status/configuration-status.component';
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -93,6 +95,8 @@ import '../charts-setup';
 import { UserNotificationsComponent } from './components/notifications/user-notifications.component';
 import { DailyReportModalComponent } from './components/modals/daily-report-modal/daily-report-modal.component';
 import { DailyReportDashboardModule } from './components/daily-report-dashboard/daily-report-dashboard.module';
+import { Magic8BallComponent } from './components/magic-8-ball/magic-8-ball.component';
+import { Magic8BallWidgetComponent } from './components/magic-8-ball-widget/magic-8-ball-widget.component';
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -134,7 +138,9 @@ export const customCurrencyMaskConfig = {
     MarketControllerModalComponent,
     UserNotificationsComponent,
     DailyReportModalComponent,
-    AdminUserApprovalComponent
+    AdminUserApprovalComponent,
+    Magic8BallComponent,
+    Magic8BallWidgetComponent
   ],
   imports: [
     NgxCurrencyDirective,
@@ -199,7 +205,8 @@ export const customCurrencyMaskConfig = {
     GoalsComponent,
     MeterGroupModule,
     DividerModule,
-    ChartComponent
+    ChartComponent,
+    ConfigurationStatusComponent
   ],
   providers: [provideCharts(withDefaultRegisterables()),
     provideEnvironmentNgxCurrency({
@@ -215,7 +222,14 @@ export const customCurrencyMaskConfig = {
       min: null,
       max: null,
       inputMode: NgxCurrencyInputMode.Financial,
-    }), NgxImageCompressService],
+    }), 
+    NgxImageCompressService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: ConfigurationInterceptor,
+      multi: true
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

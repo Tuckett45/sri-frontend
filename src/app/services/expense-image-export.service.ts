@@ -19,8 +19,9 @@ export interface ImageExportResult {
   providedIn: 'root'
 })
 export class ExpenseImageExportService {
+  // API subscription key will be added automatically by ConfigurationInterceptor
   private readonly subscriptionHeaders = new HttpHeaders({
-    'Ocp-Apim-Subscription-Key': environment.apiSubscriptionKey
+    // Headers will be managed by interceptor
   });
   private readonly apiBaseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
   private readonly blobBaseUrl = environment.receiptBlobBaseUrl
