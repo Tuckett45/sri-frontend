@@ -4,17 +4,20 @@
 The hamburger menu toggle icon was not visible on mobile devices, preventing users from accessing the navigation menu.
 
 ## Root Cause Analysis
-The hamburger menu button had `display: none` by default and relied on media queries to show it on mobile. Potential issues included:
-- Insufficient icon size for mobile visibility
-- Possible z-index conflicts
-- Media query specificity issues
-- Color contrast problems (white icon on potentially white/light backgrounds)
+The hamburger menu button had `display: none` by default and relied on media queries to show it on mobile. The main issue was:
+- **CSS specificity conflicts**: The default `display: none` was fighting with media query overrides
+- **Complex selector logic**: Using `:not(.mobile)` and multiple conditional classes created conflicts
+- **Wrong approach**: Trying to show a hidden element is less reliable than hiding a visible element
+
+The solution was to reverse the logic: make the hamburger always rendered (`display: flex` by default), then hide it on desktop with media queries.
 
 ## Changes Made
 
-### 1. Enhanced Hamburger Button Styling (`navbar.component.scss`)
-- **Increased icon size**: 28px → 32px for better mobile visibility
-- **Improved button size**: 40px → 48px touch target (better for mobile)
+### 1. Fixed Hamburger Button Display Logic (`navbar.component.scss`)
+- **Changed default display**: `display: none` → `display: flex` (always rendered in DOM)
+- **Reversed media query logic**: Now hides on desktop instead of showing on mobile
+- **Increased icon size**: 32px for better mobile visibility
+- **Improved button size**: 48px touch target (better for mobile)
 - **Added `!important` to icon color**: Ensures white color is always applied
 - **Enhanced z-index**: Set to 1001 to ensure it's above other elements
 - **Added active state**: Visual feedback when button is pressed
@@ -26,10 +29,17 @@ The hamburger menu button had `display: none` by default and relied on media que
 - **Added `flex-wrap: nowrap`**: Prevents layout breaking on small screens
 - **Proper flex ordering**: Logo (order: 1), Spacer (flex: 1), Hamburger (order: 3)
 
-### 3. Media Query Enhancements
-- **Explicit display rules**: Used `!important` to override any conflicting styles
-- **Proper element ordering**: Ensured hamburger button appears after spacer
-- **Responsive padding**: Adjusted for different screen sizes (768px, 500px)
+### 3. Simplified Media Query Logic
+- **Mobile (`@media (max-width: 768px)`)**:
+  - Show hamburger: `display: flex !important`
+  - Hide all nav links by default: `.nav-links { display: none !important }`
+  - Show nav links only when menu is open: `.nav-links.mobile.open { display: flex !important }`
+  - Removed confusing `:not(.mobile)` selector that was causing conflicts
+- **Desktop (`@media (min-width: 769px)`)**:
+  - Hide hamburger: `display: none !important`
+  - Show nav links: `display: flex !important`
+  - Reset positioning and styling for desktop layout
+  - Removed redundant `.nav-links.mobile` override
 - **Z-index management**: Mobile menu (999) below hamburger button (1001)
 
 ### 4. Very Small Screen Adjustments (< 500px)
@@ -138,12 +148,8 @@ The hamburger menu button had `display: none` by default and relied on media que
 - `src/app/components/navbar/navbar.component.html` - Structure already correct
 - `src/app/components/navbar/navbar.component.ts` - Logic already correct
 
-## Next Steps
-1. Test on actual mobile devices (iOS and Android)
-2. Get user feedback on visibility and usability
-3. Consider adding animation to menu open/close
-4. Consider adding backdrop/overlay when menu is open
-5. Consider adding swipe gesture to close menu
+## Status
+🔄 **In Progress** - CSS changes applied, awaiting user testing confirmation on actual mobile devices
 
 ## Notes
 - The fix prioritizes visibility and usability on mobile devices

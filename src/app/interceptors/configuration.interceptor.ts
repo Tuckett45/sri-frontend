@@ -17,6 +17,11 @@ export class ConfigurationInterceptor implements HttpInterceptor {
       return next.handle(req);
     }
 
+    // Skip interception for external APIs (Google Maps, etc.)
+    if (this.isExternalApiEndpoint(req.url)) {
+      return next.handle(req);
+    }
+
     // Get auth headers only (configuration headers will be added by services directly)
     return this.authService.getAuthHeaders().pipe(
       switchMap(authHeaders => {
@@ -84,6 +89,18 @@ export class ConfigurationInterceptor implements HttpInterceptor {
     ];
 
     return configEndpoints.some(endpoint => url.includes(endpoint));
+  }
+
+  /**
+   * Check if the request URL is for external APIs that don't need our auth headers
+   */
+  private isExternalApiEndpoint(url: string): boolean {
+    const externalApis = [
+      'maps.googleapis.com',
+      'googleapis.com'
+    ];
+
+    return externalApis.some(api => url.includes(api));
   }
 
   /**

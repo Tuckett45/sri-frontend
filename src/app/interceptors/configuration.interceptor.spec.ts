@@ -83,6 +83,24 @@ describe('ConfigurationInterceptor', () => {
     req.flush({});
   });
 
+  it('should not intercept Google Maps API requests', () => {
+    httpClient.get('https://maps.googleapis.com/maps/api/geocode/json?address=test').subscribe();
+
+    const req = httpMock.expectOne('https://maps.googleapis.com/maps/api/geocode/json?address=test');
+    // Should not have added any headers since it's an external API
+    expect(req.request.headers.keys().length).toBe(0);
+    req.flush({});
+  });
+
+  it('should not intercept other Google APIs', () => {
+    httpClient.get('https://www.googleapis.com/some/api').subscribe();
+
+    const req = httpMock.expectOne('https://www.googleapis.com/some/api');
+    // Should not have added any headers since it's an external API
+    expect(req.request.headers.keys().length).toBe(0);
+    req.flush({});
+  });
+
   it('should handle authentication errors gracefully', () => {
     let errorResponse: any;
 

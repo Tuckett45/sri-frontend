@@ -35,6 +35,21 @@
     z-index: 9999 !important; /* Ensure it's on top */
     position: fixed !important; /* Changed from relative to fixed for better mobile positioning */
     max-height: 50vh; /* Limit height to prevent overflow */
+    
+    /* iOS Safari specific fixes */
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0); /* Force hardware acceleration */
+    will-change: transform; /* Optimize for animations */
+  }
+
+  /* iOS Safari: Prevent autocomplete panel from being hidden */
+  ::ng-deep .cdk-overlay-pane {
+    z-index: 9999 !important;
+    position: fixed !important;
+  }
+
+  ::ng-deep .cdk-overlay-container {
+    z-index: 9999 !important;
   }
 
   .autocomplete-suggestions {
@@ -45,6 +60,7 @@
     overflow-y: auto;
     width: 100%;
     z-index: 9999;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   }
 
   ::ng-deep .mat-mdc-option .mdc-list-item__primary-text{
@@ -351,5 +367,19 @@
   /* Make sure input text is readable on mobile */
   ::ng-deep .mat-mdc-input-element {
     font-size: 16px !important; /* Prevents zoom on iOS */
+    -webkit-appearance: none; /* Remove iOS default styling */
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
+  }
+
+  /* iOS Safari: Fix input field rendering */
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    -webkit-transform: translateZ(0); /* Force hardware acceleration */
+  }
+
+  /* iOS Safari: Ensure autocomplete is clickable */
+  ::ng-deep .mat-mdc-option {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    touch-action: manipulation; /* Improve touch response */
   }
 }

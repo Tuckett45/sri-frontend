@@ -160,42 +160,70 @@ export class StreetSheetModalComponent implements OnInit {
 
   onAddressInput(event: any): void {
     const query = event.target.value;
+    
+    // Debug logging for iOS issues
+    console.log('Address input event:', { 
+      type: event.type, 
+      value: query, 
+      length: query?.length,
+      userAgent: navigator.userAgent 
+    });
+    
     // Reduced minimum length from 14 to 5 characters for better mobile UX
     if (query && query.length > 5) {
       this.isAddressLoading = true;
       this.geocodingService.geocodeAddress(query).pipe(
         debounceTime(800), // Reduced from 4000ms to 800ms for faster response
         distinctUntilChanged(),
-        catchError(() => {
+        catchError((err) => {
+          console.error('Address search error:', err);
           this.isAddressLoading = false;
-          return of([]);
+          this.toastr.warning('Unable to search addresses. Please try again or enter manually.');
+          return of({ results: [], status: 'ERROR' });
         })
       ).subscribe(suggestions => {
-        this.filteredAddresses = suggestions.results.map((result: { address_components: any[]; geometry: { location: { lat: any; lng: any; }; }; }) => {
-          
-          const address = result.address_components || [];
-          const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name 
-                                + ' ' + 
-                                address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
-          
-          const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
-          const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
-          const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
-          
-          const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
-          
-          return {
-            formattedAddress: formattedAddress,
-            original: result,
-            lat: result.geometry.location.lat,
-            lon: result.geometry.location.lng
-          };
-        });
-  
         this.isAddressLoading = false;
+        
+        console.log('Address suggestions received:', suggestions);
+        
+        // Check if we got valid results
+        if (suggestions && suggestions.results && suggestions.results.length > 0) {
+          this.filteredAddresses = suggestions.results.map((result: { address_components: any[]; geometry: { location: { lat: any; lng: any; }; }; }) => {
+            
+            const address = result.address_components || [];
+            const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name 
+                                  + ' ' + 
+                                  address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
+            
+            const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
+            const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
+            const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
+            
+            const formattedAddress = `${streetAddress}, ${city}, ${abbreviatedState}`.trim();
+            
+            return {
+              formattedAddress: formattedAddress,
+              original: result,
+              lat: result.geometry.location.lat,
+              lon: result.geometry.location.lng
+            };
+          });
+          
+          console.log('Filtered addresses:', this.filteredAddresses.length);
+        } else {
+          // No results found
+          this.filteredAddresses = [];
+          if (suggestions.status === 'ZERO_RESULTS') {
+            // Don't show error for zero results, just clear suggestions
+            console.log('No address suggestions found for:', query);
+          } else if (suggestions.status === 'ERROR') {
+            console.error('Geocoding API error:', suggestions.error);
+          }
+        }
       });
     } else {
       this.filteredAddresses = [];
+      this.isAddressLoading = false;
     }
   }
   
