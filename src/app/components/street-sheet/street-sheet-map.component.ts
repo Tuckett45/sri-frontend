@@ -229,21 +229,32 @@ export class StreetSheetMapComponent implements AfterViewInit {
 
   goToLocation(location: string): void {
     if(location !== ''){
-      const stateCoordinates = StateLocation[location as keyof typeof StateLocation] || '';
-      this.map.flyTo([stateCoordinates.latitude, stateCoordinates.longitude], 10, { animate: true, duration: 1 }); 
+      const stateCoordinates = StateLocation[location as keyof typeof StateLocation];
+      if (stateCoordinates) {
+        this.map.flyTo([stateCoordinates.latitude, stateCoordinates.longitude], 10, { animate: true, duration: 1 }); 
+      } else {
+        // If state not found, default to Utah
+        this.map.flyTo([40.7608, -111.8910], 10, { animate: true, duration: 1 }); 
+      }
     }else{
+      // Reset to Utah default view
       this.map.flyTo([40.7608, -111.8910], 10, { animate: true, duration: 1 }); 
     }
   }
 
   private initMap(): void {
-    if(this.userData.market !== 'RG'){
-      const stateCoordinates = StateLocation[this.userData.market as keyof typeof StateLocation] || '';
-      this.map = L.map('map').setView([stateCoordinates.latitude, stateCoordinates.longitude], 10); 
-    }else{
-      //utah
-      this.map = L.map('map').setView([40.7608, -111.8910], 10); 
+    let initialLat = 40.7608;  // Utah default
+    let initialLng = -111.8910;
+    
+    if(this.userData.market && this.userData.market !== 'RG'){
+      const stateCoordinates = StateLocation[this.userData.market as keyof typeof StateLocation];
+      if (stateCoordinates) {
+        initialLat = stateCoordinates.latitude;
+        initialLng = stateCoordinates.longitude;
+      }
     }
+    
+    this.map = L.map('map').setView([initialLat, initialLng], 10);
 
     this.osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: ''

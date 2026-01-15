@@ -63,7 +63,7 @@
             formControlName="streetAddress"
             [matAutocomplete]="auto"
             (input)="onAddressInput($event)"
-            placeholder="Enter Street Address"
+            placeholder="Start typing address..."
             required
           />
           <button
@@ -71,10 +71,11 @@
             matSuffix
             type="button"
             class="location-btn"
-            matTooltip="Use my location (street, city, state)"
+            matTooltip="Use my current location"
             matTooltipPosition="above"
             (click)="autofillLocationFromBrowser()"
-            [disabled]="isLocating">
+            [disabled]="isLocating"
+            aria-label="Use my current location">
             <mat-icon *ngIf="!isLocating">my_location</mat-icon>
             <mat-spinner *ngIf="isLocating" diameter="20"></mat-spinner>
           </button>
@@ -83,7 +84,7 @@
           </mat-error>
         
           <mat-spinner *ngIf="isAddressLoading" diameter="24" class="loading-spinner"></mat-spinner>
-          <mat-hint align="end" class="location-hint">Click the target to auto-fill from your current location</mat-hint>
+          <mat-hint align="end" class="location-hint">Type 6+ characters or tap <mat-icon inline="true" style="font-size: 14px; vertical-align: middle;">my_location</mat-icon> for GPS</mat-hint>
         
           <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)" class="autocomplete-suggestions">
             <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">

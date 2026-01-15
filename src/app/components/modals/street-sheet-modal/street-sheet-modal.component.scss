@@ -33,14 +33,15 @@
 
   ::ng-deep .mat-autocomplete-panel {
     z-index: 9999 !important; /* Ensure it's on top */
-    position: relative;
+    position: fixed !important; /* Changed from relative to fixed for better mobile positioning */
+    max-height: 50vh; /* Limit height to prevent overflow */
   }
 
   .autocomplete-suggestions {
     position: absolute;
     background-color: white;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-    max-height: 150px;
+    max-height: 200px; /* Increased from 150px for better visibility */
     overflow-y: auto;
     width: 100%;
     z-index: 9999;
@@ -48,17 +49,34 @@
 
   ::ng-deep .mat-mdc-option .mdc-list-item__primary-text{
     padding-top: 10px !important;
+    font-size: 14px; /* Ensure readable text size */
   }
   
   .autocomplete-suggestions mat-option {
     cursor: pointer;
-    padding: 10px;
+    padding: 12px; /* Increased from 10px for better touch targets */
     color: #000 !important;
+    min-height: 48px; /* Ensure minimum touch target size */
+    display: flex;
+    align-items: center;
   }
   
   .autocomplete-suggestions mat-option:hover {
-    padding-top: 10px;
+    padding-top: 12px; /* Match increased padding */
     background-color: #f5f5f5;
+  }
+
+  /* Mobile-specific autocomplete improvements */
+  @media (max-width: 768px) {
+    .autocomplete-suggestions mat-option {
+      padding: 14px; /* Even larger touch targets on mobile */
+      min-height: 52px;
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    .autocomplete-suggestions mat-option:hover {
+      padding-top: 14px;
+    }
   }
 
   .loading-spinner {
@@ -287,8 +305,51 @@
 .location-btn {
   color: #144f80;
   margin-left: 4px;
+  min-width: 48px; /* Ensure minimum touch target size */
+  min-height: 48px;
+  
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
 }
 
 .location-hint {
   color: #6b7280;
+  font-size: 12px;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  .location-btn {
+    min-width: 44px;
+    min-height: 44px;
+    
+    mat-icon {
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  .location-hint {
+    font-size: 11px;
+  }
+
+  /* Ensure autocomplete dropdown is visible above keyboard */
+  ::ng-deep .mat-autocomplete-panel {
+    max-height: 40vh !important; /* Limit height on mobile */
+  }
+
+  /* Improve form field spacing on mobile */
+  mat-form-field {
+    margin-bottom: 8px;
+    margin-top: 8px;
+  }
+
+  /* Make sure input text is readable on mobile */
+  ::ng-deep .mat-mdc-input-element {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
 }

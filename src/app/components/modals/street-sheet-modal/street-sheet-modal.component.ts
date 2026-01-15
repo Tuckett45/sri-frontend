@@ -160,10 +160,11 @@ export class StreetSheetModalComponent implements OnInit {
 
   onAddressInput(event: any): void {
     const query = event.target.value;
-    if (query && query.length > 14) {
+    // Reduced minimum length from 14 to 5 characters for better mobile UX
+    if (query && query.length > 5) {
       this.isAddressLoading = true;
       this.geocodingService.geocodeAddress(query).pipe(
-        debounceTime(4000),
+        debounceTime(800), // Reduced from 4000ms to 800ms for faster response
         distinctUntilChanged(),
         catchError(() => {
           this.isAddressLoading = false;
@@ -292,6 +293,15 @@ export class StreetSheetModalComponent implements OnInit {
     }
 
     this.isLocating = true;
+    this.toastr.info('Getting your location...', '', { timeOut: 2000 });
+    
+    // Add timeout and high accuracy options for better mobile performance
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000, // 10 second timeout
+      maximumAge: 0 // Don't use cached position
+    };
+
     navigator.geolocation.getCurrentPosition(
       position => {
         const { latitude, longitude } = position.coords;
@@ -306,20 +316,38 @@ export class StreetSheetModalComponent implements OnInit {
                 state: parts.state
               });
               this.attachMarkerFromCoords(latitude, longitude);
+              this.toastr.success('Location filled successfully!');
             } else {
-              this.toastr.warning('Could not determine your address.');
+              this.toastr.warning('Could not determine your address. Please enter manually.');
             }
           },
-          error: () => {
+          error: (err) => {
             this.isLocating = false;
-            this.toastr.error('Unable to fetch your location.');
+            console.error('Geocoding error:', err);
+            this.toastr.error('Unable to fetch your location. Please try again or enter manually.');
           }
         });
       },
-      () => {
+      (error) => {
         this.isLocating = false;
-        this.toastr.warning('Location access was denied.');
-      }
+        let errorMessage = 'Location access was denied.';
+        
+        // Provide specific error messages based on error code
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access was denied. Please enable location permissions in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable. Please check your device settings.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please try again.';
+            break;
+        }
+        
+        this.toastr.warning(errorMessage, '', { timeOut: 5000 });
+      },
+      options
     );
   }
 
