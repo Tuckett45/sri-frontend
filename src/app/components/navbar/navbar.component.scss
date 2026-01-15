@@ -4,13 +4,14 @@ mat-toolbar {
   left: 0;
   width: 100%;
   z-index: 1000;
-  padding: 0 20px;
+  padding: 0 16px;
   margin-bottom: 20px;
   background-color: #144f80;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 64px; /* Ensure consistent height */
+  min-height: 64px;
+  flex-wrap: nowrap; /* Prevent wrapping on mobile */
 
   button {
     &:hover {
@@ -112,48 +113,65 @@ mat-toolbar {
     }
   }
 
-  /* Hamburger Menu (visible on mobile by default) */
+  /* Hamburger Menu (visible on mobile) */
   .menu-toggle {
     display: none; /* Hidden by default, shown on mobile */
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 40px;
-    width: 40px;
+    height: 48px;
+    width: 48px;
     background: transparent;
     border: none;
     cursor: pointer;
     color: white;
-    z-index: 1001; /* Ensure it's above other elements */
+    z-index: 1001;
+    padding: 8px;
+    margin-left: auto; /* Push to the right on mobile */
 
     mat-icon {
-      color: white;
-      font-size: 28px; /* Slightly larger for better visibility */
-      width: 28px;
-      height: 28px;
+      color: white !important; /* Ensure icon color is always white */
+      font-size: 32px; /* Larger for better mobile visibility */
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
       transition: transform 0.3s ease;
     }
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: rgba(255, 255, 255, 0.15);
       border-radius: 4px;
     }
 
     &:focus {
-      outline: 2px solid rgba(255, 255, 255, 0.5);
+      outline: 2px solid rgba(255, 255, 255, 0.6);
       outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    &:active {
+      background-color: rgba(255, 255, 255, 0.2);
     }
   }
 }
 
 /* For screens smaller than 768px */
 @media (max-width: 768px) {
+  mat-toolbar {
+    padding: 0 12px; /* Reduce padding on mobile */
+  }
+
   .menu-toggle {
     display: flex !important; /* Ensure hamburger menu is visible on mobile */
+    order: 3; /* Place after logo and spacer */
   }
 
   .nav-links:not(.mobile) {
-    display: none; /* Hide regular nav links on mobile */
+    display: none !important; /* Hide regular nav links on mobile */
+  }
+
+  .nav-links.mobile {
+    z-index: 999; /* Below the hamburger button */
   }
 
   .nav-links.mobile button {
@@ -163,7 +181,12 @@ mat-toolbar {
   }
 
   .spacer {
-    display: none;
+    display: block; /* Keep spacer to push hamburger to right */
+    flex: 1;
+  }
+
+  .logo {
+    order: 1;
   }
 }
 
@@ -194,7 +217,22 @@ mat-toolbar {
 
 /* For screens smaller than 500px */
 @media (max-width: 500px) {
+  mat-toolbar {
+    padding: 0 8px; /* Even less padding on very small screens */
+  }
+
   .logo {
     font-size: 1.2rem; /* Make the logo smaller on very small screens */
+  }
+
+  .menu-toggle {
+    height: 44px;
+    width: 44px;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
   }
 }
