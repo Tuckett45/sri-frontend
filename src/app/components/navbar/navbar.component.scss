@@ -10,6 +10,7 @@ mat-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 64px; /* Ensure consistent height */
 
   button {
     &:hover {
@@ -113,7 +114,7 @@ mat-toolbar {
 
   /* Hamburger Menu (visible on mobile by default) */
   .menu-toggle {
-    display: flex; /* Show by default, will be hidden on desktop via media query */
+    display: none; /* Hidden by default, shown on mobile */
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -123,18 +124,24 @@ mat-toolbar {
     border: none;
     cursor: pointer;
     color: white;
+    z-index: 1001; /* Ensure it's above other elements */
 
     mat-icon {
       color: white;
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
+      font-size: 28px; /* Slightly larger for better visibility */
+      width: 28px;
+      height: 28px;
       transition: transform 0.3s ease;
     }
 
     &:hover {
       background-color: rgba(255, 255, 255, 0.1);
       border-radius: 4px;
+    }
+
+    &:focus {
+      outline: 2px solid rgba(255, 255, 255, 0.5);
+      outline-offset: 2px;
     }
   }
 }
