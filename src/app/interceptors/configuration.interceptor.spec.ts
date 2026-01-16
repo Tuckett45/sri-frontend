@@ -147,6 +147,18 @@ describe('ConfigurationInterceptor', () => {
     req.flush({});
   });
 
+  it('should not add Content-Type header for FormData requests', () => {
+    const formData = new FormData();
+    formData.append('test', 'value');
+
+    httpClient.post('/api/test', formData).subscribe();
+
+    const req = httpMock.expectOne('/api/test');
+    // Should not have Content-Type header - browser will set it with boundary
+    expect(req.request.headers.has('Content-Type')).toBeFalse();
+    req.flush({});
+  });
+
   it('should handle auth service errors', () => {
     authServiceSpy.getAuthHeaders.and.returnValue(of(new HttpHeaders()));
 

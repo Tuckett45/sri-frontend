@@ -45,9 +45,10 @@ export class SecureAuthService extends AuthService implements OnDestroy {
 
   /**
    * Initialize secure authentication - should be called after ConfigurationService is ready
+   * @param force - Force re-initialization even if already authenticated
    */
-  async initialize(): Promise<void> {
-    if (this.authState$.value.isAuthenticated) {
+  async initialize(force: boolean = false): Promise<void> {
+    if (this.authState$.value.isAuthenticated && !force) {
       console.log('🔐 SecureAuthService already initialized');
       return;
     }

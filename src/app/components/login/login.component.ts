@@ -43,9 +43,14 @@ export class LoginComponent implements OnInit {
   onSubmit(): void {
     if (this.loginForm.valid) {
       this.authService.login(this.loginForm.value).subscribe({
-        next: (response) => {
+        next: async (response) => {
           this.loadUserProfile();
           localStorage.setItem('loggedIn', 'true');
+          
+          // Force re-initialize SecureAuthService to pick up the new auth state
+          console.log('🔐 Re-initializing SecureAuthService after login...');
+          await this.secureAuthService.initialize(true);
+          
           this.toastr.success('Login successful!', 'Success');
           if(this.userData.role == 'Temp'){
             this.router.navigate(['/street-sheet']);

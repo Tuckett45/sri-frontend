@@ -107,6 +107,11 @@ export class ConfigurationInterceptor implements HttpInterceptor {
    * Determine if Content-Type header should be added
    */
   private shouldAddContentType(req: HttpRequest<any>): boolean {
+    // Don't add Content-Type for FormData - browser will set it with boundary
+    if (req.body instanceof FormData) {
+      return false;
+    }
+    
     // Add Content-Type for POST, PUT, PATCH requests with body
     const methodsWithBody = ['POST', 'PUT', 'PATCH'];
     return methodsWithBody.includes(req.method) && req.body !== null;

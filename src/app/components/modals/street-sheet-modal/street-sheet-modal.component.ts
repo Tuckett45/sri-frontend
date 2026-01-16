@@ -428,11 +428,17 @@ export class StreetSheetModalComponent implements OnInit {
   }
 
   save(): void {
+    console.log('💾 Save button clicked');
+    console.log('📋 Form valid:', this.streetSheetForm.valid);
+    console.log('📋 Form errors:', this.getFormValidationErrors());
+    
     if (this.streetSheetForm.valid) {
 
       const streetSheet = {
         ...this.streetSheetForm.value,
-        equipment: this.streetSheetForm.value.equipment.join(', ')
+        equipment: Array.isArray(this.streetSheetForm.value.equipment) && this.streetSheetForm.value.equipment.length > 0
+          ? this.streetSheetForm.value.equipment.join(', ')
+          : this.streetSheetForm.value.equipment // Keep as-is if already a string or empty
       };
 
       if(Array.isArray(streetSheet.pm)){
@@ -444,11 +450,33 @@ export class StreetSheetModalComponent implements OnInit {
         streetSheet.updatedDate = new Date().toISOString();
       }else{
         streetSheet.createdBy = this.userData.id
+        // Always set updatedDate to avoid backend validation error
+        streetSheet.updatedDate = new Date().toISOString();
       }
   
       const formData = new FormData();
   
       const formValue = streetSheet;
+      
+      // Validate that we have required data
+      if (!formValue.id || !formValue.segmentId || !formValue.vendorName || 
+          !formValue.streetAddress || !formValue.city || !formValue.state || 
+          !formValue.deployment || !formValue.equipment || !formValue.date) {
+        console.error('❌ Missing required fields:', {
+          id: !!formValue.id,
+          segmentId: !!formValue.segmentId,
+          vendorName: !!formValue.vendorName,
+          streetAddress: !!formValue.streetAddress,
+          city: !!formValue.city,
+          state: !!formValue.state,
+          deployment: !!formValue.deployment,
+          equipment: !!formValue.equipment,
+          date: !!formValue.date
+        });
+        this.toastr.error('Please fill in all required fields');
+        return;
+      }
+      
       const normalizedMarkers = Array.isArray(formValue.marker)
         ? formValue.marker.map((marker: MapMarker) => ({
             ...marker,
@@ -456,40 +484,114 @@ export class StreetSheetModalComponent implements OnInit {
             streetSheetId: formValue.id
           }))
         : [];
-      // Append text fields
+      // Append text fields (case-sensitive field names for backend)
+      // All required fields must be present
       formData.append('Id', formValue.id);
       formData.append('SegmentId', formValue.segmentId);
-      formData.append('PM', formValue.pm);
+      formData.append('PM', formValue.pm || ''); // Can be empty
       formData.append('VendorName', formValue.vendorName);
       formData.append('StreetAddress', formValue.streetAddress);
       formData.append('City', formValue.city);
       formData.append('State', formValue.state);
       formData.append('Deployment', formValue.deployment);
       formData.append('Equipment', formValue.equipment);
-      formData.append('date', formValue.date.toISOString());
+      formData.append('Date', formValue.date.toISOString());
       formData.append('AdditionalConcerns', formValue.additionalConcerns || '');
       formData.append('CreatedBy', formValue.createdBy || this.userData.id);
-      formData.append('UpdatedBy', formValue.updatedBy || null);
-      formData.append('updatedDate', formValue.updatedDate || new Date().toISOString());
+      
+      // UpdatedBy and UpdatedDate - backend tries to parse UpdatedDate even if nullable
+      // So we must always send a valid date
+      formData.append('UpdatedBy', formValue.updatedBy || '');
+      formData.append('UpdatedDate', formValue.updatedDate || new Date().toISOString());
+      
+      // MarkerJson is required
       formData.append('MarkerJson', JSON.stringify(normalizedMarkers));
-      // Append files if selected
-      formData.append('SWPPPImage', this.imageFiles['SWPPPImage']);
-      formData.append('PPEImage', this.imageFiles['PPEImage']);
-      formData.append('TrafficControlImage', this.imageFiles['TrafficControlImage']);
-      formData.append('SignageImage', this.imageFiles['SignageImage']);
+      
+      // Append files only if they exist (avoid appending undefined)
+      if (this.imageFiles['SWPPPImage']) {
+        formData.append('SWPPPImage', this.imageFiles['SWPPPImage']);
+      }
+      if (this.imageFiles['PPEImage']) {
+        formData.append('PPEImage', this.imageFiles['PPEImage']);
+      }
+      if (this.imageFiles['TrafficControlImage']) {
+        formData.append('TrafficControlImage', this.imageFiles['TrafficControlImage']);
+      }
+      if (this.imageFiles['SignageImage']) {
+        formData.append('SignageImage', this.imageFiles['SignageImage']);
+      }
   
+      console.log('📤 Submitting street sheet:', {
+        segmentId: formValue.segmentId,
+        pm: formValue.pm,
+        vendorName: formValue.vendorName,
+        streetAddress: formValue.streetAddress,
+        city: formValue.city,
+        state: formValue.state,
+        deployment: formValue.deployment,
+        equipment: formValue.equipment,
+        hasMarker: normalizedMarkers.length > 0,
+        markerDetails: normalizedMarkers,
+        imageCount: Object.keys(this.imageFiles).length,
+        createdBy: formValue.createdBy || this.userData.id,
+        updatedBy: formValue.updatedBy || ''
+      });
+
+      // Log FormData contents for debugging
+      console.log('📦 FormData contents:');
+      formData.forEach((value, key) => {
+        if (value instanceof File) {
+          console.log(`  ${key}: [File] ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`  ${key}: ${value}`);
+        }
+      });
+
       this.streetSheetService.saveStreetSheet(formData).subscribe(
         (response: StreetSheet) => {
+          console.log('✅ Street sheet saved successfully:', response);
           this.toastr.success('Street Sheet Saved');
           this.dialogRef.close(response); 
         },
         (error) => {
-          this.toastr.error('Error saving Street Sheet');
+          console.error('❌ Error saving street sheet:', error);
+          console.error('Error details:', {
+            status: error.status,
+            statusText: error.statusText,
+            message: error.message,
+            error: error.error
+          });
+          this.toastr.error(`Error saving Street Sheet: ${error.message || 'Unknown error'}`);
         }
       );
     } else {
-      this.toastr.error('Form is invalid');
+      console.warn('⚠️ Form is invalid - cannot save');
+      this.toastr.error('Please fill in all required fields');
+      this.markFormGroupTouched(this.streetSheetForm);
     }
+  }
+
+  // Helper method to get form validation errors
+  private getFormValidationErrors(): any {
+    const errors: any = {};
+    Object.keys(this.streetSheetForm.controls).forEach(key => {
+      const control = this.streetSheetForm.get(key);
+      if (control && control.errors) {
+        errors[key] = control.errors;
+      }
+    });
+    return errors;
+  }
+
+  // Helper method to mark all fields as touched to show validation errors
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
   
   
