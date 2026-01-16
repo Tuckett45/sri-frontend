@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from 'src/app/models/user.model';
 import { FeatureFlagService } from '../../services/feature-flag.service';
@@ -86,7 +86,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   private isMobileView = false;
 
-  constructor(public authService: AuthService) {}
+  constructor(
+    public authService: AuthService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.loadUserProfile();
@@ -147,6 +150,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (!this.isMobileView && wasMobile) {
       this.isMenuOpen = false;
     }
+
+    // Force change detection to ensure UI updates
+    this.cdr.detectChanges();
   }
 
   loadUserProfile(): void {

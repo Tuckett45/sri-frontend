@@ -5,8 +5,12 @@
   <!-- Spacer to push the navigation links to the right -->
   <span class="spacer"></span>
 
-  <!-- Hamburger Menu Icon -->
-  <button mat-icon-button aria-label="Toggle menu" class="menu-toggle" (click)="toggleMenu()">
+  <!-- Hamburger Menu Icon (Mobile Only) -->
+  <button mat-icon-button 
+          aria-label="Toggle menu" 
+          class="menu-toggle" 
+          (click)="toggleMenu()"
+          *ngIf="isMobile()">
     <mat-icon>{{ isMenuOpen ? 'close' : 'menu' }}</mat-icon>
   </button>
 

@@ -113,9 +113,9 @@ mat-toolbar {
     }
   }
 
-  /* Hamburger Menu (visible on mobile) */
+  /* Hamburger Menu */
   .menu-toggle {
-    display: flex; /* Always render in DOM */
+    display: flex; /* Always flex when rendered (controlled by *ngIf) */
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -127,11 +127,12 @@ mat-toolbar {
     color: white;
     z-index: 1001;
     padding: 8px;
-    margin-left: auto; /* Push to the right on mobile */
+    margin-left: auto;
+    order: 3;
 
     mat-icon {
-      color: white !important; /* Ensure icon color is always white */
-      font-size: 32px; /* Larger for better mobile visibility */
+      color: white !important;
+      font-size: 32px;
       width: 32px;
       height: 32px;
       line-height: 32px;
@@ -155,80 +156,80 @@ mat-toolbar {
   }
 }
 
-/* For screens smaller than 768px */
+/* Mobile: Adjust layout and show mobile menu */
 @media (max-width: 768px) {
   mat-toolbar {
-    padding: 0 12px; /* Reduce padding on mobile */
-  }
+    padding: 0 12px;
 
-  .menu-toggle {
-    display: flex !important; /* Show hamburger on mobile */
-    order: 3; /* Place after logo and spacer */
-  }
+    .nav-links {
+      display: none !important; /* Hide nav links by default */
 
-  .nav-links {
-    display: none !important; /* Hide nav links by default on mobile */
-  }
+      &.mobile.open {
+        display: flex !important; /* Show when menu is open */
+        z-index: 999;
+      }
 
-  .nav-links.mobile.open {
-    display: flex !important; /* Show when menu is open */
-    z-index: 999; /* Below the hamburger button */
-  }
+      &.mobile button {
+        width: 100%;
+        padding: 12px;
+        text-align: left;
+      }
+    }
 
-  .nav-links.mobile button {
-    width: 100%;
-    padding: 12px;
-    text-align: left;
-  }
+    .spacer {
+      display: block;
+      flex: 1;
+    }
 
-  .spacer {
-    display: block; /* Keep spacer to push hamburger to right */
-    flex: 1;
-  }
+    .logo {
+      order: 1;
+    }
 
-  .logo {
-    order: 1;
+    .menu-toggle {
+      height: 48px;
+      width: 48px;
+    }
   }
 }
 
-/* For screens larger than 768px */
+/* Desktop: Hide hamburger, show nav links */
 @media (min-width: 769px) {
-  /* Hide the hamburger menu on larger screens */
-  .menu-toggle {
-    display: none !important;  /* Hide the hamburger button on screens larger than 768px */
-  }
+  mat-toolbar {
+    .menu-toggle {
+      display: none !important; /* Hide hamburger on desktop */
+    }
 
-  /* Ensure the nav links are visible on larger screens */
-  .nav-links {
-    display: flex !important; /* Make sure the nav links are visible and centered */
-    flex-direction: row; /* Align the nav links horizontally */
-    gap: 15px; /* Keep the space between the links */
-    position: static;
-    background: transparent;
-    padding-top: 5px;
-    max-height: none;
-    width: auto;
+    .nav-links {
+      display: flex !important; /* Show nav links on desktop */
+      flex-direction: row;
+      gap: 15px;
+      position: static;
+      background: transparent;
+      padding-top: 5px;
+      max-height: none;
+      width: auto;
+    }
   }
 }
 
-/* For screens smaller than 500px */
+/* Extra small screens */
 @media (max-width: 500px) {
   mat-toolbar {
-    padding: 0 8px; /* Even less padding on very small screens */
-  }
+    padding: 0 8px;
 
-  .logo {
-    font-size: 1.2rem; /* Make the logo smaller on very small screens */
-  }
+    .logo {
+      font-size: 1.2rem;
+    }
 
-  .menu-toggle {
-    height: 44px;
-    width: 44px;
+    .menu-toggle {
+      height: 44px;
+      width: 44px;
 
-    mat-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
     }
   }
 }

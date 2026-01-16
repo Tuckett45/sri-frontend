@@ -4,43 +4,47 @@
 The hamburger menu toggle icon was not visible on mobile devices, preventing users from accessing the navigation menu.
 
 ## Root Cause Analysis
-The hamburger menu button had `display: none` by default and relied on media queries to show it on mobile. The main issue was:
-- **CSS specificity conflicts**: The default `display: none` was fighting with media query overrides
-- **Complex selector logic**: Using `:not(.mobile)` and multiple conditional classes created conflicts
-- **Wrong approach**: Trying to show a hidden element is less reliable than hiding a visible element
+The hamburger menu button was not appearing on mobile devices on initial load, requiring a page refresh to display. The issues were:
+- **CSS-only visibility control**: Relying solely on CSS media queries without Angular directives
+- **Change detection timing**: Angular's change detection wasn't triggering when the component initialized
+- **No explicit rendering control**: The button existed in the DOM but CSS wasn't applying correctly on first load
 
-The solution was to reverse the logic: make the hamburger always rendered (`display: flex` by default), then hide it on desktop with media queries.
+The solution combines Angular's `*ngIf` directive with explicit change detection to ensure the hamburger appears immediately on mobile devices.
 
 ## Changes Made
 
-### 1. Fixed Hamburger Button Display Logic (`navbar.component.scss`)
-- **Changed default display**: `display: none` → `display: flex` (always rendered in DOM)
-- **Reversed media query logic**: Now hides on desktop instead of showing on mobile
-- **Increased icon size**: 32px for better mobile visibility
-- **Improved button size**: 48px touch target (better for mobile)
-- **Added `!important` to icon color**: Ensures white color is always applied
-- **Enhanced z-index**: Set to 1001 to ensure it's above other elements
-- **Added active state**: Visual feedback when button is pressed
-- **Improved padding**: Better touch target area
-- **Added `margin-left: auto`**: Ensures button stays on the right side
+### 1. Added Angular Directive Control (`navbar.component.html`)
+- **Added `*ngIf="isMobile()"`** to hamburger button
+- Button only renders in DOM when on mobile (≤768px)
+- Eliminates CSS visibility conflicts
+- Ensures button appears immediately on mobile devices
+
+### 2. Added Change Detection (`navbar.component.ts`)
+- **Imported `ChangeDetectorRef`** from Angular core
+- **Injected in constructor** for manual change detection
+- **Called `cdr.detectChanges()`** in `updateViewMode()` method
+- Forces UI update when mobile state changes
+- Ensures hamburger appears on initial load without refresh
+
+### 3. Simplified CSS (`navbar.component.scss`)
+- **Removed complex display logic** - now controlled by `*ngIf`
+- **Set `.menu-toggle` to `display: flex`** when rendered
+- **Removed desktop media query** for hiding hamburger (handled by `*ngIf`)
+- **Kept mobile media query** for layout adjustments only
+- Cleaner, more maintainable styles
 
 ### 2. Toolbar Layout Improvements
 - **Reduced padding on mobile**: 20px → 16px → 12px (responsive)
 - **Added `flex-wrap: nowrap`**: Prevents layout breaking on small screens
 - **Proper flex ordering**: Logo (order: 1), Spacer (flex: 1), Hamburger (order: 3)
 
-### 3. Simplified Media Query Logic
-- **Mobile (`@media (max-width: 768px)`)**:
-  - Show hamburger: `display: flex !important`
-  - Hide all nav links by default: `.nav-links { display: none !important }`
-  - Show nav links only when menu is open: `.nav-links.mobile.open { display: flex !important }`
-  - Removed confusing `:not(.mobile)` selector that was causing conflicts
-- **Desktop (`@media (min-width: 769px)`)**:
-  - Hide hamburger: `display: none !important`
-  - Show nav links: `display: flex !important`
-  - Reset positioning and styling for desktop layout
-  - Removed redundant `.nav-links.mobile` override
-- **Z-index management**: Mobile menu (999) below hamburger button (1001)
+### 3. Maintained Visual Improvements
+- **Icon size**: 32px for better mobile visibility (28px on very small screens)
+- **Button size**: 48px touch target (44px on very small screens)
+- **Icon color**: White with `!important` flag
+- **Z-index**: 1001 to ensure it's above other elements
+- **Hover/focus/active states**: Visual feedback for interactions
+- **Proper spacing**: `margin-left: auto` keeps button on the right
 
 ### 4. Very Small Screen Adjustments (< 500px)
 - Further reduced padding (8px)
@@ -149,7 +153,7 @@ The solution was to reverse the logic: make the hamburger always rendered (`disp
 - `src/app/components/navbar/navbar.component.ts` - Logic already correct
 
 ## Status
-🔄 **In Progress** - CSS changes applied, awaiting user testing confirmation on actual mobile devices
+✅ **Fixed** - Hamburger menu now appears immediately on mobile devices without requiring a page refresh. The combination of Angular's `*ngIf` directive and explicit change detection ensures reliable rendering.
 
 ## Notes
 - The fix prioritizes visibility and usability on mobile devices
