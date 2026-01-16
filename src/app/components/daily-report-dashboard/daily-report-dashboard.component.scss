@@ -175,11 +175,14 @@
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: visible;
     padding: 0 8px;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 
     .mat-mdc-table {
       width: 100%;
+      min-width: 600px; /* Ensure table has minimum width */
       background: #fff;
       border-collapse: collapse;
     }
@@ -354,15 +357,22 @@
   }
 
   .table-section {
-    overflow-x: auto;
-
-    table {
-      min-width: 600px;
+    .table-container {
+      /* Ensure horizontal scrolling works on tablets */
+      overflow-x: auto;
+      
+      .mat-mdc-table {
+        min-width: 700px; /* Wider minimum for tablet */
+      }
     }
   }
 }
 
 @media (max-width: 768px) {
+  .dashboard-container {
+    padding: 12px;
+  }
+
   .stats-container {
     grid-template-columns: 1fr;
   }
@@ -376,11 +386,107 @@
       font-size: 18px;
     }
 
-    table {
-      th, td {
+    .table-container {
+      /* Mobile: Enable horizontal scrolling */
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 8px;
+      
+      /* Add scroll indicator shadow */
+      background: 
+        linear-gradient(to right, white 30%, rgba(255,255,255,0)),
+        linear-gradient(to right, rgba(255,255,255,0), white 70%) 0 100%,
+        radial-gradient(farthest-side at 0% 50%, rgba(0,0,0,.2), rgba(0,0,0,0)),
+        radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.2), rgba(0,0,0,0)) 0 100%;
+      background-repeat: no-repeat;
+      background-color: white;
+      background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+      background-attachment: local, local, scroll, scroll;
+
+      .mat-mdc-table {
+        min-width: 600px; /* Minimum width for mobile */
+      }
+
+      .mat-mdc-header-cell,
+      .mat-mdc-cell {
         padding: 12px 8px;
         font-size: 13px;
+        white-space: nowrap; /* Prevent text wrapping */
       }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 8px;
+  }
+
+  .dashboard-header {
+    h1 {
+      font-size: 20px;
+    }
+  }
+
+  .stats-container {
+    gap: 12px;
+
+    .stat-card {
+      padding: 12px;
+
+      .stat-icon {
+        width: 40px;
+        height: 40px;
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+      }
+
+      .stat-content {
+        h3 {
+          font-size: 24px;
+        }
+
+        p {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  .table-section {
+    h2 {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .table-container {
+      .mat-mdc-table {
+        min-width: 500px; /* Smaller minimum for very small screens */
+      }
+
+      .mat-mdc-header-cell,
+      .mat-mdc-cell {
+        padding: 10px 6px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .status-badge {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+
+  .upload-action,
+  button[mat-icon-button] {
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
   }
 }

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { SecureAuthService } from '../../services/secure-auth.service';
 import { RegisterModalComponent } from '../modals/register-modal/register-modal.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ForgotPasswordModalComponent } from '../modals/forgot-password-modal/forgot-password-modal.component';
@@ -17,6 +18,7 @@ import { User } from 'src/app/models/user.model';
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   userData!: User;
+  private readonly secureAuthService = inject(SecureAuthService);
 
   constructor(private fb: FormBuilder, 
               private router: Router, 
@@ -29,8 +31,9 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.authService.logout();
+  async ngOnInit(): Promise<void> {
+    // Ensure both auth services are logged out
+    await this.secureAuthService.logout();
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],

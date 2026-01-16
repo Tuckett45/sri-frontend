@@ -34,6 +34,7 @@ export class AppComponent {
 
       // Subscribe to authentication state changes
       this.authService.getAuthState().subscribe(authState => {
+        console.log('🔐 Auth state changed:', { isAuthenticated: authState.isAuthenticated });
         this.isUserLoggedIn = authState.isAuthenticated;
         
         // Initialize notification integrator when user is logged in

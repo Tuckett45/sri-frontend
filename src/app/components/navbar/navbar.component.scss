@@ -36,7 +36,7 @@ mat-toolbar {
 
   .nav-links {
     padding-top: 5px;
-    display: flex;
+    display: flex; /* Always flex by default (desktop) */
     flex-direction: row;
     gap: 10px;
     justify-content: flex-end;
@@ -66,8 +66,9 @@ mat-toolbar {
       }
     }
 
+    /* Mobile-specific styles - only applied when .mobile class is present */
     &.mobile {
-      display: none;
+      display: none; /* Hidden by default on mobile */
       flex-direction: column;
       align-items: flex-start;
       width: 100%;
@@ -87,19 +88,18 @@ mat-toolbar {
         justify-content: flex-start;
         text-align: left;
       }
-    }
 
-    &.mobile .more-button {
-      display: none;
-    }
+      .more-button {
+        display: none;
+      }
 
+      &.open {
+        display: flex; /* Show when menu is open */
+      }
 
-    &.mobile.open {
-      display: flex;
-    }
-
-    &.mobile.closed {
-      display: none;
+      &.closed {
+        display: none;
+      }
     }
 
     .more-button {
@@ -161,21 +161,6 @@ mat-toolbar {
   mat-toolbar {
     padding: 0 12px;
 
-    .nav-links {
-      display: none !important; /* Hide nav links by default */
-
-      &.mobile.open {
-        display: flex !important; /* Show when menu is open */
-        z-index: 999;
-      }
-
-      &.mobile button {
-        width: 100%;
-        padding: 12px;
-        text-align: left;
-      }
-    }
-
     .spacer {
       display: block;
       flex: 1;
@@ -186,8 +171,29 @@ mat-toolbar {
     }
 
     .menu-toggle {
+      display: flex !important; /* Ensure hamburger shows on mobile */
       height: 48px;
       width: 48px;
+    }
+
+    /* On mobile, nav-links should only be visible when .mobile.open */
+    .nav-links:not(.mobile) {
+      display: none !important; /* Hide if mobile class not applied */
+    }
+
+    .nav-links.mobile {
+      display: none !important; /* Hidden by default */
+      
+      &.open {
+        display: flex !important; /* Show when open */
+        z-index: 999;
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        text-align: left;
+      }
     }
   }
 }
@@ -200,14 +206,24 @@ mat-toolbar {
     }
 
     .nav-links {
-      display: flex !important; /* Show nav links on desktop */
-      flex-direction: row;
+      display: flex !important; /* Always show nav links on desktop */
+      flex-direction: row !important;
       gap: 15px;
-      position: static;
-      background: transparent;
+      position: static !important;
+      background: transparent !important;
       padding-top: 5px;
-      max-height: none;
-      width: auto;
+      max-height: none !important;
+      width: auto !important;
+      
+      /* Override any mobile classes that might be applied */
+      &.mobile {
+        display: flex !important;
+        flex-direction: row !important;
+        position: static !important;
+        background: transparent !important;
+        width: auto !important;
+        padding-top: 5px;
+      }
     }
   }
 }

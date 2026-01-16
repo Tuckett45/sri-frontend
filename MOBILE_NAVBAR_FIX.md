@@ -37,6 +37,7 @@ The solution combines Angular's `*ngIf` directive with explicit change detection
 - **Reduced padding on mobile**: 20px → 16px → 12px (responsive)
 - **Added `flex-wrap: nowrap`**: Prevents layout breaking on small screens
 - **Proper flex ordering**: Logo (order: 1), Spacer (flex: 1), Hamburger (order: 3)
+- **Explicit desktop display**: Nav links always visible on desktop with `display: flex !important`
 
 ### 3. Maintained Visual Improvements
 - **Icon size**: 32px for better mobile visibility (28px on very small screens)
