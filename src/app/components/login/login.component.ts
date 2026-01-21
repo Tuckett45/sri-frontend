@@ -31,9 +31,9 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  async ngOnInit(): Promise<void> {
-    // Ensure both auth services are logged out
-    await this.secureAuthService.logout();
+  ngOnInit(): void {
+    // Just initialize the form - don't clear auth state
+    // Auth state should only be cleared by explicit logout actions
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -45,13 +45,20 @@ export class LoginComponent implements OnInit {
       this.authService.login(this.loginForm.value).subscribe({
         next: async (response) => {
           this.loadUserProfile();
+          
+          // Ensure localStorage is set before proceeding
           localStorage.setItem('loggedIn', 'true');
           
           // Force re-initialize SecureAuthService to pick up the new auth state
           console.log('🔐 Re-initializing SecureAuthService after login...');
           await this.secureAuthService.initialize(true);
           
+          // Wait a tick to ensure auth state is fully synchronized
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
           this.toastr.success('Login successful!', 'Success');
+          
+          // Navigate based on role
           if(this.userData.role == 'Temp'){
             this.router.navigate(['/street-sheet']);
           }

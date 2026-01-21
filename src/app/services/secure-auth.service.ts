@@ -78,7 +78,10 @@ export class SecureAuthService extends AuthService implements OnDestroy {
         this.startTokenValidation();
       }
 
-      console.log('✅ SecureAuthService initialized successfully');
+      console.log('✅ SecureAuthService initialized successfully', {
+        isAuthenticated: this.authState$.value.isAuthenticated,
+        user: this.authState$.value.user?.email
+      });
 
     } catch (error) {
       console.error('❌ Failed to initialize secure authentication:', error);
