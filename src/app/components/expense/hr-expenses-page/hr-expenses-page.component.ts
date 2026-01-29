@@ -524,7 +524,7 @@ export class HrExpensesPageComponent implements OnInit {
           this.toastr.error('Failed to export receipts. ' + result.errorMessages.join(', '));
         }
       },
-      error: (err) => {
+      error: (err: unknown) => {
         console.error('Error exporting receipts:', err);
         this.toastr.error('An error occurred while exporting receipts');
       }

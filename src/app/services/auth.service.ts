@@ -27,6 +27,34 @@ export class AuthService {
   constructor(protected router: Router, protected http: HttpClient) {
     this.loadUserFromLocalStorage();
    }
+ 
+  /**
+   * Best-effort role extraction to handle varying backend payloads.
+   */
+  protected resolveRole(payload: any): string {
+    if (!payload) return '';
+    const candidates = [
+      payload.role,
+      payload.Role,
+      payload.userRole,
+      payload.roleName,
+      payload.role_type,
+      payload.roleType
+    ];
+
+    for (const val of candidates) {
+      if (typeof val === 'string' && val.trim().length) {
+        return val;
+      }
+    }
+
+    const rolesArray = payload.roles || payload.Roles || payload.userRoles;
+    if (Array.isArray(rolesArray) && rolesArray.length && typeof rolesArray[0] === 'string') {
+      return rolesArray[0];
+    }
+
+    return '';
+  }
 
   register(user: User): Observable<User> {
     if (!user.id) {
@@ -116,7 +144,7 @@ export class AuthService {
           }
   
           this.loggedInStatus.next(true);
-          this.setUserRole(user.role);
+          this.setUserRole(this.resolveRole(user));
           this.setUser(user);
         }
       })
@@ -152,7 +180,7 @@ export class AuthService {
     const user = localStorage.getItem('user');
     if (user) {
       const parsedUser = JSON.parse(user);
-      this.setUserRole(parsedUser.role);
+      this.setUserRole(this.resolveRole(parsedUser));
       this.currentUser = parsedUser; 
       this.loggedInStatus.next(true);
     }

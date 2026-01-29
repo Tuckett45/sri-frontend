@@ -20,9 +20,7 @@ export interface ImageExportResult {
 })
 export class ExpenseImageExportService {
   // API subscription key will be added automatically by ConfigurationInterceptor
-  private readonly subscriptionHeaders = new HttpHeaders({
-    // Headers will be managed by interceptor
-  });
+  private readonly subscriptionHeaders = new HttpHeaders({});
   private readonly apiBaseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
   private readonly blobBaseUrl = environment.receiptBlobBaseUrl
     ? String(environment.receiptBlobBaseUrl).replace(/\/$/, '')
@@ -32,9 +30,7 @@ export class ExpenseImageExportService {
 
   /**
    * Export receipts/images for selected expenses as a ZIP file
-   * @param expenses Array of expenses to export images from
-   * @param zipFileName Optional custom ZIP file name
-   * @returns Observable with export result
+   * Only uses the expenses provided (e.g., the current paginated table rows)
    */
   exportExpenseImages(expenses: Expense[], zipFileName?: string): Observable<ImageExportResult> {
     const result: ImageExportResult = {
@@ -45,8 +41,14 @@ export class ExpenseImageExportService {
       errorMessages: []
     };
 
+    // Normalize: ensure each expense has an images array (derive from receiptUrl/receiptData when needed)
+    const normalized = expenses.map(exp => ({
+      ...exp,
+      images: this.expandImages(exp)
+    }));
+
     // Filter expenses that have images
-    const expensesWithImages = expenses.filter(exp => exp.images && exp.images.length > 0);
+    const expensesWithImages = normalized.filter(exp => exp.images && exp.images.length > 0);
 
     if (expensesWithImages.length === 0) {
       result.errorMessages.push('No expenses with receipts found');
@@ -88,13 +90,22 @@ export class ExpenseImageExportService {
     // Download all images in parallel
     return forkJoin(downloadPromises).pipe(
       map(results => {
-        // Add successfully downloaded images to ZIP
+        let added = 0;
+        // Add successfully downloaded images to ZIP, grouped per expense
         results.forEach(({ expense, imageIndex, blob }) => {
-          if (blob) {
-            const fileName = this.generateFileName(expense, imageIndex);
-            zip.file(fileName, blob);
+          if (blob && blob.size > 0) {
+            const fileName = this.getPreferredFileName(expense, imageIndex);
+            const folderName = this.getExpenseFolder(expense);
+            const folder = zip.folder(folderName) ?? zip;
+            folder.file(fileName, blob);
+            added++;
           }
         });
+
+        if (added === 0) {
+          result.errorMessages.push('No downloadable receipts found for the selected expenses.');
+          return result;
+        }
 
         // Generate and download ZIP file synchronously for the observable
         zip.generateAsync({ type: 'blob' }).then((zipBlob: Blob) => {
@@ -140,11 +151,6 @@ export class ExpenseImageExportService {
     return this.http.get(resolvedUrl, options);
   }
 
-  /**
-   * Generate a filename for an image based on expense data
-   * Format: ExpenseID_Date_Vendor_ImageIndex.ext
-   * Example: EXP001_2024-01-15_Starbucks_1.jpg
-   */
   private generateFileName(expense: Expense, imageIndex: number): string {
     const expenseId = expense.id?.substring(0, 8) || 'UNKNOWN';
     const date = expense.date ? new Date(expense.date).toISOString().split('T')[0] : 'NoDate';
@@ -155,10 +161,6 @@ export class ExpenseImageExportService {
     return `${expenseId}_${date}_${vendor}_${imageIndex + 1}${extension}`;
   }
 
-  /**
-   * Generate ZIP file name with timestamp
-   * Format: expenses_receipts_YYYYMMDD_HHMMSS.zip
-   */
   private generateZipFileName(): string {
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
@@ -166,31 +168,21 @@ export class ExpenseImageExportService {
     return `expenses_receipts_${dateStr}_${timeStr}.zip`;
   }
 
-  /**
-   * Sanitize a string to be used as a filename
-   */
   private sanitizeFileName(name: string): string {
     return name
-      .replace(/[^a-zA-Z0-9-_]/g, '_')  // Replace invalid chars with underscore
-      .replace(/_+/g, '_')                // Replace multiple underscores with single
-      .substring(0, 50);                  // Limit length
+      .replace(/[^a-zA-Z0-9-_]/g, '_')
+      .replace(/_+/g, '_')
+      .substring(0, 50);
   }
 
-  /**
-   * Extract file extension from filename or URL
-   */
   private getFileExtension(fileNameOrUrl: string): string {
     const match = fileNameOrUrl.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
     if (match) {
       return `.${match[1].toLowerCase()}`;
     }
-    // Default to .jpg if no extension found
     return '.jpg';
   }
 
-  /**
-   * Get count of expenses with receipts
-   */
   getExpensesWithReceiptsCount(expenses: Expense[]): number {
     const seen = new Set<string>();
     return expenses.filter(exp => {
@@ -204,9 +196,6 @@ export class ExpenseImageExportService {
     }).length;
   }
 
-  /**
-   * Get total count of receipt images
-   */
   getTotalImageCount(expenses: Expense[]): number {
     const seen = new Set<string>();
     expenses.forEach(exp => {
@@ -225,20 +214,16 @@ export class ExpenseImageExportService {
     }
     const normalized = url.replace(/\\/g, '/');
 
-    // If this is an API-style path (e.g. "/api/..." or "api/..."), leave it
-    // relative so same-origin/proxy requests continue to work.
     if (this.isApiUrl(normalized)) {
       return normalized.startsWith('/') ? normalized : `/${normalized}`;
     }
 
-    // Otherwise treat as blob storage path when a base is provided.
     if (this.blobBaseUrl) {
       const base = this.blobBaseUrl.replace(/\/+$/, '');
       const path = normalized.replace(/^\/+/, '');
       return `${base}/${path}`;
     }
 
-    // keep relative so local dev proxy (or same-origin hosting) can handle routing
     return normalized.startsWith('/') ? normalized : `/${normalized}`;
   }
 
@@ -300,5 +285,62 @@ export class ExpenseImageExportService {
     if (!parts.length) return null;
     return parts.join('|');
   }
-}
 
+  /**
+   * Build a best-effort images array for an expense, even if backend didn't send images[]
+   */
+  private expandImages(expense: Expense): ExpenseImage[] {
+    const images: ExpenseImage[] = [...(expense.images ?? [])];
+
+    const receiptUrl = (expense as any).receiptUrl || (expense as any).receipt;
+    if ((!images.length) && receiptUrl) {
+      images.push({
+        id: `receipt-url-${expense.id ?? Math.random()}`,
+        expenseId: expense.id ?? '',
+        blobUrl: receiptUrl,
+        fileName: this.deriveFileNameFromUrl(receiptUrl),
+        contentType: undefined,
+        createdDate: expense.date ?? new Date().toISOString()
+      });
+    }
+
+    const receiptData = (expense as any).receiptData;
+    if ((!images.length) && receiptData && typeof receiptData === 'string') {
+      images.push({
+        id: `receipt-data-${expense.id ?? Math.random()}`,
+        expenseId: expense.id ?? '',
+        blobUrl: receiptData.startsWith('data:') ? receiptData : `data:image/jpeg;base64,${receiptData}`,
+        fileName: `receipt-${expense.id ?? 'unknown'}.jpg`,
+        contentType: 'image/jpeg',
+        createdDate: expense.date ?? new Date().toISOString()
+      });
+    }
+
+    return images;
+  }
+
+  private getExpenseFolder(expense: Expense): string {
+    const base = this.sanitizeFileName(
+      expense.id || (expense as any).projectId || expense.vendor || 'expense'
+    );
+    return base || 'expense';
+  }
+
+  private getPreferredFileName(expense: Expense, imageIndex: number): string {
+    const image = expense.images?.[imageIndex];
+    if (image?.fileName) {
+      return this.sanitizeFileName(image.fileName);
+    }
+    if (image?.blobUrl) {
+      return this.deriveFileNameFromUrl(image.blobUrl);
+    }
+    return this.generateFileName(expense, imageIndex);
+  }
+
+  private deriveFileNameFromUrl(url: string): string {
+    if (!url) return 'receipt.jpg';
+    const parts = url.split('/').pop()?.split('?')[0];
+    if (!parts || !parts.includes('.')) return 'receipt.jpg';
+    return this.sanitizeFileName(parts);
+  }
+}

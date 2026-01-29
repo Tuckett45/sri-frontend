@@ -146,13 +146,17 @@ export class SecureAuthService extends AuthService implements OnDestroy {
       }
 
       // Extract token and user information
-      const token = loginResponse?.token ?? loginResponse?.accessToken ?? null;
+      let token = loginResponse?.token ?? loginResponse?.accessToken ?? null;
       const user = loginResponse.user || loginResponse;
       const expiresAt = loginResponse.expiresAt ? new Date(loginResponse.expiresAt) : this.calculateTokenExpiry();
       const sessionId = loginResponse.sessionId || this.generateSessionId();
 
+      // Some backends rely solely on HTTP-only cookies and don't return a token.
+      // In that case, treat it as cookie-based auth and continue without failing.
       if (!token) {
-        throw new Error('No authentication token received');
+        console.warn('No authentication token received; assuming HTTP-only cookie auth.');
+        this.currentAuthMethod = AuthMethod.HTTP_ONLY_COOKIES;
+        token = 'http-only-cookie';
       }
 
       // Store authentication data securely
@@ -172,7 +176,7 @@ export class SecureAuthService extends AuthService implements OnDestroy {
 
       // Update parent class state for backward compatibility
       this.setUser(user);
-      this.setUserRole(user.role);
+      this.setUserRole(this.resolveRole(user));
       this.loggedInStatus.next(true);
 
       // Start token validation
@@ -497,21 +501,35 @@ export class SecureAuthService extends AuthService implements OnDestroy {
 
       const user = JSON.parse(userString);
       const token = await this.getStoredToken();
+      const usingCookieAuth = this.currentAuthMethod === AuthMethod.HTTP_ONLY_COOKIES;
 
-      if (!token || token === 'http-only-cookie') {
-        // For HTTP-only cookies or missing tokens, we'll validate on first API call
+      if (!token && !usingCookieAuth) {
+        console.warn('⚠️ Persisted login state found without a token. Clearing stale auth data.');
+        await this.clearAllAuthData();
+        return;
+      }
+
+      if (usingCookieAuth && (!token || token === 'http-only-cookie')) {
+        const sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) {
+          console.warn('⚠️ Missing session identifier for cookie-based auth. Clearing stale auth data.');
+          await this.clearAllAuthData();
+          return;
+        }
+
+        // For HTTP-only cookies we cannot read the token; mark as authenticated and validate on first API call
         this.authState$.next({
           isAuthenticated: true,
           user: user,
           tokenExpiresAt: null, // Will be determined on first validation
           lastValidated: null,
-          sessionId: localStorage.getItem('sessionId'),
+          sessionId: sessionId,
           authMethod: this.currentAuthMethod
         });
 
         // Update parent class state
         this.setUser(user);
-        this.setUserRole(user.role);
+        this.setUserRole(this.resolveRole(user));
         this.loggedInStatus.next(true);
         return;
       }
@@ -545,7 +563,7 @@ export class SecureAuthService extends AuthService implements OnDestroy {
 
       // Update parent class state
       this.setUser(user);
-      this.setUserRole(user.role);
+      this.setUserRole(this.resolveRole(user));
       this.loggedInStatus.next(true);
 
       console.log('✅ Restored authentication state');

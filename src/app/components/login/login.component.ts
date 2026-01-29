@@ -1,13 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
 import { SecureAuthService } from '../../services/secure-auth.service';
 import { RegisterModalComponent } from '../modals/register-modal/register-modal.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ForgotPasswordModalComponent } from '../modals/forgot-password-modal/forgot-password-modal.component';
 import { ToastrService } from 'ngx-toastr';
 import { User } from 'src/app/models/user.model';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -18,11 +18,11 @@ import { User } from 'src/app/models/user.model';
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   userData!: User;
+  isSubmitting = false;
   private readonly secureAuthService = inject(SecureAuthService);
 
   constructor(private fb: FormBuilder, 
               private router: Router, 
-              private authService: AuthService, 
               private dialog: MatDialog,
               private toastr: ToastrService) {
     this.loginForm = this.fb.group({
@@ -41,44 +41,46 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.loginForm.valid) {
-      this.authService.login(this.loginForm.value).subscribe({
+    if (this.loginForm.invalid || this.isSubmitting) {
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    this.secureAuthService.login(this.loginForm.value)
+      .pipe(finalize(() => this.isSubmitting = false))
+      .subscribe({
         next: async (response) => {
-          this.loadUserProfile();
+          const user = (response as any)?.user ?? response;
+          if (user) {
+            // Persist normalized user with resolved role so downstream reads are consistent
+            const normalized = this.hydrateUser(user);
+            localStorage.setItem('user', JSON.stringify(normalized));
+            this.userData = normalized;
+          } else {
+            // Ensure userData is at least an empty shell to avoid template null refs
+            this.userData = this.hydrateUser({});
+          }
           
           // Ensure localStorage is set before proceeding
           localStorage.setItem('loggedIn', 'true');
           
-          // Force re-initialize SecureAuthService to pick up the new auth state
-          console.log('🔐 Re-initializing SecureAuthService after login...');
+          // Ensure secure auth state is fully synchronized
+          console.log('🔐 Synchronizing SecureAuthService after login...');
           await this.secureAuthService.initialize(true);
-          
-          // Wait a tick to ensure auth state is fully synchronized
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 50));
           
           this.toastr.success('Login successful!', 'Success');
           
           // Navigate based on role
-          if(this.userData.role == 'Temp'){
-            this.router.navigate(['/street-sheet']);
-          }
-          else if(this.userData.role == 'OSP Coordinator'){
-            this.router.navigate(['/osp-coordinator-tracker']);
-          }
-          else if(this.userData.role == 'Controller'){
-            this.router.navigate(['/market-controller-tracker']);
-          }else if(this.userData.role == 'HR'){
-            this.router.navigate(['/expenses']);
-          }
-          else {
-            this.router.navigate(['/preliminary-punch-list']);
-          }
+          await this.navigateByRole(this.userData?.role);
         },
         error: (error) => {
-          this.toastr.error(error.error, 'error');
+          localStorage.removeItem('loggedIn');
+          sessionStorage.removeItem('authToken');
+          this.toastr.error(error?.error || 'Login failed', 'Error');
         }
       });
-    }
   }
 
   loadUserProfile(): void {
@@ -86,18 +88,7 @@ export class LoginComponent implements OnInit {
     if (userString) {
       const userObj = JSON.parse(userString);
 
-      this.userData = new User(
-          userObj.id,
-          userObj.name,
-          userObj.email,
-          userObj.password,
-          userObj.role,
-          userObj.market,
-          userObj.company,
-          new Date(userObj.createdDate),
-          userObj.isApproved,
-          userObj.approvalToken
-      );
+      this.userData = this.hydrateUser(userObj);
     }
   }
 
@@ -111,5 +102,67 @@ export class LoginComponent implements OnInit {
     this.dialog.open(RegisterModalComponent, {
       width: '500px'
     });
+  }
+
+  private async navigateByRole(role: string | undefined): Promise<void> {
+    if (!role) {
+      await this.router.navigate(['/preliminary-punch-list'], { replaceUrl: true });
+      return;
+    }
+    switch (role) {
+      case 'Temp':
+        await this.router.navigate(['/street-sheet'], { replaceUrl: true });
+        return;
+      case 'OSP Coordinator':
+        await this.router.navigate(['/osp-coordinator-tracker'], { replaceUrl: true });
+        return;
+      case 'Controller':
+        await this.router.navigate(['/market-controller-tracker'], { replaceUrl: true });
+        return;
+      case 'HR':
+        await this.router.navigate(['/expenses'], { replaceUrl: true });
+        return;
+      default:
+        await this.router.navigate(['/preliminary-punch-list'], { replaceUrl: true });
+        return;
+    }
+  }
+
+  private hydrateUser(userObj: any): User {
+    const resolvedRole = this.resolveRole(userObj);
+    return new User(
+      userObj?.id ?? '',
+      userObj?.name ?? '',
+      userObj?.email ?? '',
+      userObj?.password ?? '',
+      resolvedRole,
+      userObj?.market ?? '',
+      userObj?.company ?? '',
+      userObj?.createdDate ? new Date(userObj.createdDate) : new Date(),
+      userObj?.isApproved ?? false,
+      userObj?.approvalToken ?? ''
+    );
+  }
+
+  private resolveRole(payload: any): string {
+    if (!payload) return '';
+    const candidates = [
+      payload.role,
+      payload.Role,
+      payload.userRole,
+      payload.roleName,
+      payload.role_type,
+      payload.roleType
+    ];
+    for (const val of candidates) {
+      if (typeof val === 'string' && val.trim().length) {
+        return val;
+      }
+    }
+    const rolesArray = payload.roles || payload.Roles || payload.userRoles;
+    if (Array.isArray(rolesArray) && rolesArray.length && typeof rolesArray[0] === 'string') {
+      return rolesArray[0];
+    }
+    return '';
   }
 }
