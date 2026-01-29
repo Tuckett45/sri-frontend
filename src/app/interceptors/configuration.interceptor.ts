@@ -97,7 +97,8 @@ export class ConfigurationInterceptor implements HttpInterceptor {
   private isExternalApiEndpoint(url: string): boolean {
     const externalApis = [
       'maps.googleapis.com',
-      'googleapis.com'
+      'googleapis.com',
+      'blob.core.windows.net'
     ];
 
     return externalApis.some(api => url.includes(api));
