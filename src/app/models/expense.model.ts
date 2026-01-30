@@ -43,7 +43,8 @@ export interface MileageDetail {
 export enum ExpenseStatus {
   Pending  = 'Pending',
   Approved = 'Approved',
-  Rejected = 'Rejected'
+  Rejected = 'Rejected',
+  Paid = 'Paid'
 }
 
 

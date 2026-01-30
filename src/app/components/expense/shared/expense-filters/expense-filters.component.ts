@@ -2,14 +2,14 @@
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ExpenseListItem, ExpenseStatus } from 'src/app/models/expense.model';
+import { ExpenseStatus } from 'src/app/models/expense.model';
 
 export interface ExpenseFilters {
   startDate: Date | string | null;
   endDate: Date | string | null;
   job: string;
   employee: string;
-  status: ExpenseStatus | 'Pending' | 'Approved' | 'Rejected' | '' | null;
+  status: ExpenseStatus | 'Pending' | 'Approved' | 'Rejected' | 'Paid' | '' | null;
   category: string;
 }
 

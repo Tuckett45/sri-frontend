@@ -78,6 +78,12 @@
     vertical-align: middle;
   }
 
+  :host ::ng-deep .mat-column-select {
+    width: 56px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
   :host ::ng-deep .mat-mdc-row:nth-child(even) {
     background-color: #f6f7fb;
   }

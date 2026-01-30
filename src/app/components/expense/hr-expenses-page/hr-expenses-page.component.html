@@ -91,14 +91,52 @@
   (filtersChange)="onFiltersChange($event)">
 </app-expense-filters>
 
+<div class="bulk-actions">
+  <div class="selection-summary">
+    <mat-icon>fact_check</mat-icon>
+    <span>{{ selectedCount }} selected</span>
+  </div>
+  <div class="bulk-buttons">
+    <button
+      mat-raised-button
+      class="bulk-btn primary"
+      type="button"
+      (click)="bulkUpdateStatus(expenseStatus.Approved)"
+      [disabled]="!hasSelection || loading || bulkUpdating">
+      Approve Selected
+    </button>
+    <button
+      mat-raised-button
+      class="bulk-btn secondary"
+      type="button"
+      (click)="bulkUpdateStatus(expenseStatus.Rejected)"
+      [disabled]="!hasSelection || loading || bulkUpdating">
+      Reject Selected
+    </button>
+    <button
+      mat-raised-button
+      class="bulk-btn secondary"
+      type="button"
+      (click)="bulkUpdateStatus(expenseStatus.Paid)"
+      [disabled]="!hasSelection || loading || bulkUpdating">
+      Mark Paid
+    </button>
+    <button mat-button type="button" (click)="clearSelection()" [disabled]="!hasSelection">
+      Clear
+    </button>
+  </div>
+</div>
+
 <app-expense-table
   [expenses]="expenses"
-  [loading]="loading || statusUpdatingIds.size > 0"
+  [loading]="loading || statusUpdatingIds.size > 0 || bulkUpdating"
   [showEmployeeColumn]="true"
   [showAddButton]="false"
   [enableEdit]="true"
   [enableDelete]="false"
   [enableApproval]="true"
+  [enableSelection]="true"
+  [selectedExpenseIds]="selectedExpenseIds"
   [pendingStatusIds]="statusUpdatingIds"
   [emptyStateMessage]="'No expenses match the current filters.'"
   [serverPagination]="true"
@@ -109,5 +147,6 @@
   (pageChange)="onPageChange($event)"
   (edit)="openExpenseDetails($event)"
   (approve)="onApprove($event)"
-  (reject)="onReject($event)">
+  (reject)="onReject($event)"
+  (selectionChange)="onSelectionChange($event)">
 </app-expense-table>

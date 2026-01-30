@@ -1,12 +1,18 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { SelectionModel } from '@angular/cdk/collections';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { Expense } from 'src/app/models/expense.model';
+import { Expense, ExpenseStatus } from 'src/app/models/expense.model';
 import { MatProgressSpinner } from "@angular/material/progress-spinner";
 import { MatIcon } from "@angular/material/icon";
 import { Tag } from "primeng/tag";
 import { GalleriaModule } from "primeng/galleria";
+
+export interface ExpenseSelectionChange {
+  selectedIds: string[];
+  selectedExpenses: Expense[];
+}
 
 @Component({
   selector: 'app-expense-table',
@@ -21,12 +27,19 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   private _pageSize = 10;
   private _pageIndex = 0;
   private _totalItems = 0;
+  private readonly selection = new SelectionModel<Expense>(
+    true,
+    [],
+    true,
+    (a, b) => (a?.id ?? '') === (b?.id ?? '')
+  );
 
   @Input()
   set expenses(value: Expense[] | null) {
     this._expenses = value ?? [];
     this.dataSource.data = this._expenses;
     this.rebindTableHelpers();
+    this.syncSelectionWithInputs();
     if (!this.serverPagination && this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
@@ -92,6 +105,8 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   @Input() enableEdit = true;
   @Input() enableDelete = true;
   @Input() enableApproval = false;
+  @Input() enableSelection = false;
+  @Input() selectedExpenseIds: ReadonlyArray<string> | ReadonlySet<string> = [];
   @Input() pendingStatusIds: ReadonlyArray<string> | Set<string> | null = null;
 
   @Output() add = new EventEmitter<void>();
@@ -99,6 +114,7 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   @Output() delete = new EventEmitter<Expense>();
   @Output() approve = new EventEmitter<Expense>();
   @Output() reject = new EventEmitter<Expense>();
+  @Output() selectionChange = new EventEmitter<ExpenseSelectionChange>();
   @Output() pageChange = new EventEmitter<PageEvent>();
 
   displayedColumns: string[] = [];
@@ -119,8 +135,18 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['showActions'] || changes['showEmployeeColumn'] || changes['enableApproval'] || changes['enableEdit'] || changes['enableDelete']) {
+    if (
+      changes['showActions'] ||
+      changes['showEmployeeColumn'] ||
+      changes['enableApproval'] ||
+      changes['enableEdit'] ||
+      changes['enableDelete'] ||
+      changes['enableSelection']
+    ) {
       this.configureDisplayedColumns();
+    }
+    if (changes['expenses'] || changes['selectedExpenseIds'] || changes['enableSelection']) {
+      this.syncSelectionWithInputs();
     }
   }
 
@@ -142,6 +168,40 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
 
   onReject(expense: Expense): void {
     this.reject.emit(expense);
+  }
+
+  isSelected(expense: Expense): boolean {
+    return this.selection.isSelected(expense);
+  }
+
+  toggleRow(expense: Expense, checked: boolean): void {
+    if (!this.enableSelection || this.isStatusPending(expense) || !expense.id) return;
+    checked ? this.selection.select(expense) : this.selection.deselect(expense);
+    this.emitSelectionChange();
+  }
+
+  toggleAllRows(checked: boolean): void {
+    if (!this.enableSelection) return;
+    if (checked) {
+      const selectable = this.dataSource.data.filter(exp => !this.isStatusPending(exp) && !!exp.id);
+      this.selection.select(...selectable);
+    } else {
+      this.selection.clear();
+    }
+    this.emitSelectionChange();
+  }
+
+  isAllSelected(): boolean {
+    if (!this.enableSelection) return false;
+    const selectable = this.dataSource.data.filter(exp => !this.isStatusPending(exp) && !!exp.id);
+    return selectable.length > 0 && selectable.every(exp => this.selection.isSelected(exp));
+  }
+
+  isIndeterminate(): boolean {
+    if (!this.enableSelection) return false;
+    const selectableCount = this.dataSource.data.filter(exp => !this.isStatusPending(exp) && !!exp.id).length;
+    const selectedCount = this.selection.selected.filter(exp => !this.isStatusPending(exp) && !!exp.id).length;
+    return selectedCount > 0 && selectedCount < selectableCount;
   }
 
   canEdit(): boolean {
@@ -245,6 +305,20 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     window.open(resource.url, '_blank', 'noopener');
   }
 
+  getStatusSeverity(status: string | ExpenseStatus | undefined): 'success' | 'warn' | 'danger' | 'info' | 'secondary' | 'contrast' | undefined {
+    switch (status) {
+      case ExpenseStatus.Approved:
+      case ExpenseStatus.Paid:
+        return 'success';
+      case ExpenseStatus.Pending:
+        return 'warn';
+      case ExpenseStatus.Rejected:
+        return 'danger';
+      default:
+        return 'info';
+    }
+  }
+
   closeGallery(): void {
     this.isReceiptGalleryVisible = false;
   }
@@ -254,7 +328,11 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   }
 
   private configureDisplayedColumns(): void {
-    const base: string[] = ['date'];
+    const base: string[] = [];
+    if (this.enableSelection) {
+      base.push('select');
+    }
+    base.push('date');
     if (this.showEmployeeColumn) {
       base.push('employee');
     }
@@ -290,6 +368,10 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
     if (this.serverPagination) {
+      if (this.enableSelection) {
+        this.selection.clear();
+        this.emitSelectionChange();
+      }
       this.pageChange.emit(event);
     }
   }
@@ -331,5 +413,60 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
     if (ext === 'pdf') return 'pdf';
 
     return 'file';
+  }
+
+  private emitSelectionChange(): void {
+    if (!this.enableSelection) return;
+    const selected = this.selection.selected;
+    const ids = selected
+      .map(exp => exp.id)
+      .filter((id): id is string => typeof id === 'string' && !!id.trim());
+    this.selectionChange.emit({ selectedIds: ids, selectedExpenses: selected });
+  }
+
+  private normalizeSelectedIds(): Set<string> {
+    if (this.selectedExpenseIds instanceof Set) {
+      return new Set(Array.from(this.selectedExpenseIds).filter(id => typeof id === 'string'));
+    }
+    if (Array.isArray(this.selectedExpenseIds)) {
+      return new Set(this.selectedExpenseIds.filter(id => typeof id === 'string'));
+    }
+    return new Set<string>();
+  }
+
+  private syncSelectionWithInputs(): void {
+    if (!this.enableSelection) {
+      this.selection.clear();
+      return;
+    }
+    const previousIds = new Set(
+      this.selection.selected
+        .map(exp => exp.id)
+        .filter((id): id is string => typeof id === 'string' && !!id)
+    );
+    const lookup = this.normalizeSelectedIds();
+    this.selection.clear();
+    this.dataSource.data.forEach(expense => {
+      const id = expense.id ?? '';
+      if (id && lookup.has(id)) {
+        this.selection.select(expense);
+      }
+    });
+    const nextIds = new Set(
+      this.selection.selected
+        .map(exp => exp.id)
+        .filter((id): id is string => typeof id === 'string' && !!id)
+    );
+    if (!this.areIdSetsEqual(previousIds, nextIds)) {
+      this.emitSelectionChange();
+    }
+  }
+
+  private areIdSetsEqual(a: Set<string>, b: Set<string>): boolean {
+    if (a.size !== b.size) return false;
+    for (const value of a) {
+      if (!b.has(value)) return false;
+    }
+    return true;
   }
 }

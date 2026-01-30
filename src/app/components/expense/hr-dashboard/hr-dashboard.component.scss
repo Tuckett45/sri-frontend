@@ -133,6 +133,10 @@
           background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
         }
 
+        &.paid .metric-icon {
+          background: linear-gradient(135deg, #1d976c 0%, #93f9b9 100%);
+        }
+
         &.rejected .metric-icon {
           background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
         }
@@ -238,6 +242,11 @@
             background-color: #f8d7da;
             color: #721c24;
           }
+
+          &.status-paid {
+            background-color: #d1fae5;
+            color: #065f46;
+          }
         }
       }
     }
@@ -327,7 +336,7 @@
 
  ::ng-deep .mat-mdc-raised-button:not(:disabled) {
   align-items: center;
-  background-color: #144f80 !important;
+  // background-color: #144f80 !important;
   color: #fff !important;
   margin-bottom: 10px;
 

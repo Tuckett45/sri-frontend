@@ -20,6 +20,8 @@ interface DashboardStats {
   rejectedCount: number;
   pendingAmount: number;
   approvedAmount: number;
+  paidCount: number;
+  paidAmount: number;
 }
 
 interface CategoryStats {
@@ -59,7 +61,9 @@ export class HrDashboardComponent implements OnInit {
     approvedCount: 0,
     rejectedCount: 0,
     pendingAmount: 0,
-    approvedAmount: 0
+    approvedAmount: 0,
+    paidCount: 0,
+    paidAmount: 0
   };
 
   // Date filters
@@ -254,7 +258,9 @@ export class HrDashboardComponent implements OnInit {
       approvedCount: expenses.filter(e => e.status === ExpenseStatus.Approved).length,
       rejectedCount: expenses.filter(e => e.status === ExpenseStatus.Rejected).length,
       pendingAmount: expenses.filter(e => e.status === ExpenseStatus.Pending).reduce((sum, e) => sum + (e.amount || 0), 0),
-      approvedAmount: expenses.filter(e => e.status === ExpenseStatus.Approved).reduce((sum, e) => sum + (e.amount || 0), 0)
+      approvedAmount: expenses.filter(e => e.status === ExpenseStatus.Approved).reduce((sum, e) => sum + (e.amount || 0), 0),
+      paidCount: expenses.filter(e => e.status === ExpenseStatus.Paid).length,
+      paidAmount: expenses.filter(e => e.status === ExpenseStatus.Paid).reduce((sum, e) => sum + (e.amount || 0), 0)
     };
 
     this.stats.averageExpense = this.stats.totalExpenses > 0 
@@ -327,10 +333,10 @@ export class HrDashboardComponent implements OnInit {
 
     // Status chart (Doughnut)
     this.statusChartData = {
-      labels: ['Pending', 'Approved', 'Rejected'],
+      labels: ['Pending', 'Approved', 'Rejected', 'Paid'],
       datasets: [{
-        data: [this.stats.pendingCount, this.stats.approvedCount, this.stats.rejectedCount],
-        backgroundColor: ['#FFA726', '#66BB6A', '#EF5350']
+        data: [this.stats.pendingCount, this.stats.approvedCount, this.stats.rejectedCount, this.stats.paidCount],
+        backgroundColor: ['#FFA726', '#66BB6A', '#EF5350', '#4CAF50']
       }]
     };
 
@@ -460,6 +466,8 @@ export class HrDashboardComponent implements OnInit {
         return 'status-rejected';
       case ExpenseStatus.Pending:
         return 'status-pending';
+      case ExpenseStatus.Paid:
+        return 'status-paid';
       default:
         return '';
     }

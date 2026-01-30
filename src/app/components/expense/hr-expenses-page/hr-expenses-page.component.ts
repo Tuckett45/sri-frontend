@@ -10,8 +10,9 @@ import { Inject } from '@angular/core';
 import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/expense-report-modal/expense-report-modal.component';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
 import { forkJoin, of, firstValueFrom } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { ExpenseStateService } from '../services/expense-state.service';
+import { ExpenseSelectionChange } from '../shared/expense-table/expense-table.component';
 
 type DisplayExpense = Expense & {
   job?: string | null;
@@ -33,14 +34,17 @@ export class HrExpensesPageComponent implements OnInit {
   pageSizeOptions: number[] = [10, 25, 50];
   statusOptions = Object.values(ExpenseStatus);
   categoryOptions = Object.values(ExpenseCategory);
+  readonly expenseStatus = ExpenseStatus;
   loading = false;
   filtersOpen = false;
   readonly statusUpdatingIds = new Set<string>();
+  selectedExpenseIds = new Set<string>();
   exportUseRange = false;
   exportStartDate: Date | null = null;
   exportEndDate: Date | null = null;
   private filtersInitialized = false;
   private isUsingFilters = false;
+  bulkUpdating = false;
   private currentFilters: ExpenseFilters = {
     startDate: null,
     endDate: null,
@@ -61,6 +65,14 @@ export class HrExpensesPageComponent implements OnInit {
   protected employeeOptions: string[] = [];
   private readonly employeeSet = new Set<string>();
 
+  get hasSelection(): boolean {
+    return this.selectedExpenseIds.size > 0;
+  }
+
+  get selectedCount(): number {
+    return this.selectedExpenseIds.size;
+  }
+
   ngOnInit(): void {
     this.loadExpenses();
   }
@@ -69,6 +81,7 @@ export class HrExpensesPageComponent implements OnInit {
     this.currentFilters = filters;
     const useSearch = this.hasActiveFilters(filters);
     this.isUsingFilters = useSearch;
+    this.clearSelection();
 
     if (!this.filtersInitialized) {
       this.filtersInitialized = true;
@@ -91,11 +104,32 @@ export class HrExpensesPageComponent implements OnInit {
   }
 
   onPageChange(event: PageEvent): void {
+    this.clearSelection();
     if (this.isUsingFilters) {
       this.searchExpenses(event.pageIndex, event.pageSize);
     } else {
       this.loadExpenses(event.pageIndex, event.pageSize);
     }
+  }
+
+  onSelectionChange(change: ExpenseSelectionChange): void {
+    const currentPageIds = new Set(
+      this.expenses
+        .map(exp => exp.id)
+        .filter((id): id is string => typeof id === 'string' && !!id)
+    );
+
+    const next = new Set(this.selectedExpenseIds);
+    currentPageIds.forEach(id => next.delete(id));
+    change.selectedIds.forEach(id => next.add(id));
+    if (!this.areSetsEqual(next, this.selectedExpenseIds)) {
+      this.selectedExpenseIds = next;
+    }
+  }
+
+  clearSelection(): void {
+    if (!this.selectedExpenseIds.size) return;
+    this.selectedExpenseIds = new Set<string>();
   }
 
   loadExpenses(pageIndex: number = this.pageIndex, pageSize: number = this.pageSize): void {
@@ -208,6 +242,7 @@ export class HrExpensesPageComponent implements OnInit {
     this.totalItems = this.resolveTotal(response, items.length);
     this.expenses = items.map(item => this.toViewModel(item));
     this.addEmployeesFrom(this.expenses);
+    this.pruneSelectionToCurrentPage(this.expenses);
     this.loading = false;
   }
 
@@ -308,6 +343,27 @@ export class HrExpensesPageComponent implements OnInit {
     }
 
     return fallback ?? NaN;
+  }
+
+  private pruneSelectionToCurrentPage(expenses: DisplayExpense[]): void {
+    if (!this.selectedExpenseIds.size) return;
+    const pageIds = new Set(
+      expenses
+        .map(exp => exp.id)
+        .filter((id): id is string => typeof id === 'string' && !!id)
+    );
+    const filtered = Array.from(this.selectedExpenseIds).filter(id => pageIds.has(id));
+    if (filtered.length !== this.selectedExpenseIds.size) {
+      this.selectedExpenseIds = new Set(filtered);
+    }
+  }
+
+  private areSetsEqual(a: Set<string>, b: Set<string>): boolean {
+    if (a.size !== b.size) return false;
+    for (const value of a) {
+      if (!b.has(value)) return false;
+    }
+    return true;
   }
 
   async exportCsv(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): Promise<void> {
@@ -591,6 +647,52 @@ export class HrExpensesPageComponent implements OnInit {
 
   onReject(expense: Expense): void {
     this.updateStatus(expense, ExpenseStatus.Rejected);
+  }
+
+  bulkUpdateStatus(status: ExpenseStatus): void {
+    const selected = this.expenses.filter(
+      exp => exp.id && this.selectedExpenseIds.has(exp.id)
+    );
+
+    if (!selected.length) {
+      this.toastr.info('Select at least one expense to update.');
+      return;
+    }
+
+    const ids = selected
+      .map(exp => exp.id)
+      .filter((id): id is string => typeof id === 'string' && !!id);
+
+    ids.forEach(id => this.statusUpdatingIds.add(id));
+    this.bulkUpdating = true;
+    this.loading = true;
+
+    const updates$ = selected.map(expense =>
+      this.expenseApi.updateExpense({ ...expense, status }).pipe(
+        catchError(err => {
+          console.error(`Failed to update expense ${expense.id}`, err);
+          this.toastr.error(`Failed to update ${expense.vendor || expense.id}`);
+          return of(null);
+        })
+      )
+    );
+
+    forkJoin(updates$)
+      .pipe(
+        finalize(() => {
+          ids.forEach(id => this.statusUpdatingIds.delete(id));
+          this.bulkUpdating = false;
+        })
+      )
+      .subscribe(results => {
+        const successCount = results.filter((r): r is Expense => !!r).length;
+        if (successCount > 0) {
+          const label = status.toLowerCase();
+          this.toastr.success(`Updated ${successCount} expense${successCount === 1 ? '' : 's'} to ${label}.`);
+        }
+        this.clearSelection();
+        this.loadExpenses(this.pageIndex, this.pageSize);
+      });
   }
 
   private updateStatus(expense: Expense, status: ExpenseStatus): void {
