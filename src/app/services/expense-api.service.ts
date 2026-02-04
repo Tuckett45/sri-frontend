@@ -237,6 +237,7 @@ export class ExpenseApiService {
     job?: string;
     includeImages?: boolean;
     employee?: string;
+    createdBy?: string;
     page?: number;
     pageSize?: number;
     status?: ExpenseStatus;

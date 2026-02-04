@@ -97,6 +97,8 @@ import { DailyReportModalComponent } from './components/modals/daily-report-moda
 import { DailyReportDashboardModule } from './components/daily-report-dashboard/daily-report-dashboard.module';
 import { Magic8BallComponent } from './components/magic-8-ball/magic-8-ball.component';
 import { Magic8BallWidgetComponent } from './components/magic-8-ball-widget/magic-8-ball-widget.component';
+import { AuthService } from './services/auth.service';
+import { SecureAuthService } from './services/secure-auth.service';
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -224,6 +226,9 @@ export const customCurrencyMaskConfig = {
       inputMode: NgxCurrencyInputMode.Financial,
     }), 
     NgxImageCompressService,
+    // Always resolve AuthService to the secure implementation so user info/role
+    // is set immediately after login without needing a refresh
+    { provide: AuthService, useExisting: SecureAuthService },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ConfigurationInterceptor,

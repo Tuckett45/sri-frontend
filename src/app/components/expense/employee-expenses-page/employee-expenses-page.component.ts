@@ -143,12 +143,24 @@ export class EmployeeExpensesPageComponent implements OnInit {
     this.expenseApi.searchExpenses(searchRequest).subscribe({
       next: res => {
         const list = this.extractItems(res);
-        this.expenses = list.map((item: ExpenseListItem) => this.toViewModel(item));
-        this.filteredExpenses = [...this.expenses];
+        const mapped = list.map((item: ExpenseListItem) => this.toViewModel(item));
+
+        if (!mapped.length && this.baseExpenses.length && this.hasActiveFilters()) {
+          // Server returned nothing, but we have local data; fall back to client-side filtering
+          this.applyLocalFilters();
+        } else {
+          this.expenses = mapped;
+          this.filteredExpenses = [...mapped];
+        }
         this.loading = false;
       },
       error: () => {
-        this.toastr.error('Failed to load expenses');
+        // Fallback to client-side filtering on failure so the user still sees data
+        if (this.baseExpenses.length && this.hasActiveFilters()) {
+          this.applyLocalFilters();
+        } else {
+          this.toastr.error('Failed to load expenses');
+        }
         this.loading = false;
       }
     });
@@ -161,7 +173,9 @@ export class EmployeeExpensesPageComponent implements OnInit {
       includeImages: true,
       page: 1,
       pageSize: 200,
-      employee: employeeId
+      // Support both param names the API may expect for “owned by me”
+      employee: employeeId,
+      createdBy: employeeId as any
     };
 
     const from = this.toQueryDate(this.currentFilters.startDate);
@@ -189,6 +203,39 @@ export class EmployeeExpensesPageComponent implements OnInit {
     const hasStatus = !!filters.status;
     const hasCategory = !!filters.category;
     return hasStart || hasEnd || hasJob || hasStatus || hasCategory;
+  }
+
+  /**
+   * Client-side fallback filtering used when the server search returns no
+   * results even though we have data locally (seen on My Expenses date range).
+   */
+  private applyLocalFilters(): void {
+    const start = this.currentFilters.startDate ? new Date(this.currentFilters.startDate) : null;
+    const end = this.currentFilters.endDate ? new Date(this.currentFilters.endDate) : null;
+
+    // Include the full end date by moving to end-of-day
+    if (end) {
+      end.setHours(23, 59, 59, 999);
+    }
+
+    const jobQuery = this.currentFilters.job?.trim().toLowerCase() ?? '';
+    const statusQuery = (this.currentFilters.status ?? '').toString().toLowerCase();
+    const categoryQuery = (this.currentFilters.category ?? '').toString().toLowerCase();
+
+    const filtered = this.baseExpenses.filter(exp => {
+      const expDate = exp.date ? new Date(exp.date) : null;
+      if (start && expDate && expDate < start) return false;
+      if (end && expDate && expDate > end) return false;
+
+      if (jobQuery && !(exp.job ?? '').toString().toLowerCase().includes(jobQuery)) return false;
+      if (statusQuery && (exp.status ?? '').toString().toLowerCase() !== statusQuery) return false;
+      if (categoryQuery && (exp.category ?? '').toString().toLowerCase() !== categoryQuery) return false;
+
+      return true;
+    });
+
+    this.expenses = filtered;
+    this.filteredExpenses = [...filtered];
   }
 
   exportCsv(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {

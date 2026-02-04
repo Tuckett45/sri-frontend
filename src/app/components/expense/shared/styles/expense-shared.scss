@@ -88,12 +88,12 @@ $page-controls-gap: 0.75rem;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  border-color: rgba(20, 79, 128, 0.35);
-  color: $expense-primary;
+  border-color: $expense-primary !important;
+  color: $expense-primary !important;
 
   &:hover {
-    border-color: $expense-primary;
-    color: $expense-primary;
+    border-color: $expense-primary-dark !important;
+    color: $expense-primary-dark !important;
   }
 }
 
