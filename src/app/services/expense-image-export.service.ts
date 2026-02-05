@@ -320,16 +320,23 @@ export class ExpenseImageExportService {
   }
 
   private getExpenseFolder(expense: Expense): string {
-    const base = this.sanitizeFileName(
-      expense.id || (expense as any).projectId || expense.vendor || 'expense'
-    );
+    const date = expense.date
+      ? new Date(expense.date).toISOString().split('T')[0]
+      : 'NoDate';
+
+    const category = this.sanitizeFileName((expense as any).category || 'NoCategory');
+    const notes = this.sanitizeFileName((expense as any).notes || 'NoNotes');
+
+    const combined = [date, category, notes].filter(Boolean).join('_');
+    const base = this.sanitizeFileName(combined);
+
     return base || 'expense';
   }
 
   private getPreferredFileName(expense: Expense, imageIndex: number): string {
     const image = expense.images?.[imageIndex];
     if (image?.fileName) {
-      return this.sanitizeFileName(image.fileName);
+      return this.sanitizeFileNamePreserveExtension(image.fileName);
     }
     if (image?.blobUrl) {
       return this.deriveFileNameFromUrl(image.blobUrl);
@@ -341,6 +348,30 @@ export class ExpenseImageExportService {
     if (!url) return 'receipt.jpg';
     const parts = url.split('/').pop()?.split('?')[0];
     if (!parts || !parts.includes('.')) return 'receipt.jpg';
-    return this.sanitizeFileName(parts);
+    return this.sanitizeFileNamePreserveExtension(parts);
+  }
+
+  /**
+   * Sanitizes a filename but preserves the final extension so the OS can
+   * associate the correct file type (e.g., .jpg, .png, .pdf).
+   */
+  private sanitizeFileNamePreserveExtension(name: string): string {
+    if (!name) return 'file';
+
+    const trimmed = name.trim();
+    const lastDot = trimmed.lastIndexOf('.');
+
+    let base = trimmed;
+    let ext = '';
+
+    if (lastDot > 0 && lastDot < trimmed.length - 1) {
+      base = trimmed.slice(0, lastDot);
+      ext = trimmed.slice(lastDot + 1);
+    }
+
+    const safeBase = this.sanitizeFileName(base) || 'file';
+    const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
+
+    return safeExt ? `${safeBase}.${safeExt.toLowerCase()}` : safeBase;
   }
 }
