@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>Update Job Status</h2>
+
+<mat-dialog-content>
+  <p class="dialog-description">
+    Select a new status to apply to {{ data.selectedCount }} selected job(s).
+  </p>
+
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>New Status</mat-label>
+      <mat-select formControlName="status" required>
+        <mat-option *ngFor="let status of statusOptions" [value]="status">
+          {{ status }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('status')?.hasError('required')">
+        Status is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width" *ngIf="requiresReason">
+      <mat-label>Reason</mat-label>
+      <textarea
+        matInput
+        formControlName="reason"
+        rows="3"
+        placeholder="Explain why the status is being changed to Issue"
+      ></textarea>
+      <mat-error *ngIf="form.get('reason')?.hasError('required')">
+        Reason is required when changing status to Issue
+      </mat-error>
+    </mat-form-field>
+  </form>
+
+  <mat-hint class="warning-hint" *ngIf="form.get('status')?.value">
+    <mat-icon>info</mat-icon>
+    This will update the status for all {{ data.selectedCount }} selected job(s).
+  </mat-hint>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onConfirm()"
+    [disabled]="!form.valid"
+  >
+    Update Status
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,9 @@
+# Deployment State Management
+
+Files to be implemented:
+- deployment.state.ts - State interface definition
+- deployment.actions.ts - Action definitions
+- deployment.reducer.ts - Pure state transitions
+- deployment.effects.ts - Side effects (API calls)
+- deployment.selectors.ts - Memoized state selectors
+- index.ts - Public API exports

@@ -1,0 +1,273 @@
+.technician-form-container {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.form-header {
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+  }
+}
+
+mat-stepper {
+  background: transparent;
+}
+
+.step-content {
+  padding: 24px 0;
+
+  h3 {
+    margin: 0 0 24px 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  h4 {
+    margin: 16px 0 8px 0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .instruction {
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  mat-form-field {
+    flex: 1;
+  }
+
+  button[mat-icon-button] {
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.selected-skills {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+
+  h4 {
+    margin-top: 0;
+  }
+
+  mat-chip-list {
+    mat-chip {
+      margin: 4px;
+    }
+  }
+}
+
+.certification-item {
+  margin-bottom: 16px;
+
+  mat-card {
+    mat-card-content {
+      padding: 16px;
+    }
+  }
+}
+
+.add-cert-button {
+  margin-top: 16px;
+  width: 100%;
+
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+mat-calendar {
+  margin: 16px auto;
+  display: block;
+  max-width: 400px;
+}
+
+::ng-deep {
+  .selected-unavailable-date {
+    .mat-calendar-body-cell-content {
+      background-color: #ffcdd2 !important;
+      color: #c62828 !important;
+      border-radius: 50%;
+    }
+  }
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+
+      &.selected {
+        background-color: #ffcdd2;
+      }
+
+      &.available {
+        background-color: #ffffff;
+      }
+    }
+  }
+}
+
+.selected-dates {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+
+  h4 {
+    margin-top: 0;
+  }
+
+  mat-chip-list {
+    mat-chip {
+      margin: 4px;
+    }
+  }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 24px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+// Material form field customization
+mat-form-field {
+  &.mat-form-field-appearance-outline {
+    .mat-form-field-wrapper {
+      padding-bottom: 0;
+    }
+  }
+}
+
+// Error styling
+mat-error {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+  .technician-form-container {
+    padding: 16px;
+  }
+
+  .form-header {
+    h2 {
+      font-size: 24px;
+    }
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    button[mat-icon-button] {
+      align-self: flex-end;
+      margin-top: 0;
+    }
+  }
+
+  mat-calendar {
+    max-width: 100%;
+  }
+
+  .step-actions,
+  .form-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .technician-form-container {
+    padding: 12px;
+  }
+
+  .form-header {
+    h2 {
+      font-size: 20px;
+    }
+  }
+
+  .step-content {
+    padding: 16px 0;
+
+    h3 {
+      font-size: 18px;
+    }
+  }
+
+  .certification-item {
+    mat-card {
+      mat-card-content {
+        padding: 12px;
+      }
+    }
+  }
+}
+
+// Stepper customization for mobile
+@media (max-width: 600px) {
+  ::ng-deep {
+    .mat-horizontal-stepper-header-container {
+      display: none;
+    }
+
+    .mat-horizontal-content-container {
+      padding: 0;
+    }
+  }
+}

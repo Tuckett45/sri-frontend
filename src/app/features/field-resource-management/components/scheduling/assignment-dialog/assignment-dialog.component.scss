@@ -1,0 +1,571 @@
+.assignment-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+// Dialog Header
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+// Dialog Content
+mat-dialog-content {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+// Job Details Section
+.job-details-section {
+  margin-bottom: 24px;
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+}
+
+.job-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+  }
+
+  .value {
+    font-size: 14px;
+    color: #333;
+  }
+}
+
+.required-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+  }
+
+  .skills-list {
+    mat-chip-list {
+      mat-chip {
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+// Technicians Section
+.technicians-section {
+  margin: 24px 0;
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: #999;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: #ccc;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// Technicians List
+.technicians-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.technician-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: white;
+
+  &:hover {
+    border-color: #2196f3;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+  }
+
+  &.selected {
+    border-color: #2196f3;
+    background-color: #e3f2fd;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  }
+
+  &.has-conflicts {
+    border-color: #f44336;
+    background-color: #ffebee;
+  }
+}
+
+// Technician Header
+.technician-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.technician-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.technician-icon {
+  color: #666;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.technician-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.technician-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.technician-role {
+  font-size: 12px;
+  color: #666;
+}
+
+.selection-indicator {
+  color: #2196f3;
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+// Skill Match
+.skill-match {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.match-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.match-bar-container {
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.match-bar {
+  height: 100%;
+  transition: width 0.3s;
+
+  &.match-perfect {
+    background-color: #4caf50;
+  }
+
+  &.match-good {
+    background-color: #8bc34a;
+  }
+
+  &.match-fair {
+    background-color: #ff9800;
+  }
+
+  &.match-poor {
+    background-color: #f44336;
+  }
+}
+
+.match-percentage {
+  font-size: 14px;
+  font-weight: 600;
+
+  &.match-perfect {
+    color: #4caf50;
+  }
+
+  &.match-good {
+    color: #8bc34a;
+  }
+
+  &.match-fair {
+    color: #ff9800;
+  }
+
+  &.match-poor {
+    color: #f44336;
+  }
+}
+
+// Missing Skills Warning
+.missing-skills-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background-color: #fff3e0;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+  margin-bottom: 12px;
+
+  mat-icon {
+    color: #ff9800;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .warning-content {
+    flex: 1;
+  }
+
+  .warning-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #e65100;
+    margin-bottom: 4px;
+  }
+
+  .missing-skills-list {
+    font-size: 12px;
+    color: #666;
+  }
+}
+
+// Availability Status
+.availability-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+
+    &.available {
+      color: #4caf50;
+    }
+
+    &.partially-available {
+      color: #ff9800;
+    }
+
+    &.unavailable {
+      color: #f44336;
+    }
+  }
+
+  span {
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+// Workload Info
+.workload-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #666;
+  }
+
+  span {
+    font-size: 13px;
+    color: #333;
+  }
+}
+
+// Conflicts Section
+.conflicts-section {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #ffebee;
+  border-left: 4px solid #f44336;
+  border-radius: 4px;
+}
+
+.conflicts-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  .conflict-icon {
+    color: #f44336;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .conflicts-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #c62828;
+  }
+}
+
+.conflicts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.conflict-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  background-color: white;
+  border-radius: 4px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &.conflict-error {
+    mat-icon {
+      color: #f44336;
+    }
+  }
+
+  &.conflict-warning {
+    mat-icon {
+      color: #ff9800;
+    }
+  }
+
+  .conflict-details {
+    flex: 1;
+  }
+
+  .conflict-job {
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+  }
+
+  .conflict-time {
+    font-size: 11px;
+    color: #666;
+  }
+}
+
+// Override Section
+.override-section {
+  margin-top: 24px;
+
+  mat-divider {
+    margin-bottom: 24px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.override-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background-color: #fff3e0;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+
+  mat-icon {
+    color: #ff9800;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .warning-text {
+    flex: 1;
+
+    strong {
+      display: block;
+      font-size: 14px;
+      color: #e65100;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: #666;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+// Dialog Actions
+mat-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+
+  button {
+    min-width: 120px;
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .job-info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .technicians-list {
+    max-height: 300px;
+  }
+
+  .technician-card {
+    padding: 12px;
+  }
+
+  .skill-match {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .match-bar-container {
+    order: 2;
+  }
+
+  .match-percentage {
+    order: 3;
+  }
+}
+
+@media (max-width: 480px) {
+  .dialog-header {
+    padding: 12px 16px;
+
+    h2 {
+      font-size: 18px;
+    }
+  }
+
+  mat-dialog-content {
+    padding: 16px;
+  }
+
+  .technician-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .technician-name {
+    font-size: 14px;
+  }
+
+  mat-dialog-actions {
+    padding: 12px 16px;
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}

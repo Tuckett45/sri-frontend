@@ -1,0 +1,366 @@
+.agent-execution-container {
+  padding: 1.5rem;
+
+  .execution-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      h2 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+  }
+
+  ::ng-deep .agent-inactive-warning {
+    margin-bottom: 1.5rem;
+  }
+
+  .execution-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    ::ng-deep .execution-form-card {
+      .p-card-body {
+        padding: 1.5rem;
+      }
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        label {
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: var(--text-color);
+        }
+
+        textarea,
+        input {
+          width: 100%;
+          font-family: monospace;
+          font-size: 0.9rem;
+        }
+
+        textarea {
+          resize: vertical;
+          min-height: 200px;
+        }
+
+        .field-hint {
+          color: var(--text-color-secondary);
+          font-size: 0.85rem;
+        }
+
+        .p-error {
+          color: var(--red-500);
+          font-size: 0.85rem;
+        }
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+
+        @media (max-width: 768px) {
+          flex-direction: column;
+
+          button {
+            width: 100%;
+          }
+        }
+      }
+    }
+
+    ::ng-deep .execution-error {
+      margin-top: 1rem;
+    }
+
+    .executing-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      gap: 1rem;
+      margin-top: 1rem;
+      background: var(--surface-100);
+      border-radius: 6px;
+
+      p {
+        margin: 0;
+        color: var(--text-color-secondary);
+        font-size: 1rem;
+      }
+    }
+
+    .execution-results {
+      ::ng-deep .results-card {
+        .p-card-header {
+          padding: 1rem 1.5rem;
+          background: var(--surface-section);
+          border-bottom: 1px solid var(--surface-border);
+
+          .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            h3 {
+              margin: 0;
+              font-size: 1.25rem;
+              font-weight: 600;
+              color: var(--text-color);
+            }
+          }
+        }
+
+        .p-card-body {
+          padding: 1.5rem;
+        }
+      }
+
+      .result-section {
+        margin-bottom: 1.5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        h4 {
+          margin: 0 0 1rem 0;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: var(--text-color);
+        }
+
+        .status-info {
+          display: flex;
+          gap: 2rem;
+          align-items: center;
+
+          @media (max-width: 768px) {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          ::ng-deep .large-tag {
+            font-size: 1.1rem;
+            padding: 0.75rem 1.25rem;
+          }
+
+          .status-details {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+
+            .status-item {
+              display: flex;
+              flex-direction: column;
+              gap: 0.25rem;
+
+              label {
+                font-size: 0.875rem;
+                font-weight: 500;
+                color: var(--text-color-secondary);
+              }
+
+              .value {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--text-color);
+              }
+            }
+          }
+        }
+
+        .json-display {
+          margin: 0;
+          padding: 1rem;
+          background: var(--surface-100);
+          border: 1px solid var(--surface-border);
+          border-radius: 4px;
+          font-family: monospace;
+          font-size: 0.85rem;
+          white-space: pre-wrap;
+          overflow-x: auto;
+          max-height: 400px;
+          overflow-y: auto;
+        }
+
+        .reasoning-text {
+          margin: 0;
+          padding: 1rem;
+          background: var(--surface-100);
+          border-left: 4px solid var(--primary-color);
+          border-radius: 4px;
+          line-height: 1.6;
+          color: var(--text-color);
+        }
+
+        .factors-list,
+        .sources-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+
+          .factor-item,
+          .source-item {
+            .json-display {
+              max-height: 200px;
+            }
+          }
+        }
+
+        .feature-importance-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+
+          .importance-item {
+            display: grid;
+            grid-template-columns: 150px 1fr 80px;
+            gap: 1rem;
+            align-items: center;
+
+            @media (max-width: 768px) {
+              grid-template-columns: 1fr;
+              gap: 0.5rem;
+            }
+
+            .feature-name {
+              font-size: 0.9rem;
+              font-weight: 500;
+              color: var(--text-color);
+            }
+
+            .importance-bar-container {
+              height: 24px;
+              background: var(--surface-200);
+              border-radius: 12px;
+              overflow: hidden;
+              position: relative;
+
+              .importance-bar {
+                height: 100%;
+                background: linear-gradient(90deg, var(--primary-color), var(--primary-400));
+                transition: width 0.3s ease;
+              }
+            }
+
+            .importance-value {
+              font-size: 0.9rem;
+              font-weight: 600;
+              color: var(--text-color);
+              text-align: right;
+            }
+          }
+        }
+
+        .metadata-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
+
+          .metadata-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+
+            label {
+              font-size: 0.875rem;
+              font-weight: 500;
+              color: var(--text-color-secondary);
+            }
+
+            .value {
+              font-size: 0.95rem;
+              color: var(--text-color);
+
+              &.version-badge {
+                display: inline-block;
+                padding: 0.25rem 0.5rem;
+                background: var(--surface-100);
+                border-radius: 4px;
+                font-family: monospace;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .recent-executions {
+      ::ng-deep .p-panel {
+        .p-panel-header {
+          background: var(--surface-section);
+          border: 1px solid var(--surface-border);
+        }
+
+        .p-panel-content {
+          padding: 1rem;
+        }
+      }
+
+      .executions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+
+        .execution-item {
+          padding: 0.75rem;
+          background: var(--surface-100);
+          border: 1px solid var(--surface-border);
+          border-radius: 4px;
+
+          .execution-summary {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+
+            @media (max-width: 768px) {
+              flex-wrap: wrap;
+            }
+
+            .execution-time {
+              flex: 1;
+              font-size: 0.875rem;
+              color: var(--text-color-secondary);
+            }
+
+            .execution-confidence {
+              font-size: 0.875rem;
+              font-weight: 600;
+              color: var(--text-color);
+            }
+          }
+        }
+      }
+    }
+  }
+}

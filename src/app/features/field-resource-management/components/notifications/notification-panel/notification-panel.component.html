@@ -1,0 +1,59 @@
+<button mat-icon-button [matMenuTriggerFor]="notificationMenu" aria-label="Notifications">
+  <mat-icon [matBadge]="(unreadCount$ | async) || 0" 
+            [matBadgeHidden]="(unreadCount$ | async) === 0"
+            matBadgeColor="warn">
+    notifications
+  </mat-icon>
+</button>
+
+<mat-menu #notificationMenu="matMenu" class="notification-menu">
+  <div class="notification-header" (click)="$event.stopPropagation()">
+    <h3>Notifications</h3>
+    <button mat-button color="primary" (click)="onMarkAllAsRead()" 
+            [disabled]="(unreadCount$ | async) === 0">
+      Mark all as read
+    </button>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <div class="notification-list" (click)="$event.stopPropagation()">
+    <ng-container *ngIf="(notifications$ | async)?.length === 0">
+      <div class="empty-state">
+        <mat-icon>notifications_none</mat-icon>
+        <p>No notifications</p>
+      </div>
+    </ng-container>
+
+    <ng-container *ngFor="let group of getGroupKeys()">
+      <div class="notification-group-header">{{ group }}</div>
+      
+      <button mat-menu-item 
+              *ngFor="let notification of groupedNotifications[group]"
+              (click)="onNotificationClick(notification)"
+              [class.unread]="!notification.isRead">
+        <mat-icon [color]="notification.isRead ? '' : 'primary'">
+          {{ getNotificationIcon(notification.type) }}
+        </mat-icon>
+        <div class="notification-content">
+          <div class="notification-message">{{ notification.message }}</div>
+          <div class="notification-time">{{ notification.createdAt | date:'short' }}</div>
+        </div>
+      </button>
+    </ng-container>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <div class="notification-footer" (click)="$event.stopPropagation()">
+    <button mat-icon-button 
+            (click)="toggleNotificationSound()" 
+            [matTooltip]="notificationSoundEnabled ? 'Disable notification sound' : 'Enable notification sound'"
+            aria-label="Toggle notification sound">
+      <mat-icon>{{ notificationSoundEnabled ? 'volume_up' : 'volume_off' }}</mat-icon>
+    </button>
+    <a mat-button routerLink="/field-resource-management/notification-preferences">
+      Notification Preferences
+    </a>
+  </div>
+</mat-menu>

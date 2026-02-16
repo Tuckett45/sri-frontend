@@ -1,0 +1,342 @@
+.technician-detail-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .back-button {
+    flex-shrink: 0;
+  }
+
+  h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+
+    button {
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+.info-card {
+  margin-bottom: 24px;
+
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    mat-card-subtitle {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+
+  mat-card-content {
+    padding: 16px;
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.54);
+      letter-spacing: 0.5px;
+    }
+
+    span, a {
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    a {
+      text-decoration: none;
+      color: #1976d2;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 16px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+
+  &.active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.inactive {
+    background-color: #f5f5f5;
+    color: #757575;
+  }
+}
+
+mat-chip-list {
+  mat-chip {
+    margin: 4px;
+    font-size: 13px;
+
+    .skill-category {
+      font-size: 11px;
+      color: rgba(0, 0, 0, 0.54);
+      margin-left: 4px;
+    }
+  }
+}
+
+.certifications-table,
+.history-table {
+  width: 100%;
+  margin-top: 16px;
+
+  th {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  td {
+    padding: 12px 8px;
+  }
+}
+
+.cert-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.status-active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.status-expiring {
+    background-color: #fff3e0;
+    color: #f57c00;
+  }
+
+  &.status-expired {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+}
+
+mat-calendar {
+  margin: 16px auto;
+  display: block;
+  max-width: 400px;
+}
+
+::ng-deep {
+  .unavailable-date {
+    .mat-calendar-body-cell-content {
+      background-color: #ffcdd2 !important;
+      color: #c62828 !important;
+      border-radius: 50%;
+    }
+  }
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+
+      &.unavailable {
+        background-color: #ffcdd2;
+      }
+
+      &.available {
+        background-color: #ffffff;
+      }
+    }
+  }
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  margin-top: 16px;
+
+  .metric-item {
+    text-align: center;
+    padding: 24px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+
+    .metric-value {
+      font-size: 36px;
+      font-weight: 600;
+      color: #1976d2;
+      margin-bottom: 8px;
+    }
+
+    .metric-label {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.54);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+.no-data {
+  text-align: center;
+  padding: 32px;
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 14px;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px;
+}
+
+.error-card {
+  margin: 24px;
+  background-color: #ffebee;
+
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #c62828;
+  }
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+  .technician-detail-container {
+    padding: 16px;
+  }
+
+  .detail-header {
+    flex-wrap: wrap;
+
+    h2 {
+      font-size: 24px;
+      width: 100%;
+    }
+
+    .header-actions {
+      width: 100%;
+      justify-content: stretch;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  mat-calendar {
+    max-width: 100%;
+  }
+
+  .certifications-table,
+  .history-table {
+    font-size: 12px;
+
+    th, td {
+      padding: 8px 4px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .detail-header {
+    h2 {
+      font-size: 20px;
+    }
+
+    .header-actions {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  mat-chip-list {
+    mat-chip {
+      font-size: 11px;
+      
+      .skill-category {
+        display: none;
+      }
+    }
+  }
+}

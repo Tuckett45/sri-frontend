@@ -1,0 +1,522 @@
+// ATLAS Component Styles
+@import 'atlas-variables';
+@import 'atlas-accessibility';
+
+// ============================================================================
+// TYPOGRAPHY CLASSES
+// ============================================================================
+
+.atlas-h1 {
+  font-size: $atlas-font-size-5xl;
+  font-weight: $atlas-font-light;
+  line-height: 1.2;
+  letter-spacing: -0.01562em;
+  color: $atlas-primary;
+  margin: 0 0 $atlas-spacing-lg 0;
+}
+
+.atlas-h2 {
+  font-size: $atlas-font-size-4xl;
+  font-weight: $atlas-font-regular;
+  line-height: 1.3;
+  letter-spacing: -0.00833em;
+  color: $atlas-primary;
+  margin: 0 0 $atlas-spacing-md 0;
+}
+
+.atlas-h3 {
+  font-size: $atlas-font-size-3xl;
+  font-weight: $atlas-font-regular;
+  line-height: 1.4;
+  color: $atlas-primary;
+  margin: 0 0 $atlas-spacing-md 0;
+}
+
+.atlas-h4 {
+  font-size: $atlas-font-size-2xl;
+  font-weight: $atlas-font-medium;
+  line-height: 1.4;
+  color: $atlas-primary;
+  margin: 0 0 $atlas-spacing-sm 0;
+}
+
+.atlas-body-1 {
+  font-size: $atlas-font-size-base;
+  font-weight: $atlas-font-regular;
+  line-height: 1.5;
+  color: $atlas-gray-900;
+}
+
+.atlas-body-2 {
+  font-size: $atlas-font-size-sm;
+  font-weight: $atlas-font-regular;
+  line-height: 1.43;
+  color: $atlas-gray-800;
+}
+
+.atlas-caption {
+  font-size: $atlas-font-size-xs;
+  font-weight: $atlas-font-regular;
+  line-height: 1.66;
+  letter-spacing: 0.03333em;
+  color: $atlas-gray-600;
+}
+
+.atlas-label {
+  font-size: $atlas-font-size-sm;
+  font-weight: $atlas-font-medium;
+  line-height: 1.43;
+  letter-spacing: 0.00714em;
+  text-transform: uppercase;
+  color: $atlas-gray-700;
+}
+
+// ============================================================================
+// LOGO COMPONENT
+// ============================================================================
+
+.atlas-logo {
+  cursor: pointer;
+  object-fit: contain;
+  transition: opacity $atlas-transition-fast;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  &.atlas-logo-small {
+    height: 32px;
+    width: auto;
+  }
+  
+  &.atlas-logo-medium {
+    height: 48px;
+    width: auto;
+  }
+  
+  &.atlas-logo-large {
+    height: 64px;
+    width: auto;
+  }
+  
+  // Responsive sizing
+  @media (max-width: $atlas-breakpoint-md) {
+    &.atlas-logo-medium {
+      height: 36px;
+    }
+  }
+  
+  @media (max-width: $atlas-breakpoint-sm) {
+    &.atlas-logo-medium {
+      height: 32px;
+    }
+  }
+}
+
+// ============================================================================
+// CARDS & PANELS
+// ============================================================================
+
+.atlas-card {
+  background: $atlas-white;
+  border-radius: $atlas-border-radius-md;
+  box-shadow: $atlas-shadow-md;
+  padding: $atlas-spacing-lg;
+  transition: box-shadow $atlas-transition-base;
+  
+  &:hover {
+    box-shadow: $atlas-shadow-lg;
+  }
+  
+  &.atlas-card-elevated {
+    box-shadow: $atlas-shadow-lg;
+  }
+  
+  &.atlas-card-flat {
+    box-shadow: none;
+    border: $atlas-border-width solid $atlas-border-color;
+  }
+  
+  .atlas-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $atlas-spacing-md;
+    padding-bottom: $atlas-spacing-md;
+    border-bottom: $atlas-border-width solid $atlas-gray-200;
+    
+    .atlas-card-title {
+      font-size: $atlas-font-size-xl;
+      font-weight: $atlas-font-medium;
+      color: $atlas-primary;
+      margin: 0;
+    }
+    
+    .atlas-card-subtitle {
+      font-size: $atlas-font-size-sm;
+      color: $atlas-gray-600;
+      margin: $atlas-spacing-xs 0 0 0;
+    }
+  }
+  
+  .atlas-card-content {
+    color: $atlas-gray-900;
+  }
+  
+  .atlas-card-actions {
+    display: flex;
+    gap: $atlas-spacing-sm;
+    margin-top: $atlas-spacing-md;
+    padding-top: $atlas-spacing-md;
+    border-top: $atlas-border-width solid $atlas-gray-200;
+  }
+}
+
+// ============================================================================
+// BUTTONS
+// ============================================================================
+
+.atlas-button {
+  &.mat-raised-button,
+  &.mat-flat-button,
+  &.mat-stroked-button {
+    border-radius: $atlas-border-radius-sm;
+    text-transform: uppercase;
+    font-weight: $atlas-font-medium;
+    letter-spacing: 0.0892857143em;
+    transition: all $atlas-transition-fast;
+  }
+  
+  &.atlas-button-primary {
+    background-color: $atlas-primary !important;
+    color: $atlas-white !important;
+    
+    &:hover:not([disabled]) {
+      background-color: $atlas-primary-light !important;
+    }
+    
+    &:active:not([disabled]) {
+      background-color: $atlas-primary-dark !important;
+    }
+  }
+  
+  &.atlas-button-secondary {
+    background-color: $atlas-secondary !important;
+    color: $atlas-white !important;
+    
+    &:hover:not([disabled]) {
+      background-color: lighten($atlas-secondary, 10%) !important;
+    }
+  }
+  
+  &.atlas-button-accent {
+    background-color: $atlas-accent !important;
+    color: $atlas-white !important;
+    
+    &:hover:not([disabled]) {
+      background-color: darken($atlas-accent, 10%) !important;
+    }
+  }
+}
+
+// ============================================================================
+// STATUS BADGES
+// ============================================================================
+
+.atlas-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $atlas-spacing-xs;
+  padding: $atlas-spacing-xs $atlas-spacing-md;
+  border-radius: $atlas-border-radius-full;
+  font-size: $atlas-font-size-xs;
+  font-weight: $atlas-font-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  
+  &.atlas-badge-success {
+    background-color: rgba($atlas-success, 0.1);
+    color: darken($atlas-success, 15%);
+    border: $atlas-border-width solid rgba($atlas-success, 0.3);
+  }
+  
+  &.atlas-badge-warning {
+    background-color: rgba($atlas-warning, 0.1);
+    color: darken($atlas-warning, 15%);
+    border: $atlas-border-width solid rgba($atlas-warning, 0.3);
+  }
+  
+  &.atlas-badge-error {
+    background-color: rgba($atlas-error, 0.1);
+    color: darken($atlas-error, 10%);
+    border: $atlas-border-width solid rgba($atlas-error, 0.3);
+  }
+  
+  &.atlas-badge-info {
+    background-color: rgba($atlas-info, 0.1);
+    color: darken($atlas-info, 15%);
+    border: $atlas-border-width solid rgba($atlas-info, 0.3);
+  }
+  
+  &.atlas-badge-primary {
+    background-color: rgba($atlas-primary, 0.1);
+    color: $atlas-primary-dark;
+    border: $atlas-border-width solid rgba($atlas-primary, 0.3);
+  }
+  
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// ============================================================================
+// PAGE LAYOUT
+// ============================================================================
+
+.atlas-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $atlas-spacing-lg;
+  background: $atlas-white;
+  border-bottom: $atlas-border-width solid $atlas-gray-300;
+  
+  .atlas-page-header-content {
+    display: flex;
+    align-items: center;
+    gap: $atlas-spacing-md;
+  }
+  
+  .atlas-page-title {
+    margin: 0;
+    font-size: $atlas-font-size-3xl;
+    font-weight: $atlas-font-regular;
+    color: $atlas-primary;
+  }
+  
+  .atlas-page-subtitle {
+    margin: $atlas-spacing-xs 0 0 0;
+    font-size: $atlas-font-size-sm;
+    color: $atlas-gray-600;
+  }
+  
+  .atlas-page-actions {
+    display: flex;
+    gap: $atlas-spacing-sm;
+  }
+  
+  @media (max-width: $atlas-breakpoint-md) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $atlas-spacing-md;
+    
+    .atlas-page-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+
+.atlas-page-content {
+  padding: $atlas-spacing-lg;
+  
+  @media (max-width: $atlas-breakpoint-sm) {
+    padding: $atlas-spacing-md;
+  }
+}
+
+// ============================================================================
+// NAVIGATION
+// ============================================================================
+
+.atlas-sidenav-container {
+  height: 100%;
+  
+  .atlas-sidenav {
+    width: 260px;
+    background: $atlas-primary-dark;
+    color: $atlas-white;
+    
+    .atlas-sidenav-header {
+      padding: $atlas-spacing-lg;
+      border-bottom: $atlas-border-width solid rgba($atlas-white, 0.1);
+    }
+    
+    .mat-nav-list {
+      padding-top: 0;
+      
+      .mat-list-item {
+        color: rgba($atlas-white, 0.8);
+        transition: all $atlas-transition-fast;
+        
+        &:hover {
+          background-color: rgba($atlas-white, 0.05);
+          color: $atlas-white;
+        }
+        
+        &.active {
+          background-color: rgba($atlas-accent, 0.2);
+          color: $atlas-white;
+          border-left: 3px solid $atlas-accent;
+        }
+        
+        mat-icon {
+          color: inherit;
+          margin-right: $atlas-spacing-md;
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
+// TABLES
+// ============================================================================
+
+.atlas-table {
+  width: 100%;
+  
+  .mat-header-cell {
+    font-weight: $atlas-font-medium;
+    color: $atlas-gray-700;
+    background-color: $atlas-gray-50;
+  }
+  
+  .mat-row {
+    transition: background-color $atlas-transition-fast;
+    
+    &:hover {
+      background-color: $atlas-gray-50;
+    }
+  }
+}
+
+// ============================================================================
+// FORMS
+// ============================================================================
+
+.atlas-form-field {
+  width: 100%;
+  
+  .mat-form-field-label {
+    color: $atlas-gray-700;
+  }
+  
+  &.mat-focused {
+    .mat-form-field-label {
+      color: $atlas-primary;
+    }
+  }
+}
+
+// ============================================================================
+// LOADING STATES
+// ============================================================================
+
+.atlas-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: $atlas-spacing-xl;
+  
+  mat-spinner {
+    ::ng-deep circle {
+      stroke: $atlas-primary;
+    }
+  }
+}
+
+.atlas-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba($atlas-white, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: $atlas-z-modal-backdrop;
+}
+
+// ============================================================================
+// EMPTY STATES
+// ============================================================================
+
+.atlas-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $atlas-spacing-3xl $atlas-spacing-lg;
+  text-align: center;
+  
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: $atlas-gray-400;
+    margin-bottom: $atlas-spacing-lg;
+  }
+  
+  .atlas-empty-state-title {
+    font-size: $atlas-font-size-xl;
+    font-weight: $atlas-font-medium;
+    color: $atlas-gray-700;
+    margin-bottom: $atlas-spacing-sm;
+  }
+  
+  .atlas-empty-state-message {
+    font-size: $atlas-font-size-base;
+    color: $atlas-gray-600;
+    margin-bottom: $atlas-spacing-lg;
+    max-width: 400px;
+  }
+}
+
+// ============================================================================
+// UTILITY CLASSES
+// ============================================================================
+
+.atlas-spacer {
+  flex: 1 1 auto;
+}
+
+.atlas-text-center {
+  text-align: center;
+}
+
+.atlas-text-right {
+  text-align: right;
+}
+
+.atlas-text-primary {
+  color: $atlas-primary !important;
+}
+
+.atlas-text-secondary {
+  color: $atlas-secondary !important;
+}
+
+.atlas-text-success {
+  color: $atlas-success !important;
+}
+
+.atlas-text-warning {
+  color: $atlas-warning !important;
+}
+
+.atlas-text-error {
+  color: $atlas-error !important;
+}
+
+.atlas-bg-primary {
+  background-color: $atlas-primary !important;
+}
+
+.atlas-bg-light {
+  background-color: $atlas-gray-50 !important;
+}

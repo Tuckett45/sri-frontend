@@ -1,0 +1,13 @@
+# State Directory
+
+This directory contains NgRx state management files (actions, reducers, effects, selectors).
+
+## Structure
+
+- `technicians/` - Technician state management
+- `jobs/` - Job state management
+- `assignments/` - Assignment state management
+- `time-entries/` - Time entry state management
+- `notifications/` - Notification state management
+- `ui/` - UI state management
+- `reporting/` - Reporting state management

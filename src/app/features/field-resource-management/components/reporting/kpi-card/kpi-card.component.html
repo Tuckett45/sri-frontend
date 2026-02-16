@@ -1,0 +1,50 @@
+<mat-card class="kpi-card" [ngClass]="getStatusColor()">
+  <mat-card-content>
+    <!-- KPI Header -->
+    <div class="kpi-header">
+      <div class="kpi-name">{{ kpi.name }}</div>
+      <div class="kpi-trend" [ngClass]="getTrendColor()">
+        <mat-icon>{{ getTrendIcon() }}</mat-icon>
+      </div>
+    </div>
+    
+    <!-- KPI Value -->
+    <div class="kpi-value-section">
+      <div class="kpi-value">
+        <span class="value-number">{{ kpi.value | number:'1.0-2' }}</span>
+        <span class="value-unit">{{ kpi.unit }}</span>
+      </div>
+      <div class="kpi-target">
+        Target: {{ kpi.target | number:'1.0-2' }}{{ kpi.unit }}
+      </div>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="kpi-progress">
+      <mat-progress-bar 
+        mode="determinate" 
+        [value]="getProgressPercentage()"
+        [ngClass]="getStatusColor()">
+      </mat-progress-bar>
+      <div class="progress-label">
+        {{ getProgressPercentage() | number:'1.0-0' }}% of target
+      </div>
+    </div>
+    
+    <!-- Status Badge -->
+    <div class="kpi-status">
+      <mat-chip [ngClass]="getStatusColor()">
+        {{ getStatusLabel() }}
+      </mat-chip>
+    </div>
+    
+    <!-- Optional Sparkline Chart -->
+    <div class="kpi-sparkline" *ngIf="getSparklineData().length > 0">
+      <!-- TODO: Implement sparkline using ng2-charts or Chart.js -->
+      <div class="sparkline-placeholder">
+        <mat-icon>show_chart</mat-icon>
+        <span>Trend: {{ getSparklineData().join(', ') }}</span>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

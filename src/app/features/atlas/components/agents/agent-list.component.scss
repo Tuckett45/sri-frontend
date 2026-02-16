@@ -1,0 +1,227 @@
+.agent-list-container {
+  padding: 1.5rem;
+
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+
+  .filters-section {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 1rem;
+      align-items: end;
+
+      @media (max-width: 1200px) {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-color-secondary);
+      }
+
+      .search-input {
+        width: 100%;
+      }
+
+      &.filter-actions {
+        justify-content: flex-end;
+      }
+    }
+
+    ::ng-deep .filter-dropdown {
+      width: 100%;
+    }
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    gap: 1rem;
+
+    p {
+      color: var(--text-color-secondary);
+      margin: 0;
+    }
+  }
+
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+
+    ::ng-deep .p-message {
+      width: 100%;
+      max-width: 600px;
+    }
+  }
+
+  .table-container {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    overflow: hidden;
+
+    ::ng-deep .p-datatable {
+      .p-datatable-header {
+        background: var(--surface-section);
+        border-bottom: 1px solid var(--surface-border);
+        padding: 1rem;
+      }
+
+      .p-datatable-thead > tr > th {
+        background: var(--surface-section);
+        color: var(--text-color);
+        font-weight: 600;
+        border-bottom: 1px solid var(--surface-border);
+        padding: 0.75rem 1rem;
+      }
+
+      .p-datatable-tbody > tr {
+        &.clickable-row {
+          cursor: pointer;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background: var(--surface-hover);
+          }
+        }
+
+        > td {
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid var(--surface-border);
+        }
+      }
+
+      .p-paginator {
+        background: var(--surface-section);
+        border-top: 1px solid var(--surface-border);
+        padding: 0.75rem 1rem;
+      }
+    }
+
+    .agent-name-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      strong {
+        color: var(--text-color);
+        font-size: 0.95rem;
+      }
+
+      .agent-description {
+        color: var(--text-color-secondary);
+        font-size: 0.8rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .health-status {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      .health-details {
+        color: var(--text-color-secondary);
+        font-size: 0.75rem;
+      }
+    }
+
+    .version-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      background: var(--surface-100);
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      color: var(--text-color);
+    }
+
+    .capabilities-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .text-muted {
+      color: var(--text-color-secondary);
+      font-size: 0.875rem;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 3rem 1rem;
+
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+
+        .empty-icon {
+          font-size: 3rem;
+          color: var(--text-color-secondary);
+          opacity: 0.5;
+        }
+
+        p {
+          margin: 0;
+          color: var(--text-color-secondary);
+
+          &:first-of-type {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-color);
+          }
+
+          &.empty-hint {
+            font-size: 0.9rem;
+          }
+        }
+      }
+    }
+  }
+}

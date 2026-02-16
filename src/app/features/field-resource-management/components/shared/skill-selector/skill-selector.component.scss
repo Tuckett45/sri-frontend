@@ -1,0 +1,28 @@
+.skill-selector {
+  width: 100%;
+
+  &__field {
+    width: 100%;
+  }
+}
+
+.skill-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+
+  &__name {
+    font-weight: 500;
+  }
+
+  &__category {
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.6);
+    margin-left: 8px;
+  }
+}
+
+mat-chip-row {
+  margin: 4px;
+}

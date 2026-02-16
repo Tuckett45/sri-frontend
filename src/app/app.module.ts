@@ -1,10 +1,15 @@
-﻿import { NgModule } from '@angular/core';
+﻿import { NgModule, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
+import { ServiceWorkerModule } from '@angular/service-worker';
+
+// NgRx
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
 
 import { AppComponent } from './app.component';
 import { ConfigurationInterceptor } from './interceptors/configuration.interceptor';
@@ -172,6 +177,16 @@ export const customCurrencyMaskConfig = {
     FormsModule,
     ReactiveFormsModule, 
     AppRoutingModule,
+    
+    // NgRx Store
+    StoreModule.forRoot({}, {
+      runtimeChecks: {
+        strictStateImmutability: true,
+        strictActionImmutability: true,
+      },
+    }),
+    EffectsModule.forRoot([]),
+    
     GalleriaModule,
     MatDialogModule,
     MatAutocompleteModule,
@@ -209,6 +224,12 @@ export const customCurrencyMaskConfig = {
     DividerModule,
     ChartComponent,
     ConfigurationStatusComponent
+    
+    // Service Worker for PWA support - Add manually after build
+    // ServiceWorkerModule.register('ngsw-worker.js', {
+    //   enabled: !isDevMode(),
+    //   registrationStrategy: 'registerWhenStable:30000'
+    // })
   ],
   providers: [provideCharts(withDefaultRegisterables()),
     provideEnvironmentNgxCurrency({

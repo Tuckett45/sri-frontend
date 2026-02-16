@@ -1,0 +1,157 @@
+<p-dialog 
+  [(visible)]="visible"
+  header="Request Exception"
+  [modal]="true"
+  [closable]="!creating"
+  [closeOnEscape]="!creating"
+  (onHide)="onClose()"
+  [style]="{width: '600px'}"
+  styleClass="exception-request-dialog">
+  
+  <div class="dialog-content">
+    <!-- Error Message -->
+    <p-message 
+      *ngIf="error" 
+      severity="error" 
+      [text]="error"
+      styleClass="error-message">
+    </p-message>
+
+    <!-- Form -->
+    <form [formGroup]="exceptionForm" (ngSubmit)="onSubmit()">
+      <!-- Exception Type -->
+      <div class="form-field">
+        <label for="exceptionType">
+          Exception Type
+          <span class="required">*</span>
+        </label>
+        <p-dropdown 
+          id="exceptionType"
+          formControlName="exceptionType"
+          [options]="exceptionTypeOptions"
+          placeholder="Select exception type"
+          [disabled]="creating"
+          styleClass="w-full"
+          [class.ng-invalid]="hasError('exceptionType', 'required')"
+          [class.ng-dirty]="exceptionForm.get('exceptionType')?.dirty">
+        </p-dropdown>
+        <small 
+          *ngIf="hasError('exceptionType', 'required')" 
+          class="error-text">
+          {{ getErrorMessage('exceptionType') }}
+        </small>
+        <small class="help-text">
+          Select the type of exception you are requesting
+        </small>
+      </div>
+
+      <!-- Justification -->
+      <div class="form-field">
+        <label for="justification">
+          Justification
+          <span class="required">*</span>
+        </label>
+        <textarea 
+          id="justification"
+          pInputTextarea 
+          formControlName="justification"
+          [rows]="6"
+          [autoResize]="true"
+          placeholder="Provide detailed justification for this exception request (minimum 20 characters)..."
+          [disabled]="creating"
+          [class.ng-invalid]="hasError('justification', 'required') || hasError('justification', 'minlength')"
+          [class.ng-dirty]="exceptionForm.get('justification')?.dirty">
+        </textarea>
+        <div class="field-footer">
+          <small 
+            *ngIf="hasError('justification', 'required') || hasError('justification', 'minlength')" 
+            class="error-text">
+            {{ getErrorMessage('justification') }}
+          </small>
+          <small 
+            class="char-count"
+            [class.valid]="isJustificationValid()"
+            [class.invalid]="!isJustificationValid() && getJustificationCharCount() > 0">
+            {{ getJustificationCharCount() }} / 20 characters minimum
+          </small>
+        </div>
+        <small class="help-text">
+          Explain why this exception is necessary and what impact it will have
+        </small>
+      </div>
+
+      <!-- Expiration Date -->
+      <div class="form-field">
+        <label for="expiresAt">
+          Expiration Date
+          <span class="optional">(Optional)</span>
+        </label>
+        <p-calendar 
+          id="expiresAt"
+          formControlName="expiresAt"
+          [showIcon]="true"
+          [minDate]="minDate"
+          dateFormat="yy-mm-dd"
+          placeholder="Select expiration date"
+          [disabled]="creating"
+          styleClass="w-full">
+        </p-calendar>
+        <small class="help-text">
+          If applicable, specify when this exception should expire
+        </small>
+      </div>
+
+      <!-- Supporting Evidence -->
+      <div class="form-field">
+        <label for="supportingEvidence">
+          Supporting Evidence
+          <span class="optional">(Optional)</span>
+        </label>
+        <textarea 
+          id="supportingEvidence"
+          pInputTextarea 
+          formControlName="supportingEvidence"
+          [rows]="3"
+          [autoResize]="true"
+          placeholder="Enter evidence references (comma-separated)..."
+          [disabled]="creating">
+        </textarea>
+        <small class="help-text">
+          Provide references to supporting documentation or evidence (comma-separated)
+        </small>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div *ngIf="creating" class="dialog-loading">
+        <p-progressSpinner [style]="{width: '30px', height: '30px'}"></p-progressSpinner>
+        <span>Creating exception request...</span>
+      </div>
+    </form>
+
+    <!-- Deployment Info -->
+    <div *ngIf="!deploymentId" class="warning-message">
+      <p-message 
+        severity="warn" 
+        text="No deployment selected. Please select a deployment before requesting an exception.">
+      </p-message>
+    </div>
+  </div>
+
+  <!-- Dialog Footer -->
+  <ng-template pTemplate="footer">
+    <p-button 
+      label="Cancel" 
+      icon="pi pi-times" 
+      (onClick)="onClose()"
+      styleClass="p-button-text"
+      [disabled]="creating">
+    </p-button>
+    <p-button 
+      label="Submit Request" 
+      icon="pi pi-check" 
+      (onClick)="onSubmit()"
+      styleClass="p-button-primary"
+      [disabled]="!canSubmit()">
+    </p-button>
+  </ng-template>
+</p-dialog>

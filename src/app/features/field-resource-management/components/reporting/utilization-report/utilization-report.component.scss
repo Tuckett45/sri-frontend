@@ -1,0 +1,255 @@
+.utilization-report-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+  }
+  
+  .export-buttons {
+    display: flex;
+    gap: 12px;
+    
+    button mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+.error-card {
+  margin-bottom: 24px;
+  background-color: #ffebee;
+  
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #c62828;
+  }
+}
+
+// Filters Section
+.filters-card {
+  margin-bottom: 24px;
+  
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: end;
+    
+    mat-form-field {
+      width: 100%;
+    }
+    
+    button {
+      height: 56px;
+    }
+  }
+}
+
+// Average Utilization Card
+.average-card {
+  margin-bottom: 24px;
+  
+  .average-content {
+    text-align: center;
+    padding: 16px;
+    
+    .average-label {
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.6);
+      margin-bottom: 8px;
+    }
+    
+    .average-value {
+      font-size: 48px;
+      font-weight: 300;
+      margin-bottom: 16px;
+    }
+    
+    mat-progress-bar {
+      height: 20px;
+      border-radius: 10px;
+    }
+  }
+}
+
+// Charts Section
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.chart-card {
+  mat-card-header {
+    margin-bottom: 16px;
+  }
+  
+  mat-card-content {
+    padding: 16px;
+  }
+  
+  .chart-container {
+    height: 400px;
+    position: relative;
+  }
+  
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: rgba(0, 0, 0, 0.4);
+    
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 8px;
+    }
+  }
+}
+
+// Table Section
+.table-card {
+  mat-card-header {
+    margin-bottom: 16px;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .utilization-table {
+    width: 100%;
+    
+    .utilization-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      
+      .rate-value {
+        font-weight: 500;
+      }
+      
+      .rate-bar {
+        height: 8px;
+        border-radius: 4px;
+      }
+    }
+    
+    .table-row {
+      cursor: pointer;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+  }
+  
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: rgba(0, 0, 0, 0.4);
+    
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 8px;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .utilization-report-container {
+    padding: 16px;
+  }
+  
+  .report-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    
+    h1 {
+      font-size: 24px;
+    }
+    
+    .export-buttons {
+      width: 100%;
+      
+      button {
+        flex: 1;
+      }
+    }
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .average-value {
+    font-size: 36px !important;
+  }
+  
+  .chart-container {
+    height: 300px !important;
+  }
+  
+  .table-container {
+    .utilization-table {
+      font-size: 14px;
+      
+      th, td {
+        padding: 8px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .report-header h1 {
+    font-size: 20px;
+  }
+  
+  .export-buttons {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+  
+  .average-value {
+    font-size: 28px !important;
+  }
+  
+  .chart-container {
+    height: 250px !important;
+  }
+}

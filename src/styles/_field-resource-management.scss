@@ -1,0 +1,698 @@
+// Field Resource Management Styles
+// Mobile-first responsive styles with ATLAS branding
+
+@import 'atlas-variables';
+
+// ============================================================================
+// BREAKPOINTS (Mobile-First)
+// ============================================================================
+
+$frm-mobile-min: 320px;
+$frm-mobile-max: 767px;
+$frm-tablet-min: 768px;
+$frm-tablet-max: 1023px;
+$frm-desktop-min: 1024px;
+
+// Mixins for responsive design
+@mixin mobile-only {
+  @media (max-width: $frm-mobile-max) {
+    @content;
+  }
+}
+
+@mixin tablet-only {
+  @media (min-width: $frm-tablet-min) and (max-width: $frm-tablet-max) {
+    @content;
+  }
+}
+
+@mixin tablet-and-up {
+  @media (min-width: $frm-tablet-min) {
+    @content;
+  }
+}
+
+@mixin desktop-and-up {
+  @media (min-width: $frm-desktop-min) {
+    @content;
+  }
+}
+
+// ============================================================================
+// FRM SPECIFIC COLORS (extending ATLAS palette)
+// ============================================================================
+
+// Job Status Colors
+$frm-status-not-started: $atlas-gray-500;
+$frm-status-en-route: #2196F3;        // Blue
+$frm-status-on-site: #FF9800;         // Orange
+$frm-status-completed: $atlas-success; // Green
+$frm-status-issue: $atlas-error;       // Red
+$frm-status-cancelled: $atlas-gray-400;
+
+// Priority Colors
+$frm-priority-p1: $atlas-error;        // Critical - Red
+$frm-priority-p2: $atlas-warning;      // High - Orange
+$frm-priority-normal: $atlas-info;     // Normal - Blue
+
+// Technician Role Colors
+$frm-role-installer: #9C27B0;          // Purple
+$frm-role-lead: #FF5722;               // Deep Orange
+$frm-role-level: $atlas-primary;       // Blue
+
+// ============================================================================
+// LAYOUT UTILITIES
+// ============================================================================
+
+.frm-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: $atlas-spacing-md;
+  
+  @include tablet-and-up {
+    padding: $atlas-spacing-lg;
+  }
+  
+  @include desktop-and-up {
+    padding: $atlas-spacing-xl;
+  }
+}
+
+.frm-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: $atlas-spacing-md;
+  margin-bottom: $atlas-spacing-lg;
+  
+  @include tablet-and-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.frm-page-title {
+  font-family: $atlas-heading-font;
+  font-size: $atlas-font-size-2xl;
+  font-weight: $atlas-font-bold;
+  color: $atlas-primary-dark;
+  margin: 0;
+  
+  @include tablet-and-up {
+    font-size: $atlas-font-size-3xl;
+  }
+}
+
+.frm-page-actions {
+  display: flex;
+  gap: $atlas-spacing-sm;
+  flex-wrap: wrap;
+}
+
+// ============================================================================
+// CARD COMPONENTS
+// ============================================================================
+
+.frm-card {
+  background: $atlas-white;
+  border-radius: $atlas-border-radius-md;
+  box-shadow: $atlas-shadow-md;
+  padding: $atlas-spacing-md;
+  margin-bottom: $atlas-spacing-md;
+  transition: box-shadow $atlas-transition-base;
+  
+  @include tablet-and-up {
+    padding: $atlas-spacing-lg;
+  }
+  
+  &:hover {
+    box-shadow: $atlas-shadow-lg;
+  }
+}
+
+.frm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $atlas-spacing-md;
+  padding-bottom: $atlas-spacing-sm;
+  border-bottom: $atlas-border-width solid $atlas-border-color;
+}
+
+.frm-card-title {
+  font-size: $atlas-font-size-lg;
+  font-weight: $atlas-font-medium;
+  color: $atlas-primary-dark;
+  margin: 0;
+}
+
+.frm-card-content {
+  color: $atlas-gray-700;
+  line-height: 1.6;
+}
+
+// Mobile Job Card (optimized for touch)
+.frm-mobile-job-card {
+  background: $atlas-white;
+  border-radius: $atlas-border-radius-lg;
+  box-shadow: $atlas-shadow-md;
+  padding: $atlas-spacing-lg;
+  margin-bottom: $atlas-spacing-md;
+  
+  // Large touch targets for mobile
+  .frm-action-button {
+    min-height: 48px;
+    min-width: 48px;
+    font-size: $atlas-font-size-base;
+  }
+}
+
+// ============================================================================
+// STATUS BADGES
+// ============================================================================
+
+.frm-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $atlas-spacing-xs;
+  padding: $atlas-spacing-xs $atlas-spacing-sm;
+  border-radius: $atlas-border-radius-full;
+  font-size: $atlas-font-size-xs;
+  font-weight: $atlas-font-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  @include tablet-and-up {
+    font-size: $atlas-font-size-sm;
+    padding: $atlas-spacing-xs $atlas-spacing-md;
+  }
+  
+  &.frm-status-not-started {
+    background-color: rgba($frm-status-not-started, 0.1);
+    color: $frm-status-not-started;
+  }
+  
+  &.frm-status-en-route {
+    background-color: rgba($frm-status-en-route, 0.1);
+    color: $frm-status-en-route;
+  }
+  
+  &.frm-status-on-site {
+    background-color: rgba($frm-status-on-site, 0.1);
+    color: $frm-status-on-site;
+  }
+  
+  &.frm-status-completed {
+    background-color: rgba($frm-status-completed, 0.1);
+    color: $frm-status-completed;
+  }
+  
+  &.frm-status-issue {
+    background-color: rgba($frm-status-issue, 0.1);
+    color: $frm-status-issue;
+  }
+  
+  &.frm-status-cancelled {
+    background-color: rgba($frm-status-cancelled, 0.1);
+    color: $frm-status-cancelled;
+  }
+}
+
+// Priority Badges
+.frm-priority-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $atlas-spacing-xs $atlas-spacing-sm;
+  border-radius: $atlas-border-radius-sm;
+  font-size: $atlas-font-size-xs;
+  font-weight: $atlas-font-bold;
+  
+  &.frm-priority-p1 {
+    background-color: $frm-priority-p1;
+    color: $atlas-white;
+  }
+  
+  &.frm-priority-p2 {
+    background-color: $frm-priority-p2;
+    color: $atlas-white;
+  }
+  
+  &.frm-priority-normal {
+    background-color: $frm-priority-normal;
+    color: $atlas-white;
+  }
+}
+
+// ============================================================================
+// BUTTONS
+// ============================================================================
+
+.frm-button {
+  padding: $atlas-spacing-sm $atlas-spacing-md;
+  border-radius: $atlas-border-radius-md;
+  font-weight: $atlas-font-medium;
+  transition: all $atlas-transition-base;
+  cursor: pointer;
+  border: none;
+  
+  // Large touch targets for mobile
+  @include mobile-only {
+    min-height: 48px;
+    padding: $atlas-spacing-md $atlas-spacing-lg;
+  }
+  
+  &.frm-button-primary {
+    background-color: $atlas-primary;
+    color: $atlas-white;
+    
+    &:hover:not(:disabled) {
+      background-color: $atlas-primary-light;
+    }
+    
+    &:active:not(:disabled) {
+      background-color: $atlas-primary-dark;
+    }
+  }
+  
+  &.frm-button-secondary {
+    background-color: $atlas-secondary;
+    color: $atlas-white;
+    
+    &:hover:not(:disabled) {
+      background-color: darken($atlas-secondary, 10%);
+    }
+  }
+  
+  &.frm-button-danger {
+    background-color: $atlas-error;
+    color: $atlas-white;
+    
+    &:hover:not(:disabled) {
+      background-color: darken($atlas-error, 10%);
+    }
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Floating Action Button (Mobile)
+.frm-fab {
+  position: fixed;
+  bottom: $atlas-spacing-lg;
+  right: $atlas-spacing-lg;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: $atlas-accent;
+  color: $atlas-white;
+  box-shadow: $atlas-shadow-xl;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all $atlas-transition-base;
+  z-index: $atlas-z-fixed;
+  
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  @include desktop-and-up {
+    display: none; // Hide on desktop
+  }
+}
+
+// ============================================================================
+// FORMS
+// ============================================================================
+
+.frm-form-field {
+  margin-bottom: $atlas-spacing-md;
+  
+  label {
+    display: block;
+    font-size: $atlas-font-size-sm;
+    font-weight: $atlas-font-medium;
+    color: $atlas-gray-700;
+    margin-bottom: $atlas-spacing-xs;
+  }
+  
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: $atlas-spacing-sm $atlas-spacing-md;
+    border: $atlas-border-width solid $atlas-border-color;
+    border-radius: $atlas-border-radius-md;
+    font-size: $atlas-font-size-base;
+    transition: border-color $atlas-transition-base;
+    
+    // Larger touch targets for mobile
+    @include mobile-only {
+      padding: $atlas-spacing-md;
+      font-size: $atlas-font-size-lg;
+    }
+    
+    &:focus {
+      outline: none;
+      border-color: $atlas-primary;
+      box-shadow: 0 0 0 3px rgba($atlas-primary, 0.1);
+    }
+    
+    &:disabled {
+      background-color: $atlas-gray-100;
+      cursor: not-allowed;
+    }
+  }
+  
+  .frm-field-error {
+    color: $atlas-error;
+    font-size: $atlas-font-size-xs;
+    margin-top: $atlas-spacing-xs;
+  }
+}
+
+// ============================================================================
+// TABLES (Responsive)
+// ============================================================================
+
+.frm-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: $atlas-spacing-md;
+}
+
+.frm-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: $atlas-white;
+  
+  thead {
+    background-color: $atlas-gray-100;
+    
+    th {
+      padding: $atlas-spacing-sm $atlas-spacing-md;
+      text-align: left;
+      font-weight: $atlas-font-medium;
+      color: $atlas-gray-700;
+      border-bottom: 2px solid $atlas-border-color;
+      white-space: nowrap;
+      
+      @include mobile-only {
+        font-size: $atlas-font-size-xs;
+        padding: $atlas-spacing-xs $atlas-spacing-sm;
+      }
+    }
+  }
+  
+  tbody {
+    tr {
+      border-bottom: $atlas-border-width solid $atlas-border-color;
+      transition: background-color $atlas-transition-fast;
+      
+      &:hover {
+        background-color: $atlas-gray-50;
+      }
+    }
+    
+    td {
+      padding: $atlas-spacing-md;
+      
+      @include mobile-only {
+        padding: $atlas-spacing-sm;
+        font-size: $atlas-font-size-sm;
+      }
+    }
+  }
+}
+
+// Mobile: Convert table to cards
+@include mobile-only {
+  .frm-table-mobile-cards {
+    .frm-table {
+      thead {
+        display: none;
+      }
+      
+      tbody {
+        tr {
+          display: block;
+          margin-bottom: $atlas-spacing-md;
+          border: $atlas-border-width solid $atlas-border-color;
+          border-radius: $atlas-border-radius-md;
+          box-shadow: $atlas-shadow-sm;
+        }
+        
+        td {
+          display: flex;
+          justify-content: space-between;
+          padding: $atlas-spacing-sm $atlas-spacing-md;
+          border-bottom: $atlas-border-width solid $atlas-gray-200;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          &::before {
+            content: attr(data-label);
+            font-weight: $atlas-font-medium;
+            color: $atlas-gray-600;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
+// CALENDAR / SCHEDULING
+// ============================================================================
+
+.frm-calendar-container {
+  background: $atlas-white;
+  border-radius: $atlas-border-radius-md;
+  box-shadow: $atlas-shadow-md;
+  padding: $atlas-spacing-md;
+  
+  @include tablet-and-up {
+    padding: $atlas-spacing-lg;
+  }
+}
+
+.frm-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $atlas-spacing-md;
+  flex-wrap: wrap;
+  gap: $atlas-spacing-sm;
+}
+
+.frm-calendar-grid {
+  display: grid;
+  gap: $atlas-spacing-xs;
+  
+  // Mobile: Single column
+  grid-template-columns: 1fr;
+  
+  // Tablet: 2 columns
+  @include tablet-only {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  // Desktop: Full grid
+  @include desktop-and-up {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}
+
+// ============================================================================
+// LOADING STATES
+// ============================================================================
+
+.frm-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $atlas-spacing-3xl;
+  color: $atlas-gray-500;
+  
+  .frm-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid $atlas-gray-200;
+    border-top-color: $atlas-primary;
+    border-radius: 50%;
+    animation: frm-spin 1s linear infinite;
+  }
+  
+  .frm-loading-text {
+    margin-top: $atlas-spacing-md;
+    font-size: $atlas-font-size-base;
+  }
+}
+
+@keyframes frm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================================================
+// EMPTY STATES
+// ============================================================================
+
+.frm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $atlas-spacing-3xl $atlas-spacing-md;
+  text-align: center;
+  color: $atlas-gray-500;
+  
+  .frm-empty-icon {
+    font-size: 64px;
+    margin-bottom: $atlas-spacing-md;
+    opacity: 0.5;
+  }
+  
+  .frm-empty-title {
+    font-size: $atlas-font-size-xl;
+    font-weight: $atlas-font-medium;
+    margin-bottom: $atlas-spacing-sm;
+  }
+  
+  .frm-empty-message {
+    font-size: $atlas-font-size-base;
+    margin-bottom: $atlas-spacing-lg;
+  }
+}
+
+// ============================================================================
+// UTILITY CLASSES
+// ============================================================================
+
+// Spacing utilities
+.frm-mt-xs { margin-top: $atlas-spacing-xs; }
+.frm-mt-sm { margin-top: $atlas-spacing-sm; }
+.frm-mt-md { margin-top: $atlas-spacing-md; }
+.frm-mt-lg { margin-top: $atlas-spacing-lg; }
+.frm-mt-xl { margin-top: $atlas-spacing-xl; }
+
+.frm-mb-xs { margin-bottom: $atlas-spacing-xs; }
+.frm-mb-sm { margin-bottom: $atlas-spacing-sm; }
+.frm-mb-md { margin-bottom: $atlas-spacing-md; }
+.frm-mb-lg { margin-bottom: $atlas-spacing-lg; }
+.frm-mb-xl { margin-bottom: $atlas-spacing-xl; }
+
+.frm-p-xs { padding: $atlas-spacing-xs; }
+.frm-p-sm { padding: $atlas-spacing-sm; }
+.frm-p-md { padding: $atlas-spacing-md; }
+.frm-p-lg { padding: $atlas-spacing-lg; }
+.frm-p-xl { padding: $atlas-spacing-xl; }
+
+// Text utilities
+.frm-text-center { text-align: center; }
+.frm-text-left { text-align: left; }
+.frm-text-right { text-align: right; }
+
+.frm-text-primary { color: $atlas-primary; }
+.frm-text-secondary { color: $atlas-secondary; }
+.frm-text-success { color: $atlas-success; }
+.frm-text-warning { color: $atlas-warning; }
+.frm-text-error { color: $atlas-error; }
+.frm-text-muted { color: $atlas-gray-500; }
+
+// Display utilities
+.frm-hidden { display: none; }
+.frm-block { display: block; }
+.frm-inline-block { display: inline-block; }
+.frm-flex { display: flex; }
+.frm-inline-flex { display: inline-flex; }
+
+// Flex utilities
+.frm-flex-row { flex-direction: row; }
+.frm-flex-column { flex-direction: column; }
+.frm-flex-wrap { flex-wrap: wrap; }
+.frm-justify-start { justify-content: flex-start; }
+.frm-justify-center { justify-content: center; }
+.frm-justify-end { justify-content: flex-end; }
+.frm-justify-between { justify-content: space-between; }
+.frm-align-start { align-items: flex-start; }
+.frm-align-center { align-items: center; }
+.frm-align-end { align-items: flex-end; }
+.frm-gap-xs { gap: $atlas-spacing-xs; }
+.frm-gap-sm { gap: $atlas-spacing-sm; }
+.frm-gap-md { gap: $atlas-spacing-md; }
+.frm-gap-lg { gap: $atlas-spacing-lg; }
+
+// Responsive utilities
+.frm-mobile-only {
+  @include tablet-and-up {
+    display: none !important;
+  }
+}
+
+.frm-tablet-and-up {
+  @include mobile-only {
+    display: none !important;
+  }
+}
+
+.frm-desktop-only {
+  @media (max-width: $frm-desktop-min - 1) {
+    display: none !important;
+  }
+}
+
+// ============================================================================
+// ACCESSIBILITY
+// ============================================================================
+
+// Focus visible for keyboard navigation
+.frm-focusable:focus-visible {
+  outline: 2px solid $atlas-primary;
+  outline-offset: 2px;
+}
+
+// Screen reader only
+.frm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Skip to main content link
+.frm-skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: $atlas-primary;
+  color: $atlas-white;
+  padding: $atlas-spacing-sm $atlas-spacing-md;
+  text-decoration: none;
+  z-index: $atlas-z-tooltip;
+  
+  &:focus {
+    top: 0;
+  }
+}
+
+// ============================================================================
+// REAL-TIME NOTIFICATIONS
+// ============================================================================
+
+@import '../app/features/field-resource-management/styles/realtime-notifications';

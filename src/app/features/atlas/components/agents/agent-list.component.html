@@ -1,0 +1,264 @@
+<div class="agent-list-container">
+  <!-- Header -->
+  <div class="list-header">
+    <h2>AI Agents</h2>
+    <div class="header-actions">
+      <button 
+        pButton 
+        icon="pi pi-refresh" 
+        label="Refresh" 
+        class="p-button-outlined"
+        (click)="onRefresh()"
+        [disabled]="loading || loadingHealth"
+        pTooltip="Refresh agents and health statuses">
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filter-row">
+      <div class="filter-item">
+        <label for="search">Search</label>
+        <input 
+          id="search"
+          type="text" 
+          pInputText 
+          placeholder="Search by name, ID, or description"
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange($event)"
+          class="search-input" />
+      </div>
+
+      <div class="filter-item">
+        <label for="domain">Domain</label>
+        <p-dropdown
+          id="domain"
+          [options]="domainOptions"
+          [(ngModel)]="currentFilters.domain"
+          (onChange)="onDomainFilterChange($event.value)"
+          placeholder="Select domain"
+          [showClear]="true"
+          styleClass="filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <div class="filter-item">
+        <label for="type">Type</label>
+        <p-dropdown
+          id="type"
+          [options]="typeOptions"
+          [(ngModel)]="currentFilters.type"
+          (onChange)="onTypeFilterChange($event.value)"
+          placeholder="Select type"
+          [showClear]="true"
+          styleClass="filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <div class="filter-item">
+        <label for="active">Status</label>
+        <p-dropdown
+          id="active"
+          [options]="activeOptions"
+          [(ngModel)]="currentFilters.isActive"
+          (onChange)="onActiveFilterChange($event.value)"
+          placeholder="Select status"
+          [showClear]="true"
+          styleClass="filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <div class="filter-item filter-actions">
+        <button 
+          pButton 
+          icon="pi pi-filter-slash" 
+          label="Clear Filters" 
+          class="p-button-text"
+          (click)="onClearFilters()"
+          [disabled]="!hasActiveFilters()"
+          pTooltip="Clear all filters">
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+    <p>Loading agents...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <p-message 
+      severity="error" 
+      [text]="error">
+    </p-message>
+    <button 
+      pButton 
+      icon="pi pi-refresh" 
+      label="Retry" 
+      class="p-button-outlined"
+      (click)="onRetry()">
+    </button>
+  </div>
+
+  <!-- Agents Table -->
+  <div *ngIf="!loading && !error" class="table-container">
+    <p-table 
+      [value]="agents"
+      [rows]="50"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} agents"
+      [globalFilterFields]="['agentName', 'agentId', 'description']"
+      styleClass="p-datatable-striped"
+      responsiveLayout="scroll"
+      [rowHover]="true"
+      (onRowSelect)="onRowClick($event.data)">
+      
+      <!-- Agent Name Column -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="agentName">
+            Agent Name
+            <p-sortIcon field="agentName"></p-sortIcon>
+          </th>
+          <th pSortableColumn="domain">
+            Domain
+            <p-sortIcon field="domain"></p-sortIcon>
+          </th>
+          <th pSortableColumn="type">
+            Type
+            <p-sortIcon field="type"></p-sortIcon>
+          </th>
+          <th>Version</th>
+          <th>Health Status</th>
+          <th pSortableColumn="isActive">
+            Active
+            <p-sortIcon field="isActive"></p-sortIcon>
+          </th>
+          <th>Capabilities</th>
+          <th pSortableColumn="registeredAt">
+            Registered
+            <p-sortIcon field="registeredAt"></p-sortIcon>
+          </th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-agent>
+        <tr class="clickable-row" (click)="onRowClick(agent)">
+          <!-- Agent Name -->
+          <td>
+            <div class="agent-name-cell">
+              <strong>{{ agent.agentName || agent.agentId }}</strong>
+              <small *ngIf="agent.description" class="agent-description">
+                {{ agent.description }}
+              </small>
+            </div>
+          </td>
+
+          <!-- Domain -->
+          <td>
+            <p-tag 
+              [value]="agent.domain" 
+              [severity]="getDomainSeverity(agent.domain)">
+            </p-tag>
+          </td>
+
+          <!-- Type -->
+          <td>
+            <p-tag 
+              [value]="agent.type" 
+              [severity]="getTypeSeverity(agent.type)">
+            </p-tag>
+          </td>
+
+          <!-- Version -->
+          <td>
+            <span class="version-badge">{{ agent.version || 'N/A' }}</span>
+          </td>
+
+          <!-- Health Status -->
+          <td>
+            <ng-container *ngIf="getHealthStatus(agent.agentId) as health; else noHealth">
+              <div class="health-status">
+                <p-tag 
+                  [value]="health.state" 
+                  [severity]="getHealthSeverity(health.state)"
+                  [icon]="getHealthIcon(health.state)">
+                </p-tag>
+                <small class="health-details">
+                  Success: {{ formatSuccessRate(health.successRate) }}
+                </small>
+              </div>
+            </ng-container>
+            <ng-template #noHealth>
+              <span class="text-muted">
+                <i *ngIf="loadingHealth" class="pi pi-spin pi-spinner"></i>
+                <span *ngIf="!loadingHealth">Unknown</span>
+              </span>
+            </ng-template>
+          </td>
+
+          <!-- Active Status -->
+          <td>
+            <p-tag 
+              [value]="agent.isActive ? 'Active' : 'Inactive'" 
+              [severity]="agent.isActive ? 'success' : 'secondary'">
+            </p-tag>
+          </td>
+
+          <!-- Capabilities -->
+          <td>
+            <div class="capabilities-cell">
+              <p-badge 
+                *ngIf="agent.capabilities && agent.capabilities.length > 0"
+                [value]="agent.capabilities.length.toString()"
+                [pTooltip]="agent.capabilities.join(', ')"
+                tooltipPosition="top">
+              </p-badge>
+              <span *ngIf="!agent.capabilities || agent.capabilities.length === 0" class="text-muted">
+                None
+              </span>
+            </div>
+          </td>
+
+          <!-- Registered Date -->
+          <td>
+            <small>{{ formatDate(agent.registeredAt) }}</small>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <button 
+              pButton 
+              icon="pi pi-eye" 
+              class="p-button-text p-button-sm"
+              (click)="onRowClick(agent); $event.stopPropagation()"
+              pTooltip="View Details">
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty State -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="empty-message">
+            <div class="empty-state">
+              <i class="pi pi-inbox empty-icon"></i>
+              <p>No agents found</p>
+              <p *ngIf="hasActiveFilters()" class="empty-hint">
+                Try adjusting your filters
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

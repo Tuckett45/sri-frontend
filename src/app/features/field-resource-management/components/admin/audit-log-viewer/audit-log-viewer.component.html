@@ -1,0 +1,154 @@
+<div class="audit-log-container">
+  <div class="header">
+    <h2>Audit Log Viewer</h2>
+    <button mat-raised-button color="primary" (click)="onExportToCSV()" 
+            [disabled]="dataSource.filteredData.length === 0">
+      <mat-icon>download</mat-icon>
+      Export to CSV
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filter-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Date Range</mat-label>
+          <mat-date-range-input [rangePicker]="picker">
+            <input matStartDate placeholder="Start date" formControlName="startDate">
+            <input matEndDate placeholder="End date" formControlName="endDate">
+          </mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>User</mat-label>
+          <mat-select formControlName="user">
+            <mat-option value="">All Users</mat-option>
+            <mat-option *ngFor="let user of users" [value]="user">
+              {{ user }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Action Type</mat-label>
+          <mat-select formControlName="actionType">
+            <mat-option value="">All Actions</mat-option>
+            <mat-option *ngFor="let type of actionTypes" [value]="type">
+              {{ type }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-button (click)="clearFilters()">
+          <mat-icon>clear</mat-icon>
+          Clear Filters
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Audit Log Table -->
+  <mat-card>
+    <mat-card-content>
+      <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="audit-log-table">
+        <!-- Timestamp Column -->
+        <ng-container matColumnDef="timestamp">
+          <th mat-header-cell *matHeaderCellDef>Timestamp</th>
+          <td mat-cell *matCellDef="let log">{{ log.timestamp | date:'short' }}</td>
+        </ng-container>
+
+        <!-- User Column -->
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef>User</th>
+          <td mat-cell *matCellDef="let log">{{ log.user }}</td>
+        </ng-container>
+
+        <!-- Action Type Column -->
+        <ng-container matColumnDef="actionType">
+          <th mat-header-cell *matHeaderCellDef>Action Type</th>
+          <td mat-cell *matCellDef="let log">
+            <mat-chip [color]="getActionColor(log.actionType)" selected>
+              <mat-icon>{{ getActionIcon(log.actionType) }}</mat-icon>
+              {{ log.actionType }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Entity Column -->
+        <ng-container matColumnDef="entity">
+          <th mat-header-cell *matHeaderCellDef>Entity</th>
+          <td mat-cell *matCellDef="let log">
+            {{ log.entity }}
+            <span class="entity-id">{{ log.entityId }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Details Column -->
+        <ng-container matColumnDef="details">
+          <th mat-header-cell *matHeaderCellDef>Details</th>
+          <td mat-cell *matCellDef="let log">
+            <span class="details-preview">{{ log.details | json | slice:0:50 }}...</span>
+          </td>
+        </ng-container>
+
+        <!-- Expand Column -->
+        <ng-container matColumnDef="expand">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let log">
+            <button mat-icon-button (click)="toggleRow(log)" aria-label="Expand row">
+              <mat-icon>{{ expandedElement === log ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <!-- Expanded Content Column -->
+        <ng-container matColumnDef="expandedDetail">
+          <td mat-cell *matCellDef="let log" [attr.colspan]="displayedColumns.length">
+            <div class="expanded-detail" [@detailExpand]="log === expandedElement ? 'expanded' : 'collapsed'">
+              <div class="detail-content">
+                <h4>Full Details</h4>
+                <pre>{{ log.details | json }}</pre>
+                
+                <h4>Additional Information</h4>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <strong>IP Address:</strong>
+                    <span>{{ log.ipAddress }}</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>User Agent:</strong>
+                    <span>{{ log.userAgent }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+            class="audit-row"
+            [class.expanded-row]="expandedElement === row"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+
+        <!-- No data row -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+            <div class="empty-state">
+              <mat-icon>history</mat-icon>
+              <p>No audit log entries found</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="[25, 50, 100]" 
+                     [pageSize]="50"
+                     showFirstLastButtons>
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

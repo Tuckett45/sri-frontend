@@ -1,0 +1,110 @@
+<mat-card class="job-card" [class]="statusColorClass" (swiperight)="onSwipe()">
+  <!-- Header -->
+  <mat-card-header class="job-card__header">
+    <div class="job-card__header-content">
+      <div class="job-card__title-row">
+        <h3 class="job-card__job-id">{{ job.jobId }}</h3>
+        <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+      </div>
+      <p class="job-card__client">{{ job.client }}</p>
+      <p class="job-card__site">{{ job.siteName }}</p>
+    </div>
+    
+    <!-- Scheduled Time -->
+    <div class="job-card__time">
+      <mat-icon class="job-card__time-icon">schedule</mat-icon>
+      <span class="job-card__time-text">{{ formattedScheduledTime }}</span>
+    </div>
+  </mat-card-header>
+
+  <!-- Address -->
+  <mat-card-content class="job-card__content">
+    <div class="job-card__address">
+      <mat-icon class="job-card__address-icon">place</mat-icon>
+      <span class="job-card__address-text">{{ formattedAddress }}</span>
+    </div>
+
+    <!-- Elapsed Time (if clocked in) -->
+    <div class="job-card__elapsed" *ngIf="isClockedIn">
+      <mat-icon class="job-card__elapsed-icon">timer</mat-icon>
+      <span class="job-card__elapsed-time">{{ elapsedTime }}</span>
+      <span class="job-card__elapsed-label">Elapsed</span>
+    </div>
+
+    <!-- Status Action Buttons -->
+    <div class="job-card__status-actions" *ngIf="availableStatusActions.length > 0">
+      <button
+        *ngFor="let action of availableStatusActions"
+        mat-raised-button
+        [color]="action.status === JobStatus.Completed ? 'primary' : 'accent'"
+        class="job-card__status-button"
+        (click)="updateStatus(action.status)">
+        <mat-icon>{{ action.icon }}</mat-icon>
+        <span>{{ action.label }}</span>
+      </button>
+    </div>
+
+    <!-- Clock In/Out Buttons -->
+    <div class="job-card__time-actions">
+      <button
+        *ngIf="canClockIn"
+        mat-raised-button
+        color="primary"
+        class="job-card__clock-button job-card__clock-button--in"
+        (click)="onClockIn()">
+        <mat-icon>play_circle</mat-icon>
+        <span>Clock In</span>
+      </button>
+
+      <button
+        *ngIf="canClockOut"
+        mat-raised-button
+        color="warn"
+        class="job-card__clock-button job-card__clock-button--out"
+        (click)="onClockOut()">
+        <mat-icon>stop_circle</mat-icon>
+        <span>Clock Out</span>
+      </button>
+    </div>
+  </mat-card-content>
+
+  <!-- Actions -->
+  <mat-card-actions class="job-card__actions">
+    <!-- View Details -->
+    <button
+      mat-button
+      class="job-card__action-button"
+      (click)="onViewDetails()">
+      <mat-icon>info</mat-icon>
+      <span>Details</span>
+    </button>
+
+    <!-- Customer Contact -->
+    <button
+      *ngIf="hasCustomerContact && job.customerPOC?.phone"
+      mat-button
+      class="job-card__action-button"
+      (click)="onCallCustomer()">
+      <mat-icon>phone</mat-icon>
+      <span>Call</span>
+    </button>
+
+    <button
+      *ngIf="hasCustomerContact && job.customerPOC?.email"
+      mat-button
+      class="job-card__action-button"
+      (click)="onEmailCustomer()">
+      <mat-icon>email</mat-icon>
+      <span>Email</span>
+    </button>
+
+    <!-- Photo Upload -->
+    <button
+      mat-button
+      class="job-card__action-button"
+      (click)="onUploadPhoto()">
+      <mat-icon>photo_camera</mat-icon>
+      <span>Photo</span>
+    </button>
+  </mat-card-actions>
+</mat-card>

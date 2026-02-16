@@ -1,0 +1,178 @@
+.job-form-container {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+
+  @media (max-width: 767px) {
+    padding: 16px;
+  }
+}
+
+.job-form-header {
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 767px) {
+    h2 {
+      font-size: 24px;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 64px;
+}
+
+.form-section {
+  margin-bottom: 24px;
+
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+
+  mat-card-content {
+    padding: 16px;
+  }
+}
+
+.form-row {
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &.three-columns {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  mat-form-field {
+    width: 100%;
+
+    &.full-width {
+      width: 100%;
+    }
+  }
+}
+
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  color: #c62828;
+  font-size: 14px;
+  margin-top: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 24px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+
+  @media (max-width: 767px) {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// Material form field customizations
+mat-form-field {
+  .mat-form-field-wrapper {
+    padding-bottom: 1.25em;
+  }
+}
+
+// Textarea specific styles
+textarea.mat-input-element {
+  resize: vertical;
+  min-height: 80px;
+}
+
+// Date picker styles
+.mat-datepicker-toggle {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+// Error message styles
+mat-error {
+  font-size: 12px;
+}
+
+// Hint styles
+mat-hint {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+// Mobile-specific optimizations
+@media (max-width: 767px) {
+  .job-form-container {
+    padding: 12px;
+  }
+
+  .form-section {
+    margin-bottom: 16px;
+
+    mat-card-content {
+      padding: 12px;
+    }
+  }
+
+  .form-row {
+    margin-bottom: 12px;
+  }
+
+  mat-form-field {
+    font-size: 14px;
+  }
+}
+
+// Tablet-specific optimizations
+@media (min-width: 768px) and (max-width: 1023px) {
+  .job-form-container {
+    max-width: 700px;
+  }
+}

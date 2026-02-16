@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, inject, ChangeDetectorRef } from '@angula
 import { AuthService } from '../../services/auth.service';
 import { User } from 'src/app/models/user.model';
 import { FeatureFlagService } from '../../services/feature-flag.service';
+import { UserRole } from '../../models/role.enum';
 
 interface NavLink {
   label: string;
@@ -70,6 +71,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
       label: 'Notifications',
       route: '/notifications',
       shouldShow: () => this.featureFlags.flagEnabled('notifications')()
+    },
+    {
+      label: 'ATLAS',
+      route: '/atlas',
+      shouldShow: () => this.featureFlags.flagEnabled('atlas')()
+    },
+    {
+      label: 'Field Resources',
+      route: '/field-resource-management',
+      shouldShow: () => {
+        // Show for Admin, Dispatcher roles (PM, CM, OSPCoordinator), and Technician roles
+        return this.authService.isAdmin() || 
+               this.authService.isPM() || 
+               this.authService.isCM() || 
+               this.authService.isCoordinator() ||
+               this.authService.isUserInRole([UserRole.Technician, UserRole.DeploymentEngineer, UserRole.SRITech]);
+      }
     },
     {
       label: 'Approvals',

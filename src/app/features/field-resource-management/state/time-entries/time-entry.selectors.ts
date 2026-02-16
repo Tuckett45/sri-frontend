@@ -1,0 +1,154 @@
+/**
+ * Time Entry Selectors
+ * Provides memoized selectors for accessing time entry state
+ */
+
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { TimeEntryState } from './time-entry.state';
+import { timeEntryAdapter } from './time-entry.reducer';
+
+// Feature selector
+export const selectTimeEntryState = createFeatureSelector<TimeEntryState>('timeEntries');
+
+// Entity adapter selectors
+const {
+  selectIds,
+  selectEntities,
+  selectAll,
+  selectTotal
+} = timeEntryAdapter.getSelectors();
+
+// Select all time entries
+export const selectAllTimeEntries = createSelector(
+  selectTimeEntryState,
+  selectAll
+);
+
+// Select time entry entities
+export const selectTimeEntryEntities = createSelector(
+  selectTimeEntryState,
+  selectEntities
+);
+
+// Select time entry by ID
+export const selectTimeEntryById = (id: string) => createSelector(
+  selectTimeEntryEntities,
+  (entities) => entities[id]
+);
+
+// Select loading state
+export const selectTimeEntriesLoading = createSelector(
+  selectTimeEntryState,
+  (state) => state.loading
+);
+
+// Select error state
+export const selectTimeEntriesError = createSelector(
+  selectTimeEntryState,
+  (state) => state.error
+);
+
+// Select active entry
+export const selectActiveTimeEntry = createSelector(
+  selectTimeEntryState,
+  (state) => state.activeEntry
+);
+
+// Select total count
+export const selectTimeEntriesTotal = createSelector(
+  selectTimeEntryState,
+  selectTotal
+);
+
+// Select time entries by job
+export const selectTimeEntriesByJob = (jobId: string) => createSelector(
+  selectAllTimeEntries,
+  (timeEntries) => timeEntries.filter(entry => entry.jobId === jobId)
+);
+
+// Select time entries by technician
+export const selectTimeEntriesByTechnician = (technicianId: string) => createSelector(
+  selectAllTimeEntries,
+  (timeEntries) => timeEntries.filter(entry => entry.technicianId === technicianId)
+);
+
+// Select total hours by job
+export const selectTotalHoursByJob = (jobId: string) => createSelector(
+  selectTimeEntriesByJob(jobId),
+  (timeEntries) => timeEntries.reduce((total, entry) => {
+    return total + (entry.totalHours || 0);
+  }, 0)
+);
+
+// Select total hours by technician
+export const selectTotalHoursByTechnician = (technicianId: string) => createSelector(
+  selectTimeEntriesByTechnician(technicianId),
+  (timeEntries) => timeEntries.reduce((total, entry) => {
+    return total + (entry.totalHours || 0);
+  }, 0)
+);
+
+// Select completed time entries (with clock out time)
+export const selectCompletedTimeEntries = createSelector(
+  selectAllTimeEntries,
+  (timeEntries) => timeEntries.filter(entry => entry.clockOutTime !== undefined && entry.clockOutTime !== null)
+);
+
+// Select active time entries (without clock out time)
+export const selectActiveTimeEntries = createSelector(
+  selectAllTimeEntries,
+  (timeEntries) => timeEntries.filter(entry => !entry.clockOutTime)
+);
+
+// Select manually adjusted time entries
+export const selectManuallyAdjustedTimeEntries = createSelector(
+  selectAllTimeEntries,
+  (timeEntries) => timeEntries.filter(entry => entry.isManuallyAdjusted)
+);
+
+// Select time entries by date range
+export const selectTimeEntriesByDateRange = (startDate: Date, endDate: Date) => createSelector(
+  selectAllTimeEntries,
+  (timeEntries) => timeEntries.filter(entry => {
+    const entryDate = new Date(entry.clockInTime);
+    return entryDate >= startDate && entryDate <= endDate;
+  })
+);
+
+// Select today's time entries
+export const selectTodaysTimeEntries = createSelector(
+  selectAllTimeEntries,
+  (timeEntries) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return timeEntries.filter(entry => {
+      const entryDate = new Date(entry.clockInTime);
+      return entryDate >= today && entryDate < tomorrow;
+    });
+  }
+);
+
+// Select has active entry
+export const selectHasActiveEntry = createSelector(
+  selectActiveTimeEntry,
+  (activeEntry) => activeEntry !== null
+);
+
+// Select total mileage by technician
+export const selectTotalMileageByTechnician = (technicianId: string) => createSelector(
+  selectTimeEntriesByTechnician(technicianId),
+  (timeEntries) => timeEntries.reduce((total, entry) => {
+    return total + (entry.mileage || 0);
+  }, 0)
+);
+
+// Select total mileage by job
+export const selectTotalMileageByJob = (jobId: string) => createSelector(
+  selectTimeEntriesByJob(jobId),
+  (timeEntries) => timeEntries.reduce((total, entry) => {
+    return total + (entry.mileage || 0);
+  }, 0)
+);

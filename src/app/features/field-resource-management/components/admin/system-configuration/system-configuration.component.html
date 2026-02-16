@@ -1,0 +1,153 @@
+<div class="config-container">
+  <div class="header">
+    <h2>System Configuration</h2>
+    <div class="actions">
+      <button mat-button (click)="onResetToDefaults()">
+        <mat-icon>restore</mat-icon>
+        Reset to Defaults
+      </button>
+      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!configForm.valid">
+        <mat-icon>save</mat-icon>
+        Save Configuration
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="configForm">
+    <!-- Session Settings -->
+    <mat-card class="config-section">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>schedule</mat-icon>
+          Session Settings
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="config-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Session Timeout (minutes)</mat-label>
+            <input matInput type="number" formControlName="sessionTimeoutMinutes">
+            <mat-hint>Default: 30 minutes</mat-hint>
+            <mat-error>{{ getFieldError('sessionTimeoutMinutes') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Notification Settings -->
+    <mat-card class="config-section">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>notifications</mat-icon>
+          Notification Settings
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="config-grid">
+          <mat-slide-toggle formControlName="notificationsEnabled">
+            Enable Notifications
+          </mat-slide-toggle>
+          
+          <mat-slide-toggle formControlName="emailNotificationsEnabled">
+            Enable Email Notifications
+          </mat-slide-toggle>
+          
+          <mat-slide-toggle formControlName="inAppNotificationsEnabled">
+            Enable In-App Notifications
+          </mat-slide-toggle>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Backup Settings -->
+    <mat-card class="config-section">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>backup</mat-icon>
+          Backup Settings
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="config-grid">
+          <mat-slide-toggle formControlName="autoBackupEnabled">
+            Enable Automatic Backups
+          </mat-slide-toggle>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Backup Retention (days)</mat-label>
+            <input matInput type="number" formControlName="backupRetentionDays">
+            <mat-hint>Default: 30 days</mat-hint>
+            <mat-error>{{ getFieldError('backupRetentionDays') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- KPI Settings -->
+    <mat-card class="config-section">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>analytics</mat-icon>
+          KPI Target Values
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="config-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Target Utilization Rate (%)</mat-label>
+            <input matInput type="number" formControlName="targetUtilizationRate">
+            <mat-hint>Default: 75%</mat-hint>
+            <mat-error>{{ getFieldError('targetUtilizationRate') }}</mat-error>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Target Schedule Adherence (%)</mat-label>
+            <input matInput type="number" formControlName="targetScheduleAdherence">
+            <mat-hint>Default: 95%</mat-hint>
+            <mat-error>{{ getFieldError('targetScheduleAdherence') }}</mat-error>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Target Time Entry Completion (%)</mat-label>
+            <input matInput type="number" formControlName="targetTimeEntryCompletion">
+            <mat-hint>Default: 100%</mat-hint>
+            <mat-error>{{ getFieldError('targetTimeEntryCompletion') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Job Status Settings -->
+    <mat-card class="config-section">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>settings</mat-icon>
+          Job Status Configuration
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="config-grid">
+          <div class="chip-list-field">
+            <label>Job Status Values</label>
+            <mat-chip-set>
+              <mat-chip *ngFor="let status of configForm.get('jobStatusValues')?.value" [disabled]="true">
+                {{ status }}
+              </mat-chip>
+            </mat-chip-set>
+            <mat-hint>These are the available job status values</mat-hint>
+          </div>
+          
+          <div class="chip-list-field">
+            <label>Delay Reason Codes</label>
+            <mat-chip-set>
+              <mat-chip *ngFor="let reason of configForm.get('delayReasonCodes')?.value" [disabled]="true">
+                {{ reason }}
+              </mat-chip>
+            </mat-chip-set>
+            <mat-hint>Reasons technicians can select when jobs are delayed</mat-hint>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </form>
+</div>

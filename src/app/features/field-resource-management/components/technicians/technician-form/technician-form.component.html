@@ -1,0 +1,265 @@
+<div class="technician-form-container">
+  <!-- Header -->
+  <div class="form-header">
+    <h2>{{ isEditMode ? 'Edit Technician' : 'Add New Technician' }}</h2>
+  </div>
+
+  <!-- Multi-step Form -->
+  <form [formGroup]="technicianForm" (ngSubmit)="onSubmit()">
+    <mat-stepper linear #stepper>
+      
+      <!-- Step 1: Basic Information -->
+      <mat-step [stepControl]="basicInfoGroup" label="Basic Information">
+        <div formGroupName="basicInfo" class="step-content">
+          <h3>Basic Information</h3>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Technician ID</mat-label>
+              <input matInput formControlName="technicianId" placeholder="TECH001">
+              <mat-error *ngIf="basicInfoGroup.get('technicianId')?.hasError('required')">
+                Technician ID is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>First Name</mat-label>
+              <input matInput formControlName="firstName" placeholder="John">
+              <mat-error *ngIf="basicInfoGroup.get('firstName')?.hasError('required')">
+                First name is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Last Name</mat-label>
+              <input matInput formControlName="lastName" placeholder="Doe">
+              <mat-error *ngIf="basicInfoGroup.get('lastName')?.hasError('required')">
+                Last name is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput type="email" formControlName="email" placeholder="john.doe@example.com">
+              <mat-error *ngIf="basicInfoGroup.get('email')?.hasError('required')">
+                Email is required
+              </mat-error>
+              <mat-error *ngIf="basicInfoGroup.get('email')?.hasError('email')">
+                Please enter a valid email address
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Phone</mat-label>
+              <input matInput formControlName="phone" placeholder="555-0100">
+              <mat-error *ngIf="basicInfoGroup.get('phone')?.hasError('required')">
+                Phone is required
+              </mat-error>
+              <mat-error *ngIf="basicInfoGroup.get('phone')?.hasError('invalidPhone')">
+                Please enter a valid phone number
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Role</mat-label>
+              <mat-select formControlName="role">
+                <mat-option *ngFor="let role of roles" [value]="role">
+                  {{ role }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="basicInfoGroup.get('role')?.hasError('required')">
+                Role is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Employment Type</mat-label>
+              <mat-select formControlName="employmentType">
+                <mat-option *ngFor="let type of employmentTypes" [value]="type">
+                  {{ type }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="basicInfoGroup.get('employmentType')?.hasError('required')">
+                Employment type is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Home Base</mat-label>
+              <input matInput formControlName="homeBase" placeholder="New York">
+              <mat-error *ngIf="basicInfoGroup.get('homeBase')?.hasError('required')">
+                Home base is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Region</mat-label>
+              <input matInput formControlName="region" placeholder="Northeast">
+              <mat-error *ngIf="basicInfoGroup.get('region')?.hasError('required')">
+                Region is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Hourly Cost Rate (Admin Only)</mat-label>
+              <input matInput type="number" formControlName="hourlyCostRate" placeholder="50.00">
+              <span matPrefix>$&nbsp;</span>
+            </mat-form-field>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperNext type="button">Next</button>
+          </div>
+        </div>
+      </mat-step>
+
+      <!-- Step 2: Skills -->
+      <mat-step [stepControl]="skillsGroup" label="Skills">
+        <div formGroupName="skills" class="step-content">
+          <h3>Skills</h3>
+          
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Skills</mat-label>
+            <mat-select formControlName="selectedSkills" multiple>
+              <mat-option *ngFor="let skill of availableSkills" [value]="skill">
+                {{ skill.name }} ({{ skill.category }})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div class="selected-skills" *ngIf="skillsGroup.get('selectedSkills')?.value?.length > 0">
+            <h4>Selected Skills:</h4>
+            <mat-chip-set>
+              <mat-chip *ngFor="let skill of skillsGroup.get('selectedSkills')?.value">
+                {{ skill.name }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious type="button">Back</button>
+            <button mat-button matStepperNext type="button">Next</button>
+          </div>
+        </div>
+      </mat-step>
+
+      <!-- Step 3: Certifications -->
+      <mat-step label="Certifications">
+        <div class="step-content">
+          <h3>Certifications</h3>
+          
+          <div formArrayName="certifications">
+            <div *ngFor="let cert of certificationsArray.controls; let i = index" 
+                 [formGroupName]="i" 
+                 class="certification-item">
+              <mat-card>
+                <mat-card-content>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Certification Name</mat-label>
+                      <input matInput formControlName="name" placeholder="OSHA10">
+                      <mat-error *ngIf="cert.get('name')?.hasError('required')">
+                        Certification name is required
+                      </mat-error>
+                    </mat-form-field>
+
+                    <button mat-icon-button color="warn" type="button" (click)="removeCertification(i)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Issue Date</mat-label>
+                      <input matInput [matDatepicker]="issuePicker" formControlName="issueDate">
+                      <mat-datepicker-toggle matSuffix [for]="issuePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #issuePicker></mat-datepicker>
+                      <mat-error *ngIf="cert.get('issueDate')?.hasError('required')">
+                        Issue date is required
+                      </mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Expiration Date</mat-label>
+                      <input matInput [matDatepicker]="expirationPicker" formControlName="expirationDate">
+                      <mat-datepicker-toggle matSuffix [for]="expirationPicker"></mat-datepicker-toggle>
+                      <mat-datepicker #expirationPicker></mat-datepicker>
+                      <mat-error *ngIf="cert.get('expirationDate')?.hasError('required')">
+                        Expiration date is required
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </div>
+
+          <button mat-stroked-button type="button" (click)="addCertification()" class="add-cert-button">
+            <mat-icon>add</mat-icon>
+            Add Certification
+          </button>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious type="button">Back</button>
+            <button mat-button matStepperNext type="button">Next</button>
+          </div>
+        </div>
+      </mat-step>
+
+      <!-- Step 4: Availability -->
+      <mat-step [stepControl]="availabilityGroup" label="Availability">
+        <div formGroupName="availability" class="step-content">
+          <h3>Availability</h3>
+          <p class="instruction">Click on dates to mark them as unavailable (PTO, sick days, etc.)</p>
+          
+          <mat-calendar 
+            (selectedChange)="onDateSelected($event)"
+            [dateClass]="dateClass">
+          </mat-calendar>
+
+          <div class="calendar-legend">
+            <div class="legend-item">
+              <span class="legend-color selected"></span>
+              <span>Unavailable</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color available"></span>
+              <span>Available</span>
+            </div>
+          </div>
+
+          <div class="selected-dates" *ngIf="selectedUnavailableDates.length > 0">
+            <h4>Unavailable Dates:</h4>
+            <mat-chip-set>
+              <mat-chip *ngFor="let date of selectedUnavailableDates">
+                {{ date | date:'shortDate' }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious type="button">Back</button>
+          </div>
+        </div>
+      </mat-step>
+    </mat-stepper>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button mat-button type="button" (click)="onCancel()">Cancel</button>
+      <button mat-raised-button color="primary" type="submit">
+        {{ isEditMode ? 'Update' : 'Create' }} Technician
+      </button>
+    </div>
+  </form>
+</div>

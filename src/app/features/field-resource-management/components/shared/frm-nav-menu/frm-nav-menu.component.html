@@ -1,0 +1,36 @@
+<nav class="frm-nav-menu">
+  <mat-nav-list>
+    <ng-container *ngFor="let item of menuItems">
+      <!-- Menu item without children -->
+      <a mat-list-item 
+         *ngIf="!item.children"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact: false}">
+        <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+        <span matListItemTitle>{{ item.label }}</span>
+      </a>
+
+      <!-- Menu item with children (expandable) -->
+      <mat-expansion-panel *ngIf="item.children" class="nav-expansion-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon class="menu-icon">{{ item.icon }}</mat-icon>
+            <span class="menu-label">{{ item.label }}</span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        
+        <mat-nav-list class="submenu">
+          <a mat-list-item 
+             *ngFor="let child of item.children"
+             [routerLink]="child.route"
+             routerLinkActive="active"
+             [routerLinkActiveOptions]="{exact: false}">
+            <mat-icon matListItemIcon>{{ child.icon }}</mat-icon>
+            <span matListItemTitle>{{ child.label }}</span>
+          </a>
+        </mat-nav-list>
+      </mat-expansion-panel>
+    </ng-container>
+  </mat-nav-list>
+</nav>

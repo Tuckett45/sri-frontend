@@ -1,0 +1,251 @@
+<!-- Query Builder Component Template -->
+<div class="query-builder-container">
+  <p-card header="Query Builder" styleClass="atlas-card">
+    <form [formGroup]="queryForm" (ngSubmit)="executeQuery()">
+      
+      <!-- Data Source Selection -->
+      <div class="form-section">
+        <h3 class="section-title">Data Source</h3>
+        <div class="field">
+          <label for="dataSource">Select Data Source *</label>
+          <p-dropdown
+            id="dataSource"
+            formControlName="dataSource"
+            [options]="(dataSources$ | async) || []"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Choose a data source"
+            [showClear]="true"
+            [loading]="(dataSourcesLoading$ | async) || false"
+            styleClass="w-full">
+            <ng-template let-source pTemplate="item">
+              <div class="data-source-item">
+                <div class="source-name">{{ source.name }}</div>
+                <div class="source-description">{{ source.description }}</div>
+              </div>
+            </ng-template>
+          </p-dropdown>
+          <small class="form-error" *ngIf="queryForm.get('dataSource')?.invalid && queryForm.get('dataSource')?.touched">
+            Data source is required
+          </small>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Filters Section -->
+      <div class="form-section" *ngIf="queryForm.get('dataSource')?.value">
+        <div class="section-header">
+          <h3 class="section-title">Filters</h3>
+          <div class="section-actions">
+            <label for="logicalOperator" class="logical-operator-label">Combine with:</label>
+            <p-dropdown
+              id="logicalOperator"
+              formControlName="logicalOperator"
+              [options]="logicalOperatorOptions"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="logical-operator-dropdown">
+            </p-dropdown>
+          </div>
+        </div>
+
+        <div formArrayName="filters" class="filters-container">
+          <div *ngFor="let filter of filters.controls; let i = index" 
+               [formGroupName]="i" 
+               class="filter-row">
+            
+            <div class="filter-number">{{ i + 1 }}</div>
+
+            <!-- Field Selection -->
+            <div class="filter-field">
+              <label [for]="'field-' + i">Field</label>
+              <p-dropdown
+                [id]="'field-' + i"
+                formControlName="field"
+                [options]="(filterableFields$ | async) || []"
+                optionLabel="displayName"
+                optionValue="name"
+                placeholder="Select field"
+                [showClear]="true"
+                [loading]="(fieldsLoading$ | async) || false"
+                (onChange)="onFieldSelected(i, $event.value)"
+                styleClass="w-full">
+              </p-dropdown>
+            </div>
+
+            <!-- Operator Selection -->
+            <div class="filter-operator">
+              <label [for]="'operator-' + i">Operator</label>
+              <p-dropdown
+                [id]="'operator-' + i"
+                formControlName="operator"
+                [options]="getAllowedOperators(filter.get('field')?.value)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select operator"
+                [showClear]="true"
+                styleClass="w-full">
+              </p-dropdown>
+            </div>
+
+            <!-- Value Input -->
+            <div class="filter-value" *ngIf="operatorRequiresValue(filter.get('operator')?.value)">
+              <label [for]="'value-' + i">Value</label>
+              <input
+                [id]="'value-' + i"
+                pInputText
+                formControlName="value"
+                placeholder="Enter value"
+                class="w-full" />
+            </div>
+
+            <!-- Remove Button -->
+            <div class="filter-actions">
+              <button
+                type="button"
+                pButton
+                icon="pi pi-trash"
+                class="p-button-danger p-button-text"
+                (click)="removeFilter(i)"
+                [disabled]="filters.length === 1"
+                pTooltip="Remove filter"
+                tooltipPosition="top">
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="add-filter-section">
+          <button
+            type="button"
+            pButton
+            label="Add Filter"
+            icon="pi pi-plus"
+            class="p-button-outlined"
+            (click)="addFilter()">
+          </button>
+        </div>
+      </div>
+
+      <p-divider *ngIf="queryForm.get('dataSource')?.value"></p-divider>
+
+      <!-- Sort Criteria Section -->
+      <div class="form-section" *ngIf="queryForm.get('dataSource')?.value">
+        <div class="section-header">
+          <h3 class="section-title">Sort Criteria</h3>
+        </div>
+
+        <div formArrayName="sortBy" class="sorts-container">
+          <div *ngFor="let sort of sortBy.controls; let i = index" 
+               [formGroupName]="i" 
+               class="sort-row">
+            
+            <div class="sort-number">{{ i + 1 }}</div>
+
+            <!-- Field Selection -->
+            <div class="sort-field">
+              <label [for]="'sort-field-' + i">Field</label>
+              <p-dropdown
+                [id]="'sort-field-' + i"
+                formControlName="field"
+                [options]="(sortableFields$ | async) || []"
+                optionLabel="displayName"
+                optionValue="name"
+                placeholder="Select field"
+                [showClear]="true"
+                [loading]="(fieldsLoading$ | async) || false"
+                styleClass="w-full">
+              </p-dropdown>
+            </div>
+
+            <!-- Direction Selection -->
+            <div class="sort-direction">
+              <label [for]="'sort-direction-' + i">Direction</label>
+              <p-dropdown
+                [id]="'sort-direction-' + i"
+                formControlName="direction"
+                [options]="sortDirectionOptions"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full">
+              </p-dropdown>
+            </div>
+
+            <!-- Remove Button -->
+            <div class="sort-actions">
+              <button
+                type="button"
+                pButton
+                icon="pi pi-trash"
+                class="p-button-danger p-button-text"
+                (click)="removeSort(i)"
+                pTooltip="Remove sort"
+                tooltipPosition="top">
+              </button>
+            </div>
+          </div>
+
+          <div class="add-sort-section" *ngIf="sortBy.length === 0">
+            <p class="no-sorts-message">No sort criteria defined</p>
+          </div>
+        </div>
+
+        <div class="add-sort-section">
+          <button
+            type="button"
+            pButton
+            label="Add Sort"
+            icon="pi pi-plus"
+            class="p-button-outlined"
+            (click)="addSort()">
+          </button>
+        </div>
+      </div>
+
+      <p-divider *ngIf="queryForm.get('dataSource')?.value"></p-divider>
+
+      <!-- Query Options -->
+      <div class="form-section" *ngIf="queryForm.get('dataSource')?.value">
+        <h3 class="section-title">Query Options</h3>
+        <div class="field">
+          <label for="limit">Result Limit</label>
+          <input
+            id="limit"
+            type="number"
+            pInputText
+            formControlName="limit"
+            min="1"
+            max="10000"
+            class="limit-input" />
+          <small class="field-help">Maximum number of rows to return (1-10,000)</small>
+          <small class="form-error" *ngIf="queryForm.get('limit')?.invalid && queryForm.get('limit')?.touched">
+            Limit must be between 1 and 10,000
+          </small>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="form-actions" *ngIf="queryForm.get('dataSource')?.value">
+        <button
+          type="submit"
+          pButton
+          label="Execute Query"
+          icon="pi pi-play"
+          class="p-button-primary"
+          [disabled]="queryForm.invalid || (executing$ | async)"
+          [loading]="(executing$ | async) || false">
+        </button>
+        <button
+          type="button"
+          pButton
+          label="Clear"
+          icon="pi pi-times"
+          class="p-button-secondary"
+          (click)="clearQuery()"
+          [disabled]="(executing$ | async) || false">
+        </button>
+      </div>
+    </form>
+  </p-card>
+</div>

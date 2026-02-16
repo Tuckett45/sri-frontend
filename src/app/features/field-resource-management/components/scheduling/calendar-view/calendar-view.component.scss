@@ -1,0 +1,508 @@
+.calendar-view-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fafafa;
+}
+
+// Header
+.calendar-header {
+  background-color: white;
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.date-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.today-button {
+  min-width: 80px;
+}
+
+.selected-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+
+  mat-icon {
+    color: #666;
+  }
+}
+
+// Calendar Grid
+.calendar-grid-container {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+.calendar-grid {
+  min-width: 100%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+// Grid Header
+.grid-header {
+  display: grid;
+  grid-template-columns: 200px repeat(auto-fit, minmax(150px, 1fr));
+  background-color: #f5f5f5;
+  border-bottom: 2px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.technician-header,
+.time-slot-header {
+  padding: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  text-align: center;
+  border-right: 1px solid #e0e0e0;
+
+  &:last-child {
+    border-right: none;
+  }
+}
+
+.technician-header {
+  text-align: left;
+  background-color: #eeeeee;
+}
+
+// Grid Body
+.grid-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.technician-row {
+  display: grid;
+  grid-template-columns: 200px repeat(auto-fit, minmax(150px, 1fr));
+  border-bottom: 1px solid #e0e0e0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: #fafafa;
+  }
+}
+
+// Technician Cell
+.technician-cell {
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+}
+
+.technician-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.technician-icon {
+  color: #666;
+}
+
+.technician-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.technician-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.technician-role {
+  font-size: 12px;
+  color: #666;
+}
+
+// Time Slot Cell
+.time-slot-cell {
+  padding: 8px;
+  min-height: 100px;
+  border-right: 1px solid #e0e0e0;
+  position: relative;
+  background-color: white;
+  transition: background-color 0.2s;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  &.has-conflict {
+    background-color: #ffebee;
+    border: 2px solid #f44336;
+  }
+
+  &.cdk-drop-list-dragging {
+    background-color: #e3f2fd;
+  }
+}
+
+// Job Card
+.job-card {
+  background-color: white;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.cdk-drag-preview {
+    opacity: 0.8;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  &.cdk-drag-animating {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.job-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.job-id {
+  font-weight: 600;
+  font-size: 12px;
+  color: #333;
+}
+
+.job-client {
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+}
+
+.job-site {
+  font-size: 11px;
+  color: #888;
+}
+
+.job-time {
+  font-size: 10px;
+  color: #999;
+  margin-top: 4px;
+}
+
+// Status Indicator
+.status-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: white;
+  }
+}
+
+// Status Colors
+.status-not-started {
+  border-left: 4px solid #9e9e9e;
+
+  .status-indicator {
+    background-color: #9e9e9e;
+  }
+}
+
+.status-en-route {
+  border-left: 4px solid #2196f3;
+
+  .status-indicator {
+    background-color: #2196f3;
+  }
+}
+
+.status-on-site {
+  border-left: 4px solid #ff9800;
+
+  .status-indicator {
+    background-color: #ff9800;
+  }
+}
+
+.status-completed {
+  border-left: 4px solid #4caf50;
+
+  .status-indicator {
+    background-color: #4caf50;
+  }
+}
+
+.status-issue {
+  border-left: 4px solid #f44336;
+
+  .status-indicator {
+    background-color: #f44336;
+  }
+}
+
+.status-cancelled {
+  border-left: 4px solid #757575;
+  opacity: 0.6;
+
+  .status-indicator {
+    background-color: #757575;
+  }
+}
+
+// Conflict Indicator
+.conflict-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: #f44336;
+  color: white;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Empty Slot
+.empty-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 80px;
+  color: #bbb;
+  font-size: 12px;
+  font-style: italic;
+
+  .drop-hint {
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .time-slot-cell:hover & .drop-hint {
+    opacity: 1;
+  }
+}
+
+// Context Menu
+.context-menu {
+  position: fixed;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  min-width: 200px;
+  padding: 8px 0;
+
+  button {
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #333;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #f5f5f5;
+    }
+
+    &.delete-action {
+      color: #f44336;
+
+      mat-icon {
+        color: #f44336;
+      }
+    }
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #666;
+    }
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    color: #ccc;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .calendar-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .grid-header,
+  .technician-row {
+    grid-template-columns: 150px repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .technician-cell {
+    padding: 8px;
+  }
+
+  .technician-name {
+    font-size: 13px;
+  }
+
+  .technician-role {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-header {
+    padding: 12px;
+  }
+
+  .calendar-controls {
+    gap: 12px;
+  }
+
+  .selected-date {
+    font-size: 14px;
+  }
+
+  .grid-header,
+  .technician-row {
+    grid-template-columns: 120px repeat(auto-fit, minmax(100px, 1fr));
+  }
+
+  .time-slot-cell {
+    min-height: 80px;
+    padding: 6px;
+  }
+
+  .job-card {
+    padding: 6px;
+  }
+
+  .job-id {
+    font-size: 11px;
+  }
+
+  .job-client,
+  .job-site {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-grid-container {
+    padding: 8px;
+  }
+
+  .grid-header,
+  .technician-row {
+    grid-template-columns: 100px repeat(auto-fit, minmax(80px, 1fr));
+  }
+
+  .technician-header,
+  .time-slot-header {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .technician-info {
+    gap: 8px;
+  }
+
+  .technician-icon {
+    display: none;
+  }
+}

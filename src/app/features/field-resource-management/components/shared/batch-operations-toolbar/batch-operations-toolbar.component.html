@@ -1,0 +1,32 @@
+<div class="batch-toolbar" [class.visible]="visible" [@slideDown]="visible ? 'visible' : 'hidden'">
+  <div class="toolbar-content">
+    <div class="selection-info">
+      <mat-icon>check_circle</mat-icon>
+      <span class="count">{{ selectedCount }} item{{ selectedCount !== 1 ? 's' : '' }} selected</span>
+    </div>
+
+    <div class="actions">
+      <button mat-button (click)="onUpdateStatus()">
+        <mat-icon>update</mat-icon>
+        Update Status
+      </button>
+
+      <button mat-button (click)="onReassign()">
+        <mat-icon>swap_horiz</mat-icon>
+        Reassign
+      </button>
+
+      <button mat-button color="warn" (click)="onDelete()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+
+      <mat-divider [vertical]="true"></mat-divider>
+
+      <button mat-button (click)="onClearSelection()">
+        <mat-icon>clear</mat-icon>
+        Clear Selection
+      </button>
+    </div>
+  </div>
+</div>

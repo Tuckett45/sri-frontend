@@ -1,0 +1,252 @@
+.approval-decision-container {
+  max-width: 800px;
+  margin: 0 auto;
+
+  ::ng-deep .p-card {
+    .p-card-body {
+      padding: 2rem;
+    }
+  }
+
+  .approval-info {
+    margin-bottom: 1.5rem;
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin: 0 0 1rem 0;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .label {
+          font-weight: 600;
+          color: var(--text-color-secondary);
+          font-size: 0.875rem;
+        }
+
+        .value {
+          font-family: monospace;
+          font-size: 0.9rem;
+          color: var(--text-color);
+        }
+      }
+    }
+  }
+
+  .error-message {
+    margin-bottom: 1.5rem;
+    width: 100%;
+  }
+
+  .decision-form {
+    .form-section {
+      margin-bottom: 1.5rem;
+
+      h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-color);
+        margin: 0 0 1rem 0;
+
+        .required {
+          color: var(--red-500);
+          margin-left: 0.25rem;
+        }
+      }
+
+      .section-description {
+        color: var(--text-color-secondary);
+        font-size: 0.875rem;
+        margin: 0 0 1rem 0;
+      }
+
+      .decision-options {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+
+        .decision-option {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+
+          .decision-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+
+            i {
+              font-size: 1.25rem;
+            }
+          }
+        }
+      }
+
+      textarea {
+        width: 100%;
+        font-family: inherit;
+        
+        &.ng-invalid.ng-dirty {
+          border-color: var(--red-500);
+        }
+      }
+
+      .error-text {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--red-500);
+        font-size: 0.875rem;
+      }
+
+      .help-text {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--text-color-secondary);
+        font-size: 0.875rem;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+
+      .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        label {
+          font-weight: 600;
+          color: var(--text-color);
+          font-size: 0.9rem;
+        }
+
+        ::ng-deep .p-dropdown {
+          width: 100%;
+        }
+
+        input[type="date"] {
+          width: 100%;
+          padding: 0.5rem;
+          border: 1px solid var(--surface-border);
+          border-radius: 4px;
+          font-family: inherit;
+
+          &:focus {
+            outline: none;
+            border-color: var(--primary-color);
+          }
+
+          &:disabled {
+            background-color: var(--surface-100);
+            cursor: not-allowed;
+          }
+        }
+      }
+
+      .condition-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+
+        input[type="checkbox"] {
+          width: 1.25rem;
+          height: 1.25rem;
+          cursor: pointer;
+
+          &:disabled {
+            cursor: not-allowed;
+          }
+        }
+
+        label {
+          font-weight: 500;
+          color: var(--text-color);
+          cursor: pointer;
+        }
+      }
+
+      .nested-field {
+        margin-left: 2rem;
+        margin-bottom: 1rem;
+
+        label {
+          display: block;
+          font-weight: 600;
+          color: var(--text-color);
+          font-size: 0.9rem;
+          margin-bottom: 0.5rem;
+        }
+      }
+    }
+
+    .loading-indicator {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--surface-100);
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+
+      span {
+        color: var(--text-color-secondary);
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--surface-border);
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .approval-decision-container {
+    ::ng-deep .p-card {
+      .p-card-body {
+        padding: 1rem;
+      }
+    }
+
+    .decision-form {
+      .form-section {
+        .decision-options {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .form-actions {
+        flex-direction: column-reverse;
+
+        ::ng-deep .p-button {
+          width: 100%;
+        }
+      }
+    }
+  }
+}

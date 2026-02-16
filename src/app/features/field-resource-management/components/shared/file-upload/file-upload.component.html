@@ -1,0 +1,88 @@
+<div class="file-upload">
+  <div
+    class="file-upload__dropzone"
+    [class.file-upload__dropzone--dragging]="isDragging"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="fileInput.click()">
+    <mat-icon class="file-upload__icon">cloud_upload</mat-icon>
+    <p class="file-upload__text">
+      Drag and drop files here or <span class="file-upload__link">browse</span>
+    </p>
+    <p class="file-upload__hint">
+      Accepted: JPEG, PNG, HEIC (Max 10 MB)
+    </p>
+    <input
+      #fileInput
+      type="file"
+      class="file-upload__input"
+      [multiple]="multiple"
+      [accept]="acceptedTypes.join(',')"
+      (change)="onFileSelected($event)" />
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="file-upload__error">
+    <mat-icon>error</mat-icon>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Upload Progress -->
+  <div *ngIf="uploadProgressValue > 0 && uploadProgressValue < 100" class="file-upload__progress">
+    <mat-progress-bar mode="determinate" [value]="uploadProgressValue"></mat-progress-bar>
+    <span class="file-upload__progress-text">{{ uploadProgressValue }}%</span>
+  </div>
+
+  <!-- Selected Files List -->
+  <div *ngIf="selectedFiles.length > 0" class="file-upload__files">
+    <div class="file-upload__files-header">
+      <h4>Selected Files ({{ selectedFiles.length }})</h4>
+      <button mat-button color="warn" (click)="clearFiles()">
+        <mat-icon>clear_all</mat-icon>
+        Clear All
+      </button>
+    </div>
+
+    <div class="file-upload__files-list">
+      <div *ngFor="let filePreview of filePreviews" class="file-upload__file-item">
+        <div class="file-upload__file-preview">
+          <img [src]="filePreview.preview" [alt]="filePreview.file.name" />
+        </div>
+        <div class="file-upload__file-info">
+          <span class="file-upload__file-name">{{ filePreview.file.name }}</span>
+          <span class="file-upload__file-size">{{ getFileSize(filePreview.file.size) }}</span>
+        </div>
+        <button
+          mat-icon-button
+          color="warn"
+          (click)="removeFile(filePreview.file)"
+          [attr.aria-label]="'Remove ' + filePreview.file.name">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Files without preview -->
+      <div
+        *ngFor="let file of selectedFiles"
+        class="file-upload__file-item">
+        <ng-container *ngIf="!hasPreview(file)">
+          <div class="file-upload__file-icon">
+            <mat-icon>insert_drive_file</mat-icon>
+          </div>
+          <div class="file-upload__file-info">
+            <span class="file-upload__file-name">{{ file.name }}</span>
+            <span class="file-upload__file-size">{{ getFileSize(file.size) }}</span>
+          </div>
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="removeFile(file)"
+            [attr.aria-label]="'Remove ' + file.name">
+            <mat-icon>close</mat-icon>
+          </button>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>

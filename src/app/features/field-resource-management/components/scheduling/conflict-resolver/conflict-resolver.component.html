@@ -1,0 +1,200 @@
+<div class="conflict-resolver-container">
+  <!-- Header -->
+  <div class="resolver-header">
+    <div class="header-content">
+      <h2>
+        <mat-icon>warning</mat-icon>
+        Scheduling Conflicts
+      </h2>
+      <p class="subtitle">Resolve scheduling conflicts to optimize resource allocation</p>
+    </div>
+    
+    <div class="header-actions">
+      <button mat-button (click)="onRefresh()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Batch Actions Toolbar -->
+  <div class="batch-toolbar" *ngIf="selection.selected.length > 0">
+    <div class="selected-count">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ selection.selected.length }} conflict(s) selected</span>
+    </div>
+    
+    <div class="batch-actions">
+      <button mat-button (click)="onBatchReassign()">
+        <mat-icon>swap_horiz</mat-icon>
+        Reassign
+      </button>
+      <button mat-button (click)="onBatchReschedule()">
+        <mat-icon>schedule</mat-icon>
+        Reschedule
+      </button>
+      <button mat-button (click)="onBatchOverride()">
+        <mat-icon>check</mat-icon>
+        Override
+      </button>
+      <button mat-button (click)="clearSelection()">
+        <mat-icon>clear</mat-icon>
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- Conflicts Table -->
+  <div class="table-container">
+    <table mat-table [dataSource]="conflicts" class="conflicts-table">
+      <!-- Checkbox Column -->
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            (change)="$event ? toggleAllConflicts() : null"
+            [checked]="selection.hasValue() && isAllSelected()"
+            [indeterminate]="selection.hasValue() && !isAllSelected()"
+            color="primary">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let conflict">
+          <mat-checkbox
+            (click)="$event.stopPropagation()"
+            (change)="$event ? selection.toggle(conflict) : null"
+            [checked]="selection.isSelected(conflict)"
+            color="primary">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- Technician Column -->
+      <ng-container matColumnDef="technician">
+        <th mat-header-cell *matHeaderCellDef>Technician</th>
+        <td mat-cell *matCellDef="let conflict">
+          <div class="technician-cell">
+            <mat-icon>person</mat-icon>
+            <span>{{ getTechnicianName(conflict.technicianId) }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Conflicting Jobs Column -->
+      <ng-container matColumnDef="conflictingJobs">
+        <th mat-header-cell *matHeaderCellDef>Conflicting Jobs</th>
+        <td mat-cell *matCellDef="let conflict">
+          <div class="jobs-cell">
+            <div class="job-item">
+              <mat-icon>work</mat-icon>
+              <span>{{ conflict.conflictingJobTitle }}</span>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Time Range Column -->
+      <ng-container matColumnDef="timeRange">
+        <th mat-header-cell *matHeaderCellDef>Time Range</th>
+        <td mat-cell *matCellDef="let conflict">
+          <div class="time-range-cell">
+            <mat-icon>schedule</mat-icon>
+            <span>{{ formatTimeRange(conflict) }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Severity Column -->
+      <ng-container matColumnDef="severity">
+        <th mat-header-cell *matHeaderCellDef>Severity</th>
+        <td mat-cell *matCellDef="let conflict">
+          <div class="severity-badge" [class]="getSeverityColor(conflict.severity)">
+            <mat-icon>{{ getSeverityIcon(conflict.severity) }}</mat-icon>
+            <span>{{ conflict.severity }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let conflict">
+          <div class="actions-cell">
+            <button 
+              mat-icon-button 
+              (click)="onReassign(conflict)"
+              matTooltip="Reassign to another technician"
+              aria-label="Reassign">
+              <mat-icon>swap_horiz</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              (click)="onReschedule(conflict)"
+              matTooltip="Reschedule job"
+              aria-label="Reschedule">
+              <mat-icon>schedule</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              (click)="onOverride(conflict)"
+              matTooltip="Override conflict"
+              aria-label="Override">
+              <mat-icon>check</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="conflicts.length === 0">
+      <mat-icon>check_circle</mat-icon>
+      <h3>No Conflicts Found</h3>
+      <p>All technician schedules are conflict-free.</p>
+    </div>
+  </div>
+
+  <!-- Override Dialog -->
+  <div class="override-dialog" *ngIf="resolvingConflict && resolutionType === 'override'">
+    <div class="dialog-backdrop" (click)="cancelResolution()"></div>
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h3>Override Conflict</h3>
+        <button mat-icon-button (click)="cancelResolution()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="dialog-body">
+        <div class="conflict-info">
+          <p><strong>Technician:</strong> {{ getTechnicianName(resolvingConflict.technicianId) }}</p>
+          <p><strong>Conflicting Job:</strong> {{ resolvingConflict.conflictingJobTitle }}</p>
+          <p><strong>Time Range:</strong> {{ formatTimeRange(resolvingConflict) }}</p>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Justification (Required)</mat-label>
+          <textarea 
+            matInput 
+            [(ngModel)]="justification"
+            rows="4"
+            placeholder="Explain why this conflict override is necessary..."
+            required></textarea>
+          <mat-hint>Minimum 10 characters</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-actions">
+        <button mat-button (click)="cancelResolution()">Cancel</button>
+        <button 
+          mat-raised-button 
+          color="warn" 
+          (click)="confirmOverride()"
+          [disabled]="!justification || justification.length < 10">
+          Confirm Override
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -29,8 +29,11 @@
               "src/favicon.ico",
               "src/assets",
               "src/sw.js",
-              "src/staticwebapp.config.json"
+              "src/staticwebapp.config.json",
+              "src/manifest.webmanifest"
             ],
+            "serviceWorker": true,
+            "ngswConfigPath": "ngsw-config.json",
             "styles": [
               "@angular/material/prebuilt-themes/cyan-orange.css",
               "src/styles.scss",
@@ -57,7 +60,9 @@
                 }
               ],
               "outputHashing": "all",
-              "baseHref": "/"
+              "baseHref": "/",
+              "serviceWorker": true,
+              "ngswConfigPath": "ngsw-config.json"
             },
             "development": {
               "buildOptimizer": false,

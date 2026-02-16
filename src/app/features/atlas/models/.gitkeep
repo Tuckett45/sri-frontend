@@ -1,0 +1,14 @@
+# ATLAS Models Directory
+
+This directory contains TypeScript interfaces and enums for ATLAS data models.
+
+Models to be implemented:
+- common.model.ts - Shared models (PaginationMetadata, PagedResult, ProblemDetails)
+- deployment.model.ts - Deployment-related models and enums
+- ai-analysis.model.ts - AI analysis, risk assessment, recommendation models
+- approval.model.ts - Approval workflow models
+- exception.model.ts - Exception request models
+- agent.model.ts - Agent metadata, configuration, execution models
+- query-builder.model.ts - Query builder models
+
+All models are based on the ATLAS API OpenAPI specification.

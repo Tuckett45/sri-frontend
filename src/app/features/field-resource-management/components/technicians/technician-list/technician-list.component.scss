@@ -1,0 +1,301 @@
+.technician-list-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  button {
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    .header-actions {
+      width: 100%;
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.filter-panel {
+  margin-bottom: 24px;
+
+  mat-card-content {
+    padding: 16px;
+  }
+
+  .search-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .filters-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    mat-form-field {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .availability-toggle {
+      margin-left: 8px;
+    }
+
+    button {
+      white-space: nowrap;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px;
+}
+
+.error-card {
+  margin-bottom: 24px;
+  background-color: #ffebee;
+
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #c62828;
+  }
+}
+
+.table-container {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.technicians-table {
+  width: 100%;
+
+  th {
+    font-weight: 600;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  td {
+    padding: 16px 8px;
+  }
+
+  .technician-name {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    .technician-id {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+
+  .role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  mat-chip-list {
+    mat-chip {
+      font-size: 11px;
+      min-height: 24px;
+      padding: 4px 8px;
+      margin: 2px;
+    }
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+
+    &.active {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    &.inactive {
+      background-color: #f5f5f5;
+      color: #757575;
+    }
+  }
+
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: rgba(0, 0, 0, 0.54);
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 16px;
+    }
+  }
+}
+
+mat-paginator {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+  .technician-list-container {
+    padding: 16px;
+  }
+
+  .list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .filter-panel {
+    .filters-row {
+      flex-direction: column;
+
+      mat-form-field {
+        width: 100%;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .technicians-table {
+    // Hide some columns on mobile
+    .mat-column-skills {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .technicians-table {
+    font-size: 12px;
+
+    .mat-column-role {
+      display: none;
+    }
+  }
+}
+
+// Search highlighting
+::ng-deep .search-highlight {
+  background-color: #ffeb3b;
+  font-weight: 600;
+  padding: 2px 0;
+  border-radius: 2px;
+}
+
+// Filter expansion panel
+.filter-expansion {
+  margin-top: 16px;
+
+  mat-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .filter-count {
+      color: #1976d2;
+      font-weight: 500;
+    }
+  }
+}
+
+// Active filter chips
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+
+  .filter-label {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  mat-chip-list {
+    mat-chip {
+      background-color: #e3f2fd;
+      color: #1976d2;
+
+      strong {
+        margin-right: 4px;
+      }
+
+      mat-icon {
+        cursor: pointer;
+        opacity: 0.7;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
