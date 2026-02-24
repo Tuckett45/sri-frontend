@@ -18,13 +18,19 @@ import { takeUntil } from 'rxjs/operators';
 // PrimeNG imports
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { BadgeModule } from 'primeng/badge';
+
+// Angular Material imports
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 // Models
 import { 
@@ -47,13 +53,17 @@ import { AgentFilters } from '../../state/agents/agent.state';
     FormsModule,
     TableModule,
     ButtonModule,
-    DropdownModule,
     InputTextModule,
     ProgressSpinnerModule,
     MessageModule,
     TooltipModule,
     TagModule,
-    BadgeModule
+    BadgeModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule
   ],
   templateUrl: './agent-list.component.html',
   styleUrls: ['./agent-list.component.scss']

@@ -58,6 +58,51 @@ export enum AgentExecutionStatus {
 }
 
 /**
+ * Agent implementation type
+ * Defines how the agent is implemented
+ */
+export enum AgentImplementationType {
+  /** Native implementation */
+  Native = 'Native',
+  
+  /** Foundry-based implementation */
+  Foundry = 'Foundry',
+  
+  /** External implementation */
+  External = 'External'
+}
+
+/**
+ * Configuration schema
+ * Defines the configuration structure for an agent
+ */
+export interface ConfigurationSchema {
+  /** Schema properties */
+  properties?: Record<string, any>;
+  
+  /** Required fields */
+  required?: string[];
+  
+  /** Schema type */
+  type?: string;
+}
+
+/**
+ * Foundry agent metadata
+ * Additional metadata for Foundry-based agents
+ */
+export interface FoundryAgentMetadata {
+  /** Foundry project identifier */
+  projectId?: string;
+  
+  /** Foundry agent identifier */
+  foundryAgentId?: string;
+  
+  /** Additional Foundry-specific properties */
+  [key: string]: any;
+}
+
+/**
  * Agent metadata
  * Describes an agent's identity, capabilities, and registration information
  */
@@ -83,6 +128,9 @@ export interface AgentMetadata {
   /** List of agent capabilities */
   capabilities?: string[];
   
+  /** Configuration schema for this agent */
+  configSchema?: ConfigurationSchema;
+  
   /** When the agent was registered */
   registeredAt: Date;
   
@@ -91,6 +139,12 @@ export interface AgentMetadata {
   
   /** Whether the agent is currently active */
   isActive: boolean;
+  
+  /** Implementation type of the agent */
+  implementationType?: AgentImplementationType;
+  
+  /** Foundry-specific metadata */
+  foundryMetadata?: FoundryAgentMetadata;
 }
 
 /**

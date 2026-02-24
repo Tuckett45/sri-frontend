@@ -4,6 +4,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Store } from '@ngrx/store';
 import { Region } from '../../../models/region.model';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
+import { UserRole } from '../../../../../models/role.enum';
 
 @Component({
   selector: 'app-region-manager',
@@ -13,6 +14,7 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
 export class RegionManagerComponent implements OnInit {
   displayedColumns: string[] = ['name', 'technicianCount', 'jobCount', 'actions'];
   dataSource = new MatTableDataSource<Region>();
+  UserRole = UserRole;
 
   constructor(
     private store: Store,

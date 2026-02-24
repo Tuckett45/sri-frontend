@@ -1,0 +1,348 @@
+<div class="admin-dashboard-container" role="main">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>Administrator Dashboard</h1>
+      <div class="header-info">
+        <span class="admin-badge">
+          <mat-icon>admin_panel_settings</mat-icon>
+          System Administrator
+        </span>
+        <span class="user-name">{{ userName }}</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="navigateToUserManagement()">
+        <mat-icon>people</mat-icon>
+        User Management
+      </button>
+      <button mat-raised-button (click)="navigateToSystemConfiguration()">
+        <mat-icon>settings</mat-icon>
+        System Config
+      </button>
+      <button mat-icon-button (click)="refreshMetrics()" [disabled]="loading" matTooltip="Refresh Dashboard">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+  <!-- Error message -->
+  <mat-card *ngIf="error" class="error-card">
+    <mat-card-content>
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Dashboard content -->
+  <div *ngIf="dashboardData$ | async as data" class="dashboard-content">
+    
+    <!-- Market Filter -->
+    <section class="filter-section">
+      <mat-form-field appearance="outline">
+        <mat-label style="color: #000000 !important;">Filter by Market</mat-label>
+        <mat-select style="color: #000000 !important;" [(value)]="selectedMarket" (selectionChange)="filterByMarket($event.value)">
+          <mat-option [value]="null">All Markets</mat-option>
+          <mat-option *ngFor="let market of availableMarkets" [value]="market">
+            {{ market }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <!-- Executive KPI Metrics -->
+    <section class="metrics-section">
+      <h2 class="section-title">Executive KPIs</h2>
+      
+      <!-- Skeleton loader for metrics -->
+      <div *ngIf="widgetLoading.metrics" class="metrics-grid">
+        <mat-card class="metric-card skeleton" *ngFor="let i of [1,2,3,4,5,6]">
+          <mat-card-content>
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-text short"></div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      
+      <!-- Actual metrics -->
+      <div *ngIf="!widgetLoading.metrics" class="metrics-grid">
+        <mat-card class="metric-card">
+          <mat-card-content>
+            <div class="metric-icon primary">
+              <mat-icon>business</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.totalActiveProjects }}</div>
+              <div class="metric-label">Total Active Projects</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card">
+          <mat-card-content>
+            <div class="metric-icon accent">
+              <mat-icon>assignment</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.systemWidePendingTasks }}</div>
+              <div class="metric-label">System-Wide Pending Tasks</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card">
+          <mat-card-content>
+            <div class="metric-icon success">
+              <mat-icon>engineering</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.totalTechnicians }}</div>
+              <div class="metric-label">Total Technicians</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card">
+          <mat-card-content>
+            <div class="metric-icon info">
+              <mat-icon>trending_up</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.overallResourceUtilization | number:'1.1-1' }}%</div>
+              <div class="metric-label">Overall Resource Utilization</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card clickable" (click)="navigateToUserManagement()">
+          <mat-card-content>
+            <div class="metric-icon warn">
+              <mat-icon>person_add</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.pendingUserApprovals }}</div>
+              <div class="metric-label">Pending User Approvals</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card" [class.warn]="data.metrics.escalatedApprovals > 0">
+          <mat-card-content>
+            <div class="metric-icon" [class.warn]="data.metrics.escalatedApprovals > 0">
+              <mat-icon>priority_high</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.escalatedApprovals }}</div>
+              <div class="metric-label">Escalated Approvals</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- Market Comparison Section -->
+    <section class="market-comparison-section">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>analytics</mat-icon>
+            Market-by-Market Comparison
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="data.metrics.marketMetrics.length === 0" class="no-data">
+            <mat-icon>info</mat-icon>
+            <p>No market data available</p>
+          </div>
+          <div *ngIf="data.metrics.marketMetrics.length > 0" class="market-comparison-grid">
+            <div *ngFor="let market of data.metrics.marketMetrics" 
+                 class="market-card clickable"
+                 (click)="viewMarketDetails(market.market)">
+              <div class="market-header">
+                <h3>{{ market.market }}</h3>
+                <mat-chip [color]="getUtilizationColor(market.utilization)">
+                  {{ getMarketPerformanceIndicator(market.utilization) }}
+                </mat-chip>
+              </div>
+              <div class="market-metrics">
+                <div class="market-metric">
+                  <mat-icon>work</mat-icon>
+                  <div class="metric-info">
+                    <span class="metric-value">{{ market.activeProjects }}</span>
+                    <span class="metric-label">Projects</span>
+                  </div>
+                </div>
+                <div class="market-metric">
+                  <mat-icon>people</mat-icon>
+                  <div class="metric-info">
+                    <span class="metric-value">{{ market.technicians }}</span>
+                    <span class="metric-label">Technicians</span>
+                  </div>
+                </div>
+                <div class="market-metric">
+                  <mat-icon>trending_up</mat-icon>
+                  <div class="metric-info">
+                    <span class="metric-value">{{ market.utilization | number:'1.1-1' }}%</span>
+                    <span class="metric-label">Utilization</span>
+                  </div>
+                </div>
+                <div class="market-metric">
+                  <mat-icon>approval</mat-icon>
+                  <div class="metric-info">
+                    <span class="metric-value">{{ market.pendingApprovals }}</span>
+                    <span class="metric-label">Approvals</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="main-content-grid">
+      
+      <!-- Pending User Approvals -->
+      <section class="content-section">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>person_add</mat-icon>
+              Pending User Approvals
+            </mat-card-title>
+            <button mat-button color="primary" (click)="navigateToUserManagement()">
+              View All
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <!-- Skeleton loader -->
+            <div *ngIf="widgetLoading.userApprovals" class="skeleton-list">
+              <div class="skeleton-item" *ngFor="let i of [1,2,3]">
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text short"></div>
+              </div>
+            </div>
+            
+            <!-- Actual content -->
+            <div *ngIf="!widgetLoading.userApprovals">
+              <div *ngIf="data.pendingUserApprovals.length === 0" class="no-data">
+                <mat-icon color="primary">check_circle</mat-icon>
+                <p>No pending user approvals</p>
+              </div>
+              <div *ngIf="data.pendingUserApprovals.length > 0" class="list-container">
+                <div *ngFor="let user of data.pendingUserApprovals" 
+                     class="list-item">
+                  <div class="item-header">
+                    <div class="user-info">
+                      <span class="item-title">{{ user.name }}</span>
+                      <span class="user-email">{{ user.email }}</span>
+                    </div>
+                    <div class="user-badges">
+                      <mat-chip color="accent">{{ user.role }}</mat-chip>
+                      <mat-chip>{{ user.market }}</mat-chip>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <span class="item-time">
+                      Requested {{ formatRelativeTime(user.requestedDate) }}
+                    </span>
+                    <div class="item-actions">
+                      <button mat-button color="primary" (click)="approveUser(user.id)">
+                        <mat-icon>check</mat-icon>
+                        Approve
+                      </button>
+                      <button mat-button color="warn" (click)="rejectUser(user.id, 'Rejected by admin')">
+                        <mat-icon>close</mat-icon>
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Pagination -->
+              <mat-paginator 
+                *ngIf="userApprovalsPagination.totalItems > userApprovalsPagination.pageSize"
+                [length]="userApprovalsPagination.totalItems"
+                [pageSize]="userApprovalsPagination.pageSize"
+                [pageIndex]="userApprovalsPagination.currentPage"
+                (page)="onUserApprovalsPageChange($event.pageIndex)"
+                [pageSizeOptions]="[5, 10, 25]">
+              </mat-paginator>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </section>
+
+      <!-- Escalated Approvals -->
+      <section class="content-section">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>priority_high</mat-icon>
+              Escalated Approvals
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <!-- Skeleton loader -->
+            <div *ngIf="widgetLoading.escalatedApprovals" class="skeleton-list">
+              <div class="skeleton-item" *ngFor="let i of [1,2,3]">
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text short"></div>
+              </div>
+            </div>
+            
+            <!-- Actual content -->
+            <div *ngIf="!widgetLoading.escalatedApprovals">
+              <div *ngIf="data.escalatedApprovals.length === 0" class="no-data">
+                <mat-icon color="primary">check_circle</mat-icon>
+                <p>No escalated approvals</p>
+              </div>
+              <div *ngIf="data.escalatedApprovals.length > 0" class="list-container">
+                <div *ngFor="let approval of data.escalatedApprovals" 
+                     class="list-item clickable high-priority"
+                     (click)="navigateToEscalatedApprovalDetail(approval.id)">
+                  <div class="item-header">
+                    <span class="item-title">{{ approval.type | titlecase }} Approval</span>
+                    <mat-chip color="warn">Escalated</mat-chip>
+                  </div>
+                  <div class="item-details">
+                    <div class="item-info-group">
+                      <span class="item-info">
+                        <mat-icon>location_on</mat-icon>
+                        {{ approval.market }}
+                      </span>
+                      <span class="item-info">
+                        <mat-icon>person</mat-icon>
+                        {{ approval.submittedByName || approval.submittedBy }}
+                      </span>
+                    </div>
+                    <span class="item-time">
+                      {{ formatRelativeTime(approval.submittedAt) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Pagination -->
+              <mat-paginator 
+                *ngIf="escalatedApprovalsPagination.totalItems > escalatedApprovalsPagination.pageSize"
+                [length]="escalatedApprovalsPagination.totalItems"
+                [pageSize]="escalatedApprovalsPagination.pageSize"
+                [pageIndex]="escalatedApprovalsPagination.currentPage"
+                (page)="onEscalatedApprovalsPageChange($event.pageIndex)"
+                [pageSizeOptions]="[5, 10, 25]">
+              </mat-paginator>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </section>
+
+    </div>
+  </div>
+</div>

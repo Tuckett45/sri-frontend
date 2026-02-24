@@ -4,6 +4,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { JobNote } from '../../../models/job.model';
 import * as JobActions from '../../../state/jobs/job.actions';
+import { SanitizationService } from '../../../services/sanitization.service';
 
 /**
  * Job Notes Component
@@ -14,11 +15,12 @@ import * as JobActions from '../../../state/jobs/job.actions';
  * Features:
  * - Display notes in chronological order (newest first)
  * - Show author, timestamp, and note text
- * - Add new notes
+ * - Add new notes with input sanitization
  * - Edit notes within 1 hour of creation
  * - Integration with job state
+ * - XSS protection through input sanitization
  * 
- * Requirements: 25.1-25.6
+ * Requirements: 9.2, 25.1-25.6
  */
 @Component({
   selector: 'frm-job-notes',
@@ -39,7 +41,8 @@ export class JobNotesComponent implements OnInit {
 
   constructor(
     private store: Store,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private sanitizationService: SanitizationService
   ) {}
 
   ngOnInit(): void {
@@ -76,19 +79,17 @@ export class JobNotesComponent implements OnInit {
    * Add new note
    */
   addNote(): void {
-    if (!this.newNoteText.trim()) {
-      this.snackBar.open('Note cannot be empty', 'Close', { duration: 3000 });
-      return;
-    }
-
-    if (this.newNoteText.length > 2000) {
-      this.snackBar.open('Note cannot exceed 2000 characters', 'Close', { duration: 3000 });
+    // Validate and sanitize the note text
+    const validation = this.sanitizationService.validateAndSanitizeText(this.newNoteText, 2000);
+    
+    if (!validation.valid) {
+      this.snackBar.open(validation.error || 'Invalid note', 'Close', { duration: 3000 });
       return;
     }
 
     this.store.dispatch(JobActions.addJobNote({
       jobId: this.jobId,
-      note: this.newNoteText.trim()
+      note: validation.sanitized
     }));
 
     this.snackBar.open('Note added successfully', 'Close', { duration: 3000 });
@@ -122,13 +123,11 @@ export class JobNotesComponent implements OnInit {
    * Save edited note
    */
   saveEditNote(note: JobNote): void {
-    if (!this.editingNoteText.trim()) {
-      this.snackBar.open('Note cannot be empty', 'Close', { duration: 3000 });
-      return;
-    }
-
-    if (this.editingNoteText.length > 2000) {
-      this.snackBar.open('Note cannot exceed 2000 characters', 'Close', { duration: 3000 });
+    // Validate and sanitize the edited note text
+    const validation = this.sanitizationService.validateAndSanitizeText(this.editingNoteText, 2000);
+    
+    if (!validation.valid) {
+      this.snackBar.open(validation.error || 'Invalid note', 'Close', { duration: 3000 });
       return;
     }
 
@@ -137,6 +136,14 @@ export class JobNotesComponent implements OnInit {
     this.snackBar.open('Note updated successfully', 'Close', { duration: 3000 });
     this.editingNoteId = null;
     this.editingNoteText = '';
+  }
+
+  /**
+   * Get sanitized note text for display
+   * Escapes HTML to prevent XSS attacks
+   */
+  getSanitizedNoteText(text: string): string {
+    return this.sanitizationService.sanitizeText(text);
   }
 
   /**

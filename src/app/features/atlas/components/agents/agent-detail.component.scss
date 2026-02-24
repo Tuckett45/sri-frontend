@@ -1,11 +1,16 @@
 .agent-detail-container {
-  padding: 1.5rem;
+  background: linear-gradient(135deg, #f6f8fb 0%, #eef3f9 100%);
+  color: #0f172a;
+  padding: 14px;
+  border-radius: 10px;
+  min-height: 100vh;
 
   .detail-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    gap: 12px;
 
     .header-left {
       display: flex;
@@ -14,15 +19,15 @@
 
       h2 {
         margin: 0;
-        font-size: 1.75rem;
+        font-size: 2rem;
         font-weight: 600;
-        color: var(--text-color);
+        color: #111827;
       }
     }
 
     .header-actions {
       display: flex;
-      gap: 0.5rem;
+      gap: 10px;
     }
 
     @media (max-width: 768px) {
@@ -32,9 +37,10 @@
 
       .header-actions {
         width: 100%;
+        flex-direction: column;
         
         button {
-          flex: 1;
+          width: 100%;
         }
       }
     }
@@ -47,9 +53,13 @@
     justify-content: center;
     padding: 3rem;
     gap: 1rem;
+    background: #ffffff;
+    border-radius: 12px;
+    margin: 1rem 0;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 
     p {
-      color: var(--text-color-secondary);
+      color: #757575;
       margin: 0;
     }
   }
@@ -60,6 +70,10 @@
     align-items: center;
     gap: 1rem;
     padding: 2rem;
+    background: #ffffff;
+    border-radius: 12px;
+    margin: 1rem 0;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 
     ::ng-deep .p-message {
       width: 100%;
@@ -73,6 +87,10 @@
     gap: 1.5rem;
 
     ::ng-deep .overview-card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+
       .p-card-body {
         padding: 1.5rem;
       }
@@ -95,30 +113,30 @@
         label {
           font-size: 0.875rem;
           font-weight: 600;
-          color: var(--text-color-secondary);
+          color: #4b5563;
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
 
         .value {
           font-size: 1rem;
-          color: var(--text-color);
+          color: #0f172a;
         }
 
         .version-badge {
           display: inline-block;
           padding: 0.25rem 0.5rem;
-          background: var(--surface-100);
+          background: #f5f5f5;
           border-radius: 4px;
           font-size: 0.9rem;
           font-family: monospace;
-          color: var(--text-color);
+          color: #0f172a;
         }
 
         .description {
           margin: 0;
           line-height: 1.6;
-          color: var(--text-color);
+          color: #0f172a;
         }
 
         .capabilities-list {
@@ -144,12 +162,20 @@
     }
 
     ::ng-deep .detail-tabs {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+
+      .p-tabview-nav {
+        background: #f8f9fa;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
       .p-tabview-panels {
         padding: 1.5rem;
-        background: var(--surface-card);
-        border: 1px solid var(--surface-border);
-        border-top: none;
-        border-radius: 0 0 6px 6px;
+        background: #ffffff;
+        border: none;
       }
     }
 
@@ -162,7 +188,7 @@
       gap: 1rem;
 
       p {
-        color: var(--text-color-secondary);
+        color: #757575;
         margin: 0;
       }
     }
@@ -179,7 +205,7 @@
           margin: 0 0 1rem 0;
           font-size: 1.1rem;
           font-weight: 600;
-          color: var(--text-color);
+          color: #0f172a;
         }
 
         .config-grid {
@@ -195,12 +221,12 @@
             label {
               font-size: 0.875rem;
               font-weight: 500;
-              color: var(--text-color-secondary);
+              color: #4b5563;
             }
 
             .value {
               font-size: 0.95rem;
-              color: var(--text-color);
+              color: #0f172a;
             }
           }
         }
@@ -208,24 +234,26 @@
         .json-value {
           margin: 0;
           padding: 0.5rem;
-          background: var(--surface-100);
+          background: #f5f5f5;
           border-radius: 4px;
           font-family: monospace;
           font-size: 0.85rem;
           white-space: pre-wrap;
           word-break: break-all;
+          color: #0f172a;
         }
 
         .json-display {
           margin: 0;
           padding: 1rem;
-          background: var(--surface-100);
-          border: 1px solid var(--surface-border);
+          background: #f5f5f5;
+          border: 1px solid #e0e0e0;
           border-radius: 4px;
           font-family: monospace;
           font-size: 0.85rem;
           white-space: pre-wrap;
           overflow-x: auto;
+          color: #0f172a;
         }
       }
     }
@@ -237,6 +265,10 @@
         gap: 1rem;
 
         ::ng-deep .metric-card {
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+
           .p-card-body {
             padding: 1rem;
           }
@@ -245,6 +277,7 @@
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 1rem;
+            color: #0f172a;
           }
         }
 
@@ -253,7 +286,7 @@
           justify-content: space-between;
           align-items: center;
           padding: 0.5rem 0;
-          border-bottom: 1px solid var(--surface-border);
+          border-bottom: 1px solid #e5e7eb;
 
           &:last-child {
             border-bottom: none;
@@ -261,20 +294,20 @@
 
           label {
             font-size: 0.875rem;
-            color: var(--text-color-secondary);
+            color: #757575;
           }
 
           .metric-value {
             font-size: 1.1rem;
             font-weight: 600;
-            color: var(--text-color);
+            color: #0f172a;
 
             &.success {
-              color: var(--green-500);
+              color: #4CAF50;
             }
 
             &.danger {
-              color: var(--red-500);
+              color: #F44336;
             }
           }
         }
@@ -314,13 +347,13 @@
             label {
               font-size: 0.875rem;
               font-weight: 500;
-              color: var(--text-color-secondary);
+              color: #757575;
             }
 
             .value {
               font-size: 1rem;
               font-weight: 600;
-              color: var(--text-color);
+              color: #0f172a;
             }
           }
         }
@@ -331,7 +364,7 @@
           margin: 0 0 1rem 0;
           font-size: 1.1rem;
           font-weight: 600;
-          color: var(--text-color);
+          color: #0f172a;
         }
 
         ::ng-deep .issue-message {
@@ -349,7 +382,7 @@
         align-items: center;
         gap: 0.5rem;
         padding: 2rem;
-        color: var(--green-500);
+        color: #4CAF50;
 
         i {
           font-size: 2rem;
@@ -370,7 +403,7 @@
       justify-content: center;
       padding: 3rem;
       gap: 0.75rem;
-      color: var(--text-color-secondary);
+      color: #757575;
 
       i {
         font-size: 3rem;
@@ -385,6 +418,45 @@
   }
 
   .text-muted {
-    color: var(--text-color-secondary);
+    color: #757575;
+  }
+
+  // Button styling to match Street Sheet
+  ::ng-deep .p-button {
+    &.p-button-outlined {
+      border: 2px solid #144f80;
+      color: #144f80;
+      background: #ffffff;
+
+      &:hover:not(:disabled) {
+        background: #e8eef6;
+        border-color: #144f80;
+      }
+    }
+
+    &.p-button-text {
+      border: 2px solid #94a3b8;
+      color: #0f172a;
+      background: #ffffff;
+
+      &:hover:not(:disabled) {
+        background: #e5e7eb;
+      }
+    }
+
+    &.p-button-success {
+      background: #e18a25;
+      border-color: #e18a25;
+      color: #ffffff;
+
+      &:hover:not(:disabled) {
+        background: #b86404;
+        border-color: #b86404;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 10px;
   }
 }

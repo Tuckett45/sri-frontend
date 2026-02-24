@@ -10,7 +10,7 @@ import { UpdateTimeEntryDto } from '../../models/dtos/time-entry.dto';
 // Clock In
 export const clockIn = createAction(
   '[Time Entry] Clock In',
-  props<{ jobId: string; technicianId: string; location?: GeoLocation }>()
+  props<{ jobId: string; technicianId: string; location?: GeoLocation; mileage?: number }>()
 );
 
 export const clockInSuccess = createAction(

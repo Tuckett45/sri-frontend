@@ -42,11 +42,17 @@ export const selectTimeEntriesLoading = createSelector(
   (state) => state.loading
 );
 
+// Alias for consistency with component usage
+export const selectTimeEntryLoading = selectTimeEntriesLoading;
+
 // Select error state
 export const selectTimeEntriesError = createSelector(
   selectTimeEntryState,
   (state) => state.error
 );
+
+// Alias for consistency with component usage
+export const selectTimeEntryError = selectTimeEntriesError;
 
 // Select active entry
 export const selectActiveTimeEntry = createSelector(
@@ -131,6 +137,32 @@ export const selectTodaysTimeEntries = createSelector(
   }
 );
 
+// Alias for consistency with component usage
+export const selectTodayTimeEntries = selectTodaysTimeEntries;
+
+// Select week's time entries (Monday to Sunday)
+export const selectWeekTimeEntries = createSelector(
+  selectAllTimeEntries,
+  (timeEntries) => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() + diff);
+    weekStart.setHours(0, 0, 0, 0);
+    
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    return timeEntries.filter(entry => {
+      const entryDate = new Date(entry.clockInTime);
+      return entryDate >= weekStart && entryDate <= weekEnd;
+    });
+  }
+);
+
 // Select has active entry
 export const selectHasActiveEntry = createSelector(
   selectActiveTimeEntry,
@@ -151,4 +183,16 @@ export const selectTotalMileageByJob = (jobId: string) => createSelector(
   (timeEntries) => timeEntries.reduce((total, entry) => {
     return total + (entry.mileage || 0);
   }, 0)
+);
+
+// Select last completed time entry (most recent clock out) for a technician
+export const selectLastCompletedTimeEntry = (technicianId: string) => createSelector(
+  selectTimeEntriesByTechnician(technicianId),
+  (timeEntries) => {
+    const completed = timeEntries
+      .filter(entry => entry.clockOutTime && entry.clockOutLocation)
+      .sort((a, b) => new Date(b.clockOutTime!).getTime() - new Date(a.clockOutTime!).getTime());
+    
+    return completed.length > 0 ? completed[0] : null;
+  }
 );

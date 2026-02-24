@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { ConfigurationService } from './configuration.service';
 import { User } from '../models/user.model';
 import { LoginModel } from '../models/login-model.model';
+import { StatePersistenceService } from '../features/field-resource-management/services/state-persistence.service';
 import {
   AuthResult,
   SecureAuthState,
@@ -38,8 +39,12 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   private memoryOnlyToken: string | null = null;
   private currentAuthMethod: AuthMethod = AuthMethod.MEMORY_ONLY;
 
-  constructor(router: Router, http: HttpClient) {
-    super(router, http);
+  constructor(
+    router: Router, 
+    http: HttpClient,
+    statePersistenceService: StatePersistenceService
+  ) {
+    super(router, http, statePersistenceService);
     // Don't initialize immediately - wait for explicit initialization
   }
 

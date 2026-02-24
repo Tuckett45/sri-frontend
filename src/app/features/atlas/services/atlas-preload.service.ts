@@ -198,7 +198,9 @@ export class AtlasPreloadService {
   preloadDeploymentDetail(deploymentId: string): Observable<void> {
     return new Observable(observer => {
       // Dispatch actions to load deployment detail and related data
-      this.store.dispatch(DeploymentActions.loadDeploymentDetail({ id: deploymentId }));
+      import('../state/deployments/deployment.actions').then((actions) => {
+        this.store.dispatch(actions.loadDeploymentDetail({ id: deploymentId }));
+      });
       this.store.dispatch(AIAnalysisActions.analyzeDeployment({ deploymentId }));
 
       observer.next();
@@ -216,9 +218,6 @@ export class AtlasPreloadService {
    */
   preloadForRoute(route: string, params?: any): Observable<PreloadResult> {
     switch (route) {
-      case 'deployments':
-        return this.preload({ deployments: true, aiAgents: false });
-      
       case 'deployment-detail':
         if (params?.id) {
           return this.preloadDeploymentDetail(params.id).pipe(
@@ -228,7 +227,7 @@ export class AtlasPreloadService {
         return of({ success: false, errors: ['No deployment ID provided'] });
       
       case 'ai-analysis':
-        return this.preload({ deployments: false, aiAgents: true });
+        return this.preload({ aiAgents: true, userApprovals: false });
       
       default:
         return this.preload();

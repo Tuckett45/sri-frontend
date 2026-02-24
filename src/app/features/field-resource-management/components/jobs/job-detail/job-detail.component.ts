@@ -50,6 +50,12 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   // Assignments (placeholder - would come from assignment state)
   assignments: Assignment[] = [];
   
+  // Current user (mock - would come from auth service)
+  currentTechnicianId = 'current-technician-id';
+  
+  // Check if job is assigned to current user
+  isAssignedToCurrentUser = false;
+  
   // Status history (placeholder - would come from job service)
   statusHistory: any[] = [];
   
@@ -122,7 +128,24 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     // Placeholder data
     this.timeEntries = [];
     this.assignments = [];
-    this.statusHistory = [];
+    
+    // Check if current user is assigned to this job
+    this.checkIfAssignedToCurrentUser();
+  }
+  
+  /**
+   * Check if the current user is assigned to this job
+   */
+  private checkIfAssignedToCurrentUser(): void {
+    // In a real implementation, this would check the assignment state
+    // For now, we'll check if the job has any assignments with the current technician
+    this.isAssignedToCurrentUser = this.assignments.some(
+      assignment => assignment.technicianId === this.currentTechnicianId
+    );
+    
+    // For demo purposes, allow time tracking on all jobs
+    // Remove this line in production
+    this.isAssignedToCurrentUser = true;
   }
 
   /**

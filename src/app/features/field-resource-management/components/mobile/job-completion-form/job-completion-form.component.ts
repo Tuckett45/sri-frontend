@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Job, JobStatus } from '../../../models/job.model';
 import { updateJobStatus, uploadAttachment } from '../../../state/jobs/job.actions';
+import { SanitizationService } from '../../../services/sanitization.service';
 
 /**
  * Delay reason options
@@ -25,13 +26,14 @@ export enum DelayReason {
  * 
  * Features:
  * - Displayed when technician marks job as Completed
- * - Completion notes textarea
+ * - Completion notes textarea with sanitization
  * - File upload integration for photos
  * - Delay reason dropdown (if job not completed on time)
  * - Submit button
  * - Dispatches updateJobStatus and uploadAttachment actions
+ * - XSS protection through input sanitization
  * 
- * Requirements: 9.1-9.7
+ * Requirements: 9.1-9.7, 9.2
  */
 @Component({
   selector: 'frm-job-completion-form',
@@ -53,7 +55,8 @@ export class JobCompletionFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private store: Store
+    private store: Store,
+    private sanitizationService: SanitizationService
   ) {}
 
   ngOnInit(): void {
@@ -118,12 +121,15 @@ export class JobCompletionFormComponent implements OnInit {
     try {
       const formValue = this.completionForm.value;
 
+      // Sanitize completion notes to prevent XSS
+      let completionNotes = this.sanitizationService.sanitizeText(formValue.completionNotes);
+      
       // Build completion notes with delay information if applicable
-      let completionNotes = formValue.completionNotes;
       if (this.isDelayed && formValue.delayReason) {
         completionNotes += `\n\nDelay Reason: ${formValue.delayReason}`;
         if (formValue.delayNotes) {
-          completionNotes += `\nDelay Notes: ${formValue.delayNotes}`;
+          const sanitizedDelayNotes = this.sanitizationService.sanitizeText(formValue.delayNotes);
+          completionNotes += `\nDelay Notes: ${sanitizedDelayNotes}`;
         }
       }
 

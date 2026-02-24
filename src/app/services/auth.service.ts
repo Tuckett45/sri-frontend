@@ -7,6 +7,7 @@ import { LoginModel } from '../models/login-model.model';
 import { environment, local_environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../models/role.enum';
+import { StatePersistenceService } from '../features/field-resource-management/services/state-persistence.service';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +25,11 @@ export class AuthService {
     })
   };
   
-  constructor(protected router: Router, protected http: HttpClient) {
+  constructor(
+    protected router: Router, 
+    protected http: HttpClient,
+    private statePersistenceService: StatePersistenceService
+  ) {
     this.loadUserFromLocalStorage();
    }
  
@@ -205,14 +210,18 @@ export class AuthService {
     this.clearStorage();
     this.resetCurrentUser();
     this.loggedInStatus.next(false);
+    
+    // Clear persisted FRM state to prevent data leakage between users
+    this.statePersistenceService.clearPersistedState();
+    
     this.router.navigate(['/login']);
-}
+  }
 
-protected clearStorage(): void {
+  protected clearStorage(): void {
     localStorage.removeItem('loggedIn');
     sessionStorage.removeItem(this.authTokenStorageKey);
     localStorage.removeItem('user');
-}
+  }
 
 private resetCurrentUser(): void {
     const userString = localStorage.getItem('user');

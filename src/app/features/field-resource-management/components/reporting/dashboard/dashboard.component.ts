@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -6,6 +6,7 @@ import { DashboardMetrics, KPI, ActivityItem } from '../../../models/reporting.m
 import { Job, JobStatus } from '../../../models/job.model';
 import * as ReportingActions from '../../../state/reporting/reporting.actions';
 import * as ReportingSelectors from '../../../state/reporting/reporting.selectors';
+import { AccessibilityService } from '../../../services/accessibility.service';
 
 /**
  * Dashboard Component
@@ -50,7 +51,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   };
   
-  constructor(private store: Store) {
+  constructor(
+    private store: Store,
+    private accessibilityService: AccessibilityService
+  ) {
     // Initialize observables
     this.dashboard$ = this.store.select(ReportingSelectors.selectDashboard);
     this.loading$ = this.store.select(ReportingSelectors.selectReportingLoading);
@@ -65,6 +69,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.kpis$ = this.store.select(ReportingSelectors.selectDashboardKPIs);
   }
   
+  /**
+   * Keyboard shortcut handler
+   * Ctrl+R or F5: Refresh dashboard
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    // Ctrl+R or F5 to refresh
+    if ((event.ctrlKey && event.key === 'r') || event.key === 'F5') {
+      event.preventDefault();
+      this.onRefresh();
+      this.accessibilityService.announce('Dashboard refreshed');
+    }
+  }
+  
   ngOnInit(): void {
     // Load dashboard data
     this.loadDashboard();
@@ -73,6 +91,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.dashboard$.pipe(takeUntil(this.destroy$)).subscribe(dashboard => {
       if (dashboard) {
         this.updateCharts(dashboard);
+      }
+    });
+    
+    // Subscribe to loading state for announcements
+    this.loading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
+      if (loading) {
+        this.accessibilityService.announce('Loading dashboard data');
+      }
+    });
+    
+    // Subscribe to error state for announcements
+    this.error$.pipe(takeUntil(this.destroy$)).subscribe(error => {
+      if (error) {
+        this.accessibilityService.announceError(error);
       }
     });
     
@@ -101,6 +133,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   onRefresh(): void {
     this.store.dispatch(ReportingActions.refreshDashboard());
+    this.accessibilityService.announce('Refreshing dashboard data');
   }
   
   /**
@@ -124,9 +157,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       backgroundColor: [
         '#9E9E9E', // NotStarted - gray
         '#2196F3', // EnRoute - blue
-        '#FF9800', // OnSite - orange
-        '#4CAF50', // Completed - green
-        '#F44336', // Issue - red
+        '#42a5f5', // OnSite - light blue
+        '#66bb6a', // Completed - green
+        '#ef5350', // Issue - red
         '#757575'  // Cancelled - gray
       ]
     }];

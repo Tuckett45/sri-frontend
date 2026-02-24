@@ -28,6 +28,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatRadioModule } from '@angular/material/radio';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
 const MATERIAL_MODULES = [
@@ -58,6 +60,8 @@ const MATERIAL_MODULES = [
   MatSlideToggleModule,
   MatExpansionModule,
   MatListModule,
+  MatTabsModule,
+  MatRadioModule,
   DragDropModule
 ];
 

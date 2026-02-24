@@ -11,7 +11,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { TechnicianScheduleComponent } from './technician-schedule.component';
-import { Technician } from '../../../models/technician.model';
+import { Technician, TechnicianRole, EmploymentType } from '../../../models/technician.model';
 import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
 import { Assignment } from '../../../models/assignment.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
@@ -29,8 +29,8 @@ describe('TechnicianScheduleComponent', () => {
     lastName: 'Doe',
     email: 'john@example.com',
     phone: '555-0100',
-    role: 'Installer',
-    employmentType: 'W2',
+    role: TechnicianRole.Installer,
+    employmentType: EmploymentType.W2,
     homeBase: 'Office A',
     region: 'North',
     skills: [],
@@ -139,8 +139,8 @@ describe('TechnicianScheduleComponent', () => {
     const dispatchSpy = spyOn(store, 'dispatch');
     fixture.detectChanges();
     
-    expect(dispatchSpy).toHaveBeenCalledWith(AssignmentActions.loadAssignments());
-    expect(dispatchSpy).toHaveBeenCalledWith(JobActions.loadJobs());
+    expect(dispatchSpy).toHaveBeenCalledWith(AssignmentActions.loadAssignments({}));
+    expect(dispatchSpy).toHaveBeenCalledWith(JobActions.loadJobs({}));
   });
 
   it('should set date range to today', () => {

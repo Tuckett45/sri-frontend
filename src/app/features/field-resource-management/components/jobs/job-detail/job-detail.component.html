@@ -140,6 +140,22 @@
       </mat-card-content>
     </mat-card>
 
+    <!-- Time Tracker Section (for assigned technicians) -->
+    <mat-card class="detail-section time-tracker-section" *ngIf="isAssignedToCurrentUser">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>schedule</mat-icon>
+          Time Tracking
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <frm-time-tracker 
+          [job]="job"
+          [isAdmin]="false">
+        </frm-time-tracker>
+      </mat-card-content>
+    </mat-card>
+
     <!-- Section 4: Assigned Technicians -->
     <mat-card class="detail-section">
       <mat-card-header>

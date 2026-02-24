@@ -203,3 +203,27 @@
     }
   }
 }
+
+// Sparkline placeholder styles
+.sparkline-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(63, 81, 181, 0.08);
+  border-radius: 4px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #3f51b5;
+  }
+  
+  span {
+    font-family: 'Roboto Mono', monospace;
+  }
+}

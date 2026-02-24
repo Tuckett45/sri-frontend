@@ -5,7 +5,7 @@ import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
 import { TimeEntry } from '../../../models/time-entry.model';
 import { updateJobStatus } from '../../../state/jobs/job.actions';
 import { clockIn, clockOut } from '../../../state/time-entries/time-entry.actions';
-import { selectActiveEntry } from '../../../state/time-entries/time-entry.selectors';
+import { selectActiveTimeEntry } from '../../../state/time-entries/time-entry.selectors';
 
 describe('JobCardComponent', () => {
   let component: JobCardComponent;
@@ -60,7 +60,7 @@ describe('JobCardComponent', () => {
       providers: [
         provideMockStore({
           selectors: [
-            { selector: selectActiveEntry, value: null }
+            { selector: selectActiveTimeEntry, value: null }
           ]
         })
       ]
@@ -244,7 +244,7 @@ describe('JobCardComponent', () => {
   });
 
   it('should set isClockedIn when active entry matches job', () => {
-    store.overrideSelector(selectActiveEntry, {
+    store.overrideSelector(selectActiveTimeEntry, {
       ...mockTimeEntry,
       jobId: mockJob.id,
       clockOutTime: undefined
@@ -256,7 +256,7 @@ describe('JobCardComponent', () => {
   });
 
   it('should not set isClockedIn when active entry is for different job', () => {
-    store.overrideSelector(selectActiveEntry, {
+    store.overrideSelector(selectActiveTimeEntry, {
       ...mockTimeEntry,
       jobId: 'different-job-id',
       clockOutTime: undefined

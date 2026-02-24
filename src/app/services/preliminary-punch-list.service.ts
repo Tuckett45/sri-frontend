@@ -6,6 +6,8 @@ import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-lis
 import { environment, local_environment } from '../../environments/environments';
 import { User } from '../models/user.model';
 import { OfflineCacheService } from './offline-cache.service';
+import { RoleBasedDataService } from './role-based-data.service';
+import { AuthService } from './auth.service';
 
 export interface PagedResponse<T> {
   total: number;
@@ -67,7 +69,12 @@ export class PreliminaryPunchListService {
 
   private previousOnline = true;
 
-  constructor(private http: HttpClient, private offlineCache: OfflineCacheService) {
+  constructor(
+    private http: HttpClient, 
+    private offlineCache: OfflineCacheService,
+    private roleBasedDataService: RoleBasedDataService,
+    private authService: AuthService
+  ) {
     this.previousOnline = this.offlineCache.isOnline();
 
     effect(() => {
@@ -216,12 +223,17 @@ export class PreliminaryPunchListService {
 
     const isRegional = user.market === 'RG';
 
-    if (user.role === 'PM' && !isRegional) {
-      url = `${environment.apiUrl}/PunchList/pm-unresolved`;
-      params = params.set('state', user.market).set('company', user.company ?? '');
-    } else if (user.role === 'CM' && !isRegional) {
+    // Use RoleBasedDataService for market filtering
+    if (this.authService.isAdmin()) {
+      // Admin users: get all markets
+      url = `${environment.apiUrl}/PunchList/unresolved`;
+    } else if (this.authService.isCM() && !isRegional) {
+      // CM users: filter by their market
       url = `${environment.apiUrl}/PunchList/cm-unresolved`;
       params = params.set('state', user.market);
+    } else if (user.role === 'PM' && !isRegional) {
+      url = `${environment.apiUrl}/PunchList/pm-unresolved`;
+      params = params.set('state', user.market).set('company', user.company ?? '');
     } else {
       url = `${environment.apiUrl}/PunchList/unresolved`;
     }
@@ -235,7 +247,10 @@ export class PreliminaryPunchListService {
     let cached$ = this.unresolvedCacheMap.get(key);
     if (!cached$) {
       const request$ = this.http.get<any>(url, { params, headers: this.httpOptions.headers })
-        .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, Number(pageNumber ?? 0), Number(pageSize ?? 25))));
+        .pipe(
+          map(resp => this.normalizePaged<PreliminaryPunchList>(resp, Number(pageNumber ?? 0), Number(pageSize ?? 25))),
+          map(resp => this.applyRoleBasedFiltering(resp, user))
+        );
       cached$ = request$.pipe(
         tap(resp => this.unresolvedDataMap.set(key, resp)),
         shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 })
@@ -258,12 +273,17 @@ export class PreliminaryPunchListService {
 
     const isRegional = user.market === 'RG';
 
-    if (user.role === 'PM' && !isRegional) {
-      url = `${environment.apiUrl}/PunchList/pm-resolved`;
-      params = params.set('state', user.market).set('company', user.company ?? '');
-    } else if (user.role === 'CM' && !isRegional) {
+    // Use RoleBasedDataService for market filtering
+    if (this.authService.isAdmin()) {
+      // Admin users: get all markets
+      url = `${environment.apiUrl}/PunchList/resolved`;
+    } else if (this.authService.isCM() && !isRegional) {
+      // CM users: filter by their market
       url = `${environment.apiUrl}/PunchList/cm-resolved`;
       params = params.set('state', user.market);
+    } else if (user.role === 'PM' && !isRegional) {
+      url = `${environment.apiUrl}/PunchList/pm-resolved`;
+      params = params.set('state', user.market).set('company', user.company ?? '');
     } else {
       url = `${environment.apiUrl}/PunchList/resolved`;
     }
@@ -277,7 +297,10 @@ export class PreliminaryPunchListService {
     let cached$ = this.resolvedCacheMap.get(key);
     if (!cached$) {
       const request$ = this.http.get<any>(url, { params, headers: this.httpOptions.headers })
-        .pipe(map(resp => this.normalizePaged<PreliminaryPunchList>(resp, Number(pageNumber ?? 0), Number(pageSize ?? 25))));
+        .pipe(
+          map(resp => this.normalizePaged<PreliminaryPunchList>(resp, Number(pageNumber ?? 0), Number(pageSize ?? 25))),
+          map(resp => this.applyRoleBasedFiltering(resp, user))
+        );
       cached$ = request$.pipe(
         tap(resp => this.resolvedDataMap.set(key, resp)),
         shareReplay({ bufferSize: 1, refCount: true, windowTime: 5 * 60 * 1000 })
@@ -285,6 +308,44 @@ export class PreliminaryPunchListService {
       this.resolvedCacheMap.set(key, cached$);
     }
     return cached$;
+  }
+
+  /**
+   * Apply role-based filtering to punch list results
+   * CM users: filter by their market
+   * Admin users: include all markets
+   */
+  private applyRoleBasedFiltering(
+    response: PagedResponse<PreliminaryPunchList>,
+    user: User
+  ): PagedResponse<PreliminaryPunchList> {
+    // Admin users get all markets
+    if (this.authService.isAdmin()) {
+      return response;
+    }
+
+    // CM users: filter by their market
+    if (this.authService.isCM()) {
+      // Map state to market for filtering
+      const itemsWithMarket = response.items.map(item => ({ ...item, market: item.state }));
+      const filteredItems = this.roleBasedDataService.applyMarketFilter(
+        itemsWithMarket,
+        { specificMarket: user.market }
+      );
+      // Map back to original PreliminaryPunchList objects
+      const items = filteredItems.map(item => {
+        const { market, ...rest } = item as any;
+        return rest as PreliminaryPunchList;
+      });
+      return {
+        ...response,
+        items: items,
+        total: items.length
+      };
+    }
+
+    // Other roles: return as-is (already filtered by backend)
+    return response;
   }
 
   getAllUnresolved(pageNumber?: number, pageSize?: number) {
@@ -407,12 +468,27 @@ export class PreliminaryPunchListService {
   }
 
   addEntry(punchList: PreliminaryPunchList): Observable<any> {
+    // Associate with CM's market if CM user
+    const currentUser = this.authService.getUser();
+    if (this.authService.isCM() && !this.authService.isAdmin() && currentUser?.market) {
+      if (!punchList['market']) {
+        punchList['market'] = currentUser.market;
+      }
+    }
+
     this.clearCaches();
     return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions)
       .pipe(catchError(this.handleError));
   }
 
   updateEntry(punchList: PreliminaryPunchList): Observable<any> {
+    // Validate market ownership for CMs
+    if (this.authService.isCM() && !this.authService.isAdmin()) {
+      if (!this.roleBasedDataService.canAccessMarket(punchList['market'] || '')) {
+        return throwError(() => new Error('You do not have permission to update punch lists from other markets'));
+      }
+    }
+
     this.clearCaches();
     return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions)
       .pipe(catchError(this.handleError));

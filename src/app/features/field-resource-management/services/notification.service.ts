@@ -1,11 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, retry, map } from 'rxjs/operators';
 import { Notification } from '../models/notification.model';
+import { FrmNotificationAdapterService, FrmNotificationPreferences } from './frm-notification-adapter.service';
+import { ArkNotification } from '../../../models/ark/notification.model';
 
 /**
  * Notification preferences
+ * @deprecated Use FrmNotificationPreferences from FrmNotificationAdapterService instead
  */
 export interface NotificationPreferences {
   userId: string;
@@ -20,8 +23,17 @@ export interface NotificationPreferences {
 }
 
 /**
- * Service for managing notifications
- * Handles HTTP communication with the backend API for notification operations
+ * Service for managing FRM notifications
+ * 
+ * This service now delegates to FrmNotificationAdapterService which routes
+ * notifications through the ARK notification system. This ensures proper
+ * domain separation while maintaining backward compatibility.
+ * 
+ * All notification operations are now handled by the adapter, which provides:
+ * - Market-based filtering for CM users
+ * - System-wide access for Admin users
+ * - Consistent notification delivery and preferences management
+ * - Integration with ARK notification audit logging
  */
 @Injectable({
   providedIn: 'root'
@@ -30,7 +42,10 @@ export class NotificationService {
   private readonly apiUrl = '/api/notifications';
   private readonly retryCount = 2;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private frmNotificationAdapter: FrmNotificationAdapterService
+  ) {}
 
   /**
    * Retrieves all notifications for the current user
@@ -93,26 +108,33 @@ export class NotificationService {
 
   /**
    * Retrieves notification preferences for the current user
+   * Delegates to FrmNotificationAdapterService for ARK integration
    * @returns Observable of notification preferences
    */
   getNotificationPreferences(): Observable<NotificationPreferences> {
-    return this.http.get<NotificationPreferences>(`${this.apiUrl}/preferences`)
+    return this.http.get<{ userId: string }>(`${this.apiUrl}/preferences`)
       .pipe(
         retry(this.retryCount),
         catchError(this.handleError)
-      );
+      )
+      .pipe(
+        map(response => response.userId),
+        // Delegate to adapter to get preferences from ARK system
+        map(userId => this.frmNotificationAdapter.getFrmNotificationPreferences(userId)),
+        // Flatten the nested observable
+        map(obs => obs as any)
+      ) as Observable<NotificationPreferences>;
   }
 
   /**
    * Updates notification preferences for the current user
+   * Delegates to FrmNotificationAdapterService for ARK integration
    * @param preferences Updated notification preferences
    * @returns Observable of updated preferences
    */
   updateNotificationPreferences(preferences: NotificationPreferences): Observable<NotificationPreferences> {
-    return this.http.put<NotificationPreferences>(`${this.apiUrl}/preferences`, preferences)
-      .pipe(
-        catchError(this.handleError)
-      );
+    // Delegate to adapter to update preferences in ARK system
+    return this.frmNotificationAdapter.updateFrmNotificationPreferences(preferences as FrmNotificationPreferences);
   }
 
   /**
@@ -125,6 +147,87 @@ export class NotificationService {
       .pipe(
         catchError(this.handleError)
       );
+  }
+
+  /**
+   * Send job assigned notification
+   * Delegates to FrmNotificationAdapterService
+   * @param jobId Job identifier
+   * @param technicianId Technician identifier
+   * @returns Observable of created notification
+   */
+  sendJobAssignedNotification(jobId: string, technicianId: string): Observable<ArkNotification> {
+    return this.frmNotificationAdapter.sendJobAssignedNotification(jobId, technicianId);
+  }
+
+  /**
+   * Send job reassigned notification
+   * Delegates to FrmNotificationAdapterService
+   * @param jobId Job identifier
+   * @param oldTechnicianId Previous technician identifier
+   * @param newTechnicianId New technician identifier
+   * @returns Observable of created notification
+   */
+  sendJobReassignedNotification(
+    jobId: string,
+    oldTechnicianId: string,
+    newTechnicianId: string
+  ): Observable<ArkNotification> {
+    return this.frmNotificationAdapter.sendJobReassignedNotification(jobId, oldTechnicianId, newTechnicianId);
+  }
+
+  /**
+   * Send job status changed notification
+   * Delegates to FrmNotificationAdapterService
+   * @param jobId Job identifier
+   * @param oldStatus Previous job status
+   * @param newStatus New job status
+   * @returns Observable of created notification
+   */
+  sendJobStatusChangedNotification(
+    jobId: string,
+    oldStatus: string,
+    newStatus: string
+  ): Observable<ArkNotification> {
+    return this.frmNotificationAdapter.sendJobStatusChangedNotification(jobId, oldStatus, newStatus);
+  }
+
+  /**
+   * Send job cancelled notification
+   * Delegates to FrmNotificationAdapterService
+   * @param jobId Job identifier
+   * @param reason Cancellation reason
+   * @returns Observable of created notification
+   */
+  sendJobCancelledNotification(jobId: string, reason: string): Observable<ArkNotification> {
+    return this.frmNotificationAdapter.sendJobCancelledNotification(jobId, reason);
+  }
+
+  /**
+   * Send certification expiring notification
+   * Delegates to FrmNotificationAdapterService
+   * @param technicianId Technician identifier
+   * @param certificationName Name of the certification
+   * @param expiryDate Expiry date of the certification
+   * @returns Observable of created notification
+   */
+  sendCertificationExpiringNotification(
+    technicianId: string,
+    certificationName: string,
+    expiryDate: Date
+  ): Observable<ArkNotification> {
+    return this.frmNotificationAdapter.sendCertificationExpiringNotification(technicianId, certificationName, expiryDate);
+  }
+
+  /**
+   * Send conflict detected notification
+   * Delegates to FrmNotificationAdapterService
+   * @param conflictType Type of conflict (e.g., 'schedule', 'resource', 'location')
+   * @param details Conflict details
+   * @returns Observable of created notification
+   */
+  sendConflictDetectedNotification(conflictType: string, details: string): Observable<ArkNotification> {
+    return this.frmNotificationAdapter.sendConflictDetectedNotification(conflictType, details);
   }
 
   /**

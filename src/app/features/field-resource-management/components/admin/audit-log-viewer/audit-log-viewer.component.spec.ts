@@ -88,7 +88,7 @@ describe('AuditLogViewerComponent', () => {
   });
 
   it('should export to CSV', () => {
-    exportService.generateCSV.and.returnValue('csv,data');
+    exportService.generateCSV.and.returnValue(undefined);
     component.onExportToCSV();
     expect(exportService.generateCSV).toHaveBeenCalled();
     expect(exportService.downloadFile).toHaveBeenCalled();

@@ -16,6 +16,8 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
 import { BatchStatusDialogComponent } from '../../shared/batch-status-dialog/batch-status-dialog.component';
 import { BatchTechnicianDialogComponent } from '../../shared/batch-technician-dialog/batch-technician-dialog.component';
 import { ExportService } from '../../../services/export.service';
+import { AuthService } from '../../../../../services/auth.service';
+import { UserRole } from '../../../../../models/role.enum';
 
 /**
  * Job List Component
@@ -81,6 +83,7 @@ export class JobListComponent implements OnInit, OnDestroy {
   JobStatus = JobStatus;
   JobType = JobType;
   Priority = Priority;
+  UserRole = UserRole;
 
   // Enum arrays for dropdowns
   statusOptions = Object.values(JobStatus);
@@ -96,7 +99,8 @@ export class JobListComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private authService: AuthService
   ) {
     this.jobs$ = this.store.select(JobSelectors.selectFilteredJobs);
     this.loading$ = this.store.select(JobSelectors.selectJobsLoading);
@@ -105,6 +109,13 @@ export class JobListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Add market column for Admin users
+    if (this.authService.isAdmin()) {
+      const actionsIndex = this.displayedColumns.indexOf('actions');
+      if (actionsIndex > -1) {
+        this.displayedColumns.splice(actionsIndex, 0, 'market');
+      }
+    }
     // Load filters from URL query params
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['search']) {

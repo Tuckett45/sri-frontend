@@ -1,12 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { of, throwError } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TimeTrackerComponent } from './time-tracker.component';
 import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
 import { TimeEntry, GeoLocation } from '../../../models/time-entry.model';
 import { GeolocationService, GeolocationErrorType } from '../../../services/geolocation.service';
 import { clockIn, clockOut, updateTimeEntry } from '../../../state/time-entries/time-entry.actions';
-import { selectActiveEntry } from '../../../state/time-entries/time-entry.selectors';
+import { selectActiveTimeEntry } from '../../../state/time-entries/time-entry.selectors';
 
 describe('TimeTrackerComponent', () => {
   let component: TimeTrackerComponent;
@@ -67,10 +74,19 @@ describe('TimeTrackerComponent', () => {
 
     await TestBed.configureTestingModule({
       declarations: [TimeTrackerComponent],
+      imports: [
+        MatIconModule,
+        MatButtonModule,
+        MatCardModule,
+        MatFormFieldModule,
+        MatInputModule,
+        FormsModule,
+        BrowserAnimationsModule
+      ],
       providers: [
         provideMockStore({
           selectors: [
-            { selector: selectActiveEntry, value: null }
+            { selector: selectActiveTimeEntry, value: null }
           ]
         }),
         { provide: GeolocationService, useValue: geoServiceSpy }
@@ -89,7 +105,7 @@ describe('TimeTrackerComponent', () => {
   });
 
   it('should subscribe to active time entry on init', () => {
-    store.overrideSelector(selectActiveEntry, mockTimeEntry);
+    store.overrideSelector(selectActiveTimeEntry, mockTimeEntry);
     store.refreshState();
     fixture.detectChanges();
 
@@ -98,7 +114,7 @@ describe('TimeTrackerComponent', () => {
   });
 
   it('should not be clocked in when no active entry', () => {
-    store.overrideSelector(selectActiveEntry, null);
+    store.overrideSelector(selectActiveTimeEntry, null);
     store.refreshState();
     fixture.detectChanges();
 
@@ -107,7 +123,7 @@ describe('TimeTrackerComponent', () => {
 
   it('should not be clocked in when active entry is for different job', () => {
     const differentJobEntry = { ...mockTimeEntry, jobId: 'different-job' };
-    store.overrideSelector(selectActiveEntry, differentJobEntry);
+    store.overrideSelector(selectActiveTimeEntry, differentJobEntry);
     store.refreshState();
     fixture.detectChanges();
 
@@ -263,7 +279,7 @@ describe('TimeTrackerComponent', () => {
     component.cancelManualMileage();
 
     expect(component.showManualMileageEntry).toBe(false);
-    expect(component.manualMileage).toBe(null);
+    expect(component.manualMileage).toBe(0);
   });
 
   it('should retry location capture', () => {

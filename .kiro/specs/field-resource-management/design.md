@@ -721,3 +721,553 @@ interface UIState {
 }
 ```
 
+
+
+## Correctness Properties
+
+*A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+
+Based on the prework analysis and property reflection, the following properties capture the core correctness requirements of the Field Resource Management Tool:
+
+### Authentication and Authorization Properties
+
+**Property 1: Valid Credentials Authenticate Successfully**
+
+*For any* user with valid credentials in the database, authentication should succeed and return the user's designated role.
+
+**Validates: Requirements 1.1, 1.2**
+
+**Property 2: Authorization Enforces Role Permissions**
+
+*For any* user and any feature, access should be granted if and only if the user's role has the required permissions for that feature.
+
+**Validates: Requirements 1.3**
+
+**Property 3: Technicians Can Only Update Their Assigned Jobs**
+
+*For any* technician and any job status update attempt, the update should succeed if and only if the job is currently assigned to that technician.
+
+**Validates: Requirements 6.3**
+
+### Data Validation Properties
+
+**Property 4: Required Fields Are Enforced**
+
+*For any* entity (technician, job, etc.) being saved, the save operation should succeed if and only if all required fields are populated with valid data.
+
+**Validates: Requirements 2.1, 2.7, 3.8**
+
+**Property 5: Field Constraints Are Enforced**
+
+*For any* input field with size or format constraints (photo size ≤ 10MB, notes ≤ 2000 chars, valid email/phone formats), invalid inputs should be rejected.
+
+**Validates: Requirements 9.7, 24.5, 25.4, 30.6**
+
+### Scheduling and Conflict Detection Properties
+
+**Property 6: Unique Job IDs**
+
+*For any* set of created jobs, all job IDs should be unique across the system.
+
+**Validates: Requirements 3.1**
+
+**Property 7: Scheduling Conflicts Are Detected and Prevented**
+
+*For any* technician and any two job assignments with overlapping time periods, the system should detect the conflict and prevent the second assignment unless explicitly overridden.
+
+**Validates: Requirements 4.2, 4.3, 18.1**
+
+**Property 8: Skill Matching Validation**
+
+*For any* job assignment where the job specifies required skills, the system should verify the technician possesses those skills and display a warning if any skills are missing.
+
+**Validates: Requirements 4.4, 4.5**
+
+**Property 9: Technician Ranking by Skill Match**
+
+*For any* job with required skills and a set of available technicians, technicians should be ranked in descending order by skill match percentage (matching skills / required skills).
+
+**Validates: Requirements 19.2**
+
+**Property 10: Cross-Region Assignment Detection**
+
+*For any* job assignment where the job's region differs from the technician's home region, the system should flag the assignment as cross-region.
+
+**Validates: Requirements 28.6**
+
+### Time Tracking Properties
+
+**Property 11: Clock-In Creates Time Entry**
+
+*For any* technician clocking in to a job, a time entry should be created with the current timestamp as the start time and the technician's current location (if available).
+
+**Validates: Requirements 7.1**
+
+**Property 12: Clock-Out Completes Time Entry**
+
+*For any* active time entry, clocking out should update the entry with the current timestamp as the stop time and the technician's current location (if available).
+
+**Validates: Requirements 7.2**
+
+**Property 13: Labor Hours Calculation**
+
+*For any* time entry with both clock-in and clock-out times, the total labor hours should equal the time difference in hours (clock-out time - clock-in time).
+
+**Validates: Requirements 7.3**
+
+**Property 14: Single Active Job Per Technician**
+
+*For any* technician, attempting to clock in to a second job while already clocked in to another job should be rejected.
+
+**Validates: Requirements 7.4**
+
+**Property 15: Mileage Calculation Validity**
+
+*For any* time entry with start and end locations, the calculated mileage should be non-negative and within reasonable bounds based on the distance between locations.
+
+**Validates: Requirements 8.3**
+
+### Audit and History Properties
+
+**Property 16: Status Changes Are Recorded**
+
+*For any* job status update, a status history record should be created containing the new status, timestamp, and the user who made the change.
+
+**Validates: Requirements 6.2**
+
+**Property 17: Audit Log Completeness**
+
+*For any* logged action (job creation, profile change, assignment, time entry modification), the audit log entry should contain user ID, timestamp, and action type.
+
+**Validates: Requirements 17.5**
+
+**Property 18: Time Entries Preserved on Reassignment**
+
+*For any* job reassignment, all existing time entries associated with the job should remain unchanged (no deletions or modifications).
+
+**Validates: Requirements 20.3**
+
+### Reporting and Calculation Properties
+
+**Property 19: Utilization Rate Formula**
+
+*For any* technician with recorded labor hours and available hours, the utilization rate should equal (actual labor hours / available hours) × 100.
+
+**Validates: Requirements 10.1**
+
+**Property 20: Unavailable Dates Excluded from Utilization**
+
+*For any* technician's utilization calculation, dates marked as unavailable (PTO, sick days) should not be counted in the available hours.
+
+**Validates: Requirements 10.5**
+
+**Property 21: Schedule Adherence Calculation**
+
+*For any* set of jobs in a date range, schedule adherence should equal (jobs completed on scheduled date / total jobs) × 100.
+
+**Validates: Requirements 11.4**
+
+**Property 22: System Assignment Tracking**
+
+*For any* date range, the percentage of jobs assigned through the system should equal (jobs with assignments / total jobs) × 100.
+
+**Validates: Requirements 29.1**
+
+### Notification Properties
+
+**Property 23: Assignment Notifications**
+
+*For any* job assignment to a technician, a notification should be created and delivered to that technician.
+
+**Validates: Requirements 12.1**
+
+**Property 24: Certification Expiration Notifications**
+
+*For any* certification with an expiration date within 30 days, a notification should be sent to administrators.
+
+**Validates: Requirements 26.3**
+
+### Business Logic Properties
+
+**Property 25: Expired Certifications Remove Skills**
+
+*For any* technician certification that has expired, the associated skill tag should be automatically removed from the technician's profile.
+
+**Validates: Requirements 26.4**
+
+**Property 26: Job Template Field Population**
+
+*For any* job created from a template, all fields defined in the template should be copied to the new job with their template values.
+
+**Validates: Requirements 27.4**
+
+**Property 27: Batch Operation Validation**
+
+*For any* batch operation on multiple entities, each individual operation should be validated independently, and any failures should be reported without affecting valid operations.
+
+**Validates: Requirements 21.5**
+
+**Property 28: Export Data Completeness**
+
+*For any* data export operation, the exported data should include all visible columns and respect all applied filters from the current view.
+
+**Validates: Requirements 23.5**
+
+## Error Handling
+
+The Field Resource Management Tool implements comprehensive error handling across all layers:
+
+### Frontend Error Handling
+
+**HTTP Error Interceptor**
+- Intercepts all HTTP errors from API calls
+- Displays user-friendly error messages via toast notifications
+- Logs errors to console in development mode
+- Handles specific status codes:
+  - 401: Redirect to login
+  - 403: Display "Access Denied" message
+  - 404: Display "Resource Not Found" message
+  - 500: Display "Server Error" message with retry option
+  - Network errors: Display "Connection Lost" message
+
+**Form Validation Errors**
+- Real-time validation feedback on form fields
+- Display validation messages below invalid fields
+- Prevent form submission until all validations pass
+- Highlight invalid fields with red borders
+
+**State Management Errors**
+- NgRx effects catch and handle service errors
+- Update state with error information
+- Display error messages in UI components
+- Provide retry actions for failed operations
+
+**SignalR Connection Errors**
+- Automatic reconnection with exponential backoff
+- Display connection status indicator
+- Queue updates during disconnection
+- Sync state upon reconnection
+
+### Backend Error Handling
+
+**Global Exception Handler**
+- Catches all unhandled exceptions
+- Logs exceptions with stack traces
+- Returns standardized error responses
+- Prevents sensitive information leakage
+
+**Validation Errors**
+- Model validation using Data Annotations
+- FluentValidation for complex business rules
+- Return 400 Bad Request with detailed validation errors
+- Include field-level error messages
+
+**Business Logic Errors**
+- Custom exception types for domain errors:
+  - `ConflictException`: Scheduling conflicts
+  - `SkillMismatchException`: Missing required skills
+  - `AuthorizationException`: Permission denied
+  - `ResourceNotFoundException`: Entity not found
+  - `ValidationException`: Business rule violations
+- Map exceptions to appropriate HTTP status codes
+- Include actionable error messages
+
+**Database Errors**
+- Catch and handle Entity Framework exceptions
+- Retry transient errors (connection timeouts, deadlocks)
+- Log database errors for troubleshooting
+- Return generic error messages to clients
+
+**File Upload Errors**
+- Validate file size before upload
+- Validate file types (whitelist approach)
+- Handle Azure Blob Storage errors
+- Clean up partial uploads on failure
+
+### Error Response Format
+
+All API errors follow a consistent format:
+
+```typescript
+interface ErrorResponse {
+  statusCode: number;
+  message: string;
+  errors?: Record<string, string[]>; // Field-level validation errors
+  traceId: string; // For support troubleshooting
+  timestamp: Date;
+}
+```
+
+### Logging Strategy
+
+**Application Insights Integration**
+- Log all errors with severity levels
+- Track custom events for business operations
+- Monitor performance metrics
+- Set up alerts for critical errors
+
+**Log Levels**
+- Error: Exceptions and failures
+- Warning: Validation failures, conflicts, skill mismatches
+- Information: Successful operations, assignments, completions
+- Debug: Detailed execution flow (development only)
+
+**Sensitive Data Protection**
+- Never log passwords or authentication tokens
+- Mask PII in logs (email, phone, SSN)
+- Sanitize user input before logging
+
+## Testing Strategy
+
+The Field Resource Management Tool employs a comprehensive dual testing approach combining unit tests and property-based tests to ensure correctness and reliability.
+
+### Testing Philosophy
+
+**Complementary Testing Approaches:**
+- **Unit Tests**: Verify specific examples, edge cases, and error conditions
+- **Property Tests**: Verify universal properties across all inputs through randomization
+- Both approaches are necessary for comprehensive coverage
+- Unit tests catch concrete bugs; property tests verify general correctness
+
+### Property-Based Testing
+
+**Framework Selection:**
+- **Frontend**: fast-check (TypeScript property-based testing library)
+- **Backend**: FsCheck (F# property-based testing library for .NET)
+
+**Configuration:**
+- Minimum 100 iterations per property test (due to randomization)
+- Configurable seed for reproducible test runs
+- Shrinking enabled to find minimal failing examples
+
+**Property Test Organization:**
+
+Each correctness property from the design document must be implemented as a property-based test with the following tag format:
+
+```typescript
+// Feature: field-resource-management, Property 7: Scheduling Conflicts Are Detected and Prevented
+```
+
+**Example Property Test (Frontend):**
+
+```typescript
+import * as fc from 'fast-check';
+
+describe('Scheduling Service - Property Tests', () => {
+  // Feature: field-resource-management, Property 7: Scheduling Conflicts Are Detected and Prevented
+  it('should detect conflicts for overlapping assignments', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          technicianId: fc.uuid(),
+          job1: fc.record({
+            id: fc.uuid(),
+            startDate: fc.date(),
+            endDate: fc.date()
+          }),
+          job2: fc.record({
+            id: fc.uuid(),
+            startDate: fc.date(),
+            endDate: fc.date()
+          })
+        }),
+        (data) => {
+          // Ensure job1 dates are valid
+          if (data.job1.endDate < data.job1.startDate) {
+            [data.job1.startDate, data.job1.endDate] = [data.job1.endDate, data.job1.startDate];
+          }
+          
+          // Ensure job2 dates are valid
+          if (data.job2.endDate < data.job2.startDate) {
+            [data.job2.startDate, data.job2.endDate] = [data.job2.endDate, data.job2.startDate];
+          }
+          
+          // Check if jobs overlap
+          const overlaps = 
+            (data.job1.startDate <= data.job2.endDate) &&
+            (data.job2.startDate <= data.job1.endDate);
+          
+          // Assign job1
+          schedulingService.assignTechnician(data.job1.id, data.technicianId);
+          
+          // Try to assign job2
+          const result = schedulingService.checkConflicts(data.technicianId, data.job2.id);
+          
+          // If jobs overlap, conflicts should be detected
+          if (overlaps) {
+            expect(result.length).toBeGreaterThan(0);
+          }
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+```
+
+**Example Property Test (Backend):**
+
+```csharp
+using FsCheck;
+using FsCheck.Xunit;
+
+public class TimeTrackingPropertyTests
+{
+    // Feature: field-resource-management, Property 13: Labor Hours Calculation
+    [Property(Arbitrary = new[] { typeof(Generators) })]
+    public Property LaborHoursEqualsTimeDifference(DateTime clockIn, DateTime clockOut)
+    {
+        return (clockOut > clockIn).ImpliesProperty(() =>
+        {
+            var timeEntry = new TimeEntry
+            {
+                ClockInTime = clockIn,
+                ClockOutTime = clockOut
+            };
+            
+            var calculatedHours = timeTrackingService.CalculateLaborHours(timeEntry);
+            var expectedHours = (clockOut - clockIn).TotalHours;
+            
+            return (Math.Abs(calculatedHours - expectedHours) < 0.001)
+                .Label($"Expected {expectedHours}, got {calculatedHours}");
+        });
+    }
+}
+```
+
+### Unit Testing
+
+**Framework Selection:**
+- **Frontend**: Jasmine + Karma (Angular default)
+- **Backend**: xUnit + Moq
+
+**Unit Test Focus Areas:**
+
+1. **Component Tests**
+   - Component initialization
+   - User interactions (button clicks, form submissions)
+   - Data binding and display
+   - Navigation and routing
+   - Error message display
+
+2. **Service Tests**
+   - HTTP request/response handling
+   - Error handling and retry logic
+   - Data transformation
+   - State updates
+
+3. **Business Logic Tests**
+   - Specific edge cases (empty lists, null values)
+   - Boundary conditions (max file size, character limits)
+   - Error conditions (invalid input, missing data)
+   - Integration between components
+
+4. **State Management Tests**
+   - Action dispatching
+   - Reducer logic
+   - Selector outputs
+   - Effect side effects
+
+**Example Unit Test:**
+
+```typescript
+describe('TechnicianFormComponent', () => {
+  it('should reject technician creation when required fields are missing', () => {
+    const component = fixture.componentInstance;
+    component.technicianForm.patchValue({
+      firstName: 'John',
+      lastName: 'Doe'
+      // Missing technicianId, role, homeBase
+    });
+    
+    expect(component.technicianForm.valid).toBeFalse();
+    expect(component.technicianForm.get('technicianId')?.errors?.['required']).toBeTruthy();
+  });
+  
+  it('should validate email format', () => {
+    const component = fixture.componentInstance;
+    component.technicianForm.patchValue({
+      email: 'invalid-email'
+    });
+    
+    expect(component.technicianForm.get('email')?.errors?.['email']).toBeTruthy();
+  });
+});
+```
+
+### Integration Testing
+
+**API Integration Tests:**
+- Test complete request/response cycles
+- Use in-memory database for isolation
+- Test authentication and authorization
+- Test file upload/download
+- Test SignalR connections
+
+**End-to-End Tests:**
+- Critical user workflows only (avoid over-testing)
+- Use Cypress or Playwright
+- Test: Login → Create Job → Assign Technician → Clock In → Complete Job
+- Test: Create Technician → Add Skills → Assign to Job
+- Run in CI/CD pipeline
+
+### Test Coverage Goals
+
+- **Unit Test Coverage**: 80%+ for business logic and services
+- **Property Test Coverage**: 100% of correctness properties implemented
+- **Integration Test Coverage**: All API endpoints
+- **E2E Test Coverage**: Critical user workflows
+
+### Continuous Integration
+
+**Test Execution:**
+- Run all unit tests on every commit
+- Run property tests (100 iterations) on every commit
+- Run integration tests on pull requests
+- Run E2E tests nightly and before releases
+
+**Quality Gates:**
+- All tests must pass before merge
+- Code coverage must meet thresholds
+- No critical security vulnerabilities
+- Performance benchmarks must pass
+
+### Test Data Generation
+
+**Property Test Generators:**
+- Custom generators for domain entities (Technician, Job, Assignment)
+- Constrained generators (valid dates, non-empty strings, valid enums)
+- Relationship generators (technician with skills, job with assignments)
+
+**Example Generator:**
+
+```typescript
+const technicianArbitrary = fc.record({
+  id: fc.uuid(),
+  technicianId: fc.string({ minLength: 1, maxLength: 20 }),
+  firstName: fc.string({ minLength: 1, maxLength: 50 }),
+  lastName: fc.string({ minLength: 1, maxLength: 50 }),
+  email: fc.emailAddress(),
+  phone: fc.string({ minLength: 10, maxLength: 15 }),
+  role: fc.constantFrom('Installer', 'Lead', 'Level1', 'Level2', 'Level3', 'Level4'),
+  employmentType: fc.constantFrom('W2', '1099'),
+  homeBase: fc.string({ minLength: 1, maxLength: 100 }),
+  region: fc.string({ minLength: 1, maxLength: 50 }),
+  skills: fc.array(skillArbitrary, { minLength: 0, maxLength: 10 }),
+  isActive: fc.boolean()
+});
+```
+
+### Testing Best Practices
+
+1. **Keep Tests Fast**: Unit and property tests should run in seconds
+2. **Isolate Tests**: No shared state between tests
+3. **Clear Test Names**: Describe what is being tested and expected outcome
+4. **Arrange-Act-Assert**: Follow AAA pattern for clarity
+5. **Test Behavior, Not Implementation**: Focus on what, not how
+6. **Avoid Test Duplication**: Property tests cover many cases; don't duplicate with unit tests
+7. **Use Meaningful Assertions**: Provide context in assertion messages
+8. **Clean Up Resources**: Dispose of services, close connections
+9. **Mock External Dependencies**: Don't call real APIs or databases in unit tests
+10. **Review Test Failures**: Understand why tests fail before fixing
+

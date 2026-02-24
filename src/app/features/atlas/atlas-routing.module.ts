@@ -19,8 +19,15 @@ import { QueryResultsComponent } from './components/query-builder/query-results.
 import { QueryTemplateComponent } from './components/query-builder/query-template.component';
 import { IntegrationStatusComponent } from './components/admin/integration-status.component';
 
+// Role-based dashboard components
+import { CMDashboardComponent } from '../field-resource-management/components/reporting/cm-dashboard/cm-dashboard.component';
+import { AdminDashboardComponent } from '../field-resource-management/components/reporting/admin-dashboard/admin-dashboard.component';
+
 // Guards
 import { AtlasFeatureGuard } from './guards/index';
+import { CMGuard } from '../../guards/cm.guard';
+import { EnhancedRoleGuard } from '../../guards/enhanced-role.guard';
+import { UserRole } from '../../models/role.enum';
 
 /**
  * ATLAS Routing Module
@@ -30,6 +37,8 @@ import { AtlasFeatureGuard } from './guards/index';
  * 
  * Route Structure:
  * - /atlas - Redirects to agents (default view)
+ * - /atlas/cm/dashboard - CM Dashboard (CM and Admin only)
+ * - /atlas/admin/dashboard - Admin Dashboard (Admin only)
  * - /atlas/analysis/:deploymentId - AI analysis for deployment
  * - /atlas/risk-assessment/:deploymentId - Risk assessment for deployment
  * - /atlas/approvals - Approval management
@@ -46,8 +55,10 @@ import { AtlasFeatureGuard } from './guards/index';
  * 
  * Guards:
  * - AtlasFeatureGuard: Checks if ATLAS integration is enabled via feature flag
+ * - CMGuard: Protects CM-specific routes (CM and Admin access)
+ * - EnhancedRoleGuard: Provides role-based and market-based access control
  * 
- * Requirements: 9.5, 9.7, 2.7, 10.9
+ * Requirements: 9.5, 9.7, 2.7, 10.9, 3.7, 15.1, 15.2
  */
 const routes: Routes = [
   {
@@ -60,6 +71,46 @@ const routes: Routes = [
         path: '',
         redirectTo: 'agents',
         pathMatch: 'full'
+      },
+
+      // CM Dashboard - CM and Admin access
+      {
+        path: 'cm',
+        children: [
+          {
+            path: 'dashboard',
+            component: CMDashboardComponent,
+            canActivate: [CMGuard],
+            data: { 
+              title: 'CM Dashboard',
+              breadcrumb: 'CM Dashboard'
+            }
+          }
+        ]
+      },
+
+      // Admin Dashboard - Admin only
+      {
+        path: 'admin',
+        children: [
+          {
+            path: 'dashboard',
+            component: AdminDashboardComponent,
+            canActivate: [EnhancedRoleGuard],
+            data: { 
+              title: 'Admin Dashboard',
+              breadcrumb: 'Admin Dashboard',
+              roleGuard: {
+                allowedRoles: [UserRole.Admin]
+              }
+            }
+          },
+          {
+            path: 'integration-status',
+            component: IntegrationStatusComponent,
+            data: { title: 'ATLAS Integration Status' }
+          }
+        ]
       },
 
       // AI Analysis routes
@@ -86,7 +137,7 @@ const routes: Routes = [
         ]
       },
 
-      // Approval routes
+      // Approval routes - with market validation for CM users
       {
         path: 'approvals',
         children: [
@@ -103,7 +154,7 @@ const routes: Routes = [
         ]
       },
 
-      // Exception routes
+      // Exception routes - with market validation for CM users
       {
         path: 'exceptions',
         children: [
@@ -160,18 +211,6 @@ const routes: Routes = [
             path: 'templates',
             component: QueryTemplateComponent,
             data: { title: 'Query Templates' }
-          }
-        ]
-      },
-
-      // Admin routes
-      {
-        path: 'admin',
-        children: [
-          {
-            path: 'integration-status',
-            component: IntegrationStatusComponent,
-            data: { title: 'ATLAS Integration Status' }
           }
         ]
       }

@@ -9,20 +9,20 @@
   // Job Information
   &__job-info {
     text-align: center;
-    padding: 16px;
+    padding: 20px;
     background-color: #f5f5f5;
     border-radius: 12px;
   }
 
   &__job-title {
-    margin: 0 0 8px 0;
+    margin: 0 0 12px 0;
     font-size: 24px;
     font-weight: 600;
     color: #212121;
   }
 
   &__job-client {
-    margin: 0 0 4px 0;
+    margin: 0 0 8px 0;
     font-size: 16px;
     font-weight: 500;
     color: #424242;
@@ -91,6 +91,7 @@
     font-weight: 600;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s;
+    color: #ffffff !important;
 
     &:active {
       transform: scale(0.95);
@@ -101,6 +102,11 @@
       width: 32px;
       height: 32px;
       margin-right: 12px;
+      color: #ffffff !important;
+    }
+    
+    span {
+      color: #ffffff !important;
     }
 
     &--in {
@@ -117,7 +123,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px;
+    padding: 20px;
     background-color: #f5f5f5;
     border-radius: 12px;
     border-left: 4px solid #9e9e9e;
@@ -153,13 +159,13 @@
     font-size: 14px;
     font-weight: 500;
     color: #424242;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
   }
 
   &__location-coords {
-    font-size: 12px;
-    color: #757575;
-    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #616161;
+    line-height: 1.5;
   }
 
   // Error Message
@@ -199,7 +205,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px;
+    padding: 20px;
     background-color: #e3f2fd;
     border-radius: 12px;
     border-left: 4px solid #2196f3;
@@ -218,9 +224,10 @@
   }
 
   &__mileage-label {
-    font-size: 12px;
-    color: #757575;
-    margin-bottom: 4px;
+    font-size: 13px;
+    color: #616161;
+    margin-bottom: 6px;
+    font-weight: 500;
   }
 
   &__mileage-value {
@@ -228,14 +235,55 @@
     font-weight: 600;
     color: #1976d2;
   }
+  
+  // Edit button for mileage
+  &__edit-button {
+    mat-icon {
+      color: #212121 !important;
+    }
+  }
 
   // Manual Entry Forms
   &__manual-entry {
     border-left: 4px solid #ff9800;
+    
+    mat-card-actions {
+      button {
+        &[mat-button] {
+          color: #616161;
+        }
+        
+        &[mat-raised-button] {
+          color: #ffffff !important;
+          
+          mat-icon {
+            color: #ffffff !important;
+          }
+        }
+      }
+    }
   }
 
   &__manual-field {
     width: 100%;
+    
+    // Fix placeholder color for better readability
+    ::ng-deep {
+      input::placeholder {
+        color: #757575 !important;
+        opacity: 1 !important;
+      }
+      
+      .mat-mdc-form-field-hint,
+      .mat-mdc-form-field-error {
+        color: #616161;
+      }
+      
+      // Make suffix icon black
+      .mat-icon[matSuffix] {
+        color: #212121 !important;
+      }
+    }
   }
 
   // Admin Actions
@@ -293,61 +341,182 @@
 // Mobile Optimizations
 @media (max-width: 767px) {
   .time-tracker {
-    padding: 16px;
-    gap: 16px;
+    padding: 12px;
+    gap: 12px;
+
+    &__job-info {
+      padding: 16px;
+    }
 
     &__timer {
-      padding: 24px;
+      padding: 20px 16px;
+    }
+
+    &__timer-display {
+      gap: 12px;
+      margin-bottom: 8px;
     }
 
     &__timer-icon {
-      font-size: 40px;
-      width: 40px;
-      height: 40px;
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
     }
 
     &__timer-time {
-      font-size: 48px;
+      font-size: 40px;
+      letter-spacing: 1px;
     }
 
     &__timer-label {
-      font-size: 14px;
+      font-size: 13px;
     }
 
     &__clock-button {
-      height: 64px;
-      min-width: 200px;
-      font-size: 18px;
+      height: 56px;
+      min-width: 180px;
+      font-size: 16px;
+      border-radius: 28px;
 
       mat-icon {
-        font-size: 28px;
-        width: 28px;
-        height: 28px;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+        margin-right: 8px;
       }
     }
 
     &__job-title {
-      font-size: 20px;
+      font-size: 18px;
+      margin-bottom: 8px;
     }
 
     &__job-client {
-      font-size: 15px;
+      font-size: 14px;
+      margin-bottom: 6px;
     }
 
-    &__location-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
+    &__job-site {
+      font-size: 13px;
     }
 
+    &__location-status,
+    &__mileage,
+    &__help {
+      padding: 14px;
+      gap: 10px;
+    }
+
+    &__location-icon,
     &__mileage-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
+      font-size: 26px;
+      width: 26px;
+      height: 26px;
+    }
+
+    &__location-message {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    &__location-coords {
+      font-size: 12px;
+    }
+
+    &__mileage-label {
+      font-size: 12px;
+      margin-bottom: 4px;
     }
 
     &__mileage-value {
-      font-size: 18px;
+      font-size: 16px;
+    }
+
+    &__help {
+      p {
+        font-size: 13px;
+      }
+    }
+
+    &__error {
+      mat-card-content {
+        padding: 12px;
+      }
+    }
+
+    &__error-content {
+      gap: 10px;
+
+      mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+    }
+
+    &__error-text {
+      strong {
+        font-size: 14px;
+      }
+
+      p {
+        font-size: 13px;
+      }
+    }
+
+    &__manual-entry {
+      mat-card-header {
+        padding: 12px 12px 0;
+      }
+
+      mat-card-content {
+        padding: 12px;
+      }
+
+      mat-card-actions {
+        padding: 8px 12px 12px;
+      }
+    }
+
+    &__admin-warning {
+      padding: 10px;
+      font-size: 13px;
+      margin-bottom: 12px;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}
+
+// Extra small mobile devices
+@media (max-width: 374px) {
+  .time-tracker {
+    padding: 10px;
+    gap: 10px;
+
+    &__timer {
+      padding: 16px 12px;
+    }
+
+    &__timer-time {
+      font-size: 36px;
+    }
+
+    &__clock-button {
+      height: 52px;
+      min-width: 160px;
+      font-size: 15px;
+
+      mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+        margin-right: 6px;
+      }
     }
   }
 }

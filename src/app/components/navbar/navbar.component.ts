@@ -33,6 +33,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.authService.isClient() || this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM()
     },
     {
+      label: 'CM Dashboard',
+      route: '/field-resource-management/cm/dashboard',
+      shouldShow: () => this.authService.isCM() || this.authService.isAdmin()
+    },
+    {
+      label: 'Admin Dashboard',
+      route: '/field-resource-management/admin-dashboard',
+      shouldShow: () => this.authService.isAdmin()
+    },
+    {
       label: 'Deployments',
       route: '/deployments',
       shouldShow: () => this.authService.isAdmin()
@@ -88,6 +98,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
                this.authService.isCoordinator() ||
                this.authService.isUserInRole([UserRole.Technician, UserRole.DeploymentEngineer, UserRole.SRITech]);
       }
+    },
+    {
+      label: 'User Management',
+      route: '/field-resource-management/admin/users',
+      shouldShow: () => this.authService.isAdmin()
+    },
+    {
+      label: 'System Configuration',
+      route: '/field-resource-management/system-configuration',
+      shouldShow: () => this.authService.isAdmin()
     },
     {
       label: 'Approvals',

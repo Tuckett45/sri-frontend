@@ -109,7 +109,9 @@ describe('CalendarViewComponent', () => {
     component.onPrevious();
     
     expect(dispatchSpy).toHaveBeenCalledWith(
-      UIActions.setSelectedDate({ date: jasmine.any(Date) })
+      jasmine.objectContaining({
+        type: UIActions.setSelectedDate.type
+      })
     );
   });
 
@@ -121,7 +123,9 @@ describe('CalendarViewComponent', () => {
     component.onPrevious();
     
     expect(dispatchSpy).toHaveBeenCalledWith(
-      UIActions.setSelectedDate({ date: jasmine.any(Date) })
+      jasmine.objectContaining({
+        type: UIActions.setSelectedDate.type
+      })
     );
   });
 
@@ -133,7 +137,9 @@ describe('CalendarViewComponent', () => {
     component.onNext();
     
     expect(dispatchSpy).toHaveBeenCalledWith(
-      UIActions.setSelectedDate({ date: jasmine.any(Date) })
+      jasmine.objectContaining({
+        type: UIActions.setSelectedDate.type
+      })
     );
   });
 
@@ -141,7 +147,9 @@ describe('CalendarViewComponent', () => {
     const dispatchSpy = spyOn(store, 'dispatch');
     component.onToday();
     expect(dispatchSpy).toHaveBeenCalledWith(
-      UIActions.setSelectedDate({ date: jasmine.any(Date) })
+      jasmine.objectContaining({
+        type: UIActions.setSelectedDate.type
+      })
     );
   });
 

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -20,6 +20,7 @@ import { of } from 'rxjs';
 import { JobDetailComponent } from './job-detail.component';
 import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
+import * as JobActions from '../../../state/jobs/job.actions';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 
 describe('JobDetailComponent', () => {

@@ -5,7 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Job } from '../../../models/job.model';
 import { TimeEntry, GeoLocation } from '../../../models/time-entry.model';
 import { clockIn, clockOut, updateTimeEntry } from '../../../state/time-entries/time-entry.actions';
-import { selectActiveTimeEntry } from '../../../state/time-entries/time-entry.selectors';
+import { selectActiveTimeEntry, selectLastCompletedTimeEntry } from '../../../state/time-entries/time-entry.selectors';
 import { GeolocationService, GeolocationError, GeolocationErrorType } from '../../../services/geolocation.service';
 
 /**
@@ -150,7 +150,7 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
       // Get current technician ID from auth (mock for now)
       const technicianId = 'current-technician-id';
 
-      // Dispatch clock in action with location
+      // Dispatch clock in action with location (mileage will be calculated on clock out)
       this.store.dispatch(clockIn({
         jobId: this.job.id,
         technicianId,
@@ -181,20 +181,11 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
     this.locationError = null;
 
     try {
-      // Attempt to get current location
+      // Attempt to get current location for clock out
       const location = await this.captureLocation();
       this.locationStatus = LocationStatus.Success;
 
-      // Calculate mileage if we have both locations
-      if (this.activeTimeEntry.clockInLocation && location) {
-        const distanceMeters = this.geolocationService.calculateDistance(
-          this.activeTimeEntry.clockInLocation,
-          location
-        );
-        this.calculatedMileage = this.metersToMiles(distanceMeters);
-      }
-
-      // Dispatch clock out action with location
+      // Dispatch clock out action with location (mileage was calculated on clock in)
       this.store.dispatch(clockOut({
         timeEntryId: this.activeTimeEntry.id,
         location
@@ -391,9 +382,17 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
    * Get formatted location
    */
   get formattedLocation(): string {
+    // Show job site address instead of coordinates for better readability
+    if (this.job && this.job.siteAddress) {
+      const addr = this.job.siteAddress;
+      return `${addr.street}, ${addr.city}, ${addr.state} ${addr.zipCode}`;
+    }
+    
     if (!this.currentLocation) {
       return 'N/A';
     }
+    
+    // Fallback to coordinates if no address available
     return this.geolocationService.formatLocation(this.currentLocation);
   }
 }

@@ -6,6 +6,8 @@ import { environment, local_environment } from 'src/environments/environments';
 import { StreetSheet } from '../models/street-sheet.model';
 import { User } from '../models/user.model';
 import { OfflineCacheService } from './offline-cache.service';
+import { RoleBasedDataService } from './role-based-data.service';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +24,12 @@ export class StreetSheetService {
     })
   };
 
-  constructor(private http: HttpClient, private offlineCache: OfflineCacheService) {
+  constructor(
+    private http: HttpClient, 
+    private offlineCache: OfflineCacheService,
+    private roleBasedDataService: RoleBasedDataService,
+    private authService: AuthService
+  ) {
     this.streetSheetsCache$ = null;
 
     this.previousOnline = this.offlineCache.isOnline();
@@ -59,14 +66,22 @@ export class StreetSheetService {
     const end = endDate!.toISOString();
 
     let request$;
-    if (user.market !== 'RG' && user.role === 'CM') {
-      request$ = this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet/${user.market}?startDate=${start}&endDate=${end}`);
+    // Use RoleBasedDataService for market filtering
+    if (this.authService.isCM() && !this.authService.isAdmin()) {
+      // CM users: exclude RG markets for street sheets
+      const userMarket = user.market;
+      request$ = this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet/${userMarket}?startDate=${start}&endDate=${end}`);
+    } else if (this.authService.isAdmin()) {
+      // Admin users: get all markets including RG
+      request$ = this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet?startDate=${start}&endDate=${end}`);
     } else {
+      // Other roles: use default endpoint
       request$ = this.http.get<StreetSheet[]>(`${environment.apiUrl}/StreetSheet?startDate=${start}&endDate=${end}`);
     }
 
     const network$ = request$.pipe(
       tap(sheets => { void this.offlineCache.saveStreetSheets(sheets); }),
+      map(sheets => this.applyRoleBasedFiltering(sheets, user)),
       map(sheets => this.filterStreetSheetsForUser(sheets, user, startDate, endDate)),
       catchError(error =>
         offline$.pipe(
@@ -81,6 +96,44 @@ export class StreetSheetService {
     }
 
     return network$;
+  }
+
+  /**
+   * Apply role-based filtering using RoleBasedDataService
+   * CM users: exclude RG markets
+   * Admin users: include all markets
+   */
+  private applyRoleBasedFiltering(sheets: StreetSheet[], user: User): StreetSheet[] {
+    if (!Array.isArray(sheets)) {
+      return [];
+    }
+
+    // Admin users get all markets including RG
+    if (this.authService.isAdmin()) {
+      return sheets;
+    }
+
+    // CM users: exclude RG markets for street sheets
+    if (this.authService.isCM()) {
+      // Map state to market for filtering
+      const sheetsWithMarket = sheets.map(s => ({ ...s, market: s.state }));
+      const filtered = this.roleBasedDataService.applyMarketFilter(sheetsWithMarket, {
+        excludeRGMarkets: true
+      });
+      // Map back to original StreetSheet objects
+      return filtered.map(s => {
+        const { market, ...rest } = s as any;
+        return rest as StreetSheet;
+      });
+    }
+
+    // Other roles: apply standard market filtering
+    const sheetsWithMarket = sheets.map(s => ({ ...s, market: s.state }));
+    const filtered = this.roleBasedDataService.applyMarketFilter(sheetsWithMarket);
+    return filtered.map(s => {
+      const { market, ...rest } = s as any;
+      return rest as StreetSheet;
+    });
   }
 
   private filterStreetSheetsForUser(
@@ -128,16 +181,39 @@ export class StreetSheetService {
       // Don't set Content-Type for FormData - browser will set it with boundary
     });
 
+    // Associate with CM's market if CM user
+    const currentUser = this.authService.getUser();
+    if (this.authService.isCM() && !this.authService.isAdmin() && currentUser?.market) {
+      // Add market to formData if not already present
+      if (!formData.has('market') && !formData.has('state')) {
+        formData.append('state', currentUser.market);
+      }
+    }
+
     this.streetSheetsCache$ = null;
     return this.http.post<any>(`${environment.apiUrl}/StreetSheet`, formData, { headers });
   }
 
   updateStreetSheet(streetSheet: StreetSheet): Observable<any> {
+    // Validate market ownership for CMs
+    if (this.authService.isCM() && !this.authService.isAdmin()) {
+      if (!this.roleBasedDataService.canAccessMarket(streetSheet.state || '')) {
+        return throwError(() => new Error('You do not have permission to update street sheets from other markets'));
+      }
+    }
+
     this.streetSheetsCache$ = null;
     return this.http.put<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.segmentId}`, streetSheet, this.httpOptions);
   }
 
   deleteStreetSheet(streetSheet: StreetSheet): Observable<any> {
+    // Validate market ownership for CMs
+    if (this.authService.isCM() && !this.authService.isAdmin()) {
+      if (!this.roleBasedDataService.canAccessMarket(streetSheet.state || '')) {
+        return throwError(() => new Error('You do not have permission to delete street sheets from other markets'));
+      }
+    }
+
     this.streetSheetsCache$ = null;
     return this.http.delete<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.id}`, this.httpOptions);
   }

@@ -4,13 +4,11 @@
     <h2>AI Agents</h2>
     <div class="header-actions">
       <button 
-        pButton 
-        icon="pi pi-refresh" 
-        label="Refresh" 
-        class="p-button-outlined"
+        mat-raised-button
+        class="refresh-btn"
         (click)="onRefresh()"
-        [disabled]="loading || loadingHealth"
-        pTooltip="Refresh agents and health statuses">
+        [disabled]="loading || loadingHealth">
+        Refresh
       </button>
     </div>
   </div>
@@ -18,66 +16,56 @@
   <!-- Filters -->
   <div class="filters-section">
     <div class="filter-row">
-      <div class="filter-item">
-        <label for="search">Search</label>
+      <mat-form-field appearance="outline" class="filter-item">
+        <mat-label>Search</mat-label>
         <input 
-          id="search"
+          matInput
           type="text" 
-          pInputText 
           placeholder="Search by name, ID, or description"
           [(ngModel)]="searchTerm"
-          (input)="onSearchChange($event)"
-          class="search-input" />
-      </div>
+          (input)="onSearchChange($event)" />
+      </mat-form-field>
 
-      <div class="filter-item">
-        <label for="domain">Domain</label>
-        <p-dropdown
-          id="domain"
-          [options]="domainOptions"
+      <mat-form-field appearance="outline" class="filter-item">
+        <mat-label>Domain</mat-label>
+        <mat-select
           [(ngModel)]="currentFilters.domain"
-          (onChange)="onDomainFilterChange($event.value)"
-          placeholder="Select domain"
-          [showClear]="true"
-          styleClass="filter-dropdown">
-        </p-dropdown>
-      </div>
+          (selectionChange)="onDomainFilterChange($event.value)">
+          <mat-option *ngFor="let option of domainOptions" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
 
-      <div class="filter-item">
-        <label for="type">Type</label>
-        <p-dropdown
-          id="type"
-          [options]="typeOptions"
+      <mat-form-field appearance="outline" class="filter-item">
+        <mat-label>Type</mat-label>
+        <mat-select
           [(ngModel)]="currentFilters.type"
-          (onChange)="onTypeFilterChange($event.value)"
-          placeholder="Select type"
-          [showClear]="true"
-          styleClass="filter-dropdown">
-        </p-dropdown>
-      </div>
+          (selectionChange)="onTypeFilterChange($event.value)">
+          <mat-option *ngFor="let option of typeOptions" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
 
-      <div class="filter-item">
-        <label for="active">Status</label>
-        <p-dropdown
-          id="active"
-          [options]="activeOptions"
+      <mat-form-field appearance="outline" class="filter-item">
+        <mat-label>Status</mat-label>
+        <mat-select
           [(ngModel)]="currentFilters.isActive"
-          (onChange)="onActiveFilterChange($event.value)"
-          placeholder="Select status"
-          [showClear]="true"
-          styleClass="filter-dropdown">
-        </p-dropdown>
-      </div>
+          (selectionChange)="onActiveFilterChange($event.value)">
+          <mat-option *ngFor="let option of activeOptions" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
 
-      <div class="filter-item filter-actions">
+      <div class="filter-actions">
         <button 
-          pButton 
-          icon="pi pi-filter-slash" 
-          label="Clear Filters" 
-          class="p-button-text"
+          mat-stroked-button
+          class="reset-btn"
           (click)="onClearFilters()"
-          [disabled]="!hasActiveFilters()"
-          pTooltip="Clear all filters">
+          [disabled]="!hasActiveFilters()">
+          Clear Filters
         </button>
       </div>
     </div>

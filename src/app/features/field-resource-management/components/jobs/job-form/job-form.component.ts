@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -11,6 +11,9 @@ import { Skill } from '../../../models/technician.model';
 import { CreateJobDto, UpdateJobDto } from '../../../models/dtos/job.dto';
 import * as JobActions from '../../../state/jobs/job.actions';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
+import { SanitizationService } from '../../../services/sanitization.service';
+import { AccessibilityService } from '../../../services/accessibility.service';
+import { AuthService } from '../../../../../services/auth.service';
 
 /**
  * Job Form Component
@@ -28,8 +31,10 @@ import * as JobSelectors from '../../../state/jobs/job.selectors';
  * - Customer POC fields
  * - Create and edit modes
  * - Template-based creation
+ * - Input sanitization for XSS protection
+ * - Keyboard shortcuts (Ctrl+S to save, Escape to cancel)
  * 
- * Requirements: 3.1-3.8, 27.4-27.5
+ * Requirements: 3.1-3.8, 9.2, 27.4-27.5
  */
 @Component({
   selector: 'frm-job-form',
@@ -55,6 +60,10 @@ export class JobFormComponent implements OnInit, OnDestroy {
   // File attachments
   selectedFiles: File[] = [];
   
+  // Role-based fields
+  isAdmin = false;
+  availableMarkets: string[] = ['North', 'South', 'East', 'West', 'Central', 'RG'];
+  
   // US States for dropdown
   states = [
     'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -69,8 +78,36 @@ export class JobFormComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private store: Store,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private sanitizationService: SanitizationService,
+    private accessibilityService: AccessibilityService,
+    private authService: AuthService
   ) {}
+
+  /**
+   * Keyboard shortcut handler
+   * Ctrl+S: Save form
+   * Escape: Cancel and go back
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    // Ctrl+S to save
+    if (event.ctrlKey && event.key === 's') {
+      event.preventDefault();
+      if (this.jobForm.valid && !this.isLoading) {
+        this.onSubmit();
+        this.accessibilityService.announce('Saving job');
+      } else if (!this.jobForm.valid) {
+        this.accessibilityService.announceError('Form has validation errors');
+      }
+    }
+    
+    // Escape to cancel
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.onCancel();
+    }
+  }
 
   ngOnInit(): void {
     this.initializeForm();
@@ -107,9 +144,15 @@ export class JobFormComponent implements OnInit, OnDestroy {
    * Initialize the form with validators
    */
   private initializeForm(): void {
+    // Check user role
+    this.isAdmin = this.authService.isAdmin();
+    const currentUser = this.authService.getUser();
+    const userMarket = currentUser?.market || '';
+
     this.jobForm = this.fb.group({
       client: ['', [Validators.required, Validators.maxLength(200)]],
       siteName: ['', [Validators.required, Validators.maxLength(200)]],
+      market: [this.isAdmin ? '' : userMarket, Validators.required],
       siteAddress: this.fb.group({
         street: ['', [Validators.required, Validators.maxLength(200)]],
         city: ['', [Validators.required, Validators.maxLength(100)]],
@@ -130,6 +173,11 @@ export class JobFormComponent implements OnInit, OnDestroy {
         email: ['', [Validators.email, Validators.maxLength(200)]]
       })
     }, { validators: this.dateRangeValidator });
+
+    // Disable market field for non-admin users
+    if (!this.isAdmin) {
+      this.jobForm.get('market')?.disable();
+    }
   }
 
   /**
@@ -245,13 +293,18 @@ export class JobFormComponent implements OnInit, OnDestroy {
    * Create new job
    */
   private createJob(formValue: any): void {
+    // Sanitize text inputs before creating job
+    const sanitizedDescription = this.sanitizationService.sanitizeText(formValue.scopeDescription);
+    const sanitizedClient = this.sanitizationService.sanitizeText(formValue.client);
+    const sanitizedSiteName = this.sanitizationService.sanitizeText(formValue.siteName);
+    
     const createDto: CreateJobDto = {
-      client: formValue.client,
-      siteName: formValue.siteName,
+      client: sanitizedClient,
+      siteName: sanitizedSiteName,
       siteAddress: formValue.siteAddress,
       jobType: formValue.jobType,
       priority: formValue.priority,
-      scopeDescription: formValue.scopeDescription,
+      scopeDescription: sanitizedDescription,
       requiredSkills: formValue.requiredSkills,
       requiredCrewSize: formValue.requiredCrewSize,
       estimatedLaborHours: formValue.estimatedLaborHours,
@@ -280,13 +333,18 @@ export class JobFormComponent implements OnInit, OnDestroy {
   private updateJob(formValue: any): void {
     if (!this.jobId) return;
 
+    // Sanitize text inputs before updating job
+    const sanitizedDescription = this.sanitizationService.sanitizeText(formValue.scopeDescription);
+    const sanitizedClient = this.sanitizationService.sanitizeText(formValue.client);
+    const sanitizedSiteName = this.sanitizationService.sanitizeText(formValue.siteName);
+
     const updateDto: UpdateJobDto = {
-      client: formValue.client,
-      siteName: formValue.siteName,
+      client: sanitizedClient,
+      siteName: sanitizedSiteName,
       siteAddress: formValue.siteAddress,
       jobType: formValue.jobType,
       priority: formValue.priority,
-      scopeDescription: formValue.scopeDescription,
+      scopeDescription: sanitizedDescription,
       requiredSkills: formValue.requiredSkills,
       requiredCrewSize: formValue.requiredCrewSize,
       estimatedLaborHours: formValue.estimatedLaborHours,

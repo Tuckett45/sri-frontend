@@ -1,0 +1,37 @@
+<div class="start-time-entry-modal">
+  <h2 mat-dialog-title>Start Time Entry</h2>
+  
+  <mat-dialog-content>
+    <p class="modal-description">Select a job to clock in and start tracking your time.</p>
+    
+    <div class="job-list" *ngIf="(jobs$ | async) as jobs">
+      <div *ngIf="jobs.length === 0" class="no-jobs">
+        <mat-icon>info</mat-icon>
+        <p>No jobs available</p>
+      </div>
+      
+      <mat-selection-list [(ngModel)]="selectedJobId" [multiple]="false">
+        <mat-list-option *ngFor="let job of jobs" [value]="job.id" class="job-option">
+          <div class="job-info">
+            <div class="job-header">
+              <span class="job-id">{{ job.jobId }}</span>
+              <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+            </div>
+            <div class="job-details">
+              <div class="job-client">{{ job.client }}</div>
+              <div class="job-site">{{ job.siteName }}</div>
+            </div>
+          </div>
+        </mat-list-option>
+      </mat-selection-list>
+    </div>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="startTimeEntry()" [disabled]="!selectedJobId">
+      <mat-icon>play_circle</mat-icon>
+      Start Time Entry
+    </button>
+  </mat-dialog-actions>
+</div>

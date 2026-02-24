@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, from, of } from 'rxjs';
+import { Observable, from, of, throwError } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment, local_environment } from 'src/environments/environments';
 import {
@@ -9,12 +9,17 @@ import {
   UserSubmissionStatus
 } from '../models/daily-report.model';
 import { AuthService } from './auth.service';
+import { RoleBasedDataService } from './role-based-data.service';
 
 @Injectable({ providedIn: 'root' })
 export class DailyReportService {
   private baseUrl = `${environment.apiUrl}/dailyreport`;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(
+    private http: HttpClient, 
+    private authService: AuthService,
+    private roleBasedDataService: RoleBasedDataService
+  ) {}
 
   private buildHeaders(token?: string | null): HttpHeaders {
     // API subscription key will be added automatically by ConfigurationInterceptor
@@ -66,10 +71,24 @@ export class DailyReportService {
 
   /**
    * Submit a daily report for the current user
+   * Associates with CM's market and user ID
    * @param report - The daily report data to submit
    * @returns Observable with the response message and report ID
    */
   submitDailyReport(report: DailyReport): Observable<{ message: string; reportId: number }> {
+    // Associate with CM's market and user ID
+    const currentUser = this.authService.getUser();
+    if (currentUser) {
+      if (!report.userId) {
+        report.userId = currentUser.id;
+      }
+      if (this.authService.isCM() && !this.authService.isAdmin() && currentUser.market) {
+        if (!report.market) {
+          report.market = currentUser.market;
+        }
+      }
+    }
+
     return this.withAuth(options =>
       this.http.post<{ message: string; reportId: number }>(
         this.baseUrl,
@@ -101,6 +120,8 @@ export class DailyReportService {
 
   /**
    * Get all daily reports with optional date filtering (Admin only)
+   * CM users: filtered by their market
+   * Admin users: all markets
    * @param startDate - Optional start date for filtering
    * @param endDate - Optional end date for filtering
    * @returns Observable with list of daily reports
@@ -108,6 +129,12 @@ export class DailyReportService {
   getAllReports(startDate?: Date, endDate?: Date): Observable<DailyReport[]> {
     let url = `${this.baseUrl}/admin`;
     const params: string[] = [];
+
+    // Add market filtering for CM users
+    const currentUser = this.authService.getUser();
+    if (this.authService.isCM() && !this.authService.isAdmin() && currentUser?.market) {
+      params.push(`market=${currentUser.market}`);
+    }
 
     if (startDate) {
       params.push(`startDate=${startDate.toISOString()}`);
@@ -121,6 +148,7 @@ export class DailyReportService {
     }
 
     return this.withAuth(options => this.http.get<DailyReport[]>(url, options)).pipe(
+      map(reports => this.applyRoleBasedFiltering(reports)),
       map(reports =>
         reports.map(report => ({
           ...report,
@@ -133,16 +161,31 @@ export class DailyReportService {
 
   /**
    * Get daily reports for a specific date (Admin only)
+   * CM users: filtered by their market
+   * Admin users: all markets
    * @param date - Date to retrieve reports for (defaults to today)
    * @returns Observable with list of daily reports
    */
   getReportsByDate(date?: Date): Observable<DailyReport[]> {
     let url = `${this.baseUrl}/admin/by-date`;
+    const params: string[] = [];
+
+    // Add market filtering for CM users
+    const currentUser = this.authService.getUser();
+    if (this.authService.isCM() && !this.authService.isAdmin() && currentUser?.market) {
+      params.push(`market=${currentUser.market}`);
+    }
+
     if (date) {
-      url += `?date=${date.toISOString()}`;
+      params.push(`date=${date.toISOString()}`);
+    }
+
+    if (params.length > 0) {
+      url += `?${params.join('&')}`;
     }
 
     return this.withAuth(options => this.http.get<DailyReport[]>(url, options)).pipe(
+      map(reports => this.applyRoleBasedFiltering(reports)),
       map(reports =>
         reports.map(report => ({
           ...report,
@@ -154,12 +197,42 @@ export class DailyReportService {
   }
 
   /**
+   * Apply role-based filtering to daily reports
+   * CM users: filter by their market
+   * Admin users: include all markets
+   */
+  private applyRoleBasedFiltering(reports: DailyReport[]): DailyReport[] {
+    // Admin users get all markets
+    if (this.authService.isAdmin()) {
+      return reports;
+    }
+
+    // CM users: filter by their market
+    if (this.authService.isCM()) {
+      return this.roleBasedDataService.applyMarketFilter(reports);
+    }
+
+    // Other roles: return as-is
+    return reports;
+  }
+
+  /**
    * Get user submission status for a specific date (Admin only)
+   * Routes to CM based on market
    * @param date - Date to check submission status for (defaults to today)
+   * @param market - Market to filter by (optional, for CM routing)
    * @returns Observable with user submission status list
    */
   getUserSubmissionStatus(date?: Date, market?: string): Observable<UserSubmissionStatus[]> {
-    let url = `${this.baseUrl}/admin/user-status/${market}`;
+    // Route to CM based on market
+    const currentUser = this.authService.getUser();
+    let effectiveMarket = market;
+    
+    if (this.authService.isCM() && !this.authService.isAdmin() && currentUser?.market) {
+      effectiveMarket = currentUser.market;
+    }
+
+    let url = `${this.baseUrl}/admin/user-status/${effectiveMarket || ''}`;
     if (date) {
       url += `?date=${date.toISOString()}`;
     }

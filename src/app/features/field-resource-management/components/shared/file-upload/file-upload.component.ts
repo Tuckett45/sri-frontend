@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { SanitizationService } from '../../../services/sanitization.service';
 
 /**
  * File Upload Component
@@ -13,6 +14,9 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
  * - Image preview for uploaded images
  * - Multiple file uploads
  * - Error message display
+ * - Security validation for malicious content
+ * 
+ * Requirements: 3.7, 9.3-9.7
  * 
  * @example
  * <frm-file-upload
@@ -40,6 +44,8 @@ export class FileUploadComponent {
   isDragging = false;
   errorMessage: string | null = null;
   uploadProgressValue = 0;
+
+  constructor(private sanitizationService: SanitizationService) {}
 
   /**
    * Handle file selection from input
@@ -87,50 +93,34 @@ export class FileUploadComponent {
    */
   private processFiles(files: File[]): void {
     this.errorMessage = null;
-    const validFiles: File[] = [];
+    
+    // Use sanitization service to validate all files
+    const validation = this.sanitizationService.validateFiles(files);
 
-    for (const file of files) {
-      const validation = this.validateFile(file);
-      if (validation.valid) {
-        validFiles.push(file);
-        this.generatePreview(file);
-      } else {
-        this.errorMessage = validation.error || 'Invalid file';
-        this.uploadError.emit(this.errorMessage);
-        return;
-      }
+    if (validation.errors.length > 0) {
+      // Show first error
+      this.errorMessage = validation.errors[0];
+      this.uploadError.emit(this.errorMessage);
+      return;
     }
 
-    if (validFiles.length > 0) {
+    if (validation.validFiles.length > 0) {
+      // Generate previews for valid files
+      validation.validFiles.forEach(file => this.generatePreview(file));
+      
       this.selectedFiles = this.multiple 
-        ? [...this.selectedFiles, ...validFiles]
-        : validFiles;
+        ? [...this.selectedFiles, ...validation.validFiles]
+        : validation.validFiles;
       this.filesSelected.emit(this.selectedFiles);
     }
   }
 
   /**
-   * Validate file type and size
+   * Validate file type and size (legacy method - now uses sanitization service)
+   * @deprecated Use sanitizationService.validateFile instead
    */
   private validateFile(file: File): { valid: boolean; error?: string } {
-    // Check file type
-    if (!this.acceptedTypes.includes(file.type)) {
-      return {
-        valid: false,
-        error: `Invalid file type. Accepted types: ${this.acceptedTypes.join(', ')}`
-      };
-    }
-
-    // Check file size
-    if (file.size > this.maxSizeBytes) {
-      const maxSizeMB = this.maxSizeBytes / (1024 * 1024);
-      return {
-        valid: false,
-        error: `File size exceeds ${maxSizeMB} MB limit`
-      };
-    }
-
-    return { valid: true };
+    return this.sanitizationService.validateFile(file);
   }
 
   /**

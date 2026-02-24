@@ -5,6 +5,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { AdminGuard } from './guards/admin.guard';
 import { DispatcherGuard } from './guards/dispatcher.guard';
 import { TechnicianGuard } from './guards/technician.guard';
+import { CMGuard } from '../../guards/cm.guard';
+import { EnhancedRoleGuard } from '../../guards/enhanced-role.guard';
+import { UserRole } from '../../models/role.enum';
 
 // Components - Dashboard
 import { DashboardComponent } from './components/reporting/dashboard/dashboard.component';
@@ -30,12 +33,22 @@ import { DailyViewComponent } from './components/mobile/daily-view/daily-view.co
 // Components - Reporting
 import { UtilizationReportComponent } from './components/reporting/utilization-report/utilization-report.component';
 import { JobPerformanceReportComponent } from './components/reporting/job-performance-report/job-performance-report.component';
+import { TimecardDashboardComponent } from './components/reporting/timecard-dashboard/timecard-dashboard.component';
+import { CMDashboardComponent } from './components/reporting/cm-dashboard/cm-dashboard.component';
+import { AdminDashboardComponent } from './components/reporting/admin-dashboard/admin-dashboard.component';
 
 // Components - Admin
 import { AuditLogViewerComponent } from './components/admin/audit-log-viewer/audit-log-viewer.component';
 import { SystemConfigurationComponent } from './components/admin/system-configuration/system-configuration.component';
 import { JobTemplateManagerComponent } from './components/admin/job-template-manager/job-template-manager.component';
 import { RegionManagerComponent } from './components/admin/region-manager/region-manager.component';
+
+// Components - Approvals
+import { ApprovalQueueComponent } from './components/approvals/approval-queue/approval-queue.component';
+import { ApprovalDetailComponent } from './components/approvals/approval-detail/approval-detail.component';
+
+// Components - User Management
+import { UserManagementComponent } from './components/admin/user-management/user-management.component';
 
 /**
  * Field Resource Management Routing Module
@@ -45,15 +58,21 @@ import { RegionManagerComponent } from './components/admin/region-manager/region
  * - AdminGuard: Admin-only routes
  * - DispatcherGuard: Dispatcher and Admin routes
  * - TechnicianGuard: Technician routes
+ * - CMGuard: CM and Admin routes
+ * - EnhancedRoleGuard: Configurable role-based and market-based access control
  * 
  * Route Structure:
- * - /field-resource-management/dashboard - Dashboard overview (Dispatcher)
+ * - /field-resource-management/dashboard - Dashboard overview (All authenticated)
+ * - /field-resource-management/cm/dashboard - CM Dashboard (CM and Admin)
+ * - /field-resource-management/admin/dashboard - Admin Dashboard (Admin only)
  * - /field-resource-management/technicians - Technician management (Dispatcher)
  * - /field-resource-management/jobs - Job management (Dispatcher)
  * - /field-resource-management/schedule - Calendar scheduling (Dispatcher)
  * - /field-resource-management/mobile/daily - Mobile daily view (Technician)
  * - /field-resource-management/reports - Reporting (Dispatcher)
  * - /field-resource-management/admin - Admin settings (Admin)
+ * 
+ * Requirements: 3.7, 4.7, 15.1, 15.2
  */
 const routes: Routes = [
   // Default redirect to dashboard
@@ -63,18 +82,57 @@ const routes: Routes = [
     pathMatch: 'full'
   },
 
-  // Dashboard - Dispatcher access
+  // Dashboard - All authenticated users
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [DispatcherGuard],
     data: { 
       title: 'Dashboard',
       breadcrumb: 'Dashboard'
     }
   },
 
-  // Technician Management Routes - Dispatcher access
+  // CM Dashboard - CM and Admin access
+  {
+    path: 'cm',
+    children: [
+      {
+        path: 'dashboard',
+        component: CMDashboardComponent,
+        canActivate: [CMGuard],
+        data: { 
+          title: 'CM Dashboard',
+          breadcrumb: 'CM Dashboard'
+        }
+      }
+    ]
+  },
+
+  // Admin Dashboard - Admin only
+  {
+    path: 'admin-dashboard',
+    component: AdminDashboardComponent,
+    canActivate: [EnhancedRoleGuard],
+    data: { 
+      title: 'Admin Dashboard',
+      breadcrumb: 'Admin Dashboard',
+      roleGuard: {
+        allowedRoles: [UserRole.Admin]
+      }
+    }
+  },
+
+  // Timecard - All authenticated users (technicians and dispatchers)
+  {
+    path: 'timecard',
+    component: TimecardDashboardComponent,
+    data: { 
+      title: 'My Timecard',
+      breadcrumb: 'Timecard'
+    }
+  },
+
+  // Technician Management Routes - Dispatcher access with market validation
   {
     path: 'technicians',
     canActivate: [DispatcherGuard],
@@ -114,7 +172,7 @@ const routes: Routes = [
     ]
   },
 
-  // Job Management Routes - Dispatcher access
+  // Job Management Routes - Dispatcher access with market validation
   {
     path: 'jobs',
     canActivate: [DispatcherGuard],
@@ -154,7 +212,7 @@ const routes: Routes = [
     ]
   },
 
-  // Scheduling Routes - Dispatcher access
+  // Scheduling Routes - Dispatcher access with market validation for resource routes
   {
     path: 'schedule',
     canActivate: [DispatcherGuard],
@@ -244,6 +302,30 @@ const routes: Routes = [
     ]
   },
 
+  // Approval Routes - CM and Admin access
+  {
+    path: 'approvals',
+    canActivate: [CMGuard],
+    children: [
+      {
+        path: '',
+        component: ApprovalQueueComponent,
+        data: { 
+          title: 'Approval Queue',
+          breadcrumb: 'Approvals'
+        }
+      },
+      {
+        path: ':id',
+        component: ApprovalDetailComponent,
+        data: { 
+          title: 'Approval Details',
+          breadcrumb: 'Details'
+        }
+      }
+    ]
+  },
+
   // Admin Routes - Admin access only
   {
     path: 'admin',
@@ -284,6 +366,14 @@ const routes: Routes = [
         data: { 
           title: 'Audit Log',
           breadcrumb: 'Audit Log'
+        }
+      },
+      {
+        path: 'users',
+        component: UserManagementComponent,
+        data: { 
+          title: 'User Management',
+          breadcrumb: 'Users'
         }
       }
     ]

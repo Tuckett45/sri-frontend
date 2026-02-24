@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Role-Based Directives Manual Test</title>
+    <style>
+        .test-section {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .role-disabled {
+            background-color: #f0f0f0;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Role-Based Directives Manual Test Guide</h1>
+    
+    <div class="test-section">
+        <h2>RoleBasedShowDirective</h2>
+        <p>This directive conditionally shows/hides elements based on user role and optional market access.</p>
+        <h3>Usage Examples:</h3>
+        <pre>
+&lt;!-- Single role --&gt;
+&lt;div *roleBasedShow="UserRole.Admin"&gt;Admin Only Content&lt;/div&gt;
+
+&lt;!-- Multiple roles --&gt;
+&lt;div *roleBasedShow="[UserRole.CM, UserRole.Admin]"&gt;CM or Admin Content&lt;/div&gt;
+
+&lt;!-- With market filtering --&gt;
+&lt;div *roleBasedShow="UserRole.CM; market: 'NYC'"&gt;NYC CM Content&lt;/div&gt;
+        </pre>
+        <h3>Features:</h3>
+        <ul>
+            <li>✓ Structural directive for conditional rendering</li>
+            <li>✓ Supports single or multiple roles</li>
+            <li>✓ Optional market parameter for market-specific visibility</li>
+            <li>✓ Automatically updates when login status changes</li>
+            <li>✓ Checks both role and market access</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>RoleBasedDisableDirective</h2>
+        <p>This directive conditionally disables elements based on user role.</p>
+        <h3>Usage Examples:</h3>
+        <pre>
+&lt;!-- Single role --&gt;
+&lt;button [roleBasedDisable]="UserRole.Admin"&gt;Admin Only Action&lt;/button&gt;
+
+&lt;!-- Multiple roles --&gt;
+&lt;button [roleBasedDisable]="[UserRole.CM, UserRole.Admin]"&gt;CM/Admin Action&lt;/button&gt;
+
+&lt;!-- Custom message --&gt;
+&lt;button 
+  [roleBasedDisable]="UserRole.Admin"
+  [roleBasedDisableMessage]="'Only admins can delete users'"&gt;
+  Delete User
+&lt;/button&gt;
+        </pre>
+        <h3>Features:</h3>
+        <ul>
+            <li>✓ Attribute directive for conditional disabling</li>
+            <li>✓ Supports single or multiple roles</li>
+            <li>✓ Adds visual styling (opacity, cursor, pointer-events)</li>
+            <li>✓ Adds tooltip explaining why element is disabled</li>
+            <li>✓ Custom tooltip message support</li>
+            <li>✓ Adds aria-disabled for accessibility</li>
+            <li>✓ Works with form controls and non-form elements</li>
+            <li>✓ Automatically updates when login status changes</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>Implementation Details</h2>
+        <h3>Files Created:</h3>
+        <ul>
+            <li>src/app/directives/role-based-show.directive.ts</li>
+            <li>src/app/directives/role-based-show.directive.spec.ts</li>
+            <li>src/app/directives/role-based-disable.directive.ts</li>
+            <li>src/app/directives/role-based-disable.directive.spec.ts</li>
+            <li>src/app/directives/index.ts</li>
+        </ul>
+        
+        <h3>Module Registration:</h3>
+        <p>Both directives have been added to app.module.ts declarations.</p>
+        
+        <h3>Dependencies:</h3>
+        <ul>
+            <li>AuthService - for role checking and login status</li>
+            <li>RoleBasedDataService - for market access validation</li>
+            <li>UserRole enum - for role types</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>Testing</h2>
+        <p>Comprehensive unit tests have been created for both directives covering:</p>
+        <ul>
+            <li>✓ Single and multiple role scenarios</li>
+            <li>✓ Market filtering (RoleBasedShowDirective)</li>
+            <li>✓ Login/logout state changes</li>
+            <li>✓ Form controls and non-form elements (RoleBasedDisableDirective)</li>
+            <li>✓ Tooltip and accessibility features (RoleBasedDisableDirective)</li>
+            <li>✓ Edge cases (empty roles, undefined values)</li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -55,11 +55,11 @@
                 <mat-icon>visibility</mat-icon>
                 <span>View Details</span>
               </button>
-              <button mat-menu-item (click)="onEditRegion(region)">
+              <button mat-menu-item (click)="onEditRegion(region)" *roleBasedShow="[UserRole.Admin]">
                 <mat-icon>edit</mat-icon>
                 <span>Edit</span>
               </button>
-              <button mat-menu-item (click)="onDeleteRegion(region)">
+              <button mat-menu-item (click)="onDeleteRegion(region)" *roleBasedShow="[UserRole.Admin]">
                 <mat-icon color="warn">delete</mat-icon>
                 <span>Delete</span>
               </button>

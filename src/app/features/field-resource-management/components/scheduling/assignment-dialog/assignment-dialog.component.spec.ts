@@ -14,6 +14,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AssignmentDialogComponent } from './assignment-dialog.component';
 import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
 import { TechnicianMatch } from '../../../models/assignment.model';
+import { TechnicianRole, EmploymentType } from '../../../models/technician.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 
 describe('AssignmentDialogComponent', () => {
@@ -59,8 +60,8 @@ describe('AssignmentDialogComponent', () => {
       lastName: 'Doe',
       email: 'john@example.com',
       phone: '555-0100',
-      role: 'Installer',
-      employmentType: 'W2',
+      role: TechnicianRole.Installer,
+      employmentType: EmploymentType.W2,
       homeBase: 'Office A',
       region: 'North',
       skills: [{ id: '1', name: 'Cat6', category: 'Cabling' }],

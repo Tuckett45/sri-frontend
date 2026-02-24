@@ -60,6 +60,21 @@
             <mat-error>{{ getErrorMessage('priority') }}</mat-error>
           </mat-form-field>
         </div>
+
+        <div class="form-row">
+          <!-- Market field - Admin can select, CM sees their market (read-only) -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Market</mat-label>
+            <mat-select formControlName="market" *ngIf="isAdmin">
+              <mat-option *ngFor="let market of availableMarkets" [value]="market">
+                {{ market }}
+              </mat-option>
+            </mat-select>
+            <input matInput formControlName="market" *ngIf="!isAdmin" readonly />
+            <mat-hint *ngIf="!isAdmin">Your assigned market</mat-hint>
+            <mat-error>{{ getErrorMessage('market') }}</mat-error>
+          </mat-form-field>
+        </div>
       </mat-card-content>
     </mat-card>
 

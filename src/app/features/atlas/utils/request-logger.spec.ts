@@ -102,7 +102,7 @@ describe('RequestLogger', () => {
       const id1 = logger.logRequest(request1);
       logger.logResponse(id1, new HttpResponse({ status: 200 }), 100);
 
-      const request2 = new HttpRequest('POST', '/api/users');
+      const request2 = new HttpRequest('POST', '/api/users', {});
       const id2 = logger.logRequest(request2);
       logger.logResponse(id2, new HttpResponse({ status: 201 }), 150);
 
@@ -180,7 +180,7 @@ describe('RequestLogger', () => {
       const id1 = logger.logRequest(request1);
       logger.logResponse(id1, new HttpResponse({ status: 200 }), 100);
 
-      const request2 = new HttpRequest('POST', '/api/test2');
+      const request2 = new HttpRequest('POST', '/api/test2', {});
       const id2 = logger.logRequest(request2);
       logger.logResponse(id2, new HttpResponse({ status: 201 }), 150);
 

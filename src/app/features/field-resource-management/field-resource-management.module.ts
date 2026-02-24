@@ -28,6 +28,9 @@ import { TimeEntryEffects } from './state/time-entries/time-entry.effects';
 import { NotificationEffects } from './state/notifications/notification.effects';
 import { ReportingEffects } from './state/reporting/reporting.effects';
 
+// Meta-Reducers
+import { storageSyncMetaReducer } from './state/meta-reducers/storage-sync.meta-reducer';
+
 // Shared Components
 import { SkillSelectorComponent } from './components/shared/skill-selector/skill-selector.component';
 import { StatusBadgeComponent } from './components/shared/status-badge/status-badge.component';
@@ -66,6 +69,9 @@ import { DashboardComponent } from './components/reporting/dashboard/dashboard.c
 import { UtilizationReportComponent } from './components/reporting/utilization-report/utilization-report.component';
 import { JobPerformanceReportComponent } from './components/reporting/job-performance-report/job-performance-report.component';
 import { KPICardComponent } from './components/reporting/kpi-card/kpi-card.component';
+import { TimecardDashboardComponent } from './components/reporting/timecard-dashboard/timecard-dashboard.component';
+import { CMDashboardComponent } from './components/reporting/cm-dashboard/cm-dashboard.component';
+import { AdminDashboardComponent } from './components/reporting/admin-dashboard/admin-dashboard.component';
 
 // Notification Components
 import { NotificationPanelComponent } from './components/notifications/notification-panel/notification-panel.component';
@@ -80,6 +86,7 @@ import { BatchTechnicianDialogComponent } from './components/shared/batch-techni
 import { FrmNavMenuComponent } from './components/shared/frm-nav-menu/frm-nav-menu.component';
 import { BreadcrumbComponent } from './components/shared/breadcrumb/breadcrumb.component';
 import { OfflineIndicatorComponent } from './components/shared/offline-indicator/offline-indicator.component';
+import { StartTimeEntryModalComponent } from './components/shared/start-time-entry-modal/start-time-entry-modal.component';
 
 // Services
 import { FrmRealtimeIntegratorService } from './services/frm-realtime-integrator.service';
@@ -133,6 +140,7 @@ import { HighlightPipe } from './pipes/highlight.pipe';
     FrmNavMenuComponent,
     BreadcrumbComponent,
     OfflineIndicatorComponent,
+    StartTimeEntryModalComponent,
     
     // Technician Components
     TechnicianListComponent,
@@ -163,6 +171,9 @@ import { HighlightPipe } from './pipes/highlight.pipe';
     UtilizationReportComponent,
     JobPerformanceReportComponent,
     KPICardComponent,
+    TimecardDashboardComponent,
+    CMDashboardComponent,
+    AdminDashboardComponent,
     
     // Notification Components
     NotificationPanelComponent
@@ -188,7 +199,9 @@ import { HighlightPipe } from './pipes/highlight.pipe';
     StoreModule.forFeature('technicians', technicianReducer),
     StoreModule.forFeature('jobs', jobReducer),
     StoreModule.forFeature('assignments', assignmentReducer),
-    StoreModule.forFeature('timeEntries', timeEntryReducer),
+    StoreModule.forFeature('timeEntries', timeEntryReducer, {
+      metaReducers: [storageSyncMetaReducer]
+    }),
     StoreModule.forFeature('notifications', notificationReducer),
     StoreModule.forFeature('ui', uiReducer),
     StoreModule.forFeature('reporting', reportingReducer),
@@ -207,6 +220,9 @@ import { HighlightPipe } from './pipes/highlight.pipe';
     // Error handling
     { provide: ErrorHandler, useClass: GlobalErrorHandlerService },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }
+  ],
+  exports: [
+    TimecardDashboardComponent
   ]
 })
 export class FieldResourceManagementModule {

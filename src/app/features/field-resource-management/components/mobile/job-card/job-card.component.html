@@ -1,58 +1,60 @@
-<mat-card class="job-card" [class]="statusColorClass" (swiperight)="onSwipe()">
+<mat-card class="job-card" [class]="statusColorClass" (swiperight)="onSwipe()" role="article" [attr.aria-label]="'Job ' + job.jobId + ' for ' + job.client">
   <!-- Header -->
   <mat-card-header class="job-card__header">
     <div class="job-card__header-content">
       <div class="job-card__title-row">
-        <h3 class="job-card__job-id">{{ job.jobId }}</h3>
-        <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+        <h3 class="job-card__job-id" id="job-{{job.id}}-title">{{ job.jobId }}</h3>
+        <frm-status-badge [status]="job.status" size="small" [attr.aria-label]="'Status: ' + job.status"></frm-status-badge>
       </div>
       <p class="job-card__client">{{ job.client }}</p>
       <p class="job-card__site">{{ job.siteName }}</p>
     </div>
     
     <!-- Scheduled Time -->
-    <div class="job-card__time">
-      <mat-icon class="job-card__time-icon">schedule</mat-icon>
+    <div class="job-card__time" role="text" [attr.aria-label]="'Scheduled time: ' + formattedScheduledTime">
+      <mat-icon class="job-card__time-icon" aria-hidden="true">schedule</mat-icon>
       <span class="job-card__time-text">{{ formattedScheduledTime }}</span>
     </div>
   </mat-card-header>
 
   <!-- Address -->
   <mat-card-content class="job-card__content">
-    <div class="job-card__address">
-      <mat-icon class="job-card__address-icon">place</mat-icon>
+    <div class="job-card__address" role="text" [attr.aria-label]="'Location: ' + formattedAddress">
+      <mat-icon class="job-card__address-icon" aria-hidden="true">place</mat-icon>
       <span class="job-card__address-text">{{ formattedAddress }}</span>
     </div>
 
     <!-- Elapsed Time (if clocked in) -->
-    <div class="job-card__elapsed" *ngIf="isClockedIn">
-      <mat-icon class="job-card__elapsed-icon">timer</mat-icon>
+    <div class="job-card__elapsed" *ngIf="isClockedIn" role="timer" [attr.aria-label]="'Elapsed time: ' + elapsedTime" aria-live="polite">
+      <mat-icon class="job-card__elapsed-icon" aria-hidden="true">timer</mat-icon>
       <span class="job-card__elapsed-time">{{ elapsedTime }}</span>
       <span class="job-card__elapsed-label">Elapsed</span>
     </div>
 
     <!-- Status Action Buttons -->
-    <div class="job-card__status-actions" *ngIf="availableStatusActions.length > 0">
+    <div class="job-card__status-actions" *ngIf="availableStatusActions.length > 0" role="group" aria-label="Status update actions">
       <button
         *ngFor="let action of availableStatusActions"
         mat-raised-button
         [color]="action.status === JobStatus.Completed ? 'primary' : 'accent'"
         class="job-card__status-button"
-        (click)="updateStatus(action.status)">
-        <mat-icon>{{ action.icon }}</mat-icon>
+        (click)="updateStatus(action.status)"
+        [attr.aria-label]="'Update status to ' + action.label">
+        <mat-icon aria-hidden="true">{{ action.icon }}</mat-icon>
         <span>{{ action.label }}</span>
       </button>
     </div>
 
     <!-- Clock In/Out Buttons -->
-    <div class="job-card__time-actions">
+    <div class="job-card__time-actions" role="group" aria-label="Time tracking actions">
       <button
         *ngIf="canClockIn"
         mat-raised-button
         color="primary"
         class="job-card__clock-button job-card__clock-button--in"
-        (click)="onClockIn()">
-        <mat-icon>play_circle</mat-icon>
+        (click)="onClockIn()"
+        aria-label="Clock in to job">
+        <mat-icon aria-hidden="true">play_circle</mat-icon>
         <span>Clock In</span>
       </button>
 
@@ -61,21 +63,23 @@
         mat-raised-button
         color="warn"
         class="job-card__clock-button job-card__clock-button--out"
-        (click)="onClockOut()">
-        <mat-icon>stop_circle</mat-icon>
+        (click)="onClockOut()"
+        aria-label="Clock out from job">
+        <mat-icon aria-hidden="true">stop_circle</mat-icon>
         <span>Clock Out</span>
       </button>
     </div>
   </mat-card-content>
 
   <!-- Actions -->
-  <mat-card-actions class="job-card__actions">
+  <mat-card-actions class="job-card__actions" role="group" aria-label="Job actions">
     <!-- View Details -->
     <button
       mat-button
       class="job-card__action-button"
-      (click)="onViewDetails()">
-      <mat-icon>info</mat-icon>
+      (click)="onViewDetails()"
+      [attr.aria-label]="'View details for job ' + job.jobId">
+      <mat-icon aria-hidden="true">info</mat-icon>
       <span>Details</span>
     </button>
 
@@ -84,8 +88,9 @@
       *ngIf="hasCustomerContact && job.customerPOC?.phone"
       mat-button
       class="job-card__action-button"
-      (click)="onCallCustomer()">
-      <mat-icon>phone</mat-icon>
+      (click)="onCallCustomer()"
+      [attr.aria-label]="'Call customer ' + (job.customerPOC?.name || '')">
+      <mat-icon aria-hidden="true">phone</mat-icon>
       <span>Call</span>
     </button>
 
@@ -93,8 +98,9 @@
       *ngIf="hasCustomerContact && job.customerPOC?.email"
       mat-button
       class="job-card__action-button"
-      (click)="onEmailCustomer()">
-      <mat-icon>email</mat-icon>
+      (click)="onEmailCustomer()"
+      [attr.aria-label]="'Email customer ' + (job.customerPOC?.name || '')">
+      <mat-icon aria-hidden="true">email</mat-icon>
       <span>Email</span>
     </button>
 
@@ -102,8 +108,9 @@
     <button
       mat-button
       class="job-card__action-button"
-      (click)="onUploadPhoto()">
-      <mat-icon>photo_camera</mat-icon>
+      (click)="onUploadPhoto()"
+      aria-label="Upload photo for job">
+      <mat-icon aria-hidden="true">photo_camera</mat-icon>
       <span>Photo</span>
     </button>
   </mat-card-actions>

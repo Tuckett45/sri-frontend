@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { DomSanitizer } from '@angular/platform-browser';
+import { BrowserModule } from '@angular/platform-browser';
 import { HighlightPipe } from './highlight.pipe';
 
 describe('HighlightPipe', () => {
@@ -8,7 +9,8 @@ describe('HighlightPipe', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [DomSanitizer]
+      imports: [BrowserModule],
+      providers: []
     });
     sanitizer = TestBed.inject(DomSanitizer);
     pipe = new HighlightPipe(sanitizer);

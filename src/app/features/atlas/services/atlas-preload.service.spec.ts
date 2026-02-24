@@ -37,10 +37,9 @@ describe('AtlasPreloadService', () => {
   });
 
   describe('preload', () => {
-    it('should preload deployments and AI agents by default', (done) => {
+    it('should preload AI agents by default', (done) => {
       service.preload().subscribe(result => {
         expect(result.success).toBe(true);
-        expect(result.deployments).toBe(true);
         expect(result.aiAgents).toBe(true);
         expect(store.dispatch).toHaveBeenCalled();
         done();
@@ -49,15 +48,12 @@ describe('AtlasPreloadService', () => {
 
     it('should respect custom configuration', (done) => {
       const config = {
-        deployments: true,
         aiAgents: false,
-        userApprovals: false,
-        deploymentCount: 10
+        userApprovals: false
       };
 
       service.preload(config).subscribe(result => {
         expect(result.success).toBe(true);
-        expect(result.deployments).toBe(true);
         expect(result.aiAgents).toBeUndefined();
         done();
       });
@@ -78,7 +74,6 @@ describe('AtlasPreloadService', () => {
 
     it('should handle preload with only user approvals', (done) => {
       const config = {
-        deployments: false,
         aiAgents: false,
         userApprovals: true
       };
@@ -92,7 +87,6 @@ describe('AtlasPreloadService', () => {
 
     it('should return immediately if no preload tasks', (done) => {
       const config = {
-        deployments: false,
         aiAgents: false,
         userApprovals: false
       };
@@ -141,42 +135,7 @@ describe('AtlasPreloadService', () => {
     });
   });
 
-  describe('preloadDeploymentDetail', () => {
-    it('should dispatch actions for deployment detail', (done) => {
-      const deploymentId = 'test-123';
-
-      service.preloadDeploymentDetail(deploymentId).subscribe(() => {
-        expect(store.dispatch).toHaveBeenCalled();
-        done();
-      });
-    });
-  });
-
   describe('preloadForRoute', () => {
-    it('should preload deployments for deployments route', (done) => {
-      service.preloadForRoute('deployments').subscribe(result => {
-        expect(result.success).toBe(true);
-        expect(result.deployments).toBe(true);
-        done();
-      });
-    });
-
-    it('should preload deployment detail for detail route', (done) => {
-      service.preloadForRoute('deployment-detail', { id: 'test-123' }).subscribe(result => {
-        expect(result.success).toBe(true);
-        expect(store.dispatch).toHaveBeenCalled();
-        done();
-      });
-    });
-
-    it('should fail if deployment detail route has no ID', (done) => {
-      service.preloadForRoute('deployment-detail').subscribe(result => {
-        expect(result.success).toBe(false);
-        expect(result.errors).toContain('No deployment ID provided');
-        done();
-      });
-    });
-
     it('should preload AI agents for ai-analysis route', (done) => {
       service.preloadForRoute('ai-analysis').subscribe(result => {
         expect(result.success).toBe(true);

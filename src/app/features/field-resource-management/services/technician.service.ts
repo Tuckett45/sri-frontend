@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, map, retry, switchMap } from 'rxjs/operators';
 import { 
   Technician, 
   Skill, 
@@ -14,6 +14,8 @@ import {
   TechnicianFilters 
 } from '../models/dtos';
 import { DateRange } from '../models/assignment.model';
+import { RoleBasedDataService } from '../../../services/role-based-data.service';
+import { AuthService } from '../../../services/auth.service';
 
 /**
  * Service for managing technician data and operations
@@ -26,15 +28,27 @@ export class TechnicianService {
   private readonly apiUrl = '/api/technicians';
   private readonly retryCount = 2;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private roleBasedDataService: RoleBasedDataService,
+    private authService: AuthService
+  ) {}
 
   /**
    * Retrieves a list of technicians with optional filtering
+   * CM users: filtered by their market
+   * Admin users: all technicians
    * @param filters Optional filters to apply to the technician list
    * @returns Observable of technician array
    */
   getTechnicians(filters?: TechnicianFilters): Observable<Technician[]> {
     let params = new HttpParams();
+    
+    // Add market filtering for CM users
+    const currentUser = this.authService.getUser();
+    if (this.authService.isCM() && !this.authService.isAdmin() && currentUser?.market) {
+      params = params.set('market', currentUser.market);
+    }
     
     if (filters) {
       if (filters.searchTerm) {
@@ -66,8 +80,36 @@ export class TechnicianService {
     return this.http.get<Technician[]>(this.apiUrl, { params })
       .pipe(
         retry(this.retryCount),
+        map(technicians => this.applyRoleBasedFiltering(technicians)),
         catchError(this.handleError)
       );
+  }
+
+  /**
+   * Apply role-based filtering to technicians
+   * CM users: filter by their market
+   * Admin users: include all technicians
+   */
+  private applyRoleBasedFiltering(technicians: Technician[]): Technician[] {
+    // Admin users get all technicians
+    if (this.authService.isAdmin()) {
+      return technicians;
+    }
+
+    // CM users: filter by their market (map region to market)
+    if (this.authService.isCM()) {
+      // Map region to market for filtering
+      const techniciansWithMarket = technicians.map(t => ({ ...t, market: t.region }));
+      const filtered = this.roleBasedDataService.applyMarketFilter(techniciansWithMarket);
+      // Map back to original Technician objects
+      return filtered.map(t => {
+        const { market, ...rest } = t as any;
+        return rest as Technician;
+      });
+    }
+
+    // Other roles: return as-is
+    return technicians;
   }
 
   /**
@@ -97,15 +139,80 @@ export class TechnicianService {
 
   /**
    * Updates an existing technician
+   * Validates market ownership for CM users
    * @param id Technician ID
    * @param technician Updated technician data
    * @returns Observable of updated technician
    */
   updateTechnician(id: string, technician: UpdateTechnicianDto): Observable<Technician> {
+    // Validate market ownership for CMs
+    if (this.authService.isCM() && !this.authService.isAdmin()) {
+      const currentUser = this.authService.getUser();
+      const userMarket = currentUser?.market || '';
+      
+      // First get the technician to check region (which maps to market)
+      return this.getTechnicianById(id).pipe(
+        switchMap(existingTech => {
+          if (existingTech.region !== userMarket) {
+            return throwError(() => new Error('You do not have permission to update technicians from other markets'));
+          }
+          return this.http.put<Technician>(`${this.apiUrl}/${id}`, technician);
+        }),
+        catchError(this.handleError)
+      );
+    }
+
     return this.http.put<Technician>(`${this.apiUrl}/${id}`, technician)
       .pipe(
         catchError(this.handleError)
       );
+  }
+
+  /**
+   * Validates that a technician can be assigned to a project
+   * Prevents CM from assigning technicians from other markets
+   * @param technicianId Technician ID to validate
+   * @param projectMarket Market of the project
+   * @returns Observable of boolean indicating if assignment is valid
+   */
+  validateTechnicianAssignment(technicianId: string, projectMarket: string): Observable<boolean> {
+    // Admin users can assign any technician
+    if (this.authService.isAdmin()) {
+      return new Observable(observer => {
+        observer.next(true);
+        observer.complete();
+      });
+    }
+
+    // CM users: validate market ownership
+    if (this.authService.isCM()) {
+      return this.getTechnicianById(technicianId).pipe(
+        map(technician => {
+          const techRegion = technician.region || '';
+          const currentUser = this.authService.getUser();
+          const userMarket = currentUser?.market || '';
+          
+          // Check if technician is from CM's market (region maps to market)
+          if (techRegion !== userMarket) {
+            throw new Error('You cannot assign technicians from other markets');
+          }
+          
+          // Check if project is in CM's market
+          if (projectMarket && projectMarket !== userMarket) {
+            throw new Error('You cannot assign technicians to projects in other markets');
+          }
+          
+          return true;
+        }),
+        catchError(err => throwError(() => err))
+      );
+    }
+
+    // Other roles: allow assignment
+    return new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+    });
   }
 
   /**

@@ -37,7 +37,31 @@ export class FrmNavMenuComponent implements OnInit {
       label: 'Dashboard',
       route: '/field-resource-management/dashboard',
       icon: 'dashboard',
-      roles: [UserRole.Admin, UserRole.PM, UserRole.CM, UserRole.OSPCoordinator]
+      roles: [UserRole.Admin, UserRole.PM, UserRole.CM, UserRole.OSPCoordinator, UserRole.Technician, UserRole.DeploymentEngineer, UserRole.SRITech]
+    },
+    {
+      label: 'CM Dashboard',
+      route: '/field-resource-management/cm-dashboard',
+      icon: 'dashboard',
+      roles: [UserRole.CM, UserRole.Admin]
+    },
+    {
+      label: 'Admin Dashboard',
+      route: '/field-resource-management/admin-dashboard',
+      icon: 'admin_panel_settings',
+      roles: [UserRole.Admin]
+    },
+    {
+      label: 'My Timecard',
+      route: '/field-resource-management/timecard',
+      icon: 'schedule',
+      roles: [UserRole.Admin, UserRole.PM, UserRole.CM, UserRole.OSPCoordinator, UserRole.Technician, UserRole.DeploymentEngineer, UserRole.SRITech]
+    },
+    {
+      label: 'My Daily Schedule',
+      route: '/field-resource-management/mobile/daily',
+      icon: 'today',
+      roles: [UserRole.Technician, UserRole.DeploymentEngineer, UserRole.SRITech]
     },
     {
       label: 'Schedule',
@@ -84,10 +108,16 @@ export class FrmNavMenuComponent implements OnInit {
       ]
     },
     {
-      label: 'My Daily Schedule',
-      route: '/field-resource-management/mobile/daily',
-      icon: 'today',
-      roles: [UserRole.Technician, UserRole.DeploymentEngineer, UserRole.SRITech]
+      label: 'User Management',
+      route: '/field-resource-management/user-management',
+      icon: 'manage_accounts',
+      roles: [UserRole.Admin]
+    },
+    {
+      label: 'System Configuration',
+      route: '/field-resource-management/system-configuration',
+      icon: 'settings_applications',
+      roles: [UserRole.Admin]
     },
     {
       label: 'Admin',
