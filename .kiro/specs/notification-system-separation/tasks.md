@@ -215,8 +215,8 @@ The implementation follows a phased approach:
   - Verify no cross-domain dependencies exist
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Create migration scripts
-  - [ ] 12.1 Implement import update script
+- [x] 12. Create migration scripts
+  - [x] 12.1 Implement import update script
     - Create `scripts/migrate-notification-imports.ts`
     - Scan all TypeScript files for notification service imports
     - Update imports from `src/app/services/notification.service` to `src/app/services/ark/ark-notification.service`
@@ -225,7 +225,7 @@ The implementation follows a phased approach:
     - Log all changes made to console and migration log file
     - _Requirements: 9.1, 9.2, 9.4_
   
-  - [ ] 12.2 Implement file move script
+  - [x] 12.2 Implement file move script
     - Create `scripts/migrate-notification-files.ts`
     - Move `src/app/services/notification.service.ts` to `src/app/services/ark/ark-notification.service.ts`
     - Move `src/app/models/notification.model.ts` to `src/app/models/ark/notification.model.ts`
@@ -233,7 +233,7 @@ The implementation follows a phased approach:
     - Validate file moves completed successfully
     - _Requirements: 9.2, 9.4_
   
-  - [ ] 12.3 Implement validation script
+  - [x] 12.3 Implement validation script
     - Create `scripts/validate-notification-migration.ts`
     - Check that all imports resolve correctly (no broken imports)
     - Check that no references to old paths remain
@@ -241,7 +241,7 @@ The implementation follows a phased approach:
     - Report any issues found with file path and line number
     - _Requirements: 9.3_
   
-  - [ ] 12.4 Implement rollback script
+  - [x] 12.4 Implement rollback script
     - Create `scripts/rollback-notification-migration.ts`
     - Restore all files from backups (`.backup` files)
     - Revert all import changes
@@ -255,8 +255,8 @@ The implementation follows a phased approach:
     - Test rollback script restores original state
     - _Requirements: 9.1, 9.2, 9.3, 9.5_
 
-- [ ] 13. Update all component imports
-  - [ ] 13.1 Update ARK component imports
+- [x] 13. Update all component imports
+  - [x] 13.1 Update ARK component imports
     - Update all components using notification service to import from ARK namespace
     - Update approval queue component (`src/app/features/field-resource-management/components/approvals/approval-queue/`)
     - Update approval detail component (`src/app/features/field-resource-management/components/approvals/approval-detail/`)
@@ -265,7 +265,7 @@ The implementation follows a phased approach:
     - Update user management components (`src/app/features/field-resource-management/components/admin/`)
     - _Requirements: 1.3, 1.5_
   
-  - [ ] 13.2 Update ATLAS component imports
+  - [x] 13.2 Update ATLAS component imports
     - Update ATLAS components to use ATLAS notification service
     - Update deployment components (`src/app/features/atlas/components/deployments/`)
     - Update agent components (`src/app/features/atlas/components/agents/`)
@@ -278,8 +278,8 @@ The implementation follows a phased approach:
     - Test components handle notification errors gracefully
     - _Requirements: 1.3, 1.5, 2.1_
 
-- [ ] 14. Implement data migration for user preferences
-  - [ ] 14.1 Create preference migration script
+- [x] 14. Implement data migration for user preferences
+  - [x] 14.1 Create preference migration script
     - Create `scripts/migrate-user-preferences.ts`
     - Read existing notification preferences from database
     - Create ARK notification preferences with same values
@@ -299,8 +299,8 @@ The implementation follows a phased approach:
     - Test migration is idempotent (can run multiple times safely)
     - _Requirements: 5.4_
 
-- [ ] 15. Implement data migration for templates and logs
-  - [ ] 15.1 Create template and log migration script
+- [x] 15. Implement data migration for templates and logs
+  - [x] 15.1 Create template and log migration script
     - Create `scripts/migrate-templates-and-logs.ts`
     - Read existing notification templates from database
     - Update templates to use ARK notification types
