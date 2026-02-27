@@ -14,7 +14,7 @@ import { OspCoordinatorService } from 'src/app/services/osp-coordinator.service'
 export class OspCoordinatorModalComponent {
   statForm: FormGroup;
   crews: number[] = [1,2,3,4,5,6,7,8,9,10];
-  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm'];
+  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction'];
   ospTypes: string[] = ['OSP', 'RELO', 'ROE', 'Fiber Extension', 'Greenfield'];
   amendmentVersions: number[] = [1,2,3,4,5,6,7,8,9,10];
   amendmentReasons: string[] = ['Version Error','Final True Up to Conlog','Engineered Units differ from Field','City Change Request/Need', 'Date Change', 'PO Change', '50% True Up','Other'];
