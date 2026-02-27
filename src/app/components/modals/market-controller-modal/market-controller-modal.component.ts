@@ -39,6 +39,7 @@ export class MarketControllerModalComponent {
     'Fibernet USA',
     'James McPeak Inc.',
     'K&B Engineering',
+    'M&J Enterprises Construction',
     'Niels Fugal Sons Co, LLC',
     'Northstar Communications, Inc.',
     'Pacific Network Solutions Construction LLC',
