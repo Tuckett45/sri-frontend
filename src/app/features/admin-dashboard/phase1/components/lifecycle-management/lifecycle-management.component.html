@@ -1,0 +1,177 @@
+<div class="lifecycle-management">
+  <div class="lifecycle-header">
+    <h2>Lifecycle Management</h2>
+    <p class="entity-info">{{ entityType | titlecase }}: {{ entityId }}</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading lifecycle data...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error$ | async as error" class="error-container">
+    <p class="error-message">{{ error }}</p>
+    <button (click)="loadLifecycleData()" class="btn-retry">Retry</button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!(loading$ | async) && !(error$ | async)" class="lifecycle-content">
+    
+    <!-- Current State Display -->
+    <div class="current-state-section">
+      <h3>Current State</h3>
+      <div *ngIf="currentState$ | async as currentState" class="state-card">
+        <div class="state-badge" [attr.data-type]="currentState.type">
+          {{ currentState.name }}
+        </div>
+        <p class="state-description">{{ currentState.description }}</p>
+      </div>
+      <div *ngIf="!(currentState$ | async)" class="no-data">
+        No current state available
+      </div>
+    </div>
+
+    <!-- Available Transitions -->
+    <div class="transitions-section">
+      <h3>Available Transitions</h3>
+      <div *ngIf="availableTransitions$ | async as transitions" class="transitions-container">
+        <div *ngIf="transitions.length > 0; else noTransitions">
+          <app-state-transition-controls
+            [entityId]="entityId"
+            [availableTransitions]="transitions"
+            [currentState]="(currentState$ | async)!"
+            [requireReason]="selectedTransition?.requiresApproval || false"
+            [requireApproval]="selectedTransition?.requiresApproval || false"
+            (transitionInitiated)="executeTransition()"
+          ></app-state-transition-controls>
+        </div>
+        <ng-template #noTransitions>
+          <p class="no-data">No transitions available from current state</p>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Transition Form -->
+    <div *ngIf="selectedTransition" class="transition-form-section">
+      <h3>Transition Details</h3>
+      <form [formGroup]="transitionForm" class="transition-form">
+        <div class="form-group">
+          <label>Selected Transition</label>
+          <div class="selected-transition">
+            <span class="transition-name">{{ selectedTransition.name }}</span>
+            <span class="transition-arrow">→</span>
+            <span class="transition-target">{{ selectedTransition.toState }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="selectedTransition.requiresApproval" class="form-group">
+          <label for="reason">Reason <span class="required">*</span></label>
+          <textarea
+            id="reason"
+            formControlName="reason"
+            rows="3"
+            placeholder="Provide a reason for this transition..."
+            class="form-control"
+          ></textarea>
+          <div *ngIf="transitionForm.get('reason')?.invalid && transitionForm.get('reason')?.touched" class="error-text">
+            Reason is required for this transition
+          </div>
+        </div>
+
+        <div *ngIf="selectedTransition.requiresApproval" class="approval-warning">
+          <i class="icon-warning"></i>
+          <span>This transition requires approval before execution</span>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            (click)="executeTransition()"
+            [disabled]="!transitionForm.valid"
+            class="btn-primary"
+          >
+            {{ selectedTransition.requiresApproval ? 'Request Approval' : 'Execute Transition' }}
+          </button>
+          <button type="button" (click)="resetForm()" class="btn-secondary">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Pending Approvals -->
+    <div class="approvals-section" *ngIf="showApprovalSection">
+      <div class="section-header">
+        <h3>Pending Approvals</h3>
+        <button (click)="toggleApprovalSection()" class="btn-toggle">
+          {{ showApprovalSection ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      <div *ngIf="pendingApprovals$ | async as approvals" class="approvals-container">
+        <div *ngIf="approvals.length > 0; else noApprovals">
+          <div *ngFor="let approval of approvals" class="approval-card">
+            <div class="approval-header">
+              <span class="approval-id">{{ approval.id }}</span>
+              <span class="approval-status" [attr.data-status]="approval.status">
+                {{ approval.status }}
+              </span>
+            </div>
+            <div class="approval-details">
+              <p><strong>Requested by:</strong> {{ approval.requestedBy }}</p>
+              <p><strong>Requested at:</strong> {{ approval.requestedAt | date:'medium' }}</p>
+              <p *ngIf="approval.reason"><strong>Reason:</strong> {{ approval.reason }}</p>
+            </div>
+            <div *ngIf="approval.status === 'pending'" class="approval-actions">
+              <button (click)="approveTransition(approval.id)" class="btn-approve">
+                Approve
+              </button>
+              <button (click)="rejectTransition(approval.id, 'Rejected by user')" class="btn-reject">
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+        <ng-template #noApprovals>
+          <p class="no-data">No pending approvals</p>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Transition History -->
+    <div class="history-section">
+      <div class="section-header">
+        <h3>Transition History</h3>
+        <button (click)="toggleHistorySection()" class="btn-toggle">
+          {{ showHistorySection ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      <div *ngIf="showHistorySection && (transitionHistory$ | async) as history" class="history-container">
+        <div *ngIf="history.length > 0; else noHistory">
+          <div *ngFor="let transition of history" class="history-item">
+            <div class="history-timeline">
+              <div class="timeline-dot"></div>
+              <div class="timeline-line"></div>
+            </div>
+            <div class="history-content">
+              <div class="history-header">
+                <span class="history-states">
+                  {{ transition.fromState }} → {{ transition.toState }}
+                </span>
+                <span class="history-date">{{ transition.timestamp | date:'short' }}</span>
+              </div>
+              <div class="history-details">
+                <p><strong>User:</strong> {{ transition.userName }}</p>
+                <p *ngIf="transition.reason"><strong>Reason:</strong> {{ transition.reason }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noHistory>
+          <p class="no-data">No transition history available</p>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>

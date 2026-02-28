@@ -1,0 +1,146 @@
+<div class="job-processing-pipeline">
+  <div class="pipeline-header">
+    <h2>Job Processing Pipeline</h2>
+    <p class="job-info">Job ID: {{ jobId }}</p>
+  </div>
+
+  <!-- Pipeline Progress -->
+  <div class="pipeline-progress">
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="getPipelineProgress()"></div>
+    </div>
+    <p class="progress-text">{{ getPipelineProgress() | number:'1.0-0' }}% Complete</p>
+  </div>
+
+  <!-- Error Display -->
+  <div *ngIf="error" class="error-container">
+    <i class="icon-error"></i>
+    <p class="error-message">{{ error }}</p>
+  </div>
+
+  <!-- Pipeline Stages -->
+  <div class="pipeline-stages">
+    <div *ngFor="let stage of stages; let i = index" class="stage-container">
+      <!-- Stage Card -->
+      <div class="stage-card" [attr.data-status]="stage.status">
+        <div class="stage-header">
+          <div class="stage-number">{{ i + 1 }}</div>
+          <div class="stage-info">
+            <h3 class="stage-name">{{ stage.name }}</h3>
+            <span class="stage-status" [attr.data-status]="stage.status">
+              {{ stage.status | titlecase }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Stage Status Icon -->
+        <div class="stage-icon">
+          <i *ngIf="stage.status === 'pending'" class="icon-pending"></i>
+          <i *ngIf="stage.status === 'running'" class="icon-running spinner"></i>
+          <i *ngIf="stage.status === 'completed'" class="icon-success"></i>
+          <i *ngIf="stage.status === 'failed'" class="icon-error"></i>
+          <i *ngIf="stage.status === 'skipped'" class="icon-skip"></i>
+        </div>
+
+        <!-- Stage Details -->
+        <div class="stage-details">
+          <!-- Dependencies -->
+          <div *ngIf="stage.dependencies.length > 0" class="stage-dependencies">
+            <span class="label">Dependencies:</span>
+            <span class="dependencies-list">
+              {{ stage.dependencies.join(', ') }}
+            </span>
+          </div>
+
+          <!-- Retry Info -->
+          <div *ngIf="stage.retryable && stage.currentRetry > 0" class="stage-retry-info">
+            <span class="label">Retries:</span>
+            <span class="retry-count">{{ stage.currentRetry }} / {{ stage.maxRetries }}</span>
+          </div>
+
+          <!-- Stage Result -->
+          <div *ngIf="getStageResult(stage.id) as result" class="stage-result">
+            <div *ngIf="result.status === 'success'" class="result-success">
+              <p class="result-message">{{ result.output?.message }}</p>
+              <p class="result-duration">Duration: {{ result.duration }}ms</p>
+            </div>
+            <div *ngIf="result.status === 'failure'" class="result-failure">
+              <p class="result-error">{{ result.error?.message }}</p>
+            </div>
+            <div *ngIf="result.status === 'skipped'" class="result-skipped">
+              <p class="result-skip-reason">Reason: {{ result.output?.skipReason }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage Actions -->
+        <div class="stage-actions">
+          <!-- Retry Button -->
+          <button
+            *ngIf="canRetryStage(stage.id)"
+            (click)="retryStage(stage.id)"
+            class="btn-retry"
+            [disabled]="loading"
+          >
+            <i class="icon-retry"></i>
+            Retry ({{ stage.maxRetries - stage.currentRetry }} left)
+          </button>
+
+          <!-- Skip Button -->
+          <button
+            *ngIf="canSkipStage(stage.id)"
+            (click)="showSkipStageDialog(stage.id)"
+            class="btn-skip"
+            [disabled]="loading"
+          >
+            <i class="icon-skip"></i>
+            Skip Stage
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage Connector -->
+      <div *ngIf="i < stages.length - 1" class="stage-connector">
+        <div class="connector-line" [class.active]="stage.status === 'completed' || stage.status === 'skipped'"></div>
+        <i class="connector-arrow"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skip Dialog -->
+  <div *ngIf="showSkipDialog" class="modal-overlay" (click)="cancelSkip()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Skip Stage</h3>
+        <button class="btn-close" (click)="cancelSkip()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>Please provide a reason for skipping this stage:</p>
+        <textarea
+          [(ngModel)]="skipReason"
+          rows="4"
+          placeholder="Enter skip reason..."
+          class="form-control"
+        ></textarea>
+      </div>
+      <div class="modal-footer">
+        <button
+          (click)="skipStage()"
+          [disabled]="!skipReason.trim()"
+          class="btn-primary"
+        >
+          Skip Stage
+        </button>
+        <button (click)="cancelSkip()" class="btn-secondary">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Processing stage...</p>
+  </div>
+</div>
