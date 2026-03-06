@@ -102,6 +102,28 @@ export class DeploymentService {
     return result;
   }
 
+  /**
+   * Request an Atlas lifecycle state transition.
+   * Use when the deployment is governed by the Atlas platform backend.
+   * Endpoint: POST /deployments/{id}/transition
+   */
+  async requestAtlasTransition(id: string, targetState: string, reason: string) {
+    const result = await firstValueFrom(
+      this.http.post<{ deploymentId: string; previousState: string; newState: string; transitionedAt: string }>(
+        `${this.base}/${id}/transition`,
+        { targetState, reason },
+        { headers: this.httpOptions.headers }
+      )
+    );
+    this.invalidateListCache();
+    return result;
+  }
+
+  /** Get available Atlas lifecycle transitions for a deployment */
+  getAvailableTransitions(id: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/${id}/transitions/available`, { headers: this.httpOptions.headers });
+  }
+
   // ----- Phases/Subphases/Checklist -----
   async getSubPhases(id: string, phaseCode: number) {
     return firstValueFrom(this.http.get<any[]>(`${this.base}/${id}/phases/${phaseCode}/subphases`, { headers: this.httpOptions.headers }));
