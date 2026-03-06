@@ -336,4 +336,158 @@ describe('RecommendationEngineService', () => {
       initialReq.flush(mockRecommendations);
     });
   });
+
+  describe('Error handling with fallback', () => {
+    it('should return cached recommendations when AI service is unavailable (503) and cache exists', (done) => {
+      const context: RecommendationContext = {
+        type: 'scheduling'
+      };
+
+      const mockRecommendations: Recommendation[] = [{
+        id: '1',
+        type: 'scheduling',
+        title: 'Cached Recommendation',
+        description: 'Test',
+        confidence: 0.9,
+        priority: 'high',
+        rationale: 'Test',
+        supportingData: {},
+        actions: [],
+        createdAt: new Date(),
+        status: 'pending'
+      }];
+
+      // First call to populate cache
+      service.getRecommendations(context).subscribe(() => {
+        // Manually expire the cache by manipulating time
+        const cache = (service as any).recommendationCache;
+        const cacheKey = JSON.stringify({ type: context.type, entityId: context.entityId, timeRange: context.timeRange, filters: context.filters });
+        const cachedEntry = cache.get(cacheKey);
+        if (cachedEntry) {
+          // Set timestamp to 6 minutes ago to expire cache
+          cachedEntry.timestamp = Date.now() - (6 * 60 * 1000);
+        }
+
+        // Second call should return cached data when service is unavailable
+        service.getRecommendations(context).subscribe(recommendations => {
+          expect(recommendations.length).toBe(1);
+          expect(recommendations[0].title).toBe('Cached Recommendation');
+          done();
+        });
+
+        const failedReq = httpMock.expectOne((request) => request.url === baseUrl);
+        failedReq.flush(null, { status: 503, statusText: 'Service Unavailable' });
+      });
+
+      const initialReq = httpMock.expectOne((request) => request.url === baseUrl);
+      initialReq.flush(mockRecommendations);
+    });
+
+    it('should return cached recommendations on network error (status 0) and cache exists', (done) => {
+      const context: RecommendationContext = {
+        type: 'scheduling'
+      };
+
+      const mockRecommendations: Recommendation[] = [{
+        id: '1',
+        type: 'scheduling',
+        title: 'Cached Recommendation',
+        description: 'Test',
+        confidence: 0.9,
+        priority: 'high',
+        rationale: 'Test',
+        supportingData: {},
+        actions: [],
+        createdAt: new Date(),
+        status: 'pending'
+      }];
+
+      // First call to populate cache
+      service.getRecommendations(context).subscribe(() => {
+        // Manually expire the cache
+        const cache = (service as any).recommendationCache;
+        const cacheKey = JSON.stringify({ type: context.type, entityId: context.entityId, timeRange: context.timeRange, filters: context.filters });
+        const cachedEntry = cache.get(cacheKey);
+        if (cachedEntry) {
+          cachedEntry.timestamp = Date.now() - (6 * 60 * 1000);
+        }
+
+        // Second call should return cached data on network error
+        service.getRecommendations(context).subscribe(recommendations => {
+          expect(recommendations.length).toBe(1);
+          expect(recommendations[0].title).toBe('Cached Recommendation');
+          done();
+        });
+
+        const failedReq = httpMock.expectOne((request) => request.url === baseUrl);
+        failedReq.flush(null, { status: 0, statusText: 'Network Error' });
+      });
+
+      const initialReq = httpMock.expectOne((request) => request.url === baseUrl);
+      initialReq.flush(mockRecommendations);
+    });
+
+    it('should throw error when service unavailable and no cache available', (done) => {
+      const context: RecommendationContext = {
+        type: 'scheduling'
+      };
+
+      service.getRecommendations(context).subscribe({
+        next: () => fail('Should have thrown error'),
+        error: (error) => {
+          expect(error.status).toBe(503);
+          done();
+        }
+      });
+
+      const req = httpMock.expectOne((request) => request.url === baseUrl);
+      req.flush(null, { status: 503, statusText: 'Service Unavailable' });
+    });
+
+    it('should throw error for non-503/non-0 errors even with cache', (done) => {
+      const context: RecommendationContext = {
+        type: 'scheduling'
+      };
+
+      const mockRecommendations: Recommendation[] = [{
+        id: '1',
+        type: 'scheduling',
+        title: 'Cached Recommendation',
+        description: 'Test',
+        confidence: 0.9,
+        priority: 'high',
+        rationale: 'Test',
+        supportingData: {},
+        actions: [],
+        createdAt: new Date(),
+        status: 'pending'
+      }];
+
+      // First call to populate cache
+      service.getRecommendations(context).subscribe(() => {
+        // Manually expire the cache
+        const cache = (service as any).recommendationCache;
+        const cacheKey = JSON.stringify({ type: context.type, entityId: context.entityId, timeRange: context.timeRange, filters: context.filters });
+        const cachedEntry = cache.get(cacheKey);
+        if (cachedEntry) {
+          cachedEntry.timestamp = Date.now() - (6 * 60 * 1000);
+        }
+
+        // Second call should throw error for 400 even with cache
+        service.getRecommendations(context).subscribe({
+          next: () => fail('Should have thrown error'),
+          error: (error) => {
+            expect(error.status).toBe(400);
+            done();
+          }
+        });
+
+        const failedReq = httpMock.expectOne((request) => request.url === baseUrl);
+        failedReq.flush(null, { status: 400, statusText: 'Bad Request' });
+      });
+
+      const initialReq = httpMock.expectOne((request) => request.url === baseUrl);
+      initialReq.flush(mockRecommendations);
+    });
+  });
 });

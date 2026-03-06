@@ -49,7 +49,7 @@ export class WorkflowWizardEffects {
         if (!currentStep) {
           return of(WorkflowWizardActions.validateCurrentStepFailure({
             validationResult: {
-              isValid: false,
+              valid: false,
               errors: [{ 
                 field: 'step', 
                 message: 'No current step', 
@@ -64,7 +64,7 @@ export class WorkflowWizardEffects {
 
         return this.validationEngine.validateStep(currentStep, stepData).pipe(
           map(validationResult => {
-            if (validationResult.isValid) {
+            if (validationResult.valid) {
               return WorkflowWizardActions.validateCurrentStepSuccess({ validationResult });
             } else {
               return WorkflowWizardActions.validateCurrentStepFailure({ validationResult });
@@ -72,7 +72,7 @@ export class WorkflowWizardEffects {
           }),
           catchError(error => of(WorkflowWizardActions.validateCurrentStepFailure({
             validationResult: {
-              isValid: false,
+              valid: false,
               errors: [{ 
                 field: 'validation', 
                 message: error.message || 'Validation failed', 

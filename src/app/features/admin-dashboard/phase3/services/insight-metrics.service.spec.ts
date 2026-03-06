@@ -74,7 +74,7 @@ describe('InsightMetricsService', () => {
         value: 100,
         unit: 'units',
         trend: 'up',
-        changePercent: 10
+        changePercentage: 10
       };
       expect(service.validateTrendConsistency(metric)).toBe(true);
     });
@@ -85,7 +85,7 @@ describe('InsightMetricsService', () => {
         value: 90,
         unit: 'units',
         trend: 'down',
-        changePercent: -10
+        changePercentage: -10
       };
       expect(service.validateTrendConsistency(metric)).toBe(true);
     });
@@ -96,7 +96,7 @@ describe('InsightMetricsService', () => {
         value: 100,
         unit: 'units',
         trend: 'stable',
-        changePercent: 0
+        changePercentage: 0
       };
       expect(service.validateTrendConsistency(metric)).toBe(true);
     });
@@ -107,7 +107,7 @@ describe('InsightMetricsService', () => {
         value: 90,
         unit: 'units',
         trend: 'up',
-        changePercent: -10
+        changePercentage: -10
       };
       expect(service.validateTrendConsistency(metric)).toBe(false);
     });
@@ -118,7 +118,7 @@ describe('InsightMetricsService', () => {
         value: 110,
         unit: 'units',
         trend: 'down',
-        changePercent: 10
+        changePercentage: 10
       };
       expect(service.validateTrendConsistency(metric)).toBe(false);
     });
@@ -129,7 +129,7 @@ describe('InsightMetricsService', () => {
         value: 110,
         unit: 'units',
         trend: 'stable',
-        changePercent: 10
+        changePercentage: 10
       };
       expect(service.validateTrendConsistency(metric)).toBe(false);
     });
@@ -142,11 +142,11 @@ describe('InsightMetricsService', () => {
         value: 90,
         unit: 'units',
         trend: 'up',
-        changePercent: -10
+        changePercentage: -10
       };
       const normalized = service.normalizeMetric(metric);
       expect(normalized.trend).toBe('down');
-      expect(normalized.changePercent).toBe(-10);
+      expect(normalized.changePercentage).toBe(-10);
     });
 
     it('should correct inconsistent downward trend', () => {
@@ -155,11 +155,11 @@ describe('InsightMetricsService', () => {
         value: 110,
         unit: 'units',
         trend: 'down',
-        changePercent: 10
+        changePercentage: 10
       };
       const normalized = service.normalizeMetric(metric);
       expect(normalized.trend).toBe('up');
-      expect(normalized.changePercent).toBe(10);
+      expect(normalized.changePercentage).toBe(10);
     });
 
     it('should not modify consistent metrics', () => {
@@ -168,7 +168,7 @@ describe('InsightMetricsService', () => {
         value: 110,
         unit: 'units',
         trend: 'up',
-        changePercent: 10
+        changePercentage: 10
       };
       const normalized = service.normalizeMetric(metric);
       expect(normalized).toEqual(metric);
@@ -178,9 +178,9 @@ describe('InsightMetricsService', () => {
   describe('normalizeMetrics', () => {
     it('should normalize multiple metrics', () => {
       const metrics: InsightMetric[] = [
-        { name: 'Metric1', value: 110, unit: 'units', trend: 'down', changePercent: 10 },
-        { name: 'Metric2', value: 90, unit: 'units', trend: 'up', changePercent: -10 },
-        { name: 'Metric3', value: 100, unit: 'units', trend: 'up', changePercent: 5 }
+        { name: 'Metric1', value: 110, unit: 'units', trend: 'down', changePercentage: 10 },
+        { name: 'Metric2', value: 90, unit: 'units', trend: 'up', changePercentage: -10 },
+        { name: 'Metric3', value: 100, unit: 'units', trend: 'up', changePercentage: 5 }
       ];
 
       const normalized = service.normalizeMetrics(metrics);
@@ -198,7 +198,7 @@ describe('InsightMetricsService', () => {
       expect(metric.name).toBe('CPU Usage');
       expect(metric.value).toBe(75);
       expect(metric.unit).toBe('%');
-      expect(metric.changePercent).toBe(15);
+      expect(metric.changePercentage).toBe(15);
       expect(metric.trend).toBe('up');
     });
 
@@ -222,21 +222,21 @@ describe('InsightMetricsService', () => {
       expect(metric.name).toBe('Users');
       expect(metric.value).toBe(110);
       expect(metric.unit).toBe('count');
-      expect(metric.changePercent).toBe(10);
+      expect(metric.changePercentage).toBe(10);
       expect(metric.trend).toBe('up');
     });
 
     it('should handle decreasing values', () => {
       const metric = service.createMetricFromValues('Latency', 90, 100, 'ms');
       
-      expect(metric.changePercent).toBe(-10);
+      expect(metric.changePercentage).toBe(-10);
       expect(metric.trend).toBe('down');
     });
 
     it('should handle stable values', () => {
       const metric = service.createMetricFromValues('Status', 100, 100, 'score');
       
-      expect(metric.changePercent).toBe(0);
+      expect(metric.changePercentage).toBe(0);
       expect(metric.trend).toBe('stable');
     });
   });
@@ -316,26 +316,26 @@ describe('InsightMetricsService', () => {
   describe('validateMetrics', () => {
     it('should validate all consistent metrics', () => {
       const metrics: InsightMetric[] = [
-        { name: 'Metric1', value: 110, unit: 'units', trend: 'up', changePercent: 10 },
-        { name: 'Metric2', value: 90, unit: 'units', trend: 'down', changePercent: -10 },
-        { name: 'Metric3', value: 100, unit: 'units', trend: 'stable', changePercent: 0 }
+        { name: 'Metric1', value: 110, unit: 'units', trend: 'up', changePercentage: 10 },
+        { name: 'Metric2', value: 90, unit: 'units', trend: 'down', changePercentage: -10 },
+        { name: 'Metric3', value: 100, unit: 'units', trend: 'stable', changePercentage: 0 }
       ];
 
       const result = service.validateMetrics(metrics);
 
-      expect(result.isValid).toBe(true);
+      expect(result.valid).toBe(true);
       expect(result.invalidMetrics.length).toBe(0);
     });
 
     it('should identify inconsistent metrics', () => {
       const metrics: InsightMetric[] = [
-        { name: 'Metric1', value: 110, unit: 'units', trend: 'down', changePercent: 10 },
-        { name: 'Metric2', value: 90, unit: 'units', trend: 'up', changePercent: -10 }
+        { name: 'Metric1', value: 110, unit: 'units', trend: 'down', changePercentage: 10 },
+        { name: 'Metric2', value: 90, unit: 'units', trend: 'up', changePercentage: -10 }
       ];
 
       const result = service.validateMetrics(metrics);
 
-      expect(result.isValid).toBe(false);
+      expect(result.valid).toBe(false);
       expect(result.invalidMetrics.length).toBe(2);
       expect(result.invalidMetrics[0].expectedTrend).toBe('up');
       expect(result.invalidMetrics[1].expectedTrend).toBe('down');
@@ -344,7 +344,7 @@ describe('InsightMetricsService', () => {
     it('should return valid for empty array', () => {
       const result = service.validateMetrics([]);
 
-      expect(result.isValid).toBe(true);
+      expect(result.valid).toBe(true);
       expect(result.invalidMetrics.length).toBe(0);
     });
   });

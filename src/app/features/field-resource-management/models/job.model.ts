@@ -80,6 +80,8 @@ export interface Job {
   customerPOC?: ContactInfo;
   attachments: Attachment[];
   notes: JobNote[];
+  market: string; // Market/region identifier (e.g., 'DALLAS', 'HOUSTON', 'RG')
+  company: string; // Company identifier for PM/Vendor scoping
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

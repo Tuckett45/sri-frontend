@@ -5,6 +5,7 @@
 import { TechnicianRole } from '../technician.model';
 import { JobType, Priority, JobStatus } from '../job.model';
 import { DateRange } from '../assignment.model';
+import { CrewStatus } from '../crew.model';
 
 export interface TechnicianFilters {
   searchTerm?: string;
@@ -28,6 +29,8 @@ export interface JobFilters {
   endDate?: Date;
   technicianId?: string;
   region?: string;
+  market?: string;
+  company?: string;
   page?: number;
   pageSize?: number;
 }
@@ -46,6 +49,17 @@ export interface TimeEntryFilters {
   jobId?: string;
   dateRange?: DateRange;
   isManuallyAdjusted?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CrewFilters {
+  searchTerm?: string;
+  status?: CrewStatus;
+  market?: string;
+  company?: string;
+  leadTechnicianId?: string;
+  memberId?: string;
   page?: number;
   pageSize?: number;
 }

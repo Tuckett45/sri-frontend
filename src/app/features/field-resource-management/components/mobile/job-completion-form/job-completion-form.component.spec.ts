@@ -34,6 +34,8 @@ describe('JobCompletionFormComponent', () => {
     notes: [],
     createdBy: 'test-user',
     createdAt: new Date(),
+    market: 'DALLAS',
+    company: 'TEST_COMPANY',
     updatedAt: new Date()
   };
 

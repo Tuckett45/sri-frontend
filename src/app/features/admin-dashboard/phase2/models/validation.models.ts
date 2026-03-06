@@ -1,7 +1,7 @@
 // Validation Models
 
 export interface ValidationResult {
-  isValid: boolean;
+  valid: boolean;
   errors: ValidationError[];
   warnings: ValidationWarning[];
   metadata: Record<string, any>;
@@ -18,6 +18,7 @@ export interface ValidationWarning {
   field: string;
   message: string;
   code: string;
+  severity: 'warning';
 }
 
 export interface BusinessRule {

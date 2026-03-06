@@ -87,7 +87,8 @@ export class ValidationEngineService {
           warnings.push({
             field: `steps.${stepId}`,
             message: `Step ${stepId} has no data`,
-            code: 'EMPTY_STEP_DATA'
+            code: 'EMPTY_STEP_DATA',
+            severity: 'warning'
           });
         }
       });
@@ -98,7 +99,8 @@ export class ValidationEngineService {
       warnings.push({
         field: 'metadata',
         message: 'Workflow metadata is missing',
-        code: 'MISSING_METADATA'
+        code: 'MISSING_METADATA',
+        severity: 'warning'
       });
     }
 
@@ -117,7 +119,7 @@ export class ValidationEngineService {
         const allWarnings = [...warnings, ...(backendResult.warnings || [])];
 
         return {
-          isValid: allErrors.length === 0 && backendResult.isValid,
+          valid: allErrors.length === 0 && backendResult.valid,
           errors: allErrors,
           warnings: allWarnings,
           metadata: {
@@ -134,7 +136,7 @@ export class ValidationEngineService {
       catchError(() => {
         // If backend validation fails, return local validation results
         return of({
-          isValid: errors.length === 0,
+          valid: errors.length === 0,
           errors,
           warnings,
           metadata: {
@@ -162,7 +164,7 @@ export class ValidationEngineService {
     // Validate against step's validation rules
     for (const rule of step.validations) {
       const ruleResult = this.validateRule(rule, stepData);
-      if (!ruleResult.isValid) {
+      if (!ruleResult.valid) {
         // Aggregate all errors and warnings from rule validation
         errors.push(...ruleResult.errors);
         warnings.push(...ruleResult.warnings);
@@ -176,7 +178,8 @@ export class ValidationEngineService {
       warnings.push({
         field: 'dependencies',
         message: `Step has ${step.dependencies.length} dependencies that should be validated`,
-        code: 'UNVALIDATED_DEPENDENCIES'
+        code: 'UNVALIDATED_DEPENDENCIES',
+        severity: 'warning'
       });
     }
 
@@ -191,7 +194,7 @@ export class ValidationEngineService {
     }
 
     return of({
-      isValid: errors.length === 0,
+      valid: errors.length === 0,
       errors,
       warnings,
       metadata: { 
@@ -251,7 +254,7 @@ export class ValidationEngineService {
         const customValidator = this.customValidators.get(rule.params['validatorName']);
         if (customValidator) {
           const customResult = customValidator(fieldValue, rule.params);
-          if (!customResult.isValid) {
+          if (!customResult.valid) {
             errors.push(...customResult.errors);
             warnings.push(...customResult.warnings);
           }
@@ -260,7 +263,7 @@ export class ValidationEngineService {
     }
 
     return {
-      isValid: errors.length === 0,
+      valid: errors.length === 0,
       errors,
       warnings,
       metadata: {}
@@ -285,7 +288,7 @@ export class ValidationEngineService {
       map(result => {
         // Ensure all errors and warnings are present
         return {
-          isValid: result.isValid && (result.errors || []).length === 0,
+          valid: result.valid && (result.errors || []).length === 0,
           errors: result.errors || [],
           warnings: result.warnings || [],
           metadata: {
@@ -299,7 +302,7 @@ export class ValidationEngineService {
       catchError((error) => {
         // Return error result if backend call fails
         return of({
-          isValid: false,
+          valid: false,
           errors: [{
             field: 'businessRules',
             message: 'Failed to validate business rules',
@@ -334,7 +337,7 @@ export class ValidationEngineService {
         catchError(error => {
           // If validation fails for an item, return error result
           return of({
-            isValid: false,
+            valid: false,
             errors: [{
               field: 'item',
               message: 'Validation failed for item',
@@ -484,60 +487,60 @@ export class ValidationEngineService {
     for (const constraint of constraints) {
       const fieldValue = this.getFieldValue(data, constraint.field);
 
-      let isValid = true;
+      let valid = true;
       let errorMessage = constraint.message;
 
       switch (constraint.type) {
         case 'required':
-          isValid = !this.isEmpty(fieldValue);
+          valid = !this.isEmpty(fieldValue);
           break;
 
         case 'minLength':
           if (!this.isEmpty(fieldValue)) {
             const length = String(fieldValue).length;
-            isValid = length >= Number(constraint.value);
+            valid = length >= Number(constraint.value);
           }
           break;
 
         case 'maxLength':
           if (!this.isEmpty(fieldValue)) {
             const length = String(fieldValue).length;
-            isValid = length <= Number(constraint.value);
+            valid = length <= Number(constraint.value);
           }
           break;
 
         case 'min':
           if (!this.isEmpty(fieldValue)) {
-            isValid = Number(fieldValue) >= Number(constraint.value);
+            valid = Number(fieldValue) >= Number(constraint.value);
           }
           break;
 
         case 'max':
           if (!this.isEmpty(fieldValue)) {
-            isValid = Number(fieldValue) <= Number(constraint.value);
+            valid = Number(fieldValue) <= Number(constraint.value);
           }
           break;
 
         case 'pattern':
           if (!this.isEmpty(fieldValue)) {
             const pattern = new RegExp(String(constraint.value));
-            isValid = pattern.test(String(fieldValue));
+            valid = pattern.test(String(fieldValue));
           }
           break;
 
         case 'unique':
           // Unique validation would require backend check
           // For now, we'll assume it's valid
-          isValid = true;
+          valid = true;
           break;
 
         case 'custom':
           // Custom constraint validation would use registered validators
-          isValid = true;
+          valid = true;
           break;
       }
 
-      if (!isValid) {
+      if (!valid) {
         if (constraint.severity === 'error') {
           errors.push({
             field: constraint.field,
@@ -549,14 +552,15 @@ export class ValidationEngineService {
           warnings.push({
             field: constraint.field,
             message: errorMessage,
-            code: `CONSTRAINT_${constraint.type.toUpperCase()}`
+            code: `CONSTRAINT_${constraint.type.toUpperCase()}`,
+            severity: 'warning'
           });
         }
       }
     }
 
     return {
-      isValid: errors.length === 0,
+      valid: errors.length === 0,
       errors,
       warnings,
       metadata: { constraintCount: constraints.length }
@@ -581,7 +585,7 @@ export class ValidationEngineService {
 
     // Validate current step
     return this.validateStep(currentStep, stepData).pipe(
-      map(result => result.isValid)
+      map(result => result.valid)
     );
   }
 

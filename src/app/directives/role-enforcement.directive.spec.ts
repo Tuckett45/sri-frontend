@@ -1,12 +1,14 @@
 import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
+import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { RoleEnforcementDirective } from './role-enforcement.directive';
 import { SecureAuthService } from '../services/secure-auth.service';
 import { UserRole } from '../models/role.enum';
 import { SecureAuthState } from '../models/auth.model';
 import { User } from '../models/user.model';
+import { selectAllPermissions } from '../store/role-permissions/role-permissions.selectors';
 
 // Test component for structural directive (hide mode)
 @Component({
@@ -47,6 +49,16 @@ class TestRequireAllComponent {
 describe('RoleEnforcementDirective', () => {
   let mockAuthService: jasmine.SpyObj<SecureAuthService>;
   let authStateSubject: BehaviorSubject<SecureAuthState>;
+  let store: MockStore;
+
+  const initialState = {
+    rolePermissions: {
+      permissions: {},
+      loading: false,
+      error: null,
+      lastUpdated: null
+    }
+  };
 
   beforeEach(() => {
     // Create mock auth state
@@ -73,10 +85,12 @@ describe('RoleEnforcementDirective', () => {
       TestBed.configureTestingModule({
         declarations: [RoleEnforcementDirective, TestHideComponent],
         providers: [
-          { provide: SecureAuthService, useValue: mockAuthService }
+          { provide: SecureAuthService, useValue: mockAuthService },
+          provideMockStore({ initialState })
         ]
       });
 
+      store = TestBed.inject(MockStore);
       fixture = TestBed.createComponent(TestHideComponent);
       component = fixture.componentInstance;
     });
@@ -252,10 +266,12 @@ describe('RoleEnforcementDirective', () => {
       TestBed.configureTestingModule({
         declarations: [RoleEnforcementDirective, TestDisableComponent],
         providers: [
-          { provide: SecureAuthService, useValue: mockAuthService }
+          { provide: SecureAuthService, useValue: mockAuthService },
+          provideMockStore({ initialState })
         ]
       });
 
+      store = TestBed.inject(MockStore);
       fixture = TestBed.createComponent(TestDisableComponent);
       component = fixture.componentInstance;
     });
@@ -363,11 +379,13 @@ describe('RoleEnforcementDirective', () => {
       TestBed.configureTestingModule({
         declarations: [RoleEnforcementDirective, TestRequireAllComponent],
         providers: [
-          { provide: SecureAuthService, useValue: mockAuthService }
+          { provide: SecureAuthService, useValue: mockAuthService },
+          provideMockStore({ initialState })
         ],
         schemas: [NO_ERRORS_SCHEMA] // Allow unknown properties for testing
       });
 
+      store = TestBed.inject(MockStore);
       fixture = TestBed.createComponent(TestRequireAllComponent);
       component = fixture.componentInstance;
     });

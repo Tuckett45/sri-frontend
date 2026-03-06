@@ -1,4 +1,12 @@
 <div class="workflow-wizard">
+  <!-- Loading Indicator for async operations -->
+  <app-loading-indicator 
+    *ngIf="(saveDraftStatus$ | async)?.saving" 
+    [overlay]="true"
+    [mode]="'spinner'"
+    [message]="'Saving draft...'">
+  </app-loading-indicator>
+
   <!-- Header -->
   <div class="wizard-header">
     <h2>{{ workflowType | titlecase }} Workflow</h2>

@@ -24,13 +24,13 @@ export class InsightMetricsService {
    * - Negative change percentage → trend = 'down'
    * - Zero change percentage → trend = 'stable'
    * 
-   * @param changePercent The percentage change value
+   * @param changePercentage The percentage change value
    * @returns The trend direction ('up', 'down', or 'stable')
    */
-  calculateTrend(changePercent: number): 'up' | 'down' | 'stable' {
-    if (changePercent > 0) {
+  calculateTrend(changePercentage: number): 'up' | 'down' | 'stable' {
+    if (changePercentage > 0) {
       return 'up';
-    } else if (changePercent < 0) {
+    } else if (changePercentage < 0) {
       return 'down';
     } else {
       return 'stable';
@@ -51,9 +51,9 @@ export class InsightMetricsService {
     }
     
     const change = currentValue - previousValue;
-    const changePercent = (change / Math.abs(previousValue)) * 100;
+    const changePercentage = (change / Math.abs(previousValue)) * 100;
     
-    return changePercent;
+    return changePercentage;
   }
 
   /**
@@ -62,15 +62,15 @@ export class InsightMetricsService {
    * **Validates: Requirements 9.3, 9.4, 9.5**
    * 
    * Ensures:
-   * - If changePercent > 0, trend must be 'up'
-   * - If changePercent < 0, trend must be 'down'
-   * - If changePercent === 0, trend must be 'stable'
+   * - If changePercentage > 0, trend must be 'up'
+   * - If changePercentage < 0, trend must be 'down'
+   * - If changePercentage === 0, trend must be 'stable'
    * 
    * @param metric The insight metric to validate
-   * @returns True if trend is consistent with changePercent, false otherwise
+   * @returns True if trend is consistent with changePercentage, false otherwise
    */
   validateTrendConsistency(metric: InsightMetric): boolean {
-    const expectedTrend = this.calculateTrend(metric.changePercent);
+    const expectedTrend = this.calculateTrend(metric.changePercentage);
     return metric.trend === expectedTrend;
   }
 
@@ -79,14 +79,14 @@ export class InsightMetricsService {
    * 
    * **Validates: Requirements 9.3, 9.4, 9.5**
    * 
-   * If the trend is inconsistent with changePercent, this function
-   * corrects the trend to match the changePercent value.
+   * If the trend is inconsistent with changePercentage, this function
+   * corrects the trend to match the changePercentage value.
    * 
    * @param metric The insight metric to normalize
    * @returns A normalized metric with consistent trend
    */
   normalizeMetric(metric: InsightMetric): InsightMetric {
-    const correctTrend = this.calculateTrend(metric.changePercent);
+    const correctTrend = this.calculateTrend(metric.changePercentage);
     
     return {
       ...metric,
@@ -114,21 +114,21 @@ export class InsightMetricsService {
    * @param name Metric name
    * @param value Current value
    * @param unit Unit of measurement
-   * @param changePercent Percentage change
+   * @param changePercentage Percentage change
    * @returns A complete InsightMetric with calculated trend
    */
   createMetric(
     name: string,
     value: number,
     unit: string,
-    changePercent: number
+    changePercentage: number
   ): InsightMetric {
     return {
       name,
       value,
       unit,
-      changePercent,
-      trend: this.calculateTrend(changePercent)
+      changePercentage,
+      trend: this.calculateTrend(changePercentage)
     };
   }
 
@@ -149,9 +149,9 @@ export class InsightMetricsService {
     previousValue: number,
     unit: string
   ): InsightMetric {
-    const changePercent = this.calculateChangePercent(currentValue, previousValue);
+    const changePercentage = this.calculateChangePercent(currentValue, previousValue);
     
-    return this.createMetric(name, currentValue, unit, changePercent);
+    return this.createMetric(name, currentValue, unit, changePercentage);
   }
 
   /**
@@ -195,34 +195,34 @@ export class InsightMetricsService {
   /**
    * Format change percentage for display
    * 
-   * @param changePercent The percentage change value
+   * @param changePercentage The percentage change value
    * @param decimals Number of decimal places (default: 1)
    * @returns Formatted string with sign and percentage symbol
    */
-  formatChangePercent(changePercent: number, decimals: number = 1): string {
-    const sign = changePercent > 0 ? '+' : '';
-    return `${sign}${changePercent.toFixed(decimals)}%`;
+  formatChangePercent(changePercentage: number, decimals: number = 1): string {
+    const sign = changePercentage > 0 ? '+' : '';
+    return `${sign}${changePercentage.toFixed(decimals)}%`;
   }
 
   /**
    * Determine if a change is significant
    * 
-   * @param changePercent The percentage change value
+   * @param changePercentage The percentage change value
    * @param threshold Threshold for significance (default: 5%)
    * @returns True if the absolute change exceeds the threshold
    */
-  isSignificantChange(changePercent: number, threshold: number = 5): boolean {
-    return Math.abs(changePercent) >= threshold;
+  isSignificantChange(changePercentage: number, threshold: number = 5): boolean {
+    return Math.abs(changePercentage) >= threshold;
   }
 
   /**
    * Get change severity level
    * 
-   * @param changePercent The percentage change value
+   * @param changePercentage The percentage change value
    * @returns Severity level ('low', 'medium', 'high')
    */
-  getChangeSeverity(changePercent: number): 'low' | 'medium' | 'high' {
-    const absChange = Math.abs(changePercent);
+  getChangeSeverity(changePercentage: number): 'low' | 'medium' | 'high' {
+    const absChange = Math.abs(changePercentage);
     
     if (absChange >= 20) {
       return 'high';
@@ -242,7 +242,7 @@ export class InsightMetricsService {
    * @returns Object with validation results
    */
   validateMetrics(metrics: InsightMetric[]): {
-    isValid: boolean;
+    valid: boolean;
     invalidMetrics: Array<{ metric: InsightMetric; expectedTrend: 'up' | 'down' | 'stable' }>;
   } {
     const invalidMetrics: Array<{ metric: InsightMetric; expectedTrend: 'up' | 'down' | 'stable' }> = [];
@@ -251,13 +251,13 @@ export class InsightMetricsService {
       if (!this.validateTrendConsistency(metric)) {
         invalidMetrics.push({
           metric,
-          expectedTrend: this.calculateTrend(metric.changePercent)
+          expectedTrend: this.calculateTrend(metric.changePercentage)
         });
       }
     });
 
     return {
-      isValid: invalidMetrics.length === 0,
+      valid: invalidMetrics.length === 0,
       invalidMetrics
     };
   }

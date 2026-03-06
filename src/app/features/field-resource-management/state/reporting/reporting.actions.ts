@@ -6,6 +6,8 @@
 import { createAction, props } from '@ngrx/store';
 import { DashboardMetrics, UtilizationReport, PerformanceReport, KPI } from '../../models/reporting.model';
 import { DateRange } from '../../models/assignment.model';
+import { TechnicianRole } from '../../models/technician.model';
+import { JobType, Priority } from '../../models/job.model';
 
 // Load Dashboard
 export const loadDashboard = createAction(
@@ -25,7 +27,7 @@ export const loadDashboardFailure = createAction(
 // Load Utilization Report
 export const loadUtilization = createAction(
   '[Reporting] Load Utilization',
-  props<{ dateRange: DateRange; technicianId?: string; role?: string; region?: string }>()
+  props<{ dateRange: DateRange; technicianId?: string; role?: TechnicianRole; region?: string }>()
 );
 
 export const loadUtilizationSuccess = createAction(
@@ -41,7 +43,7 @@ export const loadUtilizationFailure = createAction(
 // Load Job Performance Report
 export const loadJobPerformance = createAction(
   '[Reporting] Load Job Performance',
-  props<{ dateRange: DateRange; jobType?: string; priority?: string; client?: string }>()
+  props<{ dateRange: DateRange; jobType?: JobType; priority?: Priority; client?: string }>()
 );
 
 export const loadJobPerformanceSuccess = createAction(
@@ -56,7 +58,8 @@ export const loadJobPerformanceFailure = createAction(
 
 // Load KPIs
 export const loadKPIs = createAction(
-  '[Reporting] Load KPIs'
+  '[Reporting] Load KPIs',
+  props<{ dateRange?: DateRange; markets?: string[] }>()
 );
 
 export const loadKPIsSuccess = createAction(

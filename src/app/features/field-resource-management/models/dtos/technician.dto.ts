@@ -3,6 +3,7 @@
  */
 
 import { TechnicianRole, EmploymentType, Skill, Certification, Availability } from '../technician.model';
+import { GeoLocation } from '../time-entry.model';
 
 export interface CreateTechnicianDto {
   technicianId: string;
@@ -34,4 +35,5 @@ export interface UpdateTechnicianDto {
   availability?: Availability[];
   hourlyCostRate?: number;
   isActive?: boolean;
+  currentLocation?: GeoLocation;
 }

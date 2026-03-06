@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { BatchTechnicianDialogComponent } from './batch-technician-dialog.component';
-import { Technician, TechnicianRole, EmploymentType } from '../../../models/technician.model';
+import { Technician, TechnicianRole, EmploymentType , SkillLevel} from '../../../models/technician.model';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 
 describe('BatchTechnicianDialogComponent', () => {
@@ -25,7 +25,7 @@ describe('BatchTechnicianDialogComponent', () => {
       employmentType: EmploymentType.W2,
       homeBase: 'Office A',
       region: 'North',
-      skills: [{ id: 's1', name: 'Cat6', category: 'Cabling' }],
+      skills: [{ id: 's1', name: 'Cat6', category: 'Cabling' , level: SkillLevel.Intermediate }],
       certifications: [],
       availability: [],
       isActive: true,

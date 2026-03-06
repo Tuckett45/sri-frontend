@@ -2,6 +2,7 @@
  * Barrel export for Field Resource Management services
  */
 
+export * from './data-scope.service';
 export * from './technician.service';
 export * from './job.service';
 export * from './scheduling.service';

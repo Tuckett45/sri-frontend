@@ -76,3 +76,22 @@ export interface PerformanceReport {
   jobsByType: Record<JobType, number>;
   topPerformers: TechnicianPerformance[];
 }
+
+/**
+ * KPI Metrics calculated from jobs and technicians data
+ */
+export interface KPIMetrics {
+  totalJobs: number;
+  completedJobs: number;
+  inProgressJobs: number;
+  notStartedJobs: number;
+  cancelledJobs: number;
+  completionRate: number; // Percentage 0-100
+  utilizationRate: number; // Percentage 0-100
+  onTimeCompletionRate: number; // Percentage 0-100
+  averageJobDuration: number; // Hours
+  totalAvailableTechnicians: number;
+  totalEstimatedHours: number;
+  totalActualHours: number;
+  dateRange: DateRange;
+}

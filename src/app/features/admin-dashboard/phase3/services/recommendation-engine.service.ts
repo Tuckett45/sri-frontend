@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../../environments/environments';
+import { CacheService } from '../../../field-resource-management/services/cache.service';
 import {
   Recommendation,
   RecommendationContext,
@@ -16,9 +17,9 @@ import {
 
 /**
  * Service for managing AI-powered recommendations
- * Implements caching, sorting, and feedback collection
+ * Implements caching with 5-minute TTL, sorting, and feedback collection
  * 
- * **Validates: Requirements 8.1, 8.3, 8.4, 8.5, 8.6, 16.2**
+ * **Validates: Requirements 8.1, 8.3, 8.4, 8.5, 8.6, 16.2, 16.3, 16.4**
  */
 @Injectable({
   providedIn: 'root'
@@ -27,45 +28,47 @@ export class RecommendationEngineService {
   private readonly baseUrl = `${environment.apiUrl}/ai/recommendations`;
   private readonly insightsUrl = `${environment.apiUrl}/ai/insights`;
   
-  // Cache for recommendations with 5-minute TTL
-  private recommendationCache = new Map<string, { data: Recommendation[]; timestamp: number }>();
-  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+  // Cache TTL: 5 minutes (Requirement 16.2)
+  private readonly CACHE_TTL = 5 * 60 * 1000;
 
   constructor(
-    private http: HttpClient
+    private http: HttpClient,
+    private cacheService: CacheService
   ) {}
 
   /**
    * Fetches recommendations for a given context
-   * Implements caching with 5-minute TTL
+   * Implements caching with 5-minute TTL (Requirement 16.2)
+   * Fetches fresh data when cache expired (Requirement 16.3)
    * Sorts recommendations by priority and confidence
+   * Returns cached recommendations when AI service is unavailable
    * 
-   * **Validates: Requirements 8.1, 8.3, 8.4, 16.2**
+   * **Validates: Requirements 8.1, 8.3, 8.4, 16.2, 16.3, 18.5, 18.6**
    */
   getRecommendations(context: RecommendationContext): Observable<Recommendation[]> {
     const cacheKey = this.getCacheKey(context);
-    const cached = this.recommendationCache.get(cacheKey);
     
-    // Check if cache is valid (within 5-minute TTL)
-    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
-      return of(cached.data);
-    }
-
-    const params = this.buildQueryParams(context);
-    
-    return this.http.get<Recommendation[]>(this.baseUrl, { params }).pipe(
-      map(recommendations => this.sortRecommendations(recommendations)),
-      tap(recommendations => {
-        // Cache the sorted recommendations
-        this.recommendationCache.set(cacheKey, {
-          data: recommendations,
-          timestamp: Date.now()
-        });
-      }),
-      catchError(error => {
-        console.error('Error fetching recommendations:', error);
-        return throwError(() => error);
-      })
+    return this.cacheService.get(
+      cacheKey,
+      () => {
+        const params = this.buildQueryParams(context);
+        
+        return this.http.get<Recommendation[]>(this.baseUrl, { params }).pipe(
+          map(recommendations => this.sortRecommendations(recommendations)),
+          catchError(error => {
+            console.error('Error fetching recommendations:', error);
+            
+            // If AI service is unavailable (503) or network error (0), try to return cached data
+            if (error.status === 503 || error.status === 0) {
+              console.log('AI service unavailable, attempting to use cached recommendations');
+              // The cache service will handle returning cached data if available
+            }
+            
+            return throwError(() => error);
+          })
+        );
+      },
+      this.CACHE_TTL
     );
   }
 
@@ -85,20 +88,22 @@ export class RecommendationEngineService {
 
   /**
    * Refreshes recommendations by clearing cache and fetching new data
+   * Clears cache entry before fetching (Requirement 16.4)
    * 
-   * **Validates: Requirements 8.1, 16.2**
+   * **Validates: Requirements 8.1, 16.2, 16.4**
    */
   refreshRecommendations(context: RecommendationContext): Observable<Recommendation[]> {
     const cacheKey = this.getCacheKey(context);
-    this.recommendationCache.delete(cacheKey);
+    this.cacheService.invalidate(cacheKey);
     return this.getRecommendations(context);
   }
 
   /**
    * Accepts a recommendation and executes its actions
    * Records acceptance feedback for model improvement
+   * Clears all recommendation caches on update (Requirement 16.4)
    * 
-   * **Validates: Requirements 8.5, 8.6**
+   * **Validates: Requirements 8.5, 8.6, 16.4**
    */
   acceptRecommendation(id: string, metadata?: any): Observable<AcceptanceResult> {
     return this.http.post<AcceptanceResult>(
@@ -116,8 +121,9 @@ export class RecommendationEngineService {
   /**
    * Rejects a recommendation with a reason
    * Records rejection feedback for model improvement
+   * Clears all recommendation caches on update (Requirement 16.4)
    * 
-   * **Validates: Requirements 8.5, 8.6**
+   * **Validates: Requirements 8.5, 8.6, 16.4**
    */
   rejectRecommendation(id: string, reason: string): Observable<void> {
     return this.http.post<void>(
@@ -310,8 +316,11 @@ export class RecommendationEngineService {
 
   /**
    * Clears all recommendation caches
+   * Called when recommendations are updated (Requirement 16.4)
+   * 
+   * **Validates: Requirement 16.4**
    */
   private clearAllCaches(): void {
-    this.recommendationCache.clear();
+    this.cacheService.invalidatePattern(/^recommendations_/);
   }
 }

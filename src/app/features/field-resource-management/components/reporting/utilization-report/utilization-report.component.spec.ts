@@ -38,7 +38,8 @@ describe('UtilizationReportComponent', () => {
           availability: [],
           isActive: true,
           createdAt: new Date(),
-          updatedAt: new Date()
+          market: 'DALLAS',
+          company: 'TEST_COMPANY',          updatedAt: new Date()
         },
         availableHours: 160,
         workedHours: 120,
@@ -124,7 +125,7 @@ describe('UtilizationReportComponent', () => {
 
   it('should clear filters', () => {
     component.selectedTechnicianId = 'tech1';
-    component.selectedRole = 'Installer';
+    component.selectedRole = TechnicianRole.Installer;
     component.selectedRegion = 'North';
     
     component.clearFilters();

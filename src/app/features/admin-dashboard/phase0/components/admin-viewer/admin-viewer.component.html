@@ -27,10 +27,12 @@
   </div>
 
   <!-- Loading Indicator -->
-  <div *ngIf="loading$ | async" class="loading-overlay">
-    <div class="spinner"></div>
-    <p>Loading admin data...</p>
-  </div>
+  <app-loading-indicator 
+    *ngIf="loading$ | async" 
+    [overlay]="true"
+    [mode]="'spinner'"
+    [message]="'Loading admin data...'">
+  </app-loading-indicator>
 
   <!-- Error Message -->
   <div *ngIf="error$ | async as error" class="error-message">

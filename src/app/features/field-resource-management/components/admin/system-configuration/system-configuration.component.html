@@ -130,7 +130,7 @@
           <div class="chip-list-field">
             <label>Job Status Values</label>
             <mat-chip-set>
-              <mat-chip *ngFor="let status of configForm.get('jobStatusValues')?.value" [disabled]="true">
+              <mat-chip *ngFor="let status of configForm.get('jobStatusValues')?.value">
                 {{ status }}
               </mat-chip>
             </mat-chip-set>
@@ -140,7 +140,7 @@
           <div class="chip-list-field">
             <label>Delay Reason Codes</label>
             <mat-chip-set>
-              <mat-chip *ngFor="let reason of configForm.get('delayReasonCodes')?.value" [disabled]="true">
+              <mat-chip *ngFor="let reason of configForm.get('delayReasonCodes')?.value">
                 {{ reason }}
               </mat-chip>
             </mat-chip-set>

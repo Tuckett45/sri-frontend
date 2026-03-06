@@ -8,7 +8,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Job } from '../../../models/job.model';
 import { TechnicianMatch, Conflict } from '../../../models/assignment.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
-import { selectQualifiedTechnicians, selectConflicts } from '../../../state/assignments/assignment.selectors';
+import { selectQualifiedTechnicians, selectAssignmentConflicts } from '../../../state/assignments/assignment.selectors';
 
 /**
  * AssignmentDialogComponent
@@ -58,7 +58,7 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   ) {
     this.job = data.job;
     this.qualifiedTechnicians$ = this.store.select(selectQualifiedTechnicians);
-    this.conflicts$ = this.store.select(selectConflicts);
+    this.conflicts$ = this.store.select(selectAssignmentConflicts);
 
     this.assignmentForm = this.fb.group({
       technicianId: ['', Validators.required],

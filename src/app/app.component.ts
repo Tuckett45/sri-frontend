@@ -3,6 +3,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { ConfigurationService } from './services/configuration.service';
 import { SecureAuthService } from './services/secure-auth.service';
 import { DeploymentNotificationIntegratorService } from './features/deployment/services/deployment-notification-integrator.service';
+import { AnalyticsService } from './shared/services/analytics.service';
 import { environment } from 'src/environments/environments';
 
 @Component({
@@ -20,6 +21,7 @@ export class AppComponent {
   private readonly configService = inject(ConfigurationService);
   private readonly authService = inject(SecureAuthService);
   private readonly notificationIntegrator = inject(DeploymentNotificationIntegratorService);
+  private readonly analyticsService = inject(AnalyticsService);
 
   constructor(public router: Router) {}
 
@@ -41,6 +43,10 @@ export class AppComponent {
       console.log('🔐 Initializing authentication...');
       await this.authService.initialize();
 
+      // Initialize analytics service
+      console.log('📊 Initializing analytics...');
+      this.analyticsService.initialize();
+
       // Subscribe to authentication state changes
       this.authService.getAuthState().subscribe(authState => {
         console.log('🔐 Auth state changed:', { isAuthenticated: authState.isAuthenticated });
@@ -52,6 +58,23 @@ export class AppComponent {
           this.notificationIntegrator.initialize().catch(error => {
             console.error('Failed to initialize notifications:', error);
           });
+
+          // Track login event and set user properties for analytics
+          this.analyticsService.trackLogin();
+          
+          // Set user properties (no PII - only role and market)
+          const user = authState.user;
+          if (user) {
+            this.analyticsService.setUserProperties({
+              user_role: user.role || 'unknown',
+              market: user.market || 'unknown'
+            });
+          }
+        } else {
+          // Track logout if user was previously logged in
+          if (this.isUserLoggedIn) {
+            this.analyticsService.trackLogout();
+          }
         }
       });
 

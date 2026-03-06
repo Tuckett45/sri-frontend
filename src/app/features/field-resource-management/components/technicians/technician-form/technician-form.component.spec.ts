@@ -16,7 +16,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 
 import { TechnicianFormComponent } from './technician-form.component';
-import { Technician, TechnicianRole, EmploymentType } from '../../../models/technician.model';
+import { Technician, TechnicianRole, EmploymentType, SkillLevel } from '../../../models/technician.model';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 
 describe('TechnicianFormComponent', () => {
@@ -37,7 +37,7 @@ describe('TechnicianFormComponent', () => {
     homeBase: 'New York',
     region: 'Northeast',
     skills: [
-      { id: 's1', name: 'Cat6', category: 'Cabling' }
+      { id: 's1', name: 'Cat6', category: 'Cabling', level: SkillLevel.Intermediate }
     ],
     certifications: [],
     availability: [],

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
@@ -35,7 +35,8 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
 @Component({
   selector: 'frm-job-detail',
   templateUrl: './job-detail.component.html',
-  styleUrls: ['./job-detail.component.scss']
+  styleUrls: ['./job-detail.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class JobDetailComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

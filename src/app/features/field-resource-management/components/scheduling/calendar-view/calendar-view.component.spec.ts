@@ -12,6 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { CalendarViewComponent } from './calendar-view.component';
 import { CalendarViewType } from '../../../state/ui/ui.state';
 import { JobStatus } from '../../../models/job.model';
+import { AssignmentStatus } from '../../../models/assignment.model';
 import * as UIActions from '../../../state/ui/ui.actions';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 
@@ -268,6 +269,7 @@ describe('CalendarViewComponent', () => {
       technicianId: 'tech1',
       assignedBy: 'admin',
       assignedAt: new Date(),
+      status: AssignmentStatus.Assigned,
       isActive: true
     }];
 

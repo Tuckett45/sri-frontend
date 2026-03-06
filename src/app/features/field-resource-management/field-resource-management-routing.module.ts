@@ -5,376 +5,162 @@ import { RouterModule, Routes } from '@angular/router';
 import { AdminGuard } from './guards/admin.guard';
 import { DispatcherGuard } from './guards/dispatcher.guard';
 import { TechnicianGuard } from './guards/technician.guard';
+import { PMGuard } from './guards/pm.guard';
 import { CMGuard } from '../../guards/cm.guard';
 import { EnhancedRoleGuard } from '../../guards/enhanced-role.guard';
 import { UserRole } from '../../models/role.enum';
 
-// Components - Dashboard
+// Components - Dashboard (kept in main module for initial load)
 import { DashboardComponent } from './components/reporting/dashboard/dashboard.component';
 
-// Components - Technicians
-import { TechnicianListComponent } from './components/technicians/technician-list/technician-list.component';
-import { TechnicianDetailComponent } from './components/technicians/technician-detail/technician-detail.component';
-import { TechnicianFormComponent } from './components/technicians/technician-form/technician-form.component';
-
-// Components - Jobs
-import { JobListComponent } from './components/jobs/job-list/job-list.component';
-import { JobDetailComponent } from './components/jobs/job-detail/job-detail.component';
-import { JobFormComponent } from './components/jobs/job-form/job-form.component';
-
-// Components - Scheduling
-import { CalendarViewComponent } from './components/scheduling/calendar-view/calendar-view.component';
-import { ConflictResolverComponent } from './components/scheduling/conflict-resolver/conflict-resolver.component';
-import { TechnicianScheduleComponent } from './components/scheduling/technician-schedule/technician-schedule.component';
-
-// Components - Mobile
-import { DailyViewComponent } from './components/mobile/daily-view/daily-view.component';
-
-// Components - Reporting
-import { UtilizationReportComponent } from './components/reporting/utilization-report/utilization-report.component';
-import { JobPerformanceReportComponent } from './components/reporting/job-performance-report/job-performance-report.component';
+// Components - Reporting (kept for direct routes)
 import { TimecardDashboardComponent } from './components/reporting/timecard-dashboard/timecard-dashboard.component';
 import { CMDashboardComponent } from './components/reporting/cm-dashboard/cm-dashboard.component';
 import { AdminDashboardComponent } from './components/reporting/admin-dashboard/admin-dashboard.component';
 
-// Components - Admin
-import { AuditLogViewerComponent } from './components/admin/audit-log-viewer/audit-log-viewer.component';
-import { SystemConfigurationComponent } from './components/admin/system-configuration/system-configuration.component';
-import { JobTemplateManagerComponent } from './components/admin/job-template-manager/job-template-manager.component';
-import { RegionManagerComponent } from './components/admin/region-manager/region-manager.component';
-
-// Components - Approvals
-import { ApprovalQueueComponent } from './components/approvals/approval-queue/approval-queue.component';
-import { ApprovalDetailComponent } from './components/approvals/approval-detail/approval-detail.component';
-
-// Components - User Management
-import { UserManagementComponent } from './components/admin/user-management/user-management.component';
+// Layout Components
+import { FrmLayoutComponent } from './components/layout/frm-layout/frm-layout.component';
 
 /**
  * Field Resource Management Routing Module
  * 
  * Defines lazy-loaded routes for the Field Resource Management feature.
+ * All feature areas (technicians, jobs, crews, scheduling, mobile, reporting, admin, mapping)
+ * are lazy-loaded to optimize initial bundle size and improve performance.
+ * 
  * Routes are protected by role-based guards:
  * - AdminGuard: Admin-only routes
  * - DispatcherGuard: Dispatcher and Admin routes
  * - TechnicianGuard: Technician routes
  * - CMGuard: CM and Admin routes
+ * - PMGuard: PM and Vendor routes
  * - EnhancedRoleGuard: Configurable role-based and market-based access control
  * 
- * Route Structure:
- * - /field-resource-management/dashboard - Dashboard overview (All authenticated)
- * - /field-resource-management/cm/dashboard - CM Dashboard (CM and Admin)
- * - /field-resource-management/admin/dashboard - Admin Dashboard (Admin only)
- * - /field-resource-management/technicians - Technician management (Dispatcher)
- * - /field-resource-management/jobs - Job management (Dispatcher)
- * - /field-resource-management/schedule - Calendar scheduling (Dispatcher)
- * - /field-resource-management/mobile/daily - Mobile daily view (Technician)
- * - /field-resource-management/reports - Reporting (Dispatcher)
- * - /field-resource-management/admin - Admin settings (Admin)
- * 
- * Requirements: 3.7, 4.7, 15.1, 15.2
+ * Requirements: 4.1.6 (Lazy loading for feature modules)
  */
 const routes: Routes = [
-  // Default redirect to dashboard
   {
     path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full'
-  },
-
-  // Dashboard - All authenticated users
-  {
-    path: 'dashboard',
-    component: DashboardComponent,
-    data: { 
-      title: 'Dashboard',
-      breadcrumb: 'Dashboard'
-    }
-  },
-
-  // CM Dashboard - CM and Admin access
-  {
-    path: 'cm',
+    component: FrmLayoutComponent,
     children: [
-      {
-        path: 'dashboard',
-        component: CMDashboardComponent,
-        canActivate: [CMGuard],
-        data: { 
-          title: 'CM Dashboard',
-          breadcrumb: 'CM Dashboard'
-        }
-      }
-    ]
-  },
-
-  // Admin Dashboard - Admin only
-  {
-    path: 'admin-dashboard',
-    component: AdminDashboardComponent,
-    canActivate: [EnhancedRoleGuard],
-    data: { 
-      title: 'Admin Dashboard',
-      breadcrumb: 'Admin Dashboard',
-      roleGuard: {
-        allowedRoles: [UserRole.Admin]
-      }
-    }
-  },
-
-  // Timecard - All authenticated users (technicians and dispatchers)
-  {
-    path: 'timecard',
-    component: TimecardDashboardComponent,
-    data: { 
-      title: 'My Timecard',
-      breadcrumb: 'Timecard'
-    }
-  },
-
-  // Technician Management Routes - Dispatcher access with market validation
-  {
-    path: 'technicians',
-    canActivate: [DispatcherGuard],
-    children: [
-      {
-        path: '',
-        component: TechnicianListComponent,
-        data: { 
-          title: 'Technicians',
-          breadcrumb: 'Technicians'
-        }
-      },
-      {
-        path: 'new',
-        component: TechnicianFormComponent,
-        data: { 
-          title: 'New Technician',
-          breadcrumb: 'New'
-        }
-      },
-      {
-        path: ':id',
-        component: TechnicianDetailComponent,
-        data: { 
-          title: 'Technician Detail',
-          breadcrumb: 'Detail'
-        }
-      },
-      {
-        path: ':id/edit',
-        component: TechnicianFormComponent,
-        data: { 
-          title: 'Edit Technician',
-          breadcrumb: 'Edit'
-        }
-      }
-    ]
-  },
-
-  // Job Management Routes - Dispatcher access with market validation
-  {
-    path: 'jobs',
-    canActivate: [DispatcherGuard],
-    children: [
-      {
-        path: '',
-        component: JobListComponent,
-        data: { 
-          title: 'Jobs',
-          breadcrumb: 'Jobs'
-        }
-      },
-      {
-        path: 'new',
-        component: JobFormComponent,
-        data: { 
-          title: 'New Job',
-          breadcrumb: 'New'
-        }
-      },
-      {
-        path: ':id',
-        component: JobDetailComponent,
-        data: { 
-          title: 'Job Detail',
-          breadcrumb: 'Detail'
-        }
-      },
-      {
-        path: ':id/edit',
-        component: JobFormComponent,
-        data: { 
-          title: 'Edit Job',
-          breadcrumb: 'Edit'
-        }
-      }
-    ]
-  },
-
-  // Scheduling Routes - Dispatcher access with market validation for resource routes
-  {
-    path: 'schedule',
-    canActivate: [DispatcherGuard],
-    children: [
-      {
-        path: '',
-        component: CalendarViewComponent,
-        data: { 
-          title: 'Schedule',
-          breadcrumb: 'Schedule'
-        }
-      },
-      {
-        path: 'conflicts',
-        component: ConflictResolverComponent,
-        data: { 
-          title: 'Resolve Conflicts',
-          breadcrumb: 'Conflicts'
-        }
-      },
-      {
-        path: 'technician/:id',
-        component: TechnicianScheduleComponent,
-        data: { 
-          title: 'Technician Schedule',
-          breadcrumb: 'Technician Schedule'
-        }
-      }
-    ]
-  },
-
-  // Mobile Routes - Technician access
-  {
-    path: 'mobile',
-    canActivate: [TechnicianGuard],
-    children: [
-      {
-        path: '',
-        redirectTo: 'daily',
-        pathMatch: 'full'
-      },
-      {
-        path: 'daily',
-        component: DailyViewComponent,
-        data: { 
-          title: 'My Daily Schedule',
-          breadcrumb: 'Daily View'
-        }
-      }
-    ]
-  },
-
-  // Reporting Routes - Dispatcher access
-  {
-    path: 'reports',
-    canActivate: [DispatcherGuard],
-    children: [
+      // Default redirect to dashboard
       {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
       },
+
+      // Dashboard - All authenticated users (kept in main module)
       {
         path: 'dashboard',
         component: DashboardComponent,
         data: { 
-          title: 'Reports Dashboard',
+          title: 'Dashboard',
           breadcrumb: 'Dashboard'
         }
       },
-      {
-        path: 'utilization',
-        component: UtilizationReportComponent,
-        data: { 
-          title: 'Utilization Report',
-          breadcrumb: 'Utilization'
-        }
-      },
-      {
-        path: 'performance',
-        component: JobPerformanceReportComponent,
-        data: { 
-          title: 'Job Performance Report',
-          breadcrumb: 'Performance'
-        }
-      }
-    ]
-  },
 
-  // Approval Routes - CM and Admin access
-  {
-    path: 'approvals',
-    canActivate: [CMGuard],
-    children: [
+      // CM Dashboard - CM and Admin access
       {
-        path: '',
-        component: ApprovalQueueComponent,
-        data: { 
-          title: 'Approval Queue',
-          breadcrumb: 'Approvals'
-        }
+        path: 'cm',
+        children: [
+          {
+            path: 'dashboard',
+            component: CMDashboardComponent,
+            canActivate: [CMGuard],
+            data: { 
+              title: 'CM Dashboard',
+              breadcrumb: 'CM Dashboard'
+            }
+          }
+        ]
       },
-      {
-        path: ':id',
-        component: ApprovalDetailComponent,
-        data: { 
-          title: 'Approval Details',
-          breadcrumb: 'Details'
-        }
-      }
-    ]
-  },
 
-  // Admin Routes - Admin access only
-  {
-    path: 'admin',
-    canActivate: [AdminGuard],
-    children: [
+      // Admin Dashboard - Admin only
       {
-        path: '',
-        redirectTo: 'configuration',
-        pathMatch: 'full'
-      },
-      {
-        path: 'configuration',
-        component: SystemConfigurationComponent,
+        path: 'admin-dashboard',
+        component: AdminDashboardComponent,
+        canActivate: [EnhancedRoleGuard],
         data: { 
-          title: 'System Configuration',
-          breadcrumb: 'Configuration'
+          title: 'Admin Dashboard',
+          breadcrumb: 'Admin Dashboard',
+          roleGuard: {
+            allowedRoles: [UserRole.Admin]
+          }
         }
       },
+
+      // Timecard - All authenticated users
       {
-        path: 'templates',
-        component: JobTemplateManagerComponent,
+        path: 'timecard',
+        component: TimecardDashboardComponent,
         data: { 
-          title: 'Job Templates',
-          breadcrumb: 'Templates'
+          title: 'My Timecard',
+          breadcrumb: 'Timecard'
         }
       },
+
+      // Technician Management Routes - Lazy Loaded
       {
-        path: 'regions',
-        component: RegionManagerComponent,
-        data: { 
-          title: 'Region Management',
-          breadcrumb: 'Regions'
-        }
+        path: 'technicians',
+        loadChildren: () => import('./components/technicians/technicians.module').then(m => m.TechniciansModule),
+        canActivate: [DispatcherGuard]
       },
+
+      // Job Management Routes - Lazy Loaded
       {
-        path: 'audit-log',
-        component: AuditLogViewerComponent,
-        data: { 
-          title: 'Audit Log',
-          breadcrumb: 'Audit Log'
-        }
+        path: 'jobs',
+        loadChildren: () => import('./components/jobs/jobs.module').then(m => m.JobsModule),
+        canActivate: [DispatcherGuard]
       },
+
+      // Crew Management Routes - Lazy Loaded
       {
-        path: 'users',
-        component: UserManagementComponent,
-        data: { 
-          title: 'User Management',
-          breadcrumb: 'Users'
-        }
+        path: 'crews',
+        loadChildren: () => import('./components/crews/crews.module').then(m => m.CrewsModule),
+        canActivate: [DispatcherGuard]
+      },
+
+      // Scheduling Routes - Lazy Loaded
+      {
+        path: 'schedule',
+        loadChildren: () => import('./components/scheduling/scheduling.module').then(m => m.SchedulingModule),
+        canActivate: [DispatcherGuard]
+      },
+
+      // Mobile Routes - Lazy Loaded
+      {
+        path: 'mobile',
+        loadChildren: () => import('./components/mobile/mobile.module').then(m => m.MobileModule),
+        canActivate: [TechnicianGuard]
+      },
+
+      // Reporting Routes - Lazy Loaded
+      {
+        path: 'reports',
+        loadChildren: () => import('./components/reporting/reporting.module').then(m => m.ReportingModule),
+        canActivate: [DispatcherGuard]
+      },
+
+      // Mapping Routes - Lazy Loaded
+      {
+        path: 'map',
+        loadChildren: () => import('./components/mapping/mapping.module').then(m => m.MappingModule),
+        canActivate: [DispatcherGuard]
+      },
+
+      // Approval Routes - Lazy Loaded
+      {
+        path: 'approvals',
+        loadChildren: () => import('./components/approvals/approvals.module').then(m => m.ApprovalsModule),
+        canActivate: [CMGuard]
+      },
+
+      // Admin Routes - Lazy Loaded
+      {
+        path: 'admin',
+        loadChildren: () => import('./components/admin/admin.module').then(m => m.AdminModule),
+        canActivate: [AdminGuard]
       }
     ]
   }

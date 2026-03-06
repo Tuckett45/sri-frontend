@@ -1,4 +1,4 @@
-import { Component, forwardRef, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, forwardRef, OnInit, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormGroup, FormControl } from '@angular/forms';
 
 export interface DateRange {
@@ -34,7 +34,8 @@ export interface DateRange {
       useExisting: forwardRef(() => DateRangePickerComponent),
       multi: true
     }
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DateRangePickerComponent implements ControlValueAccessor, OnInit {
   @Input() dateRange: DateRange | null = null;
@@ -47,9 +48,11 @@ export class DateRangePickerComponent implements ControlValueAccessor, OnInit {
 
   presetRanges = [
     { label: 'Today', value: 'today' },
-    { label: 'This Week', value: 'thisWeek' },
+    { label: 'Last 7 Days', value: 'last7Days' },
+    { label: 'Last 30 Days', value: 'last30Days' },
     { label: 'This Month', value: 'thisMonth' },
-    { label: 'Last 30 Days', value: 'last30Days' }
+    { label: 'Last Month', value: 'lastMonth' },
+    { label: 'Custom', value: 'custom' }
   ];
 
   private onChange: (value: { start: Date | null; end: Date | null }) => void = () => {};
@@ -93,21 +96,28 @@ export class DateRangePickerComponent implements ControlValueAccessor, OnInit {
         start = new Date(today);
         break;
       
-      case 'thisWeek':
+      case 'last7Days':
         start = new Date(today);
-        const dayOfWeek = start.getDay();
-        const diff = start.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Monday
-        start.setDate(diff);
+        start.setDate(start.getDate() - 6); // Include today
+        break;
+      
+      case 'last30Days':
+        start = new Date(today);
+        start.setDate(start.getDate() - 29); // Include today
         break;
       
       case 'thisMonth':
         start = new Date(today.getFullYear(), today.getMonth(), 1);
         break;
       
-      case 'last30Days':
-        start = new Date(today);
-        start.setDate(start.getDate() - 30);
+      case 'lastMonth':
+        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        end = new Date(today.getFullYear(), today.getMonth(), 0); // Last day of previous month
         break;
+      
+      case 'custom':
+        // Don't set any dates, let user pick custom range
+        return;
       
       default:
         return;

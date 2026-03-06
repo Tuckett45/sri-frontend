@@ -10,7 +10,7 @@ import { Conflict, ConflictSeverity } from '../../../models/assignment.model';
 import { Technician } from '../../../models/technician.model';
 import { Job } from '../../../models/job.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
-import { selectConflicts } from '../../../state/assignments/assignment.selectors';
+import { selectAssignmentConflicts } from '../../../state/assignments/assignment.selectors';
 import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
 import { selectAllJobs } from '../../../state/jobs/job.selectors';
 
@@ -63,7 +63,7 @@ export class ConflictResolverComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {
-    this.conflicts$ = this.store.select(selectConflicts);
+    this.conflicts$ = this.store.select(selectAssignmentConflicts);
     this.technicians$ = this.store.select(selectAllTechnicians);
     this.jobs$ = this.store.select(selectAllJobs);
   }

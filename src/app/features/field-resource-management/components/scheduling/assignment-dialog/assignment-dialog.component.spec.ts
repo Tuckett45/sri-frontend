@@ -14,7 +14,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AssignmentDialogComponent } from './assignment-dialog.component';
 import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
 import { TechnicianMatch } from '../../../models/assignment.model';
-import { TechnicianRole, EmploymentType } from '../../../models/technician.model';
+import { TechnicianRole, EmploymentType , SkillLevel} from '../../../models/technician.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 
 describe('AssignmentDialogComponent', () => {
@@ -39,7 +39,7 @@ describe('AssignmentDialogComponent', () => {
     status: JobStatus.NotStarted,
     scopeDescription: 'Test job',
     requiredSkills: [
-      { id: '1', name: 'Cat6', category: 'Cabling' }
+      { id: '1', name: 'Cat6', category: 'Cabling' , level: SkillLevel.Intermediate }
     ],
     requiredCrewSize: 1,
     estimatedLaborHours: 8,
@@ -48,8 +48,11 @@ describe('AssignmentDialogComponent', () => {
     attachments: [],
     notes: [],
     createdBy: 'admin',
+    company: 'ACME_CORP',
+    market: 'TEST_MARKET',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+
   };
 
   const mockTechnicianMatch: TechnicianMatch = {
@@ -64,7 +67,7 @@ describe('AssignmentDialogComponent', () => {
       employmentType: EmploymentType.W2,
       homeBase: 'Office A',
       region: 'North',
-      skills: [{ id: '1', name: 'Cat6', category: 'Cabling' }],
+      skills: [{ id: '1', name: 'Cat6', category: 'Cabling' , level: SkillLevel.Intermediate }],
       certifications: [],
       availability: [],
       isActive: true,

@@ -45,7 +45,8 @@ describe('JobPerformanceReportComponent', () => {
           availability: [],
           isActive: true,
           createdAt: new Date(),
-          updatedAt: new Date()
+          market: 'DALLAS',
+          company: 'TEST_COMPANY',          updatedAt: new Date()
         },
         jobsCompleted: 15,
         totalHours: 120,

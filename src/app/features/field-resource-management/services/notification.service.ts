@@ -1,271 +1,139 @@
+/**
+ * Notification Service
+ * Handles API calls for notification management
+ */
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, retry, map } from 'rxjs/operators';
-import { Notification } from '../models/notification.model';
-import { FrmNotificationAdapterService, FrmNotificationPreferences } from './frm-notification-adapter.service';
-import { ArkNotification } from '../../../models/ark/notification.model';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { Notification, NotificationPreferences } from '../models/notification.model';
+import { environment } from '../../../../environments/environments';
 
-/**
- * Notification preferences
- * @deprecated Use FrmNotificationPreferences from FrmNotificationAdapterService instead
- */
-export interface NotificationPreferences {
-  userId: string;
-  emailEnabled: boolean;
-  inAppEnabled: boolean;
-  jobAssignedEnabled: boolean;
-  jobReassignedEnabled: boolean;
-  jobStatusChangedEnabled: boolean;
-  jobCancelledEnabled: boolean;
-  certificationExpiringEnabled: boolean;
-  conflictDetectedEnabled: boolean;
-}
-
-/**
- * Service for managing FRM notifications
- * 
- * This service now delegates to FrmNotificationAdapterService which routes
- * notifications through the ARK notification system. This ensures proper
- * domain separation while maintaining backward compatibility.
- * 
- * All notification operations are now handled by the adapter, which provides:
- * - Market-based filtering for CM users
- * - System-wide access for Admin users
- * - Consistent notification delivery and preferences management
- * - Integration with ARK notification audit logging
- */
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  private readonly apiUrl = '/api/notifications';
-  private readonly retryCount = 2;
+  private readonly apiUrl = `${environment.apiUrl}/notifications`;
 
-  constructor(
-    private http: HttpClient,
-    private frmNotificationAdapter: FrmNotificationAdapterService
-  ) {}
+  constructor(private http: HttpClient) {}
 
   /**
-   * Retrieves all notifications for the current user
-   * @param includeRead Whether to include read notifications (default: true)
-   * @param page Optional page number for pagination
-   * @param pageSize Optional page size for pagination
-   * @returns Observable of notification array
+   * Get notifications for a user
+   * @param userId User ID
+   * @param unreadOnly Optional flag to get only unread notifications
+   * @returns Observable of notifications array
    */
-  getNotifications(includeRead: boolean = true, page?: number, pageSize?: number): Observable<Notification[]> {
-    let params = new HttpParams().set('includeRead', includeRead.toString());
-    
-    if (page !== undefined) {
-      params = params.set('page', page.toString());
-    }
-    if (pageSize !== undefined) {
-      params = params.set('pageSize', pageSize.toString());
+  getNotifications(userId: string, unreadOnly: boolean = false): Observable<Notification[]> {
+    let params = new HttpParams();
+    if (unreadOnly) {
+      params = params.set('unreadOnly', 'true');
     }
 
-    return this.http.get<Notification[]>(this.apiUrl, { params })
-      .pipe(
-        retry(this.retryCount),
-        catchError(this.handleError)
-      );
+    return this.http.get<Notification[]>(`${this.apiUrl}/user/${userId}`, { params }).pipe(
+      map(notifications => notifications.map(n => this.mapNotification(n)))
+    );
   }
 
   /**
-   * Marks a notification as read
+   * Get a single notification by ID
+   * @param id Notification ID
+   * @returns Observable of notification
+   */
+  getNotificationById(id: string): Observable<Notification> {
+    return this.http.get<Notification>(`${this.apiUrl}/${id}`).pipe(
+      map(n => this.mapNotification(n))
+    );
+  }
+
+  /**
+   * Mark a notification as read
    * @param id Notification ID
    * @returns Observable of void
    */
   markAsRead(id: string): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/${id}/read`, {})
-      .pipe(
-        catchError(this.handleError)
-      );
+    return this.http.patch<void>(`${this.apiUrl}/${id}/read`, {});
   }
 
   /**
-   * Marks all notifications as read for the current user
+   * Mark all notifications as read for a user
+   * @param userId User ID
    * @returns Observable of void
    */
-  markAllAsRead(): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/read-all`, {})
-      .pipe(
-        catchError(this.handleError)
-      );
+  markAllAsRead(userId: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/user/${userId}/read-all`, {});
   }
 
   /**
-   * Retrieves the count of unread notifications for the current user
-   * @returns Observable of unread count
-   */
-  getUnreadCount(): Observable<number> {
-    return this.http.get<number>(`${this.apiUrl}/unread-count`)
-      .pipe(
-        retry(this.retryCount),
-        catchError(this.handleError)
-      );
-  }
-
-  /**
-   * Retrieves notification preferences for the current user
-   * Delegates to FrmNotificationAdapterService for ARK integration
-   * @returns Observable of notification preferences
-   */
-  getNotificationPreferences(): Observable<NotificationPreferences> {
-    return this.http.get<{ userId: string }>(`${this.apiUrl}/preferences`)
-      .pipe(
-        retry(this.retryCount),
-        catchError(this.handleError)
-      )
-      .pipe(
-        map(response => response.userId),
-        // Delegate to adapter to get preferences from ARK system
-        map(userId => this.frmNotificationAdapter.getFrmNotificationPreferences(userId)),
-        // Flatten the nested observable
-        map(obs => obs as any)
-      ) as Observable<NotificationPreferences>;
-  }
-
-  /**
-   * Updates notification preferences for the current user
-   * Delegates to FrmNotificationAdapterService for ARK integration
-   * @param preferences Updated notification preferences
-   * @returns Observable of updated preferences
-   */
-  updateNotificationPreferences(preferences: NotificationPreferences): Observable<NotificationPreferences> {
-    // Delegate to adapter to update preferences in ARK system
-    return this.frmNotificationAdapter.updateFrmNotificationPreferences(preferences as FrmNotificationPreferences);
-  }
-
-  /**
-   * Deletes a notification
+   * Delete a notification
    * @param id Notification ID
    * @returns Observable of void
    */
   deleteNotification(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`)
-      .pipe(
-        catchError(this.handleError)
-      );
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   /**
-   * Send job assigned notification
-   * Delegates to FrmNotificationAdapterService
-   * @param jobId Job identifier
-   * @param technicianId Technician identifier
+   * Delete all notifications for a user
+   * @param userId User ID
+   * @returns Observable of void
+   */
+  deleteAllNotifications(userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/user/${userId}/all`);
+  }
+
+  /**
+   * Get unread notification count for a user
+   * @param userId User ID
+   * @returns Observable of count
+   */
+  getUnreadCount(userId: string): Observable<number> {
+    return this.http.get<{ count: number }>(`${this.apiUrl}/user/${userId}/unread-count`).pipe(
+      map(response => response.count)
+    );
+  }
+
+  /**
+   * Get notification preferences for a user
+   * @param userId User ID
+   * @returns Observable of notification preferences
+   */
+  getPreferences(userId: string): Observable<NotificationPreferences> {
+    return this.http.get<NotificationPreferences>(`${this.apiUrl}/user/${userId}/preferences`);
+  }
+
+  /**
+   * Update notification preferences for a user
+   * @param userId User ID
+   * @param preferences Notification preferences
+   * @returns Observable of updated preferences
+   */
+  updatePreferences(userId: string, preferences: Partial<NotificationPreferences>): Observable<NotificationPreferences> {
+    return this.http.put<NotificationPreferences>(`${this.apiUrl}/user/${userId}/preferences`, preferences);
+  }
+
+  /**
+   * Send a test notification (for testing purposes)
+   * @param userId User ID
+   * @param type Notification type
    * @returns Observable of created notification
    */
-  sendJobAssignedNotification(jobId: string, technicianId: string): Observable<ArkNotification> {
-    return this.frmNotificationAdapter.sendJobAssignedNotification(jobId, technicianId);
+  sendTestNotification(userId: string, type: string): Observable<Notification> {
+    return this.http.post<Notification>(`${this.apiUrl}/test`, { userId, type }).pipe(
+      map(n => this.mapNotification(n))
+    );
   }
 
   /**
-   * Send job reassigned notification
-   * Delegates to FrmNotificationAdapterService
-   * @param jobId Job identifier
-   * @param oldTechnicianId Previous technician identifier
-   * @param newTechnicianId New technician identifier
-   * @returns Observable of created notification
+   * Map notification from API response to ensure Date objects
+   * @param notification Raw notification from API
+   * @returns Mapped notification with Date objects
    */
-  sendJobReassignedNotification(
-    jobId: string,
-    oldTechnicianId: string,
-    newTechnicianId: string
-  ): Observable<ArkNotification> {
-    return this.frmNotificationAdapter.sendJobReassignedNotification(jobId, oldTechnicianId, newTechnicianId);
-  }
-
-  /**
-   * Send job status changed notification
-   * Delegates to FrmNotificationAdapterService
-   * @param jobId Job identifier
-   * @param oldStatus Previous job status
-   * @param newStatus New job status
-   * @returns Observable of created notification
-   */
-  sendJobStatusChangedNotification(
-    jobId: string,
-    oldStatus: string,
-    newStatus: string
-  ): Observable<ArkNotification> {
-    return this.frmNotificationAdapter.sendJobStatusChangedNotification(jobId, oldStatus, newStatus);
-  }
-
-  /**
-   * Send job cancelled notification
-   * Delegates to FrmNotificationAdapterService
-   * @param jobId Job identifier
-   * @param reason Cancellation reason
-   * @returns Observable of created notification
-   */
-  sendJobCancelledNotification(jobId: string, reason: string): Observable<ArkNotification> {
-    return this.frmNotificationAdapter.sendJobCancelledNotification(jobId, reason);
-  }
-
-  /**
-   * Send certification expiring notification
-   * Delegates to FrmNotificationAdapterService
-   * @param technicianId Technician identifier
-   * @param certificationName Name of the certification
-   * @param expiryDate Expiry date of the certification
-   * @returns Observable of created notification
-   */
-  sendCertificationExpiringNotification(
-    technicianId: string,
-    certificationName: string,
-    expiryDate: Date
-  ): Observable<ArkNotification> {
-    return this.frmNotificationAdapter.sendCertificationExpiringNotification(technicianId, certificationName, expiryDate);
-  }
-
-  /**
-   * Send conflict detected notification
-   * Delegates to FrmNotificationAdapterService
-   * @param conflictType Type of conflict (e.g., 'schedule', 'resource', 'location')
-   * @param details Conflict details
-   * @returns Observable of created notification
-   */
-  sendConflictDetectedNotification(conflictType: string, details: string): Observable<ArkNotification> {
-    return this.frmNotificationAdapter.sendConflictDetectedNotification(conflictType, details);
-  }
-
-  /**
-   * Handles HTTP errors
-   * @param error HTTP error response
-   * @returns Observable error
-   */
-  private handleError(error: any): Observable<never> {
-    let errorMessage = 'An error occurred';
-    
-    if (error.error instanceof ErrorEvent) {
-      // Client-side error
-      errorMessage = `Error: ${error.error.message}`;
-    } else {
-      // Server-side error
-      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
-      
-      // Provide more specific error messages based on status code
-      switch (error.status) {
-        case 400:
-          errorMessage = 'Invalid request. Please check your input.';
-          break;
-        case 401:
-          errorMessage = 'Unauthorized. Please log in.';
-          break;
-        case 403:
-          errorMessage = 'Access denied. You do not have permission to perform this action.';
-          break;
-        case 404:
-          errorMessage = 'Notification not found.';
-          break;
-        case 500:
-          errorMessage = 'Server error. Please try again later.';
-          break;
-      }
-    }
-    
-    console.error(errorMessage, error);
-    return throwError(() => new Error(errorMessage));
+  private mapNotification(notification: any): Notification {
+    return {
+      ...notification,
+      createdAt: new Date(notification.createdAt),
+      timestamp: new Date(notification.timestamp || notification.createdAt)
+    };
   }
 }

@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { takeUntil, filter } from 'rxjs/operators';
-import { Technician, TechnicianRole, EmploymentType, Skill, Certification } from '../../../models/technician.model';
+import { Technician, TechnicianRole, EmploymentType, Skill, Certification, SkillLevel } from '../../../models/technician.model';
 import { CreateTechnicianDto, UpdateTechnicianDto } from '../../../models/dtos/technician.dto';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
@@ -12,7 +12,8 @@ import * as TechnicianSelectors from '../../../state/technicians/technician.sele
 @Component({
   selector: 'app-technician-form',
   templateUrl: './technician-form.component.html',
-  styleUrls: ['./technician-form.component.scss']
+  styleUrls: ['./technician-form.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TechnicianFormComponent implements OnInit, OnDestroy {
   technicianForm!: FormGroup;
@@ -25,11 +26,11 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
   
   // Available skills (will be populated from store or API)
   availableSkills: Skill[] = [
-    { id: 's1', name: 'Cat6', category: 'Cabling' },
-    { id: 's2', name: 'Fiber Splicing', category: 'Fiber' },
-    { id: 's3', name: 'OSHA10', category: 'Safety' },
-    { id: 's4', name: 'Ladder Safety', category: 'Safety' },
-    { id: 's5', name: 'Confined Space', category: 'Safety' }
+    { id: 's1', name: 'Cat6', category: 'Cabling', level: SkillLevel.Intermediate },
+    { id: 's2', name: 'Fiber Splicing', category: 'Fiber', level: SkillLevel.Intermediate },
+    { id: 's3', name: 'OSHA10', category: 'Safety', level: SkillLevel.Intermediate },
+    { id: 's4', name: 'Ladder Safety', category: 'Safety', level: SkillLevel.Intermediate },
+    { id: 's5', name: 'Confined Space', category: 'Safety', level: SkillLevel.Intermediate }
   ];
   
   // Calendar selection

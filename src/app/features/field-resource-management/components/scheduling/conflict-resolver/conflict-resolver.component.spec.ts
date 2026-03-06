@@ -63,7 +63,8 @@ describe('ConflictResolverComponent', () => {
           availability: [],
           isActive: true,
           createdAt: new Date(),
-          updatedAt: new Date()
+          market: 'DALLAS',
+          company: 'TEST_COMPANY',          updatedAt: new Date()
         }
       },
       selectedId: null,

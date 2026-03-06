@@ -10,6 +10,14 @@ export enum ConflictSeverity {
   Error = 'Error'
 }
 
+export enum AssignmentStatus {
+  Assigned = 'Assigned',
+  Accepted = 'Accepted',
+  Rejected = 'Rejected',
+  InProgress = 'In Progress',
+  Completed = 'Completed'
+}
+
 export interface DateRange {
   startDate: Date;
   endDate: Date;
@@ -21,7 +29,10 @@ export interface Assignment {
   technicianId: string;
   assignedBy: string;
   assignedAt: Date;
+  status: AssignmentStatus;
   isActive: boolean;
+  startTime?: Date;
+  endTime?: Date;
   job?: Job;
   technician?: Technician;
 }

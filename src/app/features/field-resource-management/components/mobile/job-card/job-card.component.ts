@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -29,7 +29,8 @@ import { selectActiveTimeEntry } from '../../../state/time-entries/time-entry.se
 @Component({
   selector: 'frm-job-card',
   templateUrl: './job-card.component.html',
-  styleUrls: ['./job-card.component.scss']
+  styleUrls: ['./job-card.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class JobCardComponent implements OnInit, OnDestroy {
   @Input() job!: Job;

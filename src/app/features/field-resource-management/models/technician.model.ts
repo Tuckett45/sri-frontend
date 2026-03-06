@@ -2,6 +2,8 @@
  * Technician-related models and enums for Field Resource Management
  */
 
+import { GeoLocation } from './time-entry.model';
+
 export enum TechnicianRole {
   Installer = 'Installer',
   Lead = 'Lead',
@@ -22,10 +24,19 @@ export enum CertificationStatus {
   Expired = 'Expired'
 }
 
+export enum SkillLevel {
+  Beginner = 'BEGINNER',
+  Intermediate = 'INTERMEDIATE',
+  Advanced = 'ADVANCED',
+  Expert = 'EXPERT'
+}
+
 export interface Skill {
   id: string;
   name: string;
   category: string;
+  level: SkillLevel;
+  verifiedDate?: Date;
 }
 
 export interface Certification {
@@ -60,6 +71,7 @@ export interface Technician {
   availability: Availability[];
   hourlyCostRate?: number; // Admin only
   isActive: boolean;
+  currentLocation?: GeoLocation;
   createdAt: Date;
   updatedAt: Date;
 }

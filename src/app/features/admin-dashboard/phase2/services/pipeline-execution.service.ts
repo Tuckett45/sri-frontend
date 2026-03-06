@@ -40,7 +40,7 @@ export class PipelineExecutionService {
           const duration = Date.now() - startTime;
           return {
             stageId: stageId,
-            status: 'success' as const,
+            status: 'completed' as const,
             output: response.data,
             duration: duration,
             timestamp: new Date()
@@ -50,7 +50,7 @@ export class PipelineExecutionService {
           const duration = Date.now() - startTime;
           const result: StageResult = {
             stageId: stageId,
-            status: 'failure' as const,
+            status: 'failed' as const,
             output: null,
             error: error,
             duration: duration,
@@ -99,7 +99,7 @@ export class PipelineExecutionService {
     }
 
     // Check retry count
-    if (stage.currentRetry >= stage.maxRetries) {
+    if (stage.currentRetries >= stage.maxRetries) {
       return throwError(() => new Error(
         `Stage ${stage.name} has reached maximum retry count (${stage.maxRetries})`
       ));

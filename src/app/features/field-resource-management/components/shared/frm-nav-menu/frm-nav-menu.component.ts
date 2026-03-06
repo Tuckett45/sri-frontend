@@ -25,7 +25,7 @@ interface FrmNavItem {
  * ```
  */
 @Component({
-  selector: 'app-frm-nav-menu',
+  selector: 'app-frm-nav-menu-legacy',
   templateUrl: './frm-nav-menu.component.html',
   styleUrls: ['./frm-nav-menu.component.scss']
 })

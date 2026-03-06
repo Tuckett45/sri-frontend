@@ -52,7 +52,7 @@ describe('ValidationEngineService', () => {
       };
 
       service.validateWorkflowData(invalidData).subscribe(result => {
-        expect(result.isValid).toBe(false);
+        expect(result.valid).toBe(false);
         expect(result.errors.length).toBeGreaterThan(0);
         expect(result.errors.some(e => e.field === 'type')).toBe(true);
         expect(result.errors.some(e => e.field === 'createdBy')).toBe(true);
@@ -61,7 +61,7 @@ describe('ValidationEngineService', () => {
       });
 
       const req = httpMock.expectOne('/api/validation/workflow');
-      req.flush({ isValid: true, errors: [], warnings: [], metadata: {} });
+      req.flush({ valid: true, errors: [], warnings: [], metadata: {} });
     });
 
     it('should aggregate local and backend validation errors', (done) => {
@@ -83,14 +83,14 @@ describe('ValidationEngineService', () => {
       }];
 
       service.validateWorkflowData(data).subscribe(result => {
-        expect(result.isValid).toBe(false);
+        expect(result.valid).toBe(false);
         expect(result.errors.length).toBe(2); // 1 local + 1 backend
         expect(result.metadata['totalErrorCount']).toBe(2);
         done();
       });
 
       const req = httpMock.expectOne('/api/validation/workflow');
-      req.flush({ isValid: false, errors: backendErrors, warnings: [], metadata: {} });
+      req.flush({ valid: false, errors: backendErrors, warnings: [], metadata: {} });
     });
   });
 
@@ -203,10 +203,10 @@ describe('ValidationEngineService', () => {
       }];
 
       const result1 = service.validateConstraints(constraints, { name: 'test' });
-      expect(result1.isValid).toBe(true);
+      expect(result1.valid).toBe(true);
 
       const result2 = service.validateConstraints(constraints, { name: '' });
-      expect(result2.isValid).toBe(false);
+      expect(result2.valid).toBe(false);
       expect(result2.errors.length).toBe(1);
     });
 
@@ -221,10 +221,10 @@ describe('ValidationEngineService', () => {
       }];
 
       const result1 = service.validateConstraints(constraints, { password: 'password123' });
-      expect(result1.isValid).toBe(true);
+      expect(result1.valid).toBe(true);
 
       const result2 = service.validateConstraints(constraints, { password: 'pass' });
-      expect(result2.isValid).toBe(false);
+      expect(result2.valid).toBe(false);
     });
 
     it('should validate pattern constraint', () => {
@@ -238,17 +238,17 @@ describe('ValidationEngineService', () => {
       }];
 
       const result1 = service.validateConstraints(constraints, { email: 'test@example.com' });
-      expect(result1.isValid).toBe(true);
+      expect(result1.valid).toBe(true);
 
       const result2 = service.validateConstraints(constraints, { email: 'invalid-email' });
-      expect(result2.isValid).toBe(false);
+      expect(result2.valid).toBe(false);
     });
   });
 
   describe('registerCustomValidator', () => {
     it('should register and retrieve custom validators', () => {
       const validator = (value: any) => ({
-        isValid: value > 0,
+        valid: value > 0,
         errors: [],
         warnings: [],
         metadata: {}
@@ -291,8 +291,8 @@ describe('ValidationEngineService', () => {
 
       service.validateBatch(items).subscribe(results => {
         expect(results.length).toBe(2);
-        expect(results[0].isValid).toBe(true);
-        expect(results[1].isValid).toBe(false);
+        expect(results[0].valid).toBe(true);
+        expect(results[1].valid).toBe(false);
         done();
       });
 
@@ -300,8 +300,8 @@ describe('ValidationEngineService', () => {
       const requests = httpMock.match('/api/validation/workflow');
       expect(requests.length).toBe(2);
       
-      requests[0].flush({ isValid: true, errors: [], warnings: [], metadata: {} });
-      requests[1].flush({ isValid: true, errors: [], warnings: [], metadata: {} });
+      requests[0].flush({ valid: true, errors: [], warnings: [], metadata: {} });
+      requests[1].flush({ valid: true, errors: [], warnings: [], metadata: {} });
     });
   });
 });

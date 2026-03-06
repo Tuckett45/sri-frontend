@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { FormBuilder, FormGroup } from '@angular/forms';
@@ -51,7 +52,8 @@ export class TechnicianScheduleComponent implements OnInit, OnDestroy {
 
   constructor(
     private store: Store,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {
     this.assignments$ = this.store.select(selectAssignmentsByTechnician(''));
     this.jobs$ = this.store.select(selectAllJobs);
@@ -298,7 +300,6 @@ export class TechnicianScheduleComponent implements OnInit, OnDestroy {
    * Navigate to job detail
    */
   onJobClick(job: Job): void {
-    // TODO: Navigate to job detail page
-    console.log('Job clicked:', job);
+    this.router.navigate(['/field-resource-management/jobs', job.id]);
   }
 }

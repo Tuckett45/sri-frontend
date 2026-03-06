@@ -6,6 +6,7 @@
 export * from './technician.model';
 export * from './job.model';
 export * from './assignment.model';
+export * from './crew.model';
 export * from './time-entry.model';
 export * from './reporting.model';
 export * from './notification.model';

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { JobStatus } from '../../../models/job.model';
 
 /**
@@ -32,7 +32,8 @@ export interface StatusHistoryEntry {
 @Component({
   selector: 'frm-job-status-timeline',
   templateUrl: './job-status-timeline.component.html',
-  styleUrls: ['./job-status-timeline.component.scss']
+  styleUrls: ['./job-status-timeline.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class JobStatusTimelineComponent implements OnInit {
   @Input() jobId!: string;

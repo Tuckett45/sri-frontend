@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Empty State Component
@@ -24,7 +24,8 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 @Component({
   selector: 'frm-empty-state',
   templateUrl: './empty-state.component.html',
-  styleUrls: ['./empty-state.component.scss']
+  styleUrls: ['./empty-state.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EmptyStateComponent {
   @Input() icon = 'inbox';

@@ -6,8 +6,9 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { map, catchError, switchMap, tap, mergeMap } from 'rxjs/operators';
 import * as ReportingActions from './reporting.actions';
+import { ReportingService } from '../../services/reporting.service';
 
 @Injectable()
 export class ReportingEffects {
@@ -16,23 +17,13 @@ export class ReportingEffects {
     this.actions$.pipe(
       ofType(ReportingActions.loadDashboard, ReportingActions.refreshDashboard),
       switchMap(() =>
-        // TODO: Replace with actual ReportingService call when service is implemented
-        // this.reportingService.getDashboardMetrics().pipe(
-        of({
-          totalActiveJobs: 0,
-          totalAvailableTechnicians: 0,
-          jobsByStatus: {},
-          averageUtilization: 0,
-          jobsRequiringAttention: [],
-          recentActivity: [],
-          kpis: []
-        } as any).pipe( // Placeholder
+        this.reportingService.getDashboardMetrics().pipe(
           map((dashboard) =>
             ReportingActions.loadDashboardSuccess({ dashboard })
           ),
           catchError((error) =>
             of(ReportingActions.loadDashboardFailure({ 
-              error: error.message || 'Failed to load dashboard' 
+              error: error.message || 'Failed to load dashboard metrics' 
             }))
           )
         )
@@ -45,13 +36,12 @@ export class ReportingEffects {
     this.actions$.pipe(
       ofType(ReportingActions.loadUtilization),
       switchMap(({ dateRange, technicianId, role, region }) =>
-        // TODO: Replace with actual ReportingService call when service is implemented
-        // this.reportingService.getTechnicianUtilization({ dateRange, technicianId, role, region }).pipe(
-        of({
+        this.reportingService.getTechnicianUtilization({
           dateRange,
-          technicians: [],
-          averageUtilization: 0
-        } as any).pipe( // Placeholder
+          technicianId,
+          role,
+          region
+        }).pipe(
           map((utilization) =>
             ReportingActions.loadUtilizationSuccess({ utilization })
           ),
@@ -70,17 +60,12 @@ export class ReportingEffects {
     this.actions$.pipe(
       ofType(ReportingActions.loadJobPerformance),
       switchMap(({ dateRange, jobType, priority, client }) =>
-        // TODO: Replace with actual ReportingService call when service is implemented
-        // this.reportingService.getJobPerformance({ dateRange, jobType, priority, client }).pipe(
-        of({
+        this.reportingService.getJobPerformance({
           dateRange,
-          totalJobsCompleted: 0,
-          totalJobsOpen: 0,
-          averageLaborHours: 0,
-          scheduleAdherence: 0,
-          jobsByType: {},
-          topPerformers: []
-        } as any).pipe( // Placeholder
+          jobType,
+          priority,
+          client
+        }).pipe(
           map((performance) =>
             ReportingActions.loadJobPerformanceSuccess({ performance })
           ),
@@ -99,9 +84,7 @@ export class ReportingEffects {
     this.actions$.pipe(
       ofType(ReportingActions.loadKPIs),
       switchMap(() =>
-        // TODO: Replace with actual ReportingService call when service is implemented
-        // this.reportingService.getKPIs().pipe(
-        of([]).pipe( // Placeholder - returns empty array
+        this.reportingService.getKPIs().pipe(
           map((kpis) =>
             ReportingActions.loadKPIsSuccess({ kpis })
           ),
@@ -115,9 +98,25 @@ export class ReportingEffects {
     )
   );
 
+  // Log errors for debugging
+  logErrors$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(
+          ReportingActions.loadDashboardFailure,
+          ReportingActions.loadUtilizationFailure,
+          ReportingActions.loadJobPerformanceFailure,
+          ReportingActions.loadKPIsFailure
+        ),
+        tap((action) => {
+          console.error('Reporting Effect Error:', action.error);
+        })
+      ),
+    { dispatch: false }
+  );
+
   constructor(
-    private actions$: Actions
-    // TODO: Inject ReportingService when implemented
-    // private reportingService: ReportingService
+    private actions$: Actions,
+    private reportingService: ReportingService
   ) {}
 }

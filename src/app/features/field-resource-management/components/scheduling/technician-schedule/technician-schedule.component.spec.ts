@@ -11,9 +11,9 @@ import { MatChipsModule } from '@angular/material/chips';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { TechnicianScheduleComponent } from './technician-schedule.component';
-import { Technician, TechnicianRole, EmploymentType } from '../../../models/technician.model';
+import { Technician, TechnicianRole, EmploymentType , SkillLevel} from '../../../models/technician.model';
 import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
-import { Assignment } from '../../../models/assignment.model';
+import { Assignment, AssignmentStatus } from '../../../models/assignment.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 import * as JobActions from '../../../state/jobs/job.actions';
 
@@ -38,7 +38,8 @@ describe('TechnicianScheduleComponent', () => {
     availability: [],
     isActive: true,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+
   };
 
   const mockJob: Job = {
@@ -56,7 +57,7 @@ describe('TechnicianScheduleComponent', () => {
     priority: Priority.Normal,
     status: JobStatus.NotStarted,
     scopeDescription: 'Test job',
-    requiredSkills: [{ id: '1', name: 'Cat6', category: 'Cabling' }],
+    requiredSkills: [{ id: '1', name: 'Cat6', category: 'Cabling' , level: SkillLevel.Intermediate }],
     requiredCrewSize: 1,
     estimatedLaborHours: 8,
     scheduledStartDate: new Date('2024-01-15T08:00:00'),
@@ -64,9 +65,12 @@ describe('TechnicianScheduleComponent', () => {
     attachments: [],
     notes: [],
     createdBy: 'admin',
+    company: 'ACME_CORP',
+    market: 'TEST_MARKET',
     createdAt: new Date(),
-    updatedAt: new Date()
-  };
+    updatedAt: new Date(),
+
+    };
 
   const mockAssignment: Assignment = {
     id: 'assign1',
@@ -74,6 +78,7 @@ describe('TechnicianScheduleComponent', () => {
     technicianId: 'tech1',
     assignedBy: 'admin',
     assignedAt: new Date(),
+    status: AssignmentStatus.Assigned,
     isActive: true
   };
 

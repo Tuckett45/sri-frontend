@@ -17,7 +17,7 @@ describe('PipelineExecutionService', () => {
       dependencies: [],
       retryable: true,
       maxRetries: 3,
-      currentRetry: 0
+      currentRetries: 0
     },
     {
       id: 'stage2',
@@ -27,7 +27,7 @@ describe('PipelineExecutionService', () => {
       dependencies: ['stage1'],
       retryable: true,
       maxRetries: 3,
-      currentRetry: 0
+      currentRetries: 0
     },
     {
       id: 'stage3',
@@ -37,7 +37,7 @@ describe('PipelineExecutionService', () => {
       dependencies: ['stage2'],
       retryable: false,
       maxRetries: 0,
-      currentRetry: 0
+      currentRetries: 0
     }
   ];
 
@@ -136,7 +136,7 @@ describe('PipelineExecutionService', () => {
         dependencies: ['non-existent'],
         retryable: true,
         maxRetries: 3,
-        currentRetry: 0
+        currentRetries: 0
       };
 
       const result = service.checkDependencies(stage, mockStages);
@@ -149,7 +149,7 @@ describe('PipelineExecutionService', () => {
       const jobId = 'job-123';
       const stage = { ...mockStages[1] };
       stage.status = 'failed';
-      stage.currentRetry = 1;
+      stage.currentRetries = 1;
 
       const mockResponse = { data: { message: 'Retry success' } };
 
@@ -178,7 +178,7 @@ describe('PipelineExecutionService', () => {
     it('should return error when max retries reached', (done) => {
       const jobId = 'job-123';
       const stage = { ...mockStages[1] };
-      stage.currentRetry = 3;
+      stage.currentRetries = 3;
       stage.maxRetries = 3;
 
       service.retryStage(jobId, stage).subscribe({
@@ -240,7 +240,7 @@ describe('PipelineExecutionService', () => {
       const stageResults = new Map<string, StageResult>();
       stageResults.set('stage1', {
         stageId: 'stage1',
-        status: 'success',
+        status: 'completed',
         output: {},
         duration: 1000,
         timestamp: new Date()
@@ -263,7 +263,7 @@ describe('PipelineExecutionService', () => {
       const stageResults = new Map<string, StageResult>();
       stageResults.set('stage2', {
         stageId: 'stage2',
-        status: 'failure',
+        status: 'failed',
         output: null,
         error: new Error('Stage failed'),
         duration: 1000,
@@ -272,7 +272,7 @@ describe('PipelineExecutionService', () => {
 
       const result = service.aggregateResults(jobId, stages, stageResults);
 
-      expect(result.status).toBe('failure');
+      expect(result.status).toBe('failed');
       expect(result.errors.length).toBe(1);
       expect(result.errors[0].field).toBe('stage2');
     });

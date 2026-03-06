@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { KPI, Trend, KPIStatus } from '../../../models/reporting.model';
 
 /**
@@ -8,7 +8,8 @@ import { KPI, Trend, KPIStatus } from '../../../models/reporting.model';
 @Component({
   selector: 'frm-kpi-card',
   templateUrl: './kpi-card.component.html',
-  styleUrls: ['./kpi-card.component.scss']
+  styleUrls: ['./kpi-card.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KPICardComponent {
   @Input() kpi!: KPI;

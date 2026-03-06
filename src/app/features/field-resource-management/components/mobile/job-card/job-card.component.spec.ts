@@ -39,6 +39,8 @@ describe('JobCardComponent', () => {
     },
     attachments: [],
     notes: [],
+    market: 'TEST_MARKET',
+    company: 'TEST_COMPANY',
     createdBy: 'test-user',
     createdAt: new Date(),
     updatedAt: new Date()

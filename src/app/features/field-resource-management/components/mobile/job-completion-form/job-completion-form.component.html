@@ -84,8 +84,8 @@
       
       <frm-file-upload
         [multiple]="true"
-        [acceptedTypes]="['image/jpeg', 'image/png', 'image/heic']"
-        [maxSizeBytes]="10485760"
+        [allowedFileTypes]="['image/jpeg', 'image/png', 'image/heic']"
+        [maxFileSize]="10485760"
         label="Upload Photos"
         (filesSelected)="onFilesSelected($event)">
       </frm-file-upload>

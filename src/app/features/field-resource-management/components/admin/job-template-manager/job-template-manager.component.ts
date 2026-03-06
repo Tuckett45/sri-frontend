@@ -4,6 +4,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { JobTemplate } from '../../../models/job-template.model';
+import { SkillLevel } from '../../../models/technician.model';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import * as JobActions from '../../../state/jobs/job.actions';
 
@@ -36,8 +37,8 @@ export class JobTemplateManagerComponent implements OnInit {
         name: 'Standard Installation',
         jobType: 'Install',
         requiredSkills: [
-          { id: 's1', name: 'Cat6', category: 'Cabling' },
-          { id: 's2', name: 'OSHA10', category: 'Safety' }
+          { id: 's1', name: 'Cat6', category: 'Cabling', level: SkillLevel.Intermediate },
+          { id: 's2', name: 'OSHA10', category: 'Safety', level: SkillLevel.Intermediate }
         ],
         estimatedHours: 8,
         crewSize: 2,

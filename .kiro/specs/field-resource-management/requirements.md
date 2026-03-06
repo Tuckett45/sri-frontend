@@ -1,415 +1,491 @@
-# Requirements Document: Field Resource Management Tool
+# Requirements Document: Field Resource Management System
 
-## Introduction
+## 1. Functional Requirements
 
-The Field Resource Management Tool is an internal CRM system designed to schedule, manage, and track installer technicians working in the field for the ATLAS system. This tool replaces spreadsheet-based and ad-hoc scheduling with a centralized, scalable platform that efficiently assigns work to field installers, provides clear visibility into day-to-day operations, reduces scheduling conflicts, tracks labor hours, and improves operational control.
+### 1.1 User Authentication and Authorization
 
-## Glossary
+**1.1.1** The system SHALL authenticate users via JWT tokens with role information
 
-- **System**: The Field Resource Management Tool
-- **Technician**: Field installer or deployment engineer who performs on-site work
-- **Job**: A work order or task assigned to one or more technicians
-- **Dispatcher**: Operations manager responsible for creating and assigning jobs
-- **Admin**: System administrator with full access to all features and settings
-- **Time_Entry**: Record of clock-in and clock-out times for a technician on a specific job
-- **Skill_Tag**: A specific competency or certification (e.g., Cat6, Fiber Splicing, OSHA10)
-- **Assignment**: The linking of a technician to a job for a specific time period
-- **Utilization_Rate**: Percentage of available work hours that a technician spends on assigned jobs
+**1.1.2** The system SHALL support four distinct user roles: Admin, Construction Manager (CM), Project Manager (PM)/Vendor, and Technician
 
-## Requirements
+**1.1.3** The system SHALL load role-specific permissions from the backend upon user authentication
 
-### Requirement 1: User Authentication and Authorization
+**1.1.4** The system SHALL enforce permission checks before allowing any resource access or action
 
-**User Story:** As a system administrator, I want role-based access control, so that users can only access features appropriate to their role.
+**1.1.5** The system SHALL provide role-based UI rendering using the role enforcement directive
 
-#### Acceptance Criteria
+### 1.2 Technician Management
 
-1. WHEN a user logs in, THE System SHALL authenticate their credentials against the user database
-2. WHEN authentication succeeds, THE System SHALL assign the user their designated role (Admin, Dispatcher, or Technician)
-3. WHEN a user attempts to access a feature, THE System SHALL verify the user has the required permissions for that feature
-4. WHEN a user lacks required permissions, THE System SHALL deny access and display an appropriate error message
-5. THE System SHALL maintain secure session management with automatic timeout after 30 minutes of inactivity
+**1.2.1** The system SHALL allow authorized users to create, read, update, and delete technician records
 
-### Requirement 2: Technician Profile Management
+**1.2.2** The system SHALL store technician information including: name, contact details, skills, certifications, status, market, and company
 
-**User Story:** As an administrator, I want to maintain comprehensive technician profiles, so that I can track skills, certifications, and availability for proper job assignment.
+**1.2.3** The system SHALL support skill management with proficiency levels (Beginner, Intermediate, Advanced, Expert)
 
-#### Acceptance Criteria
+**1.2.4** The system SHALL track technician certifications with issue dates, expiry dates, and document attachments
 
-1. WHEN creating a technician profile, THE System SHALL require Technician ID, Name, Role, and Home Base fields
-2. THE System SHALL allow administrators to add multiple Skill_Tags to each technician profile
-3. THE System SHALL store certification information including certification name, issue date, and expiration date
-4. THE System SHALL allow administrators to mark specific dates as unavailable for each technician (PTO, sick days)
-5. WHEN storing hourly cost rates, THE System SHALL restrict visibility to Admin role only
-6. THE System SHALL support both W2 and 1099 employment type designations
-7. THE System SHALL validate that all required fields are populated before saving a technician profile
+**1.2.5** The system SHALL maintain technician availability schedules
 
-### Requirement 3: Job and Work Order Management
+**1.2.6** The system SHALL track technician status (Available, On Job, Unavailable, Off Duty)
 
-**User Story:** As a dispatcher, I want to create and manage work orders with detailed specifications, so that technicians have all necessary information to complete their assignments.
+**1.2.7** The system SHALL support filtering and searching technicians by skills, certifications, status, market, and company
 
-#### Acceptance Criteria
+### 1.3 Crew Management
 
-1. WHEN creating a job, THE System SHALL generate a unique Job ID automatically
-2. THE System SHALL require Client, Site Name, Site Address, Job Type, and Scheduled Start Date fields
-3. THE System SHALL allow dispatchers to specify required Skill_Tags for each job
-4. THE System SHALL allow dispatchers to specify required crew size (number of technicians needed)
-5. THE System SHALL support job types: Install, Decom, Site Survey, and PM (Preventive Maintenance)
-6. THE System SHALL support priority levels: P1 (Critical), P2 (High), and Normal
-7. THE System SHALL allow file attachments (drawings, MOPs) to be associated with jobs
-8. WHEN a job is saved, THE System SHALL validate that all required fields contain valid data
+**1.3.1** The system SHALL allow authorized users to create and manage crews
 
-### Requirement 4: Scheduling and Assignment
+**1.3.2** The system SHALL support crew composition with a lead technician and multiple members
 
-**User Story:** As a dispatcher, I want to assign technicians to jobs using a visual calendar interface, so that I can efficiently manage field resources and avoid conflicts.
+**1.3.3** The system SHALL track crew status (Available, On Job, Unavailable)
 
-#### Acceptance Criteria
+**1.3.4** The system SHALL associate crews with markets and companies
 
-1. THE System SHALL display a calendar view with day and week viewing options
-2. WHEN a dispatcher assigns a technician to a job, THE System SHALL check for scheduling conflicts (double booking)
-3. IF a scheduling conflict exists, THEN THE System SHALL display a warning message and prevent the assignment
-4. WHEN assigning a technician to a job, THE System SHALL verify the technician possesses required Skill_Tags
-5. IF a technician lacks required skills, THEN THE System SHALL display a skill mismatch warning
-6. THE System SHALL support drag-and-drop functionality for job assignments in calendar view
-7. THE System SHALL allow jobs to span multiple consecutive days
-8. WHEN a job requires multiple technicians, THE System SHALL allow assignment of multiple technicians to the same job
-9. THE System SHALL display technician availability status in the calendar view
+**1.3.5** The system SHALL track real-time crew locations
 
-### Requirement 5: Technician Daily View
+**1.3.6** The system SHALL link crews to active jobs
 
-**User Story:** As a field technician, I want to view my assigned jobs on a mobile device, so that I can see my schedule and job details while in the field.
+### 1.4 Job Management
 
-#### Acceptance Criteria
+**1.4.1** The system SHALL allow authorized users to create, read, update, and delete job records
 
-1. WHEN a technician logs in, THE System SHALL display today's assigned jobs by default
-2. THE System SHALL display job details including Site Address, Scope Description, Customer POC, and Notes
-3. THE System SHALL provide a mobile-responsive interface optimized for smartphone screens
-4. THE System SHALL allow technicians to view jobs for the current week
-5. THE System SHALL display jobs in chronological order by scheduled start time
-6. WHEN a technician selects a job, THE System SHALL display full job details including attachments
+**1.4.2** The system SHALL store job information including: title, description, status, priority, location, schedule, and required skills
 
-### Requirement 6: Job Status Management
+**1.4.3** The system SHALL support job statuses: Pending, Scheduled, In Progress, Completed, Cancelled, On Hold
 
-**User Story:** As a field technician, I want to update job status throughout the workday, so that dispatchers have real-time visibility into job progress.
+**1.4.4** The system SHALL support job priorities: Low, Medium, High, Critical
 
-#### Acceptance Criteria
+**1.4.5** The system SHALL associate jobs with geographic locations including coordinates
 
-1. THE System SHALL support job status values: Not Started, En Route, On Site, Completed, and Issue
-2. WHEN a technician updates job status, THE System SHALL record the status change with timestamp
-3. THE System SHALL allow technicians to update status for their assigned jobs only
-4. WHEN a job status changes to "Issue", THE System SHALL require the technician to provide a reason code
-5. THE System SHALL display current job status to dispatchers in real-time
-6. THE System SHALL maintain a complete history of all status changes for each job
+**1.4.6** The system SHALL track scheduled vs actual start/end times
 
-### Requirement 7: Time and Activity Tracking
+**1.4.7** The system SHALL maintain job notes with timestamps and authors
 
-**User Story:** As a dispatcher, I want to capture actual labor hours for each job, so that I can track costs and compare planned versus actual effort.
+**1.4.8** The system SHALL support filtering jobs by status, priority, market, company, and date range
 
-#### Acceptance Criteria
+### 1.5 Assignment and Scheduling
 
-1. WHEN a technician clocks in to a job, THE System SHALL record the start time automatically
-2. WHEN a technician clocks out of a job, THE System SHALL record the stop time automatically
-3. THE System SHALL calculate total labor hours as the difference between clock-in and clock-out times
-4. THE System SHALL allow technicians to clock in to only one job at a time
-5. WHERE a technician forgets to clock in or out, THE System SHALL allow administrators to manually adjust time entries
-6. THE System SHALL store all time entries with associated Job ID and Technician ID
-7. THE System SHALL display planned hours versus actual hours for each job
+**1.5.1** The system SHALL allow authorized users to assign technicians to jobs
 
-### Requirement 8: Mileage Tracking
+**1.5.2** The system SHALL detect and warn about assignment conflicts including time overlaps, missing skills, and excessive distance
 
-**User Story:** As a field technician, I want the system to automatically log my mileage, so that I can be reimbursed accurately without manual tracking.
+**1.5.3** The system SHALL prevent double-booking of technicians to overlapping jobs
 
-#### Acceptance Criteria
+**1.5.4** The system SHALL validate that assigned technicians have required skills for the job
 
-1. WHEN a technician clocks in to a job, THE System SHALL record the starting location
-2. WHEN a technician clocks out of a job, THE System SHALL record the ending location
-3. THE System SHALL calculate mileage between starting location and job site address
-4. THE System SHALL calculate mileage between job site address and ending location
-5. THE System SHALL store total mileage for each Time_Entry
-6. WHERE location services are unavailable, THE System SHALL allow manual mileage entry
+**1.5.5** The system SHALL support assignment statuses: Assigned, Accepted, Rejected, In Progress, Completed
 
-### Requirement 9: Job Completion and Field Reporting
+**1.5.6** The system SHALL allow technicians to accept or reject assignments
 
-**User Story:** As a field technician, I want to document job completion with notes and photos, so that there is a record of work performed.
+**1.5.7** The system SHALL provide calendar views for scheduling
 
-#### Acceptance Criteria
+**1.5.8** The system SHALL support conflict resolution workflows
 
-1. WHEN a technician marks a job as Completed, THE System SHALL require job completion confirmation
-2. THE System SHALL allow technicians to add text notes to completed jobs
-3. THE System SHALL allow technicians to upload photos associated with completed jobs
-4. THE System SHALL support common image formats (JPEG, PNG, HEIC)
-5. WHEN a job cannot be completed, THE System SHALL require selection of a delay reason code
-6. THE System SHALL store all completion documentation with the associated Job ID
-7. THE System SHALL limit photo uploads to 10 MB per image
+**1.5.9** The system SHALL track assignment history with timestamps and actors
 
-### Requirement 10: Technician Utilization Reporting
+### 1.6 Geographic Mapping and Tracking
 
-**User Story:** As an operations manager, I want to view technician utilization rates, so that I can identify underutilized resources and optimize scheduling.
+**1.6.1** The system SHALL display an interactive map showing technician locations, crew positions, and job sites
 
-#### Acceptance Criteria
+**1.6.2** The system SHALL update technician locations in real-time (30-second intervals)
 
-1. THE System SHALL calculate Utilization_Rate as (actual labor hours / available hours) × 100
-2. THE System SHALL display utilization rates per technician for selectable date ranges
-3. THE System SHALL allow filtering utilization reports by technician, role, or region
-4. THE System SHALL display utilization data in both tabular and graphical formats
-5. THE System SHALL exclude PTO and unavailable dates from available hours calculations
-6. THE System SHALL update utilization calculations daily
+**1.6.3** The system SHALL validate location coordinates (latitude: -90 to 90, longitude: -180 to 180)
 
-### Requirement 11: Job Performance Reporting
+**1.6.4** The system SHALL calculate distances between technicians and job sites
 
-**User Story:** As an operations manager, I want to view job completion metrics, so that I can track productivity and identify bottlenecks.
+**1.6.5** The system SHALL maintain location history for audit purposes
 
-#### Acceptance Criteria
+**1.6.6** The system SHALL support map clustering for performance when displaying many markers
 
-1. THE System SHALL display total jobs completed per technician for selectable date ranges
-2. THE System SHALL display labor hours per job with comparison to estimated hours
-3. THE System SHALL display open jobs versus completed jobs counts
-4. THE System SHALL calculate schedule adherence as percentage of jobs completed on scheduled date
-5. THE System SHALL allow filtering reports by job type, priority, client, or date range
-6. THE System SHALL allow exporting report data to CSV format
+**1.6.7** The system SHALL allow technicians to enable/disable location tracking
 
-### Requirement 12: Notification System
+**1.6.8** The system SHALL preserve location privacy when technicians are off-duty
 
-**User Story:** As a field technician, I want to receive notifications when jobs are assigned to me, so that I am immediately aware of new work.
+### 1.7 Real-time Updates
 
-#### Acceptance Criteria
+**1.7.1** The system SHALL use SignalR for real-time communication
 
-1. WHEN a job is assigned to a technician, THE System SHALL send a notification to that technician
-2. WHEN a job assignment is changed, THE System SHALL notify affected technicians
-3. WHEN a job is cancelled, THE System SHALL notify assigned technicians
-4. THE System SHALL support in-app notifications visible upon login
-5. WHERE a technician has provided contact information, THE System SHALL support email notifications
-6. THE System SHALL allow technicians to configure notification preferences
+**1.7.2** The system SHALL broadcast assignment changes to affected technicians immediately
 
-### Requirement 13: Data Backup and Recovery
+**1.7.3** The system SHALL broadcast location updates to authorized monitoring users
 
-**User Story:** As a system administrator, I want automated daily backups, so that data can be recovered in case of system failure.
+**1.7.4** The system SHALL handle connection loss gracefully with automatic reconnection
 
-#### Acceptance Criteria
+**1.7.5** The system SHALL fall back to polling when WebSocket connection is unavailable
 
-1. THE System SHALL perform automated backups of all data daily
-2. THE System SHALL retain backup copies for a minimum of 30 days
-3. THE System SHALL verify backup integrity after each backup operation
-4. IF a backup fails, THEN THE System SHALL alert administrators immediately
-5. THE System SHALL provide a restore function accessible to administrators only
-6. THE System SHALL log all backup and restore operations with timestamps
+**1.7.6** The system SHALL synchronize state after reconnection
 
-### Requirement 14: System Scalability
+**1.7.7** The system SHALL throttle real-time updates to prevent overwhelming clients
 
-**User Story:** As a system administrator, I want the system to support growth, so that it can handle increasing numbers of technicians and jobs.
+### 1.8 Reporting and KPIs
 
-#### Acceptance Criteria
+**1.8.1** The system SHALL calculate and display KPI metrics including job completion rates, technician utilization, and performance metrics
 
-1. THE System SHALL support a minimum of 100 concurrent technician users
-2. THE System SHALL support a minimum of 1000 active jobs simultaneously
-3. WHEN the number of users or jobs increases, THE System SHALL maintain response times under 2 seconds for standard operations
-4. THE System SHALL support database indexing for performance optimization
-5. THE System SHALL implement pagination for lists exceeding 50 items
+**1.8.2** The system SHALL support date range filtering for reports
 
-### Requirement 15: Mobile Responsiveness
+**1.8.3** The system SHALL provide role-specific dashboard views
 
-**User Story:** As a field technician, I want to access the system on my smartphone, so that I can manage my work while mobile.
+**1.8.4** The system SHALL generate utilization reports showing technician availability vs assignment
 
-#### Acceptance Criteria
+**1.8.5** The system SHALL generate performance reports showing job completion times and efficiency
 
-1. THE System SHALL render correctly on screen sizes from 320px to 1920px width
-2. THE System SHALL support touch gestures for mobile interactions (tap, swipe, pinch-to-zoom)
-3. WHEN accessed on mobile devices, THE System SHALL prioritize essential information and actions
-4. THE System SHALL maintain functionality on iOS and Android mobile browsers
-5. THE System SHALL load pages within 3 seconds on 4G mobile connections
+**1.8.6** The system SHALL support data export in CSV and PDF formats
 
-### Requirement 16: Search and Filter Functionality
+**1.8.7** The system SHALL visualize metrics using charts and graphs
 
-**User Story:** As a dispatcher, I want to search and filter jobs and technicians, so that I can quickly find specific information.
+### 1.9 Notifications
 
-#### Acceptance Criteria
+**1.9.1** The system SHALL send notifications for new job assignments
 
-1. THE System SHALL provide search functionality for jobs by Job ID, Client, Site Name, or Address
-2. THE System SHALL provide search functionality for technicians by Name, Technician ID, or Skill_Tag
-3. THE System SHALL allow filtering jobs by Status, Priority, Job Type, or Date Range
-4. THE System SHALL allow filtering technicians by Role, Skill_Tag, or Availability
-5. WHEN search or filter criteria are applied, THE System SHALL return results within 2 seconds
-6. THE System SHALL display search results with relevant summary information
+**1.9.2** The system SHALL send notifications for assignment status changes
 
-### Requirement 17: Audit Logging
+**1.9.3** The system SHALL send notifications for schedule conflicts
 
-**User Story:** As a system administrator, I want to track all system changes, so that I can maintain accountability and troubleshoot issues.
+**1.9.4** The system SHALL support in-app notification display
 
-#### Acceptance Criteria
+**1.9.5** The system SHALL support push notifications for mobile users
 
-1. THE System SHALL log all job creation, modification, and deletion actions
-2. THE System SHALL log all technician profile changes
-3. THE System SHALL log all job assignments and reassignments
-4. THE System SHALL log all time entry modifications
-5. THE System SHALL record the user ID, timestamp, and action type for each logged event
-6. THE System SHALL allow administrators to view audit logs filtered by date range, user, or action type
-7. THE System SHALL retain audit logs for a minimum of 1 year
+**1.9.6** The system SHALL allow users to configure notification preferences
 
-### Requirement 18: Conflict Resolution
+### 1.10 Offline Support
 
-**User Story:** As a dispatcher, I want to be alerted to scheduling conflicts, so that I can resolve them before they impact operations.
+**1.10.1** The system SHALL support offline operation for technician mobile views
 
-#### Acceptance Criteria
+**1.10.2** The system SHALL queue data changes when offline
 
-1. WHEN a technician is assigned to overlapping jobs, THE System SHALL detect the conflict
-2. THE System SHALL display conflict details including conflicting job IDs and time ranges
-3. THE System SHALL prevent saving assignments that create conflicts unless explicitly overridden
-4. WHERE a dispatcher overrides a conflict warning, THE System SHALL require a justification note
-5. THE System SHALL log all conflict overrides in the audit log
+**1.10.3** The system SHALL synchronize queued changes when connectivity is restored
 
-### Requirement 19: Skill Matching
+**1.10.4** The system SHALL display offline status indicator
 
-**User Story:** As a dispatcher, I want to see which technicians are qualified for a job, so that I can assign the right person efficiently.
+**1.10.5** The system SHALL cache critical data for offline access
 
-#### Acceptance Criteria
+## 2. Role-Based Access Control Requirements
 
-1. WHEN viewing a job's assignment options, THE System SHALL display all technicians with matching Skill_Tags
-2. THE System SHALL rank technicians by skill match percentage (number of matching skills / total required skills)
-3. THE System SHALL display technicians without required skills in a separate section with missing skills indicated
-4. THE System SHALL consider technician availability when displaying assignment options
-5. THE System SHALL display current workload for each technician in assignment options
+### 2.1 Admin Role
 
-### Requirement 20: Job Reassignment
+**2.1.1** Admins SHALL have full access to all system features and data across all markets
 
-**User Story:** As a dispatcher, I want to reassign jobs between technicians, so that I can adapt to changing circumstances.
+**2.1.2** Admins SHALL be able to view all KPIs without market restrictions
 
-#### Acceptance Criteria
+**2.1.3** Admins SHALL be able to create, read, update, and delete all resources
 
-1. THE System SHALL allow dispatchers to reassign jobs from one technician to another
-2. WHEN a job is reassigned, THE System SHALL notify both the original and new technician
-3. THE System SHALL preserve all existing time entries when reassigning a job
-4. THE System SHALL maintain a history of all assignments for each job
-5. WHEN reassigning a job, THE System SHALL perform the same conflict and skill checks as initial assignment
+**2.1.4** Admins SHALL be able to manage system configuration
 
-### Requirement 21: Batch Operations
+**2.1.5** Admins SHALL be able to view audit logs
 
-**User Story:** As a dispatcher, I want to perform actions on multiple jobs at once, so that I can work more efficiently.
+**2.1.6** Admins SHALL have access to user management features
 
-#### Acceptance Criteria
+### 2.2 Construction Manager (CM) Role
 
-1. THE System SHALL allow selection of multiple jobs via checkboxes
-2. THE System SHALL support batch status updates for selected jobs
-3. THE System SHALL support batch reassignment of selected jobs to a single technician
-4. THE System SHALL support batch deletion of selected jobs
-5. WHEN performing batch operations, THE System SHALL validate each operation and report any failures
-6. THE System SHALL require confirmation before executing batch operations
+**2.2.1** CMs SHALL be able to edit technicians and crews within their market
 
-### Requirement 22: Dashboard Overview
+**2.2.2** CMs SHALL be able to view maps of technician and crew locations in their market
 
-**User Story:** As an operations manager, I want a dashboard with key metrics, so that I can quickly assess operational status.
+**2.2.3** CMs SHALL be able to access most KPIs scoped to their market
 
-#### Acceptance Criteria
+**2.2.4** CMs in RG market SHALL have access to data across all markets
 
-1. THE System SHALL display total active jobs count on the dashboard
-2. THE System SHALL display total available technicians count on the dashboard
-3. THE System SHALL display jobs by status (Not Started, En Route, On Site, Completed, Issue) with counts
-4. THE System SHALL display average utilization rate across all technicians
-5. THE System SHALL display jobs requiring attention (overdue, issues, conflicts)
-6. THE System SHALL refresh dashboard data automatically every 5 minutes
-7. THE System SHALL allow users to manually refresh dashboard data
+**2.2.5** CMs SHALL be able to create and assign jobs within their market
 
-### Requirement 23: Data Export
+**2.2.6** CMs SHALL be able to view and manage schedules for their market
 
-**User Story:** As an operations manager, I want to export data to external formats, so that I can perform additional analysis or share with stakeholders.
+**2.2.7** CMs SHALL NOT be able to delete system configuration or access other markets (except RG)
 
-#### Acceptance Criteria
+### 2.3 Project Manager (PM) / Vendor Role
 
-1. THE System SHALL allow exporting job lists to CSV format
-2. THE System SHALL allow exporting technician lists to CSV format
-3. THE System SHALL allow exporting time entries to CSV format
-4. THE System SHALL allow exporting reports to PDF format
-5. WHEN exporting data, THE System SHALL include all visible columns and applied filters
-6. THE System SHALL generate export files within 10 seconds for datasets under 1000 records
+**2.3.1** PMs/Vendors SHALL only access data for their specific company AND market
 
-### Requirement 24: Customer Point of Contact Management
+**2.3.2** PMs/Vendors SHALL be able to view jobs assigned to their company
 
-**User Story:** As a field technician, I want to see customer contact information for each job, so that I can communicate with the site contact if needed.
+**2.3.3** PMs/Vendors SHALL be able to view technicians from their company
 
-#### Acceptance Criteria
+**2.3.4** PMs/Vendors SHALL NOT be able to view data from other companies
 
-1. THE System SHALL allow dispatchers to add customer POC name to jobs
-2. THE System SHALL allow dispatchers to add customer POC phone number to jobs
-3. THE System SHALL allow dispatchers to add customer POC email to jobs
-4. THE System SHALL display customer POC information in the technician's job detail view
-5. THE System SHALL validate phone number and email formats before saving
-6. WHERE customer POC information is provided, THE System SHALL display it prominently in mobile view
+**2.3.5** PMs/Vendors SHALL NOT be able to view data from other markets
 
-### Requirement 25: Job Notes and Communication
+**2.3.6** PMs/Vendors SHALL have limited KPI access scoped to their company and market
 
-**User Story:** As a dispatcher, I want to add notes to jobs that technicians can see, so that I can communicate special instructions or updates.
+### 2.4 Technician Role
 
-#### Acceptance Criteria
+**2.4.1** Technicians SHALL only see jobs they are assigned to
 
-1. THE System SHALL allow dispatchers to add notes to jobs at any time
-2. THE System SHALL allow technicians to add notes to their assigned jobs
-3. THE System SHALL display all notes in chronological order with author and timestamp
-4. THE System SHALL support notes up to 2000 characters in length
-5. THE System SHALL notify assigned technicians when a dispatcher adds a note to their job
-6. THE System SHALL allow editing of notes by the original author within 1 hour of creation
+**2.4.2** Technicians SHALL only see their own information and assignments
 
-### Requirement 26: Certification Expiration Tracking
+**2.4.3** Technicians SHALL be able to update their own location
 
-**User Story:** As an administrator, I want to be alerted when technician certifications are expiring, so that I can ensure compliance and avoid assignment issues.
+**2.4.4** Technicians SHALL be able to accept or reject assignments
 
-#### Acceptance Criteria
+**2.4.5** Technicians SHALL be able to update job status for assigned jobs
 
-1. THE System SHALL check certification expiration dates daily
-2. WHEN a certification will expire within 30 days, THE System SHALL flag the technician profile
-3. WHEN a certification will expire within 30 days, THE System SHALL notify administrators
-4. WHEN a certification has expired, THE System SHALL remove the associated Skill_Tag from the technician profile
-5. THE System SHALL display certification status (Active, Expiring Soon, Expired) in technician profiles
-6. THE System SHALL generate a monthly report of expiring and expired certifications
+**2.4.6** Technicians SHALL NOT be able to view other technicians' information
 
-### Requirement 27: Job Template Management
+**2.4.7** Technicians SHALL NOT be able to view unassigned jobs
 
-**User Story:** As a dispatcher, I want to create job templates for common work types, so that I can create new jobs more quickly.
+**2.4.8** Technicians SHALL NOT be able to access reporting or KPI features
 
-#### Acceptance Criteria
+## 3. Data Scope Requirements
 
-1. THE System SHALL allow dispatchers to save jobs as templates
-2. THE System SHALL store template name, job type, required skills, estimated hours, and crew size
-3. THE System SHALL allow dispatchers to create new jobs from templates
-4. WHEN creating a job from a template, THE System SHALL pre-populate all template fields
-5. THE System SHALL allow editing of template-created jobs before saving
-6. THE System SHALL allow administrators to manage (create, edit, delete) job templates
+### 3.1 Market-Based Scoping
 
-### Requirement 28: Geographic Region Management
+**3.1.1** The system SHALL filter data by market for CM role (except RG market CMs)
 
-**User Story:** As an administrator, I want to organize technicians and jobs by geographic region, so that I can optimize local resource allocation.
+**3.1.2** The system SHALL filter data by market AND company for PM/Vendor role
 
-#### Acceptance Criteria
+**3.1.3** The system SHALL apply market filtering at the backend API level
 
-1. THE System SHALL allow administrators to define geographic regions with names and boundaries
-2. THE System SHALL allow assignment of technicians to home regions
-3. THE System SHALL allow assignment of jobs to regions based on site address
-4. THE System SHALL allow filtering of technicians and jobs by region
-5. THE System SHALL display region information in calendar and list views
-6. THE System SHALL calculate cross-region assignments and flag them for dispatcher review
+**3.1.4** The system SHALL apply market filtering at the frontend selector level
 
-### Requirement 29: Performance Metrics
+### 3.2 Company-Based Scoping
 
-**User Story:** As an operations manager, I want to track key performance indicators, so that I can measure success against business objectives.
+**3.2.1** The system SHALL filter data by company for PM/Vendor role
 
-#### Acceptance Criteria
+**3.2.2** The system SHALL prevent cross-company data access for PM/Vendor role
 
-1. THE System SHALL calculate percentage of jobs assigned through the system (target: 95%+)
-2. THE System SHALL track scheduling conflicts per week (target: near zero)
-3. THE System SHALL calculate percentage of jobs with complete time entries (target: 100%)
-4. THE System SHALL calculate average technician utilization rate (target: configurable)
-5. THE System SHALL display KPIs on the dashboard with trend indicators (up, down, stable)
-6. THE System SHALL allow administrators to set target values for each KPI
-7. THE System SHALL highlight KPIs that fall below target thresholds
+**3.2.3** The system SHALL associate all entities with a company identifier
 
-### Requirement 30: System Configuration
+### 3.3 Self-Scoping
 
-**User Story:** As a system administrator, I want to configure system settings, so that the system can be customized to organizational needs.
+**3.3.1** The system SHALL filter data to only user-assigned items for Technician role
 
-#### Acceptance Criteria
+**3.3.2** The system SHALL prevent technicians from accessing other users' data
 
-1. THE System SHALL allow administrators to configure session timeout duration
-2. THE System SHALL allow administrators to configure notification preferences (enabled/disabled)
-3. THE System SHALL allow administrators to configure backup retention period
-4. THE System SHALL allow administrators to configure KPI target values
-5. THE System SHALL allow administrators to configure job status values and reason codes
-6. THE System SHALL validate all configuration changes before saving
-7. THE System SHALL log all configuration changes in the audit log
+**3.3.3** The system SHALL allow technicians to view only their own profile and assignments
+
+## 4. Non-Functional Requirements
+
+### 4.1 Performance
+
+**4.1.1** The system SHALL load initial dashboard view within 2 seconds
+
+**4.1.2** The system SHALL update map markers within 1 second of location change
+
+**4.1.3** The system SHALL support at least 500 concurrent users
+
+**4.1.4** The system SHALL handle lists of 1000+ items using virtual scrolling
+
+**4.1.5** The system SHALL cache API responses with appropriate TTL
+
+**4.1.6** The system SHALL use lazy loading for feature modules
+
+**4.1.7** Real-time notifications SHALL be delivered within 5 seconds of event occurrence
+
+### 4.2 Security
+
+**4.2.1** The system SHALL use HTTPS for all communications
+
+**4.2.2** The system SHALL use JWT tokens with 15-minute expiration
+
+**4.2.3** The system SHALL implement refresh token rotation
+
+**4.2.4** The system SHALL sanitize all user inputs to prevent XSS attacks
+
+**4.2.5** The system SHALL encrypt sensitive data at rest
+
+**4.2.6** The system SHALL encrypt location data in transit and at rest
+
+**4.2.7** The system SHALL log all permission checks for audit purposes
+
+**4.2.8** The system SHALL log all data access attempts
+
+**4.2.9** The system SHALL retain audit logs for compliance requirements
+
+**4.2.10** The system SHALL comply with GDPR for location data handling
+
+### 4.3 Reliability
+
+**4.3.1** The system SHALL have 99.9% uptime during business hours
+
+**4.3.2** The system SHALL handle network failures gracefully
+
+**4.3.3** The system SHALL automatically reconnect SignalR connections with exponential backoff
+
+**4.3.4** The system SHALL preserve data integrity during offline/online transitions
+
+**4.3.5** The system SHALL validate all data before persistence
+
+### 4.4 Usability
+
+**4.4.1** The system SHALL provide responsive design for mobile, tablet, and desktop
+
+**4.4.2** The system SHALL meet WCAG 2.1 Level AA accessibility standards
+
+**4.4.3** The system SHALL provide keyboard navigation for all features
+
+**4.4.4** The system SHALL display user-friendly error messages
+
+**4.4.5** The system SHALL provide loading indicators for async operations
+
+**4.4.6** The system SHALL provide empty state messages when no data is available
+
+**4.4.7** The system SHALL support browser back/forward navigation
+
+### 4.5 Maintainability
+
+**4.5.1** The system SHALL follow Angular style guide conventions
+
+**4.5.2** The system SHALL maintain 80% minimum code coverage
+
+**4.5.3** The system SHALL use TypeScript strict mode
+
+**4.5.4** The system SHALL document all public APIs
+
+**4.5.5** The system SHALL use consistent naming conventions
+
+**4.5.6** The system SHALL separate concerns using feature modules
+
+### 4.6 Scalability
+
+**4.6.1** The system SHALL support horizontal scaling of backend services
+
+**4.6.2** The system SHALL use NgRx entity adapters for efficient state management
+
+**4.6.3** The system SHALL implement pagination for large datasets
+
+**4.6.4** The system SHALL use virtual scrolling for long lists
+
+**4.6.5** The system SHALL cluster map markers when displaying many locations
+
+## 5. Integration Requirements
+
+### 5.1 Backend API Integration
+
+**5.1.1** The system SHALL integrate with RESTful backend APIs
+
+**5.1.2** The system SHALL use HTTP interceptors for authentication headers
+
+**5.1.3** The system SHALL use HTTP interceptors for error handling
+
+**5.1.4** The system SHALL handle API errors with user-friendly messages
+
+**5.1.5** The system SHALL retry failed requests with exponential backoff
+
+### 5.2 Real-time Integration
+
+**5.2.1** The system SHALL integrate with SignalR hubs for real-time updates
+
+**5.2.2** The system SHALL handle SignalR connection lifecycle events
+
+**5.2.3** The system SHALL subscribe to relevant SignalR channels based on user role
+
+**5.2.4** The system SHALL unsubscribe from SignalR channels on logout
+
+### 5.3 Mapping Integration
+
+**5.3.1** The system SHALL integrate with Leaflet or Google Maps API
+
+**5.3.2** The system SHALL display custom markers for technicians, crews, and jobs
+
+**5.3.3** The system SHALL support map interactions (zoom, pan, marker click)
+
+**5.3.4** The system SHALL calculate routes and distances using mapping API
+
+### 5.4 Geolocation Integration
+
+**5.4.1** The system SHALL use browser Geolocation API for location tracking
+
+**5.4.2** The system SHALL request user permission for location access
+
+**5.4.3** The system SHALL handle geolocation errors gracefully
+
+**5.4.4** The system SHALL provide fallback for manual location entry
+
+## 6. Data Requirements
+
+### 6.1 Data Models
+
+**6.1.1** The system SHALL define TypeScript interfaces for all data models
+
+**6.1.2** The system SHALL use UUID format for all entity identifiers
+
+**6.1.3** The system SHALL include timestamps (createdAt, updatedAt) on all entities
+
+**6.1.4** The system SHALL include audit fields (createdBy, updatedBy) on all entities
+
+### 6.2 Data Validation
+
+**6.2.1** The system SHALL validate all form inputs before submission
+
+**6.2.2** The system SHALL display validation errors inline with form fields
+
+**6.2.3** The system SHALL prevent submission of invalid data
+
+**6.2.4** The system SHALL validate data types and formats
+
+**6.2.5** The system SHALL validate required fields
+
+### 6.3 Data Persistence
+
+**6.3.1** The system SHALL persist state to localStorage for offline support
+
+**6.3.2** The system SHALL synchronize local state with backend on connectivity restore
+
+**6.3.3** The system SHALL handle data conflicts during synchronization
+
+**6.3.4** The system SHALL maintain data consistency across store and backend
+
+## 7. Testing Requirements
+
+### 7.1 Unit Testing
+
+**7.1.1** The system SHALL have unit tests for all services
+
+**7.1.2** The system SHALL have unit tests for all components
+
+**7.1.3** The system SHALL have unit tests for all NgRx reducers, effects, and selectors
+
+**7.1.4** The system SHALL achieve 80% minimum code coverage
+
+**7.1.5** The system SHALL use Jasmine/Karma for unit testing
+
+### 7.2 Property-Based Testing
+
+**7.2.1** The system SHALL use fast-check for property-based testing
+
+**7.2.2** The system SHALL test permission idempotence property
+
+**7.2.3** The system SHALL test data scope filtering properties
+
+**7.2.4** The system SHALL test assignment conflict detection properties
+
+### 7.3 Integration Testing
+
+**7.3.1** The system SHALL have integration tests for NgRx workflows
+
+**7.3.2** The system SHALL have integration tests for API integration
+
+**7.3.3** The system SHALL have integration tests for real-time updates
+
+**7.3.4** The system SHALL mock external dependencies in integration tests
+
+### 7.4 End-to-End Testing
+
+**7.4.1** The system SHALL have E2E tests for critical user workflows
+
+**7.4.2** The system SHALL use Cypress or Playwright for E2E testing
+
+**7.4.3** The system SHALL test cross-role interactions
+
+**7.4.4** The system SHALL test offline/online transitions
+
+## 8. Deployment Requirements
+
+**8.1** The system SHALL be deployable as a static Angular application
+
+**8.2** The system SHALL support environment-specific configuration
+
+**8.3** The system SHALL include service worker for PWA capabilities
+
+**8.4** The system SHALL support continuous integration/deployment
+
+**8.5** The system SHALL include build optimization (minification, tree-shaking)
+
+## 9. Documentation Requirements
+
+**9.1** The system SHALL include inline code documentation
+
+**9.2** The system SHALL include README files for each feature module
+
+**9.3** The system SHALL include API documentation for services
+
+**9.4** The system SHALL include user guide documentation
+
+**9.5** The system SHALL include deployment documentation

@@ -32,7 +32,7 @@ export interface WorkflowResult {
 
 export interface StageResult {
   stageId: string;
-  status: 'success' | 'failure' | 'skipped';
+  status: 'completed' | 'failed' | 'skipped';
   output: any;
   error?: Error;
   duration: number;
@@ -51,6 +51,27 @@ export interface ValidationRule {
   type: 'required' | 'format' | 'range' | 'custom';
   params: Record<string, any>;
   message: string;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+  metadata?: Record<string, any>;
+}
+
+export interface ValidationError {
+  field: string;
+  code: string;
+  message: string;
+  severity: 'error';
+}
+
+export interface ValidationWarning {
+  field: string;
+  code: string;
+  message: string;
+  severity: 'warning';
 }
 
 export interface SaveStatus {
@@ -80,7 +101,7 @@ export interface PipelineStage {
   dependencies: string[];
   retryable: boolean;
   maxRetries: number;
-  currentRetry: number;
+  currentRetries: number;
 }
 
 export interface JobResult {

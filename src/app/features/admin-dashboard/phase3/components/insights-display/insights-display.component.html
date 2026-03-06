@@ -2,33 +2,7 @@
   <!-- Header with Controls -->
   <div class="insights-header">
     <h2>AI Insights</h2>
-    <div class="header-controls">
-      <!-- Display Mode Toggle -->
-      <div class="display-mode-toggle">
-        <button 
-          class="mode-btn"
-          [class.active]="displayMode === 'cards'"
-          (click)="displayMode = 'cards'; updateFilteredInsights()"
-          title="Card View">
-          <span class="icon-grid"></span>
-        </button>
-        <button 
-          class="mode-btn"
-          [class.active]="displayMode === 'list'"
-          (click)="displayMode = 'list'; updateFilteredInsights()"
-          title="List View">
-          <span class="icon-list"></span>
-        </button>
-        <button 
-          class="mode-btn"
-          [class.active]="displayMode === 'timeline'"
-          (click)="displayMode = 'timeline'; updateFilteredInsights()"
-          title="Timeline View">
-          <span class="icon-timeline"></span>
-        </button>
-      </div>
-
-      <!-- Export Buttons -->
+    <div class="header-actions">
       <button class="btn-export" (click)="exportInsights('csv')">
         <span class="icon-download"></span>
         Export CSV
@@ -66,7 +40,7 @@
       </select>
     </div>
 
-    <!-- Priority Filter -->
+    <!-- Severity Filter -->
     <div class="filter-group">
       <label>Severity:</label>
       <select 
@@ -151,7 +125,7 @@
             </div>
             <div class="metric-value">{{ getMetricDisplay(metric) }}</div>
             <div class="metric-change" [ngClass]="getTrendClass(metric.trend)">
-              {{ formatChangePercent(metric.changePercent) }}
+              {{ formatChangePercent(metric.changePercentage) }}
             </div>
           </div>
         </div>
@@ -191,7 +165,7 @@
             <span *ngFor="let metric of insight.metrics" class="metric-summary-item">
               <strong>{{ metric.name }}:</strong> {{ getMetricDisplay(metric) }}
               <span class="trend-indicator" [ngClass]="getTrendClass(metric.trend)">
-                {{ getTrendIcon(metric.trend) }} {{ formatChangePercent(metric.changePercent) }}
+                {{ getTrendIcon(metric.trend) }} {{ formatChangePercent(metric.changePercentage) }}
               </span>
             </span>
           </div>
@@ -238,7 +212,7 @@
             <span class="metric-name">{{ metric.name }}:</span>
             <span class="metric-value">{{ getMetricDisplay(metric) }}</span>
             <span class="metric-change" [ngClass]="getTrendClass(metric.trend)">
-              {{ getTrendIcon(metric.trend) }} {{ formatChangePercent(metric.changePercent) }}
+              {{ getTrendIcon(metric.trend) }} {{ formatChangePercent(metric.changePercentage) }}
             </span>
           </div>
         </div>

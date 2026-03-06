@@ -63,4 +63,53 @@ describe('TechnicianGuard', () => {
       queryParams: { returnUrl: '/mobile/daily' }
     });
   });
+
+  it('should allow access for SRITech role', () => {
+    authService.isUserInRole.and.returnValue(true);
+
+    const result = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
+
+    expect(result).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should deny access for Admin role', () => {
+    authService.isUserInRole.and.returnValue(false);
+
+    const result = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
+
+    expect(result).toBe(false);
+    expect(router.navigate).toHaveBeenCalled();
+  });
+
+  it('should deny access for PM role', () => {
+    authService.isUserInRole.and.returnValue(false);
+
+    const result = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
+
+    expect(result).toBe(false);
+    expect(router.navigate).toHaveBeenCalled();
+  });
+
+  it('should redirect with correct return URL for different routes', () => {
+    authService.isUserInRole.and.returnValue(false);
+    const testUrl = '/mobile/schedule';
+
+    guard.canActivate({} as any, { url: testUrl } as any);
+
+    expect(router.navigate).toHaveBeenCalledWith(['/unauthorized'], {
+      queryParams: { returnUrl: testUrl }
+    });
+  });
+
+  it('should handle multiple consecutive calls consistently', () => {
+    authService.isUserInRole.and.returnValue(true);
+
+    const result1 = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
+    const result2 = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
+
+    expect(result1).toBe(true);
+    expect(result2).toBe(true);
+    expect(authService.isUserInRole).toHaveBeenCalledTimes(2);
+  });
 });

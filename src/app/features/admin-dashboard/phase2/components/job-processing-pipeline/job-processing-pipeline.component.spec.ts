@@ -21,7 +21,7 @@ describe('JobProcessingPipelineComponent', () => {
       dependencies: [],
       retryable: false,
       maxRetries: 0,
-      currentRetry: 0
+      currentRetries: 0
     },
     {
       id: 'validation',
@@ -31,7 +31,7 @@ describe('JobProcessingPipelineComponent', () => {
       dependencies: ['creation'],
       retryable: true,
       maxRetries: 3,
-      currentRetry: 0
+      currentRetries: 0
     }
   ];
 
@@ -86,7 +86,7 @@ describe('JobProcessingPipelineComponent', () => {
     it('should execute stage successfully', (done) => {
       const mockResult: StageResult = {
         stageId: 'creation',
-        status: 'success',
+        status: 'completed',
         output: { message: 'Success' },
         duration: 1000,
         timestamp: new Date()
@@ -116,7 +116,7 @@ describe('JobProcessingPipelineComponent', () => {
     it('should update stage status to running when executing', () => {
       const mockResult: StageResult = {
         stageId: 'creation',
-        status: 'success',
+        status: 'completed',
         output: {},
         duration: 1000,
         timestamp: new Date()
@@ -155,11 +155,11 @@ describe('JobProcessingPipelineComponent', () => {
     it('should retry failed stage', () => {
       const stage = component.stages[1];
       stage.status = 'failed';
-      stage.currentRetry = 0;
+      stage.currentRetries = 0;
 
       const mockResult: StageResult = {
         stageId: 'validation',
-        status: 'success',
+        status: 'completed',
         output: {},
         duration: 1000,
         timestamp: new Date()
@@ -169,7 +169,7 @@ describe('JobProcessingPipelineComponent', () => {
 
       component.retryStage('validation');
 
-      expect(stage.currentRetry).toBe(1);
+      expect(stage.currentRetries).toBe(1);
       expect(stage.status).toBe('pending');
       expect(mockPipelineService.retryStage).toHaveBeenCalledWith('test-job-123', stage);
     });
@@ -278,7 +278,7 @@ describe('JobProcessingPipelineComponent', () => {
     it('should get stage result', () => {
       const mockResult: StageResult = {
         stageId: 'creation',
-        status: 'success',
+        status: 'completed',
         output: {},
         duration: 1000,
         timestamp: new Date()
@@ -294,7 +294,7 @@ describe('JobProcessingPipelineComponent', () => {
       const stage = component.stages[1];
       stage.status = 'failed';
       stage.retryable = true;
-      stage.currentRetry = 0;
+      stage.currentRetries = 0;
       stage.maxRetries = 3;
 
       expect(component.canRetryStage('validation')).toBe(true);
@@ -341,7 +341,7 @@ describe('JobProcessingPipelineComponent', () => {
 
       const mockResult: StageResult = {
         stageId: 'creation',
-        status: 'success',
+        status: 'completed',
         output: {},
         duration: 1000,
         timestamp: new Date()

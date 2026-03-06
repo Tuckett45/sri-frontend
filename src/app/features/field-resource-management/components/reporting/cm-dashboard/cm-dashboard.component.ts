@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
 import { Observable, Subject, interval, combineLatest } from 'rxjs';
 import { takeUntil, map, startWith } from 'rxjs/operators';
 import { AuthService } from '../../../../../services/auth.service';
@@ -168,7 +169,8 @@ export class CMDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private roleBasedDataService: RoleBasedDataService,
-    private workflowService: WorkflowService
+    private workflowService: WorkflowService,
+    private router: Router
   ) {}
   
   ngOnInit(): void {
@@ -628,40 +630,35 @@ export class CMDashboardComponent implements OnInit, OnDestroy {
    * Navigate to approvals page
    */
   navigateToApprovals(): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('Navigate to approvals');
+    this.router.navigate(['/field-resource-management/approvals']);
   }
   
   /**
    * Navigate to street sheets page
    */
   navigateToStreetSheets(): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('Navigate to street sheets');
+    this.router.navigate(['/field-resource-management/jobs']);
   }
   
   /**
    * Navigate to street sheet detail
    */
   navigateToStreetSheetDetail(id: string): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('Navigate to street sheet:', id);
+    this.router.navigate(['/field-resource-management/jobs', id]);
   }
   
   /**
    * Navigate to approval detail
    */
   navigateToApprovalDetail(id: string): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('Navigate to approval:', id);
+    this.router.navigate(['/field-resource-management/approvals', id]);
   }
   
   /**
    * Navigate to technician detail
    */
   navigateToTechnicianDetail(id: string): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('Navigate to technician:', id);
+    this.router.navigate(['/field-resource-management/technicians', id]);
   }
   
   /**

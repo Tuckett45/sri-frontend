@@ -6,9 +6,11 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of } from 'rxjs';
-import { map, catchError, switchMap, tap } from 'rxjs/operators';
+import { of, forkJoin } from 'rxjs';
+import { map, catchError, switchMap, tap, filter } from 'rxjs/operators';
 import * as JobActions from './job.actions';
+import { JobService } from '../../services/job.service';
+import { HttpEventType } from '@angular/common/http';
 
 @Injectable()
 export class JobEffects {
@@ -17,9 +19,7 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.loadJobs),
       switchMap(({ filters }) =>
-        // TODO: Replace with actual JobService call when service is implemented
-        // this.jobService.getJobs(filters).pipe(
-        of([]).pipe( // Placeholder - returns empty array
+        this.jobService.getJobs(filters).pipe(
           map((jobs) =>
             JobActions.loadJobsSuccess({ jobs })
           ),
@@ -38,9 +38,7 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.createJob),
       switchMap(({ job }) =>
-        // TODO: Replace with actual JobService call when service is implemented
-        // this.jobService.createJob(job).pipe(
-        of({ id: 'temp-id', ...job } as any).pipe( // Placeholder
+        this.jobService.createJob(job).pipe(
           map((createdJob) =>
             JobActions.createJobSuccess({ job: createdJob })
           ),
@@ -59,9 +57,7 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.updateJob),
       switchMap(({ id, job }) =>
-        // TODO: Replace with actual JobService call when service is implemented
-        // this.jobService.updateJob(id, job).pipe(
-        of({ id, ...job } as any).pipe( // Placeholder
+        this.jobService.updateJob(id, job).pipe(
           map((updatedJob) =>
             JobActions.updateJobSuccess({ job: updatedJob })
           ),
@@ -80,9 +76,7 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.deleteJob),
       switchMap(({ id }) =>
-        // TODO: Replace with actual JobService call when service is implemented
-        // this.jobService.deleteJob(id).pipe(
-        of(void 0).pipe( // Placeholder
+        this.jobService.deleteJob(id).pipe(
           map(() =>
             JobActions.deleteJobSuccess({ id })
           ),
@@ -101,9 +95,7 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.updateJobStatus),
       switchMap(({ id, status, reason }) =>
-        // TODO: Replace with actual JobService call when service is implemented
-        // this.jobService.updateJobStatus(id, status, reason).pipe(
-        of({ id, status } as any).pipe( // Placeholder
+        this.jobService.updateJobStatus(id, status, reason).pipe(
           map((updatedJob) =>
             JobActions.updateJobStatusSuccess({ job: updatedJob })
           ),
@@ -122,15 +114,7 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.addJobNote),
       switchMap(({ jobId, note }) =>
-        // TODO: Replace with actual JobService call when service is implemented
-        // this.jobService.addJobNote(jobId, note).pipe(
-        of({ 
-          id: 'temp-note-id', 
-          jobId, 
-          text: note, 
-          author: 'current-user',
-          createdAt: new Date()
-        } as any).pipe( // Placeholder
+        this.jobService.addJobNote(jobId, note).pipe(
           map((createdNote) =>
             JobActions.addJobNoteSuccess({ jobId, note: createdNote })
           ),
@@ -149,17 +133,9 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.uploadAttachment),
       switchMap(({ jobId, file }) =>
-        // TODO: Replace with actual JobService call when service is implemented
-        // this.jobService.uploadJobAttachment(jobId, file).pipe(
-        of({ 
-          id: 'temp-attachment-id',
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: file.type,
-          blobUrl: 'temp-url',
-          uploadedBy: 'current-user',
-          uploadedAt: new Date()
-        } as any).pipe( // Placeholder
+        this.jobService.uploadJobAttachment(jobId, file).pipe(
+          filter(event => event.type === HttpEventType.Response),
+          map((event: any) => event.body),
           map((attachment) =>
             JobActions.uploadAttachmentSuccess({ jobId, attachment })
           ),
@@ -178,13 +154,16 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.batchUpdateStatus),
       switchMap(({ jobIds, status, reason }) =>
-        // TODO: Replace with actual JobService batch call when service is implemented
-        // For now, simulate individual updates with validation
-        of(jobIds.map(jobId => ({
-          jobId,
-          success: true,
-          error: undefined
-        }))).pipe(
+        forkJoin(
+          jobIds.map(jobId =>
+            this.jobService.updateJobStatus(jobId, status, reason).pipe(
+              map(() => ({ jobId, success: true, error: undefined })),
+              catchError((error) =>
+                of({ jobId, success: false, error: error.message })
+              )
+            )
+          )
+        ).pipe(
           map((results) =>
             JobActions.batchUpdateStatusSuccess({ results })
           ),
@@ -203,13 +182,14 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.batchReassign),
       switchMap(({ jobIds, technicianId }) =>
-        // TODO: Replace with actual SchedulingService batch call when service is implemented
-        // For now, simulate individual assignments with validation
-        of(jobIds.map(jobId => ({
-          jobId,
-          success: true,
-          error: undefined
-        }))).pipe(
+        // Note: This would typically use SchedulingService.assignTechnicianToJob
+        // For now, we'll use a placeholder that returns success for all jobs
+        // TODO: Integrate with SchedulingService when task 3.3.1 is complete
+        forkJoin(
+          jobIds.map(jobId =>
+            of({ jobId, success: true, error: undefined })
+          )
+        ).pipe(
           map((results) =>
             JobActions.batchReassignSuccess({ results })
           ),
@@ -228,21 +208,35 @@ export class JobEffects {
     this.actions$.pipe(
       ofType(JobActions.batchDelete),
       switchMap(({ jobIds }) =>
-        // TODO: Replace with actual JobService batch delete call when service is implemented
-        // For now, simulate individual deletions with validation
-        of(jobIds.map(jobId => ({
-          jobId,
-          success: true,
-          error: undefined
-        }))).pipe(
+        this.jobService.deleteJobs(jobIds).pipe(
+          map(() => 
+            jobIds.map(jobId => ({ jobId, success: true, error: undefined }))
+          ),
           map((results) =>
             JobActions.batchDeleteSuccess({ results })
           ),
-          catchError((error) =>
-            of(JobActions.batchDeleteFailure({ 
-              error: error.message || 'Failed to batch delete jobs' 
-            }))
-          )
+          catchError((error) => {
+            // If batch delete fails, try individual deletes
+            return forkJoin(
+              jobIds.map(jobId =>
+                this.jobService.deleteJob(jobId).pipe(
+                  map(() => ({ jobId, success: true, error: undefined })),
+                  catchError((err) =>
+                    of({ jobId, success: false, error: err.message })
+                  )
+                )
+              )
+            ).pipe(
+              map((results) =>
+                JobActions.batchDeleteSuccess({ results })
+              ),
+              catchError((err) =>
+                of(JobActions.batchDeleteFailure({ 
+                  error: err.message || 'Failed to batch delete jobs' 
+                }))
+              )
+            );
+          })
         )
       )
     )
@@ -269,6 +263,94 @@ export class JobEffects {
             { duration: 7000 }
           );
         }
+      })
+    ),
+    { dispatch: false }
+  );
+
+  // Show Create Job Success
+  showCreateJobSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.createJobSuccess),
+      tap(() => {
+        this.snackBar.open('Job created successfully', 'Close', { duration: 3000 });
+      })
+    ),
+    { dispatch: false }
+  );
+
+  // Show Update Job Success
+  showUpdateJobSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.updateJobSuccess),
+      tap(() => {
+        this.snackBar.open('Job updated successfully', 'Close', { duration: 3000 });
+      })
+    ),
+    { dispatch: false }
+  );
+
+  // Show Delete Job Success
+  showDeleteJobSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.deleteJobSuccess),
+      tap(() => {
+        this.snackBar.open('Job deleted successfully', 'Close', { duration: 3000 });
+      })
+    ),
+    { dispatch: false }
+  );
+
+  // Show Update Job Status Success
+  showUpdateJobStatusSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.updateJobStatusSuccess),
+      tap(() => {
+        this.snackBar.open('Job status updated successfully', 'Close', { duration: 3000 });
+      })
+    ),
+    { dispatch: false }
+  );
+
+  // Show Add Job Note Success
+  showAddJobNoteSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.addJobNoteSuccess),
+      tap(() => {
+        this.snackBar.open('Note added successfully', 'Close', { duration: 3000 });
+      })
+    ),
+    { dispatch: false }
+  );
+
+  // Show Upload Attachment Success
+  showUploadAttachmentSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.uploadAttachmentSuccess),
+      tap(() => {
+        this.snackBar.open('Attachment uploaded successfully', 'Close', { duration: 3000 });
+      })
+    ),
+    { dispatch: false }
+  );
+
+  // Show Error Notifications
+  showErrorNotification$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(
+        JobActions.loadJobsFailure,
+        JobActions.createJobFailure,
+        JobActions.updateJobFailure,
+        JobActions.deleteJobFailure,
+        JobActions.updateJobStatusFailure,
+        JobActions.addJobNoteFailure,
+        JobActions.uploadAttachmentFailure,
+        JobActions.batchUpdateStatusFailure,
+        JobActions.batchReassignFailure,
+        JobActions.batchDeleteFailure
+      ),
+      tap(({ error }) => {
+        this.snackBar.open(error, 'Close', { duration: 5000 });
       })
     ),
     { dispatch: false }
@@ -326,10 +408,63 @@ export class JobEffects {
     { dispatch: false }
   );
 
+  // Optimistic Update Job Effect
+  updateJobOptimistic$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.updateJobOptimistic),
+      switchMap(({ id, changes, originalData }) =>
+        this.jobService.updateJob(id, changes as any).pipe(
+          map((updatedJob) =>
+            JobActions.updateJobSuccess({ job: updatedJob })
+          ),
+          catchError((error) => {
+            console.error('Optimistic update failed, rolling back:', error);
+            return of(JobActions.rollbackJobUpdate({ id, originalData }));
+          })
+        )
+      )
+    )
+  );
+
+  // Optimistic Update Job Status Effect
+  updateJobStatusOptimistic$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.updateJobStatusOptimistic),
+      switchMap(({ id, status, reason, originalData }) =>
+        this.jobService.updateJobStatus(id, status, reason).pipe(
+          map((updatedJob) =>
+            JobActions.updateJobStatusSuccess({ job: updatedJob })
+          ),
+          catchError((error) => {
+            console.error('Optimistic status update failed, rolling back:', error);
+            return of(JobActions.rollbackJobStatusUpdate({ id, originalData }));
+          })
+        )
+      )
+    )
+  );
+
+  // Optimistic Delete Job Effect
+  deleteJobOptimistic$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.deleteJobOptimistic),
+      switchMap(({ id, originalData }) =>
+        this.jobService.deleteJob(id).pipe(
+          map(() =>
+            JobActions.deleteJobSuccess({ id })
+          ),
+          catchError((error) => {
+            console.error('Optimistic delete failed, rolling back:', error);
+            return of(JobActions.rollbackJobDelete({ originalData }));
+          })
+        )
+      )
+    )
+  );
+
   constructor(
     private actions$: Actions,
-    private snackBar: MatSnackBar
-    // TODO: Inject JobService when implemented
-    // private jobService: JobService
+    private snackBar: MatSnackBar,
+    private jobService: JobService
   ) {}
 }

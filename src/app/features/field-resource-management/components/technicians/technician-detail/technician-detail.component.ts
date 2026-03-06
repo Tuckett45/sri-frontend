@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
@@ -11,7 +11,8 @@ import * as TechnicianSelectors from '../../../state/technicians/technician.sele
 @Component({
   selector: 'app-technician-detail',
   templateUrl: './technician-detail.component.html',
-  styleUrls: ['./technician-detail.component.scss']
+  styleUrls: ['./technician-detail.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TechnicianDetailComponent implements OnInit, OnDestroy {
   technician$: Observable<Technician | null | undefined>;

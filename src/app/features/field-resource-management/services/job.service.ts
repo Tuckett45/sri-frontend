@@ -69,9 +69,21 @@ export class JobService {
       if (filters.region) {
         params = params.set('region', filters.region);
       }
+      if (filters.market) {
+        params = params.set('market', filters.market);
+      }
+      if (filters.company) {
+        params = params.set('company', filters.company);
+      }
       if (filters.dateRange) {
         params = params.set('startDate', filters.dateRange.startDate.toISOString());
         params = params.set('endDate', filters.dateRange.endDate.toISOString());
+      }
+      if (filters.startDate) {
+        params = params.set('startDate', filters.startDate.toISOString());
+      }
+      if (filters.endDate) {
+        params = params.set('endDate', filters.endDate.toISOString());
       }
       if (filters.page !== undefined) {
         params = params.set('page', filters.page.toString());

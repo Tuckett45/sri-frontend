@@ -1,4 +1,7 @@
 import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { User } from '../models/user.model';
 import {
   Permission,
@@ -7,6 +10,8 @@ import {
   PermissionCheckResult,
   RolePermission
 } from '../models/permission.model';
+import { DataScope } from '../features/field-resource-management/services/data-scope.service';
+import * as RolePermissionsSelectors from '../store/role-permissions/role-permissions.selectors';
 
 /**
  * Service for checking user permissions with condition evaluation
@@ -25,8 +30,22 @@ export class PermissionService {
   // In-memory store for role permissions
   // In a real application, this would be loaded from backend/NgRx store
   private rolePermissionsStore: Map<string, RolePermission> = new Map();
+  
+  // Mock current user for development
+  // In production, this would come from an auth service/store
+  private mockCurrentUser: User = {
+    id: 'user-123',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    password: '',
+    role: 'Admin',
+    market: 'ALL',
+    company: 'INTERNAL',
+    createdDate: new Date(),
+    isApproved: true
+  };
 
-  constructor() {
+  constructor(private store: Store) {
     // Initialize with default permissions for testing
     this.initializeDefaultPermissions();
   }
@@ -387,5 +406,61 @@ export class PermissionService {
       ],
       restrictions: []
     });
+  }
+
+  /**
+   * Get current user
+   * In production, this would retrieve from auth service or NgRx store
+   * 
+   * @returns Observable of current user
+   */
+  getCurrentUser(): Observable<User> {
+    // TODO: Replace with actual auth service call
+    // return this.store.select(selectCurrentUser);
+    return of(this.mockCurrentUser);
+  }
+
+  /**
+   * Get data scopes for current user's role
+   * 
+   * @returns Observable of data scopes array
+   */
+  getCurrentUserDataScopes(): Observable<DataScope[]> {
+    return this.getCurrentUser().pipe(
+      map(user => {
+        if (!user || !user.role) {
+          return [];
+        }
+        
+        // Map role to data scope type
+        switch (user.role) {
+          case 'Admin':
+            return [{ scopeType: 'all' as const }];
+          
+          case 'CM':
+            return [{ scopeType: 'market' as const }];
+          
+          case 'PM':
+          case 'Vendor':
+            return [{ scopeType: 'company' as const }];
+          
+          case 'Technician':
+            return [{ scopeType: 'self' as const }];
+          
+          default:
+            console.warn(`Unknown role: ${user.role}, defaulting to 'self' scope`);
+            return [{ scopeType: 'self' as const }];
+        }
+      })
+    );
+  }
+
+  /**
+   * Set current user (for testing)
+   * 
+   * @param user - User to set as current
+   */
+  setCurrentUser(user: User): void {
+    this.mockCurrentUser = user;
   }
 }

@@ -18,10 +18,13 @@
   </div>
 
   <!-- Loading Indicator -->
-  <div *ngIf="loading$ | async" class="loading-indicator">
-    <div class="spinner"></div>
-    <p>Loading recommendations...</p>
-  </div>
+  <app-loading-indicator 
+    *ngIf="loading$ | async" 
+    [overlay]="false"
+    [mode]="'spinner'"
+    [size]="'medium'"
+    [message]="'Loading recommendations...'">
+  </app-loading-indicator>
 
   <!-- Error Message -->
   <div *ngIf="error$ | async as error" class="error-message">

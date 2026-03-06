@@ -18,6 +18,7 @@ import { of } from 'rxjs';
 
 import { JobFormComponent } from './job-form.component';
 import { JobType, Priority } from '../../../models/job.model';
+import { SkillLevel } from '../../../models/technician.model';
 
 describe('JobFormComponent', () => {
   let component: JobFormComponent;
@@ -174,8 +175,8 @@ describe('JobFormComponent', () => {
 
   it('should handle skills change', () => {
     const skills = [
-      { id: '1', name: 'Cat6', category: 'Cabling' },
-      { id: '2', name: 'Fiber', category: 'Cabling' }
+      { id: '1', name: 'Cat6', category: 'Cabling', level: SkillLevel.Intermediate },
+      { id: '2', name: 'Fiber', category: 'Cabling', level: SkillLevel.Intermediate }
     ];
     
     component.onSkillsChange(skills);

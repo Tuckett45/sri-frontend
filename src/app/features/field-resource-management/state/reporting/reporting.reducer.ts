@@ -1,6 +1,6 @@
 /**
  * Reporting Reducer
- * Manages reporting state updates
+ * Manages reporting state updates for dashboard metrics, KPIs, and reports
  */
 
 import { createReducer, on } from '@ngrx/store';
@@ -13,6 +13,7 @@ export const initialState: ReportingState = {
   utilization: null,
   performance: null,
   kpis: [],
+  dateRange: null,
   loading: false,
   error: null
 };
@@ -22,7 +23,7 @@ export const reportingReducer = createReducer(
   initialState,
 
   // Load Dashboard
-  on(ReportingActions.loadDashboard, (state) => ({
+  on(ReportingActions.loadDashboard, ReportingActions.refreshDashboard, (state) => ({
     ...state,
     loading: true,
     error: null
@@ -42,8 +43,9 @@ export const reportingReducer = createReducer(
   })),
 
   // Load Utilization Report
-  on(ReportingActions.loadUtilization, (state) => ({
+  on(ReportingActions.loadUtilization, (state, { dateRange }) => ({
     ...state,
+    dateRange,
     loading: true,
     error: null
   })),
@@ -62,8 +64,9 @@ export const reportingReducer = createReducer(
   })),
 
   // Load Job Performance Report
-  on(ReportingActions.loadJobPerformance, (state) => ({
+  on(ReportingActions.loadJobPerformance, (state, { dateRange }) => ({
     ...state,
+    dateRange,
     loading: true,
     error: null
   })),
@@ -82,8 +85,9 @@ export const reportingReducer = createReducer(
   })),
 
   // Load KPIs
-  on(ReportingActions.loadKPIs, (state) => ({
+  on(ReportingActions.loadKPIs, (state, { dateRange }) => ({
     ...state,
+    dateRange: dateRange || state.dateRange,
     loading: true,
     error: null
   })),
@@ -99,13 +103,6 @@ export const reportingReducer = createReducer(
     ...state,
     loading: false,
     error
-  })),
-
-  // Refresh Dashboard (triggers loadDashboard)
-  on(ReportingActions.refreshDashboard, (state) => ({
-    ...state,
-    loading: true,
-    error: null
   })),
 
   // Clear Reports

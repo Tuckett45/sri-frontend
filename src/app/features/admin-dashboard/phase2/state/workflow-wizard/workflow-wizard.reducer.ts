@@ -162,7 +162,7 @@ export const workflowWizardReducer = createReducer(
     newValidationResults[state.currentStepIndex] = validationResult;
     
     // Mark step as complete if valid
-    const newCompletedSteps = validationResult.isValid && 
+    const newCompletedSteps = validationResult.valid && 
                              !state.completedSteps.includes(state.currentStepIndex)
       ? [...state.completedSteps, state.currentStepIndex]
       : state.completedSteps;
@@ -170,7 +170,7 @@ export const workflowWizardReducer = createReducer(
     return {
       ...state,
       validationResults: newValidationResults,
-      currentStepValid: validationResult.isValid,
+      currentStepValid: validationResult.valid,
       completedSteps: newCompletedSteps,
       loading: false
     };

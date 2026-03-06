@@ -16,7 +16,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const distPath = path.join(__dirname, '..', 'dist', 'sri-frontend', 'browser');
+const distPath = path.join(__dirname, '..', 'dist', 'sri-frontend');
 
 console.log('='.repeat(80));
 console.log('Bundle Size Analysis');

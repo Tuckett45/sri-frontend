@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { JobStatus } from '../../../models/job.model';
 
 /**
@@ -24,7 +24,8 @@ import { JobStatus } from '../../../models/job.model';
 @Component({
   selector: 'frm-status-badge',
   templateUrl: './status-badge.component.html',
-  styleUrls: ['./status-badge.component.scss']
+  styleUrls: ['./status-badge.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatusBadgeComponent {
   @Input() status!: JobStatus;

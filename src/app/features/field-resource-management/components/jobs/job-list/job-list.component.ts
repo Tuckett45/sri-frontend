@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
@@ -38,7 +38,8 @@ import { UserRole } from '../../../../../models/role.enum';
 @Component({
   selector: 'frm-job-list',
   templateUrl: './job-list.component.html',
-  styleUrls: ['./job-list.component.scss']
+  styleUrls: ['./job-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class JobListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

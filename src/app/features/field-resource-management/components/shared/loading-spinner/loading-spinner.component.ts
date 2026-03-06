@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 
 /**
@@ -23,7 +23,8 @@ import { ThemePalette } from '@angular/material/core';
 @Component({
   selector: 'frm-loading-spinner',
   templateUrl: './loading-spinner.component.html',
-  styleUrls: ['./loading-spinner.component.scss']
+  styleUrls: ['./loading-spinner.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoadingSpinnerComponent {
   @Input() size: 'small' | 'medium' | 'large' = 'medium';

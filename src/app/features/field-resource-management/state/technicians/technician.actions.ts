@@ -7,6 +7,7 @@ import { createAction, props } from '@ngrx/store';
 import { Technician } from '../../models/technician.model';
 import { TechnicianFilters } from '../../models/dtos/filters.dto';
 import { CreateTechnicianDto, UpdateTechnicianDto } from '../../models/dtos/technician.dto';
+import { GeoLocation } from '../../models/time-entry.model';
 
 // Load Technicians
 export const loadTechnicians = createAction(
@@ -88,3 +89,51 @@ export const setTechnicianFilters = createAction(
 export const clearTechnicianFilters = createAction(
   '[Technician] Clear Filters'
 );
+
+// Update Technician Location (Real-time tracking)
+export const updateTechnicianLocation = createAction(
+  '[Technician] Update Technician Location',
+  props<{ technicianId: string; location: GeoLocation }>()
+);
+
+export const updateTechnicianLocationSuccess = createAction(
+  '[Technician] Update Technician Location Success',
+  props<{ technicianId: string; location: GeoLocation }>()
+);
+
+export const updateTechnicianLocationFailure = createAction(
+  '[Technician] Update Technician Location Failure',
+  props<{ error: string }>()
+);
+
+// Optimistic Update Actions
+export const updateTechnicianOptimistic = createAction(
+  '[Technician] Update Technician Optimistic',
+  props<{ id: string; changes: Partial<Technician>; originalData: Technician }>()
+);
+
+export const rollbackTechnicianUpdate = createAction(
+  '[Technician] Rollback Technician Update',
+  props<{ id: string; originalData: Technician }>()
+);
+
+export const createTechnicianOptimistic = createAction(
+  '[Technician] Create Technician Optimistic',
+  props<{ technician: Technician; tempId: string }>()
+);
+
+export const rollbackTechnicianCreate = createAction(
+  '[Technician] Rollback Technician Create',
+  props<{ tempId: string }>()
+);
+
+export const deleteTechnicianOptimistic = createAction(
+  '[Technician] Delete Technician Optimistic',
+  props<{ id: string; originalData: Technician }>()
+);
+
+export const rollbackTechnicianDelete = createAction(
+  '[Technician] Rollback Technician Delete',
+  props<{ originalData: Technician }>()
+);
+

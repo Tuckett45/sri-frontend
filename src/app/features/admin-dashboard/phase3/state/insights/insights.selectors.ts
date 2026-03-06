@@ -22,7 +22,7 @@ const mockInsights: Insight[] = [
         name: 'Completion Rate',
         value: 92,
         unit: '%',
-        changePercent: 15,
+        changePercentage: 15,
         trend: 'up'
       }
     ],
@@ -41,7 +41,7 @@ const mockInsights: Insight[] = [
         name: 'Utilization',
         value: 68,
         unit: '%',
-        changePercent: -12,
+        changePercentage: -12,
         trend: 'down'
       }
     ],
@@ -60,7 +60,7 @@ const mockInsights: Insight[] = [
         name: 'Conflicts',
         value: 5,
         unit: 'jobs',
-        changePercent: 150,
+        changePercentage: 150,
         trend: 'up'
       }
     ],

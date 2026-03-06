@@ -17,7 +17,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { TechnicianListComponent } from './technician-list.component';
-import { Technician, TechnicianRole, EmploymentType } from '../../../models/technician.model';
+import { Technician, TechnicianRole, EmploymentType, SkillLevel } from '../../../models/technician.model';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 
 describe('TechnicianListComponent', () => {
@@ -38,8 +38,8 @@ describe('TechnicianListComponent', () => {
       homeBase: 'New York',
       region: 'Northeast',
       skills: [
-        { id: 's1', name: 'Cat6', category: 'Cabling' },
-        { id: 's2', name: 'Fiber Splicing', category: 'Fiber' }
+        { id: 's1', name: 'Cat6', category: 'Cabling', level: SkillLevel.Intermediate },
+        { id: 's2', name: 'Fiber Splicing', category: 'Fiber', level: SkillLevel.Advanced }
       ],
       certifications: [],
       availability: [],
@@ -59,7 +59,7 @@ describe('TechnicianListComponent', () => {
       homeBase: 'Boston',
       region: 'Northeast',
       skills: [
-        { id: 's3', name: 'OSHA10', category: 'Safety' }
+        { id: 's3', name: 'OSHA10', category: 'Safety', level: SkillLevel.Beginner }
       ],
       certifications: [],
       availability: [],

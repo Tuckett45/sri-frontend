@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
@@ -17,7 +18,7 @@ import * as JobActions from '../../../state/jobs/job.actions';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 
 import { selectCalendarView, selectSelectedDate } from '../../../state/ui/ui.selectors';
-import { selectAllAssignments, selectConflicts } from '../../../state/assignments/assignment.selectors';
+import { selectAllAssignments, selectAssignmentConflicts } from '../../../state/assignments/assignment.selectors';
 import { selectAllJobs } from '../../../state/jobs/job.selectors';
 import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
 
@@ -76,14 +77,15 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {
     this.calendarView$ = this.store.select(selectCalendarView);
     this.selectedDate$ = this.store.select(selectSelectedDate);
     this.assignments$ = this.store.select(selectAllAssignments);
     this.jobs$ = this.store.select(selectAllJobs);
     this.technicians$ = this.store.select(selectAllTechnicians);
-    this.conflicts$ = this.store.select(selectConflicts);
+    this.conflicts$ = this.store.select(selectAssignmentConflicts);
   }
 
   ngOnInit(): void {
@@ -350,8 +352,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
    */
   onContextEdit(): void {
     if (this.contextMenuJob) {
-      // TODO: Navigate to job edit page
-      console.log('Edit job:', this.contextMenuJob);
+      this.router.navigate(['/field-resource-management/jobs', this.contextMenuJob.id, 'edit']);
     }
     this.contextMenuJob = null;
   }

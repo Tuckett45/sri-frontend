@@ -39,7 +39,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
       dependencies: [], 
       retryable: false, 
       maxRetries: 0, 
-      currentRetry: 0 
+      currentRetries: 0 
     },
     { 
       id: 'validation', 
@@ -49,7 +49,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
       dependencies: ['creation'], 
       retryable: true, 
       maxRetries: 3, 
-      currentRetry: 0 
+      currentRetries: 0 
     },
     { 
       id: 'assignment', 
@@ -59,7 +59,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
       dependencies: ['validation'], 
       retryable: true, 
       maxRetries: 3, 
-      currentRetry: 0 
+      currentRetries: 0 
     },
     { 
       id: 'scheduling', 
@@ -69,7 +69,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
       dependencies: ['assignment'], 
       retryable: true, 
       maxRetries: 3, 
-      currentRetry: 0 
+      currentRetries: 0 
     },
     { 
       id: 'execution', 
@@ -79,7 +79,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
       dependencies: ['scheduling'], 
       retryable: true, 
       maxRetries: 2, 
-      currentRetry: 0 
+      currentRetries: 0 
     },
     { 
       id: 'completion', 
@@ -89,7 +89,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
       dependencies: ['execution'], 
       retryable: false, 
       maxRetries: 0, 
-      currentRetry: 0 
+      currentRetries: 0 
     }
   ];
 
@@ -101,6 +101,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
 
   // Loading and error states
   loading: boolean = false;
+  isExecutingStage: boolean = false;
   error: string | null = null;
 
   // Skip reason
@@ -234,7 +235,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
       
       const result: StageResult = {
         stageId: stageId,
-        status: 'failure',
+        status: 'failed',
         output: null,
         error: error,
         duration: 0,
@@ -260,7 +261,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
     }
 
     // Increment retry count
-    stage.currentRetry++;
+    stage.currentRetries++;
     stage.status = 'pending';
     this.error = null;
 
@@ -367,7 +368,7 @@ export class JobProcessingPipelineComponent implements OnInit, OnDestroy {
     return stage ? 
       stage.status === 'failed' && 
       stage.retryable && 
-      stage.currentRetry < stage.maxRetries : 
+      stage.currentRetries < stage.maxRetries : 
       false;
   }
 

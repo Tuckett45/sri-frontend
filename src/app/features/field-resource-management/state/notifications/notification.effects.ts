@@ -8,6 +8,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import * as NotificationActions from './notification.actions';
+import { NotificationService } from '../../services/notification.service';
 
 @Injectable()
 export class NotificationEffects {
@@ -16,9 +17,7 @@ export class NotificationEffects {
     this.actions$.pipe(
       ofType(NotificationActions.loadNotifications),
       switchMap(({ userId }) =>
-        // TODO: Replace with actual NotificationService call when service is implemented
-        // this.notificationService.getNotifications(userId).pipe(
-        of([]).pipe( // Placeholder - returns empty array
+        this.notificationService.getNotifications(userId).pipe(
           map((notifications) =>
             NotificationActions.loadNotificationsSuccess({ notifications })
           ),
@@ -37,9 +36,7 @@ export class NotificationEffects {
     this.actions$.pipe(
       ofType(NotificationActions.markAsRead),
       switchMap(({ id }) =>
-        // TODO: Replace with actual NotificationService call when service is implemented
-        // this.notificationService.markAsRead(id).pipe(
-        of(void 0).pipe( // Placeholder
+        this.notificationService.markAsRead(id).pipe(
           map(() =>
             NotificationActions.markAsReadSuccess({ id })
           ),
@@ -58,9 +55,7 @@ export class NotificationEffects {
     this.actions$.pipe(
       ofType(NotificationActions.markAllAsRead),
       switchMap(({ userId }) =>
-        // TODO: Replace with actual NotificationService call when service is implemented
-        // this.notificationService.markAllAsRead(userId).pipe(
-        of(void 0).pipe( // Placeholder
+        this.notificationService.markAllAsRead(userId).pipe(
           map(() =>
             NotificationActions.markAllAsReadSuccess()
           ),
@@ -75,8 +70,7 @@ export class NotificationEffects {
   );
 
   constructor(
-    private actions$: Actions
-    // TODO: Inject NotificationService when implemented
-    // private notificationService: NotificationService
+    private actions$: Actions,
+    private notificationService: NotificationService
   ) {}
 }

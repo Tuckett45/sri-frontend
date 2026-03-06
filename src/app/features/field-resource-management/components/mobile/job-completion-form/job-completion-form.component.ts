@@ -4,6 +4,7 @@ import { Store } from '@ngrx/store';
 import { Job, JobStatus } from '../../../models/job.model';
 import { updateJobStatus, uploadAttachment } from '../../../state/jobs/job.actions';
 import { SanitizationService } from '../../../services/sanitization.service';
+import { ImageCacheService } from '../../../services/image-cache.service';
 
 /**
  * Delay reason options
@@ -56,7 +57,8 @@ export class JobCompletionFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private store: Store,
-    private sanitizationService: SanitizationService
+    private sanitizationService: SanitizationService,
+    private imageCacheService: ImageCacheService
   ) {}
 
   ngOnInit(): void {
@@ -155,18 +157,37 @@ export class JobCompletionFormComponent implements OnInit {
   }
 
   /**
-   * Upload selected photos
+   * Upload selected photos with caching support
    */
   private async uploadPhotos(): Promise<void> {
     const uploadPromises = this.selectedFiles.map(file => {
       return new Promise<void>((resolve) => {
-        this.store.dispatch(uploadAttachment({
-          jobId: this.job.id,
-          file
-        }));
-        // In a real implementation, we would wait for the upload to complete
-        // For now, we'll just resolve immediately
-        resolve();
+        // Cache the image for offline access before uploading
+        const identifier = `job-${this.job.id}-photo-${Date.now()}-${file.name}`;
+        this.imageCacheService.cacheFile(file, identifier).subscribe({
+          next: () => {
+            console.log(`[JobCompletion] Cached photo: ${file.name}`);
+            
+            // Dispatch upload action
+            this.store.dispatch(uploadAttachment({
+              jobId: this.job.id,
+              file
+            }));
+            
+            resolve();
+          },
+          error: (err) => {
+            console.warn(`[JobCompletion] Failed to cache photo: ${file.name}`, err);
+            
+            // Still attempt to upload even if caching fails
+            this.store.dispatch(uploadAttachment({
+              jobId: this.job.id,
+              file
+            }));
+            
+            resolve();
+          }
+        });
       });
     });
 

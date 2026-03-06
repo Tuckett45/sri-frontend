@@ -48,10 +48,13 @@ export class TechnicianGuard implements CanActivate {
       return true;
     }
 
-    // Redirect to unauthorized page
+    // Redirect to dashboard instead of non-existent unauthorized page
     console.warn('Access denied: Technician role required');
-    this.router.navigate(['/unauthorized'], {
-      queryParams: { returnUrl: state.url }
+    this.router.navigate(['/field-resource-management/dashboard'], {
+      queryParams: { 
+        error: 'insufficient_permissions',
+        message: 'Technician access required'
+      }
     });
     return false;
   }

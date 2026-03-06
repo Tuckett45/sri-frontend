@@ -50,6 +50,8 @@ describe('JobDetailComponent', () => {
     scheduledEndDate: new Date('2024-01-15'),
     attachments: [],
     notes: [],
+    market: 'TEST_MARKET',
+    company: 'TEST_COMPANY',
     customerPOC: {
       name: 'John Doe',
       phone: '555-0100',

@@ -53,7 +53,9 @@ describe('JobListComponent', () => {
       scheduledEndDate: new Date('2024-01-15'),
       attachments: [],
       notes: [],
-      createdBy: 'user1',
+      market: 'DALLAS',
+    company: 'TestCompany',
+    createdBy: 'user1',
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-01')
     },
@@ -79,7 +81,9 @@ describe('JobListComponent', () => {
       scheduledEndDate: new Date('2024-01-16'),
       attachments: [],
       notes: [],
-      createdBy: 'user1',
+      market: 'DALLAS',
+    company: 'TestCompany',
+    createdBy: 'user1',
       createdAt: new Date('2024-01-02'),
       updatedAt: new Date('2024-01-02')
     }

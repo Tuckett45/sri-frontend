@@ -1,1273 +1,1411 @@
-# Design Document: Field Resource Management Tool
+# Design Document: Field Resource Management System
 
 ## Overview
 
-The Field Resource Management Tool is a full-stack web application integrated into the ATLAS system that provides comprehensive field technician scheduling, job management, and performance tracking capabilities. The system follows a modern Angular-based frontend architecture with NgRx state management, communicating with a RESTful backend API.
+The Field Resource Management (FRM) system is a comprehensive Angular application for managing field technicians, crews, and jobs with real-time geographic tracking and role-based access control. The system provides capabilities for editing, scheduling, assigning, and tracking field resources while enforcing strict permission boundaries across four user tiers: Admins, Construction Managers (CMs), Project Managers (PMs)/Vendors, and Technicians.
 
-### Design Goals
-
-1. **Mobile-First Experience**: Prioritize mobile usability for field technicians
-2. **Real-Time Updates**: Provide live job status and schedule changes via SignalR
-3. **Scalability**: Support 100+ concurrent users and 1000+ active jobs
-4. **Integration**: Seamlessly integrate with existing ATLAS infrastructure
-5. **Offline Capability**: Allow basic functionality when connectivity is limited
-6. **Performance**: Maintain sub-2-second response times for standard operations
-
-### Technology Stack
-
-**Frontend:**
-- Angular 15+ with TypeScript
-- NgRx for state management
-- Angular Material for UI components
-- SignalR client for real-time updates
-- Progressive Web App (PWA) capabilities for offline support
-
-**Backend:**
-- ASP.NET Core Web API
-- Entity Framework Core for data access
-- SignalR for real-time communication
-- SQL Server database
-- Azure Blob Storage for file attachments
-
-**Infrastructure:**
-- Azure App Service for hosting
-- Azure SQL Database
-- Azure Blob Storage
-- Azure Application Insights for monitoring
+The system leverages Angular with NgRx for state management, integrates with geographic mapping services for real-time location tracking, and implements a sophisticated RBAC system that scopes data visibility based on user role, market, and company affiliation. Real-time updates are handled through SignalR for crew movement and assignment changes.
 
 ## Architecture
 
-### System Architecture
-
+The system follows Angular's feature module architecture with NgRx for centralized state management. The architecture is organized into distinct layers: presentation (components), state management (NgRx store), business logic (services), and data access (API integration).
 
 ```mermaid
 graph TB
-    subgraph "Client Layer"
-        Mobile[Mobile Browser]
-        Desktop[Desktop Browser]
+    subgraph "Presentation Layer"
+        A[Admin Components]
+        B[CM Components]
+        C[PM/Vendor Components]
+        D[Technician Components]
+        E[Shared Components]
     end
     
-    subgraph "Frontend - Angular Application"
-        Components[Angular Components]
-        State[NgRx State Management]
-        Services[Angular Services]
-        SignalRClient[SignalR Client]
+    subgraph "State Management - NgRx"
+        F[Technicians State]
+        G[Jobs State]
+        H[Assignments State]
+        I[Reporting State]
+        J[UI State]
     end
     
-    subgraph "Backend - ASP.NET Core API"
-        Controllers[API Controllers]
-        BusinessLogic[Business Logic Layer]
-        DataAccess[Data Access Layer]
-        SignalRHub[SignalR Hub]
+    subgraph "Business Logic"
+        K[Permission Service]
+        L[Technician Service]
+        M[Job Service]
+        N[Scheduling Service]
+        O[Geolocation Service]
+        P[Reporting Service]
     end
     
-    subgraph "Data Layer"
-        Database[(SQL Server)]
-        BlobStorage[Azure Blob Storage]
-        Cache[Redis Cache]
+    subgraph "Real-time Layer"
+        Q[SignalR Service]
+        R[Notification Service]
     end
     
-    Mobile --> Components
-    Desktop --> Components
-    Components --> State
-    State --> Services
-    Services --> Controllers
-    SignalRClient --> SignalRHub
-    Controllers --> BusinessLogic
-    BusinessLogic --> DataAccess
-    DataAccess --> Database
-    Controllers --> BlobStorage
-    BusinessLogic --> Cache
-    SignalRHub --> Database
+    subgraph "Data Access"
+        S[HTTP Interceptors]
+        T[API Endpoints]
+    end
+    
+    A --> F
+    B --> F
+    C --> G
+    D --> H
+    E --> J
+    
+    F --> L
+    G --> M
+    H --> N
+    I --> P
+    
+    K --> F
+    K --> G
+    K --> H
+    
+    L --> S
+    M --> S
+    N --> S
+    O --> S
+    P --> S
+    
+    Q --> F
+    Q --> G
+    Q --> H
+    R --> J
+    
+    S --> T
 ```
 
-### Layered Architecture
+### Key Architectural Decisions
 
-The system follows a clean layered architecture:
+1. **NgRx State Management**: Centralized state for predictable data flow and time-travel debugging
+2. **Feature Module Isolation**: Each major capability (technicians, jobs, scheduling) is a separate module
+3. **Permission-First Design**: All data access flows through permission checks before rendering
+4. **Real-time Integration**: SignalR for live updates of crew positions and job assignments
+5. **Offline-First Approach**: Service workers and local caching for field technician mobile access
 
-1. **Presentation Layer**: Angular components and UI logic
-2. **State Management Layer**: NgRx store, actions, reducers, effects
-3. **Service Layer**: Angular services for API communication
-4. **API Layer**: RESTful endpoints and SignalR hubs
-5. **Business Logic Layer**: Domain logic and validation
-6. **Data Access Layer**: Entity Framework Core repositories
-7. **Database Layer**: SQL Server with optimized schema
+## Sequence Diagrams
 
-### Module Organization
+### User Authentication and Permission Loading
 
-
-The frontend will be organized as a feature module within the ATLAS application:
-
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as Auth Guard
+    participant P as Permission Service
+    participant S as NgRx Store
+    participant API as Backend API
+    
+    U->>A: Navigate to FRM
+    A->>P: Check authentication
+    P->>API: GET /auth/user
+    API-->>P: User + Role
+    P->>API: GET /permissions/roles/{role}
+    API-->>P: Role Permissions
+    P->>S: Dispatch LoadPermissions
+    S-->>P: Permissions Loaded
+    P-->>A: Authorized
+    A-->>U: Render FRM Dashboard
 ```
-src/app/features/field-resource-management/
-├── components/
-│   ├── technicians/
-│   │   ├── technician-list/
-│   │   ├── technician-detail/
-│   │   └── technician-form/
-│   ├── jobs/
-│   │   ├── job-list/
-│   │   ├── job-detail/
-│   │   └── job-form/
-│   ├── scheduling/
-│   │   ├── calendar-view/
-│   │   ├── assignment-dialog/
-│   │   └── conflict-resolver/
-│   ├── mobile/
-│   │   ├── daily-view/
-│   │   ├── job-card/
-│   │   └── time-tracker/
-│   ├── reporting/
-│   │   ├── dashboard/
-│   │   ├── utilization-report/
-│   │   └── job-performance-report/
-│   └── shared/
-│       ├── skill-selector/
-│       ├── status-badge/
-│       └── file-upload/
-├── state/
-│   ├── technicians/
-│   ├── jobs/
-│   ├── assignments/
-│   ├── time-entries/
-│   └── notifications/
-├── services/
-│   ├── technician.service.ts
-│   ├── job.service.ts
-│   ├── scheduling.service.ts
-│   ├── time-tracking.service.ts
-│   ├── reporting.service.ts
-│   └── frm-signalr.service.ts
-├── models/
-│   ├── technician.model.ts
-│   ├── job.model.ts
-│   ├── assignment.model.ts
-│   └── time-entry.model.ts
-└── field-resource-management.module.ts
+
+### Technician Assignment Workflow
+
+```mermaid
+sequenceDiagram
+    participant CM as Construction Manager
+    participant C as Assignment Component
+    participant P as Permission Service
+    participant S as NgRx Store
+    participant API as Backend API
+    participant SR as SignalR Hub
+    participant T as Technician (Mobile)
+    
+    CM->>C: Select Job + Technician
+    C->>P: Check permission('assignments', 'create')
+    P-->>C: Permission Granted
+    C->>S: Dispatch CreateAssignment
+    S->>API: POST /assignments
+    API-->>S: Assignment Created
+    S->>SR: Broadcast AssignmentCreated
+    SR-->>T: Notify New Assignment
+    T->>T: Update Mobile View
+    S-->>C: Assignment Success
+    C-->>CM: Show Confirmation
+```
+
+### Geographic Tracking Update
+
+```mermaid
+sequenceDiagram
+    participant T as Technician (Mobile)
+    participant G as Geolocation Service
+    participant API as Backend API
+    participant SR as SignalR Hub
+    participant CM as CM Dashboard
+    participant M as Map Component
+    
+    T->>G: Enable Location Tracking
+    loop Every 30 seconds
+        G->>G: Get Current Position
+        G->>API: POST /technicians/{id}/location
+        API->>SR: Broadcast LocationUpdate
+        SR-->>CM: Push Location Data
+        CM->>M: Update Marker Position
+        M-->>CM: Render New Position
+    end
 ```
 
 ## Components and Interfaces
 
-### Core Components
-
-#### 1. Technician Management Components
-
-**TechnicianListComponent**
-- Displays paginated list of all technicians
-- Supports search and filtering by name, role, skills, availability
-- Provides quick actions: view details, edit, deactivate
-- Shows key information: name, role, skills, current assignment status
-
-**TechnicianDetailComponent**
-- Displays comprehensive technician profile
-- Shows skills, certifications with expiration tracking
-- Displays availability calendar
-- Shows assignment history and performance metrics
-- Provides edit and delete actions (admin only)
-
-**TechnicianFormComponent**
-- Create/edit technician profiles
-- Multi-step form: basic info, skills, certifications, availability
-- Validates required fields and data formats
-- Supports skill tag selection with autocomplete
-- Handles certification date validation
-
-#### 2. Job Management Components
-
-**JobListComponent**
-- Displays paginated list of jobs with filtering
-- Supports search by job ID, client, site name
-- Filter by status, priority, job type, date range
-- Batch selection for bulk operations
-- Quick actions: view, edit, assign, delete
-
-**JobDetailComponent**
-- Displays complete job information
-- Shows assigned technicians with contact info
-- Displays time entries and labor hours
-- Shows job status history timeline
-- Displays attachments and notes
-- Provides actions: edit, reassign, add notes
-
-**JobFormComponent**
-- Create/edit job work orders
-- Validates required fields
-- Skill requirement selector
-- File attachment upload
-- Address validation and geocoding
-- Estimated hours and crew size input
-
-#### 3. Scheduling Components
-
-**CalendarViewComponent**
-- Day and week view toggle
-- Displays technician schedules in grid format
-- Color-coded job status indicators
-- Drag-and-drop job assignment
-- Conflict highlighting
-- Click to view job details
-- Right-click context menu for quick actions
-
-**AssignmentDialogComponent**
-- Modal for assigning technicians to jobs
-- Displays qualified technicians ranked by skill match
-- Shows technician availability and current workload
-- Conflict detection with override option
-- Skill mismatch warnings
-- Assignment confirmation
-
-**ConflictResolverComponent**
-- Lists all scheduling conflicts
-- Shows conflicting jobs with details
-- Provides resolution options: reassign, reschedule, override
-- Requires justification for overrides
-- Batch conflict resolution
-
-#### 4. Mobile Components
-
-**DailyViewComponent**
-- Mobile-optimized today's schedule
-- Card-based job display
-- Swipe gestures for status updates
-- Pull-to-refresh
-- Offline data caching
-- Quick access to job details
-
-**JobCardComponent**
-- Compact job information display
-- Status update buttons
-- Clock in/out buttons
-- Navigation to full job details
-- Customer contact quick actions (call, email)
-- Photo upload shortcut
-
-**TimeTrackerComponent**
-- Active job timer display
-- Clock in/out functionality
-- Automatic location capture
-- Mileage calculation display
-- Manual time adjustment (admin override)
-- Break time tracking
-
-#### 5. Reporting Components
-
-**DashboardComponent**
-- KPI summary cards
-- Jobs by status chart
-- Technician utilization gauge
-- Recent activity feed
-- Alerts and notifications panel
-- Quick links to detailed reports
-
-**UtilizationReportComponent**
-- Technician utilization table and charts
-- Date range selector
-- Filter by technician, role, region
-- Export to CSV/PDF
-- Drill-down to individual technician details
-- Trend analysis visualization
-
-**JobPerformanceReportComponent**
-- Jobs completed metrics
-- Planned vs actual hours comparison
-- Schedule adherence percentage
-- Filter by job type, priority, client
-- Export functionality
-- Graphical trend analysis
-
-### Service Interfaces
-
-#### TechnicianService
+### Core State Interfaces
 
 ```typescript
-interface TechnicianService {
-  getTechnicians(filters?: TechnicianFilters): Observable<Technician[]>;
-  getTechnicianById(id: string): Observable<Technician>;
-  createTechnician(technician: CreateTechnicianDto): Observable<Technician>;
-  updateTechnician(id: string, technician: UpdateTechnicianDto): Observable<Technician>;
-  deleteTechnician(id: string): Observable<void>;
-  getTechnicianAvailability(id: string, dateRange: DateRange): Observable<Availability[]>;
-  updateTechnicianAvailability(id: string, availability: Availability[]): Observable<void>;
-  getTechnicianSkills(id: string): Observable<Skill[]>;
-  addTechnicianSkill(id: string, skill: Skill): Observable<void>;
-  removeTechnicianSkill(id: string, skillId: string): Observable<void>;
-  getTechnicianCertifications(id: string): Observable<Certification[]>;
-  getExpiringCertifications(daysThreshold: number): Observable<Certification[]>;
+// Technician State
+interface TechnicianState {
+  entities: { [id: string]: Technician };
+  ids: string[];
+  selectedId: string | null;
+  loading: boolean;
+  error: string | null;
+  filters: TechnicianFilters;
+  pagination: PaginationState;
+}
+
+// Job State
+interface JobState {
+  entities: { [id: string]: Job };
+  ids: string[];
+  selectedId: string | null;
+  loading: boolean;
+  error: string | null;
+  filters: JobFilters;
+  pagination: PaginationState;
+}
+
+// Assignment State
+interface AssignmentState {
+  entities: { [id: string]: Assignment };
+  ids: string[];
+  loading: boolean;
+  error: string | null;
+  conflicts: AssignmentConflict[];
+}
+
+// Reporting State
+interface ReportingState {
+  kpis: KPIMetrics;
+  utilizationData: UtilizationReport[];
+  performanceData: PerformanceReport[];
+  loading: boolean;
+  error: string | null;
+  dateRange: DateRange;
+}
+
+// UI State
+interface UIState {
+  sidebarOpen: boolean;
+  mapView: MapViewState;
+  selectedFilters: FilterState;
+  notifications: Notification[];
 }
 ```
 
-#### JobService
+### Data Models
 
 ```typescript
-interface JobService {
-  getJobs(filters?: JobFilters): Observable<Job[]>;
-  getJobById(id: string): Observable<Job>;
-  createJob(job: CreateJobDto): Observable<Job>;
-  updateJob(id: string, job: UpdateJobDto): Observable<Job>;
-  deleteJob(id: string): Observable<void>;
-  deleteJobs(ids: string[]): Observable<void>;
-  getJobsByTechnician(technicianId: string, dateRange?: DateRange): Observable<Job[]>;
-  updateJobStatus(id: string, status: JobStatus, reason?: string): Observable<Job>;
-  addJobNote(id: string, note: string): Observable<JobNote>;
-  uploadJobAttachment(id: string, file: File): Observable<Attachment>;
-  getJobStatusHistory(id: string): Observable<StatusHistory[]>;
-  createJobFromTemplate(templateId: string): Observable<Job>;
-}
-```
-
-#### SchedulingService
-
-```typescript
-interface SchedulingService {
-  assignTechnician(jobId: string, technicianId: string): Observable<Assignment>;
-  unassignTechnician(assignmentId: string): Observable<void>;
-  reassignJob(jobId: string, fromTechnicianId: string, toTechnicianId: string): Observable<Assignment>;
-  getAssignments(filters?: AssignmentFilters): Observable<Assignment[]>;
-  checkConflicts(technicianId: string, jobId: string): Observable<Conflict[]>;
-  getQualifiedTechnicians(jobId: string): Observable<TechnicianMatch[]>;
-  getTechnicianSchedule(technicianId: string, dateRange: DateRange): Observable<ScheduleItem[]>;
-  bulkAssign(assignments: BulkAssignmentDto[]): Observable<AssignmentResult[]>;
-  detectAllConflicts(dateRange?: DateRange): Observable<Conflict[]>;
-}
-```
-
-#### TimeTrackingService
-
-```typescript
-interface TimeTrackingService {
-  clockIn(jobId: string, technicianId: string, location?: GeoLocation): Observable<TimeEntry>;
-  clockOut(timeEntryId: string, location?: GeoLocation): Observable<TimeEntry>;
-  getTimeEntries(filters?: TimeEntryFilters): Observable<TimeEntry[]>;
-  updateTimeEntry(id: string, entry: UpdateTimeEntryDto): Observable<TimeEntry>;
-  getTimeEntriesByJob(jobId: string): Observable<TimeEntry[]>;
-  getTimeEntriesByTechnician(technicianId: string, dateRange: DateRange): Observable<TimeEntry[]>;
-  calculateLaborHours(jobId: string): Observable<LaborSummary>;
-  getActiveTimeEntry(technicianId: string): Observable<TimeEntry | null>;
-}
-```
-
-#### ReportingService
-
-```typescript
-interface ReportingService {
-  getDashboardMetrics(): Observable<DashboardMetrics>;
-  getTechnicianUtilization(filters: UtilizationFilters): Observable<UtilizationReport>;
-  getJobPerformance(filters: PerformanceFilters): Observable<PerformanceReport>;
-  getKPIs(): Observable<KPI[]>;
-  exportReport(reportType: ReportType, filters: any, format: ExportFormat): Observable<Blob>;
-  getScheduleAdherence(dateRange: DateRange): Observable<AdherenceMetrics>;
-}
-```
-
-#### FrmSignalRService
-
-```typescript
-interface FrmSignalRService {
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
-  onJobAssigned(callback: (assignment: Assignment) => void): void;
-  onJobStatusChanged(callback: (update: JobStatusUpdate) => void): void;
-  onJobReassigned(callback: (reassignment: Reassignment) => void): void;
-  onNotification(callback: (notification: Notification) => void): void;
-  subscribeToTechnicianUpdates(technicianId: string): void;
-  unsubscribeFromTechnicianUpdates(technicianId: string): void;
-}
-```
-
-## Data Models
-
-### Core Entities
-
-#### Technician
-
-```typescript
+// Technician Model
 interface Technician {
   id: string;
-  technicianId: string; // Business ID
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
-  role: TechnicianRole; // Installer, Lead, Level1-4
-  employmentType: EmploymentType; // W2, 1099
-  homeBase: string;
-  region: string;
   skills: Skill[];
   certifications: Certification[];
-  availability: Availability[];
-  hourlyCostRate?: number; // Admin only
-  isActive: boolean;
+  status: TechnicianStatus;
+  market: string;
+  company: string;
+  currentLocation?: GeoLocation;
+  availability: AvailabilitySchedule;
   createdAt: Date;
   updatedAt: Date;
 }
 
-enum TechnicianRole {
-  Installer = 'Installer',
-  Lead = 'Lead',
-  Level1 = 'Level1',
-  Level2 = 'Level2',
-  Level3 = 'Level3',
-  Level4 = 'Level4'
-}
-
-enum EmploymentType {
-  W2 = 'W2',
-  Contractor1099 = '1099'
+enum TechnicianStatus {
+  Available = 'AVAILABLE',
+  OnJob = 'ON_JOB',
+  Unavailable = 'UNAVAILABLE',
+  OffDuty = 'OFF_DUTY'
 }
 
 interface Skill {
   id: string;
   name: string;
-  category: string;
+  level: SkillLevel;
+  verifiedDate?: Date;
+}
+
+enum SkillLevel {
+  Beginner = 'BEGINNER',
+  Intermediate = 'INTERMEDIATE',
+  Advanced = 'ADVANCED',
+  Expert = 'EXPERT'
 }
 
 interface Certification {
   id: string;
   name: string;
-  issueDate: Date;
-  expirationDate: Date;
-  status: CertificationStatus;
+  issuedBy: string;
+  issuedDate: Date;
+  expiryDate?: Date;
+  documentUrl?: string;
 }
 
-enum CertificationStatus {
-  Active = 'Active',
-  ExpiringSoon = 'ExpiringSoon',
-  Expired = 'Expired'
-}
-
-interface Availability {
-  id: string;
-  technicianId: string;
-  date: Date;
-  isAvailable: boolean;
-  reason?: string; // PTO, Sick, Training
-}
-```
-
-#### Job
-
-```typescript
+// Job Model
 interface Job {
   id: string;
-  jobId: string; // Business ID
-  client: string;
-  siteName: string;
-  siteAddress: Address;
-  jobType: JobType;
-  priority: Priority;
+  title: string;
+  description: string;
   status: JobStatus;
-  scopeDescription: string;
+  priority: JobPriority;
+  market: string;
+  company: string;
+  location: JobLocation;
+  scheduledStart: Date;
+  scheduledEnd: Date;
+  actualStart?: Date;
+  actualEnd?: Date;
   requiredSkills: Skill[];
-  requiredCrewSize: number;
-  estimatedLaborHours: number;
-  scheduledStartDate: Date;
-  scheduledEndDate: Date;
-  actualStartDate?: Date;
-  actualEndDate?: Date;
-  customerPOC?: ContactInfo;
-  attachments: Attachment[];
+  assignedTechnicians: string[];
+  estimatedHours: number;
+  actualHours?: number;
   notes: JobNote[];
-  assignments: Assignment[];
-  timeEntries: TimeEntry[];
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-enum JobType {
-  Install = 'Install',
-  Decom = 'Decom',
-  SiteSurvey = 'SiteSurvey',
-  PM = 'PM'
-}
-
-enum Priority {
-  P1 = 'P1',
-  P2 = 'P2',
-  Normal = 'Normal'
-}
-
 enum JobStatus {
-  NotStarted = 'NotStarted',
-  EnRoute = 'EnRoute',
-  OnSite = 'OnSite',
-  Completed = 'Completed',
-  Issue = 'Issue',
-  Cancelled = 'Cancelled'
+  Pending = 'PENDING',
+  Scheduled = 'SCHEDULED',
+  InProgress = 'IN_PROGRESS',
+  Completed = 'COMPLETED',
+  Cancelled = 'CANCELLED',
+  OnHold = 'ON_HOLD'
 }
 
-interface Address {
-  street: string;
+enum JobPriority {
+  Low = 'LOW',
+  Medium = 'MEDIUM',
+  High = 'HIGH',
+  Critical = 'CRITICAL'
+}
+
+interface JobLocation {
+  address: string;
   city: string;
   state: string;
   zipCode: string;
-  latitude?: number;
-  longitude?: number;
+  coordinates: GeoLocation;
 }
 
-interface ContactInfo {
-  name: string;
-  phone: string;
-  email: string;
+interface GeoLocation {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  timestamp?: Date;
 }
 
-interface Attachment {
-  id: string;
-  fileName: string;
-  fileSize: number;
-  fileType: string;
-  blobUrl: string;
-  uploadedBy: string;
-  uploadedAt: Date;
-}
-
-interface JobNote {
-  id: string;
-  jobId: string;
-  text: string;
-  author: string;
-  createdAt: Date;
-  updatedAt?: Date;
-}
-```
-
-#### Assignment
-
-```typescript
+// Assignment Model
 interface Assignment {
   id: string;
   jobId: string;
   technicianId: string;
   assignedBy: string;
   assignedAt: Date;
-  isActive: boolean;
-  job?: Job;
-  technician?: Technician;
+  status: AssignmentStatus;
+  startTime?: Date;
+  endTime?: Date;
+  notes?: string;
 }
 
-interface TechnicianMatch {
-  technician: Technician;
-  matchPercentage: number;
-  missingSkills: Skill[];
-  currentWorkload: number;
-  hasConflicts: boolean;
-  conflicts: Conflict[];
+enum AssignmentStatus {
+  Assigned = 'ASSIGNED',
+  Accepted = 'ACCEPTED',
+  Rejected = 'REJECTED',
+  InProgress = 'IN_PROGRESS',
+  Completed = 'COMPLETED'
 }
 
-interface Conflict {
-  technicianId: string;
-  conflictingJobId: string;
-  conflictingJobTitle: string;
-  timeRange: DateRange;
-  severity: ConflictSeverity;
-}
-
-enum ConflictSeverity {
-  Warning = 'Warning',
-  Error = 'Error'
-}
-```
-
-#### TimeEntry
-
-```typescript
-interface TimeEntry {
+// Crew Model
+interface Crew {
   id: string;
-  jobId: string;
-  technicianId: string;
-  clockInTime: Date;
-  clockOutTime?: Date;
-  clockInLocation?: GeoLocation;
-  clockOutLocation?: GeoLocation;
-  totalHours?: number;
-  mileage?: number;
-  isManuallyAdjusted: boolean;
-  adjustedBy?: string;
-  adjustmentReason?: string;
+  name: string;
+  leadTechnicianId: string;
+  memberIds: string[];
+  market: string;
+  company: string;
+  status: CrewStatus;
+  currentLocation?: GeoLocation;
+  activeJobId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-interface GeoLocation {
-  latitude: number;
-  longitude: number;
-  accuracy: number;
+enum CrewStatus {
+  Available = 'AVAILABLE',
+  OnJob = 'ON_JOB',
+  Unavailable = 'UNAVAILABLE'
 }
 ```
 
-### Reporting Models
+### Permission Model
 
 ```typescript
-interface DashboardMetrics {
-  totalActiveJobs: number;
-  totalAvailableTechnicians: number;
-  jobsByStatus: Record<JobStatus, number>;
-  averageUtilization: number;
-  jobsRequiringAttention: Job[];
-  recentActivity: ActivityItem[];
-  kpis: KPI[];
+// Role-Based Permission Model
+interface RolePermission {
+  role: UserRole;
+  permissions: Permission[];
+  dataScopes: DataScope[];
 }
 
-interface KPI {
-  name: string;
-  value: number;
-  target: number;
-  unit: string;
-  trend: Trend;
-  status: KPIStatus;
+enum UserRole {
+  Admin = 'ADMIN',
+  ConstructionManager = 'CM',
+  ProjectManager = 'PM',
+  Vendor = 'VENDOR',
+  Technician = 'TECHNICIAN'
 }
 
-enum Trend {
-  Up = 'Up',
-  Down = 'Down',
-  Stable = 'Stable'
+interface Permission {
+  resource: ResourceType;
+  actions: PermissionAction[];
+  conditions?: PermissionCondition[];
 }
 
-enum KPIStatus {
-  OnTrack = 'OnTrack',
-  AtRisk = 'AtRisk',
-  BelowTarget = 'BelowTarget'
+enum ResourceType {
+  Technicians = 'technicians',
+  Crews = 'crews',
+  Jobs = 'jobs',
+  Assignments = 'assignments',
+  Reports = 'reports',
+  KPIs = 'kpis',
+  SystemConfig = 'system_config'
 }
 
-interface UtilizationReport {
-  dateRange: DateRange;
-  technicians: TechnicianUtilization[];
-  averageUtilization: number;
+enum PermissionAction {
+  Create = 'create',
+  Read = 'read',
+  Update = 'update',
+  Delete = 'delete',
+  Execute = 'execute'
 }
 
-interface TechnicianUtilization {
-  technician: Technician;
-  availableHours: number;
-  workedHours: number;
-  utilizationRate: number;
-  jobsCompleted: number;
+interface PermissionCondition {
+  field: string;
+  operator: ConditionOperator;
+  value: any;
 }
 
-interface PerformanceReport {
-  dateRange: DateRange;
-  totalJobsCompleted: number;
-  totalJobsOpen: number;
-  averageLaborHours: number;
-  scheduleAdherence: number;
-  jobsByType: Record<JobType, number>;
-  topPerformers: TechnicianPerformance[];
+enum ConditionOperator {
+  Equals = 'equals',
+  NotEquals = 'notEquals',
+  In = 'in',
+  NotIn = 'notIn',
+  Contains = 'contains'
 }
 
-interface TechnicianPerformance {
-  technician: Technician;
-  jobsCompleted: number;
-  totalHours: number;
-  averageJobDuration: number;
-  onTimeCompletionRate: number;
+interface DataScope {
+  scopeType: ScopeType;
+  scopeValues: string[];
+}
+
+enum ScopeType {
+  Market = 'market',
+  Company = 'company',
+  Self = 'self',
+  All = 'all'
 }
 ```
 
-### State Models
+## Key Functions with Formal Specifications
+
+### Function 1: checkPermission()
 
 ```typescript
-interface FrmState {
-  technicians: TechnicianState;
-  jobs: JobState;
-  assignments: AssignmentState;
-  timeEntries: TimeEntryState;
-  notifications: NotificationState;
-  ui: UIState;
-}
-
-interface TechnicianState {
-  entities: Record<string, Technician>;
-  ids: string[];
-  selectedId: string | null;
-  loading: boolean;
-  error: string | null;
-  filters: TechnicianFilters;
-}
-
-interface JobState {
-  entities: Record<string, Job>;
-  ids: string[];
-  selectedId: string | null;
-  loading: boolean;
-  error: string | null;
-  filters: JobFilters;
-}
-
-interface AssignmentState {
-  entities: Record<string, Assignment>;
-  ids: string[];
-  conflicts: Conflict[];
-  loading: boolean;
-  error: string | null;
-}
-
-interface TimeEntryState {
-  entities: Record<string, TimeEntry>;
-  ids: string[];
-  activeEntry: TimeEntry | null;
-  loading: boolean;
-  error: string | null;
-}
-
-interface NotificationState {
-  notifications: Notification[];
-  unreadCount: number;
-}
-
-interface UIState {
-  calendarView: CalendarViewType;
-  selectedDate: Date;
-  sidebarOpen: boolean;
-  mobileMenuOpen: boolean;
-}
+function checkPermission(
+  user: User,
+  resource: ResourceType,
+  action: PermissionAction,
+  context?: PermissionContext
+): boolean
 ```
 
+**Preconditions:**
+- `user` is non-null and has a defined role
+- `user.role` is a valid UserRole enum value
+- `resource` is a valid ResourceType enum value
+- `action` is a valid PermissionAction enum value
+- If `context` is provided, it contains valid data scope information
 
+**Postconditions:**
+- Returns `true` if and only if user's role has permission for resource+action
+- If conditions exist, all conditions must evaluate to true for permission grant
+- No side effects on user or permission data
+- Result is deterministic for same inputs
+
+**Loop Invariants:** N/A (no loops in main logic)
+
+### Function 2: filterDataByScope()
+
+```typescript
+function filterDataByScope<T extends ScopedEntity>(
+  data: T[],
+  user: User,
+  rolePermission: RolePermission
+): T[]
+```
+
+**Preconditions:**
+- `data` is a valid array (may be empty)
+- `user` is non-null with valid role and scope information
+- `rolePermission` contains valid data scopes for the user's role
+- All items in `data` implement ScopedEntity interface (have market, company fields)
+
+**Postconditions:**
+- Returns filtered array containing only items user has permission to see
+- If user has 'all' scope, returns entire input array
+- If user has 'market' scope, returns items matching user's market
+- If user has 'company' scope, returns items matching user's company AND market
+- If user has 'self' scope, returns only items where user is the owner/assignee
+- Original data array is not mutated
+- Order of items is preserved
+
+**Loop Invariants:**
+- For each iteration through data array: all previously processed items either passed scope check or were excluded
+- Filtered result array contains only valid items that passed scope validation
+
+### Function 3: assignTechnicianToJob()
+
+```typescript
+function assignTechnicianToJob(
+  jobId: string,
+  technicianId: string,
+  assignedBy: string
+): Observable<Assignment>
+```
+
+**Preconditions:**
+- `jobId` is a valid UUID of an existing job
+- `technicianId` is a valid UUID of an existing technician
+- `assignedBy` is a valid UUID of the user making the assignment
+- User has 'create' permission on 'assignments' resource
+- Job status is not 'COMPLETED' or 'CANCELLED'
+- Technician is not already assigned to overlapping job
+- Technician has required skills for the job
+
+**Postconditions:**
+- Returns Observable that emits new Assignment object
+- Assignment is persisted to backend
+- NgRx store is updated with new assignment
+- SignalR notification is broadcast to assigned technician
+- If technician is unavailable, conflict is detected and error is thrown
+- If assignment fails, Observable emits error and no state changes occur
+
+**Loop Invariants:** N/A (async operation, no loops)
+
+### Function 4: updateTechnicianLocation()
+
+```typescript
+function updateTechnicianLocation(
+  technicianId: string,
+  location: GeoLocation
+): Observable<void>
+```
+
+**Preconditions:**
+- `technicianId` is a valid UUID of an existing technician
+- `location.latitude` is between -90 and 90
+- `location.longitude` is between -180 and 180
+- `location.accuracy` (if provided) is a positive number
+- User is either the technician themselves or has 'update' permission on 'technicians'
+
+**Postconditions:**
+- Location is updated in backend
+- NgRx store reflects new location
+- SignalR broadcasts location update to subscribed CMs/Admins
+- Map markers are updated in real-time for monitoring users
+- If location update fails, Observable emits error
+- Previous location is preserved in history for audit trail
+
+**Loop Invariants:** N/A (async operation, no loops)
+
+### Function 5: calculateKPIMetrics()
+
+```typescript
+function calculateKPIMetrics(
+  jobs: Job[],
+  technicians: Technician[],
+  dateRange: DateRange,
+  userScope: DataScope[]
+): KPIMetrics
+```
+
+**Preconditions:**
+- `jobs` is a valid array of Job objects
+- `technicians` is a valid array of Technician objects
+- `dateRange.start` is before or equal to `dateRange.end`
+- `userScope` contains valid scope definitions
+- All jobs and technicians are already filtered by user's data scope
+
+**Postconditions:**
+- Returns KPIMetrics object with calculated values
+- All percentage values are between 0 and 100
+- All count values are non-negative integers
+- Calculations are based only on data within dateRange
+- If no data exists for dateRange, returns metrics with zero values
+- Original input arrays are not mutated
+
+**Loop Invariants:**
+- When iterating through jobs: running totals (completed, in-progress, etc.) are accurate for all processed jobs
+- When calculating utilization: sum of technician hours does not exceed total available hours
+- All intermediate calculations maintain numerical precision
+
+## Algorithmic Pseudocode
+
+### Main Permission Check Algorithm
+
+```typescript
+ALGORITHM checkPermissionWithScope(user, resource, action, targetEntity)
+INPUT: 
+  user: User object with role and scope information
+  resource: ResourceType enum value
+  action: PermissionAction enum value
+  targetEntity: Optional entity being accessed
+OUTPUT: 
+  boolean indicating permission granted or denied
+
+BEGIN
+  // Step 1: Validate inputs
+  ASSERT user IS NOT NULL
+  ASSERT user.role IS VALID UserRole
+  ASSERT resource IS VALID ResourceType
+  ASSERT action IS VALID PermissionAction
+  
+  // Step 2: Get role permissions from store
+  rolePermissions ← getRolePermissions(user.role)
+  
+  IF rolePermissions IS NULL THEN
+    RETURN false
+  END IF
+  
+  // Step 3: Find matching permission for resource
+  matchingPermission ← NULL
+  FOR EACH permission IN rolePermissions.permissions DO
+    IF permission.resource = resource THEN
+      matchingPermission ← permission
+      BREAK
+    END IF
+  END FOR
+  
+  IF matchingPermission IS NULL THEN
+    RETURN false
+  END IF
+  
+  // Step 4: Check if action is allowed
+  IF action NOT IN matchingPermission.actions THEN
+    RETURN false
+  END IF
+  
+  // Step 5: Evaluate conditions if present
+  IF matchingPermission.conditions IS NOT EMPTY THEN
+    FOR EACH condition IN matchingPermission.conditions DO
+      IF NOT evaluateCondition(condition, user) THEN
+        RETURN false
+      END IF
+    END FOR
+  END IF
+  
+  // Step 6: Check data scope if targetEntity provided
+  IF targetEntity IS NOT NULL THEN
+    IF NOT checkDataScope(user, rolePermissions.dataScopes, targetEntity) THEN
+      RETURN false
+    END IF
+  END IF
+  
+  // All checks passed
+  RETURN true
+END
+
+PRECONDITIONS:
+  - user is authenticated and has valid role
+  - resource and action are valid enum values
+  - rolePermissions store is initialized
+
+POSTCONDITIONS:
+  - Returns true if and only if all permission checks pass
+  - No side effects on any input parameters
+  - Result is deterministic for same inputs
+
+LOOP INVARIANTS:
+  - Permission loop: All previously checked permissions did not match resource
+  - Condition loop: All previously evaluated conditions returned true
+```
+
+### Data Scope Filtering Algorithm
+
+```typescript
+ALGORITHM filterDataByScope(data, user, dataScopes)
+INPUT:
+  data: Array of entities with market, company, and owner fields
+  user: User object with role, market, company
+  dataScopes: Array of DataScope objects defining access boundaries
+OUTPUT:
+  filteredData: Array of entities user has permission to access
+
+BEGIN
+  filteredData ← EMPTY ARRAY
+  
+  // Step 1: Determine scope type
+  scopeType ← determineScopeType(dataScopes)
+  
+  // Step 2: Apply scope filter
+  CASE scopeType OF
+    'all':
+      // Admin: see everything
+      filteredData ← data
+      
+    'market':
+      // CM: see all in their market (or all markets if RG market CM)
+      IF user.market = 'RG' THEN
+        filteredData ← data
+      ELSE
+        FOR EACH entity IN data DO
+          IF entity.market = user.market THEN
+            filteredData.ADD(entity)
+          END IF
+        END FOR
+      END IF
+      
+    'company':
+      // PM/Vendor: see only their company AND market
+      FOR EACH entity IN data DO
+        IF entity.company = user.company AND entity.market = user.market THEN
+          filteredData.ADD(entity)
+        END IF
+      END FOR
+      
+    'self':
+      // Technician: see only assigned to them
+      FOR EACH entity IN data DO
+        IF entity.assignedTo = user.id OR entity.ownerId = user.id THEN
+          filteredData.ADD(entity)
+        END IF
+      END FOR
+  END CASE
+  
+  RETURN filteredData
+END
+
+PRECONDITIONS:
+  - data is a valid array (may be empty)
+  - user has valid role, market, and company fields
+  - dataScopes contains at least one scope definition
+  - All entities in data have required scope fields
+
+POSTCONDITIONS:
+  - Returns array containing only entities within user's scope
+  - Original data array is not mutated
+  - Order of entities is preserved
+  - If no entities match scope, returns empty array
+
+LOOP INVARIANTS:
+  - filteredData contains only entities that passed scope check
+  - All previously processed entities were evaluated correctly
+  - No duplicate entities in filteredData
+```
+
+### Assignment Conflict Detection Algorithm
+
+```typescript
+ALGORITHM detectAssignmentConflicts(jobId, technicianId, scheduledStart, scheduledEnd)
+INPUT:
+  jobId: UUID of job to assign
+  technicianId: UUID of technician to assign
+  scheduledStart: Start datetime of job
+  scheduledEnd: End datetime of job
+OUTPUT:
+  conflicts: Array of AssignmentConflict objects
+
+BEGIN
+  conflicts ← EMPTY ARRAY
+  
+  // Step 1: Get technician's existing assignments
+  existingAssignments ← getAssignmentsByTechnician(technicianId)
+  
+  // Step 2: Check for time overlaps
+  FOR EACH assignment IN existingAssignments DO
+    ASSERT assignment.status ≠ 'CANCELLED'
+    
+    job ← getJobById(assignment.jobId)
+    
+    // Check if time ranges overlap
+    IF timeRangesOverlap(
+      scheduledStart, scheduledEnd,
+      job.scheduledStart, job.scheduledEnd
+    ) THEN
+      conflict ← CREATE AssignmentConflict WITH
+        type: 'TIME_OVERLAP'
+        existingJobId: job.id
+        existingJobTitle: job.title
+        overlapStart: MAX(scheduledStart, job.scheduledStart)
+        overlapEnd: MIN(scheduledEnd, job.scheduledEnd)
+      
+      conflicts.ADD(conflict)
+    END IF
+  END FOR
+  
+  // Step 3: Check skill requirements
+  technician ← getTechnicianById(technicianId)
+  newJob ← getJobById(jobId)
+  
+  FOR EACH requiredSkill IN newJob.requiredSkills DO
+    hasSkill ← false
+    
+    FOR EACH techSkill IN technician.skills DO
+      IF techSkill.id = requiredSkill.id AND 
+         techSkill.level >= requiredSkill.level THEN
+        hasSkill ← true
+        BREAK
+      END IF
+    END FOR
+    
+    IF NOT hasSkill THEN
+      conflict ← CREATE AssignmentConflict WITH
+        type: 'MISSING_SKILL'
+        skillName: requiredSkill.name
+        requiredLevel: requiredSkill.level
+      
+      conflicts.ADD(conflict)
+    END IF
+  END FOR
+  
+  // Step 4: Check location distance
+  IF technician.currentLocation IS NOT NULL THEN
+    distance ← calculateDistance(
+      technician.currentLocation,
+      newJob.location.coordinates
+    )
+    
+    IF distance > MAX_REASONABLE_DISTANCE THEN
+      conflict ← CREATE AssignmentConflict WITH
+        type: 'EXCESSIVE_DISTANCE'
+        distance: distance
+        technicianLocation: technician.currentLocation
+        jobLocation: newJob.location.coordinates
+      
+      conflicts.ADD(conflict)
+    END IF
+  END IF
+  
+  RETURN conflicts
+END
+
+PRECONDITIONS:
+  - jobId and technicianId are valid UUIDs
+  - scheduledStart is before scheduledEnd
+  - Job and technician exist in system
+  - User has permission to view assignments
+
+POSTCONDITIONS:
+  - Returns array of all detected conflicts
+  - If no conflicts, returns empty array
+  - Conflicts are categorized by type
+  - No side effects on existing data
+
+LOOP INVARIANTS:
+  - Assignment loop: All processed assignments have been checked for overlap
+  - Skill loop: All processed skills have been validated
+  - conflicts array contains only valid conflict objects
+```
+
+### Real-time Location Update Algorithm
+
+```typescript
+ALGORITHM processLocationUpdate(technicianId, newLocation)
+INPUT:
+  technicianId: UUID of technician
+  newLocation: GeoLocation object with lat/lng
+OUTPUT:
+  success: boolean indicating update success
+
+BEGIN
+  // Step 1: Validate location data
+  ASSERT -90 ≤ newLocation.latitude ≤ 90
+  ASSERT -180 ≤ newLocation.longitude ≤ 180
+  ASSERT newLocation.accuracy > 0 IF PROVIDED
+  
+  // Step 2: Get current technician state
+  technician ← getTechnicianById(technicianId)
+  
+  IF technician IS NULL THEN
+    RETURN false
+  END IF
+  
+  // Step 3: Check if location changed significantly
+  IF technician.currentLocation IS NOT NULL THEN
+    distance ← calculateDistance(
+      technician.currentLocation,
+      newLocation
+    )
+    
+    // Skip update if movement is negligible (< 10 meters)
+    IF distance < 10 THEN
+      RETURN true
+    END IF
+  END IF
+  
+  // Step 4: Update location in database
+  TRY
+    previousLocation ← technician.currentLocation
+    technician.currentLocation ← newLocation
+    technician.updatedAt ← CURRENT_TIMESTAMP
+    
+    saveToDatabase(technician)
+    
+    // Step 5: Archive previous location for history
+    IF previousLocation IS NOT NULL THEN
+      locationHistory ← CREATE LocationHistoryEntry WITH
+        technicianId: technicianId
+        location: previousLocation
+        timestamp: previousLocation.timestamp
+      
+      saveLocationHistory(locationHistory)
+    END IF
+    
+    // Step 6: Update NgRx store
+    dispatch(UpdateTechnicianLocation(technicianId, newLocation))
+    
+    // Step 7: Broadcast via SignalR to subscribed users
+    subscribedUsers ← getSubscribedUsers(technicianId)
+    
+    FOR EACH user IN subscribedUsers DO
+      IF hasPermissionToViewTechnician(user, technician) THEN
+        signalR.send(user.connectionId, 'LocationUpdate', {
+          technicianId: technicianId,
+          location: newLocation,
+          timestamp: CURRENT_TIMESTAMP
+        })
+      END IF
+    END FOR
+    
+    RETURN true
+    
+  CATCH error
+    logError('Location update failed', error)
+    RETURN false
+  END TRY
+END
+
+PRECONDITIONS:
+  - technicianId is valid UUID
+  - newLocation has valid latitude and longitude
+  - Technician exists in system
+  - Database connection is available
+
+POSTCONDITIONS:
+  - If successful: location is updated in DB, store, and broadcast
+  - If failed: no changes are made, returns false
+  - Previous location is preserved in history
+  - Only authorized users receive SignalR updates
+
+LOOP INVARIANTS:
+  - subscribedUsers loop: All notified users have valid permissions
+  - No duplicate notifications sent to same user
+```
+
+## Example Usage
+
+### Example 1: Admin Viewing All KPIs
+
+```typescript
+// Admin user logs in
+const adminUser: User = {
+  id: 'admin-123',
+  role: UserRole.Admin,
+  market: 'ALL',
+  company: 'INTERNAL'
+};
+
+// Check permission
+const canViewKPIs = permissionService.checkPermission(
+  adminUser,
+  ResourceType.KPIs,
+  PermissionAction.Read
+);
+// Returns: true
+
+// Load KPIs for all markets
+store.dispatch(ReportingActions.loadKPIs({
+  dateRange: { start: startDate, end: endDate },
+  markets: ['ALL']
+}));
+
+// KPIs are loaded without filtering
+store.select(selectKPIMetrics).subscribe(kpis => {
+  console.log('Total Jobs:', kpis.totalJobs);
+  console.log('Utilization:', kpis.utilizationRate);
+});
+```
+
+### Example 2: CM Editing Technician in Their Market
+
+```typescript
+// CM user in Dallas market
+const cmUser: User = {
+  id: 'cm-456',
+  role: UserRole.ConstructionManager,
+  market: 'DALLAS',
+  company: 'INTERNAL'
+};
+
+// Check permission to edit technician
+const technician: Technician = {
+  id: 'tech-789',
+  market: 'DALLAS',
+  company: 'ACME_CORP',
+  // ... other fields
+};
+
+const canEdit = permissionService.checkPermission(
+  cmUser,
+  ResourceType.Technicians,
+  PermissionAction.Update,
+  { entity: technician }
+);
+// Returns: true (same market)
+
+// Update technician
+store.dispatch(TechnicianActions.updateTechnician({
+  id: technician.id,
+  changes: {
+    skills: [...technician.skills, newSkill]
+  }
+}));
+```
+
+### Example 3: PM Viewing Only Their Company's Jobs
+
+```typescript
+// PM user from ACME Corp in Dallas
+const pmUser: User = {
+  id: 'pm-101',
+  role: UserRole.ProjectManager,
+  market: 'DALLAS',
+  company: 'ACME_CORP'
+};
+
+// Load jobs - automatically filtered by service
+store.dispatch(JobActions.loadJobs({
+  filters: { status: JobStatus.InProgress }
+}));
+
+// Selector applies scope filtering
+store.select(selectFilteredJobs).subscribe(jobs => {
+  // Only jobs where:
+  // job.market === 'DALLAS' AND job.company === 'ACME_CORP'
+  console.log('My company jobs:', jobs);
+});
+```
+
+### Example 4: Technician Viewing Assigned Jobs
+
+```typescript
+// Technician user
+const techUser: User = {
+  id: 'tech-202',
+  role: UserRole.Technician,
+  market: 'DALLAS',
+  company: 'ACME_CORP'
+};
+
+// Load assignments
+store.dispatch(AssignmentActions.loadMyAssignments());
+
+// Only sees jobs assigned to them
+store.select(selectMyAssignments).subscribe(assignments => {
+  // Only assignments where:
+  // assignment.technicianId === 'tech-202'
+  console.log('My assignments:', assignments);
+});
+
+// Cannot view other technicians
+const canViewOthers = permissionService.checkPermission(
+  techUser,
+  ResourceType.Technicians,
+  PermissionAction.Read
+);
+// Returns: false (can only see self)
+```
+
+### Example 5: Real-time Location Tracking
+
+```typescript
+// Technician enables location tracking
+geolocationService.startTracking('tech-202').subscribe(
+  location => {
+    // Update sent every 30 seconds
+    store.dispatch(TechnicianActions.updateLocation({
+      technicianId: 'tech-202',
+      location: location
+    }));
+  }
+);
+
+// CM monitoring on dashboard
+signalRService.on('LocationUpdate').subscribe(update => {
+  // Receives real-time updates for technicians in their market
+  if (update.technicianId) {
+    store.dispatch(TechnicianActions.updateLocationSuccess({
+      technicianId: update.technicianId,
+      location: update.location
+    }));
+    
+    // Map component automatically updates marker
+  }
+});
+```
 
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
-
-Based on the prework analysis and property reflection, the following properties capture the core correctness requirements of the Field Resource Management Tool:
-
-### Authentication and Authorization Properties
-
-**Property 1: Valid Credentials Authenticate Successfully**
-
-*For any* user with valid credentials in the database, authentication should succeed and return the user's designated role.
-
-**Validates: Requirements 1.1, 1.2**
-
-**Property 2: Authorization Enforces Role Permissions**
-
-*For any* user and any feature, access should be granted if and only if the user's role has the required permissions for that feature.
-
-**Validates: Requirements 1.3**
-
-**Property 3: Technicians Can Only Update Their Assigned Jobs**
-
-*For any* technician and any job status update attempt, the update should succeed if and only if the job is currently assigned to that technician.
-
-**Validates: Requirements 6.3**
-
-### Data Validation Properties
-
-**Property 4: Required Fields Are Enforced**
-
-*For any* entity (technician, job, etc.) being saved, the save operation should succeed if and only if all required fields are populated with valid data.
-
-**Validates: Requirements 2.1, 2.7, 3.8**
-
-**Property 5: Field Constraints Are Enforced**
-
-*For any* input field with size or format constraints (photo size ≤ 10MB, notes ≤ 2000 chars, valid email/phone formats), invalid inputs should be rejected.
-
-**Validates: Requirements 9.7, 24.5, 25.4, 30.6**
-
-### Scheduling and Conflict Detection Properties
-
-**Property 6: Unique Job IDs**
-
-*For any* set of created jobs, all job IDs should be unique across the system.
-
-**Validates: Requirements 3.1**
-
-**Property 7: Scheduling Conflicts Are Detected and Prevented**
-
-*For any* technician and any two job assignments with overlapping time periods, the system should detect the conflict and prevent the second assignment unless explicitly overridden.
-
-**Validates: Requirements 4.2, 4.3, 18.1**
-
-**Property 8: Skill Matching Validation**
-
-*For any* job assignment where the job specifies required skills, the system should verify the technician possesses those skills and display a warning if any skills are missing.
-
-**Validates: Requirements 4.4, 4.5**
-
-**Property 9: Technician Ranking by Skill Match**
-
-*For any* job with required skills and a set of available technicians, technicians should be ranked in descending order by skill match percentage (matching skills / required skills).
-
-**Validates: Requirements 19.2**
-
-**Property 10: Cross-Region Assignment Detection**
-
-*For any* job assignment where the job's region differs from the technician's home region, the system should flag the assignment as cross-region.
-
-**Validates: Requirements 28.6**
-
-### Time Tracking Properties
-
-**Property 11: Clock-In Creates Time Entry**
-
-*For any* technician clocking in to a job, a time entry should be created with the current timestamp as the start time and the technician's current location (if available).
-
-**Validates: Requirements 7.1**
-
-**Property 12: Clock-Out Completes Time Entry**
-
-*For any* active time entry, clocking out should update the entry with the current timestamp as the stop time and the technician's current location (if available).
-
-**Validates: Requirements 7.2**
-
-**Property 13: Labor Hours Calculation**
-
-*For any* time entry with both clock-in and clock-out times, the total labor hours should equal the time difference in hours (clock-out time - clock-in time).
-
-**Validates: Requirements 7.3**
-
-**Property 14: Single Active Job Per Technician**
-
-*For any* technician, attempting to clock in to a second job while already clocked in to another job should be rejected.
-
-**Validates: Requirements 7.4**
-
-**Property 15: Mileage Calculation Validity**
-
-*For any* time entry with start and end locations, the calculated mileage should be non-negative and within reasonable bounds based on the distance between locations.
-
-**Validates: Requirements 8.3**
-
-### Audit and History Properties
-
-**Property 16: Status Changes Are Recorded**
-
-*For any* job status update, a status history record should be created containing the new status, timestamp, and the user who made the change.
-
-**Validates: Requirements 6.2**
-
-**Property 17: Audit Log Completeness**
-
-*For any* logged action (job creation, profile change, assignment, time entry modification), the audit log entry should contain user ID, timestamp, and action type.
-
-**Validates: Requirements 17.5**
-
-**Property 18: Time Entries Preserved on Reassignment**
-
-*For any* job reassignment, all existing time entries associated with the job should remain unchanged (no deletions or modifications).
-
-**Validates: Requirements 20.3**
-
-### Reporting and Calculation Properties
-
-**Property 19: Utilization Rate Formula**
-
-*For any* technician with recorded labor hours and available hours, the utilization rate should equal (actual labor hours / available hours) × 100.
-
-**Validates: Requirements 10.1**
-
-**Property 20: Unavailable Dates Excluded from Utilization**
-
-*For any* technician's utilization calculation, dates marked as unavailable (PTO, sick days) should not be counted in the available hours.
-
-**Validates: Requirements 10.5**
-
-**Property 21: Schedule Adherence Calculation**
-
-*For any* set of jobs in a date range, schedule adherence should equal (jobs completed on scheduled date / total jobs) × 100.
-
-**Validates: Requirements 11.4**
-
-**Property 22: System Assignment Tracking**
-
-*For any* date range, the percentage of jobs assigned through the system should equal (jobs with assignments / total jobs) × 100.
-
-**Validates: Requirements 29.1**
-
-### Notification Properties
-
-**Property 23: Assignment Notifications**
-
-*For any* job assignment to a technician, a notification should be created and delivered to that technician.
-
-**Validates: Requirements 12.1**
-
-**Property 24: Certification Expiration Notifications**
-
-*For any* certification with an expiration date within 30 days, a notification should be sent to administrators.
-
-**Validates: Requirements 26.3**
-
-### Business Logic Properties
-
-**Property 25: Expired Certifications Remove Skills**
-
-*For any* technician certification that has expired, the associated skill tag should be automatically removed from the technician's profile.
-
-**Validates: Requirements 26.4**
-
-**Property 26: Job Template Field Population**
-
-*For any* job created from a template, all fields defined in the template should be copied to the new job with their template values.
-
-**Validates: Requirements 27.4**
-
-**Property 27: Batch Operation Validation**
-
-*For any* batch operation on multiple entities, each individual operation should be validated independently, and any failures should be reported without affecting valid operations.
-
-**Validates: Requirements 21.5**
-
-**Property 28: Export Data Completeness**
-
-*For any* data export operation, the exported data should include all visible columns and respect all applied filters from the current view.
-
-**Validates: Requirements 23.5**
+### Property 1: Permission Consistency
+```typescript
+∀ user, resource, action:
+  checkPermission(user, resource, action) = true
+  ⟹ user.role has explicit permission for (resource, action)
+```
+
+### Property 2: Data Scope Enforcement
+```typescript
+∀ user, entity:
+  user.role = Technician ⟹ 
+    canAccess(user, entity) = true ⟺ entity.assignedTo = user.id
+
+∀ user, entity:
+  user.role = PM ⟹
+    canAccess(user, entity) = true ⟺ 
+      (entity.market = user.market ∧ entity.company = user.company)
+
+∀ user, entity:
+  user.role = CM ⟹
+    canAccess(user, entity) = true ⟺
+      (entity.market = user.market ∨ user.market = 'RG')
+
+∀ user, entity:
+  user.role = Admin ⟹ canAccess(user, entity) = true
+```
+
+### Property 3: Assignment Conflict Prevention
+```typescript
+∀ job1, job2, technician:
+  (assigned(technician, job1) ∧ assigned(technician, job2) ∧ job1 ≠ job2)
+  ⟹ ¬timeOverlap(job1.schedule, job2.schedule)
+```
+
+### Property 4: Location Update Atomicity
+```typescript
+∀ technician, location:
+  updateLocation(technician.id, location) succeeds
+  ⟹ (database.location = location ∧ 
+      store.location = location ∧
+      signalR.broadcast(location) completed)
+  
+  updateLocation(technician.id, location) fails
+  ⟹ (database.location = previousLocation ∧
+      store.location = previousLocation)
+```
+
+### Property 5: Real-time Notification Delivery
+```typescript
+∀ event, user:
+  (event occurs ∧ hasPermission(user, event.resource))
+  ⟹ ∃ notification: delivered(notification, user) within 5 seconds
+```
+
+### Property 6: State Consistency
+```typescript
+∀ entity:
+  entity in NgRx store ⟹ entity in backend database
+  
+∀ entity:
+  entity updated in store ⟹ 
+    (API call initiated ∧ 
+     (API success ⟹ store reflects new state) ∧
+     (API failure ⟹ store reverts to previous state))
+```
 
 ## Error Handling
 
-The Field Resource Management Tool implements comprehensive error handling across all layers:
+### Error Scenario 1: Permission Denied
 
-### Frontend Error Handling
+**Condition**: User attempts action without required permission
 
-**HTTP Error Interceptor**
-- Intercepts all HTTP errors from API calls
-- Displays user-friendly error messages via toast notifications
-- Logs errors to console in development mode
-- Handles specific status codes:
-  - 401: Redirect to login
-  - 403: Display "Access Denied" message
-  - 404: Display "Resource Not Found" message
-  - 500: Display "Server Error" message with retry option
-  - Network errors: Display "Connection Lost" message
+**Response**: 
+- HTTP 403 Forbidden returned from API
+- Error interceptor catches and displays user-friendly message
+- UI element is disabled/hidden via role enforcement directive
+- Action is logged in audit log
 
-**Form Validation Errors**
-- Real-time validation feedback on form fields
-- Display validation messages below invalid fields
-- Prevent form submission until all validations pass
-- Highlight invalid fields with red borders
+**Recovery**: 
+- User is informed of insufficient permissions
+- Suggested actions displayed (e.g., "Contact your administrator")
+- No state changes occur
 
-**State Management Errors**
-- NgRx effects catch and handle service errors
-- Update state with error information
-- Display error messages in UI components
-- Provide retry actions for failed operations
+### Error Scenario 2: Assignment Conflict Detected
 
-**SignalR Connection Errors**
-- Automatic reconnection with exponential backoff
-- Display connection status indicator
-- Queue updates during disconnection
-- Sync state upon reconnection
+**Condition**: Technician assigned to overlapping jobs
 
-### Backend Error Handling
+**Response**:
+- Conflict detection algorithm identifies overlap
+- Conflict dialog displayed with details
+- Options presented: Override, Reschedule, Cancel
 
-**Global Exception Handler**
-- Catches all unhandled exceptions
-- Logs exceptions with stack traces
-- Returns standardized error responses
-- Prevents sensitive information leakage
+**Recovery**:
+- If Override: Warning acknowledged, assignment proceeds
+- If Reschedule: Date picker shown to select new time
+- If Cancel: Assignment cancelled, no changes made
 
-**Validation Errors**
-- Model validation using Data Annotations
-- FluentValidation for complex business rules
-- Return 400 Bad Request with detailed validation errors
-- Include field-level error messages
+### Error Scenario 3: Location Update Failure
 
-**Business Logic Errors**
-- Custom exception types for domain errors:
-  - `ConflictException`: Scheduling conflicts
-  - `SkillMismatchException`: Missing required skills
-  - `AuthorizationException`: Permission denied
-  - `ResourceNotFoundException`: Entity not found
-  - `ValidationException`: Business rule violations
-- Map exceptions to appropriate HTTP status codes
-- Include actionable error messages
+**Condition**: GPS unavailable or network error during location update
 
-**Database Errors**
-- Catch and handle Entity Framework exceptions
-- Retry transient errors (connection timeouts, deadlocks)
-- Log database errors for troubleshooting
-- Return generic error messages to clients
+**Response**:
+- Location update queued in offline queue
+- User notified of offline mode
+- UI shows "Location tracking paused" indicator
 
-**File Upload Errors**
-- Validate file size before upload
-- Validate file types (whitelist approach)
-- Handle Azure Blob Storage errors
-- Clean up partial uploads on failure
+**Recovery**:
+- When connectivity restored, queued updates sent
+- If GPS unavailable, manual location entry option shown
+- Fallback to last known location for display
 
-### Error Response Format
+### Error Scenario 4: Real-time Connection Lost
 
-All API errors follow a consistent format:
+**Condition**: SignalR connection drops
 
-```typescript
-interface ErrorResponse {
-  statusCode: number;
-  message: string;
-  errors?: Record<string, string[]>; // Field-level validation errors
-  traceId: string; // For support troubleshooting
-  timestamp: Date;
-}
-```
+**Response**:
+- Connection status indicator shows "Disconnected"
+- Automatic reconnection attempts (exponential backoff)
+- Polling fallback for critical updates
 
-### Logging Strategy
+**Recovery**:
+- When reconnected, missed updates fetched via API
+- Store synchronized with latest backend state
+- User notified of reconnection
 
-**Application Insights Integration**
-- Log all errors with severity levels
-- Track custom events for business operations
-- Monitor performance metrics
-- Set up alerts for critical errors
+### Error Scenario 5: Data Scope Violation
 
-**Log Levels**
-- Error: Exceptions and failures
-- Warning: Validation failures, conflicts, skill mismatches
-- Information: Successful operations, assignments, completions
-- Debug: Detailed execution flow (development only)
+**Condition**: User attempts to access entity outside their scope
 
-**Sensitive Data Protection**
-- Never log passwords or authentication tokens
-- Mask PII in logs (email, phone, SSN)
-- Sanitize user input before logging
+**Response**:
+- Backend returns 403 or filtered empty result
+- Frontend selector filters out unauthorized entities
+- Audit log records attempted access
+
+**Recovery**:
+- User sees empty state or "No data available"
+- No error message shown (security by obscurity)
+- No indication that data exists but is restricted
 
 ## Testing Strategy
 
-The Field Resource Management Tool employs a comprehensive dual testing approach combining unit tests and property-based tests to ensure correctness and reliability.
+### Unit Testing Approach
 
-### Testing Philosophy
+**Permission Service Tests**:
+- Test each role's permissions against all resources
+- Verify condition evaluation logic
+- Test edge cases (null user, invalid role, etc.)
+- Mock NgRx store and API calls
 
-**Complementary Testing Approaches:**
-- **Unit Tests**: Verify specific examples, edge cases, and error conditions
-- **Property Tests**: Verify universal properties across all inputs through randomization
-- Both approaches are necessary for comprehensive coverage
-- Unit tests catch concrete bugs; property tests verify general correctness
+**Selector Tests**:
+- Test data scope filtering for each role
+- Verify selector memoization
+- Test with empty state and populated state
+- Verify derived data calculations
 
-### Property-Based Testing
+**Component Tests**:
+- Test permission-based rendering
+- Verify form validation
+- Test user interactions and event emissions
+- Mock services and store
 
-**Framework Selection:**
-- **Frontend**: fast-check (TypeScript property-based testing library)
-- **Backend**: FsCheck (F# property-based testing library for .NET)
+**Coverage Goal**: 80% code coverage minimum
 
-**Configuration:**
-- Minimum 100 iterations per property test (due to randomization)
-- Configurable seed for reproducible test runs
-- Shrinking enabled to find minimal failing examples
+### Property-Based Testing Approach
 
-**Property Test Organization:**
+**Property Test Library**: fast-check (for TypeScript/JavaScript)
 
-Each correctness property from the design document must be implemented as a property-based test with the following tag format:
+**Key Properties to Test**:
 
+1. **Permission Idempotence**:
 ```typescript
-// Feature: field-resource-management, Property 7: Scheduling Conflicts Are Detected and Prevented
-```
-
-**Example Property Test (Frontend):**
-
-```typescript
-import * as fc from 'fast-check';
-
-describe('Scheduling Service - Property Tests', () => {
-  // Feature: field-resource-management, Property 7: Scheduling Conflicts Are Detected and Prevented
-  it('should detect conflicts for overlapping assignments', () => {
-    fc.assert(
-      fc.property(
-        fc.record({
-          technicianId: fc.uuid(),
-          job1: fc.record({
-            id: fc.uuid(),
-            startDate: fc.date(),
-            endDate: fc.date()
-          }),
-          job2: fc.record({
-            id: fc.uuid(),
-            startDate: fc.date(),
-            endDate: fc.date()
-          })
-        }),
-        (data) => {
-          // Ensure job1 dates are valid
-          if (data.job1.endDate < data.job1.startDate) {
-            [data.job1.startDate, data.job1.endDate] = [data.job1.endDate, data.job1.startDate];
-          }
-          
-          // Ensure job2 dates are valid
-          if (data.job2.endDate < data.job2.startDate) {
-            [data.job2.startDate, data.job2.endDate] = [data.job2.endDate, data.job2.startDate];
-          }
-          
-          // Check if jobs overlap
-          const overlaps = 
-            (data.job1.startDate <= data.job2.endDate) &&
-            (data.job2.startDate <= data.job1.endDate);
-          
-          // Assign job1
-          schedulingService.assignTechnician(data.job1.id, data.technicianId);
-          
-          // Try to assign job2
-          const result = schedulingService.checkConflicts(data.technicianId, data.job2.id);
-          
-          // If jobs overlap, conflicts should be detected
-          if (overlaps) {
-            expect(result.length).toBeGreaterThan(0);
-          }
-        }
-      ),
-      { numRuns: 100 }
-    );
-  });
-});
-```
-
-**Example Property Test (Backend):**
-
-```csharp
-using FsCheck;
-using FsCheck.Xunit;
-
-public class TimeTrackingPropertyTests
-{
-    // Feature: field-resource-management, Property 13: Labor Hours Calculation
-    [Property(Arbitrary = new[] { typeof(Generators) })]
-    public Property LaborHoursEqualsTimeDifference(DateTime clockIn, DateTime clockOut)
-    {
-        return (clockOut > clockIn).ImpliesProperty(() =>
-        {
-            var timeEntry = new TimeEntry
-            {
-                ClockInTime = clockIn,
-                ClockOutTime = clockOut
-            };
-            
-            var calculatedHours = timeTrackingService.CalculateLaborHours(timeEntry);
-            var expectedHours = (clockOut - clockIn).TotalHours;
-            
-            return (Math.Abs(calculatedHours - expectedHours) < 0.001)
-                .Label($"Expected {expectedHours}, got {calculatedHours}");
-        });
+fc.assert(
+  fc.property(
+    fc.record({ role: fc.constantFrom(...Object.values(UserRole)) }),
+    fc.constantFrom(...Object.values(ResourceType)),
+    fc.constantFrom(...Object.values(PermissionAction)),
+    (user, resource, action) => {
+      const result1 = checkPermission(user, resource, action);
+      const result2 = checkPermission(user, resource, action);
+      return result1 === result2; // Same inputs = same output
     }
-}
+  )
+);
 ```
 
-### Unit Testing
-
-**Framework Selection:**
-- **Frontend**: Jasmine + Karma (Angular default)
-- **Backend**: xUnit + Moq
-
-**Unit Test Focus Areas:**
-
-1. **Component Tests**
-   - Component initialization
-   - User interactions (button clicks, form submissions)
-   - Data binding and display
-   - Navigation and routing
-   - Error message display
-
-2. **Service Tests**
-   - HTTP request/response handling
-   - Error handling and retry logic
-   - Data transformation
-   - State updates
-
-3. **Business Logic Tests**
-   - Specific edge cases (empty lists, null values)
-   - Boundary conditions (max file size, character limits)
-   - Error conditions (invalid input, missing data)
-   - Integration between components
-
-4. **State Management Tests**
-   - Action dispatching
-   - Reducer logic
-   - Selector outputs
-   - Effect side effects
-
-**Example Unit Test:**
-
+2. **Data Scope Filtering Preserves Order**:
 ```typescript
-describe('TechnicianFormComponent', () => {
-  it('should reject technician creation when required fields are missing', () => {
-    const component = fixture.componentInstance;
-    component.technicianForm.patchValue({
-      firstName: 'John',
-      lastName: 'Doe'
-      // Missing technicianId, role, homeBase
-    });
-    
-    expect(component.technicianForm.valid).toBeFalse();
-    expect(component.technicianForm.get('technicianId')?.errors?.['required']).toBeTruthy();
-  });
-  
-  it('should validate email format', () => {
-    const component = fixture.componentInstance;
-    component.technicianForm.patchValue({
-      email: 'invalid-email'
-    });
-    
-    expect(component.technicianForm.get('email')?.errors?.['email']).toBeTruthy();
-  });
-});
+fc.assert(
+  fc.property(
+    fc.array(fc.record({ id: fc.uuid(), market: fc.string() })),
+    fc.record({ role: fc.constantFrom(...Object.values(UserRole)) }),
+    (data, user) => {
+      const filtered = filterDataByScope(data, user);
+      const filteredIds = filtered.map(e => e.id);
+      const originalIds = data.map(e => e.id);
+      
+      // Filtered IDs appear in same order as original
+      return isSubsequence(filteredIds, originalIds);
+    }
+  )
+);
 ```
 
-### Integration Testing
-
-**API Integration Tests:**
-- Test complete request/response cycles
-- Use in-memory database for isolation
-- Test authentication and authorization
-- Test file upload/download
-- Test SignalR connections
-
-**End-to-End Tests:**
-- Critical user workflows only (avoid over-testing)
-- Use Cypress or Playwright
-- Test: Login → Create Job → Assign Technician → Clock In → Complete Job
-- Test: Create Technician → Add Skills → Assign to Job
-- Run in CI/CD pipeline
-
-### Test Coverage Goals
-
-- **Unit Test Coverage**: 80%+ for business logic and services
-- **Property Test Coverage**: 100% of correctness properties implemented
-- **Integration Test Coverage**: All API endpoints
-- **E2E Test Coverage**: Critical user workflows
-
-### Continuous Integration
-
-**Test Execution:**
-- Run all unit tests on every commit
-- Run property tests (100 iterations) on every commit
-- Run integration tests on pull requests
-- Run E2E tests nightly and before releases
-
-**Quality Gates:**
-- All tests must pass before merge
-- Code coverage must meet thresholds
-- No critical security vulnerabilities
-- Performance benchmarks must pass
-
-### Test Data Generation
-
-**Property Test Generators:**
-- Custom generators for domain entities (Technician, Job, Assignment)
-- Constrained generators (valid dates, non-empty strings, valid enums)
-- Relationship generators (technician with skills, job with assignments)
-
-**Example Generator:**
-
+3. **Assignment Conflict Detection is Symmetric**:
 ```typescript
-const technicianArbitrary = fc.record({
-  id: fc.uuid(),
-  technicianId: fc.string({ minLength: 1, maxLength: 20 }),
-  firstName: fc.string({ minLength: 1, maxLength: 50 }),
-  lastName: fc.string({ minLength: 1, maxLength: 50 }),
-  email: fc.emailAddress(),
-  phone: fc.string({ minLength: 10, maxLength: 15 }),
-  role: fc.constantFrom('Installer', 'Lead', 'Level1', 'Level2', 'Level3', 'Level4'),
-  employmentType: fc.constantFrom('W2', '1099'),
-  homeBase: fc.string({ minLength: 1, maxLength: 100 }),
-  region: fc.string({ minLength: 1, maxLength: 50 }),
-  skills: fc.array(skillArbitrary, { minLength: 0, maxLength: 10 }),
-  isActive: fc.boolean()
-});
+fc.assert(
+  fc.property(
+    fc.uuid(),
+    fc.uuid(),
+    fc.date(),
+    fc.date(),
+    (job1, job2, start, end) => {
+      const conflicts1 = detectConflicts(job1, tech, start, end);
+      const conflicts2 = detectConflicts(job2, tech, start, end);
+      
+      // If job1 conflicts with job2, then job2 conflicts with job1
+      return (conflicts1.length > 0) === (conflicts2.length > 0);
+    }
+  )
+);
 ```
 
-### Testing Best Practices
+### Integration Testing Approach
 
-1. **Keep Tests Fast**: Unit and property tests should run in seconds
-2. **Isolate Tests**: No shared state between tests
-3. **Clear Test Names**: Describe what is being tested and expected outcome
-4. **Arrange-Act-Assert**: Follow AAA pattern for clarity
-5. **Test Behavior, Not Implementation**: Focus on what, not how
-6. **Avoid Test Duplication**: Property tests cover many cases; don't duplicate with unit tests
-7. **Use Meaningful Assertions**: Provide context in assertion messages
-8. **Clean Up Resources**: Dispose of services, close connections
-9. **Mock External Dependencies**: Don't call real APIs or databases in unit tests
-10. **Review Test Failures**: Understand why tests fail before fixing
+**NgRx Integration Tests**:
+- Test complete action → effect → reducer → selector flow
+- Verify API integration with mock backend
+- Test error handling and retry logic
+- Verify state persistence
 
+**Component Integration Tests**:
+- Test component interaction with store
+- Verify routing and navigation
+- Test real-time updates via SignalR mock
+- Test form submission and validation
+
+**E2E Scenarios**:
+- Complete user workflows (login → assign job → track completion)
+- Cross-role interactions (CM assigns, technician accepts)
+- Real-time collaboration scenarios
+- Offline/online transitions
+
+## Performance Considerations
+
+**Virtual Scrolling**: 
+- Implement virtual scrolling for lists > 100 items
+- Use CDK Virtual Scroll for technician and job lists
+- Render only visible items + buffer
+
+**Lazy Loading**:
+- Feature modules loaded on-demand
+- Route-based code splitting
+- Reduce initial bundle size
+
+**Memoization**:
+- Use NgRx selector memoization
+- Cache expensive calculations (KPI metrics, distance calculations)
+- Implement request caching with TTL
+
+**Real-time Optimization**:
+- Throttle location updates to 30-second intervals
+- Batch SignalR notifications
+- Use WebSocket compression
+
+**Map Performance**:
+- Cluster markers when zoomed out
+- Lazy load map tiles
+- Limit simultaneous marker animations
+
+## Security Considerations
+
+**Authentication**:
+- JWT tokens with short expiration (15 minutes)
+- Refresh token rotation
+- Secure token storage (httpOnly cookies)
+
+**Authorization**:
+- Permission checks on every API call
+- Frontend permission checks for UX only (not security boundary)
+- Backend enforces all authorization rules
+
+**Data Protection**:
+- HTTPS only for all communications
+- Encrypt sensitive data at rest
+- Sanitize all user inputs
+- XSS protection via Angular's built-in sanitization
+
+**Audit Logging**:
+- Log all permission checks
+- Log all data access attempts
+- Log all state changes
+- Retain logs for compliance
+
+**Location Privacy**:
+- Technicians can disable tracking when off-duty
+- Location data encrypted in transit and at rest
+- Location history retention policy (30 days)
+- GDPR compliance for location data
+
+## Dependencies
+
+**Core Framework**:
+- Angular 15+
+- NgRx 15+ (Store, Effects, Entity)
+- RxJS 7+
+- TypeScript 4.9+
+
+**UI Libraries**:
+- Angular Material or PrimeNG
+- Leaflet or Google Maps for mapping
+- Chart.js or D3.js for visualizations
+
+**Real-time**:
+- @microsoft/signalr
+- Socket.io (alternative)
+
+**Utilities**:
+- date-fns or moment.js for date handling
+- lodash for utility functions
+- uuid for ID generation
+
+**Testing**:
+- Jasmine/Karma for unit tests
+- fast-check for property-based tests
+- Cypress or Playwright for E2E tests
+
+**Build & Dev**:
+- Angular CLI
+- Webpack
+- ESLint + Prettier
+- Husky for git hooks

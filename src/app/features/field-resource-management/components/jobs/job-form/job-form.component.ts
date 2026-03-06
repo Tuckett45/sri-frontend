@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -39,7 +39,8 @@ import { AuthService } from '../../../../../services/auth.service';
 @Component({
   selector: 'frm-job-form',
   templateUrl: './job-form.component.html',
-  styleUrls: ['./job-form.component.scss']
+  styleUrls: ['./job-form.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class JobFormComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

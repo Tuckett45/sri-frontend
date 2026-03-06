@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
 import { Observable, Subject, interval, combineLatest } from 'rxjs';
 import { takeUntil, map, startWith } from 'rxjs/operators';
 import { AuthService } from '../../../../../services/auth.service';
@@ -155,7 +156,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private workflowService: WorkflowService,
     private userManagementService: UserManagementService,
-    private roleBasedDataService: RoleBasedDataService
+    private roleBasedDataService: RoleBasedDataService,
+    private router: Router
   ) {}
   
   ngOnInit(): void {
@@ -475,40 +477,38 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
    * Navigate to user management page
    */
   navigateToUserManagement(): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('Navigate to user management');
+    this.router.navigate(['/field-resource-management/admin/users']);
   }
   
   /**
    * Navigate to system configuration page
    */
   navigateToSystemConfiguration(): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('Navigate to system configuration');
+    this.router.navigate(['/field-resource-management/admin/configuration']);
   }
   
   /**
    * View detailed metrics for a specific market
    */
   viewMarketDetails(market: string): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('View market details:', market);
+    // Navigate to dashboard with market filter
+    this.router.navigate(['/field-resource-management/dashboard'], {
+      queryParams: { market }
+    });
   }
   
   /**
    * Navigate to user approval detail
    */
   navigateToUserApprovalDetail(userId: string): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('Navigate to user approval:', userId);
+    this.router.navigate(['/field-resource-management/admin/users', userId]);
   }
   
   /**
    * Navigate to escalated approval detail
    */
   navigateToEscalatedApprovalDetail(approvalId: string): void {
-    // TODO: Implement navigation when routing is set up
-    console.log('Navigate to escalated approval:', approvalId);
+    this.router.navigate(['/field-resource-management/approvals', approvalId]);
   }
   
   /**

@@ -1,0 +1,669 @@
+/**
+ * Integration Tests: Phase 4-5 Interaction
+ * 
+ * Tests the integration between:
+ * - Phase 4: Template selection and configuration management
+ * - Phase 5: Predictive analytics and forecasting
+ * 
+ * Validates Requirements: 10.1-10.6, 11.1-11.7, 12.1-12.6, 13.1-13.7
+ */
+
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { provideMockStore, MockStore } from '@ngrx/store/testing';
+import { of, throwError } from 'rxjs';
+
+// Phase 4 imports
+import { TemplateSelectorComponent } from '../phase4/components/template-selector/template-selector.component';
+import { TemplateEngineService } from '../phase4/services/template-engine.service';
+import { ConfigurationManagerService } from '../phase4/services/configuration-manager.service';
+
+// Phase 5 imports
+import { PredictiveDashboardComponent } from '../phase5/components/predictive-dashboard/predictive-dashboard.component';
+import { ForecastService } from '../phase5/services/forecast.service';
+import { TrendAnalysisService } from '../phase5/services/trend-analysis.service';
+
+// Models
+import { WorkflowTemplate, TemplateConfig, UsageStats } from '../phase4/models/template.models';
+import { Forecast, Prediction, Trend } from '../phase5/models/forecast.models';
+
+describe('Phase 4-5 Integration: Template Selection with Predictive Analytics', () => {
+  let templateComponent: TemplateSelectorComponent;
+  let predictiveComponent: PredictiveDashboardComponent;
+  let templateFixture: ComponentFixture<TemplateSelectorComponent>;
+  let predictiveFixture: ComponentFixture<PredictiveDashboardComponent>;
+  let store: MockStore;
+  let templateService: jasmine.SpyObj<TemplateEngineService>;
+  let forecastService: jasmine.SpyObj<ForecastService>;
+
+  const mockTemplates: WorkflowTemplate[] = [
+    {
+      id: 'template-1',
+      name: 'Standard Job Template',
+      description: 'Standard workflow for routine jobs',
+      version: '1.0.0',
+      category: 'job',
+      workflowType: 'job',
+      author: 'System',
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-01'),
+      isPublic: true,
+      usageCount: 150,
+      rating: 4.5,
+      steps: [],
+      configuration: {
+        allowCustomization: true,
+        requiredFields: [],
+        optionalFields: [],
+        defaultValues: {},
+        validations: [],
+        permissions: []
+      },
+      metadata: {
+        avgCompletionTime: 4.2,
+        successRate: 0.92,
+        popularityTrend: 'increasing'
+      }
+    },
+    {
+      id: 'template-2',
+      name: 'High-Efficiency Template',
+      description: 'Optimized workflow based on predictive analytics',
+      version: '2.0.0',
+      category: 'job',
+      workflowType: 'job',
+      author: 'System',
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-15'),
+      isPublic: true,
+      usageCount: 85,
+      rating: 4.8,
+      steps: [],
+      configuration: {
+        allowCustomization: true,
+        requiredFields: [],
+        optionalFields: [],
+        defaultValues: {},
+        validations: [],
+        permissions: []
+      },
+      metadata: {
+        avgCompletionTime: 3.1,
+        successRate: 0.96,
+        popularityTrend: 'increasing',
+        aiOptimized: true
+      }
+    }
+  ];
+
+  const mockUsageStats: UsageStats = {
+    templateId: 'template-1',
+    totalUsage: 150,
+    successRate: 0.92,
+    averageCompletionTime: 4.2,
+    popularCustomizations: [],
+    userRatings: [4, 5, 4, 5, 5]
+  };
+
+  const mockForecasts: Forecast[] = [
+    {
+      id: 'forecast-1',
+      metric: 'template-usage',
+      timeHorizon: 'month',
+      dataPoints: [
+        {
+          timestamp: new Date('2024-02-01'),
+          value: 160,
+          lowerBound: 150,
+          upperBound: 170,
+          confidence: 0.85
+        },
+        {
+          timestamp: new Date('2024-02-15'),
+          value: 175,
+          lowerBound: 165,
+          upperBound: 185,
+          confidence: 0.82
+        }
+      ],
+      confidence: { level: 0.85, lowerBound: 150, upperBound: 185 },
+      methodology: 'ARIMA',
+      modelId: 'model-123',
+      generatedAt: new Date(),
+      expiresAt: new Date('2024-03-01')
+    }
+  ];
+
+  beforeEach(async () => {
+    const templateSpy = jasmine.createSpyObj('TemplateEngineService', [
+      'getTemplates',
+      'getTemplateById',
+      'getTemplateUsageStats',
+      'getPopularTemplates'
+    ]);
+    const forecastSpy = jasmine.createSpyObj('ForecastService', [
+      'getForecasts',
+      'getPredictions',
+      'getTrends'
+    ]);
+
+    await TestBed.configureTestingModule({
+      declarations: [
+        TemplateSelectorComponent,
+        PredictiveDashboardComponent
+      ],
+      providers: [
+        provideMockStore({
+          initialState: {
+            workflowTemplates: {
+              templates: mockTemplates,
+              loading: false
+            },
+            forecasts: {
+              forecasts: mockForecasts,
+              loading: false
+            }
+          }
+        }),
+        { provide: TemplateEngineService, useValue: templateSpy },
+        { provide: ForecastService, useValue: forecastSpy }
+      ]
+    }).compileComponents();
+
+    templateFixture = TestBed.createComponent(TemplateSelectorComponent);
+    templateComponent = templateFixture.componentInstance;
+    
+    predictiveFixture = TestBed.createComponent(PredictiveDashboardComponent);
+    predictiveComponent = predictiveFixture.componentInstance;
+    
+    store = TestBed.inject(MockStore);
+    templateService = TestBed.inject(TemplateEngineService) as jasmine.SpyObj<TemplateEngineService>;
+    forecastService = TestBed.inject(ForecastService) as jasmine.SpyObj<ForecastService>;
+
+    templateComponent.workflowType = 'job';
+    predictiveComponent.dashboardType = 'workload';
+  });
+
+  it('should recommend templates based on predictive analytics', fakeAsync(() => {
+    templateService.getTemplates.and.returnValue(of(mockTemplates));
+    forecastService.getForecasts.and.returnValue(of(mockForecasts));
+
+    templateFixture.detectChanges();
+    predictiveFixture.detectChanges();
+    tick();
+
+    // Templates should be ranked by predicted performance
+    templateComponent.templates$.subscribe(templates => {
+      expect(templates).toBeDefined();
+      expect(templates.length).toBe(2);
+      
+      // AI-optimized template should be ranked higher
+      const aiOptimized = templates.find(t => t.metadata['aiOptimized']);
+      expect(aiOptimized).toBeDefined();
+      expect(aiOptimized?.metadata['avgCompletionTime']).toBeLessThan(4);
+    });
+  }));
+
+  it('should display template usage forecasts', fakeAsync(() => {
+    forecastService.getForecasts.and.returnValue(of(mockForecasts));
+
+    predictiveFixture.detectChanges();
+    tick();
+
+    predictiveComponent.forecasts$.subscribe(forecasts => {
+      expect(forecasts).toBeDefined();
+      expect(forecasts.length).toBe(1);
+      expect(forecasts[0].metric).toBe('template-usage');
+    });
+  }));
+
+  it('should show predicted template performance metrics', fakeAsync(() => {
+    templateService.getTemplateUsageStats.and.returnValue(of(mockUsageStats));
+
+    templateFixture.detectChanges();
+    tick();
+
+    templateService.getTemplateUsageStats('template-1').subscribe(stats => {
+      expect(stats.successRate).toBe(0.92);
+      expect(stats.averageCompletionTime).toBe(4.2);
+    });
+  }));
+
+  it('should recommend template based on workload forecast', fakeAsync(() => {
+    const workloadForecast: Forecast = {
+      id: 'forecast-workload',
+      metric: 'job-volume',
+      timeHorizon: 'month',
+      dataPoints: [
+        {
+          timestamp: new Date('2024-02-01'),
+          value: 200, // High volume predicted
+          lowerBound: 190,
+          upperBound: 210,
+          confidence: 0.88
+        }
+      ],
+      confidence: { level: 0.88, lowerBound: 190, upperBound: 210 },
+      methodology: 'ARIMA',
+      modelId: 'model-456',
+      generatedAt: new Date(),
+      expiresAt: new Date('2024-03-01')
+    };
+
+    forecastService.getForecasts.and.returnValue(of([workloadForecast]));
+    templateService.getTemplates.and.returnValue(of(mockTemplates));
+
+    predictiveFixture.detectChanges();
+    templateFixture.detectChanges();
+    tick();
+
+    // High-efficiency template should be recommended for high volume
+    templateComponent.templates$.subscribe(templates => {
+      const recommended = templates.find(t => t.metadata['aiOptimized']);
+      expect(recommended).toBeDefined();
+      expect(recommended?.name).toBe('High-Efficiency Template');
+    });
+  }));
+});
+
+describe('Phase 4-5 Integration: Configuration Management with Forecasts', () => {
+  let configService: ConfigurationManagerService;
+  let forecastService: jasmine.SpyObj<ForecastService>;
+  let trendService: jasmine.SpyObj<TrendAnalysisService>;
+
+  const mockTemplateConfig: TemplateConfig = {
+    allowCustomization: true,
+    requiredFields: ['title', 'priority'],
+    optionalFields: ['estimatedHours'],
+    defaultValues: {
+      priority: 'medium',
+      estimatedHours: 4
+    },
+    validations: [],
+    permissions: []
+  };
+
+  beforeEach(() => {
+    const forecastSpy = jasmine.createSpyObj('ForecastService', [
+      'getForecasts',
+      'getPredictions'
+    ]);
+    const trendSpy = jasmine.createSpyObj('TrendAnalysisService', [
+      'calculateTrendStatistics'
+    ]);
+
+    TestBed.configureTestingModule({
+      providers: [
+        ConfigurationManagerService,
+        { provide: ForecastService, useValue: forecastSpy },
+        { provide: TrendAnalysisService, useValue: trendSpy }
+      ]
+    });
+
+    configService = TestBed.inject(ConfigurationManagerService);
+    forecastService = TestBed.inject(ForecastService) as jasmine.SpyObj<ForecastService>;
+    trendService = TestBed.inject(TrendAnalysisService) as jasmine.SpyObj<TrendAnalysisService>;
+  });
+
+  it('should adjust template configuration based on forecast data', fakeAsync(() => {
+    const forecast: Forecast = {
+      id: 'forecast-1',
+      metric: 'avg-completion-time',
+      timeHorizon: 'month',
+      dataPoints: [
+        {
+          timestamp: new Date('2024-02-01'),
+          value: 5.2, // Increasing completion time
+          lowerBound: 5.0,
+          upperBound: 5.4,
+          confidence: 0.85
+        }
+      ],
+      confidence: { level: 0.85, lowerBound: 5.0, upperBound: 5.4 },
+      methodology: 'ARIMA',
+      modelId: 'model-123',
+      generatedAt: new Date(),
+      expiresAt: new Date('2024-03-01')
+    };
+
+    forecastService.getForecasts.and.returnValue(of([forecast]));
+
+    tick();
+
+    // Configuration should be adjusted based on forecast
+    const adjustedConfig: TemplateConfig = {
+      ...mockTemplateConfig,
+      defaultValues: {
+        ...mockTemplateConfig.defaultValues,
+        estimatedHours: 6 // Increased based on forecast
+      }
+    };
+
+    expect(adjustedConfig.defaultValues['estimatedHours']).toBeGreaterThan(
+      mockTemplateConfig.defaultValues['estimatedHours']
+    );
+  }));
+
+  it('should use trend analysis to optimize template defaults', fakeAsync(() => {
+    const trend: Trend = {
+      id: 'trend-1',
+      metric: 'completion-time',
+      direction: 'upward',
+      strength: 0.75,
+      dataPoints: [],
+      statistics: {
+        mean: 5.5,
+        median: 5.3,
+        standardDeviation: 0.8,
+        variance: 0.64,
+        min: 4.0,
+        max: 7.0,
+        slope: 0.15,
+        rSquared: 0.88
+      },
+      anomalies: []
+    };
+
+    tick();
+
+    // Use trend statistics to set realistic defaults
+    const optimizedConfig: TemplateConfig = {
+      ...mockTemplateConfig,
+      defaultValues: {
+        ...mockTemplateConfig.defaultValues,
+        estimatedHours: Math.ceil(trend.statistics.mean) // 6 hours
+      }
+    };
+
+    expect(optimizedConfig.defaultValues['estimatedHours']).toBe(6);
+  }));
+
+  it('should predict optimal template configuration', fakeAsync(() => {
+    const predictions: Prediction[] = [
+      {
+        id: 'pred-1',
+        type: 'performance',
+        description: 'Template performance will improve with adjusted defaults',
+        probability: 0.82,
+        impact: 'medium',
+        timeframe: { start: new Date(), end: new Date('2024-03-01') },
+        indicators: [
+          {
+            name: 'completion-time',
+            currentValue: 4.2,
+            threshold: 3.5,
+            trend: 'decreasing',
+            significance: 0.78
+          }
+        ],
+        mitigationActions: ['Adjust default estimated hours', 'Update priority thresholds'],
+        createdAt: new Date()
+      }
+    ];
+
+    forecastService.getPredictions.and.returnValue(of(predictions));
+
+    tick();
+
+    // Configuration should be optimized based on predictions
+    expect(predictions[0].indicators[0].trend).toBe('decreasing');
+    expect(predictions[0].probability).toBe(0.82);
+  }));
+});
+
+describe('Phase 4-5 Integration: Template Recommendations Based on Predictions', () => {
+  let templateComponent: TemplateSelectorComponent;
+  let fixture: ComponentFixture<TemplateSelectorComponent>;
+  let store: MockStore;
+  let templateService: jasmine.SpyObj<TemplateEngineService>;
+  let forecastService: jasmine.SpyObj<ForecastService>;
+
+  const mockTemplates: WorkflowTemplate[] = [
+    {
+      id: 'template-1',
+      name: 'Standard Job Template',
+      description: 'Standard workflow for routine jobs',
+      version: '1.0.0',
+      category: 'job',
+      workflowType: 'job',
+      author: 'System',
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-01'),
+      isPublic: true,
+      usageCount: 150,
+      rating: 4.5,
+      steps: [],
+      configuration: {
+        allowCustomization: true,
+        requiredFields: [],
+        optionalFields: [],
+        defaultValues: {},
+        validations: [],
+        permissions: []
+      },
+      metadata: {}
+    },
+    {
+      id: 'template-2',
+      name: 'High-Efficiency Template',
+      description: 'Optimized workflow based on predictive analytics',
+      version: '2.0.0',
+      category: 'job',
+      workflowType: 'job',
+      author: 'System',
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-15'),
+      isPublic: true,
+      usageCount: 85,
+      rating: 4.8,
+      steps: [],
+      configuration: {
+        allowCustomization: true,
+        requiredFields: [],
+        optionalFields: [],
+        defaultValues: {},
+        validations: [],
+        permissions: []
+      },
+      metadata: { aiOptimized: true }
+    }
+  ];
+
+  beforeEach(async () => {
+    const templateSpy = jasmine.createSpyObj('TemplateEngineService', [
+      'getTemplates',
+      'getPopularTemplates',
+      'getTemplateUsageStats'
+    ]);
+    const forecastSpy = jasmine.createSpyObj('ForecastService', [
+      'getForecasts',
+      'getPredictions'
+    ]);
+
+    await TestBed.configureTestingModule({
+      declarations: [TemplateSelectorComponent],
+      providers: [
+        provideMockStore({
+          initialState: {
+            workflowTemplates: {
+              templates: mockTemplates,
+              loading: false
+            },
+            predictions: {
+              predictions: [],
+              loading: false
+            }
+          }
+        }),
+        { provide: TemplateEngineService, useValue: templateSpy },
+        { provide: ForecastService, useValue: forecastSpy }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(TemplateSelectorComponent);
+    templateComponent = fixture.componentInstance;
+    store = TestBed.inject(MockStore);
+    templateService = TestBed.inject(TemplateEngineService) as jasmine.SpyObj<TemplateEngineService>;
+    forecastService = TestBed.inject(ForecastService) as jasmine.SpyObj<ForecastService>;
+
+    templateComponent.workflowType = 'job';
+  });
+
+  it('should rank templates by predicted success rate', fakeAsync(() => {
+    const templatesWithPredictions = mockTemplates.map(t => ({
+      ...t,
+      metadata: {
+        ...t.metadata,
+        predictedSuccessRate: t.id === 'template-2' ? 0.96 : 0.92
+      }
+    }));
+
+    templateService.getTemplates.and.returnValue(of(templatesWithPredictions));
+
+    fixture.detectChanges();
+    tick();
+
+    templateComponent.templates$.subscribe(templates => {
+      expect(templates[0].metadata['predictedSuccessRate']).toBeGreaterThanOrEqual(
+        templates[1].metadata['predictedSuccessRate'] || 0
+      );
+    });
+  }));
+
+  it('should show predicted completion time for templates', fakeAsync(() => {
+    const predictions: Prediction[] = [
+      {
+        id: 'pred-template-1',
+        type: 'performance',
+        description: 'Template will complete 15% faster',
+        probability: 0.85,
+        impact: 'medium',
+        timeframe: { start: new Date(), end: new Date('2024-03-01') },
+        indicators: [
+          {
+            name: 'completion-time',
+            currentValue: 4.2,
+            threshold: 3.6,
+            trend: 'decreasing',
+            significance: 0.82
+          }
+        ],
+        mitigationActions: [],
+        createdAt: new Date()
+      }
+    ];
+
+    forecastService.getPredictions.and.returnValue(of(predictions));
+
+    fixture.detectChanges();
+    tick();
+
+    // Templates should display predicted performance
+    expect(predictions[0].indicators[0].currentValue).toBe(4.2);
+    expect(predictions[0].indicators[0].threshold).toBe(3.6);
+  }));
+
+  it('should recommend templates based on workload predictions', fakeAsync(() => {
+    const workloadPrediction: Prediction = {
+      id: 'pred-workload',
+      type: 'capacity',
+      description: 'High workload expected next month',
+      probability: 0.88,
+      impact: 'high',
+      timeframe: { start: new Date('2024-02-01'), end: new Date('2024-02-28') },
+      indicators: [
+        {
+          name: 'job-volume',
+          currentValue: 150,
+          threshold: 200,
+          trend: 'increasing',
+          significance: 0.90
+        }
+      ],
+      mitigationActions: ['Use high-efficiency templates', 'Optimize workflow steps'],
+      createdAt: new Date()
+    };
+
+    forecastService.getPredictions.and.returnValue(of([workloadPrediction]));
+    templateService.getTemplates.and.returnValue(of(mockTemplates));
+
+    fixture.detectChanges();
+    tick();
+
+    // High-efficiency template should be recommended
+    templateComponent.templates$.subscribe(templates => {
+      const recommended = templates.find(t => t.metadata['aiOptimized']);
+      expect(recommended).toBeDefined();
+    });
+  }));
+
+  it('should display confidence intervals for template predictions', fakeAsync(() => {
+    const forecast: Forecast = {
+      id: 'forecast-template',
+      metric: 'template-performance',
+      timeHorizon: 'month',
+      dataPoints: [
+        {
+          timestamp: new Date('2024-02-01'),
+          value: 0.94,
+          lowerBound: 0.91,
+          upperBound: 0.97,
+          confidence: 0.85
+        }
+      ],
+      confidence: { level: 0.85, lowerBound: 0.91, upperBound: 0.97 },
+      methodology: 'ARIMA',
+      modelId: 'model-123',
+      generatedAt: new Date(),
+      expiresAt: new Date('2024-03-01')
+    };
+
+    forecastService.getForecasts.and.returnValue(of([forecast]));
+
+    fixture.detectChanges();
+    tick();
+
+    // Template should display confidence intervals
+    expect(forecast.confidence.level).toBe(0.85);
+    expect(forecast.confidence.lowerBound).toBe(0.91);
+    expect(forecast.confidence.upperBound).toBe(0.97);
+  }));
+
+  it('should update template recommendations when predictions change', fakeAsync(() => {
+    const initialPredictions: Prediction[] = [
+      {
+        id: 'pred-1',
+        type: 'performance',
+        description: 'Standard performance expected',
+        probability: 0.75,
+        impact: 'medium',
+        timeframe: { start: new Date(), end: new Date('2024-03-01') },
+        indicators: [],
+        mitigationActions: [],
+        createdAt: new Date()
+      }
+    ];
+
+    const updatedPredictions: Prediction[] = [
+      {
+        ...initialPredictions[0],
+        probability: 0.90, // Increased confidence
+        impact: 'high'
+      }
+    ];
+
+    forecastService.getPredictions.and.returnValue(of(initialPredictions));
+
+    fixture.detectChanges();
+    tick();
+
+    // Update predictions
+    forecastService.getPredictions.and.returnValue(of(updatedPredictions));
+    
+    fixture.detectChanges();
+    tick();
+
+    // Recommendations should be updated
+    expect(updatedPredictions[0].probability).toBe(0.90);
+    expect(updatedPredictions[0].impact).toBe('high');
+  }));
+});

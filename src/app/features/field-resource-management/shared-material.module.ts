@@ -31,6 +31,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatRadioModule } from '@angular/material/radio';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 const MATERIAL_MODULES = [
   MatButtonModule,
@@ -62,7 +63,8 @@ const MATERIAL_MODULES = [
   MatListModule,
   MatTabsModule,
   MatRadioModule,
-  DragDropModule
+  DragDropModule,
+  ScrollingModule
 ];
 
 /**

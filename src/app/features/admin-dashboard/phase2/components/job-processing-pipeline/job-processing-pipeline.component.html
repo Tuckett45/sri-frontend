@@ -1,4 +1,13 @@
 <div class="job-processing-pipeline">
+  <!-- Loading Indicator for stage execution -->
+  <app-loading-indicator 
+    *ngIf="isExecutingStage" 
+    [overlay]="true"
+    [mode]="'progress'"
+    [progress]="getPipelineProgress()"
+    [message]="'Processing pipeline stage...'">
+  </app-loading-indicator>
+
   <div class="pipeline-header">
     <h2>Job Processing Pipeline</h2>
     <p class="job-info">Job ID: {{ jobId }}</p>
@@ -53,18 +62,18 @@
           </div>
 
           <!-- Retry Info -->
-          <div *ngIf="stage.retryable && stage.currentRetry > 0" class="stage-retry-info">
+          <div *ngIf="stage.retryable && stage.currentRetries > 0" class="stage-retry-info">
             <span class="label">Retries:</span>
-            <span class="retry-count">{{ stage.currentRetry }} / {{ stage.maxRetries }}</span>
+            <span class="retry-count">{{ stage.currentRetries }} / {{ stage.maxRetries }}</span>
           </div>
 
           <!-- Stage Result -->
           <div *ngIf="getStageResult(stage.id) as result" class="stage-result">
-            <div *ngIf="result.status === 'success'" class="result-success">
+            <div *ngIf="result.status === 'completed'" class="result-success">
               <p class="result-message">{{ result.output?.message }}</p>
               <p class="result-duration">Duration: {{ result.duration }}ms</p>
             </div>
-            <div *ngIf="result.status === 'failure'" class="result-failure">
+            <div *ngIf="result.status === 'failed'" class="result-failure">
               <p class="result-error">{{ result.error?.message }}</p>
             </div>
             <div *ngIf="result.status === 'skipped'" class="result-skipped">
@@ -83,7 +92,7 @@
             [disabled]="loading"
           >
             <i class="icon-retry"></i>
-            Retry ({{ stage.maxRetries - stage.currentRetry }} left)
+            Retry ({{ stage.maxRetries - stage.currentRetries }} left)
           </button>
 
           <!-- Skip Button -->

@@ -1,0 +1,91 @@
+<div class="location-tracking-toggle" 
+     role="region" 
+     [attr.aria-label]="'Location tracking control. Current status: ' + statusText">
+  
+  <!-- Main Toggle Control -->
+  <div class="toggle-container">
+    <mat-slide-toggle
+      [(ngModel)]="status.enabled"
+      (change)="toggleTracking()"
+      [disabled]="!isGeolocationSupported"
+      [color]="statusColor"
+      [attr.aria-label]="'Toggle location tracking. Currently ' + (status.enabled ? 'enabled' : 'disabled')"
+      class="tracking-toggle">
+      <span class="toggle-label">
+        <mat-icon [class.enabled]="status.enabled" 
+                  [class.error]="status.error"
+                  aria-hidden="true">
+          {{ statusIcon }}
+        </mat-icon>
+        <span class="status-text">{{ statusText }}</span>
+      </span>
+    </mat-slide-toggle>
+  </div>
+
+  <!-- Status Information -->
+  <div class="status-info" *ngIf="status.enabled || status.error || isPermissionBlocked">
+    
+    <!-- Permission Status (when blocked) -->
+    <div class="permission-blocked-info" *ngIf="isPermissionBlocked && !status.enabled" role="alert" aria-live="polite">
+      <mat-icon class="warning-icon" aria-hidden="true">block</mat-icon>
+      <div class="permission-message">
+        <strong>Location Access Blocked</strong>
+        <p>{{ permissionStatusText }}</p>
+        <p class="help-text">To enable location tracking, please allow location access in your browser settings.</p>
+      </div>
+    </div>
+
+    <!-- Location Information (when tracking is enabled) -->
+    <div class="location-info" *ngIf="status.enabled && !status.error">
+      <div class="info-row">
+        <span class="info-label">Permission:</span>
+        <span class="info-value permission-granted" [attr.aria-label]="permissionStatusText">
+          <mat-icon class="status-icon" aria-hidden="true">check_circle</mat-icon>
+          Granted
+        </span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Location:</span>
+        <span class="info-value" [attr.aria-label]="'Current location: ' + locationText">
+          {{ locationText }}
+        </span>
+      </div>
+      
+      <div class="info-row">
+        <span class="info-label">Accuracy:</span>
+        <span class="info-value" [attr.aria-label]="'Location accuracy: ' + accuracyText">
+          {{ accuracyText }}
+        </span>
+      </div>
+      
+      <div class="info-row">
+        <span class="info-label">Last Update:</span>
+        <span class="info-value" [attr.aria-label]="'Last updated: ' + lastUpdateText">
+          {{ lastUpdateText }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Error Message (when there's an error) -->
+    <div class="error-info" *ngIf="status.error" role="alert" aria-live="assertive">
+      <mat-icon class="error-icon" aria-hidden="true">warning</mat-icon>
+      <div class="error-content">
+        <strong class="error-title">{{ errorMessage }}</strong>
+        <p class="error-details" *ngIf="userFriendlyErrorMessage">{{ userFriendlyErrorMessage }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Text (when geolocation is not supported) -->
+  <div class="help-text" *ngIf="!isGeolocationSupported" role="alert">
+    <mat-icon aria-hidden="true">info</mat-icon>
+    <span>Location tracking is not available in your browser. Please use a modern browser with location services enabled.</span>
+  </div>
+
+  <!-- Privacy Notice -->
+  <div class="privacy-notice" *ngIf="isGeolocationSupported && !status.enabled && !status.error">
+    <mat-icon aria-hidden="true">privacy_tip</mat-icon>
+    <span>Your location will only be tracked when this feature is enabled and you are on duty.</span>
+  </div>
+</div>

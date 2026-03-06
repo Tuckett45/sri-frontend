@@ -9,9 +9,11 @@ import {
   Renderer2,
   Optional
 } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, combineLatest } from 'rxjs';
+import { Store } from '@ngrx/store';
 import { SecureAuthService } from '../services/secure-auth.service';
 import { UserRole } from '../models/role.enum';
+import { selectAllPermissions } from '../store/role-permissions/role-permissions.selectors';
 
 /**
  * Unified role enforcement directive that supports both hide and disable modes.
@@ -44,7 +46,8 @@ export class RoleEnforcementDirective implements OnInit, OnDestroy {
     @Optional() private viewContainer: ViewContainerRef,
     @Optional() private elementRef: ElementRef,
     @Optional() private renderer: Renderer2,
-    private authService: SecureAuthService
+    private authService: SecureAuthService,
+    private store: Store
   ) {
     // Determine if this is a structural directive (has TemplateRef) or attribute directive
     this.isStructural = !!this.templateRef && !!this.viewContainer;
@@ -54,10 +57,17 @@ export class RoleEnforcementDirective implements OnInit, OnDestroy {
     // Initial permission check
     this.checkPermissions();
 
-    // Subscribe to authentication state changes to react to role changes
-    this.authService.getAuthState()
+    // Subscribe to both authentication state changes AND role permission changes
+    // This ensures the UI updates immediately when:
+    // 1. User's role changes during a session (auth state change)
+    // 2. Role permissions are updated in the system (permission state change)
+    combineLatest([
+      this.authService.getAuthState(),
+      this.store.select(selectAllPermissions)
+    ])
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
+        // Re-evaluate permissions whenever auth state or permissions change
         this.checkPermissions();
       });
   }

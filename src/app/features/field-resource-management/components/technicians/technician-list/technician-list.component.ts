@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
@@ -15,7 +15,8 @@ import { ExportService } from '../../../services/export.service';
 @Component({
   selector: 'app-technician-list',
   templateUrl: './technician-list.component.html',
-  styleUrls: ['./technician-list.component.scss']
+  styleUrls: ['./technician-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TechnicianListComponent implements OnInit, OnDestroy {
   technicians$: Observable<Technician[]>;

@@ -72,6 +72,23 @@ export const deleteJobFailure = createAction(
   props<{ error: string }>()
 );
 
+// Select Job
+export const selectJob = createAction(
+  '[Job] Select Job',
+  props<{ id: string | null }>()
+);
+
+// Set Filters
+export const setJobFilters = createAction(
+  '[Job] Set Filters',
+  props<{ filters: JobFilters }>()
+);
+
+// Clear Filters
+export const clearJobFilters = createAction(
+  '[Job] Clear Filters'
+);
+
 // Update Job Status
 export const updateJobStatus = createAction(
   '[Job] Update Job Status',
@@ -86,12 +103,6 @@ export const updateJobStatusSuccess = createAction(
 export const updateJobStatusFailure = createAction(
   '[Job] Update Job Status Failure',
   props<{ error: string }>()
-);
-
-// Select Job
-export const selectJob = createAction(
-  '[Job] Select Job',
-  props<{ id: string | null }>()
 );
 
 // Add Job Note
@@ -126,18 +137,14 @@ export const uploadAttachmentFailure = createAction(
   props<{ error: string }>()
 );
 
-// Set Filters
-export const setJobFilters = createAction(
-  '[Job] Set Filters',
-  props<{ filters: JobFilters }>()
-);
-
-// Clear Filters
-export const clearJobFilters = createAction(
-  '[Job] Clear Filters'
-);
-
 // Batch Operations
+export interface BatchOperationResult {
+  jobId: string;
+  success: boolean;
+  error?: string;
+}
+
+// Batch Update Status
 export const batchUpdateStatus = createAction(
   '[Job] Batch Update Status',
   props<{ jobIds: string[]; status: JobStatus; reason?: string }>()
@@ -145,7 +152,7 @@ export const batchUpdateStatus = createAction(
 
 export const batchUpdateStatusSuccess = createAction(
   '[Job] Batch Update Status Success',
-  props<{ results: Array<{ jobId: string; success: boolean; error?: string }> }>()
+  props<{ results: BatchOperationResult[] }>()
 );
 
 export const batchUpdateStatusFailure = createAction(
@@ -153,6 +160,7 @@ export const batchUpdateStatusFailure = createAction(
   props<{ error: string }>()
 );
 
+// Batch Reassign
 export const batchReassign = createAction(
   '[Job] Batch Reassign',
   props<{ jobIds: string[]; technicianId: string }>()
@@ -160,7 +168,7 @@ export const batchReassign = createAction(
 
 export const batchReassignSuccess = createAction(
   '[Job] Batch Reassign Success',
-  props<{ results: Array<{ jobId: string; success: boolean; error?: string }> }>()
+  props<{ results: BatchOperationResult[] }>()
 );
 
 export const batchReassignFailure = createAction(
@@ -168,6 +176,7 @@ export const batchReassignFailure = createAction(
   props<{ error: string }>()
 );
 
+// Batch Delete
 export const batchDelete = createAction(
   '[Job] Batch Delete',
   props<{ jobIds: string[] }>()
@@ -175,10 +184,41 @@ export const batchDelete = createAction(
 
 export const batchDeleteSuccess = createAction(
   '[Job] Batch Delete Success',
-  props<{ results: Array<{ jobId: string; success: boolean; error?: string }> }>()
+  props<{ results: BatchOperationResult[] }>()
 );
 
 export const batchDeleteFailure = createAction(
   '[Job] Batch Delete Failure',
   props<{ error: string }>()
+);
+
+// Optimistic Update Actions
+export const updateJobOptimistic = createAction(
+  '[Job] Update Job Optimistic',
+  props<{ id: string; changes: Partial<Job>; originalData: Job }>()
+);
+
+export const rollbackJobUpdate = createAction(
+  '[Job] Rollback Job Update',
+  props<{ id: string; originalData: Job }>()
+);
+
+export const updateJobStatusOptimistic = createAction(
+  '[Job] Update Job Status Optimistic',
+  props<{ id: string; status: JobStatus; reason?: string; originalData: Job }>()
+);
+
+export const rollbackJobStatusUpdate = createAction(
+  '[Job] Rollback Job Status Update',
+  props<{ id: string; originalData: Job }>()
+);
+
+export const deleteJobOptimistic = createAction(
+  '[Job] Delete Job Optimistic',
+  props<{ id: string; originalData: Job }>()
+);
+
+export const rollbackJobDelete = createAction(
+  '[Job] Rollback Job Delete',
+  props<{ originalData: Job }>()
 );

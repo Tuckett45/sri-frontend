@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -25,7 +25,8 @@ import { SanitizationService } from '../../../services/sanitization.service';
 @Component({
   selector: 'frm-job-notes',
   templateUrl: './job-notes.component.html',
-  styleUrls: ['./job-notes.component.scss']
+  styleUrls: ['./job-notes.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class JobNotesComponent implements OnInit {
   @Input() jobId!: string;

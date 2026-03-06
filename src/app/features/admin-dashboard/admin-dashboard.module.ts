@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
+import { BaseChartDirective } from 'ng2-charts';
 
 import { AdminDashboardRoutingModule } from './admin-dashboard-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 // Phase 0 State
 import { adminViewerReducer } from './phase0/state/admin-viewer/admin-viewer.reducer';
@@ -58,6 +60,18 @@ import { AiInsightsDashboardComponent } from './phase3/pages/ai-insights-dashboa
 import { aiRecommendationsReducer } from './phase3/state/ai-recommendations/ai-recommendations.reducer';
 import { AIRecommendationsEffects } from './phase3/state/ai-recommendations/ai-recommendations.effects';
 
+// Phase 5 Services
+import { ForecastService } from './phase5/services/forecast.service';
+import { TrendAnalysisService } from './phase5/services/trend-analysis.service';
+
+// Phase 5 Components
+import { PredictiveDashboardComponent } from './phase5/components/predictive-dashboard/predictive-dashboard.component';
+import { TrendAnalysisComponent } from './phase5/components/trend-analysis/trend-analysis.component';
+
+// Phase 5 State
+import { forecastsReducer } from './phase5/state/forecasts/forecasts.reducer';
+import { ForecastsEffects } from './phase5/state/forecasts/forecasts.effects';
+
 @NgModule({
   declarations: [
     // Phase 0
@@ -73,13 +87,18 @@ import { AIRecommendationsEffects } from './phase3/state/ai-recommendations/ai-r
     // Phase 3
     AIAdvisoryPanelComponent,
     InsightsDisplayComponent,
-    AiInsightsDashboardComponent
+    AiInsightsDashboardComponent,
+    // Phase 5
+    PredictiveDashboardComponent,
+    TrendAnalysisComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     AdminDashboardRoutingModule,
+    SharedModule,
+    BaseChartDirective,
     
     // NgRx State Management
     // Phase 0
@@ -94,7 +113,10 @@ import { AIRecommendationsEffects } from './phase3/state/ai-recommendations/ai-r
     EffectsModule.forFeature([WorkflowWizardEffects]),
     // Phase 3
     StoreModule.forFeature('aiRecommendations', aiRecommendationsReducer),
-    EffectsModule.forFeature([AIRecommendationsEffects])
+    EffectsModule.forFeature([AIRecommendationsEffects]),
+    // Phase 5
+    StoreModule.forFeature('forecasts', forecastsReducer),
+    EffectsModule.forFeature([ForecastsEffects])
   ],
   exports: [
     // Export Phase 3 components for use in standalone components
@@ -113,7 +135,10 @@ import { AIRecommendationsEffects } from './phase3/state/ai-recommendations/ai-r
     AdminWorkflowService,
     // Phase 3
     RecommendationEngineService,
-    InsightMetricsService
+    InsightMetricsService,
+    // Phase 5
+    ForecastService,
+    TrendAnalysisService
   ]
 })
 export class AdminDashboardModule { }

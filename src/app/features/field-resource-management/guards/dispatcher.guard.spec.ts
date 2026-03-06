@@ -64,4 +64,44 @@ describe('DispatcherGuard', () => {
       queryParams: { returnUrl: '/schedule' }
     });
   });
+
+  it('should allow access for CM role', () => {
+    authService.isUserInRole.and.returnValue(true);
+
+    const result = guard.canActivate({} as any, { url: '/schedule' } as any);
+
+    expect(result).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should allow access for OSPCoordinator role', () => {
+    authService.isUserInRole.and.returnValue(true);
+
+    const result = guard.canActivate({} as any, { url: '/schedule' } as any);
+
+    expect(result).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should redirect with correct return URL for different routes', () => {
+    authService.isUserInRole.and.returnValue(false);
+    const testUrl = '/dispatcher/jobs';
+
+    guard.canActivate({} as any, { url: testUrl } as any);
+
+    expect(router.navigate).toHaveBeenCalledWith(['/unauthorized'], {
+      queryParams: { returnUrl: testUrl }
+    });
+  });
+
+  it('should handle multiple consecutive calls consistently', () => {
+    authService.isUserInRole.and.returnValue(true);
+
+    const result1 = guard.canActivate({} as any, { url: '/schedule' } as any);
+    const result2 = guard.canActivate({} as any, { url: '/schedule' } as any);
+
+    expect(result1).toBe(true);
+    expect(result2).toBe(true);
+    expect(authService.isUserInRole).toHaveBeenCalledTimes(2);
+  });
 });

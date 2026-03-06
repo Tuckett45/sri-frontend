@@ -73,7 +73,7 @@ export interface InsightMetric {
   value: number;
   unit: string;
   trend: 'up' | 'down' | 'stable';
-  changePercent: number;
+  changePercentage: number;
 }
 
 export interface Visualization {

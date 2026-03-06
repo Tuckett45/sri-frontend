@@ -133,5 +133,81 @@ export const technicianReducer = createReducer(
   on(TechnicianActions.clearTechnicianFilters, (state) => ({
     ...state,
     filters: {}
-  }))
+  })),
+
+  // Update Technician Location (Real-time tracking)
+  on(TechnicianActions.updateTechnicianLocation, (state) => ({
+    ...state,
+    error: null
+  })),
+
+  on(TechnicianActions.updateTechnicianLocationSuccess, (state, { technicianId, location }) =>
+    technicianAdapter.updateOne(
+      {
+        id: technicianId,
+        changes: {
+          currentLocation: location,
+          updatedAt: new Date()
+        }
+      },
+      {
+        ...state,
+        error: null
+      }
+    )
+  ),
+
+  on(TechnicianActions.updateTechnicianLocationFailure, (state, { error }) => ({
+    ...state,
+    error
+  })),
+
+  // Optimistic Update Handlers
+  on(TechnicianActions.updateTechnicianOptimistic, (state, { id, changes }) =>
+    technicianAdapter.updateOne(
+      { id, changes },
+      {
+        ...state,
+        error: null
+      }
+    )
+  ),
+
+  on(TechnicianActions.rollbackTechnicianUpdate, (state, { id, originalData }) =>
+    technicianAdapter.updateOne(
+      { id, changes: originalData },
+      {
+        ...state,
+        error: 'Update failed - changes reverted'
+      }
+    )
+  ),
+
+  on(TechnicianActions.createTechnicianOptimistic, (state, { technician }) =>
+    technicianAdapter.addOne(technician, {
+      ...state,
+      error: null
+    })
+  ),
+
+  on(TechnicianActions.rollbackTechnicianCreate, (state, { tempId }) =>
+    technicianAdapter.removeOne(tempId, {
+      ...state,
+      error: 'Create failed - changes reverted'
+    })
+  ),
+
+  on(TechnicianActions.deleteTechnicianOptimistic, (state, { id }) =>
+    technicianAdapter.removeOne(id, {
+      ...state,
+      error: null
+    })
+  ),
+
+  on(TechnicianActions.rollbackTechnicianDelete, (state, { originalData }) =>
+    technicianAdapter.addOne(originalData, {
+      ...state,
+      error: 'Delete failed - changes reverted'
+    })
+  )
 );

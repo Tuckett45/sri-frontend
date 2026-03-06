@@ -4,10 +4,11 @@ import {
   HttpHandler,
   HttpEvent,
   HttpInterceptor,
-  HttpErrorResponse
+  HttpErrorResponse,
+  HttpClient
 } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, filter, take, switchMap } from 'rxjs/operators';
+import { catchError, filter, take, switchMap, map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 import { AuthTokenService } from '../services/auth-token.service';
@@ -28,7 +29,8 @@ export class AuthTokenInterceptor implements HttpInterceptor {
 
   constructor(
     private authTokenService: AuthTokenService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   /**
@@ -88,32 +90,8 @@ export class AuthTokenInterceptor implements HttpInterceptor {
    * Attempts to refresh token or redirects to login
    */
   private handle401Error(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    if (!this.isRefreshing) {
-      this.isRefreshing = true;
-      this.refreshTokenSubject.next(null);
-
-      const refreshToken = this.authTokenService.getRefreshToken();
-
-      if (refreshToken) {
-        return this.refreshToken(refreshToken).pipe(
-          switchMap((newToken: string) => {
-            this.isRefreshing = false;
-            this.refreshTokenSubject.next(newToken);
-            return next.handle(this.addToken(request, newToken));
-          }),
-          catchError((error) => {
-            this.isRefreshing = false;
-            this.logout();
-            return throwError(() => error);
-          })
-        );
-      } else {
-        this.isRefreshing = false;
-        this.logout();
-        return throwError(() => new Error('No refresh token available'));
-      }
-    } else {
-      // Wait for token refresh to complete
+    // If we're already refreshing, wait for it to complete
+    if (this.isRefreshing) {
       return this.refreshTokenSubject.pipe(
         filter(token => token !== null),
         take(1),
@@ -122,6 +100,40 @@ export class AuthTokenInterceptor implements HttpInterceptor {
         })
       );
     }
+
+    const refreshToken = this.authTokenService.getRefreshToken();
+
+    // If no refresh token, don't attempt refresh - just pass through the error
+    // This allows the app to continue working even if auth isn't fully set up
+    if (!refreshToken) {
+      console.warn('No refresh token available. Passing through 401 error.');
+      return throwError(() => new Error('Unauthorized - No refresh token available'));
+    }
+
+    this.isRefreshing = true;
+    this.refreshTokenSubject.next(null);
+
+    return this.refreshToken(refreshToken).pipe(
+      switchMap((newToken: string) => {
+        this.isRefreshing = false;
+        this.refreshTokenSubject.next(newToken);
+        return next.handle(this.addToken(request, newToken));
+      }),
+      catchError((error) => {
+        this.isRefreshing = false;
+        
+        // Only logout if the refresh token itself is invalid (401)
+        // For other errors (404, 500), don't logout - the endpoint might not be implemented
+        if (error instanceof HttpErrorResponse && error.status === 401) {
+          console.error('Refresh token is invalid. Logging out.');
+          this.logout();
+        } else {
+          console.warn('Token refresh failed but not due to invalid token. Continuing session.');
+        }
+        
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
@@ -131,18 +143,33 @@ export class AuthTokenInterceptor implements HttpInterceptor {
    * @returns Observable with new access token
    */
   private refreshToken(refreshToken: string): Observable<string> {
-    // In a real implementation, this would call the refresh token endpoint
-    // For now, we'll just return an error to trigger logout
-    return throwError(() => new Error('Token refresh not implemented'));
-    
-    // Real implementation would look like:
-    // return this.http.post<{ token: string }>('/api/auth/refresh', { refreshToken })
-    //   .pipe(
-    //     map(response => {
-    //       this.authTokenService.setToken(response.token);
-    //       return response.token;
-    //     })
-    //   );
+    return this.http.post<{ token: string; refreshToken?: string; expiresIn?: number }>(
+      '/api/auth/refresh', 
+      { refreshToken }
+    ).pipe(
+      map(response => {
+        // Store new tokens
+        this.authTokenService.setToken(
+          response.token, 
+          response.refreshToken || refreshToken, 
+          response.expiresIn
+        );
+        return response.token;
+      }),
+      catchError(error => {
+        console.error('Token refresh failed:', error);
+        
+        // Only logout if the refresh token itself is invalid (401)
+        // For other errors (404, 500), the refresh endpoint might not be implemented yet
+        if (error instanceof HttpErrorResponse && error.status === 401) {
+          console.error('Refresh token is invalid or expired');
+        } else {
+          console.warn('Token refresh endpoint not available or failed. Continuing with existing session.');
+        }
+        
+        return throwError(() => error);
+      })
+    );
   }
 
   /**

@@ -4,7 +4,8 @@
  */
 
 import { createAction, props } from '@ngrx/store';
-import { CalendarViewType } from './ui.state';
+import { CalendarViewType, MapViewState, FilterState } from './ui.state';
+import { Notification } from '../../models/notification.model';
 
 // Set Calendar View
 export const setCalendarView = createAction(
@@ -46,6 +47,79 @@ export const openMobileMenu = createAction(
 // Close Mobile Menu
 export const closeMobileMenu = createAction(
   '[UI] Close Mobile Menu'
+);
+
+// Set Filters
+export const setFilters = createAction(
+  '[UI] Set Filters',
+  props<{ filters: FilterState }>()
+);
+
+// Clear Filters
+export const clearFilters = createAction(
+  '[UI] Clear Filters'
+);
+
+// Set Map View
+export const setMapView = createAction(
+  '[UI] Set Map View',
+  props<{ mapView: Partial<MapViewState> }>()
+);
+
+// Show Notification
+export const showNotification = createAction(
+  '[UI] Show Notification',
+  props<{ notification: Notification }>()
+);
+
+// Show Notifications (multiple)
+export const showNotifications = createAction(
+  '[UI] Show Notifications',
+  props<{ notifications: Notification[] }>()
+);
+
+// Dismiss Notification
+export const dismissNotification = createAction(
+  '[UI] Dismiss Notification',
+  props<{ notificationId: string }>()
+);
+
+// Clear All Notifications
+export const clearAllNotifications = createAction(
+  '[UI] Clear All Notifications'
+);
+
+// Mark Notification as Read
+export const markNotificationAsRead = createAction(
+  '[UI] Mark Notification as Read',
+  props<{ notificationId: string }>()
+);
+
+// Update Connection Status
+export const updateConnectionStatus = createAction(
+  '[UI] Update Connection Status',
+  props<{ 
+    status: import('./ui.state').ConnectionStatus;
+    reconnectAttempts?: number;
+    error?: string;
+  }>()
+);
+
+// Connection Established
+export const connectionEstablished = createAction(
+  '[UI] Connection Established'
+);
+
+// Connection Lost
+export const connectionLost = createAction(
+  '[UI] Connection Lost',
+  props<{ error?: string }>()
+);
+
+// Reconnecting
+export const reconnecting = createAction(
+  '[UI] Reconnecting',
+  props<{ attempt: number }>()
 );
 
 // Reset UI State

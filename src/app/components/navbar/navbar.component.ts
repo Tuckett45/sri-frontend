@@ -111,7 +111,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     },
     {
       label: 'System Configuration',
-      route: '/field-resource-management/system-configuration',
+      route: '/field-resource-management/admin/configuration',
       shouldShow: () => this.authService.isAdmin()
     },
     {

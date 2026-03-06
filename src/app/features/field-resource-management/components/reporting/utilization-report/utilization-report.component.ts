@@ -7,6 +7,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { UtilizationReport, TechnicianUtilization } from '../../../models/reporting.model';
 import { DateRange } from '../../../models/assignment.model';
+import { TechnicianRole } from '../../../models/technician.model';
 import * as ReportingActions from '../../../state/reporting/reporting.actions';
 import * as ReportingSelectors from '../../../state/reporting/reporting.selectors';
 
@@ -37,7 +38,7 @@ export class UtilizationReportComponent implements OnInit, OnDestroy {
   // Filters
   selectedDateRange: DateRange | null = null;
   selectedTechnicianId: string | null = null;
-  selectedRole: string | null = null;
+  selectedRole: TechnicianRole | null = null;
   selectedRegion: string | null = null;
   
   // Chart data
@@ -152,7 +153,7 @@ export class UtilizationReportComponent implements OnInit, OnDestroy {
   /**
    * Handle role filter change
    */
-  onRoleFilterChange(role: string | null): void {
+  onRoleFilterChange(role: TechnicianRole | null): void {
     this.selectedRole = role;
     this.loadUtilizationReport();
   }
