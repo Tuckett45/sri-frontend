@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { AtlasErrorHandlerService } from './atlas-error-handler.service';
+import { AtlasQueryBuilderService } from '../../../services/atlas-query-builder.service';
 import {
   DataSourceInfo,
   FieldConfig,
@@ -33,10 +34,12 @@ import {
   providedIn: 'root'
 })
 export class QueryBuilderService {
+  // Kept only for executeTemplate which is not yet in AtlasQueryBuilderService
   private readonly baseUrl = '/v1/query-builder';
 
   constructor(
     private http: HttpClient,
+    private atlasQueryBuilder: AtlasQueryBuilderService,
     private errorHandler: AtlasErrorHandlerService
   ) {}
 
@@ -58,15 +61,15 @@ export class QueryBuilderService {
    *   });
    */
   getDataSources(): Observable<DataSourceInfo[]> {
-    return this.http.get<DataSourceInfo[]>(`${this.baseUrl}/data-sources`)
-      .pipe(
-        catchError((error: HttpErrorResponse) => 
-          this.errorHandler.handleError<DataSourceInfo[]>(error, {
-            endpoint: `${this.baseUrl}/data-sources`,
-            method: 'GET'
-          })
-        )
-      );
+    return this.atlasQueryBuilder.getDataSources().pipe(
+      map((r) => r as unknown as DataSourceInfo[]),
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<DataSourceInfo[]>(error, {
+          endpoint: `${this.baseUrl}/data-sources`,
+          method: 'GET'
+        })
+      )
+    );
   }
 
   /**
@@ -89,10 +92,9 @@ export class QueryBuilderService {
    *   });
    */
   getFields(dataSourceId: string): Observable<FieldConfig[]> {
-    return this.http.get<FieldConfig[]>(
-      `${this.baseUrl}/data-sources/${dataSourceId}/fields`
-    ).pipe(
-      catchError((error: HttpErrorResponse) => 
+    return this.atlasQueryBuilder.getDataSourceFields(dataSourceId).pipe(
+      map((r) => r as unknown as FieldConfig[]),
+      catchError((error: HttpErrorResponse) =>
         this.errorHandler.handleError<FieldConfig[]>(error, {
           endpoint: `${this.baseUrl}/data-sources/${dataSourceId}/fields`,
           method: 'GET'
@@ -131,15 +133,15 @@ export class QueryBuilderService {
    *   });
    */
   executeQuery(query: UserQuery): Observable<QueryResult> {
-    return this.http.post<QueryResult>(`${this.baseUrl}/execute`, query)
-      .pipe(
-        catchError((error: HttpErrorResponse) => 
-          this.errorHandler.handleError<QueryResult>(error, {
-            endpoint: `${this.baseUrl}/execute`,
-            method: 'POST'
-          })
-        )
-      );
+    return this.atlasQueryBuilder.executeQuery(query as any).pipe(
+      map((r) => r as unknown as QueryResult),
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<QueryResult>(error, {
+          endpoint: `${this.baseUrl}/execute`,
+          method: 'POST'
+        })
+      )
+    );
   }
 
   /**
@@ -176,16 +178,21 @@ export class QueryBuilderService {
    *   });
    */
   exportResults(request: ExportRequestDto): Observable<Blob> {
-    return this.http.post(`${this.baseUrl}/export`, request, {
-      responseType: 'blob'
-    }).pipe(
-      catchError((error: HttpErrorResponse) => 
-        this.errorHandler.handleError<Blob>(error, {
-          endpoint: `${this.baseUrl}/export`,
-          method: 'POST'
-        })
+    return this.atlasQueryBuilder
+      .exportQueryResults(
+        request.queryResult as any,
+        request.format as any,
+        request.dataSource,
+        request.fileName
       )
-    );
+      .pipe(
+        catchError((error: HttpErrorResponse) =>
+          this.errorHandler.handleError<Blob>(error, {
+            endpoint: `${this.baseUrl}/export`,
+            method: 'POST'
+          })
+        )
+      );
   }
 
   /**
@@ -207,15 +214,15 @@ export class QueryBuilderService {
    *   });
    */
   getTemplates(): Observable<QueryTemplate[]> {
-    return this.http.get<QueryTemplate[]>(`${this.baseUrl}/templates`)
-      .pipe(
-        catchError((error: HttpErrorResponse) => 
-          this.errorHandler.handleError<QueryTemplate[]>(error, {
-            endpoint: `${this.baseUrl}/templates`,
-            method: 'GET'
-          })
-        )
-      );
+    return this.atlasQueryBuilder.getTemplates().pipe(
+      map((r) => r as unknown as QueryTemplate[]),
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<QueryTemplate[]>(error, {
+          endpoint: `${this.baseUrl}/templates`,
+          method: 'GET'
+        })
+      )
+    );
   }
 
   /**
@@ -251,9 +258,11 @@ export class QueryBuilderService {
    *   });
    */
   createTemplate(request: CreateTemplateRequest): Observable<QueryTemplate> {
-    return this.http.post<QueryTemplate>(`${this.baseUrl}/templates`, request)
+    return this.atlasQueryBuilder
+      .saveTemplate(request.name, request.description ?? '', request.query as any)
       .pipe(
-        catchError((error: HttpErrorResponse) => 
+        map((r) => r as unknown as QueryTemplate),
+        catchError((error: HttpErrorResponse) =>
           this.errorHandler.handleError<QueryTemplate>(error, {
             endpoint: `${this.baseUrl}/templates`,
             method: 'POST'
@@ -277,15 +286,15 @@ export class QueryBuilderService {
    *   });
    */
   getTemplate(templateId: string): Observable<QueryTemplate> {
-    return this.http.get<QueryTemplate>(`${this.baseUrl}/templates/${templateId}`)
-      .pipe(
-        catchError((error: HttpErrorResponse) => 
-          this.errorHandler.handleError<QueryTemplate>(error, {
-            endpoint: `${this.baseUrl}/templates/${templateId}`,
-            method: 'GET'
-          })
-        )
-      );
+    return this.atlasQueryBuilder.loadTemplate(templateId).pipe(
+      map((r) => r as unknown as QueryTemplate),
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<QueryTemplate>(error, {
+          endpoint: `${this.baseUrl}/templates/${templateId}`,
+          method: 'GET'
+        })
+      )
+    );
   }
 
   /**
@@ -303,15 +312,14 @@ export class QueryBuilderService {
    *   });
    */
   deleteTemplate(templateId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/templates/${templateId}`)
-      .pipe(
-        catchError((error: HttpErrorResponse) => 
-          this.errorHandler.handleError<void>(error, {
-            endpoint: `${this.baseUrl}/templates/${templateId}`,
-            method: 'DELETE'
-          })
-        )
-      );
+    return this.atlasQueryBuilder.deleteTemplate(templateId).pipe(
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<void>(error, {
+          endpoint: `${this.baseUrl}/templates/${templateId}`,
+          method: 'DELETE'
+        })
+      )
+    );
   }
 
   /**

@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
-import { catchError, takeUntil, tap } from 'rxjs/operators';
+import { catchError, map, takeUntil, tap } from 'rxjs/operators';
 import { AtlasConfigService } from './atlas-config.service';
 import { AtlasErrorHandlerService } from './atlas-error-handler.service';
+import { AtlasAiAnalysisService } from '../../../services/atlas-ai-analysis.service';
+import { AtlasLifecycleState } from '../../../models/atlas.models';
 import {
   AnalysisResult,
   RiskAssessment,
@@ -56,16 +58,13 @@ export interface AgentOperationValidationResponse {
   providedIn: 'root'
 })
 export class AIAnalysisService {
-  private readonly baseUrl: string;
   private cancelSubjects = new Map<string, Subject<void>>();
 
   constructor(
-    private http: HttpClient,
+    private atlasAiAnalysis: AtlasAiAnalysisService,
     private configService: AtlasConfigService,
     private errorHandler: AtlasErrorHandlerService
-  ) {
-    this.baseUrl = this.configService.config.endpoints.aiAnalysis;
-  }
+  ) {}
 
   // ============================================================================
   // Analysis Operations (Task 8.1)
@@ -83,23 +82,20 @@ export class AIAnalysisService {
    * @returns Observable of analysis result
    */
   analyzeDeployment(deploymentId: string, targetState?: string): Observable<AnalysisResult> {
-    const endpoint = `${this.baseUrl}/deployments/${deploymentId}/analyze`;
+    const endpoint = `/v1/ai-analysis/deployments/${deploymentId}/analyze`;
     const cancelToken = this.createCancelToken(`analyzeDeployment-${deploymentId}`);
 
-    let httpParams = new HttpParams();
-    if (targetState) {
-      httpParams = httpParams.set('targetState', targetState);
-    }
-
-    const request$ = this.http.post<AnalysisResult>(endpoint, null, { params: httpParams }).pipe(
-      takeUntil(cancelToken),
-      tap(() => this.errorHandler.recordSuccess(endpoint)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError<AnalysisResult>(error, {
-        endpoint,
-        method: 'POST'
-      })),
-      tap(() => this.removeCancelToken(`analyzeDeployment-${deploymentId}`))
-    );
+    const request$ = this.atlasAiAnalysis
+      .analyzeDeployment(deploymentId, targetState as AtlasLifecycleState | undefined)
+      .pipe(
+        takeUntil(cancelToken),
+        map((r) => r as unknown as AnalysisResult),
+        tap(() => this.errorHandler.recordSuccess(endpoint)),
+        catchError((error: HttpErrorResponse) =>
+          this.errorHandler.handleError<AnalysisResult>(error, { endpoint, method: 'POST' })
+        ),
+        tap(() => this.removeCancelToken(`analyzeDeployment-${deploymentId}`))
+      );
 
     return this.errorHandler.withTimeout<AnalysisResult>(request$, this.configService.getTimeout());
   }
@@ -115,16 +111,16 @@ export class AIAnalysisService {
    * @returns Observable of risk assessment result
    */
   assessRisk(deploymentId: string): Observable<RiskAssessment> {
-    const endpoint = `${this.baseUrl}/deployments/${deploymentId}/risk-assessment`;
+    const endpoint = `/v1/ai-analysis/deployments/${deploymentId}/risk-assessment`;
     const cancelToken = this.createCancelToken(`assessRisk-${deploymentId}`);
 
-    const request$ = this.http.post<RiskAssessment>(endpoint, null).pipe(
+    const request$ = this.atlasAiAnalysis.performRiskAssessment(deploymentId).pipe(
       takeUntil(cancelToken),
+      map((r) => r as unknown as RiskAssessment),
       tap(() => this.errorHandler.recordSuccess(endpoint)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError<RiskAssessment>(error, {
-        endpoint,
-        method: 'POST'
-      })),
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<RiskAssessment>(error, { endpoint, method: 'POST' })
+      ),
       tap(() => this.removeCancelToken(`assessRisk-${deploymentId}`))
     );
 
@@ -142,16 +138,16 @@ export class AIAnalysisService {
    * @returns Observable of recommendation set
    */
   generateRecommendations(deploymentId: string): Observable<RecommendationSet> {
-    const endpoint = `${this.baseUrl}/deployments/${deploymentId}/recommendations`;
+    const endpoint = `/v1/ai-analysis/deployments/${deploymentId}/recommendations`;
     const cancelToken = this.createCancelToken(`generateRecommendations-${deploymentId}`);
 
-    const request$ = this.http.post<RecommendationSet>(endpoint, null).pipe(
+    const request$ = this.atlasAiAnalysis.generateRecommendations(deploymentId).pipe(
       takeUntil(cancelToken),
+      map((r) => r as unknown as RecommendationSet),
       tap(() => this.errorHandler.recordSuccess(endpoint)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError<RecommendationSet>(error, {
-        endpoint,
-        method: 'POST'
-      })),
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<RecommendationSet>(error, { endpoint, method: 'POST' })
+      ),
       tap(() => this.removeCancelToken(`generateRecommendations-${deploymentId}`))
     );
 
@@ -171,16 +167,16 @@ export class AIAnalysisService {
    * @returns Observable of available agent information
    */
   getAvailableAgents(): Observable<AgentInfo[]> {
-    const endpoint = `${this.baseUrl}/agents`;
+    const endpoint = '/v1/ai-analysis/agents';
     const cancelToken = this.createCancelToken('getAvailableAgents');
 
-    const request$ = this.http.get<AgentInfo[]>(endpoint).pipe(
+    const request$ = this.atlasAiAnalysis.getAvailableAgents().pipe(
       takeUntil(cancelToken),
+      map((r) => r as unknown as AgentInfo[]),
       tap(() => this.errorHandler.recordSuccess(endpoint)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError<AgentInfo[]>(error, {
-        endpoint,
-        method: 'GET'
-      })),
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<AgentInfo[]>(error, { endpoint, method: 'GET' })
+      ),
       tap(() => this.removeCancelToken('getAvailableAgents'))
     );
 
@@ -201,18 +197,16 @@ export class AIAnalysisService {
    * @returns Observable of validation result
    */
   validateAgentOperation(agentId: string, operation: string): Observable<AgentOperationValidationResponse> {
-    const endpoint = `${this.baseUrl}/agents/${agentId}/validate-operation`;
+    const endpoint = `/v1/ai-analysis/agents/${agentId}/validate-operation`;
     const cancelToken = this.createCancelToken(`validateAgentOperation-${agentId}`);
 
-    const request$ = this.http.post<AgentOperationValidationResponse>(endpoint, operation, {
-      headers: { 'Content-Type': 'application/json' }
-    }).pipe(
+    const request$ = this.atlasAiAnalysis.validateAgentOperation(agentId, operation).pipe(
       takeUntil(cancelToken),
+      map((r) => ({ isValid: r.isAllowed, message: r.message } as AgentOperationValidationResponse)),
       tap(() => this.errorHandler.recordSuccess(endpoint)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError<AgentOperationValidationResponse>(error, {
-        endpoint,
-        method: 'POST'
-      })),
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<AgentOperationValidationResponse>(error, { endpoint, method: 'POST' })
+      ),
       tap(() => this.removeCancelToken(`validateAgentOperation-${agentId}`))
     );
 

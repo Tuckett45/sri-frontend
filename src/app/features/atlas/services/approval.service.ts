@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { AtlasErrorHandlerService } from './atlas-error-handler.service';
+import { AtlasApprovalsService } from '../../../services/atlas-approvals.service';
+import { AtlasLifecycleState } from '../../../models/atlas.models';
 import {
   ApprovalAuthority,
   ApprovalRequestDto,
@@ -29,10 +31,8 @@ import {
   providedIn: 'root'
 })
 export class ApprovalService {
-  private readonly baseUrl = '/v1/approvals';
-
   constructor(
-    private http: HttpClient,
+    private atlasApprovals: AtlasApprovalsService,
     private errorHandler: AtlasErrorHandlerService
   ) {}
 
@@ -52,16 +52,17 @@ export class ApprovalService {
    *   });
    */
   checkAuthority(deploymentId: string, forState: LifecycleState): Observable<ApprovalAuthority> {
-    return this.http.get<ApprovalAuthority>(
-      `${this.baseUrl}/authority/${deploymentId}/${forState}`
-    ).pipe(
-      catchError((error: HttpErrorResponse) => 
-        this.errorHandler.handleError<ApprovalAuthority>(error, {
-          endpoint: `${this.baseUrl}/authority/${deploymentId}/${forState}`,
-          method: 'GET'
-        })
-      )
-    );
+    return this.atlasApprovals
+      .validateApprovalAuthority(deploymentId, forState as unknown as AtlasLifecycleState)
+      .pipe(
+        map((r) => r as unknown as ApprovalAuthority),
+        catchError((error: HttpErrorResponse) =>
+          this.errorHandler.handleError<ApprovalAuthority>(error, {
+            endpoint: `/v1/approvals/authority/${deploymentId}/${forState}`,
+            method: 'GET'
+          })
+        )
+      );
   }
 
   /**
@@ -79,11 +80,13 @@ export class ApprovalService {
    * this.approvalService.requestApproval(request).subscribe();
    */
   requestApproval(request: ApprovalRequestDto): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/request`, request)
+    return this.atlasApprovals
+      .requestApproval(request as any)
       .pipe(
-        catchError((error: HttpErrorResponse) => 
+        map(() => undefined as void),
+        catchError((error: HttpErrorResponse) =>
           this.errorHandler.handleError<void>(error, {
-            endpoint: `${this.baseUrl}/request`,
+            endpoint: '/v1/approvals/request',
             method: 'POST'
           })
         )
@@ -106,11 +109,13 @@ export class ApprovalService {
    * this.approvalService.recordDecision('appr-456', decision).subscribe();
    */
   recordDecision(approvalId: string, decision: ApprovalDecisionDto): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/${approvalId}/decision`, decision)
+    return this.atlasApprovals
+      .recordDecision(approvalId, decision as any)
       .pipe(
-        catchError((error: HttpErrorResponse) => 
+        map(() => undefined as void),
+        catchError((error: HttpErrorResponse) =>
           this.errorHandler.handleError<void>(error, {
-            endpoint: `${this.baseUrl}/${approvalId}/decision`,
+            endpoint: `/v1/approvals/${approvalId}/decision`,
             method: 'POST'
           })
         )
@@ -130,15 +135,14 @@ export class ApprovalService {
    *   });
    */
   getPendingApprovals(deploymentId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/deployment/${deploymentId}/pending`)
-      .pipe(
-        catchError((error: HttpErrorResponse) => 
-          this.errorHandler.handleError<any[]>(error, {
-            endpoint: `${this.baseUrl}/deployment/${deploymentId}/pending`,
-            method: 'GET'
-          })
-        )
-      );
+    return this.atlasApprovals.getPendingApprovals(deploymentId).pipe(
+      catchError((error: HttpErrorResponse) =>
+        this.errorHandler.handleError<any[]>(error, {
+          endpoint: `/v1/approvals/deployment/${deploymentId}/pending`,
+          method: 'GET'
+        })
+      )
+    );
   }
 
   /**
@@ -155,16 +159,16 @@ export class ApprovalService {
    *   });
    */
   getApprovalsForState(deploymentId: string, forState: LifecycleState): Observable<any[]> {
-    return this.http.get<any[]>(
-      `${this.baseUrl}/deployment/${deploymentId}/state/${forState}`
-    ).pipe(
-      catchError((error: HttpErrorResponse) => 
-        this.errorHandler.handleError<any[]>(error, {
-          endpoint: `${this.baseUrl}/deployment/${deploymentId}/state/${forState}`,
-          method: 'GET'
-        })
-      )
-    );
+    return this.atlasApprovals
+      .getApprovalsForState(deploymentId, forState as unknown as AtlasLifecycleState)
+      .pipe(
+        catchError((error: HttpErrorResponse) =>
+          this.errorHandler.handleError<any[]>(error, {
+            endpoint: `/v1/approvals/deployment/${deploymentId}/state/${forState}`,
+            method: 'GET'
+          })
+        )
+      );
   }
 
   /**
@@ -183,16 +187,17 @@ export class ApprovalService {
    *   });
    */
   checkSufficientApprovals(deploymentId: string, forState: LifecycleState): Observable<boolean> {
-    return this.http.get<boolean>(
-      `${this.baseUrl}/deployment/${deploymentId}/state/${forState}/sufficient`
-    ).pipe(
-      catchError((error: HttpErrorResponse) => 
-        this.errorHandler.handleError<boolean>(error, {
-          endpoint: `${this.baseUrl}/deployment/${deploymentId}/state/${forState}/sufficient`,
-          method: 'GET'
-        })
-      )
-    );
+    return this.atlasApprovals
+      .hasSufficientApprovals(deploymentId, forState as unknown as AtlasLifecycleState)
+      .pipe(
+        map((r) => r.hasSufficientApprovals),
+        catchError((error: HttpErrorResponse) =>
+          this.errorHandler.handleError<boolean>(error, {
+            endpoint: `/v1/approvals/deployment/${deploymentId}/state/${forState}/sufficient`,
+            method: 'GET'
+          })
+        )
+      );
   }
 
   /**
@@ -212,11 +217,13 @@ export class ApprovalService {
    *   });
    */
   getCriticalGate(state: LifecycleState): Observable<CriticalGateDefinition> {
-    return this.http.get<CriticalGateDefinition>(`${this.baseUrl}/critical-gate/${state}`)
+    return this.atlasApprovals
+      .getCriticalGateDefinition(state as unknown as AtlasLifecycleState)
       .pipe(
-        catchError((error: HttpErrorResponse) => 
+        map((r) => r as unknown as CriticalGateDefinition),
+        catchError((error: HttpErrorResponse) =>
           this.errorHandler.handleError<CriticalGateDefinition>(error, {
-            endpoint: `${this.baseUrl}/critical-gate/${state}`,
+            endpoint: `/v1/approvals/critical-gate/${state}`,
             method: 'GET'
           })
         )
@@ -238,12 +245,19 @@ export class ApprovalService {
    *   });
    */
   getUserApprovals(page: number = 1, pageSize: number = 50): Observable<PagedResult<any>> {
-    return this.http.get<PagedResult<any>>(`${this.baseUrl}/user/approvals`, {
-      params: { page: page.toString(), pageSize: pageSize.toString() }
-    }).pipe(
-      catchError((error: HttpErrorResponse) => 
+    return this.atlasApprovals.getUserApprovals(page, pageSize).pipe(
+      map((r) => ({
+        items: r.items,
+        pagination: {
+          currentPage: r.page,
+          pageSize: r.pageSize,
+          totalCount: r.totalCount,
+          totalPages: r.totalPages
+        }
+      })),
+      catchError((error: HttpErrorResponse) =>
         this.errorHandler.handleError<PagedResult<any>>(error, {
-          endpoint: `${this.baseUrl}/user/approvals`,
+          endpoint: '/v1/approvals/user/approvals',
           method: 'GET'
         })
       )

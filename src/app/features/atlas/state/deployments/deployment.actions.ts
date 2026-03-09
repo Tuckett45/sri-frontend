@@ -1,12 +1,13 @@
 /**
  * Deployment NgRx Actions
- * 
+ *
  * Defines all actions for deployment state management including:
  * - Load operations (list, detail)
  * - CRUD operations
  * - State transitions
  * - Evidence management
- * 
+ * - Filter management
+ *
  * Each operation has corresponding success and failure actions.
  */
 
@@ -19,6 +20,7 @@ import {
   StateTransitionRequest,
   EvidenceSubmissionRequest
 } from '../../models/deployment.model';
+import { DeploymentFilters } from './deployment.state';
 
 // ============================================================================
 // Load Deployments (List)
@@ -256,4 +258,17 @@ export const clearDeploymentState = createAction(
  */
 export const refreshDeployments = createAction(
   '[Deployment] Refresh Deployments'
+);
+
+// ============================================================================
+// Filter Management
+// ============================================================================
+
+export const setDeploymentFilters = createAction(
+  '[Deployment] Set Filters',
+  props<{ filters: DeploymentFilters }>()
+);
+
+export const clearDeploymentFilters = createAction(
+  '[Deployment] Clear Filters'
 );

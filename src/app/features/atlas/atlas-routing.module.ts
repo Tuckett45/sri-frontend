@@ -5,6 +5,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { AtlasContainerComponent } from './atlas-container.component';
 
 // Components
+import { DeploymentListComponent } from './components/deployments/deployment-list.component';
+import { DeploymentFormComponent } from './components/deployments/deployment-form.component';
 import { AIAnalysisComponent } from './components/ai-analysis/ai-analysis.component';
 import { RiskAssessmentComponent } from './components/ai-analysis/risk-assessment.component';
 import { ApprovalListComponent } from './components/approvals/approval-list.component';
@@ -66,11 +68,33 @@ const routes: Routes = [
     component: AtlasContainerComponent,
     canActivate: [AtlasFeatureGuard],
     children: [
-      // Default route - redirect to agents
+      // Default route - redirect to deployments
       {
         path: '',
-        redirectTo: 'agents',
+        redirectTo: 'deployments',
         pathMatch: 'full'
+      },
+
+      // Deployment routes
+      {
+        path: 'deployments',
+        children: [
+          {
+            path: '',
+            component: DeploymentListComponent,
+            data: { title: 'Deployments' }
+          },
+          {
+            path: 'new',
+            component: DeploymentFormComponent,
+            data: { title: 'New Deployment' }
+          },
+          {
+            path: ':id/edit',
+            component: DeploymentFormComponent,
+            data: { title: 'Edit Deployment' }
+          }
+        ]
       },
 
       // CM Dashboard - CM and Admin access

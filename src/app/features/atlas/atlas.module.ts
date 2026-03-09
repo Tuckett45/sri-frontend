@@ -47,6 +47,8 @@ import { AtlasSharedModule } from './atlas-shared.module';
 // Components
 import { AIAnalysisComponent } from './components/ai-analysis/ai-analysis.component';
 import { RiskAssessmentComponent } from './components/ai-analysis/risk-assessment.component';
+import { DeploymentListComponent } from './components/deployments/deployment-list.component';
+import { DeploymentFormComponent } from './components/deployments/deployment-form.component';
 import { ApprovalListComponent } from './components/approvals/approval-list.component';
 import { ApprovalDecisionComponent } from './components/approvals/approval-decision.component';
 import { ExceptionListComponent } from './components/exceptions/exception-list.component';
@@ -71,6 +73,8 @@ import { agentReducer } from './state/agents/agent.reducer';
 import { AgentEffects } from './state/agents/agent.effects';
 import { queryBuilderReducer } from './state/query-builder/query-builder.reducer';
 import { QueryBuilderEffects } from './state/query-builder/query-builder.effects';
+import { deploymentReducer } from './state/deployments/deployment.reducer';
+import { DeploymentEffects } from './state/deployments/deployment.effects';
 
 /**
  * ATLAS Feature Module
@@ -110,6 +114,8 @@ import { QueryBuilderEffects } from './state/query-builder/query-builder.effects
     AtlasSharedModule,
     
     // Standalone Components
+    DeploymentListComponent,
+    DeploymentFormComponent,
     AIAnalysisComponent,
     RiskAssessmentComponent,
     ApprovalListComponent,
@@ -176,6 +182,10 @@ import { QueryBuilderEffects } from './state/query-builder/query-builder.effects
     // Query Builder state management
     StoreModule.forFeature('queryBuilder', queryBuilderReducer),
     EffectsModule.forFeature([QueryBuilderEffects]),
+
+    // Deployment state management
+    StoreModule.forFeature('deployments', deploymentReducer),
+    EffectsModule.forFeature([DeploymentEffects]),
   ],
   providers: [
     // Services will be provided as they are implemented

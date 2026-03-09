@@ -1,0 +1,155 @@
+<!-- Deployment List Component Template -->
+<div class="deployment-list-container">
+  <p-toast></p-toast>
+
+  <!-- Header -->
+  <div class="list-header">
+    <h2>Deployments</h2>
+    <p-button
+      label="New Deployment"
+      icon="pi pi-plus"
+      (onClick)="onCreateDeployment()"
+    ></p-button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-row">
+    <span class="p-input-icon-left search-field">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Search by title or ID..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+      />
+    </span>
+
+    <p-dropdown
+      [options]="stateOptions"
+      [(ngModel)]="selectedState"
+      placeholder="All States"
+      [showClear]="true"
+      (onChange)="onFilterChange()"
+    ></p-dropdown>
+
+    <p-dropdown
+      [options]="typeOptions"
+      [(ngModel)]="selectedType"
+      placeholder="All Types"
+      [showClear]="true"
+      (onChange)="onFilterChange()"
+    ></p-dropdown>
+
+    <p-button
+      label="My Deployments"
+      [outlined]="!assignedToMe"
+      (onClick)="toggleAssignedToMe()"
+      icon="pi pi-user"
+      size="small"
+    ></p-button>
+
+    <p-button
+      *ngIf="hasActiveFilters()"
+      label="Clear"
+      severity="secondary"
+      (onClick)="clearFilters()"
+      icon="pi pi-times"
+      size="small"
+    ></p-button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+  </div>
+
+  <!-- Error -->
+  <p-message
+    *ngIf="error && !loading"
+    severity="error"
+    [text]="error"
+    styleClass="mb-3"
+  ></p-message>
+  <p-button
+    *ngIf="error && !loading"
+    label="Retry"
+    severity="secondary"
+    (onClick)="onRetry()"
+    icon="pi pi-refresh"
+    styleClass="mb-3"
+  ></p-button>
+
+  <!-- Table -->
+  <p-table
+    *ngIf="!loading && !error"
+    [value]="deployments"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="totalCount"
+    (onPage)="onPageChange($event)"
+    (onSort)="onSort($event)"
+    [sortField]="sortField"
+    [sortOrder]="sortOrder"
+    [rowHover]="true"
+    styleClass="p-datatable-sm"
+    (onRowSelect)="onRowClick($event.data)"
+    selectionMode="single"
+    emptyMessage="No deployments found."
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="title">Title <p-sortIcon field="title"></p-sortIcon></th>
+        <th>Type</th>
+        <th pSortableColumn="currentState">State <p-sortIcon field="currentState"></p-sortIcon></th>
+        <th pSortableColumn="createdAt">Created <p-sortIcon field="createdAt"></p-sortIcon></th>
+        <th pSortableColumn="updatedAt">Updated <p-sortIcon field="updatedAt"></p-sortIcon></th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-deployment>
+      <tr [pSelectableRow]="deployment" class="clickable-row">
+        <td>{{ deployment.title || deployment.id }}</td>
+        <td>
+          <p-tag [value]="deployment.type" severity="info"></p-tag>
+        </td>
+        <td>
+          <p-tag
+            [value]="formatStateLabel(deployment.currentState)"
+            [severity]="getStateSeverity(deployment.currentState)"
+          ></p-tag>
+        </td>
+        <td>{{ formatDate(deployment.createdAt) }}</td>
+        <td>{{ formatDate(deployment.updatedAt) }}</td>
+        <td>
+          <p-button
+            icon="pi pi-eye"
+            [rounded]="true"
+            [text]="true"
+            pTooltip="View"
+            (onClick)="onViewDeployment(deployment); $event.stopPropagation()"
+          ></p-button>
+          <p-button
+            icon="pi pi-pencil"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            pTooltip="Edit"
+            (onClick)="onEditDeployment(deployment); $event.stopPropagation()"
+          ></p-button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="empty-state">
+          <i class="pi pi-inbox empty-icon"></i>
+          <p>No deployments found.</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
