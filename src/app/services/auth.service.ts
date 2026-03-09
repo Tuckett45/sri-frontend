@@ -129,6 +129,14 @@ export class AuthService {
       return this.userRole.getValue() === UserRole.HR;
   }
 
+  isEngineeringFieldSupport() {
+    return this.userRole.getValue() === UserRole.EngineeringFieldSupport;
+  }
+
+  isMaterialsManager() {
+    return this.userRole.getValue() === UserRole.MaterialsManager;
+  }
+
   isLoggedIn(): boolean {
     return localStorage.getItem('loggedIn') === 'true';
   }

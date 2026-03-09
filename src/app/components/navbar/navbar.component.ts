@@ -55,12 +55,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
     {
       label: 'Prelim Punch List',
       route: '/preliminary-punch-list',
-      shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM()
+      shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM() || this.authService.isEngineeringFieldSupport() || this.authService.isMaterialsManager()
     },
     {
       label: 'Street Sheet',
       route: '/street-sheet',
-      shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isTemp()
+      shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isTemp() || this.authService.isEngineeringFieldSupport() || this.authService.isMaterialsManager()
     },
     {
       label: 'OSP Coordinator',

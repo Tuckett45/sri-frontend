@@ -14,7 +14,7 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class RegisterModalComponent {
   registerForm!: FormGroup;
-  roles: string[] = ['CM', 'PM', 'Client', 'OSP Coordinator', 'Controller', 'HR'];
+  roles: string[] = ['CM', 'PM', 'Client', 'OSP Coordinator', 'Controller', 'HR', 'Engineering Field Support', 'Materials Manager'];
   companys: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction'];
   markets: { name: string, abbreviation: string }[] = [
     { name: 'Arizona', abbreviation: 'AZ' },
@@ -63,7 +63,7 @@ export class RegisterModalComponent {
   onSubmit(): void {
     const formValues = this.registerForm.value;
 
-    if (formValues.role == 'CM' || formValues.role == 'OSP Coordinator' || formValues.role == 'Controller' || formValues.role == 'HR'){
+    if (formValues.role == 'CM' || formValues.role == 'OSP Coordinator' || formValues.role == 'Controller' || formValues.role == 'HR' || formValues.role == 'EngineeringFieldSupport' || formValues.role == 'MaterialsManager'){
       formValues.company = 'SRI';
     }else if(formValues.role == 'Client'){
       formValues.company = 'Google'; 
