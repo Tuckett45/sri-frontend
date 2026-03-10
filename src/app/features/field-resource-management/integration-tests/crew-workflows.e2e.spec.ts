@@ -864,20 +864,20 @@ describe('Crew Workflows E2E Integration Tests', () => {
       expect(component.getStatusBadgeClass(CrewStatus.Available)).toBe('status-available');
       expect(component.getStatusBadgeClass(CrewStatus.OnJob)).toBe('status-on-job');
       expect(component.getStatusBadgeClass(CrewStatus.Unavailable)).toBe('status-unavailable');
-    }));
+    });
 
     it('should format location correctly', () => {
       const location = { latitude: 32.7767, longitude: -96.7970 };
       const formatted = component.formatLocation(location);
       expect(formatted).toContain('32.776700');
       expect(formatted).toContain('-96.797000');
-    }));
+    });
 
     it('should get member count correctly', () => {
       const crew = mockCrews[1];
       const count = component.getMemberCount(crew);
       expect(count).toBe(1); // tech-003, excluding lead tech-002
-    }));
+    });
 
     it('should navigate to edit crew', fakeAsync(() => {
       spyOn(router, 'navigate');
@@ -916,14 +916,14 @@ describe('Crew Workflows E2E Integration Tests', () => {
       const formatted = component.formatDate(date);
       expect(formatted).toBeDefined();
       expect(formatted.length).toBeGreaterThan(0);
-    }));
+    });
 
     it('should format time correctly', () => {
       const date = new Date('2024-01-01T12:00:00Z');
       const formatted = component.formatTime(date);
       expect(formatted).toBeDefined();
       expect(formatted.length).toBeGreaterThan(0);
-    }));
+    });
 
     it('should clear selected crew on destroy', fakeAsync(() => {
       component.ngOnDestroy();

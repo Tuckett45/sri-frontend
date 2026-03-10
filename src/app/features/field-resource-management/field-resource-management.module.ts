@@ -40,6 +40,10 @@ import { SharedComponentsModule } from './components/shared/shared-components.mo
 import { FrmLayoutComponent } from './components/layout/frm-layout/frm-layout.component';
 import { NavigationMenuComponent } from './components/layout/navigation-menu/navigation-menu.component';
 import { OfflineIndicatorComponent } from './components/layout/offline-indicator/offline-indicator.component';
+import { BreadcrumbComponent } from './components/layout/breadcrumb/breadcrumb.component';
+
+// Home Dashboard Component (eagerly loaded as landing page)
+import { HomeDashboardComponent } from './components/home/home-dashboard.component';
 
 // Notification Components (needed for real-time updates)
 import { NotificationPanelComponent } from './components/notifications/notification-panel/notification-panel.component';
@@ -92,12 +96,16 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     FrmLayoutComponent,
     NavigationMenuComponent,
     OfflineIndicatorComponent,
+    BreadcrumbComponent,
+    
+    // Home Dashboard (landing page)
+    HomeDashboardComponent,
     
     // Notification Components
     NotificationPanelComponent
     
     // Note: All feature components (technicians, jobs, crews, scheduling, mobile, admin, mapping)
-    // and dashboard components are now in their respective lazy-loaded feature modules
+    // and analytics dashboard are now in their respective lazy-loaded feature modules
   ],
   imports: [
     // Angular Core

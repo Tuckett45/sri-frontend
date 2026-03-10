@@ -10,7 +10,10 @@ import { CMGuard } from '../../guards/cm.guard';
 import { EnhancedRoleGuard } from '../../guards/enhanced-role.guard';
 import { UserRole } from '../../models/role.enum';
 
-// Components - Dashboard (kept in main module for initial load)
+// Components - Home Dashboard
+import { HomeDashboardComponent } from './components/home/home-dashboard.component';
+
+// Components - Reporting (Analytics Dashboard)
 import { DashboardComponent } from './components/reporting/dashboard/dashboard.component';
 
 // Components - Reporting (kept for direct routes)
@@ -43,17 +46,17 @@ const routes: Routes = [
     path: '',
     component: FrmLayoutComponent,
     children: [
-      // Default redirect to dashboard
+      // Default redirect to dashboard (home page)
       {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
       },
 
-      // Dashboard - All authenticated users (kept in main module)
+      // Dashboard - Home page with quick links and summary
       {
         path: 'dashboard',
-        component: DashboardComponent,
+        component: HomeDashboardComponent,
         data: { 
           title: 'Dashboard',
           breadcrumb: 'Dashboard'

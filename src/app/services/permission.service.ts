@@ -342,6 +342,34 @@ export class PermissionService {
         {
           resource: 'reports',
           actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'technicians',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'crews',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'assignments',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'kpis',
+          actions: ['read']
+        },
+        {
+          resource: 'approvals',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'system_config',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'time_entries',
+          actions: ['create', 'read', 'update', 'delete']
         }
       ],
       restrictions: []
@@ -366,6 +394,58 @@ export class PermissionService {
         {
           resource: 'reports',
           actions: ['create', 'read']
+        },
+        {
+          resource: 'technicians',
+          actions: ['read']
+        },
+        {
+          resource: 'crews',
+          actions: ['read']
+        },
+        {
+          resource: 'assignments',
+          actions: ['read']
+        },
+        {
+          resource: 'kpis',
+          actions: ['read']
+        },
+        {
+          resource: 'approvals',
+          actions: ['create', 'read', 'update']
+        }
+      ],
+      restrictions: []
+    });
+
+    // Dispatcher role - can manage technicians, jobs, crews, scheduling
+    this.setRolePermissions('Dispatcher', {
+      role: 'Dispatcher',
+      permissions: [
+        {
+          resource: 'jobs',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'technicians',
+          actions: ['create', 'read', 'update']
+        },
+        {
+          resource: 'crews',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'assignments',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'reports',
+          actions: ['read']
+        },
+        {
+          resource: 'kpis',
+          actions: ['read']
         }
       ],
       restrictions: []
@@ -402,6 +482,18 @@ export class PermissionService {
         {
           resource: 'deployments',
           actions: ['read', 'update']
+        },
+        {
+          resource: 'assignments',
+          actions: ['read']
+        },
+        {
+          resource: 'time_entries',
+          actions: ['create', 'read', 'update']
+        },
+        {
+          resource: 'kpis',
+          actions: ['read']
         }
       ],
       restrictions: []

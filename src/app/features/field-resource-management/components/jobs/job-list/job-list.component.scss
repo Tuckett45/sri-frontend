@@ -13,11 +13,33 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
 
-  h2 {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 500;
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .page-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+      color: #212121;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #757575;
+      margin-left: 8px;
+    }
   }
 
   .header-actions {
@@ -29,6 +51,16 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+
+    .header-title {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+
+      .page-subtitle {
+        margin-left: 0;
+      }
+    }
 
     .header-actions {
       width: 100%;

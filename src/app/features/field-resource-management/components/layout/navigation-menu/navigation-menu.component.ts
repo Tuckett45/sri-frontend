@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, filter } from 'rxjs/operators';
@@ -36,8 +36,9 @@ interface MenuItem {
 @Component({
   selector: 'app-frm-nav-menu',
   templateUrl: './navigation-menu.component.html',
-  styleUrls: ['./navigation-menu.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./navigation-menu.component.scss']
+  // Temporarily using Default change detection for debugging
+  // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NavigationMenuComponent implements OnInit, OnDestroy {
   @Output() navigationClick = new EventEmitter<void>();
@@ -56,90 +57,99 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
     {
       label: 'Dashboard',
       icon: 'dashboard',
-      route: '/frm/dashboard',
+      route: '/field-resource-management/dashboard',
       resource: 'kpis',
       action: 'read'
     },
     {
       label: 'Technicians',
       icon: 'engineering',
-      route: '/frm/technicians',
+      route: '/field-resource-management/technicians',
       resource: 'technicians',
       action: 'read'
     },
     {
       label: 'Crews',
       icon: 'groups',
-      route: '/frm/crews',
+      route: '/field-resource-management/crews',
       resource: 'crews',
       action: 'read'
     },
     {
       label: 'Jobs',
       icon: 'work',
-      route: '/frm/jobs',
+      route: '/field-resource-management/jobs',
       resource: 'jobs',
       action: 'read'
     },
     {
       label: 'Scheduling',
       icon: 'calendar_today',
-      route: '/frm/scheduling',
+      route: '/field-resource-management/schedule',
       resource: 'assignments',
       action: 'read'
     },
     {
       label: 'Map View',
       icon: 'map',
-      route: '/frm/map',
+      route: '/field-resource-management/map',
       resource: 'technicians',
       action: 'read'
     },
     {
-      label: 'Reports',
-      icon: 'assessment',
-      route: '/frm/reports',
+      label: 'Reports & Analytics',
+      icon: 'bar_chart',
+      route: '/field-resource-management/reports',
       resource: 'reports',
       action: 'read'
     },
     {
-      label: 'KPIs',
-      icon: 'analytics',
-      route: '/frm/kpis',
-      resource: 'kpis',
-      action: 'read'
+      label: 'Approvals',
+      icon: 'approval',
+      route: '/field-resource-management/approvals',
+      resource: 'approvals',
+      action: 'read',
+      roles: [UserRole.Admin, UserRole.CM]
     },
     {
-      label: 'System Config',
-      icon: 'settings',
-      route: '/frm/system-config',
+      label: 'Admin',
+      icon: 'admin_panel_settings',
+      route: '/field-resource-management/admin',
       resource: 'system_config',
       action: 'read',
       roles: [UserRole.Admin]
     },
     {
+      label: 'My Timecard',
+      icon: 'schedule',
+      route: '/field-resource-management/timecard',
+      resource: 'time_entries',
+      action: 'read'
+      // Available to all authenticated users
+    },
+    {
       label: 'My Assignments',
       icon: 'assignment',
-      route: '/frm/my-assignments',
+      route: '/field-resource-management/mobile/assignments',
       resource: 'assignments',
       action: 'read',
       roles: [UserRole.Technician]
     },
     {
-      label: 'My Schedule',
-      icon: 'event',
-      route: '/frm/my-schedule',
-      resource: 'assignments',
+      label: 'CM Dashboard',
+      icon: 'business',
+      route: '/field-resource-management/cm/dashboard',
+      resource: 'kpis',
       action: 'read',
-      roles: [UserRole.Technician]
+      roles: [UserRole.Admin, UserRole.CM]
     },
     {
-      label: 'My Profile',
-      icon: 'person',
-      route: '/frm/my-profile',
-      resource: 'technicians',
+      label: 'Admin Dashboard',
+      icon: 'dashboard_customize',
+      route: '/field-resource-management/admin-dashboard',
+      resource: 'kpis',
       action: 'read',
-      roles: [UserRole.Technician]
+      roles: [UserRole.Admin]
     }
   ];
 
@@ -151,6 +161,19 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getUser();
+    
+    if (!this.currentUser) {
+      console.warn('NavigationMenu: No current user found. Menu will be empty.');
+      this.menuItems = [];
+      return;
+    }
+    
+    console.log('NavigationMenu: Initializing with user:', {
+      email: this.currentUser.email,
+      role: this.currentUser.role,
+      market: this.currentUser.market
+    });
+    
     this.buildMenuForCurrentUser();
     this.trackActiveRoute();
   }
@@ -165,13 +188,18 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
    */
   private buildMenuForCurrentUser(): void {
     if (!this.currentUser) {
+      console.log('NavigationMenu: No current user found');
       this.menuItems = [];
       return;
     }
 
+    console.log('NavigationMenu: Building menu for user:', this.currentUser.email, 'Role:', this.currentUser.role);
+    
     this.menuItems = this.allMenuItems.filter(item => 
       this.canAccessMenuItem(item)
     );
+    
+    console.log('NavigationMenu: Built', this.menuItems.length, 'menu items:', this.menuItems.map(i => i.label));
   }
 
   /**
@@ -192,11 +220,18 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
 
     // Check permission if resource and action are defined
     if (item.resource && item.action) {
-      return this.permissionService.checkPermission(
+      const hasPermission = this.permissionService.checkPermission(
         this.currentUser,
         item.resource,
         item.action as any
       );
+      
+      // Log for debugging
+      if (!hasPermission) {
+        console.log(`Permission denied for ${item.label}: resource=${item.resource}, action=${item.action}`);
+      }
+      
+      return hasPermission;
     }
 
     // Check children permissions

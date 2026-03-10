@@ -1019,3 +1019,32 @@ export const selectScopedUpcomingJobs = (user: User, dataScopes: DataScope[]) =>
 // Note: determineScopeType helper function has been moved to shared/selector-helpers.ts
 // to avoid code duplication across selector files.
 
+
+// Select total jobs count
+export const selectTotalJobs = createSelector(
+  selectAllJobs,
+  (jobs) => jobs.length
+);
+
+// Select active jobs count (not completed or cancelled)
+export const selectActiveJobsCount = createSelector(
+  selectAllJobs,
+  (jobs) => jobs.filter(job => 
+    job.status !== JobStatus.Completed && 
+    job.status !== JobStatus.Cancelled
+  ).length
+);
+
+// Select recent jobs (last 10, sorted by creation date)
+export const selectRecentJobs = createSelector(
+  selectAllJobs,
+  (jobs) => {
+    return [...jobs]
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.scheduledStartDate).getTime();
+        const dateB = new Date(b.createdAt || b.scheduledStartDate).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 10);
+  }
+);

@@ -1136,6 +1136,7 @@ describe('ReportingService', () => {
           technicianId: 'tech-1',
           assignedBy: 'admin',
           assignedAt: new Date('2024-01-09'),
+          status: AssignmentStatus.Active,
           isActive: true
         }
       ];
@@ -1405,6 +1406,7 @@ describe('ReportingService', () => {
           actualEndDate: new Date('2024-01-10T15:00:00'),
           attachments: [],
           notes: [],
+          market: 'DALLAS',
           company: 'ACME',
           createdBy: 'admin',
           createdAt: new Date(),
@@ -1419,6 +1421,7 @@ describe('ReportingService', () => {
           technicianId: 'tech-1',
           assignedBy: 'admin',
           assignedAt: new Date('2024-01-09'),
+          status: AssignmentStatus.Active,
           isActive: true
         }
       ];
@@ -1502,6 +1505,7 @@ describe('ReportingService', () => {
           technicianId: 'tech-2',
           assignedBy: 'admin',
           assignedAt: new Date('2024-01-09'),
+          status: AssignmentStatus.Active,
           isActive: true
         },
         {
@@ -1510,6 +1514,7 @@ describe('ReportingService', () => {
           technicianId: 'tech-2',
           assignedBy: 'admin',
           assignedAt: new Date('2024-01-09'),
+          status: AssignmentStatus.Active,
           isActive: true
         }
       );

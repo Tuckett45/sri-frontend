@@ -11,6 +11,7 @@ import { TechnicianFilters } from '../../../models/dtos/filters.dto';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 import { ExportService } from '../../../services/export.service';
+import { UserRole } from '../../../../../models/role.enum';
 
 @Component({
   selector: 'app-technician-list',
@@ -24,6 +25,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   error$: Observable<string | null>;
   
   displayedColumns: string[] = ['name', 'role', 'skills', 'status', 'actions'];
+  
+  // Expose UserRole enum for template
+  UserRole = UserRole;
   
   // Search and filter controls
   searchControl = new FormControl('');

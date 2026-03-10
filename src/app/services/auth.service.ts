@@ -196,6 +196,22 @@ export class AuthService {
       this.setUserRole(this.resolveRole(parsedUser));
       this.currentUser = parsedUser; 
       this.loggedInStatus.next(true);
+    } else if (!environment.production) {
+      // In development mode, use a mock admin user if no user is logged in
+      this.currentUser = {
+        id: 'dev-admin-123',
+        name: 'Dev Admin',
+        email: 'admin@dev.local',
+        password: '',
+        role: 'Admin',
+        market: 'ALL',
+        company: 'INTERNAL',
+        createdDate: new Date(),
+        isApproved: true
+      };
+      this.setUserRole(UserRole.Admin);
+      this.loggedInStatus.next(true);
+      console.log('AuthService: Using development mock user (Admin)');
     }
   }
 

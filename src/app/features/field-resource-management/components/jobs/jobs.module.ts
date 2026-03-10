@@ -9,8 +9,8 @@ import { SharedMaterialModule } from '../../shared-material.module';
 // Shared Components Module
 import { SharedComponentsModule } from '../shared/shared-components.module';
 
-// Mobile Module (for TimeTrackerComponent)
-import { MobileModule } from '../mobile/mobile.module';
+// Mobile Shared Module (for TimeTrackerComponent without routes)
+import { MobileSharedModule } from '../mobile/mobile-shared.module';
 
 // Job Components
 import { JobListComponent } from './job-list/job-list.component';
@@ -75,7 +75,7 @@ const routes: Routes = [
     ReactiveFormsModule,
     SharedMaterialModule,
     SharedComponentsModule,
-    MobileModule,
+    MobileSharedModule,
     RouterModule.forChild(routes)
   ]
 })

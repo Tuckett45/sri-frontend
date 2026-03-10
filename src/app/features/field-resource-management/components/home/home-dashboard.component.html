@@ -1,0 +1,158 @@
+<div class="home-dashboard">
+  <!-- Welcome Header -->
+  <div class="welcome-header">
+    <div class="welcome-content">
+      <h1>Field Resource Management</h1>
+      <p>Manage technicians, crews, jobs, and schedules</p>
+    </div>
+  </div>
+
+  <!-- Quick Summary Cards -->
+  <div class="summary-cards">
+    <mat-card class="summary-card" (click)="navigateToJobs()">
+      <mat-card-content>
+        <div class="card-icon">
+          <mat-icon>work</mat-icon>
+        </div>
+        <div class="card-info">
+          <div class="card-value">{{ activeJobs$ | async }}</div>
+          <div class="card-label">Active Jobs</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card" (click)="navigateToTechnicians()">
+      <mat-card-content>
+        <div class="card-icon">
+          <mat-icon>engineering</mat-icon>
+        </div>
+        <div class="card-info">
+          <div class="card-value">{{ availableTechnicians$ | async }}</div>
+          <div class="card-label">Available Technicians</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card" (click)="navigateToScheduling()">
+      <mat-card-content>
+        <div class="card-icon">
+          <mat-icon>calendar_today</mat-icon>
+        </div>
+        <div class="card-info">
+          <div class="card-value">{{ totalJobs$ | async }}</div>
+          <div class="card-label">Total Jobs</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="content-grid">
+    <!-- Quick Actions -->
+    <mat-card class="quick-actions-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>bolt</mat-icon>
+          Quick Actions
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="action-buttons">
+          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="createNewJob()" *ngIf="currentUserRole === UserRole.Admin || currentUserRole === UserRole.CM">
+            <mat-icon style="color: white !important;">add</mat-icon>
+            Create New Job
+          </button>
+          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToJobs()">
+            <mat-icon style="color: white !important;">work</mat-icon>
+            View All Jobs
+          </button>
+          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToScheduling()">
+            <mat-icon style="color: white !important;">calendar_today</mat-icon>
+            Open Schedule
+          </button>
+          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToMap()">
+            <mat-icon style="color: white !important;">map</mat-icon>
+            View Map
+          </button>
+          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToTimecard()">
+            <mat-icon style="color: white !important;">schedule</mat-icon>
+            My Timecard
+          </button>
+          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToReports()">
+            <mat-icon style="color: white !important;">bar_chart</mat-icon>
+            View Reports
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Recent Jobs -->
+    <mat-card class="recent-jobs-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>history</mat-icon>
+          Recent Jobs
+        </mat-card-title>
+        <button mat-button color="primary" (click)="navigateToJobs()">
+          View All
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="recent-jobs-list" *ngIf="(recentJobs$ | async) as jobs">
+          <div *ngIf="jobs.length === 0" class="empty-state">
+            <mat-icon>work_off</mat-icon>
+            <p>No recent jobs</p>
+          </div>
+          <div 
+            *ngFor="let job of jobs" 
+            class="job-item"
+            (click)="navigateToJobDetail(job.id)">
+            <div class="job-info">
+              <div class="job-id">{{ job.jobId }}</div>
+              <div class="job-client">{{ job.client }}</div>
+              <div class="job-site">{{ job.siteName }}</div>
+            </div>
+            <div class="job-meta">
+              <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+              <div class="job-date">{{ formatDate(job.scheduledStartDate) }}</div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Feature Links -->
+  <div class="feature-links">
+    <mat-card class="feature-card" (click)="navigateToTechnicians()">
+      <mat-icon>engineering</mat-icon>
+      <h3>Technicians</h3>
+      <p>Manage field technicians and their assignments</p>
+    </mat-card>
+
+    <mat-card class="feature-card" (click)="navigateToCrews()">
+      <mat-icon>groups</mat-icon>
+      <h3>Crews</h3>
+      <p>Organize technicians into work crews</p>
+    </mat-card>
+
+    <mat-card class="feature-card" (click)="navigateToScheduling()">
+      <mat-icon>calendar_today</mat-icon>
+      <h3>Scheduling</h3>
+      <p>Plan and assign jobs to resources</p>
+    </mat-card>
+
+    <mat-card class="feature-card" (click)="navigateToMap()">
+      <mat-icon>map</mat-icon>
+      <h3>Map View</h3>
+      <p>Track technician locations in real-time</p>
+    </mat-card>
+
+    <mat-card class="feature-card" (click)="navigateToTimecard()">
+      <mat-icon>schedule</mat-icon>
+      <h3>My Timecard</h3>
+      <p>Track time entries and manage timesheets</p>
+    </mat-card>
+  </div>
+</div>

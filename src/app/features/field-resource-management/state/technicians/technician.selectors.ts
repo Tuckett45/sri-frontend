@@ -829,3 +829,9 @@ export const selectCanAccessTechnician = (technicianId: string, user: User, data
 // Note: determineScopeType helper function has been moved to shared/selector-helpers.ts
 // to avoid code duplication across selector files.
 
+
+// Select available technicians count (active technicians)
+export const selectAvailableTechniciansCount = createSelector(
+  selectAllTechnicians,
+  (technicians) => technicians.filter(tech => tech.isActive).length
+);

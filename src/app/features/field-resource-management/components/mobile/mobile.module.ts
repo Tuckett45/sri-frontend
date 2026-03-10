@@ -9,10 +9,12 @@ import { SharedMaterialModule } from '../../shared-material.module';
 // Shared Components Module
 import { SharedComponentsModule } from '../shared/shared-components.module';
 
+// Mobile Shared Module (for TimeTrackerComponent)
+import { MobileSharedModule } from './mobile-shared.module';
+
 // Mobile Components
 import { DailyViewComponent } from './daily-view/daily-view.component';
 import { JobCardComponent } from './job-card/job-card.component';
-import { TimeTrackerComponent } from './time-tracker/time-tracker.component';
 import { JobCompletionFormComponent } from './job-completion-form/job-completion-form.component';
 
 const routes: Routes = [
@@ -42,7 +44,6 @@ const routes: Routes = [
   declarations: [
     DailyViewComponent,
     JobCardComponent,
-    TimeTrackerComponent,
     JobCompletionFormComponent
   ],
   imports: [
@@ -50,10 +51,11 @@ const routes: Routes = [
     ReactiveFormsModule,
     SharedMaterialModule,
     SharedComponentsModule,
+    MobileSharedModule,
     RouterModule.forChild(routes)
   ],
   exports: [
-    TimeTrackerComponent
+    MobileSharedModule
   ]
 })
 export class MobileModule { }

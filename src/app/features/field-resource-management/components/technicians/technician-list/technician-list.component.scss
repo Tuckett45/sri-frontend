@@ -2,6 +2,8 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+  background-color: #f5f5f5;
+  min-height: 100vh;
 }
 
 .list-header {
@@ -45,6 +47,7 @@
 
 .filter-panel {
   margin-bottom: 24px;
+  background-color: white;
 
   mat-card-content {
     padding: 16px;
@@ -148,6 +151,22 @@
       padding: 4px 8px;
       margin: 2px;
     }
+  }
+
+  .skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .skill-chip {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
   }
 
   .status-badge {
@@ -279,22 +298,36 @@ mat-paginator {
     color: rgba(0, 0, 0, 0.87);
   }
 
-  mat-chip-list {
-    mat-chip {
-      background-color: #e3f2fd;
-      color: #1976d2;
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 
-      strong {
-        margin-right: 4px;
+  mat-chip {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+
+    strong {
+      margin-right: 4px;
+    }
+
+    button[matChipRemove] {
+      margin-left: 4px;
+      opacity: 0.7;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 1;
       }
 
       mat-icon {
-        cursor: pointer;
-        opacity: 0.7;
-
-        &:hover {
-          opacity: 1;
-        }
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
       }
     }
   }

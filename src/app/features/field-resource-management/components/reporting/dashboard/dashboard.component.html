@@ -1,10 +1,24 @@
-<div class="dashboard-container" role="main" id="main-content" tabindex="-1">
-  <!-- Header with refresh button -->
-  <div class="dashboard-header">
-    <h1 id="dashboard-title">Dashboard</h1>
-    <button mat-icon-button (click)="onRefresh()" [disabled]="loading$ | async" matTooltip="Refresh Dashboard" aria-label="Refresh dashboard data">
-      <mat-icon aria-hidden="true">refresh</mat-icon>
-    </button>
+<div class="dashboard-container analytics-dashboard" role="main" id="main-content" tabindex="-1">
+  <!-- Hero Header Section -->
+  <div class="dashboard-hero">
+    <div class="hero-content">
+      <div class="hero-icon">
+        <mat-icon>insights</mat-icon>
+      </div>
+      <div class="hero-text">
+        <h1 id="dashboard-title">Performance Analytics</h1>
+        <p class="hero-subtitle">Real-time insights and key performance indicators</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button mat-stroked-button class="date-range-btn">
+        <mat-icon>date_range</mat-icon>
+        Last 30 Days
+      </button>
+      <button mat-icon-button (click)="onRefresh()" [disabled]="loading$ | async" matTooltip="Refresh Dashboard" aria-label="Refresh dashboard data" class="refresh-btn">
+        <mat-icon aria-hidden="true">refresh</mat-icon>
+      </button>
+    </div>
   </div>
   
   <!-- Loading indicator -->
@@ -18,59 +32,48 @@
     </mat-card-content>
   </mat-card>
   
-  <!-- KPI Summary Cards -->
-  <div class="kpi-grid" role="region" aria-labelledby="kpi-summary-heading">
+  <!-- KPI Summary Cards - Large, Prominent -->
+  <div class="kpi-hero-grid" role="region" aria-labelledby="kpi-summary-heading">
     <h2 id="kpi-summary-heading" class="sr-only">Key Performance Indicators Summary</h2>
-    <mat-card class="kpi-card" role="article" aria-label="Active jobs metric">
-      <mat-card-content>
-        <div class="kpi-icon icon-primary" aria-hidden="true">
-          <mat-icon>work</mat-icon>
-        </div>
-        <div class="kpi-content">
-          <div class="kpi-label">Active Jobs</div>
-          <div class="kpi-value" aria-live="polite">{{ totalActiveJobs$ | async }}</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
     
-    <mat-card class="kpi-card" role="article" aria-label="Available technicians metric">
-      <mat-card-content>
-        <div class="kpi-icon icon-accent" aria-hidden="true">
-          <mat-icon>people</mat-icon>
-        </div>
-        <div class="kpi-content">
-          <div class="kpi-label">Available Technicians</div>
-          <div class="kpi-value" aria-live="polite">{{ totalAvailableTechnicians$ | async }}</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-    
-    <mat-card class="kpi-card" role="article" aria-label="Average utilization metric">
-      <mat-card-content>
-        <div class="kpi-icon icon-success" aria-hidden="true">
+    <div class="kpi-hero-card primary-card" role="article" aria-label="Active jobs metric">
+      <div class="kpi-hero-header">
+        <mat-icon class="kpi-hero-icon">work_outline</mat-icon>
+        <span class="kpi-trend positive">
           <mat-icon>trending_up</mat-icon>
-        </div>
-        <div class="kpi-content">
-          <div class="kpi-label">Average Utilization</div>
-          <div class="kpi-value" aria-live="polite">{{ (averageUtilization$ | async) | number:'1.1-1' }}%</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+          +12%
+        </span>
+      </div>
+      <div class="kpi-hero-value" aria-live="polite">{{ totalActiveJobs$ | async }}</div>
+      <div class="kpi-hero-label">Active Jobs</div>
+      <div class="kpi-hero-footer">vs. last month</div>
+    </div>
     
-    <!-- My Timecard Quick Access Card -->
-    <mat-card class="kpi-card timecard-card" role="article" aria-label="My timecard quick access">
-      <mat-card-content>
-        <div class="kpi-icon icon-timecard" aria-hidden="true">
-          <mat-icon>schedule</mat-icon>
-        </div>
-        <div class="kpi-content">
-          <div class="kpi-label">My Timecard</div>
-          <button mat-raised-button color="primary" routerLink="/field-resource-management/timecard" class="timecard-button">
-            View Timecard
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
+    <div class="kpi-hero-card success-card" role="article" aria-label="Available technicians metric">
+      <div class="kpi-hero-header">
+        <mat-icon class="kpi-hero-icon">people_outline</mat-icon>
+        <span class="kpi-trend positive">
+          <mat-icon>trending_up</mat-icon>
+          +5%
+        </span>
+      </div>
+      <div class="kpi-hero-value" aria-live="polite">{{ totalAvailableTechnicians$ | async }}</div>
+      <div class="kpi-hero-label">Available Technicians</div>
+      <div class="kpi-hero-footer">ready for assignment</div>
+    </div>
+    
+    <div class="kpi-hero-card accent-card" role="article" aria-label="Average utilization metric">
+      <div class="kpi-hero-header">
+        <mat-icon class="kpi-hero-icon">speed</mat-icon>
+        <span class="kpi-trend neutral">
+          <mat-icon>trending_flat</mat-icon>
+          0%
+        </span>
+      </div>
+      <div class="kpi-hero-value" aria-live="polite">{{ (averageUtilization$ | async) | number:'1.0-0' }}%</div>
+      <div class="kpi-hero-label">Utilization Rate</div>
+      <div class="kpi-hero-footer">team efficiency</div>
+    </div>
   </div>
   
   <!-- Charts Section -->

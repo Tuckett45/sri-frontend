@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy, Inject, Optional } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { takeUntil, filter } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { Job, JobType, Priority, ContactInfo } from '../../../models/job.model';
 import { Skill } from '../../../models/technician.model';
@@ -14,6 +15,11 @@ import * as JobSelectors from '../../../state/jobs/job.selectors';
 import { SanitizationService } from '../../../services/sanitization.service';
 import { AccessibilityService } from '../../../services/accessibility.service';
 import { AuthService } from '../../../../../services/auth.service';
+
+export interface JobFormDialogData {
+  jobId?: string;
+  templateId?: string;
+}
 
 /**
  * Job Form Component
@@ -76,13 +82,15 @@ export class JobFormComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
+    @Optional() private route: ActivatedRoute,
+    @Optional() private router: Router,
     private store: Store,
     private snackBar: MatSnackBar,
     private sanitizationService: SanitizationService,
     private accessibilityService: AccessibilityService,
-    private authService: AuthService
+    private authService: AuthService,
+    @Optional() public dialogRef: MatDialogRef<JobFormComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) public data: JobFormDialogData
   ) {}
 
   /**
@@ -113,27 +121,40 @@ export class JobFormComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeForm();
     
-    // Check if edit mode or create mode
-    this.route.params
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(params => {
-        const id = params['id'];
-        if (id && id !== 'new') {
-          this.isEditMode = true;
-          this.jobId = id;
-          this.loadJob(id);
-        }
-      });
+    // Check if opened as dialog with data
+    if (this.data) {
+      if (this.data.jobId) {
+        this.isEditMode = true;
+        this.jobId = this.data.jobId;
+        this.loadJob(this.data.jobId);
+      }
+      if (this.data.templateId) {
+        this.loadTemplate(this.data.templateId);
+      }
+    }
+    
+    // Fallback to route params if not in dialog mode
+    if (this.route) {
+      this.route.params
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(params => {
+          const id = params['id'];
+          if (id && id !== 'new') {
+            this.isEditMode = true;
+            this.jobId = id;
+            this.loadJob(id);
+          }
+        });
 
-    // Check for template ID in query params
-    this.route.queryParams
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(params => {
-        const templateId = params['templateId'];
-        if (templateId) {
-          this.loadTemplate(templateId);
-        }
-      });
+      this.route.queryParams
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(params => {
+          const templateId = params['templateId'];
+          if (templateId) {
+            this.loadTemplate(templateId);
+          }
+        });
+    }
   }
 
   ngOnDestroy(): void {
@@ -325,7 +346,12 @@ export class JobFormComponent implements OnInit, OnDestroy {
       // and then upload files with the new job ID
     }
     
-    this.router.navigate(['/field-resource-management/jobs']);
+    // Close dialog if opened as modal, otherwise navigate
+    if (this.dialogRef) {
+      this.dialogRef.close({ success: true });
+    } else if (this.router) {
+      this.router.navigate(['/field-resource-management/jobs']);
+    }
   }
 
   /**
@@ -357,17 +383,28 @@ export class JobFormComponent implements OnInit, OnDestroy {
     this.store.dispatch(JobActions.updateJob({ id: this.jobId, job: updateDto }));
     
     this.snackBar.open('Job updated successfully', 'Close', { duration: 3000 });
-    this.router.navigate(['/field-resource-management/jobs', this.jobId]);
+    
+    // Close dialog if opened as modal, otherwise navigate
+    if (this.dialogRef) {
+      this.dialogRef.close({ success: true });
+    } else if (this.router) {
+      this.router.navigate(['/field-resource-management/jobs', this.jobId]);
+    }
   }
 
   /**
    * Cancel and go back
    */
   onCancel(): void {
-    if (this.isEditMode && this.jobId) {
-      this.router.navigate(['/field-resource-management/jobs', this.jobId]);
-    } else {
-      this.router.navigate(['/field-resource-management/jobs']);
+    // Close dialog if opened as modal, otherwise navigate
+    if (this.dialogRef) {
+      this.dialogRef.close();
+    } else if (this.router) {
+      if (this.isEditMode && this.jobId) {
+        this.router.navigate(['/field-resource-management/jobs', this.jobId]);
+      } else {
+        this.router.navigate(['/field-resource-management/jobs']);
+      }
     }
   }
 

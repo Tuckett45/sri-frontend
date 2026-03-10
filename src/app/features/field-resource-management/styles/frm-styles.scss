@@ -1,0 +1,384 @@
+/**
+ * FRM Global Styles
+ * Import this file in components that need the full design system
+ */
+
+@import './frm-variables';
+@import './frm-mixins';
+
+// ============================================================================
+// GLOBAL UTILITY CLASSES
+// ============================================================================
+
+// Spacing utilities
+.frm-mt-xs { margin-top: $frm-spacing-xs; }
+.frm-mt-sm { margin-top: $frm-spacing-sm; }
+.frm-mt-md { margin-top: $frm-spacing-md; }
+.frm-mt-lg { margin-top: $frm-spacing-lg; }
+.frm-mt-xl { margin-top: $frm-spacing-xl; }
+
+.frm-mb-xs { margin-bottom: $frm-spacing-xs; }
+.frm-mb-sm { margin-bottom: $frm-spacing-sm; }
+.frm-mb-md { margin-bottom: $frm-spacing-md; }
+.frm-mb-lg { margin-bottom: $frm-spacing-lg; }
+.frm-mb-xl { margin-bottom: $frm-spacing-xl; }
+
+.frm-p-xs { padding: $frm-spacing-xs; }
+.frm-p-sm { padding: $frm-spacing-sm; }
+.frm-p-md { padding: $frm-spacing-md; }
+.frm-p-lg { padding: $frm-spacing-lg; }
+.frm-p-xl { padding: $frm-spacing-xl; }
+
+// Text utilities
+.frm-text-primary { color: $frm-text-primary; }
+.frm-text-secondary { color: $frm-text-secondary; }
+.frm-text-disabled { color: $frm-text-disabled; }
+
+.frm-text-center { text-align: center; }
+.frm-text-right { text-align: right; }
+.frm-text-left { text-align: left; }
+
+.frm-truncate { @include frm-truncate; }
+
+// Flex utilities
+.frm-flex { display: flex; }
+.frm-flex-center { @include frm-flex-center; }
+.frm-flex-between { @include frm-flex-between; }
+.frm-flex-column { @include frm-flex-column; }
+.frm-flex-wrap { flex-wrap: wrap; }
+.frm-flex-1 { flex: 1; }
+
+// Gap utilities
+.frm-gap-xs { gap: $frm-spacing-xs; }
+.frm-gap-sm { gap: $frm-spacing-sm; }
+.frm-gap-md { gap: $frm-spacing-md; }
+.frm-gap-lg { gap: $frm-spacing-lg; }
+
+// ============================================================================
+// COMMON COMPONENT CLASSES
+// ============================================================================
+
+.frm-page-container {
+  padding: $frm-spacing-lg;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @include frm-responsive(xs) {
+    padding: $frm-spacing-md;
+  }
+}
+
+.frm-page-header {
+  @include frm-flex-between;
+  margin-bottom: $frm-spacing-lg;
+
+  h1 {
+    margin: 0;
+    font-size: $frm-font-size-xxl;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
+  }
+
+  .frm-page-actions {
+    display: flex;
+    gap: $frm-spacing-sm;
+  }
+}
+
+.frm-section {
+  @include frm-card;
+  margin-bottom: $frm-spacing-lg;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.frm-section-header {
+  @include frm-card-header;
+}
+
+.frm-empty-state {
+  @include frm-flex-center;
+  @include frm-flex-column;
+  padding: $frm-spacing-xxl;
+  text-align: center;
+  color: $frm-text-secondary;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: $frm-spacing-md;
+    color: $frm-gray-400;
+  }
+
+  h3 {
+    margin: 0 0 $frm-spacing-sm 0;
+    font-size: $frm-font-size-lg;
+    font-weight: $frm-font-weight-medium;
+  }
+
+  p {
+    margin: 0 0 $frm-spacing-md 0;
+    font-size: $frm-font-size-base;
+  }
+}
+
+.frm-loading-state {
+  @include frm-flex-center;
+  padding: $frm-spacing-xxl;
+}
+
+.frm-error-state {
+  @include frm-flex-center;
+  @include frm-flex-column;
+  padding: $frm-spacing-xxl;
+  text-align: center;
+  color: $frm-error;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: $frm-spacing-md;
+  }
+
+  h3 {
+    margin: 0 0 $frm-spacing-sm 0;
+    font-size: $frm-font-size-lg;
+    font-weight: $frm-font-weight-medium;
+  }
+
+  p {
+    margin: 0 0 $frm-spacing-md 0;
+    font-size: $frm-font-size-base;
+    color: $frm-text-secondary;
+  }
+}
+
+// ============================================================================
+// STATUS BADGES
+// ============================================================================
+
+.frm-status-badge {
+  @include frm-status-badge;
+}
+
+// ============================================================================
+// DATA TABLES
+// ============================================================================
+
+.frm-table-container {
+  @include frm-card;
+  overflow-x: auto;
+  @include frm-scrollbar;
+
+  table {
+    @include frm-table;
+  }
+
+  .mat-column-actions {
+    width: 120px;
+    text-align: right;
+  }
+
+  .mat-column-status {
+    width: 120px;
+  }
+
+  .mat-column-select {
+    width: 56px;
+  }
+}
+
+// ============================================================================
+// FILTER PANELS
+// ============================================================================
+
+.frm-filter-panel {
+  @include frm-card;
+  margin-bottom: $frm-spacing-md;
+
+  .frm-filter-header {
+    @include frm-flex-between;
+    margin-bottom: $frm-spacing-md;
+
+    h3 {
+      margin: 0;
+      font-size: $frm-font-size-md;
+      font-weight: $frm-font-weight-medium;
+    }
+  }
+
+  .frm-filter-content {
+    display: flex;
+    gap: $frm-spacing-md;
+    flex-wrap: wrap;
+
+    .mat-form-field {
+      min-width: 200px;
+      flex: 1;
+    }
+  }
+}
+
+// ============================================================================
+// FORMS
+// ============================================================================
+
+.frm-form {
+  .frm-form-section {
+    margin-bottom: $frm-spacing-xl;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h3 {
+      font-size: $frm-font-size-md;
+      font-weight: $frm-font-weight-medium;
+      margin-bottom: $frm-spacing-md;
+      color: $frm-text-secondary;
+    }
+  }
+
+  .frm-form-row {
+    display: flex;
+    gap: $frm-spacing-md;
+    margin-bottom: $frm-spacing-md;
+
+    @include frm-responsive(xs) {
+      flex-direction: column;
+    }
+
+    .frm-form-field {
+      flex: 1;
+    }
+  }
+
+  .frm-form-actions {
+    @include frm-flex-between;
+    padding-top: $frm-spacing-lg;
+    border-top: $frm-border-width solid $frm-border-light;
+    gap: $frm-spacing-sm;
+
+    @include frm-responsive(xs) {
+      flex-direction: column-reverse;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// ============================================================================
+// DETAIL VIEWS
+// ============================================================================
+
+.frm-detail-container {
+  @include frm-card;
+
+  .frm-detail-header {
+    @include frm-flex-between;
+    padding-bottom: $frm-spacing-md;
+    margin-bottom: $frm-spacing-md;
+    border-bottom: $frm-border-width solid $frm-border-light;
+
+    h2 {
+      margin: 0;
+      font-size: $frm-font-size-xl;
+      font-weight: $frm-font-weight-medium;
+    }
+
+    .frm-detail-actions {
+      display: flex;
+      gap: $frm-spacing-sm;
+    }
+  }
+
+  .frm-detail-section {
+    margin-bottom: $frm-spacing-lg;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h3 {
+      font-size: $frm-font-size-md;
+      font-weight: $frm-font-weight-medium;
+      margin-bottom: $frm-spacing-md;
+      color: $frm-text-secondary;
+    }
+  }
+
+  .frm-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: $frm-spacing-md;
+  }
+
+  .frm-detail-field {
+    .frm-detail-label {
+      font-size: $frm-font-size-sm;
+      font-weight: $frm-font-weight-medium;
+      color: $frm-text-secondary;
+      margin-bottom: $frm-spacing-xs;
+    }
+
+    .frm-detail-value {
+      font-size: $frm-font-size-base;
+      color: $frm-text-primary;
+    }
+  }
+}
+
+// ============================================================================
+// LIST VIEWS
+// ============================================================================
+
+.frm-list-container {
+  @include frm-card;
+
+  .frm-list-header {
+    @include frm-card-header;
+  }
+
+  .frm-list-filters {
+    display: flex;
+    gap: $frm-spacing-md;
+    margin-bottom: $frm-spacing-md;
+    flex-wrap: wrap;
+  }
+
+  .frm-list-content {
+    table {
+      @include frm-table;
+    }
+  }
+}
+
+// ============================================================================
+// RESPONSIVE UTILITIES
+// ============================================================================
+
+.frm-hide-xs {
+  @include frm-responsive(xs) {
+    display: none !important;
+  }
+}
+
+.frm-hide-sm {
+  @include frm-responsive(sm) {
+    display: none !important;
+  }
+}
+
+.frm-show-xs {
+  display: none !important;
+  
+  @include frm-responsive(xs) {
+    display: block !important;
+  }
+}
