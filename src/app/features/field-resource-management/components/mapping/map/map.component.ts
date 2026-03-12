@@ -3,6 +3,8 @@ import {
   OnInit,
   AfterViewInit,
   OnDestroy,
+  OnChanges,
+  SimpleChanges,
   Input,
   Output,
   EventEmitter,
@@ -74,7 +76,7 @@ export interface MapZoomEvent {
   styleUrls: ['./map.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
+export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLDivElement>;
 
   /**
@@ -87,6 +89,19 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     maxZoom: 18,
     scrollWheelZoom: true,
     dragging: true
+  };
+
+  /**
+   * Filter settings for controlling marker visibility
+   */
+  @Input() filters: any = {
+    showTechnicians: true,
+    showCrews: true,
+    showJobs: true,
+    technicianStatuses: ['available', 'on-job', 'unavailable', 'off-duty'],
+    crewStatuses: ['AVAILABLE', 'ON_JOB', 'UNAVAILABLE'],
+    jobStatuses: ['NotStarted', 'EnRoute', 'OnSite', 'Completed', 'Issue', 'Cancelled'],
+    jobPriorities: ['P1', 'P2', 'P3', 'P4']
   };
 
   /**
@@ -194,6 +209,39 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private destroy$ = new Subject<void>();
 
+  /**
+   * Cached technician data for filter updates
+   */
+  private cachedTechnicians: Technician[] = [];
+
+  /**
+   * Cached crew data for filter updates
+   */
+  private cachedCrews: Array<{
+    id: string;
+    name: string;
+    location: GeoLocation;
+    status: string;
+    activeJobId?: string;
+    memberCount: number;
+  }> = [];
+
+  /**
+   * Cached job data for filter updates
+   */
+  private cachedJobs: Array<{
+    id: string;
+    jobId: string;
+    siteName: string;
+    location: {
+      latitude: number;
+      longitude: number;
+    };
+    status: JobStatus;
+    priority: Priority;
+    scheduledStartDate: Date;
+  }> = [];
+
   constructor(
     private store: Store,
     private permissionService: PermissionService,
@@ -215,6 +263,16 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     
     // Subscribe to SignalR real-time location updates
     this.setupSignalRLocationSubscriptions();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // React to filter changes
+    if (changes['filters'] && !changes['filters'].firstChange) {
+      // Re-apply filters to cached data
+      this.updateTechnicianMarkers(this.cachedTechnicians);
+      this.updateCrewMarkers(this.cachedCrews);
+      this.updateJobMarkers(this.cachedJobs);
+    }
   }
 
   ngAfterViewInit(): void {
@@ -528,6 +586,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           debounceTime(150) // Debounce rapid updates
         )
         .subscribe(technicians => {
+          this.cachedTechnicians = technicians;
           this.updateTechnicianMarkers(technicians);
         });
     });
@@ -542,11 +601,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Filter technicians with valid locations
-    const techniciansWithLocation = technicians.filter(tech => 
-      tech.currentLocation && 
-      this.isValidCoordinate(tech.currentLocation)
-    );
+    // Check if technicians should be shown
+    if (!this.filters.showTechnicians) {
+      // Remove all technician markers if filter is off
+      this.clearAllMarkers();
+      return;
+    }
+
+    // Filter technicians with valid locations and matching status filter
+    const techniciansWithLocation = technicians.filter(tech => {
+      if (!tech.currentLocation || !this.isValidCoordinate(tech.currentLocation)) {
+        return false;
+      }
+      
+      // Check if technician status matches filter
+      const status = this.getTechnicianStatus(tech);
+      return this.filters.technicianStatuses.includes(status);
+    });
 
     // Get current marker IDs
     const currentMarkerIds = new Set(this.technicianMarkers.keys());
@@ -886,6 +957,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           debounceTime(150) // Debounce rapid updates
         )
         .subscribe(crews => {
+          this.cachedCrews = crews;
           this.updateCrewMarkers(crews);
         });
     });
@@ -907,9 +979,21 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Check if crews should be shown
+    if (!this.filters.showCrews) {
+      // Remove all crew markers if filter is off
+      this.clearAllCrewMarkers();
+      return;
+    }
+
+    // Filter crews by status
+    const filteredCrews = crews.filter(crew => 
+      this.filters.crewStatuses.includes(crew.status)
+    );
+
     // Get current marker IDs
     const currentMarkerIds = new Set(this.crewMarkers.keys());
-    const newCrewIds = new Set(crews.map(c => c.id));
+    const newCrewIds = new Set(filteredCrews.map(c => c.id));
 
     // Remove markers for crews no longer in the list
     currentMarkerIds.forEach(id => {
@@ -919,7 +1003,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     // Add or update markers for crews
-    crews.forEach(crew => {
+    filteredCrews.forEach(crew => {
       this.addOrUpdateCrewMarker(crew);
     });
   }
@@ -1146,6 +1230,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           debounceTime(150) // Debounce rapid updates
         )
         .subscribe(jobs => {
+          this.cachedJobs = jobs;
           this.updateJobMarkers(jobs);
         });
     });
@@ -1369,9 +1454,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Check if jobs should be shown
+    if (!this.filters.showJobs) {
+      // Remove all job markers if filter is off
+      this.clearAllJobMarkers();
+      return;
+    }
+
+    // Filter jobs by status and priority
+    const filteredJobs = jobs.filter(job => 
+      this.filters.jobStatuses.includes(job.status) &&
+      this.filters.jobPriorities.includes(job.priority)
+    );
+
     // Get current marker IDs
     const currentMarkerIds = new Set(this.jobMarkers.keys());
-    const newJobIds = new Set(jobs.map(j => j.id));
+    const newJobIds = new Set(filteredJobs.map(j => j.id));
 
     // Remove markers for jobs no longer in the list
     currentMarkerIds.forEach(id => {
@@ -1381,7 +1479,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     // Add or update markers for jobs
-    jobs.forEach(job => {
+    filteredJobs.forEach(job => {
       this.addOrUpdateJobMarker(job);
     });
   }

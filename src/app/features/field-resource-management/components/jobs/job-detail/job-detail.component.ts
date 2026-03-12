@@ -12,6 +12,7 @@ import { Assignment } from '../../../models/assignment.model';
 import * as JobActions from '../../../state/jobs/job.actions';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
+import { AssignmentDialogComponent } from '../../scheduling/assignment-dialog/assignment-dialog.component';
 
 /**
  * Job Detail Component
@@ -153,18 +154,36 @@ export class JobDetailComponent implements OnInit, OnDestroy {
    * Navigate to edit job
    */
   editJob(): void {
-    if (this.job) {
-      this.router.navigate(['/field-resource-management/jobs', this.job.id, 'edit']);
+    if (!this.job) return;
+    
+    try {
+      // Use relative navigation from current route
+      this.router.navigate(['edit'], { relativeTo: this.route });
+    } catch (error) {
+      console.error('Navigation error:', error);
+      this.snackBar.open('Unable to navigate to edit page', 'Close', { duration: 3000 });
     }
   }
 
   /**
-   * Navigate to reassign job
+   * Open reassign dialog
    */
   reassignJob(): void {
-    if (this.job) {
-      this.router.navigate(['/field-resource-management/jobs', this.job.id, 'reassign']);
-    }
+    if (!this.job) return;
+
+    const dialogRef = this.dialog.open(AssignmentDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      data: { job: this.job }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.assigned) {
+        this.snackBar.open('Technician assigned successfully', 'Close', { duration: 3000 });
+        // Reload related data to show new assignment
+        this.loadRelatedData();
+      }
+    });
   }
 
   /**
@@ -396,6 +415,13 @@ export class JobDetailComponent implements OnInit, OnDestroy {
    * Navigate back to job list
    */
   goBack(): void {
-    this.router.navigate(['/field-resource-management/jobs']);
+    try {
+      // Navigate back to jobs list using relative path
+      this.router.navigate(['..'], { relativeTo: this.route });
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback: try absolute path
+      this.router.navigate(['/field-resources/jobs']);
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -89,7 +90,10 @@ export class UtilizationReportComponent implements OnInit, OnDestroy {
     }
   };
   
-  constructor(private store: Store) {
+  constructor(
+    private store: Store,
+    private router: Router
+  ) {
     this.utilizationReport$ = this.store.select(ReportingSelectors.selectUtilizationReport);
     this.loading$ = this.store.select(ReportingSelectors.selectReportingLoading);
     this.error$ = this.store.select(ReportingSelectors.selectReportingError);
@@ -227,8 +231,14 @@ export class UtilizationReportComponent implements OnInit, OnDestroy {
    * View technician detail
    */
   viewTechnicianDetail(technician: TechnicianUtilization): void {
-    // Navigation will be implemented in routing task
-    console.log('View technician detail:', technician.technician.id);
+    this.router.navigate(['/field-resources/technicians', technician.technician.id]);
+  }
+  
+  /**
+   * Handle row click
+   */
+  onRowClick(technician: TechnicianUtilization): void {
+    this.viewTechnicianDetail(technician);
   }
   
   /**

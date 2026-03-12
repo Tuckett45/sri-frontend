@@ -1,4 +1,4 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { KPI, Trend, KPIStatus } from '../../../models/reporting.model';
 
 /**
@@ -13,6 +13,7 @@ import { KPI, Trend, KPIStatus } from '../../../models/reporting.model';
 })
 export class KPICardComponent {
   @Input() kpi!: KPI;
+  @Output() kpiClick = new EventEmitter<KPI>();
   
   // Enum references for template
   Trend = Trend;
@@ -97,5 +98,12 @@ export class KPICardComponent {
   getSparklineData(): number[] {
     // Mock sparkline data - would be provided by API
     return [65, 70, 68, 72, 75, 73, this.kpi.value];
+  }
+  
+  /**
+   * Handle card click
+   */
+  onClick(): void {
+    this.kpiClick.emit(this.kpi);
   }
 }

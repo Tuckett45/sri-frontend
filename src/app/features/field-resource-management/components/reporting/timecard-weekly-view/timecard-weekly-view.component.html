@@ -1,0 +1,248 @@
+<div class="timecard-weekly-view" role="main" *ngIf="weeklySummary$ | async as summary">
+  <!-- Header -->
+  <div class="timecard-header">
+    <div class="header-left">
+      <h1>My Timecard</h1>
+      <div class="week-navigation">
+        <button mat-icon-button (click)="previousWeek()" aria-label="Previous week">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="week-range">Week of {{ formatWeekRange() }}</span>
+        <button mat-icon-button (click)="nextWeek()" aria-label="Next week">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+        <button mat-button (click)="goToCurrentWeek()" class="today-button">
+          Today
+        </button>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <button mat-icon-button (click)="refresh()" matTooltip="Refresh" aria-label="Refresh timecard">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  <mat-progress-bar *ngIf="loading$ | async" mode="indeterminate"></mat-progress-bar>
+
+  <!-- Status Bar -->
+  <mat-card class="status-bar">
+    <mat-card-content>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="status-label">Status:</span>
+          <span class="status-value">
+            <mat-chip class="status-chip draft">Draft</mat-chip>
+          </span>
+        </div>
+        
+        <div class="status-item">
+          <span class="status-label">Total Hours:</span>
+          <span class="status-value" [class.overtime]="weekHasOvertime(summary)">
+            {{ formatHours(summary.totalHours) }}
+          </span>
+        </div>
+        
+        <div class="status-item">
+          <span class="status-label">Regular:</span>
+          <span class="status-value">{{ formatHours(summary.regularHours) }}</span>
+        </div>
+        
+        <div class="status-item" *ngIf="summary.overtimeHours > 0">
+          <span class="status-label">Overtime:</span>
+          <span class="status-value overtime">{{ formatHours(summary.overtimeHours) }}</span>
+        </div>
+        
+        <div class="status-item">
+          <span class="status-label">Expenses:</span>
+          <span class="status-value">${{ summary.totalExpenses | number:'1.2-2' }}</span>
+        </div>
+        
+        <div class="status-item lock-status" *ngIf="!summary.isLocked && summary.locksIn">
+          <mat-icon class="lock-icon">schedule</mat-icon>
+          <span class="status-label">Locks in:</span>
+          <span class="status-value">{{ lockCountdown$ | async }}</span>
+        </div>
+        
+        <div class="status-item lock-status locked" *ngIf="summary.isLocked">
+          <mat-icon class="lock-icon">lock</mat-icon>
+          <span class="status-value">Locked</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Week Grid -->
+  <mat-card class="week-grid-card">
+    <mat-card-content>
+      <div class="week-grid">
+        <!-- Header Row -->
+        <div class="grid-header">
+          <div class="day-header" *ngFor="let day of daysOfWeek; let i = index">
+            <div class="day-name">{{ day }}</div>
+            <div class="day-date">{{ formatDate(getDateForDay(i)) }}</div>
+          </div>
+        </div>
+
+        <!-- Data Row -->
+        <div class="grid-data">
+          <div 
+            class="day-cell" 
+            *ngFor="let day of daysOfWeek; let i = index"
+            [class.has-data]="getDailySummary(summary, i)"
+            [class.locked]="getDailySummary(summary, i)?.isLocked"
+            [class.overtime]="hasOvertime(getDailySummary(summary, i))"
+            (click)="viewDayDetails(getDailySummary(summary, i)!)"
+            [attr.tabindex]="getDailySummary(summary, i) ? 0 : -1"
+            [attr.role]="getDailySummary(summary, i) ? 'button' : null"
+            [attr.aria-label]="getDailySummary(summary, i) ? 'View details for ' + day : null">
+            
+            <ng-container *ngIf="getDailySummary(summary, i) as dailySummary">
+              <!-- Hours -->
+              <div class="cell-hours">
+                <mat-icon class="cell-icon">access_time</mat-icon>
+                <span class="hours-value">{{ formatHours(dailySummary.totalHours) }}</span>
+                <mat-icon *ngIf="dailySummary.overtimeHours > 0" class="overtime-icon" matTooltip="Overtime">
+                  warning
+                </mat-icon>
+              </div>
+
+              <!-- Jobs Count -->
+              <div class="cell-jobs">
+                <mat-icon class="cell-icon">work</mat-icon>
+                <span>{{ dailySummary.jobCount }} {{ dailySummary.jobCount === 1 ? 'job' : 'jobs' }}</span>
+              </div>
+
+              <!-- Expenses -->
+              <div class="cell-expenses" *ngIf="dailySummary.totalExpenses > 0">
+                <mat-icon class="cell-icon">receipt</mat-icon>
+                <span>${{ dailySummary.totalExpenses | number:'1.2-2' }}</span>
+              </div>
+
+              <!-- Lock Indicator -->
+              <div class="cell-lock" *ngIf="dailySummary.isLocked">
+                <mat-icon class="lock-icon" matTooltip="Locked">lock</mat-icon>
+              </div>
+            </ng-container>
+
+            <!-- Empty State -->
+            <div class="empty-day" *ngIf="!getDailySummary(summary, i)">
+              <span class="empty-text">No entries</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="addTimeEntry()"
+      [disabled]="summary.isLocked">
+      <mat-icon>add</mat-icon>
+      Add Time Entry
+    </button>
+
+    <button 
+      mat-raised-button 
+      (click)="addExpense()"
+      [disabled]="summary.isLocked">
+      <mat-icon>receipt</mat-icon>
+      Add Expense
+    </button>
+
+    <button 
+      mat-raised-button 
+      (click)="copyPreviousWeek()"
+      [disabled]="summary.isLocked">
+      <mat-icon>content_copy</mat-icon>
+      Copy Last Week
+    </button>
+
+    <button 
+      mat-raised-button 
+      color="accent" 
+      (click)="submitTimecard()"
+      [disabled]="summary.isLocked || summary.totalHours === 0">
+      <mat-icon>send</mat-icon>
+      Submit for Approval
+    </button>
+
+    <button 
+      mat-button 
+      (click)="requestUnlock()"
+      *ngIf="summary.isLocked">
+      <mat-icon>lock_open</mat-icon>
+      Request Unlock
+    </button>
+  </div>
+
+  <!-- Detailed Entries Section -->
+  <mat-card class="entries-detail">
+    <mat-card-header>
+      <mat-card-title>Time Entries</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="entries-by-day" *ngFor="let dailySummary of summary.dailySummaries">
+        <div class="day-header-detail">
+          <h3>{{ dailySummary.date | date:'EEEE, MMMM d' }}</h3>
+          <span class="day-total">{{ formatHours(dailySummary.totalHours) }}</span>
+        </div>
+
+        <div class="day-entries">
+          <div class="entry-row" *ngFor="let entry of dailySummary.timeEntries">
+            <div class="entry-job">
+              <mat-icon>work</mat-icon>
+              <span>{{ entry.jobId }}</span>
+            </div>
+            <div class="entry-time">
+              <span>{{ entry.clockInTime | date:'shortTime' }}</span>
+              <mat-icon>arrow_forward</mat-icon>
+              <span>{{ entry.clockOutTime ? (entry.clockOutTime | date:'shortTime') : 'Active' }}</span>
+            </div>
+            <div class="entry-hours">
+              {{ formatHours(timecardService.calculateEntryHours(entry)) }}
+            </div>
+            <div class="entry-actions">
+              <button 
+                mat-icon-button 
+                (click)="editTimeEntry(entry); $event.stopPropagation()"
+                [disabled]="dailySummary.isLocked"
+                matTooltip="Edit entry">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Day Expenses -->
+        <div class="day-expenses" *ngIf="dailySummary.expenses.length > 0">
+          <h4>Expenses</h4>
+          <div class="expense-row" *ngFor="let expense of dailySummary.expenses">
+            <div class="expense-type">
+              <mat-icon>receipt</mat-icon>
+              <span>{{ expense.type }}</span>
+            </div>
+            <div class="expense-description">{{ expense.description }}</div>
+            <div class="expense-amount">${{ expense.amount | number:'1.2-2' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="summary.dailySummaries.length === 0">
+        <mat-icon>info</mat-icon>
+        <p>No time entries for this week</p>
+        <button mat-raised-button color="primary" (click)="addTimeEntry()">
+          <mat-icon>add</mat-icon>
+          Add Your First Entry
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

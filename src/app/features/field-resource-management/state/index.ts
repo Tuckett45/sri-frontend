@@ -51,6 +51,11 @@ export { reportingReducer, initialState as reportingInitialState } from './repor
 export * from './reporting/reporting.selectors';
 export * from './reporting/reporting.effects';
 
+// Timecard State
+export * from './timecards/timecard.actions';
+export { timecardReducer, initialState as timecardInitialState } from './timecards/timecard.reducer';
+export * from './timecards/timecard.selectors';
+
 /**
  * Root State Interface
  * Combines all feature state slices
@@ -62,6 +67,7 @@ import { TimeEntryState } from './time-entries/time-entry.state';
 import { NotificationState } from './notifications/notification.state';
 import { UIState } from './ui/ui.state';
 import { ReportingState } from './reporting/reporting.state';
+import { TimecardState } from './timecards/timecard.reducer';
 
 export interface FieldResourceManagementState {
   technicians: TechnicianState;
@@ -71,4 +77,5 @@ export interface FieldResourceManagementState {
   notifications: NotificationState;
   ui: UIState;
   reporting: ReportingState;
+  timecards: TimecardState;
 }

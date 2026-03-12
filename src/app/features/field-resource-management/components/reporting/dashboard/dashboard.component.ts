@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -53,7 +54,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   
   constructor(
     private store: Store,
-    private accessibilityService: AccessibilityService
+    private accessibilityService: AccessibilityService,
+    private router: Router
   ) {
     // Initialize observables
     this.dashboard$ = this.store.select(ReportingSelectors.selectDashboard);
@@ -218,17 +220,49 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * Navigate to detailed reports
    */
   navigateToUtilizationReport(): void {
-    // Navigation will be implemented in routing task
-    console.log('Navigate to utilization report');
+    this.router.navigate(['/field-resources/reporting/utilization']);
+    this.accessibilityService.announce('Navigating to utilization report');
   }
   
   navigateToPerformanceReport(): void {
-    // Navigation will be implemented in routing task
-    console.log('Navigate to performance report');
+    this.router.navigate(['/field-resources/reporting/performance']);
+    this.accessibilityService.announce('Navigating to performance report');
   }
   
   navigateToJobDetail(jobId: string): void {
-    // Navigation will be implemented in routing task
-    console.log('Navigate to job detail:', jobId);
+    this.router.navigate(['/field-resources/jobs', jobId]);
+    this.accessibilityService.announce('Navigating to job details');
+  }
+  
+  /**
+   * Navigate to technician detail
+   */
+  navigateToTechnicianDetail(technicianId: string): void {
+    this.router.navigate(['/field-resources/technicians', technicianId]);
+    this.accessibilityService.announce('Navigating to technician details');
+  }
+  
+  /**
+   * Navigate to crew detail
+   */
+  navigateToCrewDetail(crewId: string): void {
+    this.router.navigate(['/field-resources/crews', crewId]);
+    this.accessibilityService.announce('Navigating to crew details');
+  }
+  
+  /**
+   * Handle KPI card click
+   */
+  onKPIClick(kpi: KPI): void {
+    // Navigate to relevant report based on KPI name
+    const kpiName = kpi.name.toLowerCase();
+    if (kpiName.includes('utilization')) {
+      this.navigateToUtilizationReport();
+    } else if (kpiName.includes('completion') || kpiName.includes('performance')) {
+      this.navigateToPerformanceReport();
+    } else {
+      // Default to dashboard refresh
+      this.onRefresh();
+    }
   }
 }

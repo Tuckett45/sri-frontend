@@ -289,7 +289,14 @@
           </ng-container>
           
           <tr mat-header-row *matHeaderRowDef="['rank', 'name', 'jobsCompleted', 'averageHours', 'onTimeRate', 'actions']"></tr>
-          <tr mat-row *matRowDef="let row; columns: ['rank', 'name', 'jobsCompleted', 'averageHours', 'onTimeRate', 'actions'];" class="performer-row"></tr>
+          <tr mat-row 
+              *matRowDef="let row; columns: ['rank', 'name', 'jobsCompleted', 'averageHours', 'onTimeRate', 'actions'];" 
+              class="performer-row clickable-row"
+              (click)="onPerformerRowClick(row)"
+              tabindex="0"
+              (keydown.enter)="onPerformerRowClick(row)"
+              [attr.aria-label]="'View details for ' + row.technician.firstName + ' ' + row.technician.lastName">
+          </tr>
         </table>
       </div>
       <div *ngIf="topPerformers.length === 0" class="no-data">

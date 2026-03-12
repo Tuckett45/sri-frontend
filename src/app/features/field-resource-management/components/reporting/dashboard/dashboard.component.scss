@@ -625,6 +625,22 @@
   gap: 1rem;
 }
 
+// Clickable KPI cards
+.clickable-kpi {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:focus {
+    outline: 2px solid var(--primary-color, #1976d2);
+    outline-offset: 2px;
+  }
+}
+
 // Quick Links
 .quick-links {
   margin-bottom: 1.5rem;

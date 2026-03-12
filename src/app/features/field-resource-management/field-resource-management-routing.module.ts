@@ -7,6 +7,7 @@ import { DispatcherGuard } from './guards/dispatcher.guard';
 import { TechnicianGuard } from './guards/technician.guard';
 import { PMGuard } from './guards/pm.guard';
 import { CMGuard } from '../../guards/cm.guard';
+import { ManagerGuard } from './guards/manager.guard';
 import { EnhancedRoleGuard } from '../../guards/enhanced-role.guard';
 import { UserRole } from '../../models/role.enum';
 
@@ -18,6 +19,7 @@ import { DashboardComponent } from './components/reporting/dashboard/dashboard.c
 
 // Components - Reporting (kept for direct routes)
 import { TimecardDashboardComponent } from './components/reporting/timecard-dashboard/timecard-dashboard.component';
+import { TimecardManagerViewComponent } from './components/reporting/timecard-manager-view/timecard-manager-view.component';
 import { CMDashboardComponent } from './components/reporting/cm-dashboard/cm-dashboard.component';
 import { AdminDashboardComponent } from './components/reporting/admin-dashboard/admin-dashboard.component';
 
@@ -100,6 +102,17 @@ const routes: Routes = [
         data: { 
           title: 'My Timecard',
           breadcrumb: 'Timecard'
+        }
+      },
+
+      // Timecard Manager View - Manager, HR, and Admin access
+      {
+        path: 'timecard-manager',
+        component: TimecardManagerViewComponent,
+        canActivate: [ManagerGuard],
+        data: { 
+          title: 'Timecard Management',
+          breadcrumb: 'Timecard Management'
         }
       },
 

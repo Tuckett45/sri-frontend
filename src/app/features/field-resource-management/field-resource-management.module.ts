@@ -20,6 +20,7 @@ import { timeEntryReducer } from './state/time-entries/time-entry.reducer';
 import { notificationReducer } from './state/notifications/notification.reducer';
 import { uiReducer } from './state/ui/ui.reducer';
 import { reportingReducer } from './state/reporting/reporting.reducer';
+import { timecardReducer } from './state/timecards/timecard.reducer';
 
 // State Management - Effects
 import { TechnicianEffects } from './state/technicians/technician.effects';
@@ -29,6 +30,7 @@ import { AssignmentEffects } from './state/assignments/assignment.effects';
 import { TimeEntryEffects } from './state/time-entries/time-entry.effects';
 import { NotificationEffects } from './state/notifications/notification.effects';
 import { ReportingEffects } from './state/reporting/reporting.effects';
+import { TimecardEffects } from './state/timecards/timecard.effects';
 
 // Meta-Reducers
 import { storageSyncMetaReducer } from './state/meta-reducers/storage-sync.meta-reducer';
@@ -51,6 +53,7 @@ import { NotificationPanelComponent } from './components/notifications/notificat
 // Services
 import { FrmRealtimeIntegratorService } from './services/frm-realtime-integrator.service';
 import { GlobalErrorHandlerService } from './services/global-error-handler.service';
+import { MockDataService } from './services/mock-data.service';
 
 // Interceptors
 import { ErrorInterceptor } from './interceptors/error.interceptor';
@@ -133,6 +136,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     StoreModule.forFeature('notifications', notificationReducer),
     StoreModule.forFeature('ui', uiReducer),
     StoreModule.forFeature('reporting', reportingReducer),
+    StoreModule.forFeature('timecards', timecardReducer),
     
     // NgRx Effects
     EffectsModule.forFeature([
@@ -142,7 +146,8 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
       AssignmentEffects,
       TimeEntryEffects,
       NotificationEffects,
-      ReportingEffects
+      ReportingEffects,
+      TimecardEffects
     ])
   ],
   providers: [
@@ -152,11 +157,20 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
   ]
 })
 export class FieldResourceManagementModule {
-  constructor(private realtimeIntegrator: FrmRealtimeIntegratorService) {
+  constructor(
+    private realtimeIntegrator: FrmRealtimeIntegratorService,
+    private mockDataService: MockDataService
+  ) {
     // Initialize SignalR real-time updates on module load
     this.realtimeIntegrator.initialize().catch(error => {
       console.error('Failed to initialize FRM real-time updates:', error);
       // Application continues to function without real-time updates
     });
+
+    // Initialize mock data for demo
+    // TODO: Remove this in production or add environment check
+    setTimeout(() => {
+      this.mockDataService.initializeAllMockData();
+    }, 1000); // Delay to ensure store is ready
   }
 }

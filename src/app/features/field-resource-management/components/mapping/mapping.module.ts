@@ -5,6 +5,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MapComponent } from './map/map.component';
+import { MapViewComponent } from './map-view/map-view.component';
+import { MapFiltersComponent } from './map-filters/map-filters.component';
+import { MapLegendComponent } from './map-legend/map-legend.component';
 import { LocationTrackingToggleComponent } from './location-tracking-toggle/location-tracking-toggle.component';
 
 // Guards
@@ -13,7 +16,7 @@ import { DispatcherGuard } from '../../guards/dispatcher.guard';
 const routes: Routes = [
   {
     path: '',
-    component: MapComponent,
+    component: MapViewComponent,
     data: { 
       title: 'Map View',
       breadcrumb: 'Map'
@@ -31,6 +34,9 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     MapComponent,
+    MapViewComponent,
+    MapFiltersComponent,
+    MapLegendComponent,
     LocationTrackingToggleComponent
   ],
   imports: [
@@ -42,6 +48,9 @@ const routes: Routes = [
   ],
   exports: [
     MapComponent,
+    MapViewComponent,
+    MapFiltersComponent,
+    MapLegendComponent,
     LocationTrackingToggleComponent
   ]
 })

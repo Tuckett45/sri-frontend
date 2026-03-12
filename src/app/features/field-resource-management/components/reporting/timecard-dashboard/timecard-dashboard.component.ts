@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { MatTabChangeEvent } from '@angular/material/tabs';
 import { TimeEntry, GeoLocation } from '../../../models/time-entry.model';
 import { Job } from '../../../models/job.model';
 import * as TimeEntryActions from '../../../state/time-entries/time-entry.actions';
@@ -15,11 +16,8 @@ import { GeocodingService } from '../../../../../services/geocoding.service';
  * Timecard Dashboard Component
  * 
  * Displays comprehensive time tracking overview for the current user:
- * - Active time entry with live timer
- * - Today's time entries summary
- * - Weekly time entries with totals
- * - Mileage tracking
- * - Quick actions for clock in/out
+ * - Daily View: Active time entry, today's entries, and summary
+ * - Weekly View: Full week grid with lock status, expenses, and summaries
  */
 @Component({
   selector: 'frm-timecard-dashboard',
@@ -32,11 +30,13 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
   // Current user (mock - would come from auth service)
   currentTechnicianId = 'current-technician-id';
   
+  // Tab management
+  selectedTabIndex = 0;
+  
   // Observable data streams
   activeTimeEntry$: Observable<TimeEntry | null>;
   todayTimeEntries$: Observable<TimeEntry[]>;
   todayTimeEntriesData: TimeEntry[] = [];
-  weekTimeEntries$: Observable<TimeEntry[]>;
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
   
@@ -47,16 +47,12 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
   // Computed values
   todayTotalHours = 0;
   todayTotalMileage = 0;
-  weekTotalHours = 0;
-  weekTotalMileage = 0;
   
   // Active job for time tracker
   activeJob: Job | null = null;
   
   // Date range for filtering
   selectedDate = new Date();
-  weekStart = new Date();
-  weekEnd = new Date();
   
   // Cache for reverse geocoded addresses
   private addressCache: Map<string, string> = new Map();
@@ -70,13 +66,9 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
     // Initialize observables
     this.activeTimeEntry$ = this.store.select(TimeEntrySelectors.selectActiveTimeEntry);
     this.todayTimeEntries$ = this.store.select(TimeEntrySelectors.selectTodayTimeEntries);
-    this.weekTimeEntries$ = this.store.select(TimeEntrySelectors.selectWeekTimeEntries);
     this.loading$ = this.store.select(TimeEntrySelectors.selectTimeEntryLoading);
     this.error$ = this.store.select(TimeEntrySelectors.selectTimeEntryError);
     this.jobs$ = this.store.select(JobSelectors.selectAllJobs);
-    
-    // Calculate week range
-    this.calculateWeekRange();
   }
   
   ngOnInit(): void {
@@ -96,11 +88,6 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
     this.todayTimeEntries$.pipe(takeUntil(this.destroy$)).subscribe(entries => {
       this.todayTimeEntriesData = entries;
       this.calculateTodayTotals(entries);
-    });
-    
-    // Subscribe to week entries for calculations
-    this.weekTimeEntries$.pipe(takeUntil(this.destroy$)).subscribe(entries => {
-      this.calculateWeekTotals(entries);
     });
     
     // Subscribe to loading state for announcements
@@ -144,20 +131,11 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Calculate week range (Monday to Sunday)
+   * Handle tab change
    */
-  calculateWeekRange(): void {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Adjust for Sunday
-    
-    this.weekStart = new Date(today);
-    this.weekStart.setDate(today.getDate() + diff);
-    this.weekStart.setHours(0, 0, 0, 0);
-    
-    this.weekEnd = new Date(this.weekStart);
-    this.weekEnd.setDate(this.weekStart.getDate() + 6);
-    this.weekEnd.setHours(23, 59, 59, 999);
+  onTabChange(event: MatTabChangeEvent): void {
+    const tabLabels = ['Daily View', 'Weekly View'];
+    this.accessibilityService.announce(`Switched to ${tabLabels[event.index]}`);
   }
   
   /**
@@ -169,19 +147,6 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
     }, 0);
     
     this.todayTotalMileage = entries.reduce((sum, entry) => {
-      return sum + (entry.mileage || 0);
-    }, 0);
-  }
-  
-  /**
-   * Calculate week totals
-   */
-  calculateWeekTotals(entries: TimeEntry[]): void {
-    this.weekTotalHours = entries.reduce((sum, entry) => {
-      return sum + this.calculateHours(entry);
-    }, 0);
-    
-    this.weekTotalMileage = entries.reduce((sum, entry) => {
       return sum + (entry.mileage || 0);
     }, 0);
   }
@@ -253,43 +218,6 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
   onRefresh(): void {
     this.loadTimeEntries();
     this.accessibilityService.announce('Timecard data refreshed');
-  }
-  
-  /**
-   * Navigate to previous week
-   */
-  previousWeek(): void {
-    this.weekStart.setDate(this.weekStart.getDate() - 7);
-    this.weekEnd.setDate(this.weekEnd.getDate() - 7);
-    this.loadTimeEntries();
-  }
-  
-  /**
-   * Navigate to next week
-   */
-  nextWeek(): void {
-    this.weekStart.setDate(this.weekStart.getDate() + 7);
-    this.weekEnd.setDate(this.weekEnd.getDate() + 7);
-    this.loadTimeEntries();
-  }
-  
-  /**
-   * Navigate to current week
-   */
-  currentWeek(): void {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Adjust for Sunday
-    
-    this.weekStart = new Date(today);
-    this.weekStart.setDate(today.getDate() + diff);
-    this.weekStart.setHours(0, 0, 0, 0);
-    
-    this.weekEnd = new Date(this.weekStart);
-    this.weekEnd.setDate(this.weekStart.getDate() + 6);
-    this.weekEnd.setHours(23, 59, 59, 999);
-    
-    this.loadTimeEntries();
   }
   
   /**

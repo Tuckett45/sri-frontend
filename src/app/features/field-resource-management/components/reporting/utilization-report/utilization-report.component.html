@@ -205,7 +205,14 @@
           </ng-container>
           
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+          <tr mat-row 
+              *matRowDef="let row; columns: displayedColumns;" 
+              class="table-row clickable-row"
+              (click)="onRowClick(row)"
+              tabindex="0"
+              (keydown.enter)="onRowClick(row)"
+              [attr.aria-label]="'View details for ' + row.technician.firstName + ' ' + row.technician.lastName">
+          </tr>
           
           <!-- No data row -->
           <tr class="mat-row" *matNoDataRow>

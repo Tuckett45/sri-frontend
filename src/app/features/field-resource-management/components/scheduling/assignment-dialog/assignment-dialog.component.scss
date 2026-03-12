@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   max-height: 90vh;
+  background: white;
 }
 
 // Dialog Header
@@ -9,32 +10,38 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  padding: 1.5rem;
+  background: #f5f7fa;
   border-bottom: 1px solid #e0e0e0;
 
   h2 {
     margin: 0;
-    font-size: 20px;
-    font-weight: 500;
-    color: #333;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212121;
   }
 }
 
 // Dialog Content
 mat-dialog-content {
-  padding: 24px;
+  padding: 1.5rem;
   overflow-y: auto;
+  background: white;
 }
 
 // Job Details Section
 .job-details-section {
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f5f7fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 
   h3 {
-    margin: 0 0 16px 0;
-    font-size: 16px;
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
     font-weight: 600;
-    color: #333;
+    color: #212121;
   }
 }
 
@@ -51,15 +58,16 @@ mat-dialog-content {
   gap: 4px;
 
   .label {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: #666;
+    color: #616161;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .value {
-    font-size: 14px;
-    color: #333;
+    font-size: 0.875rem;
+    color: #212121;
   }
 }
 
@@ -69,16 +77,19 @@ mat-dialog-content {
   gap: 8px;
 
   .label {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: #666;
+    color: #616161;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .skills-list {
     mat-chip-list {
       mat-chip {
-        font-size: 12px;
+        font-size: 0.75rem;
+        background-color: #e3f2fd;
+        color: #1976d2;
       }
     }
   }
@@ -86,13 +97,13 @@ mat-dialog-content {
 
 // Technicians Section
 .technicians-section {
-  margin: 24px 0;
+  margin: 1.5rem 0;
 
   h3 {
-    margin: 0 0 16px 0;
-    font-size: 16px;
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
     font-weight: 600;
-    color: #333;
+    color: #212121;
   }
 }
 
@@ -101,21 +112,25 @@ mat-dialog-content {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: 3rem 1.5rem;
   text-align: center;
-  color: #999;
+  background: #f5f7fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 
   mat-icon {
     font-size: 48px;
     width: 48px;
     height: 48px;
-    margin-bottom: 16px;
-    color: #ccc;
+    margin-bottom: 1rem;
+    color: #9e9e9e;
+    opacity: 0.5;
   }
 
   p {
     margin: 0;
-    font-size: 14px;
+    font-size: 0.875rem;
+    color: #616161;
   }
 }
 
@@ -123,7 +138,7 @@ mat-dialog-content {
 .technicians-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1rem;
   max-height: 400px;
   overflow-y: auto;
   padding: 4px;
@@ -132,20 +147,21 @@ mat-dialog-content {
 .technician-card {
   border: 2px solid #e0e0e0;
   border-radius: 8px;
-  padding: 16px;
+  padding: 1rem;
   cursor: pointer;
   transition: all 0.2s;
   background-color: white;
 
   &:hover {
-    border-color: #2196f3;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+    border-color: #1976d2;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
+    transform: translateY(-2px);
   }
 
   &.selected {
-    border-color: #2196f3;
+    border-color: #1976d2;
     background-color: #e3f2fd;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
   }
 
   &.has-conflicts {
@@ -169,7 +185,7 @@ mat-dialog-content {
 }
 
 .technician-icon {
-  color: #666;
+  color: #616161;
   font-size: 32px;
   width: 32px;
   height: 32px;
@@ -182,18 +198,18 @@ mat-dialog-content {
 }
 
 .technician-name {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
-  color: #333;
+  color: #212121;
 }
 
 .technician-role {
-  font-size: 12px;
-  color: #666;
+  font-size: 0.75rem;
+  color: #616161;
 }
 
 .selection-indicator {
-  color: #2196f3;
+  color: #1976d2;
   font-size: 28px;
   width: 28px;
   height: 28px;
@@ -209,9 +225,9 @@ mat-dialog-content {
 }
 
 .match-label {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #666;
+  color: #616161;
 }
 
 .match-bar-container {
@@ -243,7 +259,7 @@ mat-dialog-content {
 }
 
 .match-percentage {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 
   &.match-perfect {
@@ -269,7 +285,7 @@ mat-dialog-content {
   align-items: flex-start;
   gap: 8px;
   padding: 12px;
-  background-color: #fff3e0;
+  background-color: #fff8e1;
   border-left: 4px solid #ff9800;
   border-radius: 4px;
   margin-bottom: 12px;
@@ -286,15 +302,15 @@ mat-dialog-content {
   }
 
   .warning-title {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #e65100;
     margin-bottom: 4px;
   }
 
   .missing-skills-list {
-    font-size: 12px;
-    color: #666;
+    font-size: 0.75rem;
+    color: #616161;
   }
 }
 
@@ -304,9 +320,10 @@ mat-dialog-content {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background-color: #f5f5f5;
+  background-color: #f5f7fa;
   border-radius: 4px;
   margin-bottom: 8px;
+  border: 1px solid #e0e0e0;
 
   mat-icon {
     font-size: 20px;
@@ -327,9 +344,9 @@ mat-dialog-content {
   }
 
   span {
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 500;
-    color: #333;
+    color: #212121;
   }
 }
 
@@ -339,20 +356,21 @@ mat-dialog-content {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background-color: #f5f5f5;
+  background-color: #f5f7fa;
   border-radius: 4px;
   margin-bottom: 8px;
+  border: 1px solid #e0e0e0;
 
   mat-icon {
     font-size: 20px;
     width: 20px;
     height: 20px;
-    color: #666;
+    color: #616161;
   }
 
   span {
-    font-size: 13px;
-    color: #333;
+    font-size: 0.8125rem;
+    color: #212121;
   }
 }
 
@@ -363,6 +381,7 @@ mat-dialog-content {
   background-color: #ffebee;
   border-left: 4px solid #f44336;
   border-radius: 4px;
+  border: 1px solid #ef9a9a;
 }
 
 .conflicts-header {
@@ -379,7 +398,7 @@ mat-dialog-content {
   }
 
   .conflicts-title {
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: #c62828;
   }
@@ -422,30 +441,30 @@ mat-dialog-content {
   }
 
   .conflict-job {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: #333;
+    color: #212121;
     margin-bottom: 2px;
   }
 
   .conflict-time {
-    font-size: 11px;
-    color: #666;
+    font-size: 0.6875rem;
+    color: #616161;
   }
 }
 
 // Override Section
 .override-section {
-  margin-top: 24px;
+  margin-top: 1.5rem;
 
   mat-divider {
-    margin-bottom: 24px;
+    margin-bottom: 1.5rem;
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 1rem;
   }
 }
 
@@ -453,10 +472,11 @@ mat-dialog-content {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 16px;
-  background-color: #fff3e0;
+  padding: 1rem;
+  background-color: #fff8e1;
   border-left: 4px solid #ff9800;
   border-radius: 4px;
+  border: 1px solid #ffcc80;
 
   mat-icon {
     color: #ff9800;
@@ -470,15 +490,15 @@ mat-dialog-content {
 
     strong {
       display: block;
-      font-size: 14px;
+      font-size: 0.875rem;
       color: #e65100;
       margin-bottom: 8px;
     }
 
     p {
       margin: 0 0 8px 0;
-      font-size: 13px;
-      color: #666;
+      font-size: 0.8125rem;
+      color: #616161;
 
       &:last-child {
         margin-bottom: 0;
@@ -496,7 +516,8 @@ mat-dialog-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 16px 24px;
+  padding: 1rem 1.5rem;
+  background: #f5f7fa;
   border-top: 1px solid #e0e0e0;
 
   button {

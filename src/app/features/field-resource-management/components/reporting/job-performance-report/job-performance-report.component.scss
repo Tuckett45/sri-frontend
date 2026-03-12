@@ -231,10 +231,27 @@
     
     .performer-row {
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: all 0.2s ease;
       
       &:hover {
-        background-color: rgba(0, 0, 0, 0.04);
+        background-color: rgba(25, 118, 210, 0.08);
+        transform: translateX(4px);
+      }
+    }
+    
+    .clickable-row {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: rgba(25, 118, 210, 0.08);
+        transform: translateX(4px);
+      }
+      
+      &:focus {
+        outline: 2px solid #1976d2;
+        outline-offset: -2px;
+        background-color: rgba(25, 118, 210, 0.12);
       }
     }
   }

@@ -119,41 +119,55 @@ export class JobFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.initializeForm();
-    
-    // Check if opened as dialog with data
-    if (this.data) {
-      if (this.data.jobId) {
-        this.isEditMode = true;
-        this.jobId = this.data.jobId;
-        this.loadJob(this.data.jobId);
+    try {
+      this.initializeForm();
+      
+      // Check if opened as dialog with data
+      if (this.data) {
+        if (this.data.jobId) {
+          this.isEditMode = true;
+          this.jobId = this.data.jobId;
+          this.loadJob(this.data.jobId);
+        }
+        if (this.data.templateId) {
+          this.loadTemplate(this.data.templateId);
+        }
       }
-      if (this.data.templateId) {
-        this.loadTemplate(this.data.templateId);
-      }
-    }
-    
-    // Fallback to route params if not in dialog mode
-    if (this.route) {
-      this.route.params
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(params => {
-          const id = params['id'];
-          if (id && id !== 'new') {
-            this.isEditMode = true;
-            this.jobId = id;
-            this.loadJob(id);
-          }
-        });
+      
+      // Fallback to route params if not in dialog mode
+      if (this.route) {
+        this.route.params
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(params => {
+            try {
+              const id = params['id'];
+              if (id && id !== 'new') {
+                this.isEditMode = true;
+                this.jobId = id;
+                this.loadJob(id);
+              }
+            } catch (error) {
+              console.error('Error processing route params:', error);
+              this.snackBar.open('Error loading job data', 'Close', { duration: 3000 });
+            }
+          });
 
-      this.route.queryParams
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(params => {
-          const templateId = params['templateId'];
-          if (templateId) {
-            this.loadTemplate(templateId);
-          }
-        });
+        this.route.queryParams
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(params => {
+            try {
+              const templateId = params['templateId'];
+              if (templateId) {
+                this.loadTemplate(templateId);
+              }
+            } catch (error) {
+              console.error('Error processing query params:', error);
+            }
+          });
+      }
+    } catch (error) {
+      console.error('Error in ngOnInit:', error);
+      this.snackBar.open('Error initializing form', 'Close', { duration: 3000 });
     }
   }
 
@@ -166,12 +180,13 @@ export class JobFormComponent implements OnInit, OnDestroy {
    * Initialize the form with validators
    */
   private initializeForm(): void {
-    // Check user role
-    this.isAdmin = this.authService.isAdmin();
-    const currentUser = this.authService.getUser();
-    const userMarket = currentUser?.market || '';
+    // Check user role with error handling
+    try {
+      this.isAdmin = this.authService.isAdmin();
+      const currentUser = this.authService.getUser();
+      const userMarket = currentUser?.market || '';
 
-    this.jobForm = this.fb.group({
+      this.jobForm = this.fb.group({
       client: ['', [Validators.required, Validators.maxLength(200)]],
       siteName: ['', [Validators.required, Validators.maxLength(200)]],
       market: [this.isAdmin ? '' : userMarket, Validators.required],
@@ -194,11 +209,42 @@ export class JobFormComponent implements OnInit, OnDestroy {
         phone: ['', [Validators.pattern(/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/)]],
         email: ['', [Validators.email, Validators.maxLength(200)]]
       })
-    }, { validators: this.dateRangeValidator });
+      }, { validators: this.dateRangeValidator });
 
-    // Disable market field for non-admin users
-    if (!this.isAdmin) {
-      this.jobForm.get('market')?.disable();
+      // Disable market field for non-admin users
+      if (!this.isAdmin) {
+        this.jobForm.get('market')?.disable();
+      }
+    } catch (error) {
+      console.error('Error initializing job form:', error);
+      // Initialize with default values if auth service fails
+      this.isAdmin = false;
+      this.jobForm = this.fb.group({
+        client: ['', [Validators.required, Validators.maxLength(200)]],
+        siteName: ['', [Validators.required, Validators.maxLength(200)]],
+        market: ['', Validators.required],
+        siteAddress: this.fb.group({
+          street: ['', [Validators.required, Validators.maxLength(200)]],
+          city: ['', [Validators.required, Validators.maxLength(100)]],
+          state: ['', [Validators.required]],
+          zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}(-\d{4})?$/)]]
+        }),
+        jobType: [JobType.Install, Validators.required],
+        priority: [Priority.Normal, Validators.required],
+        scopeDescription: ['', [Validators.required, Validators.maxLength(2000)]],
+        requiredSkills: [[]],
+        requiredCrewSize: [1, [Validators.required, Validators.min(1), Validators.max(20)]],
+        estimatedLaborHours: [8, [Validators.required, Validators.min(0.5), Validators.max(200)]],
+        scheduledStartDate: [null, Validators.required],
+        scheduledEndDate: [null, Validators.required],
+        customerPOC: this.fb.group({
+          name: ['', Validators.maxLength(200)],
+          phone: ['', [Validators.pattern(/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/)]],
+          email: ['', [Validators.email, Validators.maxLength(200)]]
+        })
+      }, { validators: this.dateRangeValidator });
+      
+      this.snackBar.open('Warning: Some features may be limited', 'Close', { duration: 3000 });
     }
   }
 
@@ -220,20 +266,32 @@ export class JobFormComponent implements OnInit, OnDestroy {
    * Load job for editing
    */
   private loadJob(id: string): void {
-    this.isLoading = true;
-    this.store.dispatch(JobActions.selectJob({ id }));
-    
-    this.store.select(JobSelectors.selectSelectedJob)
-      .pipe(
-        takeUntil(this.destroy$),
-        filter(job => !!job)
-      )
-      .subscribe(job => {
-        if (job) {
-          this.populateForm(job);
-          this.isLoading = false;
-        }
-      });
+    try {
+      this.isLoading = true;
+      this.store.dispatch(JobActions.selectJob({ id }));
+      
+      this.store.select(JobSelectors.selectSelectedJob)
+        .pipe(
+          takeUntil(this.destroy$),
+          filter(job => !!job)
+        )
+        .subscribe(job => {
+          try {
+            if (job) {
+              this.populateForm(job);
+              this.isLoading = false;
+            }
+          } catch (error) {
+            console.error('Error populating form:', error);
+            this.isLoading = false;
+            this.snackBar.open('Error loading job data', 'Close', { duration: 3000 });
+          }
+        });
+    } catch (error) {
+      console.error('Error loading job:', error);
+      this.isLoading = false;
+      this.snackBar.open('Error loading job', 'Close', { duration: 3000 });
+    }
   }
 
   /**

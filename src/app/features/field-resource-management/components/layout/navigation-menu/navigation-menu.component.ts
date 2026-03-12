@@ -128,6 +128,14 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       // Available to all authenticated users
     },
     {
+      label: 'Timecard Management',
+      icon: 'fact_check',
+      route: '/field-resource-management/timecard-manager',
+      resource: 'time_entries',
+      action: 'approve',
+      roles: [UserRole.Admin, UserRole.Manager, UserRole.HR]
+    },
+    {
       label: 'My Assignments',
       icon: 'assignment',
       route: '/field-resource-management/mobile/assignments',

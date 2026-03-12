@@ -195,7 +195,15 @@
   <div class="kpi-details-section" *ngIf="(kpis$ | async) as kpis" role="region" aria-labelledby="kpi-details-heading">
     <h2 id="kpi-details-heading">Key Performance Indicators</h2>
     <div class="kpi-details-grid" role="list">
-      <frm-kpi-card *ngFor="let kpi of kpis" [kpi]="kpi" role="listitem"></frm-kpi-card>
+      <frm-kpi-card 
+        *ngFor="let kpi of kpis" 
+        [kpi]="kpi" 
+        (click)="onKPIClick(kpi)"
+        role="listitem"
+        tabindex="0"
+        (keydown.enter)="onKPIClick(kpi)"
+        class="clickable-kpi">
+      </frm-kpi-card>
     </div>
   </div>
   

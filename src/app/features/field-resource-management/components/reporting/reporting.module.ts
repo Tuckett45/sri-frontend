@@ -18,6 +18,8 @@ import { UtilizationReportComponent } from './utilization-report/utilization-rep
 import { JobPerformanceReportComponent } from './job-performance-report/job-performance-report.component';
 import { KPICardComponent } from './kpi-card/kpi-card.component';
 import { TimecardDashboardComponent } from './timecard-dashboard/timecard-dashboard.component';
+import { TimecardWeeklyViewComponent } from './timecard-weekly-view/timecard-weekly-view.component';
+import { TimecardManagerViewComponent } from './timecard-manager-view/timecard-manager-view.component';
 import { CMDashboardComponent } from './cm-dashboard/cm-dashboard.component';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
 
@@ -66,6 +68,8 @@ const routes: Routes = [
     JobPerformanceReportComponent,
     KPICardComponent,
     TimecardDashboardComponent,
+    TimecardWeeklyViewComponent,
+    TimecardManagerViewComponent,
     CMDashboardComponent,
     AdminDashboardComponent
   ],
@@ -79,6 +83,7 @@ const routes: Routes = [
   ],
   exports: [
     TimecardDashboardComponent,
+    TimecardManagerViewComponent,
     CMDashboardComponent,
     AdminDashboardComponent
   ]
