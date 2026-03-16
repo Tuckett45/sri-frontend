@@ -159,7 +159,8 @@ export class DailyReportService {
    * @returns Observable with user submission status list
    */
   getUserSubmissionStatus(date?: Date, market?: string): Observable<UserSubmissionStatus[]> {
-    let url = `${this.baseUrl}/admin/user-status/${market}`;
+    const marketParam = (market && market.trim().toUpperCase() !== 'RG') ? market.trim() : 'all';
+    let url = `${this.baseUrl}/admin/user-status/${marketParam}`;
     if (date) {
       url += `?date=${date.toISOString()}`;
     }

@@ -77,7 +77,7 @@
 
     <div class="dashboard-metrics">
       <div class="metric-card primary">
-        <span class="metric-label">Sheets in range</span>
+        <span class="metric-label">Total Sheets Submitted</span>
         <div class="metric-value">{{ dashboardMetrics.total }}</div>
         <span class="metric-sub">After filters</span>
       </div>
@@ -130,46 +130,6 @@
             <button mat-stroked-button class="reset-btn" (click)="prevSubmittedPage()" [disabled]="submittedPageIndex === 0">Prev</button>
             <span>Page {{ submittedPageIndex + 1 }} of {{ submittedPageCount }}</span>
             <button mat-stroked-button class="refresh-btn" (click)="nextSubmittedPage()" [disabled]="submittedPageIndex + 1 >= submittedPageCount">Next</button>
-          </div>
-        </div>
-        <div class="panel table-panel">
-          <div class="panel-header">
-            <div>
-              <h3>Street Sheets in range</h3>
-              <span class="muted-text">Filtered list for the dashboard window</span>
-            </div>
-          </div>
-          <div class="table-wrapper">
-            <table class="dashboard-table">
-              <thead>
-                <tr>
-                <th (click)="changeSort('segmentId')" class="sortable">Segment <span *ngIf="sortField === 'segmentId'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
-                <th (click)="changeSort('vendorName')" class="sortable">Vendor <span *ngIf="sortField === 'vendorName'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
-                <th (click)="changeSort('pm')" class="sortable">PM <span *ngIf="sortField === 'pm'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
-                <th (click)="changeSort('city')" class="sortable">Location <span *ngIf="sortField === 'city'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
-                <th (click)="changeSort('createdBy')" class="sortable">Created By <span *ngIf="sortField === 'createdBy'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
-                <th (click)="changeSort('date')" class="sortable">Date <span *ngIf="sortField === 'date'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let sheet of pagedDashboardStreetSheets" (click)="selectStreetSheet(sheet)" class="clickable-row">
-                  <td>{{ sheet.segmentId }}</td>
-                  <td>{{ sheet.vendorName }}</td>
-                  <td>{{ sheet.pm || 'N/A' }}</td>
-                  <td>{{ sheet.city }}, {{ sheet.state }}</td>
-                  <td>{{ sheet.createdBy || 'Unknown' }}</td>
-                  <td>{{ sheet.date | date:'MMM d, y' }}</td>
-                </tr>
-                <tr *ngIf="!dashboardStreetSheets.length">
-                  <td colspan="6" class="muted-text">No street sheets match the selected filters.</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="table-pagination" *ngIf="dashboardStreetSheets.length">
-              <button mat-stroked-button class="reset-btn" (click)="prevPage()" [disabled]="pageIndex === 0">Prev</button>
-              <span>Page {{ pageIndex + 1 }} of {{ pageCount }}</span>
-              <button mat-stroked-button class="refresh-btn" (click)="nextPage()" [disabled]="pageIndex + 1 >= pageCount">Next</button>
-            </div>
           </div>
         </div>
       </div>
