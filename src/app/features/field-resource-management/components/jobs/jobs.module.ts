@@ -12,6 +12,9 @@ import { SharedComponentsModule } from '../shared/shared-components.module';
 // Mobile Shared Module (for TimeTrackerComponent without routes)
 import { MobileSharedModule } from '../mobile/mobile-shared.module';
 
+// Budget Module for budget view integration in job detail
+import { BudgetModule } from '../budgets/budget.module';
+
 // Job Components
 import { JobListComponent } from './job-list/job-list.component';
 import { JobDetailComponent } from './job-detail/job-detail.component';
@@ -76,6 +79,7 @@ const routes: Routes = [
     SharedMaterialModule,
     SharedComponentsModule,
     MobileSharedModule,
+    BudgetModule,
     RouterModule.forChild(routes)
   ]
 })

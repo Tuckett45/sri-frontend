@@ -78,6 +78,16 @@
             </mat-select>
           </mat-form-field>
 
+          <!-- Travel Willingness Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Travel Willingness</mat-label>
+            <mat-select [formControl]="travelWillingnessControl">
+              <mat-option value="">All</mat-option>
+              <mat-option value="willing">Willing to Travel</mat-option>
+              <mat-option value="not-willing">Not Willing to Travel</mat-option>
+            </mat-select>
+          </mat-form-field>
+
           <!-- Availability Toggle -->
           <mat-checkbox [formControl]="availabilityControl" class="availability-toggle">
             Available Only
@@ -162,6 +172,25 @@
               {{ skillName }}
             </span>
           </div>
+        </td>
+      </ng-container>
+
+      <!-- Travel Status Column -->
+      <ng-container matColumnDef="travelStatus">
+        <th mat-header-cell *matHeaderCellDef>Travel</th>
+        <td mat-cell *matCellDef="let technician">
+          <ng-container *ngIf="getTravelStatus(technician) as travelStatus; else noTravelData">
+            <span class="travel-status-badge" [class.willing]="travelStatus.willing" [class.not-willing]="!travelStatus.willing">
+              <mat-icon>{{ travelStatus.willing ? 'flight_takeoff' : 'flight_land' }}</mat-icon>
+              {{ travelStatus.label }}
+            </span>
+          </ng-container>
+          <ng-template #noTravelData>
+            <span class="travel-status-badge unknown">
+              <mat-icon>help_outline</mat-icon>
+              N/A
+            </span>
+          </ng-template>
         </td>
       </ng-container>
 

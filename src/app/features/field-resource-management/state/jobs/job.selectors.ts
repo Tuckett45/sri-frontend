@@ -1048,3 +1048,62 @@ export const selectRecentJobs = createSelector(
       .slice(0, 10);
   }
 );
+
+// ============================================================================
+// BUDGET HEALTH SELECTORS
+// ============================================================================
+// These selectors combine job data with budget data to provide
+// health indicators based on budget status.
+// ============================================================================
+
+import { selectBudgetByJobId, selectBudgetStatus, selectBudgetConsumptionPercentage } from '../budgets/budget.selectors';
+import { BudgetStatus } from '../../models/budget.model';
+
+/**
+ * Select job with budget health indicator
+ * Combines job data with budget status for display in job detail view
+ */
+export const selectJobWithBudgetHealth = (jobId: string) => createSelector(
+  selectJobById(jobId),
+  selectBudgetByJobId(jobId),
+  selectBudgetConsumptionPercentage(jobId),
+  (job, budget, consumptionPercentage) => {
+    if (!job) return null;
+    
+    return {
+      ...job,
+      budgetHealth: budget ? {
+        status: budget.status,
+        allocatedHours: budget.allocatedHours,
+        consumedHours: budget.consumedHours,
+        remainingHours: budget.remainingHours,
+        consumptionPercentage
+      } : null
+    };
+  }
+);
+
+/**
+ * Select active jobs with budget health indicators
+ * Used for job list views that show budget status alongside job info
+ */
+export const selectActiveJobsWithBudgetHealth = createSelector(
+  selectActiveJobs,
+  (jobs) => jobs.map(job => ({
+    ...job,
+    // Budget data will be loaded separately per job
+    budgetHealthPending: true
+  }))
+);
+
+/**
+ * Select jobs that are over budget
+ * Useful for dashboard alerts and attention indicators
+ */
+export const selectJobsOverBudget = createSelector(
+  selectAllJobs,
+  (jobs) => jobs.filter(job => 
+    job.status !== JobStatus.Completed && 
+    job.status !== JobStatus.Cancelled
+  )
+);

@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { map, catchError, switchMap, tap, mergeMap } from 'rxjs/operators';
 import * as TimecardActions from './timecard.actions';
+import * as BudgetActions from '../budgets/budget.actions';
 import { TimecardService } from '../../services/timecard.service';
-import { TimecardPeriod, TimecardStatus } from '../../models/time-entry.model';
+import { TimecardRoundingService } from '../../services/timecard-rounding.service';
+import { TimecardPeriod, TimecardStatus, TimeEntry } from '../../models/time-entry.model';
 
 /**
  * Timecard Effects
@@ -14,6 +17,7 @@ import { TimecardPeriod, TimecardStatus } from '../../models/time-entry.model';
  * - Loading lock configuration
  * - Managing expenses
  * - Handling unlock requests
+ * - Budget integration on timecard submission/approval
  */
 @Injectable()
 export class TimecardEffects {
@@ -25,7 +29,6 @@ export class TimecardEffects {
     this.actions$.pipe(
       ofType(TimecardActions.loadLockConfig),
       switchMap(() => {
-        // Return default lock configuration
         const config = this.timecardService.getDefaultLockConfig();
         return of(TimecardActions.loadLockConfigSuccess({ config }));
       }),
@@ -44,7 +47,6 @@ export class TimecardEffects {
     this.actions$.pipe(
       ofType(TimecardActions.loadTimecardPeriod),
       switchMap(({ technicianId, startDate, endDate }) => {
-        // Create a mock period for now
         const period: TimecardPeriod = {
           id: `period-${Date.now()}`,
           technicianId,
@@ -72,9 +74,106 @@ export class TimecardEffects {
       )
     )
   );
-  
+
+  /**
+   * On timecard submission success, trigger budget deductions for each time entry.
+   * Uses rounded hours from TimecardRoundingService for budget calculations.
+   * Requirements: 3.6, 3.7, 8.1, 8.2
+   */
+  submitTimecardBudgetDeduction$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimecardActions.submitTimecardSuccess),
+      mergeMap(({ period }) => {
+        const deductionActions = this.createBudgetDeductionsForPeriod(period);
+        return deductionActions;
+      })
+    )
+  );
+
+  /**
+   * On timecard approval success, trigger budget deductions for each time entry.
+   * This handles the case where budget deduction happens at approval rather than submission.
+   * Requirements: 8.1, 8.2, 8.4
+   */
+  approveTimecardBudgetDeduction$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimecardActions.approveTimecardSuccess),
+      mergeMap(({ period }) => {
+        const deductionActions = this.createBudgetDeductionsForPeriod(period);
+        return deductionActions;
+      })
+    )
+  );
+
+  /**
+   * Dispatch a confirmation action after budget deduction is triggered
+   */
+  budgetDeductionConfirmation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimecardActions.triggerBudgetDeduction),
+      map(({ jobId, roundedHours, timecardEntryId }) =>
+        TimecardActions.budgetDeductionTriggered({ jobId, roundedHours, timecardEntryId })
+      )
+    )
+  );
+
   constructor(
     private actions$: Actions,
-    private timecardService: TimecardService
+    private timecardService: TimecardService,
+    private roundingService: TimecardRoundingService,
+    private store: Store
   ) {}
+
+  /**
+   * Creates budget deduction actions for all time entries in a period.
+   * Groups entries by jobId and calculates rounded hours for each.
+   * 
+   * @param period The timecard period containing time entries
+   * @returns Array of budget deduction actions
+   */
+  private createBudgetDeductionsForPeriod(period: TimecardPeriod): any[] {
+    if (!period.timeEntries || period.timeEntries.length === 0) {
+      return [TimecardActions.budgetDeductionTriggered({ 
+        jobId: '', 
+        roundedHours: 0, 
+        timecardEntryId: period.id 
+      })];
+    }
+
+    // Process each time entry: calculate rounded hours and dispatch budget deduction
+    const actions: any[] = [];
+    
+    for (const entry of period.timeEntries) {
+      if (!entry.clockInTime || !entry.clockOutTime) {
+        continue;
+      }
+
+      const { roundedHours } = this.roundingService.processTimecardEntry(
+        new Date(entry.clockInTime),
+        new Date(entry.clockOutTime)
+      );
+
+      if (roundedHours > 0 && entry.jobId) {
+        // Dispatch budget deduction with rounded hours
+        actions.push(
+          BudgetActions.deductHours({
+            jobId: entry.jobId,
+            hours: roundedHours,
+            timecardEntryId: entry.id
+          })
+        );
+      }
+    }
+
+    // If no valid entries produced deductions, emit a no-op confirmation
+    if (actions.length === 0) {
+      return [TimecardActions.budgetDeductionTriggered({ 
+        jobId: '', 
+        roundedHours: 0, 
+        timecardEntryId: period.id 
+      })];
+    }
+
+    return actions;
+  }
 }

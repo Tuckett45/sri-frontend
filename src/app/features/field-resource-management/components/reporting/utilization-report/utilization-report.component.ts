@@ -231,7 +231,7 @@ export class UtilizationReportComponent implements OnInit, OnDestroy {
    * View technician detail
    */
   viewTechnicianDetail(technician: TechnicianUtilization): void {
-    this.router.navigate(['/field-resources/technicians', technician.technician.id]);
+    this.router.navigate(['/field-resource-management/technicians', technician.technician.id]);
   }
   
   /**

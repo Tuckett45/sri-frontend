@@ -1,3 +1,5 @@
+@import '../../../styles/frm-styles';
+
 .crew-list-container {
   padding: 24px;
   height: 100%;
@@ -248,6 +250,46 @@
       p {
         margin: 0;
         font-size: 16px;
+      }
+    }
+
+    // Action buttons styling
+    .mat-column-actions {
+      button[mat-icon-button] {
+        transition: all 0.2s ease;
+
+        mat-icon {
+          color: #757575;
+          transition: color 0.2s ease;
+        }
+
+        &:hover {
+          mat-icon {
+            color: #1976d2;
+          }
+        }
+
+        // View icon
+        &:first-child {
+          mat-icon {
+            color: #2196f3;
+          }
+
+          &:hover mat-icon {
+            color: #1565c0;
+          }
+        }
+
+        // Edit icon
+        &:nth-child(2) {
+          mat-icon {
+            color: #ff9800;
+          }
+
+          &:hover mat-icon {
+            color: #f57c00;
+          }
+        }
       }
     }
   }

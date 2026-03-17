@@ -1,3 +1,5 @@
+@import '../../../styles/frm-styles';
+
 .technician-list-container {
   padding: 24px;
   max-width: 1400px;
@@ -188,6 +190,37 @@
     }
   }
 
+  .travel-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+
+    &.willing {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &.not-willing {
+      background-color: #fff3e0;
+      color: #e65100;
+    }
+
+    &.unknown {
+      background-color: #f5f5f5;
+      color: #9e9e9e;
+    }
+  }
+
   .no-data {
     display: flex;
     flex-direction: column;
@@ -206,6 +239,57 @@
     p {
       margin: 0;
       font-size: 16px;
+    }
+  }
+
+  // Action buttons styling
+  .mat-column-actions {
+    button[mat-icon-button] {
+      transition: all 0.2s ease;
+
+      mat-icon {
+        color: #757575;
+        transition: color 0.2s ease;
+      }
+
+      &:hover {
+        mat-icon {
+          color: #1976d2;
+        }
+      }
+
+      // View icon
+      &:first-child {
+        mat-icon {
+          color: #2196f3;
+        }
+
+        &:hover mat-icon {
+          color: #1565c0;
+        }
+      }
+
+      // Edit icon
+      &:nth-child(2) {
+        mat-icon {
+          color: #ff9800;
+        }
+
+        &:hover mat-icon {
+          color: #f57c00;
+        }
+      }
+
+      // Toggle icon
+      &:last-child {
+        mat-icon {
+          color: #4caf50;
+        }
+
+        &:hover mat-icon {
+          color: #388e3c;
+        }
+      }
     }
   }
 }

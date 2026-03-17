@@ -1,0 +1,70 @@
+<h2 mat-dialog-title>Adjust Budget</h2>
+
+<mat-dialog-content>
+  <!-- Current Budget Info -->
+  <div class="current-budget-info">
+    <div class="info-row">
+      <span class="info-label">Current Allocated</span>
+      <span class="info-value">{{ data.currentBudget | number:'1.1-1' }} hrs</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Consumed</span>
+      <span class="info-value">{{ data.consumedHours | number:'1.1-1' }} hrs</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Remaining</span>
+      <span class="info-value">{{ data.remainingHours | number:'1.1-1' }} hrs</span>
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Adjustment Form -->
+  <form [formGroup]="adjustmentForm" class="adjustment-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Adjustment Amount (hours)</mat-label>
+      <input matInput type="number" formControlName="amount" placeholder="e.g., 10 or -5">
+      <mat-hint>Positive to increase, negative to decrease (-1000 to 1000)</mat-hint>
+      <mat-error *ngIf="amountControl?.hasError('required')">Amount is required</mat-error>
+      <mat-error *ngIf="amountControl?.hasError('min')">Minimum adjustment is -1000 hours</mat-error>
+      <mat-error *ngIf="amountControl?.hasError('max')">Maximum adjustment is 1000 hours</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Reason for Adjustment</mat-label>
+      <textarea matInput formControlName="reason" rows="3"
+                placeholder="Explain why this budget adjustment is needed..."></textarea>
+      <mat-hint>Minimum 10 characters</mat-hint>
+      <mat-error *ngIf="reasonControl?.hasError('required')">Reason is required</mat-error>
+      <mat-error *ngIf="reasonControl?.hasError('minlength')">
+        Reason must be at least 10 characters
+      </mat-error>
+    </mat-form-field>
+  </form>
+
+  <!-- Preview -->
+  <div class="preview-section" *ngIf="amountControl?.value !== 0">
+    <h3>Preview</h3>
+    <div class="preview-row">
+      <span class="preview-label">New Allocated Budget</span>
+      <span class="preview-value" [class.negative-value]="newBudget < 0">
+        {{ newBudget | number:'1.1-1' }} hrs
+      </span>
+    </div>
+    <div class="preview-row">
+      <span class="preview-label">New Remaining</span>
+      <span class="preview-value" [class.negative-value]="newRemaining < 0">
+        {{ newRemaining | number:'1.1-1' }} hrs
+      </span>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary"
+          [disabled]="adjustmentForm.invalid"
+          (click)="submit()">
+    Apply Adjustment
+  </button>
+</mat-dialog-actions>

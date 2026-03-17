@@ -22,6 +22,8 @@ import { TimecardWeeklyViewComponent } from './timecard-weekly-view/timecard-wee
 import { TimecardManagerViewComponent } from './timecard-manager-view/timecard-manager-view.component';
 import { CMDashboardComponent } from './cm-dashboard/cm-dashboard.component';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
+import { JobCostReportComponent } from './job-cost-report/job-cost-report.component';
+import { BudgetDashboardComponent } from './budget-dashboard/budget-dashboard.component';
 
 const routes: Routes = [
   {
@@ -52,6 +54,22 @@ const routes: Routes = [
       title: 'Job Performance Report',
       breadcrumb: 'Performance'
     }
+  },
+  {
+    path: 'budget-dashboard',
+    component: BudgetDashboardComponent,
+    data: {
+      title: 'Budget Dashboard',
+      breadcrumb: 'Budget Dashboard'
+    }
+  },
+  {
+    path: 'job-cost/:jobId',
+    component: JobCostReportComponent,
+    data: {
+      title: 'Job Cost Report',
+      breadcrumb: 'Job Cost'
+    }
   }
 ];
 
@@ -71,7 +89,9 @@ const routes: Routes = [
     TimecardWeeklyViewComponent,
     TimecardManagerViewComponent,
     CMDashboardComponent,
-    AdminDashboardComponent
+    AdminDashboardComponent,
+    JobCostReportComponent,
+    BudgetDashboardComponent
   ],
   imports: [
     CommonModule,
@@ -85,7 +105,9 @@ const routes: Routes = [
     TimecardDashboardComponent,
     TimecardManagerViewComponent,
     CMDashboardComponent,
-    AdminDashboardComponent
+    AdminDashboardComponent,
+    JobCostReportComponent,
+    BudgetDashboardComponent
   ]
 })
 export class ReportingModule { }

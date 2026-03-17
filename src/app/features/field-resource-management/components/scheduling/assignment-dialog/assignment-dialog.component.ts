@@ -7,8 +7,15 @@ import { takeUntil } from 'rxjs/operators';
 
 import { Job } from '../../../models/job.model';
 import { TechnicianMatch, Conflict } from '../../../models/assignment.model';
+import { TechnicianDistance, PerDiemConfig } from '../../../models/travel.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
+import * as TravelActions from '../../../state/travel/travel.actions';
 import { selectQualifiedTechnicians, selectAssignmentConflicts } from '../../../state/assignments/assignment.selectors';
+import { 
+  selectTechniciansSortedByDistance, 
+  selectPerDiemConfig,
+  selectDistanceCalculationLoading 
+} from '../../../state/travel/travel.selectors';
 
 /**
  * AssignmentDialogComponent
@@ -38,10 +45,16 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   job: Job;
   qualifiedTechnicians$: Observable<TechnicianMatch[]>;
   conflicts$: Observable<Conflict[]>;
+  techniciansWithDistance$!: Observable<TechnicianDistance[]>;
+  perDiemConfig$!: Observable<PerDiemConfig>;
+  distanceLoading$!: Observable<boolean>;
 
   qualifiedTechnicians: TechnicianMatch[] = [];
   selectedTechnician: TechnicianMatch | null = null;
   assignmentForm: FormGroup;
+  
+  // Distance map for quick lookup by technician ID
+  distanceMap: Map<string, TechnicianDistance> = new Map();
 
   // Availability status enum for template
   AvailabilityStatus = {
@@ -70,12 +83,32 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load qualified technicians for this job
     this.store.dispatch(AssignmentActions.loadQualifiedTechnicians({ jobId: this.job.id }));
+    
+    // Calculate distances for this job
+    this.store.dispatch(TravelActions.calculateDistances({ jobId: this.job.id }));
+    
+    // Setup distance observables
+    this.techniciansWithDistance$ = this.store.select(
+      selectTechniciansSortedByDistance(this.job.id, false)
+    );
+    this.perDiemConfig$ = this.store.select(selectPerDiemConfig);
+    this.distanceLoading$ = this.store.select(selectDistanceCalculationLoading);
 
     // Subscribe to qualified technicians
     this.qualifiedTechnicians$
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
         this.qualifiedTechnicians = technicians;
+      });
+    
+    // Subscribe to distances to build the map
+    this.techniciansWithDistance$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(distances => {
+        this.distanceMap.clear();
+        distances.forEach(d => {
+          this.distanceMap.set(d.technicianId, d);
+        });
       });
 
     // Watch override checkbox to conditionally require justification
@@ -95,6 +128,8 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    // Clear calculated distances when dialog closes
+    this.store.dispatch(TravelActions.clearDistances({ jobId: this.job.id }));
   }
 
   /**
@@ -273,5 +308,46 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
       minute: '2-digit'
     });
     return `${startStr} - ${endStr}`;
+  }
+
+  /**
+   * Get distance info for a technician
+   */
+  getDistanceInfo(technicianId: string): TechnicianDistance | null {
+    return this.distanceMap.get(technicianId) || null;
+  }
+
+  /**
+   * Format distance in miles
+   */
+  formatDistance(miles: number | null): string {
+    if (miles === null) return 'N/A';
+    return `${miles.toFixed(1)} mi`;
+  }
+
+  /**
+   * Format driving time
+   */
+  formatDrivingTime(minutes: number | null): string {
+    if (minutes === null) return 'N/A';
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    if (hours === 0) return `${mins} min`;
+    if (mins === 0) return `${hours} hr`;
+    return `${hours} hr ${mins} min`;
+  }
+
+  /**
+   * Calculate per diem amount for a technician
+   */
+  getPerDiemAmount(technicianId: string, config: PerDiemConfig): number {
+    const distanceInfo = this.distanceMap.get(technicianId);
+    if (!distanceInfo || !distanceInfo.perDiemEligible || distanceInfo.distanceMiles === null) {
+      return 0;
+    }
+    if (config.flatRateAmount !== null) {
+      return config.flatRateAmount;
+    }
+    return distanceInfo.distanceMiles * config.ratePerMile;
   }
 }

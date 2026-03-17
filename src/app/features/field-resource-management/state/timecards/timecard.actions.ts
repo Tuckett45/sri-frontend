@@ -192,3 +192,30 @@ export const setSelectedDate = createAction(
 export const clearTimecardState = createAction(
   '[Timecard] Clear State'
 );
+
+// Budget Integration Actions
+export const triggerBudgetDeduction = createAction(
+  '[Timecard] Trigger Budget Deduction',
+  props<{ jobId: string; roundedHours: number; timecardEntryId: string }>()
+);
+
+export const budgetDeductionTriggered = createAction(
+  '[Timecard] Budget Deduction Triggered',
+  props<{ jobId: string; roundedHours: number; timecardEntryId: string }>()
+);
+
+// Approve Timecard (Manager action)
+export const approveTimecard = createAction(
+  '[Timecard] Approve Timecard',
+  props<{ periodId: string }>()
+);
+
+export const approveTimecardSuccess = createAction(
+  '[Timecard] Approve Timecard Success',
+  props<{ period: TimecardPeriod }>()
+);
+
+export const approveTimecardFailure = createAction(
+  '[Timecard] Approve Timecard Failure',
+  props<{ error: string }>()
+);

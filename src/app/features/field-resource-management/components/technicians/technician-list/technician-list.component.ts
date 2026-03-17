@@ -1,15 +1,18 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Observable, Subject, combineLatest } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Technician, TechnicianRole } from '../../../models/technician.model';
 import { TechnicianFilters } from '../../../models/dtos/filters.dto';
+import { TravelProfile } from '../../../models/travel.model';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
+import { selectAllTravelProfiles } from '../../../state/travel/travel.selectors';
+import * as TravelActions from '../../../state/travel/travel.actions';
 import { ExportService } from '../../../services/export.service';
 import { UserRole } from '../../../../../models/role.enum';
 
@@ -24,7 +27,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
   
-  displayedColumns: string[] = ['name', 'role', 'skills', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'role', 'skills', 'travelStatus', 'status', 'actions'];
   
   // Expose UserRole enum for template
   UserRole = UserRole;
@@ -34,6 +37,10 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   roleControl = new FormControl('');
   skillsControl = new FormControl([]);
   availabilityControl = new FormControl(false);
+  travelWillingnessControl = new FormControl('');
+  
+  // Travel profiles map for display
+  travelProfilesMap: Map<string, TravelProfile> = new Map();
   
   // Pagination
   pageSize = 50;
@@ -74,6 +81,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       if (params['available']) {
         this.availabilityControl.setValue(params['available'] === 'true');
       }
+      if (params['travelWillingness']) {
+        this.travelWillingnessControl.setValue(params['travelWillingness']);
+      }
       // Load pagination from URL
       if (params['page']) {
         this.pageIndex = parseInt(params['page'], 10);
@@ -85,6 +95,19 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
 
     // Load technicians on init
     this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
+    
+    // Load travel profiles for all technicians
+    this.store.dispatch(TravelActions.loadAllTravelProfiles());
+    
+    // Subscribe to travel profiles to build the map
+    this.store.select(selectAllTravelProfiles)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(profiles => {
+        this.travelProfilesMap.clear();
+        profiles.forEach(profile => {
+          this.travelProfilesMap.set(profile.technicianId, profile);
+        });
+      });
     
     // Setup search with debounce
     this.searchControl.valueChanges
@@ -107,6 +130,10 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       .subscribe(() => this.applyFilters());
     
     this.availabilityControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
+    
+    this.travelWillingnessControl.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.applyFilters());
     
@@ -172,6 +199,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     if (this.availabilityControl.value) {
       queryParams.available = 'true';
     }
+    if (this.travelWillingnessControl.value) {
+      queryParams.travelWillingness = this.travelWillingnessControl.value;
+    }
     // Add pagination to URL
     if (this.pageIndex > 0) {
       queryParams.page = this.pageIndex.toString();
@@ -209,6 +239,12 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     if (this.availabilityControl.value) {
       filters.push({ label: 'Availability', value: 'Available Only', key: 'available' });
     }
+    if (this.travelWillingnessControl.value) {
+      const travelLabel = this.travelWillingnessControl.value === 'willing' 
+        ? 'Willing to Travel' 
+        : 'Not Willing to Travel';
+      filters.push({ label: 'Travel', value: travelLabel, key: 'travelWillingness' });
+    }
     
     return filters;
   }
@@ -230,6 +266,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       case 'available':
         this.availabilityControl.setValue(false);
         break;
+      case 'travelWillingness':
+        this.travelWillingnessControl.setValue('');
+        break;
     }
     this.applyFilters();
   }
@@ -239,6 +278,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.roleControl.setValue('');
     this.skillsControl.setValue([]);
     this.availabilityControl.setValue(false);
+    this.travelWillingnessControl.setValue('');
     this.pageIndex = 0; // Reset to first page
     this.store.dispatch(TechnicianActions.clearTechnicianFilters());
   }
@@ -276,6 +316,20 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   
   getCurrentStatus(technician: Technician): string {
     return technician.isActive ? 'Active' : 'Inactive';
+  }
+
+  /**
+   * Get travel willingness status for a technician
+   */
+  getTravelStatus(technician: Technician): { willing: boolean; label: string } | null {
+    const profile = this.travelProfilesMap.get(technician.id);
+    if (!profile) {
+      return null;
+    }
+    return {
+      willing: profile.willingToTravel,
+      label: profile.willingToTravel ? 'Willing' : 'Not Willing'
+    };
   }
 
   /**

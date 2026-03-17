@@ -1,0 +1,298 @@
+<ng-container *ngIf="viewModel$ | async as vm">
+  <div class="inventory-dashboard">
+    <!-- Hero Header -->
+    <div class="dashboard-hero">
+      <div class="hero-content">
+        <div class="hero-icon">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+        <div class="hero-text">
+          <h1>Inventory Management</h1>
+          <p class="hero-subtitle">Track equipment, materials, and stock levels</p>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button mat-stroked-button class="hero-btn" (click)="clearFilters()">
+          <mat-icon>filter_list_off</mat-icon>
+          Reset Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <mat-progress-bar *ngIf="vm.loading" mode="indeterminate"></mat-progress-bar>
+
+    <!-- Error State -->
+    <div *ngIf="vm.error && !vm.loading" class="error-card">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ vm.error }}</p>
+    </div>
+
+    <ng-container *ngIf="!vm.loading">
+      <!-- Low Stock Alerts -->
+      <div *ngIf="vm.lowStockAlerts.length > 0" class="alerts-banner">
+        <div class="alerts-header">
+          <mat-icon class="alert-icon">warning</mat-icon>
+          <span class="alerts-title">Low Stock Alerts ({{ vm.lowStockAlerts.length }})</span>
+        </div>
+        <div class="alerts-chips">
+          <mat-chip-listbox aria-label="Low stock items">
+            <mat-chip *ngFor="let alert of vm.lowStockAlerts"
+                      color="warn" highlighted
+                      (removed)="dismissAlert(alert.id)">
+              {{ alert.name }} ({{ alert.quantity }}/{{ alert.minimumThreshold }})
+              <button matChipRemove aria-label="Dismiss alert">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+          </mat-chip-listbox>
+        </div>
+      </div>
+
+      <!-- KPI Hero Cards -->
+      <div class="kpi-hero-grid">
+        <div class="kpi-hero-card primary-card">
+          <div class="kpi-hero-header">
+            <mat-icon class="kpi-hero-icon">category</mat-icon>
+          </div>
+          <div class="kpi-hero-value">{{ vm.statistics.total }}</div>
+          <div class="kpi-hero-label">Total Items</div>
+          <div class="kpi-hero-footer">across all locations</div>
+        </div>
+
+        <div class="kpi-hero-card warn-card">
+          <div class="kpi-hero-header">
+            <mat-icon class="kpi-hero-icon">report_problem</mat-icon>
+            <span *ngIf="vm.statistics.lowStock > 0" class="kpi-trend negative">
+              <mat-icon>trending_down</mat-icon>
+              Low
+            </span>
+          </div>
+          <div class="kpi-hero-value">{{ vm.statistics.lowStock }}</div>
+          <div class="kpi-hero-label">Low Stock</div>
+          <div class="kpi-hero-footer">below threshold</div>
+        </div>
+
+        <div class="kpi-hero-card success-card">
+          <div class="kpi-hero-header">
+            <mat-icon class="kpi-hero-icon">attach_money</mat-icon>
+          </div>
+          <div class="kpi-hero-value">{{ formatCurrency(vm.totalValue) }}</div>
+          <div class="kpi-hero-label">Total Value</div>
+          <div class="kpi-hero-footer">inventory worth</div>
+        </div>
+
+        <div class="kpi-hero-card accent-card">
+          <div class="kpi-hero-header">
+            <mat-icon class="kpi-hero-icon">place</mat-icon>
+          </div>
+          <div class="kpi-value-breakdown">
+            <div *ngFor="let entry of vm.valueByLocation | keyvalue" class="breakdown-item">
+              <mat-icon class="breakdown-icon">{{ getLocationIcon(entry.key) }}</mat-icon>
+              <span class="breakdown-label">{{ formatLocationLabel(entry.key) }}</span>
+              <span class="breakdown-value">{{ formatCurrency(entry.value) }}</span>
+            </div>
+          </div>
+          <div class="kpi-hero-label">Value by Location</div>
+        </div>
+      </div>
+
+      <!-- Filters Section -->
+      <div class="filter-section">
+        <div class="filter-row">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search inventory</mat-label>
+            <input matInput
+                   [value]="vm.filters.searchTerm || ''"
+                   (input)="onSearchChange($any($event.target).value)"
+                   placeholder="Search by name, item number, or description">
+            <mat-icon matPrefix>search</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Category</mat-label>
+            <mat-select [value]="vm.filters.category || ''"
+                        (selectionChange)="onCategoryFilter($event.value)">
+              <mat-option value="">All Categories</mat-option>
+              <mat-option *ngFor="let cat of categories" [value]="cat">
+                {{ cat | titlecase }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Status</mat-label>
+            <mat-select [value]="vm.filters.status || ''"
+                        (selectionChange)="onStatusFilter($event.value)">
+              <mat-option value="">All Statuses</mat-option>
+              <mat-option *ngFor="let status of statuses" [value]="status">
+                {{ status | titlecase }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Location Type</mat-label>
+            <mat-select [value]="vm.filters.locationType || ''"
+                        (selectionChange)="onLocationTypeFilter($event.value)">
+              <mat-option value="">All Locations</mat-option>
+              <mat-option *ngFor="let loc of locationTypes" [value]="loc">
+                {{ loc | titlecase }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-slide-toggle
+            [checked]="!!vm.filters.lowStock"
+            (change)="toggleLowStockFilter($event.checked)"
+            class="low-stock-toggle">
+            Low Stock Only
+          </mat-slide-toggle>
+
+          <button mat-button (click)="clearFilters()" class="clear-filters-btn">
+            <mat-icon>clear</mat-icon>
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Inventory Table -->
+      <div class="table-container">
+        <div *ngIf="vm.items.length === 0" class="empty-state">
+          <mat-icon>inventory_2</mat-icon>
+          <p>No inventory items match your filters</p>
+        </div>
+
+        <table mat-table [dataSource]="vm.items" *ngIf="vm.items.length > 0" class="inventory-table">
+          <!-- Item Number Column -->
+          <ng-container matColumnDef="itemNumber">
+            <th mat-header-cell *matHeaderCellDef>Item #</th>
+            <td mat-cell *matCellDef="let item">{{ item.itemNumber }}</td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let item">
+              <div class="item-name">{{ item.name }}</div>
+              <div class="item-description">{{ item.description }}</div>
+            </td>
+          </ng-container>
+
+          <!-- Category Column -->
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="category-chip">{{ item.category | titlecase }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Location Column -->
+          <ng-container matColumnDef="location">
+            <th mat-header-cell *matHeaderCellDef>Location</th>
+            <td mat-cell *matCellDef="let item">
+              <div class="location-cell">
+                <mat-icon class="location-icon">{{ getLocationIcon(item.currentLocation.type) }}</mat-icon>
+                <div>
+                  <div class="location-name">{{ item.currentLocation.name }}</div>
+                  <div class="location-type">{{ item.currentLocation.type | titlecase }}</div>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Quantity Column -->
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef>Qty</th>
+            <td mat-cell *matCellDef="let item">
+              <span [class.low-stock-qty]="isLowStock(item)">
+                {{ item.quantity }}
+              </span>
+              <span *ngIf="isLowStock(item)" class="low-stock-indicator"
+                    matTooltip="Below minimum threshold ({{ item.minimumThreshold }})">
+                <mat-icon>warning</mat-icon>
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="status-chip" [ngClass]="getStatusColor(item.status)">
+                {{ item.status | titlecase }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Value Column -->
+          <ng-container matColumnDef="value">
+            <th mat-header-cell *matHeaderCellDef>Value</th>
+            <td mat-cell *matCellDef="let item">{{ formatCurrency(item.totalValue) }}</td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let item">
+              <button mat-icon-button
+                      matTooltip="Assign to location"
+                      (click)="openAssignDialog(item)"
+                      [disabled]="item.status === 'retired' || item.status === 'maintenance'">
+                <mat-icon>swap_horiz</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [class.low-stock-row]="isLowStock(row)"></tr>
+        </table>
+      </div>
+
+      <!-- Material Usage Report Section -->
+      <div class="report-section">
+        <div class="report-header">
+          <h2>
+            <mat-icon>assessment</mat-icon>
+            Material Usage Report
+          </h2>
+          <button mat-button (click)="toggleMaterialUsage()" class="toggle-btn">
+            <mat-icon>{{ showMaterialUsage ? 'expand_less' : 'expand_more' }}</mat-icon>
+            {{ showMaterialUsage ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+        <ng-container *ngIf="showMaterialUsage">
+          <mat-progress-bar *ngIf="materialUsageLoading$ | async" mode="indeterminate"></mat-progress-bar>
+          <ng-container *ngIf="materialUsageReport$ | async as report">
+            <div class="usage-card">
+              <div class="usage-total">
+                <span class="usage-label">Total Material Cost</span>
+                <span class="usage-value">{{ formatCurrency(report.totalCost) }}</span>
+              </div>
+              <div *ngIf="report.topMaterials.length > 0" class="usage-breakdown">
+                <h4>Top Materials by Cost</h4>
+                <div class="usage-list">
+                  <div *ngFor="let material of report.topMaterials.slice(0, 5)" class="usage-item">
+                    <span class="item-name">{{ material.materialName }}</span>
+                    <span class="item-qty">{{ material.quantity }} units</span>
+                    <span class="item-cost">{{ formatCurrency(material.totalCost) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="report.byJob.length > 0" class="usage-breakdown">
+                <h4>Material Cost by Job</h4>
+                <div class="usage-list">
+                  <div *ngFor="let job of report.byJob.slice(0, 5)" class="usage-item">
+                    <span class="item-name">{{ job.jobName || job.jobId }}</span>
+                    <span class="item-cost">{{ formatCurrency(job.totalCost) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+      </div>
+    </ng-container>
+  </div>
+</ng-container>

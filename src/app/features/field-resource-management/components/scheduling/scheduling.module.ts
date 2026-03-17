@@ -9,6 +9,9 @@ import { SharedMaterialModule } from '../../shared-material.module';
 // Shared Components Module
 import { SharedComponentsModule } from '../shared/shared-components.module';
 
+// Travel Shared Module for distance display in assignment dialog (no routes)
+import { TravelSharedModule } from '../travel/travel.module';
+
 // Scheduling Components
 import { CalendarViewComponent } from './calendar-view/calendar-view.component';
 import { AssignmentDialogComponent } from './assignment-dialog/assignment-dialog.component';
@@ -61,6 +64,7 @@ const routes: Routes = [
     ReactiveFormsModule,
     SharedMaterialModule,
     SharedComponentsModule,
+    TravelSharedModule,
     RouterModule.forChild(routes)
   ]
 })

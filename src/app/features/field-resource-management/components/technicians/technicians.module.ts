@@ -9,6 +9,9 @@ import { SharedMaterialModule } from '../../shared-material.module';
 // Shared Components Module
 import { SharedComponentsModule } from '../shared/shared-components.module';
 
+// Travel Module for travel profile integration
+import { TravelSharedModule } from '../travel/travel.module';
+
 // Technician Components
 import { TechnicianListComponent } from './technician-list/technician-list.component';
 import { TechnicianDetailComponent } from './technician-detail/technician-detail.component';
@@ -67,6 +70,7 @@ const routes: Routes = [
     ReactiveFormsModule,
     SharedMaterialModule,
     SharedComponentsModule,
+    TravelSharedModule,
     RouterModule.forChild(routes)
   ]
 })

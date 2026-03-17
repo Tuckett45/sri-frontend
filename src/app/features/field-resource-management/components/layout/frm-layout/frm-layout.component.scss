@@ -3,25 +3,31 @@
   height: 100vh;
   overflow: hidden;
   position: relative;
+  width: 100%;
 }
 
 // Sidebar Styles
 .frm-sidebar {
   width: 260px;
+  min-width: 260px;
+  max-width: 260px;
   background-color: #1e293b;
   color: #f1f5f9;
   display: flex;
   flex-direction: column;
   transition: transform 0.3s ease-in-out;
-  z-index: 1000;
+  z-index: 100;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden; // Prevent sidebar from overflowing
+  height: 100vh;
+  flex-shrink: 0;
+  position: relative;
 
   @media (max-width: 768px) {
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
+    z-index: 1000;
     transform: translateX(-100%);
 
     &.open {
@@ -85,6 +91,8 @@
   flex-direction: column;
   overflow: hidden;
   background-color: #f8fafc;
+  min-width: 0; // Prevent flex item from overflowing
+  position: relative;
 
   @media (max-width: 768px) {
     width: 100%;
@@ -99,8 +107,9 @@
   background-color: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  z-index: 100;
-  flex-shrink: 0; // Prevent topbar from shrinking
+  z-index: 50;
+  flex-shrink: 0;
+  position: relative;
 }
 
 .menu-toggle {
@@ -122,6 +131,14 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 24px;
+
+  // Hide scrollbar but keep scroll functionality
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE and Edge
+  
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari, Opera
+  }
 
   @media (max-width: 768px) {
     padding: 16px;

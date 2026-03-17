@@ -1,0 +1,71 @@
+<div class="travel-overview">
+  <div class="page-header">
+    <h2>
+      <mat-icon>flight</mat-icon>
+      Travel Management
+    </h2>
+    <p class="page-description">
+      Manage technician travel profiles, home addresses, and distance calculations for job assignments.
+    </p>
+  </div>
+
+  <mat-tab-group animationDuration="200ms">
+    <!-- Travel Profiles Tab -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">person_pin</mat-icon>
+        Travel Profiles
+      </ng-template>
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <div class="profile-instructions" *ngIf="!selectedTechnicianId">
+            <mat-card>
+              <mat-card-content>
+                <mat-icon class="info-icon">info</mat-icon>
+                <p>Select a technician from the <strong>Technicians</strong> page to view and edit their travel profile, 
+                   or use the technician detail view to manage travel flags and home addresses.</p>
+                <a mat-stroked-button color="primary" routerLink="/field-resource-management/technicians">
+                  <mat-icon>engineering</mat-icon>
+                  Go to Technicians
+                </a>
+              </mat-card-content>
+            </mat-card>
+          </div>
+          <app-technician-travel-profile 
+            *ngIf="selectedTechnicianId"
+            [technicianId]="selectedTechnicianId">
+          </app-technician-travel-profile>
+        </div>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Distance Calculator Tab -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">straighten</mat-icon>
+        Distance Calculator
+      </ng-template>
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <div class="distance-instructions" *ngIf="!selectedJobId">
+            <mat-card>
+              <mat-card-content>
+                <mat-icon class="info-icon">info</mat-icon>
+                <p>Select a job from the <strong>Jobs</strong> page to calculate technician distances, 
+                   or use the job detail view to see nearby technicians sorted by distance.</p>
+                <a mat-stroked-button color="primary" routerLink="/field-resource-management/jobs">
+                  <mat-icon>work</mat-icon>
+                  Go to Jobs
+                </a>
+              </mat-card-content>
+            </mat-card>
+          </div>
+          <app-technician-distance-list
+            *ngIf="selectedJobId"
+            [jobId]="selectedJobId">
+          </app-technician-distance-list>
+        </div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

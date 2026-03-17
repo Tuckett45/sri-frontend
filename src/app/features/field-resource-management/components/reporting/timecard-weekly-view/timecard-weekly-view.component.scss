@@ -358,6 +358,10 @@
           .entry-actions {
             display: flex;
             gap: 4px;
+
+            button mat-icon {
+              color: #e18a25;
+            }
           }
         }
       }
@@ -428,7 +432,7 @@
       padding: 48px 24px;
       text-align: center;
 
-      mat-icon {
+      > mat-icon {
         font-size: 64px;
         width: 64px;
         height: 64px;
@@ -440,6 +444,14 @@
         font-size: 16px;
         color: #616161;
         margin-bottom: 24px;
+      }
+
+      button mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: inherit;
+        margin-bottom: 0;
       }
     }
   }

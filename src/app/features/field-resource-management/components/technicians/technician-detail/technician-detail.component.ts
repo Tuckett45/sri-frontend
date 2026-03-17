@@ -5,8 +5,10 @@ import { Observable, Subject } from 'rxjs';
 import { takeUntil, filter, switchMap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { Technician, CertificationStatus } from '../../../models/technician.model';
+import { TravelProfile } from '../../../models/travel.model';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
+import { selectTravelProfile } from '../../../state/travel/travel.selectors';
 
 @Component({
   selector: 'app-technician-detail',
@@ -18,8 +20,12 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
   technician$: Observable<Technician | null | undefined>;
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
+  travelProfile$!: Observable<TravelProfile | null>;
   
   technicianId: string | null = null;
+  
+  // Tab management
+  selectedTabIndex = 0;
   
   // For calendar display
   selectedDate: Date = new Date();
@@ -55,6 +61,8 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
       .subscribe(params => {
         this.technicianId = params['id'];
         this.store.dispatch(TechnicianActions.selectTechnician({ id: this.technicianId }));
+        // Setup travel profile observable for the travel tab
+        this.travelProfile$ = this.store.select(selectTravelProfile(this.technicianId!));
       });
     
     // Load technician data and populate unavailable dates

@@ -1,0 +1,138 @@
+@import '../../../styles/frm-variables';
+
+.po-form {
+  display: flex;
+  flex-direction: column;
+  gap: $frm-spacing-sm;
+  min-width: 500px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.automation-badge {
+  font-size: $frm-font-size-xs;
+  color: $frm-success;
+  font-weight: $frm-font-weight-medium;
+}
+
+// Supplier Info
+.supplier-info {
+  background: $frm-gray-50;
+  border-radius: $frm-border-radius-sm;
+  padding: $frm-spacing-sm $frm-spacing-md;
+  margin-bottom: $frm-spacing-sm;
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+
+    .info-label {
+      font-size: $frm-font-size-sm;
+      color: $frm-text-secondary;
+    }
+
+    .info-value {
+      font-size: $frm-font-size-sm;
+      font-weight: $frm-font-weight-medium;
+    }
+
+    .delivery-date {
+      color: $frm-primary;
+    }
+  }
+}
+
+// Items Section
+.items-section {
+  margin: $frm-spacing-md 0;
+
+  .items-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $frm-spacing-sm;
+
+    h3 {
+      margin: 0;
+      font-size: $frm-font-size-md;
+      font-weight: $frm-font-weight-medium;
+    }
+  }
+}
+
+.empty-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $frm-spacing-lg;
+  color: $frm-text-secondary;
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    margin-bottom: $frm-spacing-xs;
+  }
+
+  p {
+    font-size: $frm-font-size-sm;
+  }
+}
+
+.item-row {
+  display: flex;
+  gap: $frm-spacing-sm;
+  align-items: flex-start;
+  margin-bottom: $frm-spacing-xs;
+
+  .material-field {
+    flex: 3;
+  }
+
+  .qty-field {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  .cost-field {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .item-total {
+    display: flex;
+    align-items: center;
+    min-width: 80px;
+    font-weight: $frm-font-weight-medium;
+    font-size: $frm-font-size-sm;
+    padding-top: $frm-spacing-md;
+    color: $frm-text-primary;
+  }
+}
+
+// Order Total
+.order-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: $frm-spacing-md;
+  padding: $frm-spacing-md;
+  background: $frm-gray-50;
+  border-radius: $frm-border-radius-sm;
+  margin-top: $frm-spacing-sm;
+
+  .total-label {
+    font-size: $frm-font-size-md;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-secondary;
+  }
+
+  .total-value {
+    font-size: $frm-font-size-xl;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-primary;
+  }
+}

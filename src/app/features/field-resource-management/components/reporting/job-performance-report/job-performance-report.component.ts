@@ -263,7 +263,7 @@ export class JobPerformanceReportComponent implements OnInit, OnDestroy {
    * View technician detail
    */
   viewTechnicianDetail(performer: TechnicianPerformance): void {
-    this.router.navigate(['/field-resources/technicians', performer.technician.id]);
+    this.router.navigate(['/field-resource-management/technicians', performer.technician.id]);
   }
   
   /**

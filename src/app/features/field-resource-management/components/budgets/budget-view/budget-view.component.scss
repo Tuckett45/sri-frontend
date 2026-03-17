@@ -1,0 +1,197 @@
+@import '../../../../styles/frm-variables';
+
+:host {
+  display: block;
+}
+
+.budget-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $frm-spacing-xl;
+  color: $frm-text-secondary;
+}
+
+.budget-error {
+  display: flex;
+  align-items: center;
+  gap: $frm-spacing-sm;
+  padding: $frm-spacing-md;
+  color: $frm-error;
+  background: rgba($frm-error, 0.08);
+  border-radius: $frm-border-radius-md;
+}
+
+.budget-view {
+  display: flex;
+  flex-direction: column;
+  gap: $frm-spacing-md;
+}
+
+.budget-summary-card {
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $frm-spacing-md;
+  }
+
+  .budget-status-chip {
+    padding: $frm-spacing-xs $frm-spacing-sm;
+    border-radius: $frm-border-radius-lg;
+    font-size: $frm-font-size-sm;
+    font-weight: $frm-font-weight-medium;
+
+    &.on-track {
+      background: rgba($frm-success, 0.12);
+      color: $frm-success-dark;
+    }
+    &.warning {
+      background: rgba($frm-warning, 0.12);
+      color: $frm-warning-dark;
+    }
+    &.over-budget {
+      background: rgba($frm-error, 0.12);
+      color: $frm-error-dark;
+    }
+  }
+}
+
+.budget-progress-section {
+  margin-bottom: $frm-spacing-lg;
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: $frm-spacing-xs;
+    font-size: $frm-font-size-sm;
+    color: $frm-text-secondary;
+
+    .percentage {
+      font-weight: $frm-font-weight-medium;
+      color: $frm-text-primary;
+    }
+  }
+}
+
+.hours-breakdown {
+  display: flex;
+  justify-content: space-around;
+  padding: $frm-spacing-md 0;
+  border-top: 1px solid $frm-border-light;
+  border-bottom: 1px solid $frm-border-light;
+  margin-bottom: $frm-spacing-md;
+
+  .hours-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $frm-spacing-xs;
+
+    .hours-label {
+      font-size: $frm-font-size-sm;
+      color: $frm-text-secondary;
+    }
+
+    .hours-value {
+      font-size: $frm-font-size-lg;
+      font-weight: $frm-font-weight-medium;
+
+      &.allocated { color: $frm-primary; }
+      &.consumed { color: $frm-text-primary; }
+      &.remaining {
+        &.on-track { color: $frm-success; }
+        &.warning { color: $frm-warning; }
+        &.over-budget { color: $frm-error; }
+      }
+    }
+  }
+}
+
+.budget-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: $frm-spacing-sm;
+}
+
+.budget-history-card {
+  .history-content {
+    padding: $frm-spacing-md 0;
+  }
+
+  .empty-history {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: $frm-spacing-xl;
+    color: $frm-text-secondary;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: $frm-spacing-sm;
+    }
+  }
+
+  .history-item {
+    height: auto !important;
+    padding: $frm-spacing-sm 0;
+  }
+
+  .positive { color: $frm-success; }
+  .negative { color: $frm-error; }
+
+  .adjustment-amount {
+    font-weight: $frm-font-weight-medium;
+    margin-right: $frm-spacing-sm;
+  }
+
+  .adjustment-by, .deduction-tech {
+    font-size: $frm-font-size-sm;
+    color: $frm-text-secondary;
+  }
+
+  .adjustment-reason {
+    font-size: $frm-font-size-sm;
+    color: $frm-text-secondary;
+    font-style: italic;
+  }
+
+  .adjustment-meta, .deduction-meta {
+    font-size: $frm-font-size-xs;
+    color: $frm-text-hint;
+    display: flex;
+    gap: $frm-spacing-md;
+  }
+
+  .budget-change {
+    font-family: $frm-font-family-mono;
+    font-size: $frm-font-size-xs;
+  }
+
+  .deduction-hours {
+    font-weight: $frm-font-weight-medium;
+    color: $frm-error;
+    margin-right: $frm-spacing-sm;
+  }
+
+  .deduction-icon {
+    color: $frm-text-secondary;
+  }
+}
+
+.no-budget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $frm-spacing-xxl;
+  color: $frm-text-secondary;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: $frm-spacing-md;
+  }
+}

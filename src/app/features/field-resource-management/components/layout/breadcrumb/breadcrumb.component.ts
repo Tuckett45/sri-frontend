@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, filter, distinctUntilChanged } from 'rxjs/operators';
@@ -39,14 +39,16 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
    * Route label mapping for common FRM routes
    */
   private readonly routeLabels: { [key: string]: string } = {
-    'frm': 'Field Resource Management',
+    'field-resource-management': 'Field Resources',
     'dashboard': 'Dashboard',
     'technicians': 'Technicians',
     'crews': 'Crews',
     'jobs': 'Jobs',
     'scheduling': 'Scheduling',
     'map': 'Map View',
-    'reports': 'Reports',
+    'reports': 'Reports & Analytics',
+    'timecard': 'Timecards',
+    'timecard-manager': 'Timecard Management',
     'kpis': 'KPIs',
     'system-config': 'System Configuration',
     'my-assignments': 'My Assignments',
@@ -62,7 +64,7 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
    * Route icon mapping for common FRM routes
    */
   private readonly routeIcons: { [key: string]: string } = {
-    'frm': 'home',
+    'field-resource-management': 'home',
     'dashboard': 'dashboard',
     'technicians': 'engineering',
     'crews': 'groups',
@@ -70,6 +72,8 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
     'scheduling': 'calendar_today',
     'map': 'map',
     'reports': 'assessment',
+    'timecard': 'schedule',
+    'timecard-manager': 'admin_panel_settings',
     'kpis': 'analytics',
     'system-config': 'settings',
     'my-assignments': 'assignment',
@@ -79,7 +83,8 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -95,6 +100,7 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
       )
       .subscribe(() => {
         this.buildBreadcrumbs();
+        this.cdr.markForCheck(); // Trigger change detection
       });
   }
 
@@ -110,21 +116,42 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
     const breadcrumbs: BreadcrumbItem[] = [];
     const urlSegments = this.router.url.split('/').filter(segment => segment);
 
+    console.log('=== BREADCRUMB BUILD START ===');
+    console.log('Full URL:', this.router.url);
+    console.log('URL segments:', urlSegments);
+
     let currentUrl = '';
 
     urlSegments.forEach((segment, index) => {
       // Skip query parameters and fragments
       const cleanSegment = segment.split('?')[0].split('#')[0];
       
+      console.log(`\n[${index}] Processing: "${cleanSegment}"`);
+      
       if (!cleanSegment) {
+        console.log('  ❌ Empty segment, skipping');
         return;
       }
 
+      // Build URL incrementally
       currentUrl += `/${cleanSegment}`;
+      console.log(`  📍 Current URL: ${currentUrl}`);
 
-      // Get label from route data or use default mapping
+      // Check if this is an ID segment (UUID or entity ID like "tech-15")
+      const isId = this.isUUID(cleanSegment);
+      
+      if (isId) {
+        console.log(`  🔑 ID segment detected, skipping breadcrumb (but URL continues)`);
+        return;
+      }
+
+      // Get label and icon for this segment
       const label = this.getRouteLabel(cleanSegment, index);
       const icon = index === 0 ? this.routeIcons[cleanSegment] : undefined;
+
+      console.log(`  ✅ Adding breadcrumb: "${label}"`);
+      console.log(`     URL: ${currentUrl}`);
+      console.log(`     Icon: ${icon || 'none'}`);
 
       breadcrumbs.push({
         label,
@@ -133,6 +160,10 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
       });
     });
 
+    console.log('\n=== FINAL BREADCRUMBS ===');
+    console.log(breadcrumbs.map(b => b.label).join(' > '));
+    console.log('========================\n');
+    
     this.breadcrumbs = breadcrumbs;
   }
 
@@ -140,30 +171,25 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
    * Get label for route segment
    */
   private getRouteLabel(segment: string, index: number): string {
-    // Check if segment is a UUID (entity ID)
-    if (this.isUUID(segment)) {
-      return this.getEntityLabel(segment);
-    }
-
     // Use predefined label or format segment
     return this.routeLabels[segment] || this.formatSegment(segment);
   }
 
   /**
-   * Check if string is a UUID
+   * Check if string is a UUID or entity ID
    */
   private isUUID(str: string): boolean {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(str);
-  }
-
-  /**
-   * Get label for entity ID (can be enhanced with entity name lookup)
-   */
-  private getEntityLabel(id: string): string {
-    // In a real implementation, this could fetch entity name from store
-    // For now, return shortened ID
-    return `ID: ${id.substring(0, 8)}...`;
+    // Check for patterns like "tech-15", "job-123", "crew-5" (entity IDs with numbers)
+    // This should NOT match "technicians", "jobs", "crews" (plural route names)
+    const idPattern = /^(tech|job|crew|user)-\d+$/i;
+    
+    const isUuid = uuidRegex.test(str);
+    const isIdPattern = idPattern.test(str);
+    
+    console.log(`isUUID check for "${str}": UUID=${isUuid}, IDPattern=${isIdPattern}`);
+    
+    return isUuid || isIdPattern;
   }
 
   /**

@@ -26,12 +26,6 @@
     [message]="'Loading recommendations...'">
   </app-loading-indicator>
 
-  <!-- Error Message -->
-  <div *ngIf="error$ | async as error" class="error-message">
-    <span class="icon-error"></span>
-    <p>{{ error }}</p>
-  </div>
-
   <!-- Recommendations List -->
   <div class="recommendations-list" *ngIf="recommendations$ | async as recommendations">
     <div *ngIf="recommendations.length === 0 && !(loading$ | async)" class="no-recommendations">

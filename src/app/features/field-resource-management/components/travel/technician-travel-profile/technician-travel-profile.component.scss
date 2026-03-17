@@ -1,0 +1,227 @@
+@import '../../../styles/frm-variables';
+
+:host {
+  display: block;
+}
+
+.travel-profile {
+  display: flex;
+  flex-direction: column;
+  gap: $frm-spacing-md;
+}
+
+.travel-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $frm-spacing-xl;
+  color: $frm-text-secondary;
+}
+
+.travel-error {
+  display: flex;
+  align-items: center;
+  gap: $frm-spacing-sm;
+  padding: $frm-spacing-md;
+  color: $frm-error;
+  background: rgba($frm-error, 0.08);
+  border-radius: $frm-border-radius-md;
+}
+
+// Travel Flag Card
+.travel-flag-card {
+  .travel-flag-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $frm-spacing-sm 0;
+  }
+
+  .flag-info {
+    display: flex;
+    align-items: center;
+    gap: $frm-spacing-sm;
+  }
+
+  .flag-label {
+    font-size: $frm-font-size-md;
+    font-weight: $frm-font-weight-medium;
+  }
+
+  .travel-willing {
+    color: $frm-success;
+  }
+
+  .travel-not-willing {
+    color: $frm-text-secondary;
+  }
+}
+
+// Address Card
+.address-card {
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $frm-spacing-md;
+  }
+
+  .geocoding-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: $frm-spacing-xs;
+    padding: $frm-spacing-xs $frm-spacing-sm;
+    border-radius: $frm-border-radius-lg;
+    font-size: $frm-font-size-sm;
+    font-weight: $frm-font-weight-medium;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+
+    &.success {
+      background: rgba($frm-success, 0.12);
+      color: $frm-success-dark;
+    }
+
+    &.pending {
+      background: rgba($frm-info, 0.12);
+      color: $frm-info-dark;
+    }
+
+    &.error {
+      background: rgba($frm-error, 0.12);
+      color: $frm-error-dark;
+    }
+
+    &.not-geocoded {
+      background: rgba($frm-gray-500, 0.12);
+      color: $frm-gray-600;
+    }
+  }
+}
+
+// Address Form
+.address-form {
+  .full-width {
+    width: 100%;
+  }
+
+  .address-row {
+    display: flex;
+    gap: $frm-spacing-md;
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+    }
+
+    .city-field {
+      flex: 2;
+    }
+
+    .state-field {
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .postal-field {
+      flex: 1;
+      min-width: 120px;
+    }
+  }
+
+  .address-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: $frm-spacing-sm;
+  }
+}
+
+// Geocoding Details
+.geocoding-details {
+  margin-top: $frm-spacing-md;
+  padding-top: $frm-spacing-md;
+  border-top: 1px solid $frm-border-light;
+}
+
+.geocoding-progress {
+  display: flex;
+  align-items: center;
+  gap: $frm-spacing-sm;
+  color: $frm-info;
+  font-size: $frm-font-size-sm;
+}
+
+.geocoding-error {
+  display: flex;
+  align-items: center;
+  gap: $frm-spacing-sm;
+  color: $frm-error;
+  font-size: $frm-font-size-sm;
+  padding: $frm-spacing-sm;
+  background: rgba($frm-error, 0.06);
+  border-radius: $frm-border-radius-md;
+}
+
+.coordinates-display {
+  display: flex;
+  flex-direction: column;
+  gap: $frm-spacing-sm;
+
+  .coord-item {
+    display: flex;
+    align-items: center;
+    gap: $frm-spacing-sm;
+
+    mat-icon {
+      color: $frm-success;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .coord-info {
+    display: flex;
+    flex-direction: column;
+
+    .coord-label {
+      font-size: $frm-font-size-xs;
+      color: $frm-text-secondary;
+    }
+
+    .coord-value {
+      font-size: $frm-font-size-sm;
+      font-family: $frm-font-family-mono;
+      color: $frm-text-primary;
+    }
+  }
+}
+
+// Spinning animation for geocoding
+.spinning {
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// No Profile State
+.no-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $frm-spacing-xxl;
+  color: $frm-text-secondary;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: $frm-spacing-md;
+  }
+}

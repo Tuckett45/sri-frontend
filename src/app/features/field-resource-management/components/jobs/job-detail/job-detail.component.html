@@ -140,6 +140,60 @@
       </mat-card-content>
     </mat-card>
 
+    <!-- Section: Budget Tracking -->
+    <mat-card class="detail-section budget-section" *ngIf="budget$ | async as budget">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>account_balance_wallet</mat-icon>
+          Budget Tracking
+        </mat-card-title>
+        <span class="budget-status-badge" [ngClass]="getBudgetStatusClass(budget.status)">
+          {{ getBudgetStatusText(budget.status) }}
+        </span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="budget-overview">
+          <div class="budget-metric">
+            <label>Allocated Hours</label>
+            <span class="metric-value">{{ budget.allocatedHours | number:'1.1-1' }} hrs</span>
+          </div>
+          <div class="budget-metric">
+            <label>Consumed Hours</label>
+            <span class="metric-value">{{ budget.consumedHours | number:'1.1-1' }} hrs</span>
+          </div>
+          <div class="budget-metric">
+            <label>Remaining Hours</label>
+            <span class="metric-value" [ngClass]="{'over-budget-value': budget.remainingHours < 0}">
+              {{ budget.remainingHours | number:'1.1-1' }} hrs
+            </span>
+          </div>
+          <div class="budget-metric">
+            <label>Consumption</label>
+            <span class="metric-value">{{ (budgetConsumptionPercentage$ | async) | number:'1.0-1' }}%</span>
+          </div>
+        </div>
+        
+        <!-- Budget Progress Bar -->
+        <div class="budget-progress">
+          <div class="progress-bar-container">
+            <div 
+              class="progress-bar-fill" 
+              [ngClass]="getBudgetStatusClass(budget.status)"
+              [style.width.%]="(budgetConsumptionPercentage$ | async) || 0 | number:'1.0-0'">
+            </div>
+          </div>
+          <div class="progress-labels">
+            <span>0%</span>
+            <span class="warning-marker">80%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Budget Management (full view with adjustment dialog) -->
+    <app-budget-view *ngIf="job" [jobId]="job.id"></app-budget-view>
+
     <!-- Time Tracker Section (for assigned technicians) -->
     <mat-card class="detail-section time-tracker-section" *ngIf="isAssignedToCurrentUser">
       <mat-card-header>
@@ -153,6 +207,94 @@
           [job]="job"
           [isAdmin]="false">
         </frm-time-tracker>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section: Job Cost Report -->
+    <mat-card class="detail-section cost-report-section">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>assessment</mat-icon>
+          Job Cost Report
+        </mat-card-title>
+        <div class="cost-report-actions">
+          <button mat-button (click)="toggleCostReport()">
+            <mat-icon>{{ showCostReport ? 'expand_less' : 'expand_more' }}</mat-icon>
+            {{ showCostReport ? 'Hide' : 'Show' }} Details
+          </button>
+          <button mat-button color="primary" (click)="viewFullCostReport()">
+            <mat-icon>open_in_new</mat-icon>
+            Full Report
+          </button>
+        </div>
+      </mat-card-header>
+      <mat-card-content *ngIf="showCostReport">
+        <!-- Loading -->
+        <mat-progress-bar *ngIf="costReportLoading$ | async" mode="indeterminate"></mat-progress-bar>
+
+        <!-- Error -->
+        <div *ngIf="costReportError$ | async as error" class="cost-report-error">
+          <mat-icon color="warn">error_outline</mat-icon>
+          <span>{{ error }}</span>
+        </div>
+
+        <!-- Cost Breakdown Summary -->
+        <ng-container *ngIf="costBreakdown$ | async as breakdown">
+          <div class="cost-summary-grid">
+            <div class="cost-item labor">
+              <mat-icon>people</mat-icon>
+              <div class="cost-details">
+                <span class="cost-label">Labor</span>
+                <span class="cost-value">{{ formatCurrency(breakdown.laborCosts.totalCost) }}</span>
+                <span class="cost-meta">{{ breakdown.laborCosts.totalRoundedHours | number:'1.1-1' }} hrs</span>
+              </div>
+            </div>
+            <div class="cost-item materials">
+              <mat-icon>inventory_2</mat-icon>
+              <div class="cost-details">
+                <span class="cost-label">Materials</span>
+                <span class="cost-value">{{ formatCurrency(breakdown.materialCosts.totalCost) }}</span>
+                <span class="cost-meta">{{ breakdown.materialCosts.byMaterial.length }} items</span>
+              </div>
+            </div>
+            <div class="cost-item travel">
+              <mat-icon>directions_car</mat-icon>
+              <div class="cost-details">
+                <span class="cost-label">Travel</span>
+                <span class="cost-value">{{ formatCurrency(breakdown.travelCosts.totalCost) }}</span>
+                <span class="cost-meta">{{ breakdown.travelCosts.byTechnician.length }} technicians</span>
+              </div>
+            </div>
+            <div class="cost-item total">
+              <mat-icon>account_balance</mat-icon>
+              <div class="cost-details">
+                <span class="cost-label">Total Cost</span>
+                <span class="cost-value">{{ formatCurrency(breakdown.totalCosts) }}</span>
+                <span class="cost-meta" [ngClass]="breakdown.budgetVariance >= 0 ? 'positive-variance' : 'negative-variance'">
+                  Variance: {{ breakdown.budgetVariancePercent | number:'1.1-1' }}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Budget Comparison -->
+        <ng-container *ngIf="budgetComparison$ | async as comparison">
+          <div class="budget-comparison">
+            <h4>Budget vs Actual</h4>
+            <div class="comparison-bar">
+              <div class="comparison-info">
+                <span>Allocated: {{ formatCurrency(comparison.allocatedBudget) }}</span>
+                <span>Actual: {{ formatCurrency(comparison.actualCost) }}</span>
+              </div>
+              <mat-progress-bar
+                mode="determinate"
+                [value]="comparison.allocatedBudget > 0 ? (comparison.actualCost / comparison.allocatedBudget) * 100 : 0"
+                [color]="comparison.status === BudgetStatus.OverBudget ? 'warn' : comparison.status === BudgetStatus.Warning ? 'accent' : 'primary'">
+              </mat-progress-bar>
+            </div>
+          </div>
+        </ng-container>
       </mat-card-content>
     </mat-card>
 

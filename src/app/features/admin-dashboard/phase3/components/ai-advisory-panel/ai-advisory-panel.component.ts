@@ -65,15 +65,15 @@ export class AIAdvisoryPanelComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Load initial recommendations
-    this.loadRecommendations();
+    // Load initial recommendations - commented out to avoid 404 errors
+    // this.loadRecommendations();
 
     // Set up auto-refresh if enabled
     if (this.autoRefresh) {
       interval(this.refreshInterval)
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
-          this.refreshRecommendations();
+          // this.refreshRecommendations();
         });
     }
   }

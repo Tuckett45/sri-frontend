@@ -104,6 +104,34 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       action: 'read'
     },
     {
+      label: 'Budget Dashboard',
+      icon: 'account_balance_wallet',
+      route: '/field-resource-management/reports/budget-dashboard',
+      resource: 'reports',
+      action: 'read'
+    },
+    {
+      label: 'Travel',
+      icon: 'flight',
+      route: '/field-resource-management/travel',
+      resource: 'technicians',
+      action: 'read'
+    },
+    {
+      label: 'Inventory',
+      icon: 'inventory_2',
+      route: '/field-resource-management/inventory',
+      resource: 'jobs',
+      action: 'read'
+    },
+    {
+      label: 'Materials',
+      icon: 'category',
+      route: '/field-resource-management/materials',
+      resource: 'jobs',
+      action: 'read'
+    },
+    {
       label: 'Approvals',
       icon: 'approval',
       route: '/field-resource-management/approvals',
@@ -269,10 +297,31 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if a route is currently active
+   * Check if a route is currently active.
+   * Uses exact match first; falls back to prefix match only if
+   * no other menu item has a more specific (longer) prefix match.
    */
   isActive(route: string): boolean {
-    return this.activeRoute.startsWith(route);
+    if (!this.activeRoute) return false;
+
+    // Exact match always wins
+    if (this.activeRoute === route) return true;
+
+    // Check if this route is a prefix of the active route
+    const isPrefix = this.activeRoute.startsWith(route);
+    if (!isPrefix) return false;
+
+    // It's a prefix match — but only highlight if no other menu item
+    // has a longer (more specific) prefix match
+    const hasMoreSpecificMatch = this.menuItems.some(item => {
+      if (!item.route || item.route === route) return false;
+      return (
+        item.route.length > route.length &&
+        this.activeRoute.startsWith(item.route)
+      );
+    });
+
+    return !hasMoreSpecificMatch;
   }
 
   /**

@@ -1,0 +1,120 @@
+<h2 mat-dialog-title>Assign Inventory Item</h2>
+
+<mat-dialog-content>
+  <!-- Item Info -->
+  <div class="item-info">
+    <div class="info-row">
+      <span class="info-label">Item</span>
+      <span class="info-value">{{ data.item.name }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Item Number</span>
+      <span class="info-value">{{ data.item.itemNumber }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Current Location</span>
+      <span class="info-value location-value">
+        <mat-icon class="location-icon">{{ getLocationIcon(data.item.currentLocation.type) }}</mat-icon>
+        {{ data.item.currentLocation.name }} ({{ data.item.currentLocation.type | titlecase }})
+      </span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Status</span>
+      <span class="info-value status-value" [ngClass]="data.item.status">
+        {{ data.item.status | titlecase }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Availability Check -->
+  <div *ngIf="checkingAvailability" class="availability-check">
+    <mat-spinner diameter="20"></mat-spinner>
+    <span>Checking availability...</span>
+  </div>
+
+  <div *ngIf="!checkingAvailability && !isAvailable" class="availability-warning">
+    <mat-icon>warning</mat-icon>
+    <span>This item is not available for assignment</span>
+  </div>
+
+  <div *ngIf="!checkingAvailability && !canAssign && isAvailable" class="availability-warning">
+    <mat-icon>warning</mat-icon>
+    <span>Item cannot be assigned while in {{ data.item.status }} status</span>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Assignment Form -->
+  <form [formGroup]="assignmentForm" class="assignment-form" *ngIf="canAssign">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Assign To</mat-label>
+      <mat-select formControlName="locationType">
+        <mat-option *ngFor="let type of locationTypes" [value]="type.value">
+          <mat-icon>{{ type.icon }}</mat-icon>
+          {{ type.label }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="locationTypeControl?.hasError('required')">
+        Please select a location type
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>
+        {{ locationTypeControl?.value ? (locationTypeControl?.value | titlecase) + ' ID' : 'Location ID' }}
+      </mat-label>
+      <input matInput formControlName="locationId"
+             placeholder="Enter the ID of the job, technician, vendor, or warehouse">
+      <mat-error *ngIf="locationIdControl?.hasError('required')">
+        Location ID is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Reason (Optional)</mat-label>
+      <textarea matInput formControlName="reason" rows="2"
+                placeholder="Reason for this assignment..."></textarea>
+    </mat-form-field>
+  </form>
+
+  <!-- Location History -->
+  <div class="history-section">
+    <h3>Location History</h3>
+    <ng-container *ngIf="locationHistory$ | async as history">
+      <div *ngIf="history.length === 0" class="empty-history">
+        <mat-icon>history</mat-icon>
+        <p>No location history available</p>
+      </div>
+
+      <mat-list *ngIf="history.length > 0" class="history-list">
+        <mat-list-item *ngFor="let entry of history" class="history-item">
+          <mat-icon matListItemIcon>{{ getLocationIcon(entry.toLocation.type) }}</mat-icon>
+          <div matListItemTitle class="history-title">
+            <span *ngIf="entry.fromLocation">
+              {{ entry.fromLocation.name }} → {{ entry.toLocation.name }}
+            </span>
+            <span *ngIf="!entry.fromLocation">
+              Initial: {{ entry.toLocation.name }}
+            </span>
+          </div>
+          <div matListItemLine class="history-meta">
+            <span>{{ formatDate(entry.timestamp) }}</span>
+            <span class="moved-by">by {{ entry.movedByName }}</span>
+          </div>
+          <div matListItemLine *ngIf="entry.reason" class="history-reason">
+            {{ entry.reason }}
+          </div>
+        </mat-list-item>
+      </mat-list>
+    </ng-container>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary"
+          [disabled]="assignmentForm.invalid || !canAssign"
+          (click)="submit()">
+    Assign
+  </button>
+</mat-dialog-actions>

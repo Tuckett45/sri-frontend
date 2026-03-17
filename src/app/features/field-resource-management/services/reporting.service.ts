@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { Observable, throwError, of } from 'rxjs';
+import { catchError, retry, map } from 'rxjs/operators';
 import { 
   DashboardMetrics, 
   UtilizationReport, 
@@ -9,11 +9,23 @@ import {
   KPI,
   KPIMetrics,
   TechnicianUtilization,
-  TechnicianPerformance
+  TechnicianPerformance,
+  JobCostBreakdown,
+  BudgetComparison,
+  LaborCosts,
+  MaterialCosts,
+  TravelCosts,
+  TechnicianLaborCost,
+  MaterialCostItem,
+  TechnicianTravelCost,
+  BudgetVarianceReport,
+  TravelCostReport,
+  MaterialUsageReport
 } from '../models/reporting.model';
 import { DateRange, Assignment } from '../models/assignment.model';
 import { TechnicianRole, Technician } from '../models/technician.model';
 import { JobType, Priority, Job, JobStatus } from '../models/job.model';
+import { JobBudget, BudgetStatus } from '../models/budget.model';
 import { CacheService } from './cache.service';
 import { DataScope } from './data-scope.service';
 
@@ -550,6 +562,207 @@ export class ReportingService {
         throw new Error('topPerformers must be sorted by jobsCompleted descending');
       }
     }
+  }
+
+  // ============================================================================
+  // JOB COST REPORT METHODS (Task 20.3)
+  // ============================================================================
+
+  /**
+   * Retrieves job cost report from the API
+   * @param jobId Job ID to get cost report for
+   * @returns Observable of JobCostBreakdown
+   */
+  getJobCostReport(jobId: string): Observable<JobCostBreakdown> {
+    const cacheKey = `job-cost-${jobId}`;
+    return this.cacheService.get(
+      cacheKey,
+      () => this.http.get<JobCostBreakdown>(`${this.apiUrl}/job-cost/${jobId}`)
+        .pipe(
+          retry(this.retryCount),
+          catchError(this.handleError)
+        ),
+      this.REPORT_CACHE_TTL
+    );
+  }
+
+  /**
+   * Retrieves budget comparison data for a job
+   * @param jobId Job ID to get budget comparison for
+   * @returns Observable of BudgetComparison
+   */
+  getBudgetComparison(jobId: string): Observable<BudgetComparison> {
+    const cacheKey = `budget-comparison-${jobId}`;
+    return this.cacheService.get(
+      cacheKey,
+      () => this.http.get<BudgetComparison>(`${this.apiUrl}/budget-comparison/${jobId}`)
+        .pipe(
+          retry(this.retryCount),
+          catchError(this.handleError)
+        ),
+      this.REPORT_CACHE_TTL
+    );
+  }
+
+  /**
+   * Retrieves budget variance report across all jobs
+   * @param dateRange Optional date range filter
+   * @returns Observable of budget variance data
+   */
+  getBudgetVarianceReport(dateRange?: DateRange): Observable<BudgetVarianceReport> {
+    const cacheKey = `budget-variance-${dateRange ? JSON.stringify(dateRange) : 'all'}`;
+    return this.cacheService.get(
+      cacheKey,
+      () => {
+        let params = new HttpParams();
+        if (dateRange) {
+          params = params
+            .set('startDate', dateRange.startDate.toISOString())
+            .set('endDate', dateRange.endDate.toISOString());
+        }
+        return this.http.get<BudgetVarianceReport>(`${this.apiUrl}/budget-variance`, { params })
+          .pipe(
+            retry(this.retryCount),
+            catchError(this.handleError)
+          );
+      },
+      this.REPORT_CACHE_TTL
+    );
+  }
+
+  /**
+   * Retrieves travel cost report
+   * @param dateRange Optional date range filter
+   * @returns Observable of travel cost data
+   */
+  getTravelCostReport(dateRange?: DateRange): Observable<TravelCostReport> {
+    const cacheKey = `travel-cost-${dateRange ? JSON.stringify(dateRange) : 'all'}`;
+    return this.cacheService.get(
+      cacheKey,
+      () => {
+        let params = new HttpParams();
+        if (dateRange) {
+          params = params
+            .set('startDate', dateRange.startDate.toISOString())
+            .set('endDate', dateRange.endDate.toISOString());
+        }
+        return this.http.get<TravelCostReport>(`${this.apiUrl}/travel-costs`, { params })
+          .pipe(
+            retry(this.retryCount),
+            catchError(this.handleError)
+          );
+      },
+      this.REPORT_CACHE_TTL
+    );
+  }
+
+  /**
+   * Retrieves material usage report
+   * @param dateRange Optional date range filter
+   * @returns Observable of material usage data
+   */
+  getMaterialUsageReport(dateRange?: DateRange): Observable<MaterialUsageReport> {
+    const cacheKey = `material-usage-${dateRange ? JSON.stringify(dateRange) : 'all'}`;
+    return this.cacheService.get(
+      cacheKey,
+      () => {
+        let params = new HttpParams();
+        if (dateRange) {
+          params = params
+            .set('startDate', dateRange.startDate.toISOString())
+            .set('endDate', dateRange.endDate.toISOString());
+        }
+        return this.http.get<MaterialUsageReport>(`${this.apiUrl}/material-usage`, { params })
+          .pipe(
+            retry(this.retryCount),
+            catchError(this.handleError)
+          );
+      },
+      this.REPORT_CACHE_TTL
+    );
+  }
+
+  /**
+   * Export job cost report as PDF or Excel
+   * @param jobId Job ID to export report for
+   * @param format Export format ('pdf' or 'excel')
+   * @returns Observable of Blob containing the exported file
+   */
+  exportJobCostReport(jobId: string, format: 'pdf' | 'excel'): Observable<Blob> {
+    const params = new HttpParams().set('format', format);
+    return this.http.get(`${this.apiUrl}/job-cost/${jobId}/export`, {
+      params,
+      responseType: 'blob'
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Generate a job cost breakdown from local data
+   * Used for client-side aggregation when API data is not available
+   */
+  generateJobCostBreakdown(
+    jobId: string,
+    laborData: TechnicianLaborCost[],
+    materialData: MaterialCostItem[],
+    travelData: TechnicianTravelCost[],
+    allocatedBudget: number
+  ): JobCostBreakdown {
+    const laborCosts: LaborCosts = {
+      totalHours: laborData.reduce((sum, t) => sum + t.hours, 0),
+      totalRoundedHours: laborData.reduce((sum, t) => sum + t.roundedHours, 0),
+      averageHourlyRate: laborData.length > 0
+        ? laborData.reduce((sum, t) => sum + t.hourlyRate, 0) / laborData.length
+        : 0,
+      totalCost: laborData.reduce((sum, t) => sum + t.totalCost, 0),
+      byTechnician: laborData
+    };
+
+    const materialCosts: MaterialCosts = {
+      totalCost: materialData.reduce((sum, m) => sum + m.totalCost, 0),
+      byMaterial: materialData
+    };
+
+    const travelCosts: TravelCosts = {
+      totalCost: travelData.reduce((sum, t) => sum + t.perDiemAmount, 0),
+      byTechnician: travelData
+    };
+
+    const totalCosts = laborCosts.totalCost + materialCosts.totalCost + travelCosts.totalCost;
+    const budgetVariance = allocatedBudget - totalCosts;
+    const budgetVariancePercent = allocatedBudget > 0
+      ? (budgetVariance / allocatedBudget) * 100
+      : 0;
+
+    return {
+      jobId,
+      laborCosts,
+      materialCosts,
+      travelCosts,
+      totalCosts,
+      budgetVariance,
+      budgetVariancePercent
+    };
+  }
+
+  /**
+   * Generate a budget comparison from a JobBudget
+   */
+  generateBudgetComparison(budget: JobBudget, totalActualCost: number): BudgetComparison {
+    const allocatedBudget = budget.allocatedHours;
+    const variance = allocatedBudget - totalActualCost;
+    const variancePercent = allocatedBudget > 0
+      ? (variance / allocatedBudget) * 100
+      : 0;
+
+    return {
+      allocatedBudget,
+      actualCost: totalActualCost,
+      variance,
+      variancePercent,
+      status: budget.status
+    };
   }
 
   /**

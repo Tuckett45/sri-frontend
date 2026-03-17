@@ -1,0 +1,141 @@
+<div class="travel-profile">
+  <!-- Loading State -->
+  <div *ngIf="loading$ | async" class="travel-loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading travel profile...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error$ | async as error" class="travel-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <ng-container *ngIf="travelProfile$ | async as profile">
+    <!-- Travel Flag Section -->
+    <mat-card class="travel-flag-card">
+      <mat-card-header>
+        <mat-card-title>Travel Willingness</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="travel-flag-row">
+          <div class="flag-info">
+            <mat-icon [class]="profile.willingToTravel ? 'travel-willing' : 'travel-not-willing'">
+              {{ profile.willingToTravel ? 'flight_takeoff' : 'flight_land' }}
+            </mat-icon>
+            <span class="flag-label" [class]="profile.willingToTravel ? 'travel-willing' : 'travel-not-willing'">
+              {{ profile.willingToTravel ? 'Willing to Travel' : 'Not Willing to Travel' }}
+            </span>
+          </div>
+          <mat-slide-toggle
+            [checked]="profile.willingToTravel"
+            [disabled]="!canEdit"
+            (change)="toggleTravelFlag(profile)"
+            color="primary"
+            aria-label="Toggle travel willingness">
+          </mat-slide-toggle>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Home Address Section -->
+    <mat-card class="address-card">
+      <mat-card-header>
+        <mat-card-title>Home Address</mat-card-title>
+        <span class="geocoding-status-chip" [ngClass]="getGeocodingStatusClass(profile.geocodingStatus)">
+          <mat-icon *ngIf="profile.geocodingStatus === GeocodingStatus.Pending" class="spinning">sync</mat-icon>
+          {{ getGeocodingStatusLabel(profile.geocodingStatus) }}
+        </span>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Address Form -->
+        <form [formGroup]="addressForm" (ngSubmit)="updateHomeAddress()" class="address-form">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Street Address</mat-label>
+            <input matInput formControlName="street" placeholder="123 Main St">
+            <mat-error *ngIf="addressForm.get('street')?.invalid">
+              {{ getFieldError('street') }}
+            </mat-error>
+          </mat-form-field>
+
+          <div class="address-row">
+            <mat-form-field appearance="outline" class="city-field">
+              <mat-label>City</mat-label>
+              <input matInput formControlName="city" placeholder="Springfield">
+              <mat-error *ngIf="addressForm.get('city')?.invalid">
+                {{ getFieldError('city') }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="state-field">
+              <mat-label>State</mat-label>
+              <input matInput formControlName="state" placeholder="CA" maxlength="2">
+              <mat-error *ngIf="addressForm.get('state')?.invalid">
+                {{ getFieldError('state') }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="postal-field">
+              <mat-label>Postal Code</mat-label>
+              <input matInput formControlName="postalCode" placeholder="12345">
+              <mat-error *ngIf="addressForm.get('postalCode')?.invalid">
+                {{ getFieldError('postalCode') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="address-actions" *ngIf="canEdit">
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              [disabled]="addressForm.invalid || addressForm.pristine || (geocodingInProgress$ | async)">
+              <mat-icon>save</mat-icon>
+              Save Address
+            </button>
+          </div>
+        </form>
+
+        <!-- Geocoding Status Details -->
+        <div class="geocoding-details" *ngIf="profile.geocodingStatus !== GeocodingStatus.NotGeocoded">
+          <!-- Geocoding In Progress -->
+          <div *ngIf="geocodingInProgress$ | async" class="geocoding-progress">
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Geocoding address...</span>
+          </div>
+
+          <!-- Geocoding Error -->
+          <div *ngIf="profile.geocodingStatus === GeocodingStatus.Failed" class="geocoding-error">
+            <mat-icon>warning</mat-icon>
+            <span>{{ profile.geocodingError || 'Failed to geocode address' }}</span>
+          </div>
+
+          <!-- Coordinates Display -->
+          <div *ngIf="profile.geocodingStatus === GeocodingStatus.Success && profile.homeCoordinates" class="coordinates-display">
+            <div class="coord-item">
+              <mat-icon>place</mat-icon>
+              <div class="coord-info">
+                <span class="coord-label">Coordinates</span>
+                <span class="coord-value">{{ formatCoordinates(profile.homeCoordinates) }}</span>
+              </div>
+            </div>
+            <div class="coord-item" *ngIf="profile.lastGeocodedAt">
+              <mat-icon>schedule</mat-icon>
+              <div class="coord-info">
+                <span class="coord-label">Last Geocoded</span>
+                <span class="coord-value">{{ formatDate(profile.lastGeocodedAt) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+
+  <!-- No Profile State -->
+  <div *ngIf="!(travelProfile$ | async) && !(loading$ | async) && !(error$ | async)" class="no-profile">
+    <mat-icon>person_off</mat-icon>
+    <p>No travel profile found for this technician</p>
+  </div>
+</div>

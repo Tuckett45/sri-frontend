@@ -219,6 +219,91 @@
         <mat-icon aria-hidden="true">bar_chart</mat-icon>
         Performance Report
       </button>
+      <button mat-raised-button color="primary" (click)="navigateToBudgetDashboard()" aria-label="View budget dashboard">
+        <mat-icon aria-hidden="true">account_balance_wallet</mat-icon>
+        Budget Dashboard
+      </button>
     </div>
+  </div>
+
+  <!-- Budget Variance Report Section -->
+  <div class="report-section" role="region" aria-labelledby="budget-variance-heading">
+    <h2 id="budget-variance-heading">
+      <mat-icon aria-hidden="true">trending_up</mat-icon>
+      Budget Variance Overview
+    </h2>
+    <mat-progress-bar *ngIf="budgetVarianceLoading$ | async" mode="indeterminate"></mat-progress-bar>
+    <ng-container *ngIf="budgetVarianceReport$ | async as report">
+      <div class="variance-stats-grid">
+        <mat-card class="variance-stat-card">
+          <mat-card-content>
+            <span class="stat-value">{{ report.totalAllocated | number:'1.0-0' }}</span>
+            <span class="stat-label">Total Allocated Hours</span>
+          </mat-card-content>
+        </mat-card>
+        <mat-card class="variance-stat-card">
+          <mat-card-content>
+            <span class="stat-value">{{ report.totalConsumed | number:'1.0-0' }}</span>
+            <span class="stat-label">Total Consumed Hours</span>
+          </mat-card-content>
+        </mat-card>
+        <mat-card class="variance-stat-card" [ngClass]="report.averageVariancePercent >= 0 ? 'positive' : 'negative'">
+          <mat-card-content>
+            <span class="stat-value">{{ report.averageVariancePercent | number:'1.1-1' }}%</span>
+            <span class="stat-label">Avg Variance</span>
+          </mat-card-content>
+        </mat-card>
+        <mat-card class="variance-stat-card warn">
+          <mat-card-content>
+            <span class="stat-value">{{ report.jobsOverBudget }}</span>
+            <span class="stat-label">Over Budget</span>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <div class="variance-action">
+        <button mat-button color="primary" (click)="navigateToBudgetDashboard()">
+          View Full Budget Dashboard
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Travel Cost Report Section -->
+  <div class="report-section" role="region" aria-labelledby="travel-cost-heading">
+    <h2 id="travel-cost-heading">
+      <mat-icon aria-hidden="true">directions_car</mat-icon>
+      Travel Cost Summary
+    </h2>
+    <mat-progress-bar *ngIf="travelCostLoading$ | async" mode="indeterminate"></mat-progress-bar>
+    <ng-container *ngIf="travelCostReport$ | async as report">
+      <mat-card class="travel-cost-card">
+        <mat-card-content>
+          <div class="travel-total">
+            <span class="total-label">Total Travel Costs</span>
+            <span class="total-value">{{ formatCurrency(report.totalCost) }}</span>
+          </div>
+          <div class="travel-breakdown" *ngIf="report.byTechnician.length > 0">
+            <h4>Top Technician Travel Costs</h4>
+            <div class="travel-list">
+              <div *ngFor="let tech of report.byTechnician.slice(0, 5)" class="travel-item">
+                <div class="tech-info">
+                  <mat-icon>person</mat-icon>
+                  <span>{{ tech.technicianName }}</span>
+                </div>
+                <div class="tech-cost">
+                  <span class="distance">{{ tech.distanceMiles | number:'1.0-0' }} mi</span>
+                  <span class="amount">{{ formatCurrency(tech.perDiemAmount) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="report.byTechnician.length === 0" class="no-travel-data">
+            <mat-icon>info</mat-icon>
+            <p>No travel cost data available</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </ng-container>
   </div>
 </div>

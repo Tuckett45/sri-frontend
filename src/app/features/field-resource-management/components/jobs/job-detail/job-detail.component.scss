@@ -652,3 +652,233 @@
     }
   }
 }
+
+// Budget Section Styles
+.budget-section {
+  border-left: 4px solid #1976d2;
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+        color: #1976d2;
+      }
+    }
+  }
+}
+
+.budget-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.budget-on-track {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.budget-warning {
+    background-color: #fff3e0;
+    color: #e65100;
+  }
+
+  &.budget-over {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+}
+
+.budget-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+
+  .budget-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    background-color: #f5f7fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #616161;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #212121;
+
+      &.over-budget-value {
+        color: #c62828;
+      }
+    }
+  }
+
+  @media (max-width: 767px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+.budget-progress {
+  .progress-bar-container {
+    width: 100%;
+    height: 12px;
+    background-color: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.5s ease-in-out;
+      max-width: 100%;
+
+      &.budget-on-track {
+        background-color: #4caf50;
+      }
+
+      &.budget-warning {
+        background-color: #ff9800;
+      }
+
+      &.budget-over {
+        background-color: #f44336;
+      }
+    }
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 0.7rem;
+    color: #9e9e9e;
+
+    .warning-marker {
+      color: #ff9800;
+      font-weight: 600;
+    }
+  }
+}
+
+
+// Job Cost Report Section
+.cost-report-section {
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .cost-report-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+
+  .cost-report-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    color: #f44336;
+    background: #fce4ec;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .cost-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    .cost-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: #f5f7fa;
+
+      mat-icon {
+        color: #1976d2;
+        margin-top: 2px;
+      }
+
+      &.labor mat-icon { color: #1976d2; }
+      &.materials mat-icon { color: #ff9800; }
+      &.travel mat-icon { color: #4caf50; }
+      &.total {
+        background: #e3f2fd;
+        mat-icon { color: #1565c0; }
+      }
+
+      .cost-details {
+        display: flex;
+        flex-direction: column;
+
+        .cost-label {
+          font-size: 0.75rem;
+          color: #757575;
+          text-transform: uppercase;
+          font-weight: 500;
+        }
+
+        .cost-value {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #212121;
+        }
+
+        .cost-meta {
+          font-size: 0.75rem;
+          color: #9e9e9e;
+        }
+
+        .positive-variance { color: #4caf50; }
+        .negative-variance { color: #f44336; }
+      }
+    }
+  }
+
+  .budget-comparison {
+    h4 {
+      margin: 0 0 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #424242;
+    }
+
+    .comparison-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8125rem;
+      color: #616161;
+      margin-bottom: 0.5rem;
+    }
+  }
+}

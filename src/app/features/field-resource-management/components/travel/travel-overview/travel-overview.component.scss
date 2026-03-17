@@ -1,0 +1,119 @@
+.travel-overview {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+
+  .page-header {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    padding: 2rem;
+    color: white;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 8px 0;
+      font-size: 2rem;
+      font-weight: 600;
+      color: white;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    .page-description {
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+      font-size: 1rem;
+    }
+  }
+
+  // Tab label styling — black text
+  ::ng-deep {
+    .mat-mdc-tab-labels .mdc-tab {
+      .mdc-tab__text-label {
+        color: rgba(0, 0, 0, 0.87) !important;
+      }
+
+      &.mdc-tab--active .mdc-tab__text-label {
+        color: #1976d2 !important;
+      }
+    }
+
+    .mat-mdc-tab-header {
+      background: white;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .mat-mdc-tab-body-wrapper {
+      padding-top: 0;
+    }
+
+    .mdc-tab-indicator__content--underline {
+      border-color: #1976d2 !important;
+    }
+  }
+
+  .tab-icon {
+    margin-right: 8px;
+  }
+
+  .tab-content {
+    padding: 1.5rem 0;
+  }
+
+  .profile-instructions,
+  .distance-instructions {
+    mat-card {
+      max-width: 600px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+      mat-card-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 1.5rem;
+      }
+
+      .info-icon {
+        color: #1976d2;
+        font-size: 36px;
+        height: 36px;
+        width: 36px;
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.6;
+        color: #424242;
+        font-size: 0.9375rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .travel-overview {
+    padding: 1rem;
+
+    .page-header {
+      padding: 1.5rem;
+
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+  }
+}

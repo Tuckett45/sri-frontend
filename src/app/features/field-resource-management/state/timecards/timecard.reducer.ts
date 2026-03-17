@@ -258,6 +258,31 @@ export const timecardReducer = createReducer(
     selectedDate: date
   })),
 
+  // Approve Timecard
+  on(TimecardActions.approveTimecard, (state) => ({
+    ...state,
+    loading: true,
+    error: null
+  })),
+
+  on(TimecardActions.approveTimecardSuccess, (state, { period }) => ({
+    ...state,
+    currentPeriod: state.currentPeriod?.id === period.id ? period : state.currentPeriod,
+    periods: updatePeriodInList(state.periods, period),
+    loading: false
+  })),
+
+  on(TimecardActions.approveTimecardFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error
+  })),
+
+  // Budget Deduction Triggered (confirmation)
+  on(TimecardActions.budgetDeductionTriggered, (state) => ({
+    ...state
+  })),
+
   // Clear State
   on(TimecardActions.clearTimecardState, () => initialState)
 );

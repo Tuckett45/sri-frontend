@@ -1,13 +1,14 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, interval } from 'rxjs';
+import { Observable, Subject, BehaviorSubject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { DashboardMetrics, KPI, ActivityItem } from '../../../models/reporting.model';
+import { DashboardMetrics, KPI, ActivityItem, BudgetVarianceReport, TravelCostReport } from '../../../models/reporting.model';
 import { Job, JobStatus } from '../../../models/job.model';
 import * as ReportingActions from '../../../state/reporting/reporting.actions';
 import * as ReportingSelectors from '../../../state/reporting/reporting.selectors';
 import { AccessibilityService } from '../../../services/accessibility.service';
+import { ReportingService } from '../../../services/reporting.service';
 
 /**
  * Dashboard Component
@@ -52,10 +53,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   };
   
+  // Budget variance report
+  budgetVarianceReport$ = new BehaviorSubject<BudgetVarianceReport | null>(null);
+  budgetVarianceLoading$ = new BehaviorSubject<boolean>(false);
+
+  // Travel cost report
+  travelCostReport$ = new BehaviorSubject<TravelCostReport | null>(null);
+  travelCostLoading$ = new BehaviorSubject<boolean>(false);
+  
   constructor(
     private store: Store,
     private accessibilityService: AccessibilityService,
-    private router: Router
+    private router: Router,
+    private reportingService: ReportingService
   ) {
     // Initialize observables
     this.dashboard$ = this.store.select(ReportingSelectors.selectDashboard);
@@ -88,6 +98,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load dashboard data
     this.loadDashboard();
+    
+    // Load budget variance report
+    this.loadBudgetVarianceReport();
+    
+    // Load travel cost report
+    this.loadTravelCostReport();
     
     // Subscribe to dashboard data for chart updates
     this.dashboard$.pipe(takeUntil(this.destroy$)).subscribe(dashboard => {
@@ -220,17 +236,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * Navigate to detailed reports
    */
   navigateToUtilizationReport(): void {
-    this.router.navigate(['/field-resources/reporting/utilization']);
+    this.router.navigate(['/field-resource-management/reports/utilization']);
     this.accessibilityService.announce('Navigating to utilization report');
   }
   
   navigateToPerformanceReport(): void {
-    this.router.navigate(['/field-resources/reporting/performance']);
+    this.router.navigate(['/field-resource-management/reports/performance']);
     this.accessibilityService.announce('Navigating to performance report');
   }
   
   navigateToJobDetail(jobId: string): void {
-    this.router.navigate(['/field-resources/jobs', jobId]);
+    this.router.navigate(['/field-resource-management/jobs', jobId]);
     this.accessibilityService.announce('Navigating to job details');
   }
   
@@ -238,7 +254,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * Navigate to technician detail
    */
   navigateToTechnicianDetail(technicianId: string): void {
-    this.router.navigate(['/field-resources/technicians', technicianId]);
+    this.router.navigate(['/field-resource-management/technicians', technicianId]);
     this.accessibilityService.announce('Navigating to technician details');
   }
   
@@ -246,7 +262,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * Navigate to crew detail
    */
   navigateToCrewDetail(crewId: string): void {
-    this.router.navigate(['/field-resources/crews', crewId]);
+    this.router.navigate(['/field-resource-management/crews', crewId]);
     this.accessibilityService.announce('Navigating to crew details');
   }
   
@@ -264,5 +280,59 @@ export class DashboardComponent implements OnInit, OnDestroy {
       // Default to dashboard refresh
       this.onRefresh();
     }
+  }
+
+  /**
+   * Load budget variance report data
+   */
+  loadBudgetVarianceReport(): void {
+    this.budgetVarianceLoading$.next(true);
+    this.reportingService.getBudgetVarianceReport()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (report) => {
+          this.budgetVarianceReport$.next(report);
+          this.budgetVarianceLoading$.next(false);
+        },
+        error: () => {
+          this.budgetVarianceLoading$.next(false);
+        }
+      });
+  }
+
+  /**
+   * Load travel cost report data
+   */
+  loadTravelCostReport(): void {
+    this.travelCostLoading$.next(true);
+    this.reportingService.getTravelCostReport()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (report) => {
+          this.travelCostReport$.next(report);
+          this.travelCostLoading$.next(false);
+        },
+        error: () => {
+          this.travelCostLoading$.next(false);
+        }
+      });
+  }
+
+  /**
+   * Navigate to budget dashboard
+   */
+  navigateToBudgetDashboard(): void {
+    this.router.navigate(['/field-resource-management/reports/budget-dashboard']);
+    this.accessibilityService.announce('Navigating to budget dashboard');
+  }
+
+  /**
+   * Format currency value
+   */
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(value);
   }
 }

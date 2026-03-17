@@ -7,6 +7,7 @@ import { createAction, props } from '@ngrx/store';
 import { Job, JobStatus, JobNote, Attachment } from '../../models/job.model';
 import { JobFilters } from '../../models/dtos/filters.dto';
 import { CreateJobDto, UpdateJobDto } from '../../models/dtos/job.dto';
+import { JobCostBreakdown } from '../../models/reporting.model';
 
 // Load Jobs
 export const loadJobs = createAction(
@@ -221,4 +222,20 @@ export const deleteJobOptimistic = createAction(
 export const rollbackJobDelete = createAction(
   '[Job] Rollback Job Delete',
   props<{ originalData: Job }>()
+);
+
+// Generate Final Cost Report (triggered on job completion)
+export const generateFinalCostReport = createAction(
+  '[Job] Generate Final Cost Report',
+  props<{ jobId: string }>()
+);
+
+export const generateFinalCostReportSuccess = createAction(
+  '[Job] Generate Final Cost Report Success',
+  props<{ jobId: string; report: JobCostBreakdown }>()
+);
+
+export const generateFinalCostReportFailure = createAction(
+  '[Job] Generate Final Cost Report Failure',
+  props<{ error: string }>()
 );

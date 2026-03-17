@@ -5,11 +5,16 @@
 
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, forkJoin } from 'rxjs';
-import { map, catchError, switchMap, tap, filter } from 'rxjs/operators';
+import { map, catchError, switchMap, tap, filter, withLatestFrom } from 'rxjs/operators';
 import * as JobActions from './job.actions';
+import * as BudgetActions from '../budgets/budget.actions';
+import * as ReportingActions from '../reporting/reporting.actions';
 import { JobService } from '../../services/job.service';
+import { ReportingService } from '../../services/reporting.service';
+import { JobStatus } from '../../models/job.model';
 import { HttpEventType } from '@angular/common/http';
 
 @Injectable()
@@ -462,9 +467,93 @@ export class JobEffects {
     )
   );
 
+  // Auto-create budget when a new job is created
+  autoCreateBudgetOnJobCreation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.createJobSuccess),
+      map(({ job }) =>
+        BudgetActions.createBudget({
+          budget: {
+            jobId: job.id,
+            allocatedHours: job.estimatedLaborHours || 0
+          }
+        })
+      )
+    )
+  );
+
+  // Generate final cost report when a job is completed
+  generateFinalCostReportOnCompletion$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.updateJobStatusSuccess),
+      filter(({ job }) => job.status === JobStatus.Completed),
+      tap(({ job }) => {
+        this.snackBar.open(
+          `Generating final cost report for job ${job.jobId}...`,
+          'Close',
+          { duration: 3000 }
+        );
+      }),
+      map(({ job }) =>
+        JobActions.generateFinalCostReport({ jobId: job.id })
+      )
+    )
+  );
+
+  // Load final cost report data
+  loadFinalCostReport$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.generateFinalCostReport),
+      switchMap(({ jobId }) =>
+        this.reportingService.getJobCostReport(jobId).pipe(
+          map((report) =>
+            JobActions.generateFinalCostReportSuccess({ jobId, report })
+          ),
+          catchError((error) =>
+            of(JobActions.generateFinalCostReportFailure({
+              error: error.message || 'Failed to generate final cost report'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  // Show final cost report success notification
+  showFinalCostReportSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.generateFinalCostReportSuccess),
+      tap(({ jobId }) => {
+        this.snackBar.open(
+          'Final cost report generated successfully',
+          'View Report',
+          { duration: 5000 }
+        );
+      })
+    ),
+    { dispatch: false }
+  );
+
+  // Show final cost report failure notification
+  showFinalCostReportFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.generateFinalCostReportFailure),
+      tap(({ error }) => {
+        this.snackBar.open(
+          `Failed to generate cost report: ${error}`,
+          'Close',
+          { duration: 5000 }
+        );
+      })
+    ),
+    { dispatch: false }
+  );
+
   constructor(
     private actions$: Actions,
+    private store: Store,
     private snackBar: MatSnackBar,
-    private jobService: JobService
+    private jobService: JobService,
+    private reportingService: ReportingService
   ) {}
 }

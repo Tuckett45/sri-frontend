@@ -1,18 +1,23 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { takeUntil, filter, map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { Job, JobStatus, Attachment, JobNote } from '../../../models/job.model';
+import { JobBudget, BudgetStatus } from '../../../models/budget.model';
 import { TimeEntry } from '../../../models/time-entry.model';
 import { Assignment } from '../../../models/assignment.model';
+import { JobCostBreakdown, BudgetComparison } from '../../../models/reporting.model';
 import * as JobActions from '../../../state/jobs/job.actions';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
+import * as BudgetActions from '../../../state/budgets/budget.actions';
+import * as BudgetSelectors from '../../../state/budgets/budget.selectors';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { AssignmentDialogComponent } from '../../scheduling/assignment-dialog/assignment-dialog.component';
+import { ReportingService } from '../../../services/reporting.service';
 
 /**
  * Job Detail Component
@@ -45,6 +50,21 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   job$: Observable<Job | null | undefined>;
   job: Job | null = null;
   loading$: Observable<boolean>;
+  
+  // Budget tracking
+  budget$!: Observable<JobBudget | null>;
+  budgetStatus$!: Observable<BudgetStatus | null>;
+  budgetConsumptionPercentage$!: Observable<number>;
+  
+  // Job cost report
+  costBreakdown$ = new BehaviorSubject<JobCostBreakdown | null>(null);
+  budgetComparison$ = new BehaviorSubject<BudgetComparison | null>(null);
+  costReportLoading$ = new BehaviorSubject<boolean>(false);
+  costReportError$ = new BehaviorSubject<string | null>(null);
+  showCostReport = false;
+  
+  // Enum references for template
+  BudgetStatus = BudgetStatus;
   
   // Time entries (placeholder - would come from time entry state)
   timeEntries: TimeEntry[] = [];
@@ -80,7 +100,8 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     private router: Router,
     private store: Store,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private reportingService: ReportingService
   ) {
     this.loading$ = this.store.select(JobSelectors.selectJobsLoading);
     this.job$ = this.store.select(JobSelectors.selectSelectedJob);
@@ -121,6 +142,14 @@ export class JobDetailComponent implements OnInit, OnDestroy {
    */
   private loadRelatedData(): void {
     if (!this.job) return;
+    
+    // Load budget data for this job
+    this.store.dispatch(BudgetActions.loadBudget({ jobId: this.job.id }));
+    this.budget$ = this.store.select(BudgetSelectors.selectBudgetByJobId(this.job.id));
+    this.budgetStatus$ = this.store.select(BudgetSelectors.selectBudgetStatus(this.job.id));
+    this.budgetConsumptionPercentage$ = this.store.select(
+      BudgetSelectors.selectBudgetConsumptionPercentage(this.job.id)
+    );
     
     // In a real implementation, these would dispatch actions to load:
     // - Time entries from time entry state
@@ -421,7 +450,106 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Navigation error:', error);
       // Fallback: try absolute path
-      this.router.navigate(['/field-resources/jobs']);
+      this.router.navigate(['/field-resource-management/jobs']);
     }
+  }
+
+  /**
+   * Get CSS class for budget status indicator
+   */
+  getBudgetStatusClass(status: BudgetStatus | null): string {
+    if (!status) return '';
+    switch (status) {
+      case BudgetStatus.OnTrack:
+        return 'budget-on-track';
+      case BudgetStatus.Warning:
+        return 'budget-warning';
+      case BudgetStatus.OverBudget:
+        return 'budget-over';
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Get display text for budget status
+   */
+  getBudgetStatusText(status: BudgetStatus | null): string {
+    if (!status) return 'No Budget';
+    switch (status) {
+      case BudgetStatus.OnTrack:
+        return 'On Track';
+      case BudgetStatus.Warning:
+        return 'At Risk (80%+)';
+      case BudgetStatus.OverBudget:
+        return 'Over Budget';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  /**
+   * Toggle cost report visibility and load data
+   */
+  toggleCostReport(): void {
+    this.showCostReport = !this.showCostReport;
+    if (this.showCostReport && this.job) {
+      this.loadCostReport();
+    }
+  }
+
+  /**
+   * Load job cost report data
+   */
+  loadCostReport(): void {
+    if (!this.job) return;
+
+    this.costReportLoading$.next(true);
+    this.costReportError$.next(null);
+
+    // Load cost breakdown
+    this.reportingService.getJobCostReport(this.job.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (breakdown) => {
+          this.costBreakdown$.next(breakdown);
+          this.costReportLoading$.next(false);
+        },
+        error: (err) => {
+          this.costReportError$.next(err.message || 'Failed to load cost report');
+          this.costReportLoading$.next(false);
+        }
+      });
+
+    // Load budget comparison
+    this.reportingService.getBudgetComparison(this.job.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (comparison) => {
+          this.budgetComparison$.next(comparison);
+        },
+        error: (err) => {
+          console.error('Failed to load budget comparison:', err);
+        }
+      });
+  }
+
+  /**
+   * Navigate to full job cost report
+   */
+  viewFullCostReport(): void {
+    if (this.job) {
+      this.router.navigate(['/field-resource-management/reports/job-cost', this.job.id]);
+    }
+  }
+
+  /**
+   * Format currency value
+   */
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(value);
   }
 }

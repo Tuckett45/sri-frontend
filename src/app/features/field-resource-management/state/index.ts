@@ -56,6 +56,27 @@ export * from './timecards/timecard.actions';
 export { timecardReducer, initialState as timecardInitialState } from './timecards/timecard.reducer';
 export * from './timecards/timecard.selectors';
 
+// Budget State
+export * from './budgets/budget.state';
+export * from './budgets/budget.actions';
+export { budgetReducer, initialState as budgetInitialState } from './budgets/budget.reducer';
+export * from './budgets/budget.selectors';
+export * from './budgets/budget.effects';
+
+// Inventory State
+export * from './inventory/inventory.state';
+export * from './inventory/inventory.actions';
+export { inventoryReducer, initialState as inventoryInitialState } from './inventory/inventory.reducer';
+export * from './inventory/inventory.selectors';
+export * from './inventory/inventory.effects';
+
+// Materials State
+export * from './materials/materials.state';
+export * from './materials/materials.actions';
+export { materialsReducer, initialState as materialsInitialState } from './materials/materials.reducer';
+export * from './materials/materials.selectors';
+export * from './materials/materials.effects';
+
 /**
  * Root State Interface
  * Combines all feature state slices
@@ -68,6 +89,9 @@ import { NotificationState } from './notifications/notification.state';
 import { UIState } from './ui/ui.state';
 import { ReportingState } from './reporting/reporting.state';
 import { TimecardState } from './timecards/timecard.reducer';
+import { BudgetState } from './budgets/budget.state';
+import { InventoryState } from './inventory/inventory.state';
+import { MaterialsState } from './materials/materials.state';
 
 export interface FieldResourceManagementState {
   technicians: TechnicianState;
@@ -78,4 +102,7 @@ export interface FieldResourceManagementState {
   ui: UIState;
   reporting: ReportingState;
   timecards: TimecardState;
+  budgets: BudgetState;
+  inventory: InventoryState;
+  materials: MaterialsState;
 }

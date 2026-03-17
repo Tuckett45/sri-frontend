@@ -21,6 +21,9 @@ import { notificationReducer } from './state/notifications/notification.reducer'
 import { uiReducer } from './state/ui/ui.reducer';
 import { reportingReducer } from './state/reporting/reporting.reducer';
 import { timecardReducer } from './state/timecards/timecard.reducer';
+import { budgetReducer } from './state/budgets/budget.reducer';
+import { travelReducer } from './state/travel/travel.reducer';
+import { inventoryReducer } from './state/inventory/inventory.reducer';
 
 // State Management - Effects
 import { TechnicianEffects } from './state/technicians/technician.effects';
@@ -31,6 +34,9 @@ import { TimeEntryEffects } from './state/time-entries/time-entry.effects';
 import { NotificationEffects } from './state/notifications/notification.effects';
 import { ReportingEffects } from './state/reporting/reporting.effects';
 import { TimecardEffects } from './state/timecards/timecard.effects';
+import { BudgetEffects } from './state/budgets/budget.effects';
+import { TravelEffects } from './state/travel/travel.effects';
+import { InventoryEffects } from './state/inventory/inventory.effects';
 
 // Meta-Reducers
 import { storageSyncMetaReducer } from './state/meta-reducers/storage-sync.meta-reducer';
@@ -137,6 +143,9 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     StoreModule.forFeature('ui', uiReducer),
     StoreModule.forFeature('reporting', reportingReducer),
     StoreModule.forFeature('timecards', timecardReducer),
+    StoreModule.forFeature('budgets', budgetReducer),
+    StoreModule.forFeature('travel', travelReducer),
+    StoreModule.forFeature('inventory', inventoryReducer),
     
     // NgRx Effects
     EffectsModule.forFeature([
@@ -147,7 +156,10 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
       TimeEntryEffects,
       NotificationEffects,
       ReportingEffects,
-      TimecardEffects
+      TimecardEffects,
+      BudgetEffects,
+      TravelEffects,
+      InventoryEffects
     ])
   ],
   providers: [

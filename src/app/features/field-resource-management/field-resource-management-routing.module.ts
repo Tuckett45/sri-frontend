@@ -177,6 +177,39 @@ const routes: Routes = [
         path: 'admin',
         loadChildren: () => import('./components/admin/admin.module').then(m => m.AdminModule),
         canActivate: [AdminGuard]
+      },
+
+      // Inventory Routes - Lazy Loaded
+      {
+        path: 'inventory',
+        loadChildren: () => import('./components/inventory/inventory.module').then(m => m.InventoryModule),
+        canActivate: [DispatcherGuard],
+        data: {
+          title: 'Inventory Management',
+          breadcrumb: 'Inventory'
+        }
+      },
+
+      // Travel Routes - Lazy Loaded
+      {
+        path: 'travel',
+        loadChildren: () => import('./components/travel/travel.module').then(m => m.TravelModule),
+        canActivate: [DispatcherGuard],
+        data: {
+          title: 'Travel Management',
+          breadcrumb: 'Travel'
+        }
+      },
+
+      // Materials Routes - Lazy Loaded
+      {
+        path: 'materials',
+        loadChildren: () => import('./components/materials/materials.module').then(m => m.MaterialsModule),
+        canActivate: [DispatcherGuard],
+        data: {
+          title: 'Materials Management',
+          breadcrumb: 'Materials'
+        }
       }
     ]
   }

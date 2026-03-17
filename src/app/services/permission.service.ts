@@ -370,6 +370,82 @@ export class PermissionService {
         {
           resource: 'time_entries',
           actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'budgets',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'travel_profiles',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'home_addresses',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'inventory',
+          actions: ['create', 'read', 'update', 'delete']
+        },
+        {
+          resource: 'materials',
+          actions: ['create', 'read', 'update', 'delete']
+        }
+      ],
+      restrictions: []
+    });
+
+    // Manager role - budget adjustment and management permissions
+    this.setRolePermissions('Manager', {
+      role: 'Manager',
+      permissions: [
+        {
+          resource: 'jobs',
+          actions: ['create', 'read', 'update', 'execute']
+        },
+        {
+          resource: 'budgets',
+          actions: ['create', 'read', 'update']
+        },
+        {
+          resource: 'travel_profiles',
+          actions: ['read', 'update']
+        },
+        {
+          resource: 'home_addresses',
+          actions: ['read', 'update']
+        },
+        {
+          resource: 'inventory',
+          actions: ['create', 'read', 'update']
+        },
+        {
+          resource: 'materials',
+          actions: ['create', 'read', 'update']
+        },
+        {
+          resource: 'reports',
+          actions: ['create', 'read']
+        },
+        {
+          resource: 'technicians',
+          actions: ['read', 'update']
+        },
+        {
+          resource: 'crews',
+          actions: ['read', 'update']
+        },
+        {
+          resource: 'assignments',
+          actions: ['create', 'read', 'update']
+        },
+        {
+          resource: 'kpis',
+          actions: ['read']
+        },
+        {
+          resource: 'time_entries',
+          actions: ['create', 'read', 'update']
         }
       ],
       restrictions: []
@@ -414,6 +490,26 @@ export class PermissionService {
         {
           resource: 'approvals',
           actions: ['create', 'read', 'update']
+        },
+        {
+          resource: 'budgets',
+          actions: ['read', 'update']
+        },
+        {
+          resource: 'travel_profiles',
+          actions: ['read', 'update']
+        },
+        {
+          resource: 'home_addresses',
+          actions: ['read']
+        },
+        {
+          resource: 'inventory',
+          actions: ['read', 'update']
+        },
+        {
+          resource: 'materials',
+          actions: ['read', 'update']
         }
       ],
       restrictions: []
@@ -446,6 +542,18 @@ export class PermissionService {
         {
           resource: 'kpis',
           actions: ['read']
+        },
+        {
+          resource: 'budgets',
+          actions: ['read']
+        },
+        {
+          resource: 'inventory',
+          actions: ['read', 'update']
+        },
+        {
+          resource: 'materials',
+          actions: ['read']
         }
       ],
       restrictions: []
@@ -465,6 +573,10 @@ export class PermissionService {
         },
         {
           resource: 'reports',
+          actions: ['read']
+        },
+        {
+          resource: 'budgets',
           actions: ['read']
         }
       ],
@@ -494,6 +606,15 @@ export class PermissionService {
         {
           resource: 'kpis',
           actions: ['read']
+        },
+        {
+          resource: 'budgets',
+          actions: ['read']
+        },
+        {
+          resource: 'travel_profiles',
+          actions: ['read', 'update'],
+          conditions: [{ field: 'id', operator: 'equals' as const, value: 'self' }]
         }
       ],
       restrictions: []

@@ -127,6 +127,33 @@
             <span>Current Jobs: {{ techMatch.currentWorkload }}</span>
           </div>
 
+          <!-- Distance and Travel Info -->
+          <ng-container *ngIf="getDistanceInfo(techMatch.technician.id) as distanceInfo">
+            <div class="distance-info">
+              <div class="distance-row">
+                <mat-icon>directions_car</mat-icon>
+                <span class="distance-value">{{ formatDistance(distanceInfo.distanceMiles) }}</span>
+                <span class="driving-time">({{ formatDrivingTime(distanceInfo.drivingTimeMinutes) }})</span>
+              </div>
+              <div class="travel-status-row">
+                <mat-icon [class]="distanceInfo.willingToTravel ? 'travel-willing' : 'travel-not-willing'">
+                  {{ distanceInfo.willingToTravel ? 'flight_takeoff' : 'flight_land' }}
+                </mat-icon>
+                <span [class]="distanceInfo.willingToTravel ? 'travel-willing' : 'travel-not-willing'">
+                  {{ distanceInfo.willingToTravel ? 'Willing to Travel' : 'Not Willing to Travel' }}
+                </span>
+              </div>
+              <ng-container *ngIf="perDiemConfig$ | async as perDiemConfig">
+                <div class="per-diem-row" *ngIf="distanceInfo.perDiemEligible">
+                  <mat-icon class="per-diem-icon">attach_money</mat-icon>
+                  <span class="per-diem-amount">
+                    Per Diem: {{ getPerDiemAmount(techMatch.technician.id, perDiemConfig) | currency }}
+                  </span>
+                </div>
+              </ng-container>
+            </div>
+          </ng-container>
+
           <!-- Conflicts -->
           <div class="conflicts-section" *ngIf="techMatch.hasConflicts && techMatch.conflicts.length > 0">
             <div class="conflicts-header">
