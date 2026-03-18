@@ -24,6 +24,7 @@ import { timecardReducer } from './state/timecards/timecard.reducer';
 import { budgetReducer } from './state/budgets/budget.reducer';
 import { travelReducer } from './state/travel/travel.reducer';
 import { inventoryReducer } from './state/inventory/inventory.reducer';
+import { materialsReducer } from './state/materials/materials.reducer';
 
 // State Management - Effects
 import { TechnicianEffects } from './state/technicians/technician.effects';
@@ -37,6 +38,7 @@ import { TimecardEffects } from './state/timecards/timecard.effects';
 import { BudgetEffects } from './state/budgets/budget.effects';
 import { TravelEffects } from './state/travel/travel.effects';
 import { InventoryEffects } from './state/inventory/inventory.effects';
+import { MaterialsEffects } from './state/materials/materials.effects';
 
 // Meta-Reducers
 import { storageSyncMetaReducer } from './state/meta-reducers/storage-sync.meta-reducer';
@@ -146,6 +148,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     StoreModule.forFeature('budgets', budgetReducer),
     StoreModule.forFeature('travel', travelReducer),
     StoreModule.forFeature('inventory', inventoryReducer),
+    StoreModule.forFeature('materials', materialsReducer),
     
     // NgRx Effects
     EffectsModule.forFeature([
@@ -159,7 +162,8 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
       TimecardEffects,
       BudgetEffects,
       TravelEffects,
-      InventoryEffects
+      InventoryEffects,
+      MaterialsEffects
     ])
   ],
   providers: [

@@ -72,7 +72,7 @@ export class InventoryManagerComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.store.dispatch(InventoryActions.loadInventory({}));
+    // Inventory data is loaded by MockDataService — no need to dispatch loadInventory
 
     this.viewModel$ = combineLatest([
       this.store.select(selectFilteredInventory),

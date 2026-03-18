@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, filter, distinctUntilChanged } from 'rxjs/operators';
 
@@ -41,9 +41,11 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
   private readonly routeLabels: { [key: string]: string } = {
     'field-resource-management': 'Field Resources',
     'dashboard': 'Dashboard',
+    'home': 'Home',
     'technicians': 'Technicians',
     'crews': 'Crews',
     'jobs': 'Jobs',
+    'schedule': 'Scheduling',
     'scheduling': 'Scheduling',
     'map': 'Map View',
     'reports': 'Reports & Analytics',
@@ -57,7 +59,19 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
     'new': 'New',
     'edit': 'Edit',
     'detail': 'Details',
-    'view': 'View'
+    'view': 'View',
+    'inventory': 'Inventory',
+    'materials': 'Materials',
+    'travel': 'Travel',
+    'budget-dashboard': 'Budget Dashboard',
+    'utilization': 'Utilization Report',
+    'performance': 'Job Performance',
+    'job-cost': 'Job Cost Report',
+    'admin': 'Administration',
+    'admin-dashboard': 'Admin Dashboard',
+    'approvals': 'Approvals',
+    'mobile': 'Mobile',
+    'cm': 'CM'
   };
 
   /**
@@ -66,9 +80,11 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
   private readonly routeIcons: { [key: string]: string } = {
     'field-resource-management': 'home',
     'dashboard': 'dashboard',
+    'home': 'home',
     'technicians': 'engineering',
     'crews': 'groups',
     'jobs': 'work',
+    'schedule': 'calendar_today',
     'scheduling': 'calendar_today',
     'map': 'map',
     'reports': 'assessment',
@@ -78,12 +94,23 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
     'system-config': 'settings',
     'my-assignments': 'assignment',
     'my-schedule': 'event',
-    'my-profile': 'person'
+    'my-profile': 'person',
+    'inventory': 'inventory_2',
+    'materials': 'category',
+    'travel': 'directions_car',
+    'budget-dashboard': 'account_balance_wallet',
+    'utilization': 'bar_chart',
+    'performance': 'trending_up',
+    'job-cost': 'receipt_long',
+    'admin': 'admin_panel_settings',
+    'admin-dashboard': 'admin_panel_settings',
+    'approvals': 'check_circle',
+    'mobile': 'phone_iphone',
+    'cm': 'supervisor_account'
   };
 
   constructor(
     private router: Router,
-    private activatedRoute: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -100,7 +127,7 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
       )
       .subscribe(() => {
         this.buildBreadcrumbs();
-        this.cdr.markForCheck(); // Trigger change detection
+        this.cdr.markForCheck();
       });
   }
 
@@ -116,42 +143,27 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
     const breadcrumbs: BreadcrumbItem[] = [];
     const urlSegments = this.router.url.split('/').filter(segment => segment);
 
-    console.log('=== BREADCRUMB BUILD START ===');
-    console.log('Full URL:', this.router.url);
-    console.log('URL segments:', urlSegments);
-
     let currentUrl = '';
 
     urlSegments.forEach((segment, index) => {
       // Skip query parameters and fragments
       const cleanSegment = segment.split('?')[0].split('#')[0];
-      
-      console.log(`\n[${index}] Processing: "${cleanSegment}"`);
-      
+
       if (!cleanSegment) {
-        console.log('  ❌ Empty segment, skipping');
         return;
       }
 
       // Build URL incrementally
       currentUrl += `/${cleanSegment}`;
-      console.log(`  📍 Current URL: ${currentUrl}`);
 
       // Check if this is an ID segment (UUID or entity ID like "tech-15")
-      const isId = this.isUUID(cleanSegment);
-      
-      if (isId) {
-        console.log(`  🔑 ID segment detected, skipping breadcrumb (but URL continues)`);
+      if (this.isEntityId(cleanSegment)) {
         return;
       }
 
       // Get label and icon for this segment
-      const label = this.getRouteLabel(cleanSegment, index);
+      const label = this.getRouteLabel(cleanSegment);
       const icon = index === 0 ? this.routeIcons[cleanSegment] : undefined;
-
-      console.log(`  ✅ Adding breadcrumb: "${label}"`);
-      console.log(`     URL: ${currentUrl}`);
-      console.log(`     Icon: ${icon || 'none'}`);
 
       breadcrumbs.push({
         label,
@@ -160,36 +172,29 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
       });
     });
 
-    console.log('\n=== FINAL BREADCRUMBS ===');
-    console.log(breadcrumbs.map(b => b.label).join(' > '));
-    console.log('========================\n');
-    
     this.breadcrumbs = breadcrumbs;
   }
 
   /**
    * Get label for route segment
    */
-  private getRouteLabel(segment: string, index: number): string {
-    // Use predefined label or format segment
+  private getRouteLabel(segment: string): string {
     return this.routeLabels[segment] || this.formatSegment(segment);
   }
 
   /**
-   * Check if string is a UUID or entity ID
+   * Check if string is a UUID or entity ID (e.g. "tech-15", "inv-001", "po-1")
+   * Should NOT match route segments like "technicians", "budget-dashboard", etc.
    */
-  private isUUID(str: string): boolean {
+  private isEntityId(str: string): boolean {
+    // Standard UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    // Check for patterns like "tech-15", "job-123", "crew-5" (entity IDs with numbers)
-    // This should NOT match "technicians", "jobs", "crews" (plural route names)
-    const idPattern = /^(tech|job|crew|user)-\d+$/i;
-    
-    const isUuid = uuidRegex.test(str);
-    const isIdPattern = idPattern.test(str);
-    
-    console.log(`isUUID check for "${str}": UUID=${isUuid}, IDPattern=${isIdPattern}`);
-    
-    return isUuid || isIdPattern;
+    // Entity ID patterns: prefix-number (e.g. tech-15, job-123, inv-001, po-1, sup-1, etc.)
+    const idPattern = /^(tech|job|crew|user|inv|mat|budget|adj|ded|entry|assignment|po|sup)-\d+$/i;
+    // Compound entity IDs like "adj-job-1-0", "ded-job-1-0"
+    const compoundIdPattern = /^(adj|ded)-job-\d+-\d+$/i;
+
+    return uuidRegex.test(str) || idPattern.test(str) || compoundIdPattern.test(str);
   }
 
   /**
@@ -206,11 +211,9 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
    * Navigate to breadcrumb URL
    */
   navigateTo(breadcrumb: BreadcrumbItem): void {
-    // Don't navigate if it's the current page (last breadcrumb)
     if (breadcrumb === this.breadcrumbs[this.breadcrumbs.length - 1]) {
       return;
     }
-
     this.router.navigate([breadcrumb.url]);
   }
 

@@ -11,7 +11,8 @@ import { InventoryAssignmentDialogComponent } from './inventory-assignment-dialo
 const routes: Routes = [
   {
     path: '',
-    component: InventoryManagerComponent
+    component: InventoryManagerComponent,
+    data: { breadcrumb: 'Inventory' }
   }
 ];
 

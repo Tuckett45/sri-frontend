@@ -11,7 +11,8 @@ import { PurchaseOrderDialogComponent } from './purchase-order-dialog/purchase-o
 const routes: Routes = [
   {
     path: '',
-    component: MaterialsManagerComponent
+    component: MaterialsManagerComponent,
+    data: { breadcrumb: 'Materials' }
   }
 ];
 

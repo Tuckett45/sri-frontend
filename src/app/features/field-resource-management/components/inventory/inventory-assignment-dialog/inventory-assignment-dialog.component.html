@@ -63,8 +63,7 @@
       <mat-label>
         {{ locationTypeControl?.value ? (locationTypeControl?.value | titlecase) + ' ID' : 'Location ID' }}
       </mat-label>
-      <input matInput formControlName="locationId"
-             placeholder="Enter the ID of the job, technician, vendor, or warehouse">
+      <input matInput formControlName="locationId">
       <mat-error *ngIf="locationIdControl?.hasError('required')">
         Location ID is required
       </mat-error>
@@ -72,8 +71,7 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Reason (Optional)</mat-label>
-      <textarea matInput formControlName="reason" rows="2"
-                placeholder="Reason for this assignment..."></textarea>
+      <textarea matInput formControlName="reason" rows="2"></textarea>
     </mat-form-field>
   </form>
 

@@ -134,13 +134,8 @@ export class InventoryEffects {
     )
   );
 
-  // Reload inventory after filter change
-  reloadOnFilterChange$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(InventoryActions.setFilters),
-      map(({ filters }) => InventoryActions.loadInventory({ filters }))
-    )
-  );
+  // Filtering is handled client-side by selectFilteredInventory selector
+  // No need to reload from server on filter change
 
   // Success Notifications
   assignToJobSuccess$ = createEffect(

@@ -2,11 +2,97 @@
 
 :host {
   display: block;
+}
+
+.materials-dashboard {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
   background-color: #f5f7fa;
   min-height: 100vh;
+  color: #212121;
+}
+
+// Hero Header
+.dashboard-hero {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  padding: 2rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+
+  .hero-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+
+    .hero-icon mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .hero-text {
+      h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 600;
+        color: white;
+      }
+
+      .hero-subtitle {
+        margin: 0.5rem 0 0;
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 400;
+      }
+    }
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    .hero-btn {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+
+    .hero-content .hero-text h1 {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+// Error card
+.error-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  color: $frm-error;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid $frm-error;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
 }
 
 .materials-loading {
@@ -17,47 +103,38 @@
   color: #757575;
 }
 
-.materials-error {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  color: $frm-error;
+// Reorder Alerts Banner
+.alerts-banner {
   background: white;
   border-radius: 12px;
-  border-left: 4px solid $frm-error;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin-bottom: 1.5rem;
-}
+  border-left: 4px solid $frm-warning;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
 
-.materials-manager {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
+  .alerts-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
 
-// Reorder Alerts
-.reorder-alerts {
-  .alert-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid $frm-warning;
-
-    mat-card-header {
-      padding: 1.25rem 1.5rem 0;
+    .alert-icon {
+      color: $frm-warning;
+      background: rgba($frm-warning, 0.12);
+      border-radius: 50%;
+      padding: 4px;
     }
 
-    mat-card-content {
-      padding: 1rem 1.5rem 1.5rem !important;
+    .alerts-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #424242;
     }
-  }
 
-  .alert-icon {
-    color: $frm-warning;
-    background: rgba($frm-warning, 0.12);
-    border-radius: 50%;
-    padding: 4px;
+    .alerts-subtitle {
+      font-size: 0.8125rem;
+      color: #757575;
+    }
   }
 }
 
@@ -105,94 +182,148 @@
     gap: 0.75rem;
   }
 
-  .urgency-icon {
+  .urgency-icon { font-size: 20px; width: 20px; height: 20px; }
+
+  .rec-details { display: flex; flex-direction: column; }
+  .rec-name { font-weight: 600; font-size: 0.875rem; color: #424242; }
+  .rec-qty { font-size: 0.8125rem; color: #757575; }
+
+  .rec-action { display: flex; align-items: center; gap: 1rem; }
+  .rec-cost { font-size: 0.8125rem; color: #757575; }
+}
+
+// KPI Hero Cards
+.kpi-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpi-hero-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-left: 4px solid #1976d2;
+
+  &.primary-card { border-left-color: #1976d2; }
+  &.success-card { border-left-color: #43a047; }
+  &.accent-card { border-left-color: #fb8c00; }
+  &.warn-card { border-left-color: #f44336; }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .kpi-hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    .kpi-hero-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+      color: #1976d2;
+    }
+
+    .kpi-trend {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+
+      &.positive { background: rgba(76, 175, 80, 0.1); color: #43a047; }
+      &.negative { background: rgba(244, 67, 54, 0.1); color: #f44336; }
+
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+  }
+
+  .kpi-hero-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #212121;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .kpi-hero-label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #616161;
+    margin-bottom: 0.25rem;
+  }
+
+  .kpi-hero-footer {
+    font-size: 0.875rem;
+    color: #9e9e9e;
+  }
+}
+
+.warn-card .kpi-hero-icon { color: #f44336; }
+.success-card .kpi-hero-icon { color: #43a047; }
+.accent-card .kpi-hero-icon { color: #fb8c00; }
+
+// Tab Container
+.tab-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+
+  .tab-icon {
+    margin-right: 6px;
     font-size: 20px;
     width: 20px;
     height: 20px;
+    vertical-align: middle;
   }
 
-  .rec-details {
-    display: flex;
-    flex-direction: column;
+  .filter-section {
+    margin-bottom: 0;
+    box-shadow: none;
+    border-radius: 0;
   }
 
-  .rec-name {
-    font-weight: 600;
-    font-size: 0.875rem;
+  .table-container {
+    box-shadow: none;
+    border-radius: 0;
+    margin-bottom: 0;
   }
 
-  .rec-qty {
-    font-size: 0.8125rem;
-    color: #757575;
-  }
-
-  .rec-action {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .rec-cost {
-    font-size: 0.8125rem;
-    color: #757575;
+  .consume-card,
+  .history-card {
+    box-shadow: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    border-top: 1px solid #e0e0e0;
   }
 }
 
-// Statistics Row
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-
-  @media (max-width: 960px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-
-  .stat-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 1.5rem;
-    text-align: center;
-    border-left: 4px solid $frm-primary;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-    &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    }
-
-    .stat-value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #212121;
-      line-height: 1;
-
-      &.low-stock {
-        color: $frm-warning;
-      }
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-      color: #757575;
-      text-transform: uppercase;
-      font-weight: 500;
-      margin-top: 0.5rem;
-      letter-spacing: 0.5px;
-    }
-  }
+.report-tab-content {
+  padding: 1.5rem;
 }
 
-// Filters
-.filter-card {
+// Filters Section
+.filter-section {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 1.25rem;
+  margin-bottom: 2rem;
 
   .filter-row {
     display: flex;
@@ -210,27 +341,74 @@
     flex: 1;
     min-width: 150px;
   }
+
+  .clear-filters-btn {
+    color: #212121 !important;
+    border-color: #e18a25 !important;
+    background: transparent !important;
+
+    mat-icon {
+      color: #e18a25 !important;
+    }
+
+    &:hover {
+      background: rgba(225, 138, 37, 0.08) !important;
+    }
+
+    &:disabled {
+      color: #9e9e9e !important;
+      border-color: #e0e0e0 !important;
+
+      mat-icon {
+        color: #9e9e9e !important;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .filter-row {
+      flex-direction: column;
+
+      .search-field,
+      .filter-field {
+        width: 100%;
+        min-width: unset;
+      }
+    }
+  }
 }
 
-// Table
-.table-card {
+// Table Container
+.table-container {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow-x: auto;
+  overflow: hidden;
+  margin-bottom: 2rem;
 }
 
 .materials-table {
   width: 100%;
 
+  th {
+    font-weight: 600;
+    font-size: 14px;
+    color: #616161;
+  }
+
+  td {
+    padding: 16px 8px;
+    color: #616161;
+  }
+
   .material-name {
     font-weight: 600;
-    color: #212121;
+    color: #424242;
   }
 
   .material-description {
     font-size: 0.8125rem;
-    color: #757575;
+    color: #9e9e9e;
     max-width: 200px;
     white-space: nowrap;
     overflow: hidden;
@@ -238,12 +416,13 @@
   }
 
   .category-chip {
-    padding: 2px 10px;
+    display: inline-block;
+    padding: 4px 12px;
     border-radius: 12px;
-    font-size: 0.8125rem;
+    font-size: 12px;
+    font-weight: 500;
     background: rgba($frm-primary, 0.08);
     color: $frm-primary;
-    font-weight: 500;
   }
 
   .low-stock-qty {
@@ -251,14 +430,27 @@
     font-weight: 600;
   }
 
-  .low-stock-indicator {
-    mat-icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
-      color: $frm-warning;
-      vertical-align: middle;
-      margin-left: 4px;
+  .low-stock-indicator mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: $frm-warning;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  .mat-column-actions {
+    button[mat-icon-button] {
+      transition: all 0.2s ease;
+
+      mat-icon {
+        color: #757575;
+        transition: color 0.2s ease;
+      }
+
+      &:hover mat-icon {
+        color: #1976d2;
+      }
     }
   }
 }
@@ -268,74 +460,10 @@
 }
 
 .selected-row {
-  background: rgba($frm-primary, 0.08);
+  background: rgba($frm-primary, 0.06);
 }
 
-// Consume Card
-.consume-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-left: 4px solid $frm-primary;
-
-  .consume-form {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-
-    mat-form-field {
-      flex: 1;
-      min-width: 150px;
-    }
-  }
-}
-
-// History Card
-.history-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-  mat-card-header {
-    position: relative;
-    padding: 1.25rem 1.5rem 0;
-  }
-
-  mat-card-content {
-    padding: 1rem 1.5rem 1.5rem !important;
-  }
-
-  .close-btn {
-    position: absolute;
-    right: 8px;
-    top: 8px;
-  }
-}
-
-.transaction-table {
-  width: 100%;
-
-  .txn-type {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.8125rem;
-    font-weight: 500;
-
-    &.receipt { color: $frm-success; }
-    &.consumption { color: $frm-error; }
-    &.adjustment { color: $frm-primary; }
-    &.return { color: $frm-accent; }
-  }
-
-  .txn-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-  }
-}
-
-.empty-state, .empty-history {
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -347,7 +475,7 @@
     width: 48px;
     height: 48px;
     margin-bottom: 0.5rem;
-    opacity: 0.7;
+    opacity: 0.5;
   }
 
   p {
@@ -356,52 +484,208 @@
   }
 }
 
-// Material Usage Report
-.usage-report-card {
+// Consume Material Card
+.consume-card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
 
-  mat-card-header {
+  .card-header {
     display: flex;
     align-items: center;
-    padding: 1.25rem 1.5rem 0;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: #f5f7fa;
+    border-bottom: 1px solid #e0e0e0;
 
-    .toggle-btn {
-      margin-left: auto;
+    .header-icon {
+      color: $frm-primary;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #424242;
     }
   }
 
-  mat-card-content {
-    padding: 1rem 1.5rem 1.5rem !important;
+  .card-content {
+    padding: 1.5rem;
   }
 
-  .usage-summary {
+  .consume-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
     margin-bottom: 1rem;
 
-    .usage-total {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background: #f5f7fa;
-      border-radius: 8px;
+    mat-form-field {
+      flex: 1;
+      min-width: 180px;
+    }
+  }
 
-      .usage-label {
-        font-size: 1rem;
-        font-weight: 500;
-        color: #424242;
+  .consume-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+}
+
+// Transaction History Card
+.history-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: #f5f7fa;
+    border-bottom: 1px solid #e0e0e0;
+
+    .header-icon {
+      color: $frm-primary;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #424242;
+      flex: 1;
+    }
+
+    .close-btn {
+      mat-icon {
+        color: #757575;
       }
 
-      .usage-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: $frm-primary;
+      &:hover mat-icon {
+        color: #424242;
       }
     }
   }
 
-  .top-materials-section, .cost-by-job-section {
+  .card-content {
+    padding: 1.5rem;
+  }
+}
+
+.transaction-table {
+  width: 100%;
+
+  th {
+    font-weight: 600;
+    font-size: 14px;
+    color: #616161;
+  }
+
+  td {
+    padding: 12px 8px;
+    color: #616161;
+  }
+
+  .txn-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+
+    &.consumption {
+      background: rgba($frm-warning, 0.1);
+      color: #ef6c00;
+    }
+    &.purchase {
+      background: rgba($frm-success, 0.1);
+      color: #2e7d32;
+    }
+    &.adjustment {
+      background: rgba($frm-primary, 0.1);
+      color: #1565c0;
+    }
+    &.return {
+      background: rgba(156, 39, 176, 0.1);
+      color: #7b1fa2;
+    }
+
+    .txn-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// Report Section
+.report-section {
+  margin-bottom: 2rem;
+
+  .report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+      color: #212121;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+
+    .toggle-btn {
+      color: #757575;
+    }
+  }
+}
+
+.usage-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+
+  .usage-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f5f7fa;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+
+    .usage-label {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #424242;
+    }
+
+    .usage-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $frm-primary;
+    }
+  }
+
+  .usage-breakdown {
     margin-bottom: 1rem;
 
     h4 {
@@ -443,8 +727,112 @@
   }
 }
 
+// Force primary blue on all buttons
+::ng-deep {
+  .mat-mdc-raised-button.mat-primary,
+  .mat-mdc-unelevated-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: #ffffff !important;
+  }
+
+  .mat-mdc-outlined-button.mat-primary,
+  .mat-mdc-button.mat-primary {
+    color: #1976d2 !important;
+    border-color: #1976d2 !important;
+  }
+}
+
+// Force tab label styling
+::ng-deep {
+  .mat-mdc-tab-labels {
+    background: #fafafa !important;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .mat-mdc-tab .mdc-tab__text-label {
+    color: #424242 !important;
+    font-weight: 500;
+  }
+
+  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+    color: #1976d2 !important;
+    font-weight: 600;
+  }
+
+  .mat-mdc-tab-header .mdc-tab-indicator__content--underline {
+    border-color: #1976d2 !important;
+  }
+}
+
+// Force light theme for mat-table and inputs
+::ng-deep {
+  .mat-mdc-input-element {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-form-field {
+    .mdc-text-field--outlined .mdc-notched-outline__leading,
+    .mdc-text-field--outlined .mdc-notched-outline__notch,
+    .mdc-text-field--outlined .mdc-notched-outline__trailing {
+      border-color: rgba(0, 0, 0, 0.38) !important;
+    }
+
+    .mat-mdc-floating-label,
+    .mdc-floating-label {
+      color: rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .mat-mdc-input-element::placeholder {
+      color: rgba(0, 0, 0, 0.42) !important;
+      opacity: 1 !important;
+    }
+
+    .mat-mdc-select-value-text {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-placeholder {
+      color: rgba(0, 0, 0, 0.42) !important;
+    }
+
+    .mat-mdc-select-arrow {
+      color: rgba(0, 0, 0, 0.54) !important;
+    }
+
+    .mat-mdc-form-field-icon-prefix mat-icon {
+      color: rgba(0, 0, 0, 0.54) !important;
+    }
+  }
+
+  .materials-table,
+  .transaction-table {
+    background-color: #ffffff !important;
+
+    .mat-mdc-table {
+      background-color: #ffffff !important;
+    }
+
+    .mat-mdc-header-row {
+      background-color: #fafafa !important;
+    }
+
+    .mat-mdc-row {
+      background-color: #ffffff !important;
+      color: #616161 !important;
+
+      &:hover {
+        background-color: #f5f5f5 !important;
+      }
+    }
+
+    .mat-mdc-cell, .mat-mdc-header-cell {
+      color: #616161 !important;
+    }
+  }
+}
+
 @media (max-width: 768px) {
-  :host {
+  .materials-dashboard {
     padding: 1rem;
   }
 }

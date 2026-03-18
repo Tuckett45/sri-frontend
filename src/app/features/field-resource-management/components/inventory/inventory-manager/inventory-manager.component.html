@@ -104,8 +104,7 @@
             <mat-label>Search inventory</mat-label>
             <input matInput
                    [value]="vm.filters.searchTerm || ''"
-                   (input)="onSearchChange($any($event.target).value)"
-                   placeholder="Search by name, item number, or description">
+                   (input)="onSearchChange($any($event.target).value)">
             <mat-icon matPrefix>search</mat-icon>
           </mat-form-field>
 

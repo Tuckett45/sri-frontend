@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
 import { SharedMaterialModule } from '../../shared-material.module';
@@ -12,7 +12,8 @@ import { TravelOverviewComponent } from './travel-overview/travel-overview.compo
 const routes: Routes = [
   {
     path: '',
-    component: TravelOverviewComponent
+    component: TravelOverviewComponent,
+    data: { breadcrumb: 'Travel' }
   }
 ];
 
@@ -45,6 +46,8 @@ export class TravelSharedModule { }
   ],
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     SharedMaterialModule,
     TravelSharedModule,
     RouterModule.forChild(routes)
