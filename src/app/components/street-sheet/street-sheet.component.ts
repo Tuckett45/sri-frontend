@@ -125,8 +125,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
                 )
             )
         ).subscribe(results => {
-            const filteredStreetSheets = results.filter((result: any) => result.mapMarkers.length > 0)
-                .map((result: any) => {
+            const filteredStreetSheets = results.map((result: any) => {
                     result.sheet.marker = result.mapMarkers;
                     result.sheet.marker.forEach((marker: MapMarker) => {
                         this.getReversedAddress(marker).then((reversedAddress) => {
@@ -452,8 +451,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
                 )
             )
         ).subscribe(results => {
-            const filteredStreetSheets = results.filter((result: any) => result.mapMarkers.length > 0)
-                .map((result: any) => {
+            const filteredStreetSheets = results.map((result: any) => {
                     result.sheet.marker = result.mapMarkers;
                     result.sheet.marker.forEach((marker: MapMarker) => {
                         this.getReversedAddress(marker).then((reversedAddress) => {
@@ -617,6 +615,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
 
           const withCount = stats?.submittedCount ?? this.cmsWithEntries.length;
           const withoutCount = stats?.notSubmittedCount ?? this.cmsWithoutEntries.length;
+          const totalSheets = stats?.totalSheetCount ?? this.dashboardStreetSheets.length;
 
           this.submittedPageIndex = 0;
           this.missingPageIndex = 0;
@@ -629,7 +628,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
           }
 
           this.dashboardMetrics = {
-            total: withCount + withoutCount,
+            total: totalSheets,
             withEntries: withCount,
             withoutEntries: withoutCount,
             lastRefreshed: new Date()
