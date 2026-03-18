@@ -195,3 +195,12 @@
     margin-bottom: $frm-spacing-md;
   }
 }
+
+// Force black text on Material tab labels
+::ng-deep .mat-mdc-tab .mdc-tab__text-label {
+  color: #000000 !important;
+}
+
+::ng-deep .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+  color: #000000 !important;
+}

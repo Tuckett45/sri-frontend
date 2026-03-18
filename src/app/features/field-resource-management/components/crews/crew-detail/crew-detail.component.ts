@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, of } from 'rxjs';
-import { takeUntil, filter, map } from 'rxjs/operators';
+import { takeUntil, filter, map, take } from 'rxjs/operators';
+import { Actions, ofType } from '@ngrx/effects';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -63,6 +64,10 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
   canEdit$: Observable<boolean> = of(true);
   canDelete$: Observable<boolean> = of(true);
   
+  // Add member state
+  showAddMember = false;
+  availableTechnicians$: Observable<Technician[]> = of([]);
+  
   // Enum references for template
   CrewStatus = CrewStatus;
   
@@ -73,7 +78,8 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
     private router: Router,
     private store: Store,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private actions$: Actions
   ) {
     this.crew$ = this.store.select(CrewSelectors.selectSelectedCrew);
     this.loading$ = this.store.select(CrewSelectors.selectCrewsLoading);
@@ -312,5 +318,102 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
    */
   trackByMemberId(_index: number, member: Technician): string {
     return member.id;
+  }
+
+  /**
+   * Toggle the add member panel
+   */
+  toggleAddMember(): void {
+    this.showAddMember = !this.showAddMember;
+    if (this.showAddMember) {
+      this.updateAvailableTechnicians();
+    }
+  }
+
+  /**
+   * Update the list of technicians available to add (not already in crew)
+   */
+  private updateAvailableTechnicians(): void {
+    this.crew$.pipe(
+      takeUntil(this.destroy$),
+      filter(crew => !!crew),
+      take(1)
+    ).subscribe(crew => {
+      if (crew) {
+        const existingIds = new Set([crew.leadTechnicianId, ...crew.memberIds]);
+        this.availableTechnicians$ = this.store.select(TechnicianSelectors.selectAllTechnicians).pipe(
+          map(technicians => technicians
+            .filter(t => !existingIds.has(t.id) && t.isActive)
+            .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`))
+          )
+        );
+      }
+    });
+  }
+
+  /**
+   * Add a technician to the crew
+   */
+  addMemberToCrew(technicianId: string): void {
+    this.crew$.pipe(
+      takeUntil(this.destroy$),
+      filter(crew => !!crew),
+      take(1)
+    ).subscribe(crew => {
+      if (crew) {
+        this.store.dispatch(CrewActions.addCrewMember({ crewId: crew.id, technicianId }));
+        
+        this.actions$.pipe(
+          ofType(CrewActions.addCrewMemberSuccess),
+          takeUntil(this.destroy$),
+          take(1)
+        ).subscribe(() => {
+          this.snackBar.open('Member added to crew', 'Close', { duration: 3000 });
+          this.showAddMember = false;
+        });
+
+        this.actions$.pipe(
+          ofType(CrewActions.addCrewMemberFailure),
+          takeUntil(this.destroy$),
+          take(1)
+        ).subscribe(({ error }) => {
+          this.snackBar.open(`Failed to add member: ${error}`, 'Close', { duration: 5000 });
+        });
+      }
+    });
+  }
+
+  /**
+   * Remove a member from the crew
+   */
+  removeMemberFromCrew(event: Event, technicianId: string): void {
+    event.stopPropagation();
+    
+    this.crew$.pipe(
+      takeUntil(this.destroy$),
+      filter(crew => !!crew),
+      take(1)
+    ).subscribe(crew => {
+      if (crew) {
+        const tech = this.getTechnicianFullName;
+        const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+          width: '400px',
+          data: {
+            title: 'Remove Member',
+            message: 'Are you sure you want to remove this technician from the crew?',
+            confirmText: 'Remove',
+            cancelText: 'Cancel',
+            confirmColor: 'warn'
+          }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.store.dispatch(CrewActions.removeCrewMember({ crewId: crew.id, technicianId }));
+            this.snackBar.open('Member removed from crew', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 }

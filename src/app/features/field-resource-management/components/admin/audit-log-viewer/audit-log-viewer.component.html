@@ -1,7 +1,7 @@
 <div class="audit-log-container">
   <div class="header">
     <h2>Audit Log Viewer</h2>
-    <button mat-raised-button color="primary" (click)="onExportToCSV()" 
+    <button mat-raised-button class="btn-green" (click)="onExportToCSV()" 
             [disabled]="dataSource.filteredData.length === 0">
       <mat-icon>download</mat-icon>
       Export to CSV

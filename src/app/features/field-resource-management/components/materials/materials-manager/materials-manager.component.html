@@ -227,7 +227,7 @@
                   </mat-form-field>
                 </div>
                 <div class="consume-actions">
-                  <button mat-button (click)="cancelConsumption()">Cancel</button>
+                  <button mat-button color="warn" (click)="cancelConsumption()">Cancel</button>
                   <button mat-raised-button color="primary"
                           [disabled]="!consumeJobId || consumeQuantity < 1"
                           (click)="submitConsumption()">

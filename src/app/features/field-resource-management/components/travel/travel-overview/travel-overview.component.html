@@ -174,7 +174,7 @@
                     </mat-form-field>
                   </div>
                   <div class="form-actions">
-                    <button mat-stroked-button (click)="cancelEditConfig()">Cancel</button>
+                    <button mat-stroked-button color="warn" (click)="cancelEditConfig()">Cancel</button>
                     <button mat-raised-button color="primary" [disabled]="!configForm.valid" (click)="saveConfig()">
                       <mat-icon>save</mat-icon> Save Configuration
                     </button>

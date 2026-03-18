@@ -1,7 +1,7 @@
 <div class="job-notes-container">
   <!-- Add Note Button -->
   <div class="notes-header" *ngIf="!isAddingNote && notes.length > 0">
-    <button mat-raised-button color="primary" (click)="showAddNoteForm()">
+    <button mat-raised-button class="btn-orange" (click)="showAddNoteForm()">
       <mat-icon>add</mat-icon>
       Add Note
     </button>
@@ -22,7 +22,7 @@
       <mat-hint align="end">{{ newNoteCharCount }}/2000</mat-hint>
     </mat-form-field>
     <div class="note-actions">
-      <button mat-button (click)="cancelAddNote()">
+      <button mat-button color="warn" (click)="cancelAddNote()">
         Cancel
       </button>
       <button
@@ -83,7 +83,7 @@
           <mat-hint align="end">{{ editNoteCharCount }}/2000</mat-hint>
         </mat-form-field>
         <div class="note-actions">
-          <button mat-button (click)="cancelEditNote()">
+          <button mat-button color="warn" (click)="cancelEditNote()">
             Cancel
           </button>
           <button
@@ -104,7 +104,7 @@
     <mat-icon>note</mat-icon>
     <h3>No notes yet</h3>
     <p>Add a note to document important information about this job</p>
-    <button mat-raised-button color="primary" (click)="showAddNoteForm()">
+    <button mat-raised-button class="btn-orange" (click)="showAddNoteForm()">
       <mat-icon>add</mat-icon>
       Add First Note
     </button>

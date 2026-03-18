@@ -141,7 +141,7 @@
   <div class="quick-actions">
     <button 
       mat-raised-button 
-      color="primary" 
+      class="btn-orange"
       (click)="addTimeEntry()"
       [disabled]="summary.isLocked">
       <mat-icon>add</mat-icon>
@@ -166,7 +166,7 @@
 
     <button 
       mat-raised-button 
-      color="accent" 
+      color="primary" 
       (click)="submitTimecard()"
       [disabled]="summary.isLocked || summary.totalHours === 0">
       <mat-icon>send</mat-icon>
@@ -238,7 +238,7 @@
       <div class="empty-state" *ngIf="summary.dailySummaries.length === 0">
         <mat-icon>info</mat-icon>
         <p>No time entries for this week</p>
-        <button mat-raised-button color="primary" (click)="addTimeEntry()">
+        <button mat-raised-button class="btn-orange" (click)="addTimeEntry()">
           <mat-icon>add</mat-icon>
           Add Your First Entry
         </button>

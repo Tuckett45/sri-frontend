@@ -58,28 +58,28 @@
       </mat-card-header>
       <mat-card-content>
         <div class="action-buttons">
-          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="createNewJob()" *ngIf="currentUserRole === UserRole.Admin || currentUserRole === UserRole.CM">
-            <mat-icon style="color: white !important;">add</mat-icon>
+          <button mat-raised-button class="btn-orange" (click)="createNewJob()" *ngIf="currentUserRole === UserRole.Admin || currentUserRole === UserRole.CM">
+            <mat-icon>add</mat-icon>
             Create New Job
           </button>
-          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToJobs()">
-            <mat-icon style="color: white !important;">work</mat-icon>
+          <button mat-stroked-button color="primary" (click)="navigateToJobs()">
+            <mat-icon>work</mat-icon>
             View All Jobs
           </button>
-          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToScheduling()">
-            <mat-icon style="color: white !important;">calendar_today</mat-icon>
+          <button mat-stroked-button color="primary" (click)="navigateToScheduling()">
+            <mat-icon>calendar_today</mat-icon>
             Open Schedule
           </button>
-          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToMap()">
-            <mat-icon style="color: white !important;">map</mat-icon>
+          <button mat-stroked-button color="primary" (click)="navigateToMap()">
+            <mat-icon>map</mat-icon>
             View Map
           </button>
-          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToTimecard()">
-            <mat-icon style="color: white !important;">schedule</mat-icon>
+          <button mat-stroked-button color="primary" (click)="navigateToTimecard()">
+            <mat-icon>schedule</mat-icon>
             My Timecard
           </button>
-          <button mat-raised-button style="background-color: #144f80 !important; color: white !important;" (click)="navigateToReports()">
-            <mat-icon style="color: white !important;">bar_chart</mat-icon>
+          <button mat-stroked-button color="primary" (click)="navigateToReports()">
+            <mat-icon>bar_chart</mat-icon>
             View Reports
           </button>
         </div>

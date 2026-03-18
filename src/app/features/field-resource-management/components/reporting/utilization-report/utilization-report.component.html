@@ -3,7 +3,7 @@
   <div class="report-header">
     <h1>Technician Utilization Report</h1>
     <div class="export-buttons">
-      <button mat-raised-button (click)="exportToCSV()" [disabled]="loading$ | async">
+      <button mat-raised-button class="btn-green" (click)="exportToCSV()" [disabled]="loading$ | async">
         <mat-icon>download</mat-icon>
         Export CSV
       </button>

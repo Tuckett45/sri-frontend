@@ -119,7 +119,7 @@
       </mat-form-field>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-button (click)="cancelManualMileage()">Cancel</button>
+      <button mat-button color="warn" (click)="cancelManualMileage()">Cancel</button>
       <button
         mat-raised-button
         color="primary"
@@ -134,7 +134,7 @@
   <div class="time-tracker__admin-actions" *ngIf="isAdmin && isClockedIn">
     <button
       mat-stroked-button
-      color="accent"
+      color="primary"
       (click)="onManualTimeAdjustment()">
       <mat-icon>edit</mat-icon>
       <span>Adjust Time (Admin)</span>
@@ -156,7 +156,7 @@
       <p>Time adjustment form would go here with date/time pickers.</p>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-button (click)="showManualTimeAdjustment = false">Cancel</button>
+      <button mat-button color="warn" (click)="showManualTimeAdjustment = false">Cancel</button>
       <button mat-raised-button color="primary">Save Adjustment</button>
     </mat-card-actions>
   </mat-card>

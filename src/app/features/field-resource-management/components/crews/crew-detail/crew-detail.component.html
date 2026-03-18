@@ -121,8 +121,31 @@
           <mat-icon>group</mat-icon>
           Crew Members ({{ getMemberCount(crew) }})
         </mat-card-title>
+        <button 
+          mat-stroked-button 
+          color="primary"
+          (click)="toggleAddMember()"
+          *ngIf="canEdit$ | async"
+          class="add-member-btn"
+          aria-label="Add a member to this crew">
+          <mat-icon>{{ showAddMember ? 'close' : 'person_add' }}</mat-icon>
+          {{ showAddMember ? 'Cancel' : 'Add Member' }}
+        </button>
       </mat-card-header>
       <mat-card-content>
+        <!-- Add Member Panel -->
+        <div *ngIf="showAddMember" class="add-member-panel">
+          <mat-form-field appearance="outline" class="add-member-select">
+            <mat-label>Select Technician</mat-label>
+            <mat-select (selectionChange)="addMemberToCrew($event.value)" placeholder="Choose a technician to add">
+              <mat-option *ngFor="let tech of availableTechnicians$ | async" [value]="tech.id">
+                {{ tech.firstName }} {{ tech.lastName }} ({{ tech.technicianId }}) — {{ tech.role }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Select a technician to add to this crew</mat-hint>
+          </mat-form-field>
+        </div>
+
         <div *ngIf="(crewMembers$ | async)?.length; else noMembers">
           <div class="members-list" role="list" aria-label="Crew members">
             <div 
@@ -167,7 +190,18 @@
                   </div>
                 </div>
               </div>
-              <mat-icon class="nav-icon" aria-hidden="true">chevron_right</mat-icon>
+              <div class="member-actions">
+                <button 
+                  mat-icon-button 
+                  color="warn"
+                  (click)="removeMemberFromCrew($event, member.id)"
+                  *ngIf="canEdit$ | async"
+                  matTooltip="Remove from crew"
+                  aria-label="Remove member from crew">
+                  <mat-icon>remove_circle_outline</mat-icon>
+                </button>
+                <mat-icon class="nav-icon" aria-hidden="true">chevron_right</mat-icon>
+              </div>
             </div>
           </div>
         </div>

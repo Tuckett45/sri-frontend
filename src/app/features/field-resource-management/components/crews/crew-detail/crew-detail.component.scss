@@ -18,6 +18,30 @@
   }
 }
 
+// Button color overrides (dark theme bleeds through on Material primary)
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-raised-button.mat-warn {
+    background-color: #f44336 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-outlined-button.mat-primary,
+  .mat-mdc-stroked-button.mat-primary {
+    border-color: #1976d2 !important;
+    color: #1976d2 !important;
+  }
+
+  .mat-mdc-outlined-button.mat-primary:hover,
+  .mat-mdc-stroked-button.mat-primary:hover {
+    background-color: rgba(25, 118, 210, 0.08) !important;
+  }
+}
+
 // Header Section
 .detail-header {
   display: flex;
@@ -76,6 +100,10 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
     mat-card-title {
       display: flex;
       align-items: center;
@@ -87,10 +115,52 @@
         color: #1976d2;
       }
     }
+
+    .add-member-btn {
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
   }
 
   mat-card-content {
     padding-top: 16px;
+  }
+}
+
+// Add Member Panel
+.add-member-panel {
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  border: 1px dashed #1976d2;
+
+  .add-member-select {
+    width: 100%;
+  }
+}
+
+// Material form field overrides for add member panel
+::ng-deep .add-member-panel {
+  .mat-mdc-form-field {
+    .mat-mdc-floating-label,
+    .mdc-floating-label {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-value-text {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-placeholder {
+      color: #000000 !important;
+      opacity: 0.6;
+    }
+  }
+
+  .mat-mdc-form-field-hint {
+    color: #000000 !important;
   }
 }
 
@@ -317,6 +387,17 @@
       }
     }
   }
+
+  .nav-icon {
+    color: #999;
+  }
+}
+
+// Member actions (remove + nav)
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 
   .nav-icon {
     color: #999;
