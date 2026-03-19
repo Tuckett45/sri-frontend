@@ -1,0 +1,319 @@
+<div class="crew-detail-container" *ngIf="crew$ | async as crew; else loadingTemplate">
+  <!-- Header Section -->
+  <div class="detail-header">
+    <div class="header-content">
+      <button mat-icon-button (click)="goBack()" aria-label="Go back to crew list">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-info">
+        <h1 class="crew-name">{{ crew.name }}</h1>
+        <span class="status-badge" [ngClass]="getStatusBadgeClass(crew.status)">
+          {{ crew.status }}
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="editCrew()"
+        *ngIf="canEdit$ | async"
+        aria-label="Edit crew">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button 
+        mat-raised-button 
+        color="warn" 
+        (click)="deleteCrew(crew)"
+        *ngIf="canDelete$ | async"
+        aria-label="Delete crew">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="detail-content">
+    <!-- Crew Information Card -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>info</mat-icon>
+          Crew Information
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Crew ID:</span>
+            <span class="info-value">{{ crew.id }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Status:</span>
+            <span class="info-value">
+              <span class="status-badge" [ngClass]="getStatusBadgeClass(crew.status)">
+                {{ crew.status }}
+              </span>
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Market:</span>
+            <span class="info-value">{{ crew.market }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Company:</span>
+            <span class="info-value">{{ crew.company }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Member Count:</span>
+            <span class="info-value">{{ getMemberCount(crew) }}</span>
+          </div>
+          <div class="info-item" *ngIf="crew.currentLocation">
+            <span class="info-label">Current Location:</span>
+            <span class="info-value">{{ formatLocation(crew.currentLocation) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Created:</span>
+            <span class="info-value">{{ formatDate(crew.createdAt) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Last Updated:</span>
+            <span class="info-value">{{ formatDate(crew.updatedAt) }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Lead Technician Card -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>person</mat-icon>
+          Lead Technician
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="leadTechnician$ | async as leadTech; else noLeadTech">
+          <div class="technician-card" (click)="viewTechnician(leadTech.id)" role="button" tabindex="0">
+            <div class="technician-info">
+              <mat-icon class="technician-icon">account_circle</mat-icon>
+              <div class="technician-details">
+                <h3 class="technician-name">{{ getTechnicianFullName(leadTech) }}</h3>
+                <p class="technician-meta">{{ leadTech.email }}</p>
+                <p class="technician-meta">{{ leadTech.phone }}</p>
+              </div>
+            </div>
+            <mat-icon class="nav-icon">chevron_right</mat-icon>
+          </div>
+        </div>
+        <ng-template #noLeadTech>
+          <p class="empty-state">No lead technician assigned</p>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Crew Members Card -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>group</mat-icon>
+          Crew Members ({{ getMemberCount(crew) }})
+        </mat-card-title>
+        <button 
+          mat-stroked-button 
+          color="primary"
+          (click)="toggleAddMember()"
+          *ngIf="canEdit$ | async"
+          class="add-member-btn"
+          aria-label="Add a member to this crew">
+          <mat-icon>{{ showAddMember ? 'close' : 'person_add' }}</mat-icon>
+          {{ showAddMember ? 'Cancel' : 'Add Member' }}
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Add Member Panel -->
+        <div *ngIf="showAddMember" class="add-member-panel">
+          <mat-form-field appearance="outline" class="add-member-select">
+            <mat-label>Select Technician</mat-label>
+            <mat-select (selectionChange)="addMemberToCrew($event.value)" placeholder="Choose a technician to add">
+              <mat-option *ngFor="let tech of availableTechnicians$ | async" [value]="tech.id">
+                {{ tech.firstName }} {{ tech.lastName }} ({{ tech.technicianId }}) — {{ tech.role }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Select a technician to add to this crew</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div *ngIf="(crewMembers$ | async)?.length; else noMembers">
+          <div class="members-list" role="list" aria-label="Crew members">
+            <div 
+              *ngFor="let member of crewMembers$ | async; trackBy: trackByMemberId" 
+              class="member-card"
+              (click)="viewTechnician(member.id)"
+              (keydown.enter)="viewTechnician(member.id)"
+              (keydown.space)="viewTechnician(member.id)"
+              role="listitem"
+              tabindex="0"
+              [attr.aria-label]="'View details for ' + getTechnicianFullName(member)">
+              <div class="member-info">
+                <mat-icon class="member-icon" aria-hidden="true">person</mat-icon>
+                <div class="member-details">
+                  <div class="member-header">
+                    <h4 class="member-name">{{ getTechnicianFullName(member) }}</h4>
+                    <span 
+                      class="member-status-badge" 
+                      [ngClass]="getTechnicianStatusClass(member)"
+                      [attr.aria-label]="'Status: ' + getTechnicianStatus(member)">
+                      {{ getTechnicianStatus(member) }}
+                    </span>
+                  </div>
+                  <p class="member-role">{{ getTechnicianRoleDisplay(member) }}</p>
+                  <p class="member-meta">
+                    <mat-icon inline aria-hidden="true">email</mat-icon>
+                    {{ member.email }}
+                  </p>
+                  <p class="member-meta">
+                    <mat-icon inline aria-hidden="true">phone</mat-icon>
+                    {{ member.phone }}
+                  </p>
+                  <div class="member-skills" *ngIf="member.skills.length">
+                    <mat-chip-set aria-label="Member skills">
+                      <mat-chip *ngFor="let skill of member.skills.slice(0, 3)">
+                        {{ skill.name }}
+                      </mat-chip>
+                      <mat-chip *ngIf="member.skills.length > 3">
+                        +{{ member.skills.length - 3 }} more
+                      </mat-chip>
+                    </mat-chip-set>
+                  </div>
+                </div>
+              </div>
+              <div class="member-actions">
+                <button 
+                  mat-icon-button 
+                  color="warn"
+                  (click)="removeMemberFromCrew($event, member.id)"
+                  *ngIf="canEdit$ | async"
+                  matTooltip="Remove from crew"
+                  aria-label="Remove member from crew">
+                  <mat-icon>remove_circle_outline</mat-icon>
+                </button>
+                <mat-icon class="nav-icon" aria-hidden="true">chevron_right</mat-icon>
+              </div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noMembers>
+          <p class="empty-state">No crew members assigned</p>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Active Job Card -->
+    <mat-card class="info-card" *ngIf="crew.activeJobId">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>work</mat-icon>
+          Active Job
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="activeJob$ | async as job; else noActiveJob">
+          <div class="job-card" (click)="viewJob(job.id)" role="button" tabindex="0">
+            <div class="job-info">
+              <mat-icon class="job-icon">assignment</mat-icon>
+              <div class="job-details">
+                <h3 class="job-title">{{ job.jobId }} - {{ job.siteName }}</h3>
+                <p class="job-meta">{{ job.scopeDescription }}</p>
+                <div class="job-badges">
+                  <span class="badge priority-{{ job.priority.toLowerCase() }}">
+                    {{ job.priority }}
+                  </span>
+                  <span class="badge status-{{ job.status.toLowerCase() }}">
+                    {{ job.status }}
+                  </span>
+                </div>
+                <p class="job-location">
+                  <mat-icon inline>location_on</mat-icon>
+                  {{ job.siteAddress.street }}, {{ job.siteAddress.city }}
+                </p>
+              </div>
+            </div>
+            <mat-icon class="nav-icon">chevron_right</mat-icon>
+          </div>
+        </div>
+        <ng-template #noActiveJob>
+          <p class="empty-state">Job information not available</p>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Location History Card -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>location_on</mat-icon>
+          Location History
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Loading State -->
+        <div *ngIf="locationHistoryLoading$ | async" class="loading-state">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading location history...</p>
+        </div>
+
+        <!-- Error State -->
+        <div *ngIf="locationHistoryError$ | async as error" class="error-state">
+          <mat-icon color="warn">error</mat-icon>
+          <p>{{ error }}</p>
+        </div>
+
+        <!-- Location History List -->
+        <div *ngIf="!(locationHistoryLoading$ | async) && !(locationHistoryError$ | async)">
+          <div *ngIf="(locationHistory$ | async)?.length; else noLocationHistory" class="location-history">
+            <div *ngFor="let entry of locationHistory$ | async" class="location-entry">
+              <div class="location-time">
+                <mat-icon>schedule</mat-icon>
+                <span>{{ formatDate(entry.timestamp) }}</span>
+              </div>
+              <div class="location-coords">
+                <mat-icon>place</mat-icon>
+                <span>{{ formatLocation(entry.location) }}</span>
+              </div>
+              <div class="location-accuracy" *ngIf="entry.location.accuracy">
+                <mat-icon>gps_fixed</mat-icon>
+                <span>±{{ entry.location.accuracy }}m</span>
+              </div>
+            </div>
+          </div>
+          <ng-template #noLocationHistory>
+            <p class="empty-state">No location history available</p>
+          </ng-template>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<!-- Loading Template -->
+<ng-template #loadingTemplate>
+  <div class="loading-container" *ngIf="loading$ | async; else errorTemplate">
+    <mat-spinner></mat-spinner>
+    <p>Loading crew details...</p>
+  </div>
+</ng-template>
+
+<!-- Error Template -->
+<ng-template #errorTemplate>
+  <div class="error-container" *ngIf="error$ | async as error">
+    <mat-icon color="warn">error</mat-icon>
+    <h2>Error Loading Crew</h2>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="goBack()">
+      Go Back
+    </button>
+  </div>
+</ng-template>

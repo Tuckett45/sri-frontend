@@ -1,0 +1,14 @@
+src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts(867,7): error TS1005: ';' expected.
+src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts(874,7): error TS1005: ';' expected.
+src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts(880,7): error TS1005: ';' expected.
+src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts(919,7): error TS1005: ';' expected.
+src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts(926,7): error TS1005: ';' expected.
+src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts(936,3): error TS1128: Declaration or statement expected.
+src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts(936,4): error TS1128: Declaration or statement expected.
+src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts(1296,1): error TS1128: Declaration or statement expected.
+src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts(1296,2): error TS1128: Declaration or statement expected.
+npm notice
+npm notice New minor version of npm available! 11.4.1 -> 11.11.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.11.0
+npm notice To update run: npm install -g npm@11.11.0
+npm notice

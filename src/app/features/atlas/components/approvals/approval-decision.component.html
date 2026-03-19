@@ -1,0 +1,193 @@
+<div class="approval-decision-container">
+  <p-card>
+    <!-- Approval Information -->
+    <div *ngIf="showApprovalInfo && approval" class="approval-info">
+      <h3>Approval Information</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Approval ID:</span>
+          <span class="value">{{ approval.id }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">For State:</span>
+          <p-tag 
+            [value]="formatStateLabel(approval.forState)" 
+            [severity]="getStateSeverity(approval.forState)">
+          </p-tag>
+        </div>
+        <div class="info-item" *ngIf="approval.approverId">
+          <span class="label">Current Approver:</span>
+          <span class="value">{{ approval.approverId }}</span>
+        </div>
+      </div>
+      <p-divider></p-divider>
+    </div>
+
+    <!-- Error Message -->
+    <p-message 
+      *ngIf="error" 
+      severity="error" 
+      [text]="error"
+      styleClass="error-message">
+    </p-message>
+
+    <!-- Decision Form -->
+    <form [formGroup]="decisionForm" (ngSubmit)="onSubmit()" class="decision-form">
+      <!-- Decision Type -->
+      <div class="form-section">
+        <h4>Decision</h4>
+        <div class="decision-options">
+          <div *ngFor="let option of decisionOptions" class="decision-option">
+            <p-radioButton 
+              [inputId]="option.value"
+              [value]="option.value" 
+              formControlName="decision"
+              [disabled]="recordingDecision">
+            </p-radioButton>
+            <label [for]="option.value" class="decision-label">
+              <i [class]="option.icon" [style.color]="option.severity === 'success' ? 'var(--green-500)' : 'var(--red-500)'"></i>
+              {{ option.label }}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Comments -->
+      <div class="form-section">
+        <h4>
+          Comments
+          <span *ngIf="decisionForm.get('decision')?.value === 'DENIED'" class="required">*</span>
+        </h4>
+        <textarea 
+          pInputTextarea 
+          formControlName="comments"
+          [rows]="4"
+          [autoResize]="true"
+          placeholder="Enter your comments and justification..."
+          [disabled]="recordingDecision"
+          [class.ng-invalid]="hasError('comments')"
+          [class.ng-dirty]="decisionForm.get('comments')?.dirty">
+        </textarea>
+        <small *ngIf="hasError('comments')" class="error-text">
+          Comments are required when denying an approval request.
+        </small>
+        <small *ngIf="!hasError('comments')" class="help-text">
+          Provide detailed reasoning for your decision.
+        </small>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Approver Details -->
+      <div class="form-section">
+        <h4>Approver Details (Optional)</h4>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="approverRole">Role</label>
+            <p-dropdown 
+              inputId="approverRole"
+              formControlName="approverRole"
+              [options]="roleOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select your role"
+              [disabled]="recordingDecision"
+              [showClear]="true">
+            </p-dropdown>
+          </div>
+
+          <div class="form-field">
+            <label for="approverAuthority">Authority Level</label>
+            <p-dropdown 
+              inputId="approverAuthority"
+              formControlName="approverAuthority"
+              [options]="authorityOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select authority level"
+              [disabled]="recordingDecision"
+              [showClear]="true">
+            </p-dropdown>
+          </div>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Conditions -->
+      <div class="form-section" formGroupName="conditions">
+        <h4>Conditions (Optional)</h4>
+        <p class="section-description">
+          Add any conditions or requirements that must be met for this approval.
+        </p>
+
+        <div class="condition-item">
+          <input 
+            type="checkbox" 
+            id="requiresFollowUp" 
+            formControlName="requiresFollowUp"
+            [disabled]="recordingDecision">
+          <label for="requiresFollowUp">Requires Follow-up</label>
+        </div>
+
+        <div *ngIf="decisionForm.get('conditions.requiresFollowUp')?.value" class="nested-field">
+          <label for="followUpDate">Follow-up Date</label>
+          <input 
+            type="date" 
+            id="followUpDate" 
+            pInputText 
+            formControlName="followUpDate"
+            [disabled]="recordingDecision">
+        </div>
+
+        <div class="condition-item">
+          <input 
+            type="checkbox" 
+            id="additionalReview" 
+            formControlName="additionalReview"
+            [disabled]="recordingDecision">
+          <label for="additionalReview">Requires Additional Review</label>
+        </div>
+
+        <div class="form-field">
+          <label for="customCondition">Custom Condition</label>
+          <textarea 
+            id="customCondition"
+            pInputTextarea 
+            formControlName="customCondition"
+            [rows]="2"
+            placeholder="Enter any custom conditions..."
+            [disabled]="recordingDecision">
+          </textarea>
+        </div>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div *ngIf="recordingDecision" class="loading-indicator">
+        <p-progressSpinner [style]="{width: '30px', height: '30px'}"></p-progressSpinner>
+        <span>Recording decision...</span>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <p-button 
+          label="Cancel" 
+          icon="pi pi-times" 
+          (onClick)="onCancel()"
+          styleClass="p-button-text"
+          [disabled]="recordingDecision"
+          type="button">
+        </p-button>
+        <p-button 
+          [label]="decisionForm.get('decision')?.value === 'APPROVED' ? 'Approve' : 'Deny'" 
+          [icon]="decisionForm.get('decision')?.value === 'APPROVED' ? 'pi pi-check' : 'pi pi-times'" 
+          [styleClass]="decisionForm.get('decision')?.value === 'APPROVED' ? 'p-button-success' : 'p-button-danger'"
+          [disabled]="!canSubmit()"
+          type="submit">
+        </p-button>
+      </div>
+    </form>
+  </p-card>
+</div>

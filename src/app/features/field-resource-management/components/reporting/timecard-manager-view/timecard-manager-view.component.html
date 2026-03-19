@@ -1,0 +1,289 @@
+<div class="timecard-manager-view" role="main">
+  <!-- Breadcrumb -->
+  <app-breadcrumb></app-breadcrumb>
+  
+  <!-- Header -->
+  <div class="manager-header">
+    <div class="header-left">
+      <h1>Timecard Management</h1>
+      <p class="subtitle">Review and approve team timecards</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button class="btn-green" (click)="exportData()" aria-label="Export timecard data">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <button mat-icon-button (click)="refresh()" [disabled]="loading$ | async" matTooltip="Refresh data">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Loading indicator -->
+  <mat-progress-bar *ngIf="loading$ | async" mode="indeterminate"></mat-progress-bar>
+  
+  <!-- Error message -->
+  <mat-card *ngIf="error$ | async as error" class="error-card" role="alert">
+    <mat-card-content>
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Summary Cards -->
+  <div class="summary-section">
+    <div class="summary-grid">
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="summary-icon">
+            <mat-icon>schedule</mat-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-label">Total Hours</div>
+            <div class="summary-value">{{ formatHours(totalHours) }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="summary-icon overtime">
+            <mat-icon>access_time</mat-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-label">Overtime Hours</div>
+            <div class="summary-value">{{ formatHours(totalOvertimeHours) }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="summary-icon expenses">
+            <mat-icon>attach_money</mat-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-label">Total Expenses</div>
+            <div class="summary-value">${{ totalExpenses | number:'1.2-2' }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="summary-icon pending">
+            <mat-icon>pending_actions</mat-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-label">Pending Approvals</div>
+            <div class="summary-value">{{ pendingApprovals }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+  
+  <!-- Filters Section -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters-container">
+        <!-- Date Range Filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Date Range</mat-label>
+          <mat-select [formControl]="dateRangeControl" (selectionChange)="onDateRangeChange($event.value)">
+            <mat-option value="week">This Week</mat-option>
+            <mat-option value="biweek">This Pay Period</mat-option>
+            <mat-option value="month">This Month</mat-option>
+            <mat-option value="custom">Custom Range</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <!-- Filter By -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Filter By</mat-label>
+          <mat-select [formControl]="filterByControl" (selectionChange)="onFilterChange()">
+            <mat-option value="all">All Timecards</mat-option>
+            <mat-option value="technician">By Technician</mat-option>
+            <mat-option value="crew">By Crew</mat-option>
+            <mat-option value="job">By Job</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <!-- Technician Filter -->
+        <mat-form-field appearance="outline" class="filter-field" *ngIf="filterByControl.value === 'technician'">
+          <mat-label>Select Technician</mat-label>
+          <mat-select [formControl]="selectedTechnicianControl">
+            <mat-option *ngFor="let tech of technicians$ | async" [value]="tech.id">
+              {{ tech.firstName }} {{ tech.lastName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <!-- Crew Filter -->
+        <mat-form-field appearance="outline" class="filter-field" *ngIf="filterByControl.value === 'crew'">
+          <mat-label>Select Crew</mat-label>
+          <mat-select [formControl]="selectedCrewControl">
+            <mat-option *ngFor="let crew of crews$ | async" [value]="crew.id">
+              {{ crew.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <!-- Job Filter -->
+        <mat-form-field appearance="outline" class="filter-field" *ngIf="filterByControl.value === 'job'">
+          <mat-label>Select Job</mat-label>
+          <mat-select [formControl]="selectedJobControl">
+            <mat-option *ngFor="let job of jobs$ | async" [value]="job.id">
+              {{ job.jobId }} - {{ job.client }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <!-- Status Filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Status</mat-label>
+          <mat-select [formControl]="statusFilterControl">
+            <mat-option value="all">All Statuses</mat-option>
+            <mat-option value="draft">Draft</mat-option>
+            <mat-option value="submitted">Submitted</mat-option>
+            <mat-option value="approved">Approved</mat-option>
+            <mat-option value="rejected">Rejected</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Bulk Actions -->
+  <div class="bulk-actions" *ngIf="selectedPeriodIds.size > 0">
+    <span class="selected-count">{{ selectedPeriodIds.size }} selected</span>
+    <button mat-raised-button color="primary" (click)="bulkApprove()">
+      <mat-icon>check_circle</mat-icon>
+      Approve Selected
+    </button>
+    <button mat-button (click)="selectedPeriodIds.clear()">
+      Clear Selection
+    </button>
+  </div>
+  
+  <!-- Timecards Table -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="filteredPeriodsData" class="timecards-table">
+          <!-- Checkbox Column -->
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox 
+                (change)="selectAllPeriods($event.checked)"
+                [checked]="allPeriodsSelected">
+              </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let period">
+              <mat-checkbox
+                (click)="$event.stopPropagation()"
+                (change)="togglePeriodSelection(period.id)"
+                [checked]="selectedPeriodIds.has(period.id)">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+          
+          <!-- Technician Column -->
+          <ng-container matColumnDef="technician">
+            <th mat-header-cell *matHeaderCellDef>Technician</th>
+            <td mat-cell *matCellDef="let period">
+              {{ getTechnicianName(period.technicianId) | async }}
+            </td>
+          </ng-container>
+          
+          <!-- Period Column -->
+          <ng-container matColumnDef="period">
+            <th mat-header-cell *matHeaderCellDef>Period</th>
+            <td mat-cell *matCellDef="let period">
+              <div class="period-cell">
+                <div class="period-dates">
+                  {{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }}
+                </div>
+                <div class="period-type">{{ period.periodType }}</div>
+              </div>
+            </td>
+          </ng-container>
+          
+          <!-- Hours Column -->
+          <ng-container matColumnDef="hours">
+            <th mat-header-cell *matHeaderCellDef>Regular Hours</th>
+            <td mat-cell *matCellDef="let period">
+              {{ formatHours(period.regularHours) }}
+            </td>
+          </ng-container>
+          
+          <!-- Overtime Column -->
+          <ng-container matColumnDef="overtime">
+            <th mat-header-cell *matHeaderCellDef>Overtime</th>
+            <td mat-cell *matCellDef="let period">
+              <span [class.has-overtime]="period.overtimeHours > 0">
+                {{ formatHours(period.overtimeHours) }}
+              </span>
+            </td>
+          </ng-container>
+          
+          <!-- Expenses Column -->
+          <ng-container matColumnDef="expenses">
+            <th mat-header-cell *matHeaderCellDef>Expenses</th>
+            <td mat-cell *matCellDef="let period">
+              ${{ period.totalExpenses | number:'1.2-2' }}
+            </td>
+          </ng-container>
+          
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let period">
+              <span class="status-badge" [ngClass]="getStatusClass(period.status)">
+                {{ period.status }}
+              </span>
+              <mat-icon *ngIf="period.isLocked" class="lock-icon" matTooltip="Locked">lock</mat-icon>
+            </td>
+          </ng-container>
+          
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let period">
+              <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Actions">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="viewPeriodDetails(period)">
+                  <mat-icon>visibility</mat-icon>
+                  <span>View Details</span>
+                </button>
+                <button mat-menu-item (click)="approvePeriod(period)" *ngIf="period.status === 'submitted'">
+                  <mat-icon>check_circle</mat-icon>
+                  <span>Approve</span>
+                </button>
+                <button mat-menu-item (click)="rejectPeriod(period, 'Reason')" *ngIf="period.status === 'submitted'">
+                  <mat-icon>cancel</mat-icon>
+                  <span>Reject</span>
+                </button>
+                <button mat-menu-item (click)="unlockPeriod(period)" *ngIf="period.isLocked">
+                  <mat-icon>lock_open</mat-icon>
+                  <span>Unlock</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+          
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="timecard-row"></tr>
+        </table>
+        
+        <!-- Empty State -->
+        <div *ngIf="filteredPeriodsData.length === 0" class="empty-state">
+          <mat-icon>inbox</mat-icon>
+          <p>No timecards found for the selected filters</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

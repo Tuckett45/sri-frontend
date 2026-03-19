@@ -1,0 +1,74 @@
+@import '../../styles/accessibility';
+
+.frm-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+
+  &__header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &__title {
+    font-size: 20px;
+    font-weight: 500;
+    margin-left: 16px;
+  }
+
+  &__spacer {
+    flex: 1 1 auto;
+  }
+
+  &__container {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &__drawer {
+    width: 280px;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: #1e1e1e;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    background-color: #121212;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .frm-layout {
+    &__drawer {
+      width: 240px;
+    }
+
+    &__title {
+      font-size: 18px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .frm-layout {
+    &__title {
+      display: none;
+    }
+  }
+}
+
+// Ensure main content is focusable for skip navigation
+main#main-content {
+  outline: none;
+  
+  &:focus {
+    outline: 3px solid #4CAF50;
+    outline-offset: -3px;
+  }
+}

@@ -1,0 +1,69 @@
+<h2 mat-dialog-title>Assign Technician</h2>
+
+<mat-dialog-content>
+  <p class="dialog-description">
+    Select a technician to assign to {{ data.selectedCount }} selected job(s).
+  </p>
+
+  <div class="loading-container" *ngIf="loading$ | async">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading technicians...</p>
+  </div>
+
+  <form [formGroup]="form" *ngIf="!(loading$ | async)">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Select Technician</mat-label>
+      <mat-select formControlName="technicianId" required>
+        <mat-option *ngFor="let technician of technicians$ | async" [value]="technician.id">
+          {{ getTechnicianDisplayName(technician) }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('technicianId')?.hasError('required')">
+        Technician is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Selected Technician Details -->
+    <mat-card class="technician-details" *ngIf="selectedTechnician">
+      <mat-card-header>
+        <mat-card-title>Technician Details</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-row">
+          <span class="label">Name:</span>
+          <span class="value">{{ selectedTechnician.firstName }} {{ selectedTechnician.lastName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Role:</span>
+          <span class="value">{{ selectedTechnician.role }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Home Base:</span>
+          <span class="value">{{ selectedTechnician.homeBase }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Skills:</span>
+          <span class="value">{{ getTechnicianSkills(selectedTechnician) }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </form>
+
+  <mat-hint class="warning-hint" *ngIf="form.get('technicianId')?.value">
+    <mat-icon>warning</mat-icon>
+    This will assign the selected technician to all {{ data.selectedCount }} job(s). 
+    Conflicts and skill mismatches will be validated for each job individually.
+  </mat-hint>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button color="warn" (click)="onCancel()">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onConfirm()"
+    [disabled]="!form.valid"
+  >
+    Assign Technician
+  </button>
+</mat-dialog-actions>

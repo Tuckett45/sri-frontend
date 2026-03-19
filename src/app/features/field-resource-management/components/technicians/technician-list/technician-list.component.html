@@ -1,0 +1,255 @@
+<div class="technician-list-container">
+  <!-- Header -->
+  <div class="list-header">
+    <h2>Technicians</h2>
+    <div class="header-actions">
+      <button mat-stroked-button [matMenuTriggerFor]="exportMenu">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <mat-menu #exportMenu="matMenu">
+        <button mat-menu-item (click)="exportToCSV()">
+          <mat-icon>description</mat-icon>
+          <span>Export to CSV</span>
+        </button>
+        <button mat-menu-item (click)="exportToPDF()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <span>Export to PDF</span>
+        </button>
+      </mat-menu>
+      <button mat-raised-button class="btn-orange" routerLink="./new" *roleBasedShow="[UserRole.Admin, UserRole.PM, UserRole.CM]">
+        <mat-icon>add</mat-icon>
+        Add Technician
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <mat-card class="filter-panel">
+    <mat-card-content>
+      <!-- Search Input -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search by name or ID</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Enter name or technician ID">
+        <mat-icon matPrefix>search</mat-icon>
+        <button
+          mat-icon-button
+          matSuffix
+          *ngIf="searchControl.value"
+          (click)="searchControl.setValue('')"
+          aria-label="Clear search"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Filter Expansion Panel -->
+      <mat-expansion-panel class="filter-expansion">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>filter_list</mat-icon>
+            <span>Filters</span>
+            <span class="filter-count" *ngIf="getActiveFilters().length > 0">
+              ({{ getActiveFilters().length }} active)
+            </span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <!-- Filters -->
+        <div class="filters-row">
+          <!-- Role Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Role</mat-label>
+            <mat-select [formControl]="roleControl">
+              <mat-option value="">All Roles</mat-option>
+              <mat-option *ngFor="let role of roles" [value]="role">
+                {{ role }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Skills Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Skills</mat-label>
+            <mat-select [formControl]="skillsControl" multiple>
+              <mat-option *ngFor="let skill of availableSkills" [value]="skill">
+                {{ skill }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Travel Willingness Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Travel Willingness</mat-label>
+            <mat-select [formControl]="travelWillingnessControl">
+              <mat-option value="">All</mat-option>
+              <mat-option value="willing">Willing to Travel</mat-option>
+              <mat-option value="not-willing">Not Willing to Travel</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Availability Toggle -->
+          <mat-checkbox [formControl]="availabilityControl" class="availability-toggle">
+            Available Only
+          </mat-checkbox>
+
+          <!-- Clear Filters Button -->
+          <button mat-stroked-button (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Active Filter Chips -->
+      <div class="active-filters" *ngIf="getActiveFilters().length > 0">
+        <span class="filter-label">Active Filters:</span>
+        <div class="filter-chips">
+          <mat-chip
+            *ngFor="let filter of getActiveFilters()"
+            [removable]="true"
+            (removed)="removeFilter(filter.key)"
+          >
+            <strong>{{ filter.label }}:</strong> {{ filter.value }}
+            <button matChipRemove [attr.aria-label]="'Remove ' + filter.label + ' filter'">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Error Message -->
+  <mat-card *ngIf="error$ | async as error" class="error-card">
+    <mat-card-content>
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Technicians Table -->
+  <div class="table-container" *ngIf="!(loading$ | async)">
+    <table mat-table [dataSource]="(technicians$ | async) || []" class="technicians-table">
+      
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let technician">
+          <div class="technician-name">
+            <strong>
+              <span [innerHTML]="getFullName(technician) | highlight: (searchControl.value || '')"></span>
+            </strong>
+            <span class="technician-id">
+              <span [innerHTML]="technician.technicianId | highlight: (searchControl.value || '')"></span>
+            </span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Role Column -->
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef>Role</th>
+        <td mat-cell *matCellDef="let technician">
+          <span class="role-badge">{{ technician.role }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Skills Column -->
+      <ng-container matColumnDef="skills">
+        <th mat-header-cell *matHeaderCellDef>Skills</th>
+        <td mat-cell *matCellDef="let technician">
+          <div class="skills-container">
+            <span 
+              *ngFor="let skillName of getSkillNames(technician)" 
+              class="skill-chip"
+              [title]="skillName">
+              {{ skillName }}
+            </span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Travel Status Column -->
+      <ng-container matColumnDef="travelStatus">
+        <th mat-header-cell *matHeaderCellDef>Travel</th>
+        <td mat-cell *matCellDef="let technician">
+          <ng-container *ngIf="getTravelStatus(technician) as travelStatus; else noTravelData">
+            <span class="travel-status-badge" [class.willing]="travelStatus.willing" [class.not-willing]="!travelStatus.willing">
+              <mat-icon>{{ travelStatus.willing ? 'flight_takeoff' : 'flight_land' }}</mat-icon>
+              {{ travelStatus.label }}
+            </span>
+          </ng-container>
+          <ng-template #noTravelData>
+            <span class="travel-status-badge unknown">
+              <mat-icon>help_outline</mat-icon>
+              N/A
+            </span>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let technician">
+          <span class="status-badge" [class.active]="technician.isActive" [class.inactive]="!technician.isActive">
+            {{ getCurrentStatus(technician) }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let technician">
+          <button mat-icon-button 
+                  [routerLink]="['./', technician.id]"
+                  matTooltip="View Details"
+                  (click)="viewTechnician(technician)">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button 
+                  [routerLink]="['./', technician.id, 'edit']"
+                  matTooltip="Edit"
+                  (click)="editTechnician(technician)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button 
+                  [matTooltip]="technician.isActive ? 'Deactivate' : 'Activate'"
+                  (click)="toggleTechnicianStatus(technician)">
+            <mat-icon>{{ technician.isActive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <!-- No Data Row -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+          <div class="no-data">
+            <mat-icon>person_off</mat-icon>
+            <p>No technicians found</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Paginator -->
+    <mat-paginator 
+      [length]="(technicians$ | async)?.length || 0"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageIndex]="pageIndex"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+</div>

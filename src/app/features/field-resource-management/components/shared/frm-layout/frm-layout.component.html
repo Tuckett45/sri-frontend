@@ -1,0 +1,62 @@
+<!-- Skip Navigation Links -->
+<frm-skip-navigation></frm-skip-navigation>
+
+<!-- Main Layout -->
+<div class="frm-layout">
+  <!-- Header -->
+  <header class="frm-layout__header" role="banner">
+    <mat-toolbar color="primary">
+      <button mat-icon-button (click)="drawer.toggle()" aria-label="Toggle navigation menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="frm-layout__title">Field Resource Management</span>
+      
+      <span class="frm-layout__spacer"></span>
+      
+      <!-- Offline Indicator -->
+      <frm-offline-indicator></frm-offline-indicator>
+      
+      <!-- Notifications -->
+      <frm-notification-panel></frm-notification-panel>
+      
+      <!-- User Menu -->
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Open user menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item aria-label="View profile">
+          <mat-icon>person</mat-icon>
+          <span>Profile</span>
+        </button>
+        <button mat-menu-item aria-label="Open settings">
+          <mat-icon>settings</mat-icon>
+          <span>Settings</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item aria-label="Logout">
+          <mat-icon>exit_to_app</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+  </header>
+
+  <!-- Sidebar and Content -->
+  <mat-drawer-container class="frm-layout__container" autosize>
+    <!-- Navigation Drawer -->
+    <mat-drawer #drawer class="frm-layout__drawer" mode="side" opened>
+      <frm-nav-menu></frm-nav-menu>
+    </mat-drawer>
+
+    <!-- Main Content -->
+    <mat-drawer-content class="frm-layout__content">
+      <!-- Breadcrumb Navigation -->
+      <frm-breadcrumb></frm-breadcrumb>
+      
+      <!-- Router Outlet for Page Content -->
+      <main id="main-content" tabindex="-1" role="main">
+        <router-outlet></router-outlet>
+      </main>
+    </mat-drawer-content>
+  </mat-drawer-container>
+</div>

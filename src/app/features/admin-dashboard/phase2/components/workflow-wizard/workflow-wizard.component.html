@@ -1,0 +1,154 @@
+<div class="workflow-wizard">
+  <!-- Loading Indicator for async operations -->
+  <app-loading-indicator 
+    *ngIf="(saveDraftStatus$ | async)?.saving" 
+    [overlay]="true"
+    [mode]="'spinner'"
+    [message]="'Saving draft...'">
+  </app-loading-indicator>
+
+  <!-- Header -->
+  <div class="wizard-header">
+    <h2>{{ workflowType | titlecase }} Workflow</h2>
+    <div class="wizard-actions">
+      <button 
+        class="btn btn-secondary" 
+        (click)="saveDraft()"
+        [disabled]="(saveDraftStatus$ | async)?.saving">
+        <span *ngIf="!(saveDraftStatus$ | async)?.saving">Save Draft</span>
+        <span *ngIf="(saveDraftStatus$ | async)?.saving">Saving...</span>
+      </button>
+      <button 
+        class="btn btn-outline" 
+        (click)="cancelWorkflow()">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="wizard-main-grid">
+    <!-- Left Column: Wizard Steps -->
+    <div class="wizard-left-column">
+      <!-- Progress Indicator -->
+      <div class="wizard-progress">
+        <div class="progress-bar">
+          <div 
+            class="progress-fill" 
+            [style.width.%]="getStepProgress()">
+          </div>
+        </div>
+        <div class="progress-text">
+          Step {{ currentStepIndex + 1 }} of {{ steps.length }}
+        </div>
+      </div>
+
+      <!-- Step Navigation -->
+      <div class="wizard-steps">
+        <div 
+          *ngFor="let step of steps; let i = index"
+          class="step-item"
+          [class.active]="i === currentStepIndex"
+          [class.completed]="isStepComplete(i)"
+          [class.clickable]="isStepComplete(i) || i === currentStepIndex"
+          (click)="goToStep(i)">
+          <div class="step-number">
+            <span *ngIf="!isStepComplete(i)">{{ i + 1 }}</span>
+            <span *ngIf="isStepComplete(i)" class="check-icon">✓</span>
+          </div>
+          <div class="step-info">
+            <div class="step-name">{{ step.name }}</div>
+            <div class="step-description">{{ step.description }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Step Content -->
+      <div class="wizard-content">
+        <div *ngIf="getCurrentStep() as currentStep" class="step-content">
+          <h3>{{ currentStep.name }}</h3>
+          <p class="step-description">{{ currentStep.description }}</p>
+
+          <!-- Dynamic step component would be loaded here -->
+          <div class="step-form">
+            <!-- Placeholder for dynamic step component -->
+            <p class="text-muted">
+              Step component: {{ currentStep.component }}
+            </p>
+            
+            <!-- Example form fields (would be replaced by dynamic component) -->
+            <div class="form-group" *ngIf="currentStep.id === 'basic-info'">
+              <label>Title *</label>
+              <input type="text" class="form-control" placeholder="Enter title">
+            </div>
+            <div class="form-group" *ngIf="currentStep.id === 'basic-info'">
+              <label>Description *</label>
+              <textarea class="form-control" rows="4" placeholder="Enter description"></textarea>
+            </div>
+          </div>
+
+          <!-- Validation Errors -->
+          <div 
+            *ngIf="(validationResults$ | async) as validationResults"
+            class="validation-errors">
+            <div 
+              *ngFor="let error of validationResults[0]?.errors"
+              class="alert alert-danger">
+              <strong>{{ error.field }}:</strong> {{ error.message }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="wizard-footer">
+        <button 
+          class="btn btn-secondary"
+          (click)="previousStep()"
+          [disabled]="!canGoToPreviousStep()">
+          Previous
+        </button>
+
+        <button 
+          *ngIf="currentStepIndex < steps.length - 1"
+          class="btn btn-primary"
+          (click)="nextStep()"
+          [disabled]="!(canProceed$ | async)">
+          Next
+        </button>
+
+        <button 
+          *ngIf="currentStepIndex === steps.length - 1"
+          class="btn btn-success"
+          (click)="submitWorkflow()"
+          [disabled]="!(canProceed$ | async)">
+          Submit
+        </button>
+      </div>
+
+      <!-- Save Status -->
+      <div 
+        *ngIf="(saveDraftStatus$ | async) as saveStatus"
+        class="save-status">
+        <span *ngIf="saveStatus.saved" class="text-success">
+          Draft saved at {{ saveStatus.lastSavedAt | date:'short' }}
+        </span>
+        <span *ngIf="saveStatus.error" class="text-danger">
+          Error saving draft: {{ saveStatus.error }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Right Column: AI Advisory Panel -->
+    <div class="wizard-right-column">
+      <div class="ai-advisory-sidebar">
+        <h4>AI Recommendations</h4>
+        <p class="sidebar-description">Get AI-powered suggestions for your workflow</p>
+        <app-ai-advisory-panel
+          context="job"
+          [autoRefresh]="false">
+        </app-ai-advisory-panel>
+      </div>
+    </div>
+  </div>
+</div>

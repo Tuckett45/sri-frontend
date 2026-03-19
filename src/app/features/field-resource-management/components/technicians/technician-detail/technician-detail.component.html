@@ -1,0 +1,245 @@
+<div class="technician-detail-container" *ngIf="technician$ | async as technician; else loading">
+  <!-- Header -->
+  <div class="detail-header">
+    <button mat-icon-button (click)="goBack()" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2>{{ getFullName(technician) }}</h2>
+    <div class="header-actions" *ngIf="isAdmin()">
+      <button mat-raised-button color="primary" (click)="editTechnician()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-raised-button color="warn" (click)="deleteTechnician(technician)">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </div>
+  </div>
+
+  <!-- Basic Information Card -->
+  <mat-card class="info-card">
+    <mat-card-header>
+      <mat-card-title>Basic Information</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Technician ID</label>
+          <span>{{ technician.technicianId }}</span>
+        </div>
+        <div class="info-item">
+          <label>Role</label>
+          <span class="role-badge">{{ technician.role }}</span>
+        </div>
+        <div class="info-item">
+          <label>Employment Type</label>
+          <span>{{ technician.employmentType }}</span>
+        </div>
+        <div class="info-item">
+          <label>Email</label>
+          <a [href]="'mailto:' + technician.email">{{ technician.email }}</a>
+        </div>
+        <div class="info-item">
+          <label>Phone</label>
+          <a [href]="'tel:' + technician.phone">{{ technician.phone }}</a>
+        </div>
+        <div class="info-item">
+          <label>Home Base</label>
+          <span>{{ technician.homeBase }}</span>
+        </div>
+        <div class="info-item">
+          <label>Region</label>
+          <span>{{ technician.region }}</span>
+        </div>
+        <div class="info-item">
+          <label>Status</label>
+          <span class="status-badge" [class.active]="technician.isActive" [class.inactive]="!technician.isActive">
+            {{ technician.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Tabbed Content -->
+  <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="detail-tabs">
+    <!-- Profile Tab -->
+    <mat-tab label="Profile">
+      <ng-template matTabContent>
+        <!-- Skills Card -->
+        <mat-card class="info-card tab-card">
+          <mat-card-header>
+            <mat-card-title>Skills</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div *ngIf="technician.skills.length > 0; else noSkills">
+              <mat-chip-set>
+                <mat-chip *ngFor="let skill of technician.skills" [title]="skill.category">
+                  <strong>{{ skill.name }}</strong>
+                  <span class="skill-category"> - {{ skill.category }}</span>
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+            <ng-template #noSkills>
+              <p class="no-data">No skills assigned</p>
+            </ng-template>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Certifications Card -->
+        <mat-card class="info-card tab-card">
+          <mat-card-header>
+            <mat-card-title>Certifications</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div *ngIf="technician.certifications.length > 0; else noCertifications">
+              <table mat-table [dataSource]="technician.certifications" class="certifications-table">
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef>Certification</th>
+                  <td mat-cell *matCellDef="let cert">{{ cert.name }}</td>
+                </ng-container>
+                <ng-container matColumnDef="issueDate">
+                  <th mat-header-cell *matHeaderCellDef>Issue Date</th>
+                  <td mat-cell *matCellDef="let cert">{{ cert.issueDate | date:'shortDate' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="expirationDate">
+                  <th mat-header-cell *matHeaderCellDef>Expiration Date</th>
+                  <td mat-cell *matCellDef="let cert">{{ cert.expirationDate | date:'shortDate' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let cert">
+                    <span class="cert-status-badge" [ngClass]="getCertificationStatusClass(cert.status)">
+                      {{ cert.status }}
+                    </span>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="['name', 'issueDate', 'expirationDate', 'status']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['name', 'issueDate', 'expirationDate', 'status'];"></tr>
+              </table>
+            </div>
+            <ng-template #noCertifications>
+              <p class="no-data">No certifications on file</p>
+            </ng-template>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Performance Metrics Card -->
+        <mat-card class="info-card tab-card">
+          <mat-card-header>
+            <mat-card-title>Performance Metrics</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="metrics-grid">
+              <div class="metric-item">
+                <div class="metric-value">{{ performanceMetrics.utilizationRate }}%</div>
+                <div class="metric-label">Utilization Rate</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-value">{{ performanceMetrics.jobsCompleted }}</div>
+                <div class="metric-label">Jobs Completed</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Availability Tab -->
+    <mat-tab label="Availability">
+      <ng-template matTabContent>
+        <!-- Availability Calendar Card -->
+        <mat-card class="info-card tab-card">
+          <mat-card-header>
+            <mat-card-title>Availability Calendar</mat-card-title>
+            <mat-card-subtitle>Red dates indicate unavailability (PTO, sick days, etc.)</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <mat-calendar 
+              [(selected)]="selectedDate"
+              [dateClass]="dateClass">
+            </mat-calendar>
+            <div class="calendar-legend">
+              <div class="legend-item">
+                <span class="legend-color unavailable"></span>
+                <span>Unavailable</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color available"></span>
+                <span>Available</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Assignment History Card -->
+        <mat-card class="info-card tab-card">
+          <mat-card-header>
+            <mat-card-title>Recent Assignment History</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div *ngIf="assignmentHistory.length > 0; else noHistory">
+              <table mat-table [dataSource]="assignmentHistory" class="history-table">
+                <ng-container matColumnDef="jobId">
+                  <th mat-header-cell *matHeaderCellDef>Job ID</th>
+                  <td mat-cell *matCellDef="let assignment">{{ assignment.jobId }}</td>
+                </ng-container>
+                <ng-container matColumnDef="client">
+                  <th mat-header-cell *matHeaderCellDef>Client</th>
+                  <td mat-cell *matCellDef="let assignment">{{ assignment.client }}</td>
+                </ng-container>
+                <ng-container matColumnDef="siteName">
+                  <th mat-header-cell *matHeaderCellDef>Site</th>
+                  <td mat-cell *matCellDef="let assignment">{{ assignment.siteName }}</td>
+                </ng-container>
+                <ng-container matColumnDef="date">
+                  <th mat-header-cell *matHeaderCellDef>Date</th>
+                  <td mat-cell *matCellDef="let assignment">{{ assignment.date | date:'shortDate' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let assignment">{{ assignment.status }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="['jobId', 'client', 'siteName', 'date', 'status']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['jobId', 'client', 'siteName', 'date', 'status'];"></tr>
+              </table>
+            </div>
+            <ng-template #noHistory>
+              <p class="no-data">No assignment history available</p>
+            </ng-template>
+          </mat-card-content>
+        </mat-card>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Travel Tab -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">flight</mat-icon>
+        Travel
+      </ng-template>
+      <ng-template matTabContent>
+        <div class="travel-tab-content" *ngIf="technicianId">
+          <app-technician-travel-profile [technicianId]="technicianId">
+          </app-technician-travel-profile>
+        </div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<!-- Loading Template -->
+<ng-template #loading>
+  <div class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+</ng-template>
+
+<!-- Error Display -->
+<mat-card *ngIf="error$ | async as error" class="error-card">
+  <mat-card-content>
+    <mat-icon color="warn">error</mat-icon>
+    <span>{{ error }}</span>
+  </mat-card-content>
+</mat-card>

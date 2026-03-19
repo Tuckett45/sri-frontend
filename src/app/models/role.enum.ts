@@ -5,6 +5,7 @@ export enum UserRole {
     DeploymentEngineer = 'DeploymentEngineer',
     PM = 'PM',
     CM = 'CM',
+    Manager = 'Manager',
     Admin = 'Admin',
     DCOps = 'DCOps',
     VendorRep = 'VendorRep',
@@ -12,5 +13,7 @@ export enum UserRole {
     HR = 'HR',
     Client = 'Client',
     OSPCoordinator = 'OSPCoordinator',
-    Controller = 'Controller'
+    Controller = 'Controller',
+    EngineeringFieldSupport = 'EngineeringFieldSupport',
+    MaterialsManager = 'MaterialsManager'
 }

@@ -1,0 +1,796 @@
+/**
+ * FRM Global Styles
+ * Import this file in components that need the full design system
+ */
+
+@import './frm-variables';
+@import './frm-mixins';
+
+// ============================================================================
+// GLOBAL UTILITY CLASSES
+// ============================================================================
+
+// Spacing utilities
+.frm-mt-xs { margin-top: $frm-spacing-xs; }
+.frm-mt-sm { margin-top: $frm-spacing-sm; }
+.frm-mt-md { margin-top: $frm-spacing-md; }
+.frm-mt-lg { margin-top: $frm-spacing-lg; }
+.frm-mt-xl { margin-top: $frm-spacing-xl; }
+
+.frm-mb-xs { margin-bottom: $frm-spacing-xs; }
+.frm-mb-sm { margin-bottom: $frm-spacing-sm; }
+.frm-mb-md { margin-bottom: $frm-spacing-md; }
+.frm-mb-lg { margin-bottom: $frm-spacing-lg; }
+.frm-mb-xl { margin-bottom: $frm-spacing-xl; }
+
+.frm-p-xs { padding: $frm-spacing-xs; }
+.frm-p-sm { padding: $frm-spacing-sm; }
+.frm-p-md { padding: $frm-spacing-md; }
+.frm-p-lg { padding: $frm-spacing-lg; }
+.frm-p-xl { padding: $frm-spacing-xl; }
+
+// Text utilities
+.frm-text-primary { color: $frm-text-primary; }
+.frm-text-secondary { color: $frm-text-secondary; }
+.frm-text-disabled { color: $frm-text-disabled; }
+
+.frm-text-center { text-align: center; }
+.frm-text-right { text-align: right; }
+.frm-text-left { text-align: left; }
+
+.frm-truncate { @include frm-truncate; }
+
+// Flex utilities
+.frm-flex { display: flex; }
+.frm-flex-center { @include frm-flex-center; }
+.frm-flex-between { @include frm-flex-between; }
+.frm-flex-column { @include frm-flex-column; }
+.frm-flex-wrap { flex-wrap: wrap; }
+.frm-flex-1 { flex: 1; }
+
+// Gap utilities
+.frm-gap-xs { gap: $frm-spacing-xs; }
+.frm-gap-sm { gap: $frm-spacing-sm; }
+.frm-gap-md { gap: $frm-spacing-md; }
+.frm-gap-lg { gap: $frm-spacing-lg; }
+
+// ============================================================================
+// COMMON COMPONENT CLASSES
+// ============================================================================
+
+.frm-page-container {
+  padding: $frm-spacing-lg;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @include frm-responsive(xs) {
+    padding: $frm-spacing-md;
+  }
+}
+
+.frm-page-header {
+  @include frm-flex-between;
+  margin-bottom: $frm-spacing-lg;
+
+  h1 {
+    margin: 0;
+    font-size: $frm-font-size-xxl;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
+  }
+
+  .frm-page-actions {
+    display: flex;
+    gap: $frm-spacing-sm;
+  }
+}
+
+.frm-section {
+  @include frm-card;
+  margin-bottom: $frm-spacing-lg;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.frm-section-header {
+  @include frm-card-header;
+}
+
+.frm-empty-state {
+  @include frm-flex-center;
+  @include frm-flex-column;
+  padding: $frm-spacing-xxl;
+  text-align: center;
+  color: $frm-text-secondary;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: $frm-spacing-md;
+    color: $frm-gray-400;
+  }
+
+  h3 {
+    margin: 0 0 $frm-spacing-sm 0;
+    font-size: $frm-font-size-lg;
+    font-weight: $frm-font-weight-medium;
+  }
+
+  p {
+    margin: 0 0 $frm-spacing-md 0;
+    font-size: $frm-font-size-base;
+  }
+}
+
+.frm-loading-state {
+  @include frm-flex-center;
+  padding: $frm-spacing-xxl;
+}
+
+.frm-error-state {
+  @include frm-flex-center;
+  @include frm-flex-column;
+  padding: $frm-spacing-xxl;
+  text-align: center;
+  color: $frm-error;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: $frm-spacing-md;
+  }
+
+  h3 {
+    margin: 0 0 $frm-spacing-sm 0;
+    font-size: $frm-font-size-lg;
+    font-weight: $frm-font-weight-medium;
+  }
+
+  p {
+    margin: 0 0 $frm-spacing-md 0;
+    font-size: $frm-font-size-base;
+    color: $frm-text-secondary;
+  }
+}
+
+// ============================================================================
+// STATUS BADGES
+// ============================================================================
+
+.frm-status-badge {
+  @include frm-status-badge;
+}
+
+// ============================================================================
+// BUTTON STYLES
+// ============================================================================
+// NOTE: These styles are scoped to .frm-layout to prevent leaking to the main navbar
+// The ::ng-deep is still needed for Angular Material component styling
+//
+// ALSO: :host ::ng-deep overrides are added so that components importing this
+// file directly get correct button colors regardless of DOM nesting.
+
+// Component-scoped button overrides (works when imported in any component SCSS)
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+  .mat-mdc-raised-button.mat-warn {
+    background-color: #f44336 !important;
+    color: white !important;
+  }
+  .mat-mdc-raised-button.mat-accent {
+    background-color: #00bcd4 !important;
+    color: white !important;
+  }
+  .mat-mdc-outlined-button.mat-primary,
+  .mat-mdc-stroked-button.mat-primary {
+    border-color: #1976d2 !important;
+    color: #1976d2 !important;
+  }
+  .mat-mdc-outlined-button.mat-primary:hover,
+  .mat-mdc-stroked-button.mat-primary:hover {
+    background-color: rgba(25, 118, 210, 0.08) !important;
+  }
+  .mat-mdc-button.mat-primary,
+  .mat-mdc-button {
+    color: #1976d2 !important;
+  }
+  // Orange buttons
+  .mat-mdc-raised-button.btn-orange {
+    background-color: #FF6B00 !important;
+    color: white !important;
+  }
+  .mat-mdc-outlined-button.btn-orange,
+  .mat-mdc-stroked-button.btn-orange {
+    border-color: #FF6B00 !important;
+    color: #FF6B00 !important;
+  }
+  // Green buttons
+  .mat-mdc-raised-button.btn-green {
+    background-color: #4CAF50 !important;
+    color: white !important;
+  }
+}
+
+// Primary raised buttons
+.frm-layout ::ng-deep .mat-mdc-raised-button.mat-primary {
+  background-color: #1976d2 !important;
+  color: white !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+  padding: 0 16px;
+  min-height: 36px;
+
+  &:hover:not([disabled]) {
+    background-color: #1565c0 !important;
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+  }
+
+  &[disabled] {
+    background-color: #e0e0e0 !important;
+    color: #9e9e9e !important;
+    box-shadow: none;
+    opacity: 0.6;
+  }
+
+  .mat-icon {
+    margin-right: 8px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Accent raised buttons
+.frm-layout ::ng-deep .mat-mdc-raised-button.mat-accent {
+  background-color: #00bcd4 !important;
+  color: white !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 188, 212, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover:not([disabled]) {
+    background-color: #00acc1 !important;
+    box-shadow: 0 4px 8px rgba(0, 188, 212, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+  }
+}
+
+// Warn raised buttons
+.frm-layout ::ng-deep .mat-mdc-raised-button.mat-warn {
+  background-color: #f44336 !important;
+  color: white !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover:not([disabled]) {
+    background-color: #e53935 !important;
+    box-shadow: 0 4px 8px rgba(244, 67, 54, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+  }
+}
+
+// Stroked/Outlined buttons
+.frm-layout ::ng-deep .mat-mdc-outlined-button,
+.frm-layout ::ng-deep .mat-mdc-stroked-button {
+  border: 1.5px solid #1976d2 !important;
+  color: #1976d2 !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+  padding: 0 15px;
+  min-height: 36px;
+
+  &:hover:not([disabled]) {
+    background-color: rgba(25, 118, 210, 0.08) !important;
+    border-color: #1565c0 !important;
+    color: #1565c0 !important;
+    transform: translateY(-1px);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+    background-color: rgba(25, 118, 210, 0.12) !important;
+  }
+
+  &[disabled] {
+    border-color: #e0e0e0 !important;
+    color: #9e9e9e !important;
+    opacity: 0.6;
+  }
+
+  .mat-icon {
+    margin-right: 8px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Flat/Text buttons
+.frm-layout ::ng-deep .mat-mdc-button {
+  color: #1976d2 !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+  padding: 0 16px;
+  min-height: 36px;
+
+  &:hover:not([disabled]) {
+    background-color: rgba(25, 118, 210, 0.08) !important;
+    color: #1565c0 !important;
+  }
+
+  &:active:not([disabled]) {
+    background-color: rgba(25, 118, 210, 0.12) !important;
+  }
+
+  &[disabled] {
+    color: #9e9e9e !important;
+    opacity: 0.6;
+  }
+
+  .mat-icon {
+    margin-right: 8px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Icon buttons
+.frm-layout ::ng-deep .mat-mdc-icon-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+
+  &:hover:not([disabled]) {
+    background-color: rgba(25, 118, 210, 0.08) !important;
+    transform: scale(1.1);
+  }
+
+  &:active:not([disabled]) {
+    transform: scale(1);
+    background-color: rgba(25, 118, 210, 0.12) !important;
+  }
+
+  &[disabled] {
+    opacity: 0.4;
+  }
+
+  .mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// ============================================================================
+// CUSTOM BUTTON COLORS (Orange for Add/Create, Green for Export CSV)
+// ============================================================================
+
+// Orange "Add/Create" buttons
+.frm-layout ::ng-deep .mat-mdc-raised-button.btn-orange,
+.btn-orange.mat-mdc-raised-button {
+  background-color: #FF6B00 !important;
+  color: white !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(255, 107, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+
+  &:hover:not([disabled]) {
+    background-color: #E65C00 !important;
+    box-shadow: 0 4px 8px rgba(255, 107, 0, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(255, 107, 0, 0.3);
+  }
+
+  &[disabled] {
+    background-color: #e0e0e0 !important;
+    color: #9e9e9e !important;
+    box-shadow: none;
+    opacity: 0.6;
+  }
+
+  .mat-icon {
+    margin-right: 8px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Orange stroked variant
+.frm-layout ::ng-deep .mat-mdc-outlined-button.btn-orange,
+.frm-layout ::ng-deep .mat-mdc-stroked-button.btn-orange,
+.btn-orange.mat-mdc-outlined-button,
+.btn-orange.mat-mdc-stroked-button {
+  border: 1.5px solid #FF6B00 !important;
+  color: #FF6B00 !important;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover:not([disabled]) {
+    background-color: rgba(255, 107, 0, 0.08) !important;
+    border-color: #E65C00 !important;
+    color: #E65C00 !important;
+  }
+
+  .mat-icon {
+    margin-right: 8px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Green "Export" buttons
+.frm-layout ::ng-deep .mat-mdc-raised-button.btn-green,
+.btn-green.mat-mdc-raised-button {
+  background-color: #4CAF50 !important;
+  color: white !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+
+  &:hover:not([disabled]) {
+    background-color: #43A047 !important;
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  }
+
+  &[disabled] {
+    background-color: #e0e0e0 !important;
+    color: #9e9e9e !important;
+    box-shadow: none;
+    opacity: 0.6;
+  }
+
+  .mat-icon {
+    margin-right: 8px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// FAB buttons
+.frm-layout ::ng-deep .mat-mdc-fab,
+.frm-layout ::ng-deep .mat-mdc-mini-fab {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover:not([disabled]) {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.19), 0 6px 12px rgba(0, 0, 0, 0.28);
+    transform: translateY(-2px);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  }
+}
+
+// Button groups
+.button-group,
+.header-actions,
+.frm-page-actions,
+.frm-detail-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+
+  button {
+    min-width: 100px;
+
+    @include frm-responsive(xs) {
+      min-width: auto;
+      flex: 1;
+    }
+  }
+}
+
+// Special button types
+button[aria-label*="Export"],
+button[aria-label*="Download"] {
+  .mat-icon {
+    color: #4caf50 !important;
+  }
+}
+
+button[aria-label*="Delete"],
+button[aria-label*="Remove"],
+button.delete-action {
+  &:hover:not([disabled]) {
+    color: #d32f2f !important;
+    
+    .mat-icon {
+      color: #d32f2f !important;
+    }
+  }
+}
+
+// ============================================================================
+// DATA TABLES
+// ============================================================================
+
+.frm-table-container {
+  @include frm-card;
+  overflow-x: auto;
+  @include frm-scrollbar;
+
+  table {
+    @include frm-table;
+  }
+
+  .mat-column-actions {
+    width: 120px;
+    text-align: right;
+
+    button[mat-icon-button] {
+      transition: all 0.2s ease;
+
+      mat-icon {
+        color: #757575;
+        transition: color 0.2s ease;
+      }
+
+      &:hover {
+        mat-icon {
+          color: #1976d2;
+        }
+      }
+    }
+
+    // Menu trigger button
+    button[mat-icon-button][aria-label*="actions"] {
+      mat-icon {
+        color: #757575;
+      }
+
+      &:hover mat-icon {
+        color: #1976d2;
+      }
+    }
+  }
+
+  .mat-column-status {
+    width: 120px;
+  }
+
+  .mat-column-select {
+    width: 56px;
+  }
+}
+
+// ============================================================================
+// FILTER PANELS
+// ============================================================================
+
+.frm-filter-panel {
+  @include frm-card;
+  margin-bottom: $frm-spacing-md;
+
+  .frm-filter-header {
+    @include frm-flex-between;
+    margin-bottom: $frm-spacing-md;
+
+    h3 {
+      margin: 0;
+      font-size: $frm-font-size-md;
+      font-weight: $frm-font-weight-medium;
+    }
+  }
+
+  .frm-filter-content {
+    display: flex;
+    gap: $frm-spacing-md;
+    flex-wrap: wrap;
+
+    .mat-form-field {
+      min-width: 200px;
+      flex: 1;
+    }
+  }
+}
+
+// ============================================================================
+// FORMS
+// ============================================================================
+
+.frm-form {
+  .frm-form-section {
+    margin-bottom: $frm-spacing-xl;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h3 {
+      font-size: $frm-font-size-md;
+      font-weight: $frm-font-weight-medium;
+      margin-bottom: $frm-spacing-md;
+      color: $frm-text-secondary;
+    }
+  }
+
+  .frm-form-row {
+    display: flex;
+    gap: $frm-spacing-md;
+    margin-bottom: $frm-spacing-md;
+
+    @include frm-responsive(xs) {
+      flex-direction: column;
+    }
+
+    .frm-form-field {
+      flex: 1;
+    }
+  }
+
+  .frm-form-actions {
+    @include frm-flex-between;
+    padding-top: $frm-spacing-lg;
+    border-top: $frm-border-width solid $frm-border-light;
+    gap: $frm-spacing-sm;
+
+    @include frm-responsive(xs) {
+      flex-direction: column-reverse;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// ============================================================================
+// DETAIL VIEWS
+// ============================================================================
+
+.frm-detail-container {
+  @include frm-card;
+
+  .frm-detail-header {
+    @include frm-flex-between;
+    padding-bottom: $frm-spacing-md;
+    margin-bottom: $frm-spacing-md;
+    border-bottom: $frm-border-width solid $frm-border-light;
+
+    h2 {
+      margin: 0;
+      font-size: $frm-font-size-xl;
+      font-weight: $frm-font-weight-medium;
+    }
+
+    .frm-detail-actions {
+      display: flex;
+      gap: $frm-spacing-sm;
+    }
+  }
+
+  .frm-detail-section {
+    margin-bottom: $frm-spacing-lg;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h3 {
+      font-size: $frm-font-size-md;
+      font-weight: $frm-font-weight-medium;
+      margin-bottom: $frm-spacing-md;
+      color: $frm-text-secondary;
+    }
+  }
+
+  .frm-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: $frm-spacing-md;
+  }
+
+  .frm-detail-field {
+    .frm-detail-label {
+      font-size: $frm-font-size-sm;
+      font-weight: $frm-font-weight-medium;
+      color: $frm-text-secondary;
+      margin-bottom: $frm-spacing-xs;
+    }
+
+    .frm-detail-value {
+      font-size: $frm-font-size-base;
+      color: $frm-text-primary;
+    }
+  }
+}
+
+// ============================================================================
+// LIST VIEWS
+// ============================================================================
+
+.frm-list-container {
+  @include frm-card;
+
+  .frm-list-header {
+    @include frm-card-header;
+  }
+
+  .frm-list-filters {
+    display: flex;
+    gap: $frm-spacing-md;
+    margin-bottom: $frm-spacing-md;
+    flex-wrap: wrap;
+  }
+
+  .frm-list-content {
+    table {
+      @include frm-table;
+    }
+  }
+}
+
+// ============================================================================
+// RESPONSIVE UTILITIES
+// ============================================================================
+
+.frm-hide-xs {
+  @include frm-responsive(xs) {
+    display: none !important;
+  }
+}
+
+.frm-hide-sm {
+  @include frm-responsive(sm) {
+    display: none !important;
+  }
+}
+
+.frm-show-xs {
+  display: none !important;
+  
+  @include frm-responsive(xs) {
+    display: block !important;
+  }
+}

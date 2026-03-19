@@ -1,0 +1,268 @@
+<div class="timecard-dashboard" role="main" id="main-content" tabindex="-1">
+  <!-- Breadcrumb Navigation -->
+  <app-breadcrumb></app-breadcrumb>
+  
+  <!-- Header -->
+  <div class="timecard-header">
+    <h1 id="timecard-title">My Timecard</h1>
+    <button 
+      mat-icon-button 
+      (click)="onRefresh()" 
+      [disabled]="loading$ | async" 
+      matTooltip="Refresh timecard" 
+      aria-label="Refresh timecard data">
+      <mat-icon aria-hidden="true">refresh</mat-icon>
+    </button>
+  </div>
+  
+  <!-- Loading indicator -->
+  <mat-progress-bar 
+    *ngIf="loading$ | async" 
+    mode="indeterminate" 
+    role="progressbar" 
+    aria-label="Loading timecard data">
+  </mat-progress-bar>
+  
+  <!-- Error message -->
+  <mat-card *ngIf="error$ | async as error" class="error-card" role="alert" aria-live="assertive">
+    <mat-card-content>
+      <mat-icon color="warn" aria-hidden="true">error</mat-icon>
+      <span>{{ error }}</span>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Tab Group -->
+  <mat-tab-group class="timecard-tabs" [(selectedIndex)]="selectedTabIndex" (selectedTabChange)="onTabChange($event)">
+    <!-- Daily View Tab -->
+    <mat-tab label="Daily View">
+      <ng-template matTabContent>
+        <!-- Start Time Entry Card (shown when not clocked in) -->
+        <section class="start-entry-section" *ngIf="!(activeTimeEntry$ | async)" role="region" aria-labelledby="start-entry-heading">
+          <mat-card class="start-entry-card">
+            <mat-card-header>
+              <div class="start-entry-card-header">
+                <mat-icon class="start-entry-icon">play_circle</mat-icon>
+                <div>
+                  <mat-card-title id="start-entry-heading">Start a New Time Entry</mat-card-title>
+                  <mat-card-subtitle>Select a job to clock in and start tracking your time</mat-card-subtitle>
+                </div>
+              </div>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="job-selection" *ngIf="(jobs$ | async) as jobs">
+                <div *ngIf="jobs.length === 0" class="no-jobs">
+                  <mat-icon>info</mat-icon>
+                  <p>No jobs available</p>
+                </div>
+                
+                <mat-radio-group [(ngModel)]="selectedJobId" class="job-cards" *ngIf="jobs.length > 0">
+                  <div *ngFor="let job of jobs" 
+                       class="job-card" 
+                       [class.selected]="selectedJobId === job.id"
+                       (click)="selectJob(job.id)">
+                    <div class="job-card-content">
+                      <div class="job-card-left">
+                        <div class="job-id">{{ job.jobId }}</div>
+                        <div class="job-client">{{ job.client }}</div>
+                        <div class="job-site">{{ job.siteName }}</div>
+                        <div class="job-address">{{ formatAddress(job.siteAddress) }}</div>
+                      </div>
+                      <div class="job-card-right">
+                        <frm-status-badge [status]="job.status"></frm-status-badge>
+                        <mat-radio-button 
+                          [value]="job.id"
+                          (click)="$event.stopPropagation()"
+                          [attr.aria-label]="'Select job ' + job.jobId">
+                        </mat-radio-button>
+                      </div>
+                    </div>
+                  </div>
+                </mat-radio-group>
+              </div>
+            </mat-card-content>
+            <mat-card-actions align="end">
+              <button 
+                mat-raised-button 
+                color="primary" 
+                (click)="startTimeEntry()" 
+                [disabled]="!selectedJobId"
+                class="start-button">
+                <mat-icon>play_circle</mat-icon>
+                Start Time Entry
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </section>
+        
+        <!-- Active Time Entry Section -->
+        <section class="active-section" *ngIf="(activeTimeEntry$ | async) as activeEntry" role="region" aria-labelledby="active-entry-heading">
+          <h2 id="active-entry-heading">Currently Clocked In</h2>
+          <mat-card class="active-card">
+            <mat-card-content>
+              <frm-time-tracker 
+                *ngIf="activeJob" 
+                [job]="activeJob"
+                [isAdmin]="false">
+              </frm-time-tracker>
+              <div *ngIf="!activeJob" class="loading-job">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Loading job details...</p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </section>
+        
+        <!-- Today's Summary -->
+        <section class="summary-section" role="region" aria-labelledby="today-summary-heading">
+          <h2 id="today-summary-heading">Today's Summary</h2>
+          <div class="summary-grid">
+            <mat-card class="summary-card" role="article" aria-label="Today's hours worked">
+              <mat-card-content>
+                <div class="summary-icon" aria-hidden="true">
+                  <mat-icon>access_time</mat-icon>
+                </div>
+                <div class="summary-content">
+                  <div class="summary-label">Hours Worked</div>
+                  <div class="summary-value" aria-live="polite">{{ formatHours(todayTotalHours) }}</div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="summary-card" role="article" aria-label="Today's mileage">
+              <mat-card-content>
+                <div class="summary-icon" aria-hidden="true">
+                  <mat-icon>directions_car</mat-icon>
+                </div>
+                <div class="summary-content">
+                  <div class="summary-label">Mileage</div>
+                  <div class="summary-value" aria-live="polite">{{ todayTotalMileage | number:'1.1-1' }} mi</div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="summary-card" role="article" aria-label="Today's jobs">
+              <mat-card-content>
+                <div class="summary-icon" aria-hidden="true">
+                  <mat-icon>work</mat-icon>
+                </div>
+                <div class="summary-content">
+                  <div class="summary-label">Jobs</div>
+                  <div class="summary-value" aria-live="polite">{{ (todayTimeEntries$ | async)?.length || 0 }}</div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </section>
+        
+        <!-- Today's Time Entries -->
+        <section class="entries-section" role="region" aria-labelledby="today-entries-heading">
+          <h2 id="today-entries-heading">Today's Time Entries</h2>
+          <mat-card>
+            <mat-card-content>
+              <div class="entries-table-container">
+                <table mat-table [dataSource]="todayTimeEntriesData" class="entries-table" role="table" aria-labelledby="today-entries-heading">
+                  <!-- Job Column -->
+                  <ng-container matColumnDef="job">
+                    <th mat-header-cell *matHeaderCellDef role="columnheader">Job</th>
+                    <td mat-cell *matCellDef="let entry" role="cell">
+                      <div class="job-cell">
+                        <span class="job-id">{{ entry.jobId }}</span>
+                      </div>
+                    </td>
+                  </ng-container>
+                  
+                  <!-- Clock In Column -->
+                  <ng-container matColumnDef="clockIn">
+                    <th mat-header-cell *matHeaderCellDef role="columnheader">Clock In</th>
+                    <td mat-cell *matCellDef="let entry" role="cell">
+                      <div class="time-location-cell">
+                        <div class="time">{{ formatTime(entry.clockInTime) }}</div>
+                        <div class="location" *ngIf="entry.clockInLocation">
+                          <mat-icon class="location-icon">location_on</mat-icon>
+                          <div class="location-details">
+                            <a 
+                              [href]="getGoogleMapsLink(entry.clockInLocation)" 
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="location-link"
+                              [matTooltip]="'View on Google Maps'"
+                              matTooltipPosition="above">
+                              <div class="location-address">{{ getLocationAddress(entry.clockInLocation) }}</div>
+                              <div class="location-coords">{{ formatLocation(entry.clockInLocation) }}</div>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </ng-container>
+                  
+                  <!-- Clock Out Column -->
+                  <ng-container matColumnDef="clockOut">
+                    <th mat-header-cell *matHeaderCellDef role="columnheader">Clock Out</th>
+                    <td mat-cell *matCellDef="let entry" role="cell">
+                      <div class="time-location-cell" *ngIf="entry.clockOutTime">
+                        <div class="time">{{ formatTime(entry.clockOutTime) }}</div>
+                        <div class="location" *ngIf="entry.clockOutLocation">
+                          <mat-icon class="location-icon">location_on</mat-icon>
+                          <div class="location-details">
+                            <a 
+                              [href]="getGoogleMapsLink(entry.clockOutLocation)" 
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="location-link"
+                              [matTooltip]="'View on Google Maps'"
+                              matTooltipPosition="above">
+                              <div class="location-address">{{ getLocationAddress(entry.clockOutLocation) }}</div>
+                              <div class="location-coords">{{ formatLocation(entry.clockOutLocation) }}</div>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                      <span *ngIf="!entry.clockOutTime" class="active-badge">
+                        <mat-icon>schedule</mat-icon> Active
+                      </span>
+                    </td>
+                  </ng-container>
+                  
+                  <!-- Hours Column -->
+                  <ng-container matColumnDef="hours">
+                    <th mat-header-cell *matHeaderCellDef role="columnheader">Hours</th>
+                    <td mat-cell *matCellDef="let entry" role="cell">
+                      {{ formatHours(calculateHours(entry)) }}
+                    </td>
+                  </ng-container>
+                  
+                  <!-- Mileage Column -->
+                  <ng-container matColumnDef="mileage">
+                    <th mat-header-cell *matHeaderCellDef role="columnheader">Mileage</th>
+                    <td mat-cell *matCellDef="let entry" role="cell">
+                      <span *ngIf="entry.mileage">{{ entry.mileage | number:'1.1-1' }} mi</span>
+                      <span *ngIf="!entry.mileage" class="no-data">-</span>
+                    </td>
+                  </ng-container>
+                  
+                  <tr mat-header-row *matHeaderRowDef="['job', 'clockIn', 'clockOut', 'hours', 'mileage']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['job', 'clockIn', 'clockOut', 'hours', 'mileage'];"></tr>
+                </table>
+                
+                <!-- Empty State -->
+                <div *ngIf="todayTimeEntriesData.length === 0" class="empty-state" role="status">
+                  <mat-icon aria-hidden="true">info</mat-icon>
+                  <p>No time entries for today</p>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </section>
+  
+      </ng-template>
+    </mat-tab>
+    
+    <!-- Weekly View Tab -->
+    <mat-tab label="Weekly View">
+      <ng-template matTabContent>
+        <frm-timecard-weekly-view></frm-timecard-weekly-view>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

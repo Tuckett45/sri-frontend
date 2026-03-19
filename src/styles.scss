@@ -4,6 +4,12 @@
 @import "primeicons/primeicons.css";
 @import "primeflex/primeflex.css";
 
+// ATLAS Brand Styles
+@import 'styles/atlas-variables';
+@import 'styles/atlas-components';
+
+// Field Resource Management Styles
+@import 'styles/field-resource-management';
 
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 

@@ -1,0 +1,456 @@
+.technician-form-container {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+// Material form field input text color override
+::ng-deep .mat-mdc-input-element {
+  color: #000000 !important;
+}
+
+::ng-deep .mat-mdc-form-field {
+  // Form field labels
+  .mat-mdc-floating-label,
+  .mdc-floating-label {
+    color: #000000 !important;
+  }
+
+  // Input placeholders
+  .mat-mdc-input-element::placeholder {
+    color: #000000 !important;
+    opacity: 0.6;
+  }
+
+  .mat-mdc-select-value-text {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-select-placeholder {
+    color: #000000 !important;
+    opacity: 0.6;
+  }
+
+  // Additional placeholder selectors for better coverage
+  input::placeholder,
+  textarea::placeholder {
+    color: #000000 !important;
+    opacity: 0.6;
+  }
+
+  input::-webkit-input-placeholder,
+  textarea::-webkit-input-placeholder {
+    color: #000000 !important;
+    opacity: 0.6;
+  }
+
+  input::-moz-placeholder,
+  textarea::-moz-placeholder {
+    color: #000000 !important;
+    opacity: 0.6;
+  }
+
+  input:-ms-input-placeholder,
+  textarea:-ms-input-placeholder {
+    color: #000000 !important;
+    opacity: 0.6;
+  }
+}
+
+// Target Material labels more specifically
+::ng-deep {
+  .mat-mdc-form-field-label,
+  .mat-mdc-form-field-hint,
+  label.mat-mdc-floating-label {
+    color: #000000 !important;
+  }
+}
+
+.form-header {
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+  }
+}
+
+mat-stepper {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+.step-content {
+  padding: 24px 0;
+
+  h3 {
+    margin: 0 0 24px 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  h4 {
+    margin: 16px 0 8px 0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .instruction {
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  mat-form-field {
+    flex: 1;
+  }
+
+  button[mat-icon-button] {
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.selected-skills {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+
+  h4 {
+    margin-top: 0;
+  }
+
+  mat-chip-list {
+    mat-chip {
+      margin: 4px;
+    }
+  }
+}
+
+// Ensure chip text is black
+::ng-deep mat-chip {
+  .mdc-evolution-chip__text-label,
+  .mat-mdc-chip-action-label {
+    color: #000000 !important;
+  }
+}
+
+.certification-item {
+  margin-bottom: 16px;
+
+  mat-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    mat-card-content {
+      padding: 16px;
+    }
+  }
+}
+
+.add-cert-button {
+  margin-top: 16px;
+  width: 100%;
+
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+mat-calendar {
+  margin: 16px auto;
+  display: block;
+  max-width: 400px;
+}
+
+::ng-deep {
+  .selected-unavailable-date {
+    .mat-calendar-body-cell-content {
+      background-color: #ffcdd2 !important;
+      color: #c62828 !important;
+      border-radius: 50%;
+    }
+  }
+
+  // Calendar selected date styling
+  .mat-calendar-body-selected {
+    background-color: #1976d2 !important;
+    color: #ffffff !important;
+  }
+
+  .mat-calendar-body-today:not(.mat-calendar-body-selected) {
+    border-color: #1976d2 !important;
+  }
+
+  .mat-calendar-body-cell:hover .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+    background-color: rgba(25, 118, 210, 0.1) !important;
+  }
+
+  // Make calendar text more visible
+  .mat-calendar-body-label,
+  .mat-calendar-body-cell-content {
+    color: #000000 !important;
+  }
+
+  .mat-calendar-table-header th {
+    color: #000000 !important;
+  }
+
+  .mat-calendar-period-button,
+  .mat-calendar-arrow {
+    color: #ff6f00 !important;
+  }
+
+  // Target the actual arrow button elements
+  .mat-calendar-previous-button,
+  .mat-calendar-next-button {
+    color: #ff6f00 !important;
+  }
+
+  // Target SVG icons inside arrow buttons
+  .mat-calendar-previous-button svg,
+  .mat-calendar-next-button svg {
+    fill: #ff6f00 !important;
+  }
+
+  // Target Material icon elements
+  button[mat-icon-button].mat-calendar-previous-button,
+  button[mat-icon-button].mat-calendar-next-button {
+    color: #ff6f00 !important;
+
+    mat-icon {
+      color: #ff6f00 !important;
+    }
+  }
+
+  .mat-calendar-header {
+    color: #000000 !important;
+  }
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+
+      &.selected {
+        background-color: #ffcdd2;
+      }
+
+      &.available {
+        background-color: #ffffff;
+      }
+    }
+  }
+}
+
+.selected-dates {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+
+  h4 {
+    margin-top: 0;
+  }
+
+  mat-chip-list {
+    mat-chip {
+      margin: 4px;
+    }
+  }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 24px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+// Material form field customization
+mat-form-field {
+  &.mat-form-field-appearance-outline {
+    .mat-form-field-wrapper {
+      padding-bottom: 0;
+    }
+  }
+}
+
+// Error styling
+mat-error {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+  .technician-form-container {
+    padding: 16px;
+  }
+
+  .form-header {
+    h2 {
+      font-size: 24px;
+    }
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    button[mat-icon-button] {
+      align-self: flex-end;
+      margin-top: 0;
+    }
+  }
+
+  mat-calendar {
+    max-width: 100%;
+  }
+
+  .step-actions,
+  .form-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .technician-form-container {
+    padding: 12px;
+  }
+
+  .form-header {
+    h2 {
+      font-size: 20px;
+    }
+  }
+
+  .step-content {
+    padding: 16px 0;
+
+    h3 {
+      font-size: 18px;
+    }
+  }
+
+  .certification-item {
+    mat-card {
+      mat-card-content {
+        padding: 12px;
+      }
+    }
+  }
+}
+
+// Stepper customization for mobile
+@media (max-width: 600px) {
+  ::ng-deep {
+    .mat-horizontal-stepper-header-container {
+      display: none;
+    }
+
+    .mat-horizontal-content-container {
+      padding: 0;
+    }
+  }
+}
+
+
+// Enhanced stepper styling
+::ng-deep {
+  .mat-stepper-horizontal-line {
+    border-top-color: #e0e0e0 !important;
+  }
+
+  .mat-step-header {
+    padding: 16px 24px !important;
+
+    .mat-step-icon {
+      background-color: #1976d2 !important;
+      color: #ffffff !important;
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 16px !important;
+      font-weight: 600 !important;
+    }
+
+    .mat-step-icon-selected {
+      background-color: #ff6f00 !important;
+    }
+
+    .mat-step-icon-state-edit {
+      background-color: #4caf50 !important;
+    }
+
+    .mat-step-label {
+      font-size: 16px !important;
+      font-weight: 500 !important;
+      color: #000000 !important;
+    }
+
+    .mat-step-label-selected {
+      font-weight: 600 !important;
+      color: #1976d2 !important;
+    }
+
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.05) !important;
+    }
+  }
+
+  .mat-step-header.cdk-keyboard-focused,
+  .mat-step-header.cdk-program-focused {
+    background-color: rgba(25, 118, 210, 0.1) !important;
+  }
+}

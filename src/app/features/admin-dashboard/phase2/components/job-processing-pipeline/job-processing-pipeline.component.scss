@@ -1,0 +1,561 @@
+.job-processing-pipeline {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .pipeline-header {
+    margin-bottom: 24px;
+
+    h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0 0 8px 0;
+    }
+
+    .job-info {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+    }
+  }
+
+  // Pipeline Progress
+  .pipeline-progress {
+    margin-bottom: 32px;
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background-color: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%);
+        transition: width 0.3s ease;
+      }
+    }
+
+    .progress-text {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      margin: 0;
+    }
+  }
+
+  // Error Container
+  .error-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background-color: #ffebee;
+    border: 1px solid #ef5350;
+    border-radius: 8px;
+    margin-bottom: 24px;
+
+    .icon-error {
+      color: #ef5350;
+      font-size: 20px;
+    }
+
+    .error-message {
+      color: #c62828;
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+
+  // Pipeline Stages
+  .pipeline-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .stage-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    // Stage Card
+    .stage-card {
+      width: 100%;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s ease;
+
+      &[data-status="pending"] {
+        border-color: #e0e0e0;
+        opacity: 0.7;
+      }
+
+      &[data-status="running"] {
+        border-color: #2196f3;
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+      }
+
+      &[data-status="completed"] {
+        border-color: #4caf50;
+        background-color: #f1f8f4;
+      }
+
+      &[data-status="failed"] {
+        border-color: #ef5350;
+        background-color: #ffebee;
+      }
+
+      &[data-status="skipped"] {
+        border-color: #ff9800;
+        background-color: #fff3e0;
+      }
+
+      .stage-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+
+        .stage-number {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background-color: #2196f3;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          font-size: 18px;
+          flex-shrink: 0;
+        }
+
+        .stage-info {
+          flex: 1;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .stage-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0;
+          }
+
+          .stage-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+
+            &[data-status="pending"] {
+              background-color: #e0e0e0;
+              color: #666;
+            }
+
+            &[data-status="running"] {
+              background-color: #bbdefb;
+              color: #1976d2;
+            }
+
+            &[data-status="completed"] {
+              background-color: #c8e6c9;
+              color: #2e7d32;
+            }
+
+            &[data-status="failed"] {
+              background-color: #ffcdd2;
+              color: #c62828;
+            }
+
+            &[data-status="skipped"] {
+              background-color: #ffe0b2;
+              color: #e65100;
+            }
+          }
+        }
+      }
+
+      .stage-icon {
+        text-align: center;
+        margin-bottom: 16px;
+
+        i {
+          font-size: 48px;
+        }
+
+        .icon-pending {
+          color: #9e9e9e;
+        }
+
+        .icon-running {
+          color: #2196f3;
+        }
+
+        .icon-success {
+          color: #4caf50;
+        }
+
+        .icon-error {
+          color: #ef5350;
+        }
+
+        .icon-skip {
+          color: #ff9800;
+        }
+
+        .spinner {
+          animation: spin 1s linear infinite;
+        }
+      }
+
+      .stage-details {
+        margin-bottom: 16px;
+
+        .stage-dependencies,
+        .stage-retry-info {
+          margin-bottom: 8px;
+          font-size: 14px;
+          color: #666;
+
+          .label {
+            font-weight: 600;
+            margin-right: 8px;
+          }
+
+          .dependencies-list,
+          .retry-count {
+            color: #1a1a1a;
+          }
+        }
+
+        .stage-result {
+          margin-top: 12px;
+          padding: 12px;
+          border-radius: 8px;
+          font-size: 14px;
+
+          .result-success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+
+            .result-message {
+              margin: 0 0 4px 0;
+              font-weight: 500;
+            }
+
+            .result-duration {
+              margin: 0;
+              font-size: 12px;
+              color: #558b2f;
+            }
+          }
+
+          .result-failure {
+            background-color: #ffebee;
+            color: #c62828;
+
+            .result-error {
+              margin: 0;
+              font-weight: 500;
+            }
+          }
+
+          .result-skipped {
+            background-color: #fff3e0;
+            color: #e65100;
+
+            .result-skip-reason {
+              margin: 0;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+
+      .stage-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+
+        button {
+          padding: 8px 16px;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+
+          i {
+            font-size: 16px;
+          }
+        }
+
+        .btn-retry {
+          background-color: #2196f3;
+          color: white;
+
+          &:hover:not(:disabled) {
+            background-color: #1976d2;
+          }
+        }
+
+        .btn-skip {
+          background-color: #ff9800;
+          color: white;
+
+          &:hover:not(:disabled) {
+            background-color: #f57c00;
+          }
+        }
+      }
+    }
+
+    // Stage Connector
+    .stage-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 40px;
+      position: relative;
+
+      .connector-line {
+        width: 2px;
+        height: 100%;
+        background-color: #e0e0e0;
+        transition: background-color 0.3s ease;
+
+        &.active {
+          background-color: #4caf50;
+        }
+      }
+
+      .connector-arrow {
+        position: absolute;
+        bottom: -4px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 8px solid #e0e0e0;
+      }
+    }
+  }
+
+  // Modal Overlay
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+
+    .modal-dialog {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #e0e0e0;
+
+        h3 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 600;
+          color: #1a1a1a;
+        }
+
+        .btn-close {
+          background: none;
+          border: none;
+          font-size: 28px;
+          color: #666;
+          cursor: pointer;
+          padding: 0;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          transition: background-color 0.2s ease;
+
+          &:hover {
+            background-color: #f5f5f5;
+          }
+        }
+      }
+
+      .modal-body {
+        padding: 20px;
+
+        p {
+          margin: 0 0 12px 0;
+          color: #666;
+          font-size: 14px;
+        }
+
+        .form-control {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #e0e0e0;
+          border-radius: 6px;
+          font-size: 14px;
+          font-family: inherit;
+          resize: vertical;
+
+          &:focus {
+            outline: none;
+            border-color: #2196f3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+          }
+        }
+      }
+
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 20px;
+        border-top: 1px solid #e0e0e0;
+
+        button {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+
+        .btn-primary {
+          background-color: #2196f3;
+          color: white;
+
+          &:hover:not(:disabled) {
+            background-color: #1976d2;
+          }
+        }
+
+        .btn-secondary {
+          background-color: #e0e0e0;
+          color: #666;
+
+          &:hover {
+            background-color: #d0d0d0;
+          }
+        }
+      }
+    }
+  }
+
+  // Loading Overlay
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e0e0e0;
+      border-top-color: #2196f3;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    p {
+      margin-top: 16px;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  // Animations
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .job-processing-pipeline {
+    padding: 16px;
+
+    .pipeline-header h2 {
+      font-size: 20px;
+    }
+
+    .pipeline-stages .stage-card {
+      padding: 16px;
+
+      .stage-header {
+        .stage-number {
+          width: 32px;
+          height: 32px;
+          font-size: 16px;
+        }
+
+        .stage-info .stage-name {
+          font-size: 16px;
+        }
+      }
+
+      .stage-icon i {
+        font-size: 36px;
+      }
+
+      .stage-actions {
+        flex-direction: column;
+
+        button {
+          width: 100%;
+        }
+      }
+    }
+  }
+}

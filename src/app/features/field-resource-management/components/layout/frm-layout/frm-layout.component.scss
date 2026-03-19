@@ -1,0 +1,172 @@
+.frm-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+// Sidebar Styles
+.frm-sidebar {
+  width: 260px;
+  min-width: 260px;
+  max-width: 260px;
+  background-color: #1e293b;
+  color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease-in-out;
+  z-index: 100;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  height: 100vh;
+  flex-shrink: 0;
+  position: relative;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0; // Prevent header from shrinking
+}
+
+.sidebar-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.sidebar-toggle {
+  color: #f1f5f9;
+
+  @media (min-width: 769px) {
+    display: none;
+  }
+}
+
+// Sidebar Overlay (mobile)
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+
+  @media (max-width: 768px) {
+    display: block;
+    pointer-events: none;
+
+    &.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+// Main Content Area
+.frm-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #f8fafc;
+  min-width: 0; // Prevent flex item from overflowing
+  position: relative;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+}
+
+// Top Bar
+.frm-topbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.menu-toggle {
+  margin-right: 8px;
+
+  @media (min-width: 769px) {
+    display: none;
+  }
+}
+
+.spacer {
+  flex: 1;
+}
+
+// Content Area
+.frm-content {
+  flex: 1;
+  min-height: 0; // Allow flex item to shrink below content size
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+
+  // Hide scrollbar but keep scroll functionality
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE and Edge
+  
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari, Opera
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+// Accessibility
+:host ::ng-deep {
+  // Focus styles
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  // Skip navigation link
+  .skip-nav {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #3b82f6;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+
+    &:focus {
+      top: 0;
+    }
+  }
+}

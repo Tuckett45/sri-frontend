@@ -1,0 +1,17 @@
+<div 
+  class="offline-indicator"
+  [class.online]="isOnline"
+  [class.offline]="!isOnline"
+  [class.visible]="showIndicator"
+  role="status"
+  [attr.aria-live]="showIndicator ? 'polite' : 'off'"
+  [attr.aria-label]="getStatusText()">
+  
+  <span class="material-icons indicator-icon" aria-hidden="true">
+    {{ getIconName() }}
+  </span>
+  
+  <span class="indicator-text">
+    {{ getDisplayText() }}
+  </span>
+</div>

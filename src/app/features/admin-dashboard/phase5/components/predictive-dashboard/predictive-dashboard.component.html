@@ -1,0 +1,319 @@
+<!-- 
+  Predictive Dashboard Component Template
+  
+  Main dashboard displaying forecasts, predictions, and trends with unified controls.
+  
+  **Validates: Requirements 13.1, 13.3, 13.7**
+-->
+
+<div class="predictive-dashboard-container">
+  <!-- Loading Indicator -->
+  <app-loading-indicator 
+    *ngIf="isLoading$ | async" 
+    [overlay]="true"
+    [mode]="'spinner'"
+    [message]="'Loading predictive analytics...'">
+  </app-loading-indicator>
+
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="header-title">
+      <h2>Predictive Analytics Dashboard</h2>
+      <span class="dashboard-type-badge">{{ dashboardType | titlecase }}</span>
+    </div>
+
+    <div class="header-actions">
+      <button 
+        (click)="refreshForecasts()" 
+        class="btn btn-secondary"
+        [disabled]="(isLoading$ | async) || false"
+        title="Refresh Data"
+      >
+        <i class="icon-refresh"></i> Refresh
+      </button>
+      <button 
+        (click)="exportDashboard('pdf')" 
+        class="btn btn-secondary"
+        title="Export as PDF"
+      >
+        <i class="icon-download"></i> PDF
+      </button>
+      <button 
+        (click)="exportDashboard('excel')" 
+        class="btn btn-secondary"
+        title="Export as Excel"
+      >
+        <i class="icon-download"></i> Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- Control Panel -->
+  <div class="control-panel">
+    <!-- Time Horizon Selection -->
+    <div class="control-group time-horizon-control">
+      <label class="control-label">Time Horizon:</label>
+      <div class="button-group">
+        <button 
+          *ngFor="let horizon of availableTimeHorizons"
+          (click)="changeTimeHorizon(horizon)"
+          [class.active]="selectedTimeHorizon === horizon"
+          class="btn btn-outline"
+        >
+          {{ getTimeHorizonLabel(horizon) }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Metric Selection -->
+    <div class="control-group metric-control">
+      <label class="control-label">Metric:</label>
+      <select 
+        [(ngModel)]="selectedMetric" 
+        (change)="selectMetric(selectedMetric)"
+        class="form-select"
+      >
+        <option *ngFor="let metric of availableMetrics" [value]="metric">
+          {{ getMetricLabel(metric) }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Display Options -->
+    <div class="control-group display-options">
+      <label class="checkbox-label">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="showConfidenceIntervals"
+          (change)="toggleConfidenceIntervals()"
+        />
+        Show Confidence Intervals
+      </label>
+      <label class="checkbox-label">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="compareWithActuals"
+          (change)="toggleCompareWithActuals()"
+        />
+        Compare with Historical
+      </label>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading$ | async" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Loading predictive data...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error$ | async as error" class="error-message">
+    <i class="icon-alert"></i>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content" *ngIf="!(isLoading$ | async)">
+    <!-- Forecast Visualization -->
+    <div class="dashboard-section forecast-section">
+      <div class="section-header">
+        <h3>Forecast</h3>
+        <span class="section-subtitle" *ngIf="forecasts.length > 0">
+          Model: {{ forecasts[0].methodology }} | 
+          Confidence: {{ (forecasts[0].confidence.level * 100) | number:'1.0-0' }}%
+        </span>
+      </div>
+      <div class="chart-container">
+        <canvas 
+          *ngIf="forecastChartData"
+          baseChart
+          [data]="forecastChartData"
+          [type]="'line'"
+          [options]="{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top' },
+              tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+              x: { display: true, title: { display: true, text: 'Time' } },
+              y: { display: true, title: { display: true, text: selectedMetric } }
+            }
+          }"
+        ></canvas>
+        <div *ngIf="!forecastChartData" class="no-data-message">
+          <p>No forecast data available for {{ selectedMetric }}</p>
+        </div>
+      </div>
+      <div class="forecast-metadata" *ngIf="forecasts.length > 0">
+        <div class="metadata-item">
+          <span class="label">Generated:</span>
+          <span class="value">{{ forecasts[0].generatedAt | date:'medium' }}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="label">Expires:</span>
+          <span class="value">{{ forecasts[0].expiresAt | date:'medium' }}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="label">Data Points:</span>
+          <span class="value">{{ forecasts[0].dataPoints.length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historical Trend Visualization -->
+    <div class="dashboard-section trend-section">
+      <div class="section-header">
+        <h3>Historical Trend</h3>
+        <span class="section-subtitle" *ngIf="trends.length > 0">
+          Direction: {{ trends[0].direction | titlecase }} | 
+          Strength: {{ (trends[0].strength * 100) | number:'1.0-0' }}%
+        </span>
+      </div>
+      <div class="chart-container">
+        <canvas 
+          *ngIf="trendChartData"
+          baseChart
+          [data]="trendChartData"
+          [type]="'line'"
+          [options]="{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top' },
+              tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+              x: { display: true, title: { display: true, text: 'Time' } },
+              y: { display: true, title: { display: true, text: selectedMetric } }
+            }
+          }"
+        ></canvas>
+        <div *ngIf="!trendChartData" class="no-data-message">
+          <p>No trend data available</p>
+        </div>
+      </div>
+      <div class="trend-statistics" *ngIf="trends.length > 0 && trends[0].statistics">
+        <div class="stat-item">
+          <span class="label">Mean:</span>
+          <span class="value">{{ trends[0].statistics.mean | number:'1.2-2' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">Std Dev:</span>
+          <span class="value">{{ trends[0].statistics.standardDeviation | number:'1.2-2' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">Slope:</span>
+          <span class="value">{{ trends[0].statistics.slope | number:'1.4-4' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison Visualization -->
+    <div class="dashboard-section comparison-section" *ngIf="compareWithActuals">
+      <div class="section-header">
+        <h3>Forecast vs Historical Comparison</h3>
+      </div>
+      <div class="chart-container">
+        <canvas 
+          *ngIf="comparisonChartData"
+          baseChart
+          [data]="comparisonChartData"
+          [type]="'line'"
+          [options]="{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top' },
+              tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+              x: { display: true, title: { display: true, text: 'Time' } },
+              y: { display: true, title: { display: true, text: selectedMetric } }
+            }
+          }"
+        ></canvas>
+        <div *ngIf="!comparisonChartData" class="no-data-message">
+          <p>Comparison data not available</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Predictions Panel -->
+    <div class="dashboard-section predictions-section" *ngIf="predictions.length > 0">
+      <div class="section-header">
+        <h3>Key Predictions</h3>
+        <span class="section-subtitle">{{ predictions.length }} predictions</span>
+      </div>
+      <div class="predictions-list">
+        <div 
+          *ngFor="let prediction of predictions.slice(0, 5)" 
+          class="prediction-card"
+          [class.high-impact]="prediction.impact === 'high' || prediction.impact === 'critical'"
+        >
+          <div class="prediction-header">
+            <span class="prediction-type">{{ prediction.type | titlecase }}</span>
+            <span [class]="'badge badge-' + prediction.impact">
+              {{ prediction.impact | uppercase }}
+            </span>
+          </div>
+          <div class="prediction-description">
+            {{ prediction.description }}
+          </div>
+          <div class="prediction-footer">
+            <span class="probability">
+              Probability: {{ (prediction.probability * 100) | number:'1.0-0' }}%
+            </span>
+            <span class="timeframe">
+              {{ prediction.timeframe.start | date:'shortDate' }} - 
+              {{ prediction.timeframe.end | date:'shortDate' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Anomalies Panel -->
+    <div class="dashboard-section anomalies-section" *ngIf="trends.length > 0 && trends[0].anomalies.length > 0">
+      <div class="section-header">
+        <h3>Detected Anomalies</h3>
+        <span class="section-subtitle">{{ trends[0].anomalies.length }} anomalies</span>
+      </div>
+      <div class="anomalies-list">
+        <div 
+          *ngFor="let anomaly of trends[0].anomalies.slice(0, 5)" 
+          class="anomaly-card"
+        >
+          <div class="anomaly-header">
+            <span class="anomaly-type">
+              <i [class]="'icon-' + anomaly.type"></i>
+              {{ anomaly.type | titlecase }}
+            </span>
+            <span [class]="'badge badge-' + anomaly.severity">
+              {{ anomaly.severity | uppercase }}
+            </span>
+          </div>
+          <div class="anomaly-details">
+            <div class="detail-row">
+              <span class="label">Time:</span>
+              <span class="value">{{ anomaly.timestamp | date:'medium' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Value:</span>
+              <span class="value">{{ anomaly.value | number:'1.2-2' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Expected:</span>
+              <span class="value">{{ anomaly.expectedValue | number:'1.2-2' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Deviation:</span>
+              <span class="value">{{ anomaly.deviation | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,63 @@
+<button mat-icon-button [matMenuTriggerFor]="notificationMenu" aria-label="Open notifications menu">
+  <mat-icon [matBadge]="(unreadCount$ | async) || 0" 
+            [matBadgeHidden]="(unreadCount$ | async) === 0"
+            matBadgeColor="warn"
+            [attr.aria-label]="(unreadCount$ | async) + ' unread notifications'">
+    notifications
+  </mat-icon>
+</button>
+
+<mat-menu #notificationMenu="matMenu" class="notification-menu" role="menu" aria-label="Notifications">
+  <div class="notification-header" (click)="$event.stopPropagation()" role="banner">
+    <h3 id="notification-menu-title">Notifications</h3>
+    <button mat-button color="primary" (click)="onMarkAllAsRead()" 
+            [disabled]="(unreadCount$ | async) === 0"
+            aria-label="Mark all notifications as read">
+      Mark all as read
+    </button>
+  </div>
+
+  <mat-divider role="separator"></mat-divider>
+
+  <div class="notification-list" (click)="$event.stopPropagation()" aria-labelledby="notification-menu-title" aria-live="polite">
+    <ng-container *ngIf="(notifications$ | async)?.length === 0">
+      <div class="empty-state" role="status">
+        <mat-icon aria-hidden="true">notifications_none</mat-icon>
+        <p>No notifications</p>
+      </div>
+    </ng-container>
+
+    <ng-container *ngFor="let group of getGroupKeys()">
+      <div class="notification-group-header" role="heading" aria-level="4">{{ group }}</div>
+      
+      <button mat-menu-item 
+              *ngFor="let notification of groupedNotifications[group]"
+              (click)="onNotificationClick(notification)"
+              [class.unread]="!notification.isRead"
+              [attr.aria-label]="notification.message + (notification.isRead ? '' : ' - unread')">
+        <mat-icon [color]="notification.isRead ? '' : 'primary'" aria-hidden="true">
+          {{ getNotificationIcon(notification.type) }}
+        </mat-icon>
+        <div class="notification-content">
+          <div class="notification-message">{{ notification.message }}</div>
+          <div class="notification-time" aria-label="Received at">{{ notification.createdAt | date:'short' }}</div>
+        </div>
+      </button>
+    </ng-container>
+  </div>
+
+  <mat-divider role="separator"></mat-divider>
+
+  <div class="notification-footer" (click)="$event.stopPropagation()" role="contentinfo">
+    <button mat-icon-button 
+            (click)="toggleNotificationSound()" 
+            [matTooltip]="notificationSoundEnabled ? 'Disable notification sound' : 'Enable notification sound'"
+            [attr.aria-label]="notificationSoundEnabled ? 'Disable notification sound' : 'Enable notification sound'"
+            [attr.aria-pressed]="notificationSoundEnabled">
+      <mat-icon aria-hidden="true">{{ notificationSoundEnabled ? 'volume_up' : 'volume_off' }}</mat-icon>
+    </button>
+    <a mat-button routerLink="/field-resource-management/notification-preferences" aria-label="Go to notification preferences">
+      Notification Preferences
+    </a>
+  </div>
+</mat-menu>

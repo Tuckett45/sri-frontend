@@ -1,0 +1,28 @@
+.offline-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  
+  .offline-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    min-height: 48px;
+    
+    mat-icon {
+      margin-right: 8px;
+    }
+    
+    .offline-message {
+      flex: 1;
+      font-size: 14px;
+    }
+    
+    button {
+      margin-left: auto;
+    }
+  }
+}

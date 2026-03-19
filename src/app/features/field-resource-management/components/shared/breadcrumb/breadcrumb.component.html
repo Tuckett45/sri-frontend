@@ -1,0 +1,37 @@
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <ol class="breadcrumb-list">
+    <!-- Home breadcrumb -->
+    <li class="breadcrumb-item">
+      <a (click)="navigateTo('/field-resource-management')" 
+         class="breadcrumb-link"
+         tabindex="0"
+         (keydown.enter)="navigateTo('/field-resource-management')"
+         (keydown.space)="navigateTo('/field-resource-management')">
+        <mat-icon class="breadcrumb-icon">home</mat-icon>
+        <span class="breadcrumb-label">Field Resources</span>
+      </a>
+    </li>
+
+    <!-- Dynamic breadcrumbs -->
+    <li class="breadcrumb-item" *ngFor="let breadcrumb of breadcrumbs; let i = index">
+      <mat-icon class="breadcrumb-separator">chevron_right</mat-icon>
+      
+      <!-- Clickable breadcrumb (not last) -->
+      <a *ngIf="!isLast(i)"
+         (click)="navigateTo(breadcrumb.url)" 
+         class="breadcrumb-link"
+         tabindex="0"
+         (keydown.enter)="navigateTo(breadcrumb.url)"
+         (keydown.space)="navigateTo(breadcrumb.url)">
+        <span class="breadcrumb-label">{{ breadcrumb.label }}</span>
+      </a>
+      
+      <!-- Current page (last breadcrumb) -->
+      <span *ngIf="isLast(i)" 
+            class="breadcrumb-current"
+            aria-current="page">
+        {{ breadcrumb.label }}
+      </span>
+    </li>
+  </ol>
+</nav>

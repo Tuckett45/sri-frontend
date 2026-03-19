@@ -1,0 +1,503 @@
+.technician-schedule-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fafafa;
+  padding: 24px;
+  gap: 24px;
+}
+
+// Header
+.schedule-header {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.technician-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .technician-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #666;
+  }
+
+  .technician-details {
+    h2 {
+      margin: 0 0 4px 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .technician-role {
+      margin: 0;
+      font-size: 14px;
+      color: #666;
+    }
+  }
+}
+
+// Date Range Selector
+.date-range-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.quick-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .filter-button {
+    min-width: 100px;
+  }
+}
+
+.date-range-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .date-field {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .date-separator {
+    font-size: 14px;
+    color: #666;
+    padding: 0 8px;
+  }
+}
+
+// Summary Card
+.summary-card {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  mat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: #2196f3;
+  }
+
+  .summary-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .summary-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .summary-label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+  }
+}
+
+// Jobs Section
+.jobs-section {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  overflow: auto;
+
+  h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    color: #ccc;
+  }
+
+  h4 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// Jobs List
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.job-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: white;
+
+  &:hover {
+    border-color: #2196f3;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+    transform: translateY(-2px);
+  }
+
+  &.status-not-started {
+    border-left: 6px solid #9e9e9e;
+  }
+
+  &.status-en-route {
+    border-left: 6px solid #2196f3;
+  }
+
+  &.status-on-site {
+    border-left: 6px solid #ff9800;
+  }
+
+  &.status-completed {
+    border-left: 6px solid #4caf50;
+  }
+
+  &.status-issue {
+    border-left: 6px solid #f44336;
+  }
+
+  &.status-cancelled {
+    border-left: 6px solid #757575;
+    opacity: 0.6;
+  }
+}
+
+// Job Header
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.job-id-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.job-id {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.status-not-started {
+    background-color: #f5f5f5;
+    color: #757575;
+  }
+
+  &.status-en-route {
+    background-color: #e3f2fd;
+    color: #1976d2;
+  }
+
+  &.status-on-site {
+    background-color: #fff3e0;
+    color: #e65100;
+  }
+
+  &.status-completed {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.status-issue {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+
+  &.status-cancelled {
+    background-color: #f5f5f5;
+    color: #757575;
+  }
+}
+
+.chevron-icon {
+  color: #999;
+  transition: transform 0.2s;
+
+  .job-card:hover & {
+    transform: translateX(4px);
+    color: #2196f3;
+  }
+}
+
+// Job Details
+.job-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  mat-icon {
+    color: #666;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+  }
+
+  .detail-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .detail-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+  }
+
+  .detail-value {
+    font-size: 14px;
+    color: #333;
+  }
+}
+
+// Skills List
+.skills-list {
+  mat-chip-list {
+    mat-chip {
+      font-size: 11px;
+      min-height: 24px;
+      padding: 4px 8px;
+    }
+  }
+}
+
+.skill-chip {
+  background-color: #e3f2fd !important;
+  color: #1976d2 !important;
+}
+
+// Priority Badge
+.priority-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .technician-schedule-container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .schedule-header,
+  .summary-card,
+  .jobs-section {
+    padding: 16px;
+  }
+
+  .summary-card {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .technician-schedule-container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .schedule-header {
+    padding: 16px;
+  }
+
+  .technician-info {
+    .technician-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+
+    .technician-details {
+      h2 {
+        font-size: 20px;
+      }
+
+      .technician-role {
+        font-size: 13px;
+      }
+    }
+  }
+
+  .date-range-form {
+    flex-direction: column;
+    align-items: stretch;
+
+    .date-field {
+      width: 100%;
+    }
+
+    .date-separator {
+      text-align: center;
+    }
+  }
+
+  .summary-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .summary-item {
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+
+    .summary-value {
+      font-size: 20px;
+    }
+  }
+
+  .job-card {
+    padding: 16px;
+  }
+
+  .job-id {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .technician-schedule-container {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .schedule-header,
+  .summary-card,
+  .jobs-section {
+    padding: 12px;
+  }
+
+  .quick-filters {
+    .filter-button {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .job-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .chevron-icon {
+    display: none;
+  }
+
+  .detail-row {
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .detail-value {
+      font-size: 13px;
+    }
+  }
+}

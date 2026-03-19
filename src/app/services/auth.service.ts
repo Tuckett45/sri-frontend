@@ -7,6 +7,7 @@ import { LoginModel } from '../models/login-model.model';
 import { environment, local_environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../models/role.enum';
+import { StatePersistenceService } from '../features/field-resource-management/services/state-persistence.service';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +25,11 @@ export class AuthService {
     })
   };
   
-  constructor(protected router: Router, protected http: HttpClient) {
+  constructor(
+    protected router: Router, 
+    protected http: HttpClient,
+    private statePersistenceService: StatePersistenceService
+  ) {
     this.loadUserFromLocalStorage();
    }
  
@@ -124,6 +129,14 @@ export class AuthService {
       return this.userRole.getValue() === UserRole.HR;
   }
 
+  isEngineeringFieldSupport() {
+    return this.userRole.getValue() === UserRole.EngineeringFieldSupport;
+  }
+
+  isMaterialsManager() {
+    return this.userRole.getValue() === UserRole.MaterialsManager;
+  }
+
   isLoggedIn(): boolean {
     return localStorage.getItem('loggedIn') === 'true';
   }
@@ -183,6 +196,22 @@ export class AuthService {
       this.setUserRole(this.resolveRole(parsedUser));
       this.currentUser = parsedUser; 
       this.loggedInStatus.next(true);
+    } else if (!environment.production) {
+      // In development mode, use a mock admin user if no user is logged in
+      this.currentUser = {
+        id: 'dev-admin-123',
+        name: 'Dev Admin',
+        email: 'admin@dev.local',
+        password: '',
+        role: 'Admin',
+        market: 'ALL',
+        company: 'INTERNAL',
+        createdDate: new Date(),
+        isApproved: true
+      };
+      this.setUserRole(UserRole.Admin);
+      this.loggedInStatus.next(true);
+      console.log('AuthService: Using development mock user (Admin)');
     }
   }
 
@@ -205,14 +234,18 @@ export class AuthService {
     this.clearStorage();
     this.resetCurrentUser();
     this.loggedInStatus.next(false);
+    
+    // Clear persisted FRM state to prevent data leakage between users
+    this.statePersistenceService.clearPersistedState();
+    
     this.router.navigate(['/login']);
-}
+  }
 
-protected clearStorage(): void {
+  protected clearStorage(): void {
     localStorage.removeItem('loggedIn');
     sessionStorage.removeItem(this.authTokenStorageKey);
     localStorage.removeItem('user');
-}
+  }
 
 private resetCurrentUser(): void {
     const userString = localStorage.getItem('user');

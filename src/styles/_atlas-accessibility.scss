@@ -1,0 +1,361 @@
+// ATLAS Accessibility Styles
+// Ensures WCAG 2.1 AA compliance for focus indicators, skip links, and screen reader support
+
+// Screen reader only content
+.sr-only,
+.atlas-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Screen reader only content that becomes visible on focus
+.sr-only-focusable:focus,
+.atlas-sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+// Skip navigation links
+.atlas-skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  z-index: 10000;
+  padding: 8px 16px;
+  background-color: #1976d2;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  font-weight: 500;
+  transition: top 0.2s ease-in-out;
+
+  &:focus {
+    top: 0;
+    outline: 3px solid #ffd740;
+    outline-offset: 2px;
+  }
+}
+
+// Focus indicators - WCAG 2.1 AA compliant
+// Minimum 3:1 contrast ratio with adjacent colors
+*:focus,
+*:focus-visible {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+// Enhanced focus for interactive elements
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 3px solid #1976d2;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.2);
+}
+
+// Focus for ATLAS components
+.atlas-card:focus-within,
+.atlas-table-row:focus-within {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  *:focus,
+  *:focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline-width: 4px;
+    box-shadow: 0 0 0 6px rgba(25, 118, 210, 0.3);
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// Color contrast helpers
+.atlas-text-high-contrast {
+  color: #000000;
+  background-color: #ffffff;
+}
+
+.atlas-text-high-contrast-inverse {
+  color: #ffffff;
+  background-color: #000000;
+}
+
+// Keyboard navigation indicators
+.atlas-keyboard-nav-active {
+  *:focus {
+    outline: 3px solid #ffd740;
+    outline-offset: 3px;
+  }
+}
+
+// Loading state accessibility
+.atlas-loading {
+  &[aria-busy="true"] {
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.7);
+      z-index: 1;
+    }
+  }
+}
+
+// Error state accessibility
+.atlas-error {
+  border-left: 4px solid #d32f2f;
+  padding-left: 12px;
+  
+  &[role="alert"] {
+    background-color: #ffebee;
+    padding: 12px;
+    border-radius: 4px;
+  }
+}
+
+// Success state accessibility
+.atlas-success {
+  border-left: 4px solid #388e3c;
+  padding-left: 12px;
+  
+  &[role="status"] {
+    background-color: #e8f5e9;
+    padding: 12px;
+    border-radius: 4px;
+  }
+}
+
+// Warning state accessibility
+.atlas-warning {
+  border-left: 4px solid #f57c00;
+  padding-left: 12px;
+  
+  &[role="alert"] {
+    background-color: #fff3e0;
+    padding: 12px;
+    border-radius: 4px;
+  }
+}
+
+// Table accessibility
+.atlas-table {
+  th {
+    font-weight: 600;
+    text-align: left;
+  }
+
+  caption {
+    padding: 8px;
+    font-weight: 600;
+    text-align: left;
+    caption-side: top;
+  }
+
+  &[aria-busy="true"] {
+    opacity: 0.6;
+  }
+}
+
+// Form accessibility
+.atlas-form-field {
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .atlas-form-error {
+    color: #d32f2f;
+    font-size: 0.875rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &::before {
+      content: '⚠';
+      font-weight: bold;
+    }
+  }
+
+  .atlas-form-hint {
+    color: #666666;
+    font-size: 0.875rem;
+    margin-top: 4px;
+  }
+
+  input[aria-invalid="true"],
+  select[aria-invalid="true"],
+  textarea[aria-invalid="true"] {
+    border-color: #d32f2f;
+    border-width: 2px;
+  }
+}
+
+// Modal/Dialog accessibility
+.atlas-modal {
+  &[role="dialog"],
+  &[role="alertdialog"] {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 11px 15px -7px rgba(0, 0, 0, 0.2),
+                0 24px 38px 3px rgba(0, 0, 0, 0.14),
+                0 9px 46px 8px rgba(0, 0, 0, 0.12);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+  }
+
+  .atlas-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+}
+
+// Badge/Status indicator accessibility
+.atlas-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  &[aria-label]::before {
+    content: attr(aria-label);
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+// Tooltip accessibility
+.atlas-tooltip {
+  &[role="tooltip"] {
+    position: absolute;
+    z-index: 1001;
+    background-color: #616161;
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    max-width: 300px;
+    word-wrap: break-word;
+  }
+}
+
+// Progress indicator accessibility
+.atlas-progress {
+  &[role="progressbar"] {
+    height: 4px;
+    background-color: #e0e0e0;
+    border-radius: 2px;
+    overflow: hidden;
+
+    .atlas-progress-bar {
+      height: 100%;
+      background-color: #1976d2;
+      transition: width 0.3s ease;
+    }
+  }
+}
+
+// Breadcrumb accessibility
+.atlas-breadcrumb {
+  &[aria-label="Breadcrumb"] {
+    ol {
+      display: flex;
+      flex-wrap: wrap;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      gap: 8px;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      &:not(:last-child)::after {
+        content: '/';
+        color: #666666;
+      }
+    }
+
+    a {
+      text-decoration: none;
+      color: #1976d2;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    [aria-current="page"] {
+      color: #666666;
+      font-weight: 500;
+    }
+  }
+}

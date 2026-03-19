@@ -1,0 +1,594 @@
+<div class="job-detail-container" *ngIf="job">
+  <!-- Header -->
+  <div class="job-detail-header">
+    <div class="header-left">
+      <button mat-icon-button (click)="goBack()" aria-label="Go back">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-info">
+        <h2>{{ job.jobId }}</h2>
+        <frm-status-badge [status]="job.status" size="medium"></frm-status-badge>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-button (click)="editJob()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-button (click)="reassignJob()">
+        <mat-icon>person_add</mat-icon>
+        Reassign
+      </button>
+      <button mat-button [matMenuTriggerFor]="moreMenu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #moreMenu="matMenu">
+        <button mat-menu-item (click)="deleteJob()">
+          <mat-icon color="warn">delete</mat-icon>
+          <span>Delete Job</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="loading-container" *ngIf="loading$ | async">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Content -->
+  <div class="job-detail-content" *ngIf="!(loading$ | async)">
+    <!-- Section 1: Job Info -->
+    <mat-card class="detail-section">
+      <mat-card-header>
+        <mat-card-title>Job Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Job ID</label>
+            <span>{{ job.jobId }}</span>
+          </div>
+          <div class="info-item">
+            <label>Client</label>
+            <span>{{ job.client }}</span>
+          </div>
+          <div class="info-item">
+            <label>Site Name</label>
+            <span>{{ job.siteName }}</span>
+          </div>
+          <div class="info-item">
+            <label>Job Type</label>
+            <span>{{ job.jobType }}</span>
+          </div>
+          <div class="info-item">
+            <label>Priority</label>
+            <span class="priority-badge" [ngClass]="'priority-' + job.priority.toLowerCase()">
+              {{ job.priority }}
+            </span>
+          </div>
+          <div class="info-item">
+            <label>Status</label>
+            <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+          </div>
+          <div class="info-item full-width">
+            <label>Site Address</label>
+            <span>{{ getFullAddress() }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 2: Scope -->
+    <mat-card class="detail-section">
+      <mat-card-header>
+        <mat-card-title>Scope</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item full-width">
+            <label>Description</label>
+            <p class="description-text">{{ job.scopeDescription }}</p>
+          </div>
+          <div class="info-item full-width">
+            <label>Required Skills</label>
+            <mat-chip-set>
+              <mat-chip *ngFor="let skill of job.requiredSkills">
+                {{ skill.name }}
+              </mat-chip>
+              <mat-chip *ngIf="job.requiredSkills.length === 0" disabled>
+                No specific skills required
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+          <div class="info-item">
+            <label>Crew Size</label>
+            <span>{{ job.requiredCrewSize }} technician(s)</span>
+          </div>
+          <div class="info-item">
+            <label>Estimated Hours</label>
+            <span>{{ job.estimatedLaborHours }} hours</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 3: Schedule -->
+    <mat-card class="detail-section">
+      <mat-card-header>
+        <mat-card-title>Schedule</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Scheduled Start</label>
+            <span>{{ formatDate(job.scheduledStartDate) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Scheduled End</label>
+            <span>{{ formatDate(job.scheduledEndDate) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Actual Start</label>
+            <span>{{ formatDate(job.actualStartDate) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Actual End</label>
+            <span>{{ formatDate(job.actualEndDate) }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section: Budget Tracking -->
+    <mat-card class="detail-section budget-section" *ngIf="budget$ | async as budget">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>account_balance_wallet</mat-icon>
+          Budget Tracking
+        </mat-card-title>
+        <span class="budget-status-badge" [ngClass]="getBudgetStatusClass(budget.status)">
+          {{ getBudgetStatusText(budget.status) }}
+        </span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="budget-overview">
+          <div class="budget-metric">
+            <label>Allocated Hours</label>
+            <span class="metric-value">{{ budget.allocatedHours | number:'1.1-1' }} hrs</span>
+          </div>
+          <div class="budget-metric">
+            <label>Consumed Hours</label>
+            <span class="metric-value">{{ budget.consumedHours | number:'1.1-1' }} hrs</span>
+          </div>
+          <div class="budget-metric">
+            <label>Remaining Hours</label>
+            <span class="metric-value" [ngClass]="{'over-budget-value': budget.remainingHours < 0}">
+              {{ budget.remainingHours | number:'1.1-1' }} hrs
+            </span>
+          </div>
+          <div class="budget-metric">
+            <label>Consumption</label>
+            <span class="metric-value">{{ (budgetConsumptionPercentage$ | async) | number:'1.0-1' }}%</span>
+          </div>
+        </div>
+        
+        <!-- Budget Progress Bar -->
+        <div class="budget-progress">
+          <div class="progress-bar-container">
+            <div 
+              class="progress-bar-fill" 
+              [ngClass]="getBudgetStatusClass(budget.status)"
+              [style.width.%]="(budgetConsumptionPercentage$ | async) || 0 | number:'1.0-0'">
+            </div>
+          </div>
+          <div class="progress-labels">
+            <span>0%</span>
+            <span class="warning-marker">80%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Budget Management (full view with adjustment dialog) -->
+    <app-budget-view *ngIf="job" [jobId]="job.id"></app-budget-view>
+
+    <!-- Time Tracker Section (for assigned technicians) -->
+    <mat-card class="detail-section time-tracker-section" *ngIf="isAssignedToCurrentUser">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>schedule</mat-icon>
+          Time Tracking
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <frm-time-tracker 
+          [job]="job"
+          [isAdmin]="false">
+        </frm-time-tracker>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section: Job Cost Report -->
+    <mat-card class="detail-section cost-report-section">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>assessment</mat-icon>
+          Job Cost Report
+        </mat-card-title>
+        <div class="cost-report-actions">
+          <button mat-stroked-button color="primary" (click)="toggleCostReport()">
+            <mat-icon>{{ showCostReport ? 'expand_less' : 'expand_more' }}</mat-icon>
+            {{ showCostReport ? 'Hide' : 'Show' }} Details
+          </button>
+          <button mat-stroked-button color="primary" (click)="viewFullCostReport()">
+            <mat-icon>open_in_new</mat-icon>
+            Full Report
+          </button>
+        </div>
+      </mat-card-header>
+      <mat-card-content *ngIf="showCostReport">
+        <!-- Loading -->
+        <mat-progress-bar *ngIf="costReportLoading$ | async" mode="indeterminate"></mat-progress-bar>
+
+        <!-- Error -->
+        <div *ngIf="costReportError$ | async as error" class="cost-report-error">
+          <mat-icon color="warn">error_outline</mat-icon>
+          <span>{{ error }}</span>
+        </div>
+
+        <!-- Cost Breakdown Summary -->
+        <ng-container *ngIf="costBreakdown$ | async as breakdown">
+          <div class="cost-summary-grid">
+            <div class="cost-item labor">
+              <mat-icon>people</mat-icon>
+              <div class="cost-details">
+                <span class="cost-label">Labor</span>
+                <span class="cost-value">{{ formatCurrency(breakdown.laborCosts.totalCost) }}</span>
+                <span class="cost-meta">{{ breakdown.laborCosts.totalRoundedHours | number:'1.1-1' }} hrs</span>
+              </div>
+            </div>
+            <div class="cost-item materials">
+              <mat-icon>inventory_2</mat-icon>
+              <div class="cost-details">
+                <span class="cost-label">Materials</span>
+                <span class="cost-value">{{ formatCurrency(breakdown.materialCosts.totalCost) }}</span>
+                <span class="cost-meta">{{ breakdown.materialCosts.byMaterial.length }} items</span>
+              </div>
+            </div>
+            <div class="cost-item travel">
+              <mat-icon>directions_car</mat-icon>
+              <div class="cost-details">
+                <span class="cost-label">Travel</span>
+                <span class="cost-value">{{ formatCurrency(breakdown.travelCosts.totalCost) }}</span>
+                <span class="cost-meta">{{ breakdown.travelCosts.byTechnician.length }} technicians</span>
+              </div>
+            </div>
+            <div class="cost-item total">
+              <mat-icon>account_balance</mat-icon>
+              <div class="cost-details">
+                <span class="cost-label">Total Cost</span>
+                <span class="cost-value">{{ formatCurrency(breakdown.totalCosts) }}</span>
+                <span class="cost-meta" [ngClass]="breakdown.budgetVariance >= 0 ? 'positive-variance' : 'negative-variance'">
+                  Variance: {{ breakdown.budgetVariancePercent | number:'1.1-1' }}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Budget Comparison -->
+        <ng-container *ngIf="budgetComparison$ | async as comparison">
+          <div class="budget-comparison">
+            <h4>Budget vs Actual</h4>
+            <div class="comparison-bar">
+              <div class="comparison-info">
+                <span>Allocated: {{ formatCurrency(comparison.allocatedBudget) }}</span>
+                <span>Actual: {{ formatCurrency(comparison.actualCost) }}</span>
+              </div>
+              <mat-progress-bar
+                mode="determinate"
+                [value]="comparison.allocatedBudget > 0 ? (comparison.actualCost / comparison.allocatedBudget) * 100 : 0"
+                [color]="comparison.status === BudgetStatus.OverBudget ? 'warn' : comparison.status === BudgetStatus.Warning ? 'accent' : 'primary'">
+              </mat-progress-bar>
+            </div>
+          </div>
+        </ng-container>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 4: Assigned Technicians -->
+    <mat-card class="detail-section">
+      <mat-card-header>
+        <mat-card-title>Assigned Technicians</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="technician-list" *ngIf="assignments.length > 0">
+          <div class="technician-item" *ngFor="let assignment of assignments">
+            <div class="technician-info">
+              <mat-icon>person</mat-icon>
+              <div>
+                <div class="technician-name">Technician Name</div>
+                <div class="technician-contact">
+                  <a href="tel:555-0100">
+                    <mat-icon>phone</mat-icon>
+                    (555) 010-0100
+                  </a>
+                  <a href="mailto:tech&#64;example.com">
+                    <mat-icon>email</mat-icon>
+                    tech&#64;example.com
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="empty-message" *ngIf="assignments.length === 0">
+          <mat-icon>person_off</mat-icon>
+          <p>No technicians assigned yet</p>
+          <button mat-stroked-button class="btn-orange" (click)="reassignJob()">
+            Assign Technician
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 5: Time Entries -->
+    <mat-card class="detail-section">
+      <mat-card-header>
+        <mat-card-title>Time Entries</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="time-summary" *ngIf="timeEntries.length > 0">
+          <div class="summary-item">
+            <label>Total Hours</label>
+            <span class="summary-value">{{ totalLaborHours.toFixed(2) }} hrs</span>
+          </div>
+          <div class="summary-item">
+            <label>Total Mileage</label>
+            <span class="summary-value">{{ totalMileage.toFixed(1) }} mi</span>
+          </div>
+          <div class="summary-item">
+            <label>Estimated Hours</label>
+            <span class="summary-value">{{ job.estimatedLaborHours }} hrs</span>
+          </div>
+        </div>
+        
+        <table mat-table [dataSource]="timeEntries" class="time-entries-table" *ngIf="timeEntries.length > 0">
+          <ng-container matColumnDef="technician">
+            <th mat-header-cell *matHeaderCellDef>Technician</th>
+            <td mat-cell *matCellDef="let entry">Technician Name</td>
+          </ng-container>
+
+          <ng-container matColumnDef="clockIn">
+            <th mat-header-cell *matHeaderCellDef>Clock In</th>
+            <td mat-cell *matCellDef="let entry">{{ formatDateTime(entry.clockInTime) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="clockOut">
+            <th mat-header-cell *matHeaderCellDef>Clock Out</th>
+            <td mat-cell *matCellDef="let entry">{{ formatDateTime(entry.clockOutTime) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="hours">
+            <th mat-header-cell *matHeaderCellDef>Hours</th>
+            <td mat-cell *matCellDef="let entry">{{ entry.totalHours?.toFixed(2) || 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="mileage">
+            <th mat-header-cell *matHeaderCellDef>Mileage</th>
+            <td mat-cell *matCellDef="let entry">{{ entry.mileage?.toFixed(1) || 'N/A' }} mi</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['technician', 'clockIn', 'clockOut', 'hours', 'mileage']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['technician', 'clockIn', 'clockOut', 'hours', 'mileage']"></tr>
+        </table>
+
+        <div class="empty-message" *ngIf="timeEntries.length === 0">
+          <mat-icon>schedule</mat-icon>
+          <p>No time entries recorded yet</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 6: Status History -->
+    <mat-card class="detail-section">
+      <mat-card-header>
+        <mat-card-title>Status History</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <frm-job-status-timeline [jobId]="job.id"></frm-job-status-timeline>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 7: Attachments -->
+    <mat-card class="detail-section">
+      <mat-card-header>
+        <mat-card-title>Attachments</mat-card-title>
+        <button mat-icon-button (click)="fileInput.click()" [disabled]="isUploadingFile">
+          <mat-icon>add</mat-icon>
+        </button>
+        <input
+          #fileInput
+          type="file"
+          hidden
+          accept="image/jpeg,image/png,image/heic,application/pdf"
+          (change)="onFileSelected($event)"
+        />
+      </mat-card-header>
+      <mat-card-content>
+        <div class="attachment-list" *ngIf="job.attachments.length > 0">
+          <div class="attachment-item" *ngFor="let attachment of job.attachments">
+            <div class="attachment-icon">
+              <mat-icon *ngIf="isImage(attachment)">image</mat-icon>
+              <mat-icon *ngIf="!isImage(attachment)">description</mat-icon>
+            </div>
+            <div class="attachment-info">
+              <div class="attachment-name">{{ attachment.fileName }}</div>
+              <div class="attachment-meta">
+                {{ formatFileSize(attachment.fileSize) }} • 
+                Uploaded by {{ attachment.uploadedBy }} • 
+                {{ formatDate(attachment.uploadedAt) }}
+              </div>
+            </div>
+            <button mat-icon-button (click)="downloadAttachment(attachment)">
+              <mat-icon>download</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="empty-message" *ngIf="job.attachments.length === 0 && !isUploadingFile">
+          <mat-icon>attach_file</mat-icon>
+          <p>No attachments yet</p>
+          <button mat-stroked-button class="btn-orange" (click)="fileInput.click()">
+            Upload File
+          </button>
+        </div>
+
+        <div class="uploading-message" *ngIf="isUploadingFile">
+          <mat-spinner diameter="24"></mat-spinner>
+          <span>Uploading file...</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 8: Notes -->
+    <mat-card class="detail-section">
+      <mat-card-header>
+        <mat-card-title>Notes</mat-card-title>
+        <button mat-icon-button (click)="showAddNoteForm()" *ngIf="!isAddingNote">
+          <mat-icon>add</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Add Note Form -->
+        <div class="note-form" *ngIf="isAddingNote">
+          <mat-form-field appearance="outline" class="note-textarea">
+            <mat-label>Add a note</mat-label>
+            <textarea
+              matInput
+              [(ngModel)]="newNoteText"
+              rows="3"
+              maxlength="2000"
+              placeholder="Enter your note here..."
+            ></textarea>
+            <mat-hint align="end">{{ newNoteText.length }}/2000</mat-hint>
+          </mat-form-field>
+          <div class="note-actions">
+            <button mat-button color="warn" (click)="cancelAddNote()">Cancel</button>
+            <button mat-raised-button color="primary" (click)="addNote()" [disabled]="!newNoteText.trim()">
+              Add Note
+            </button>
+          </div>
+        </div>
+
+        <!-- Notes List -->
+        <div class="notes-list" *ngIf="job.notes.length > 0">
+          <div class="note-item" *ngFor="let note of job.notes">
+            <div class="note-header">
+              <div class="note-author">
+                <mat-icon>person</mat-icon>
+                <span>{{ note.author }}</span>
+              </div>
+              <div class="note-meta">
+                <span class="note-date">{{ formatDateTime(note.createdAt) }}</span>
+                <button
+                  mat-icon-button
+                  *ngIf="canEditNote(note) && editingNoteId !== note.id"
+                  (click)="startEditNote(note)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </div>
+            </div>
+            
+            <!-- View Mode -->
+            <div class="note-text" *ngIf="editingNoteId !== note.id">
+              {{ note.text }}
+            </div>
+
+            <!-- Edit Mode -->
+            <div class="note-edit" *ngIf="editingNoteId === note.id">
+              <mat-form-field appearance="outline" class="note-textarea">
+                <textarea
+                  matInput
+                  [(ngModel)]="editingNoteText"
+                  rows="3"
+                  maxlength="2000"
+                ></textarea>
+              </mat-form-field>
+              <div class="note-actions">
+                <button mat-button color="warn" (click)="cancelEditNote()">Cancel</button>
+                <button mat-raised-button color="primary" (click)="saveEditNote(note)">
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-message" *ngIf="job.notes.length === 0 && !isAddingNote">
+          <mat-icon>note</mat-icon>
+          <p>No notes yet</p>
+          <button mat-stroked-button class="btn-orange" (click)="showAddNoteForm()">
+            Add Note
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 9: Customer POC -->
+    <mat-card class="detail-section" *ngIf="job.customerPOC">
+      <mat-card-header>
+        <mat-card-title>Customer Point of Contact</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="customer-poc">
+          <div class="poc-info">
+            <mat-icon>person</mat-icon>
+            <div>
+              <div class="poc-name">{{ job.customerPOC.name }}</div>
+              <div class="poc-contact">
+                <a [href]="'tel:' + job.customerPOC.phone" class="contact-link">
+                  <mat-icon>phone</mat-icon>
+                  {{ job.customerPOC.phone }}
+                </a>
+                <a [href]="'mailto:' + job.customerPOC.email" class="contact-link">
+                  <mat-icon>email</mat-icon>
+                  {{ job.customerPOC.email }}
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="poc-actions">
+            <button mat-raised-button color="primary" (click)="callCustomer()">
+              <mat-icon>phone</mat-icon>
+              Call
+            </button>
+            <button mat-raised-button (click)="emailCustomer()">
+              <mat-icon>email</mat-icon>
+              Email
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="!job && (loading$ | async)">
+  <mat-spinner></mat-spinner>
+  <p>Loading job details...</p>
+</div>
+
+<!-- Error State -->
+<div class="error-container" *ngIf="!job && !(loading$ | async)">
+  <mat-icon>error_outline</mat-icon>
+  <h3>Job not found</h3>
+  <p>The requested job could not be found.</p>
+  <button mat-stroked-button color="primary" (click)="goBack()">
+    Back to Jobs
+  </button>
+</div>

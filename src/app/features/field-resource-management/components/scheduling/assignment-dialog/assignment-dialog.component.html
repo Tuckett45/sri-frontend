@@ -1,0 +1,235 @@
+<div class="assignment-dialog">
+  <!-- Dialog Header -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Assign Technician to Job</h2>
+    <button mat-icon-button (click)="onCancel()" aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Dialog Content -->
+  <mat-dialog-content>
+    <!-- Job Details Section -->
+    <div class="job-details-section">
+      <h3>Job Details</h3>
+      <div class="job-info-grid">
+        <div class="info-item">
+          <span class="label">Job ID:</span>
+          <span class="value">{{ job.jobId }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Client:</span>
+          <span class="value">{{ job.client }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Site:</span>
+          <span class="value">{{ job.siteName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Scheduled:</span>
+          <span class="value">
+            {{ job.scheduledStartDate | date:'short' }} - {{ job.scheduledEndDate | date:'short' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Required Skills -->
+      <div class="required-skills">
+        <span class="label">Required Skills:</span>
+        <div class="skills-list">
+          <mat-chip-set>
+            <mat-chip *ngFor="let skill of job.requiredSkills" color="primary" selected>
+              {{ skill.name }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Qualified Technicians Section -->
+    <div class="technicians-section">
+      <h3>Qualified Technicians</h3>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="qualifiedTechnicians.length === 0">
+        <mat-icon>person_off</mat-icon>
+        <p>No qualified technicians available for this job.</p>
+      </div>
+
+      <!-- Technicians List -->
+      <div class="technicians-list" *ngIf="qualifiedTechnicians.length > 0">
+        <div 
+          class="technician-card"
+          *ngFor="let techMatch of qualifiedTechnicians"
+          [class.selected]="isSelected(techMatch)"
+          [class.has-conflicts]="techMatch.hasConflicts"
+          (click)="onSelectTechnician(techMatch)">
+          
+          <!-- Technician Header -->
+          <div class="technician-header">
+            <div class="technician-info">
+              <mat-icon class="technician-icon">person</mat-icon>
+              <div class="technician-details">
+                <div class="technician-name">
+                  {{ techMatch.technician.firstName }} {{ techMatch.technician.lastName }}
+                </div>
+                <div class="technician-role">{{ techMatch.technician.role }}</div>
+              </div>
+            </div>
+
+            <!-- Selection Indicator -->
+            <mat-icon class="selection-indicator" *ngIf="isSelected(techMatch)">
+              check_circle
+            </mat-icon>
+          </div>
+
+          <!-- Skill Match -->
+          <div class="skill-match">
+            <div class="match-label">Skill Match:</div>
+            <div class="match-bar-container">
+              <div 
+                class="match-bar" 
+                [class]="getSkillMatchColor(techMatch.matchPercentage)"
+                [style.width.%]="techMatch.matchPercentage">
+              </div>
+            </div>
+            <div class="match-percentage" [class]="getSkillMatchColor(techMatch.matchPercentage)">
+              {{ techMatch.matchPercentage }}%
+            </div>
+          </div>
+
+          <!-- Missing Skills Warning -->
+          <div class="missing-skills-warning" *ngIf="techMatch.missingSkills.length > 0">
+            <mat-icon>warning</mat-icon>
+            <div class="warning-content">
+              <div class="warning-title">Missing Skills:</div>
+              <div class="missing-skills-list">
+                <span *ngFor="let skill of techMatch.missingSkills; let last = last">
+                  {{ skill.name }}<span *ngIf="!last">, </span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Availability Status -->
+          <div class="availability-status">
+            <mat-icon [class]="getAvailabilityStatus(techMatch)">
+              {{ getAvailabilityIcon(getAvailabilityStatus(techMatch)) }}
+            </mat-icon>
+            <span>{{ getAvailabilityLabel(getAvailabilityStatus(techMatch)) }}</span>
+          </div>
+
+          <!-- Current Workload -->
+          <div class="workload-info">
+            <mat-icon>work</mat-icon>
+            <span>Current Jobs: {{ techMatch.currentWorkload }}</span>
+          </div>
+
+          <!-- Distance and Travel Info -->
+          <ng-container *ngIf="getDistanceInfo(techMatch.technician.id) as distanceInfo">
+            <div class="distance-info">
+              <div class="distance-row">
+                <mat-icon>directions_car</mat-icon>
+                <span class="distance-value">{{ formatDistance(distanceInfo.distanceMiles) }}</span>
+                <span class="driving-time">({{ formatDrivingTime(distanceInfo.drivingTimeMinutes) }})</span>
+              </div>
+              <div class="travel-status-row">
+                <mat-icon [class]="distanceInfo.willingToTravel ? 'travel-willing' : 'travel-not-willing'">
+                  {{ distanceInfo.willingToTravel ? 'flight_takeoff' : 'flight_land' }}
+                </mat-icon>
+                <span [class]="distanceInfo.willingToTravel ? 'travel-willing' : 'travel-not-willing'">
+                  {{ distanceInfo.willingToTravel ? 'Willing to Travel' : 'Not Willing to Travel' }}
+                </span>
+              </div>
+              <ng-container *ngIf="perDiemConfig$ | async as perDiemConfig">
+                <div class="per-diem-row" *ngIf="distanceInfo.perDiemEligible">
+                  <mat-icon class="per-diem-icon">attach_money</mat-icon>
+                  <span class="per-diem-amount">
+                    Per Diem: {{ getPerDiemAmount(techMatch.technician.id, perDiemConfig) | currency }}
+                  </span>
+                </div>
+              </ng-container>
+            </div>
+          </ng-container>
+
+          <!-- Conflicts -->
+          <div class="conflicts-section" *ngIf="techMatch.hasConflicts && techMatch.conflicts.length > 0">
+            <div class="conflicts-header">
+              <mat-icon class="conflict-icon">error</mat-icon>
+              <span class="conflicts-title">Scheduling Conflicts</span>
+            </div>
+            <div class="conflicts-list">
+              <div 
+                class="conflict-item" 
+                *ngFor="let conflict of techMatch.conflicts"
+                [class]="getConflictColor(conflict.severity)">
+                <mat-icon>{{ getConflictIcon(conflict.severity) }}</mat-icon>
+                <div class="conflict-details">
+                  <div class="conflict-job">{{ conflict.conflictingJobTitle }}</div>
+                  <div class="conflict-time">
+                    {{ formatTimeRange(conflict.timeRange.startDate, conflict.timeRange.endDate) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Override Section -->
+    <div class="override-section" *ngIf="requiresOverride() && selectedTechnician">
+      <mat-divider></mat-divider>
+      
+      <form [formGroup]="assignmentForm">
+        <div class="override-warning">
+          <mat-icon>warning</mat-icon>
+          <div class="warning-text">
+            <strong>Override Required</strong>
+            <p *ngIf="selectedTechnician.hasConflicts">
+              This assignment creates scheduling conflicts.
+            </p>
+            <p *ngIf="selectedTechnician.matchPercentage < 100">
+              This technician does not have all required skills.
+            </p>
+          </div>
+        </div>
+
+        <mat-checkbox formControlName="override" color="warn">
+          I understand the risks and want to proceed with this assignment
+        </mat-checkbox>
+
+        <mat-form-field appearance="outline" class="full-width" *ngIf="assignmentForm.get('override')?.value">
+          <mat-label>Justification (Required)</mat-label>
+          <textarea 
+            matInput 
+            formControlName="justification"
+            rows="3"
+            placeholder="Explain why this override is necessary..."
+            required></textarea>
+          <mat-error *ngIf="assignmentForm.get('justification')?.hasError('required')">
+            Justification is required for override assignments
+          </mat-error>
+          <mat-error *ngIf="assignmentForm.get('justification')?.hasError('minlength')">
+            Justification must be at least 10 characters
+          </mat-error>
+        </mat-form-field>
+      </form>
+    </div>
+  </mat-dialog-content>
+
+  <!-- Dialog Actions -->
+  <mat-dialog-actions>
+    <button mat-button color="warn" (click)="onCancel()">Cancel</button>
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="onAssign()"
+      [disabled]="!canAssign()">
+      <mat-icon>person_add</mat-icon>
+      Assign Technician
+    </button>
+  </mat-dialog-actions>
+</div>

@@ -1,0 +1,202 @@
+@import '../../../../styles/frm-variables';
+
+:host {
+  display: block;
+}
+
+.timecard-entry-card {
+  .entry-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .entry-title {
+    display: flex;
+    align-items: center;
+    gap: $frm-spacing-sm;
+
+    mat-icon {
+      color: $frm-primary;
+    }
+  }
+
+  .status-chip {
+    padding: $frm-spacing-xs $frm-spacing-sm;
+    border-radius: $frm-border-radius-lg;
+    font-size: $frm-font-size-sm;
+    font-weight: $frm-font-weight-medium;
+
+    &.status-approved {
+      background: rgba($frm-success, 0.12);
+      color: $frm-success-dark;
+    }
+    &.status-submitted {
+      background: rgba($frm-info, 0.12);
+      color: $frm-info-dark;
+    }
+    &.status-rejected {
+      background: rgba($frm-error, 0.12);
+      color: $frm-error-dark;
+    }
+    &.status-draft {
+      background: rgba($frm-gray-500, 0.12);
+      color: $frm-gray-700;
+    }
+  }
+}
+
+.clock-times {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $frm-spacing-md;
+  padding: $frm-spacing-md 0;
+  border-bottom: 1px solid $frm-border-light;
+  margin-bottom: $frm-spacing-md;
+
+  .clock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $frm-spacing-xs;
+
+    .clock-label {
+      font-size: $frm-font-size-sm;
+      color: $frm-text-secondary;
+    }
+
+    .clock-value {
+      font-size: $frm-font-size-md;
+      font-weight: $frm-font-weight-medium;
+      color: $frm-text-primary;
+    }
+  }
+
+  .arrow-icon {
+    color: $frm-gray-400;
+  }
+}
+
+.hours-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: $frm-spacing-sm;
+  padding: $frm-spacing-sm 0;
+  margin-bottom: $frm-spacing-md;
+
+  .hours-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $frm-spacing-sm $frm-spacing-md;
+    border-radius: $frm-border-radius-md;
+
+    &.actual-hours {
+      background: $frm-gray-50;
+    }
+
+    &.rounded-hours {
+      background: rgba($frm-primary, 0.04);
+      border: 1px solid rgba($frm-primary, 0.12);
+
+      &.highlighted {
+        background: rgba($frm-primary, 0.08);
+        border-color: rgba($frm-primary, 0.24);
+      }
+    }
+
+    .rounded-label-group {
+      display: flex;
+      align-items: center;
+      gap: $frm-spacing-xs;
+    }
+
+    .hours-label {
+      font-size: $frm-font-size-base;
+      color: $frm-text-secondary;
+    }
+
+    .hours-value {
+      font-size: $frm-font-size-md;
+      font-weight: $frm-font-weight-medium;
+      font-family: $frm-font-family-mono;
+      color: $frm-text-primary;
+
+      &.rounded-value {
+        color: $frm-primary;
+      }
+    }
+
+    .budget-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: $frm-primary;
+      cursor: help;
+    }
+  }
+}
+
+.rounding-indicator {
+  margin-bottom: $frm-spacing-md;
+
+  .rounding-badge {
+    display: flex;
+    align-items: center;
+    gap: $frm-spacing-sm;
+    padding: $frm-spacing-sm $frm-spacing-md;
+    border-radius: $frm-border-radius-md;
+    font-size: $frm-font-size-sm;
+
+    &.has-rounding {
+      background: rgba($frm-warning, 0.08);
+      color: $frm-warning-dark;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: $frm-warning;
+      }
+    }
+
+    &.no-rounding {
+      background: rgba($frm-success, 0.08);
+      color: $frm-success-dark;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: $frm-success;
+      }
+    }
+  }
+}
+
+.budget-note {
+  display: flex;
+  align-items: flex-start;
+  gap: $frm-spacing-sm;
+  padding: $frm-spacing-sm $frm-spacing-md;
+  background: rgba($frm-info, 0.06);
+  border-radius: $frm-border-radius-md;
+  border-left: 3px solid $frm-info;
+  font-size: $frm-font-size-sm;
+  color: $frm-text-secondary;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: $frm-info;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  strong {
+    color: $frm-primary;
+  }
+}

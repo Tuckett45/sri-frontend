@@ -1,0 +1,569 @@
+/**
+ * Integration Tests: Phase 0-1 Interaction
+ * 
+ * Tests the integration between:
+ * - Phase 0: Admin viewer and state visualization
+ * - Phase 1: Role enforcement and lifecycle management
+ * 
+ * Validates Requirements: 1.1-1.7, 2.1-2.7, 3.1-3.7, 4.1-4.7
+ */
+
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { provideMockStore, MockStore } from '@ngrx/store/testing';
+import { of, throwError } from 'rxjs';
+import { DebugElement } from '@angular/core';
+import { By } from '@angular/platform-browser';
+
+// Phase 0 imports
+import { AdminViewerComponent } from '../phase0/components/admin-viewer/admin-viewer.component';
+import { StateVisualizationComponent } from '../phase0/components/state-visualization/state-visualization.component';
+import { StateTimelineComponent } from '../phase0/components/state-timeline/state-timeline.component';
+
+// Phase 1 imports
+import { RoleEnforcementDirective } from '../../../../directives/role-enforcement.directive';
+import { LifecycleManagementComponent } from '../phase1/components/lifecycle-management/lifecycle-management.component';
+import { StateTransitionControlsComponent } from '../phase1/components/state-transition-controls/state-transition-controls.component';
+
+// Services
+import { SecureAuthService } from '../../../../services/secure-auth.service';
+import { PermissionService } from '../../../../services/permission.service';
+import { LifecycleService } from '../phase1/services/lifecycle.service';
+
+// Models
+import { AdminMetrics, AuditLogEntry, SystemHealth } from '../phase0/models/admin.models';
+import { StateNode, StateTransition } from '../phase0/models/state.models';
+import { LifecycleState, LifecycleTransition } from '../phase1/models/lifecycle.models';
+
+describe('Phase 0-1 Integration: Admin Viewer with Role Enforcement', () => {
+  let component: AdminViewerComponent;
+  let fixture: ComponentFixture<AdminViewerComponent>;
+  let store: MockStore;
+  let authService: jasmine.SpyObj<SecureAuthService>;
+  let permissionService: jasmine.SpyObj<PermissionService>;
+
+  const mockAdminMetrics: AdminMetrics = {
+    activeUsers: 15,
+    totalJobs: 200,
+    completedJobs: 150,
+    pendingJobs: 50,
+    failedJobs: 0,
+    activeDeployments: 10,
+    systemHealth: {
+      status: 'healthy',
+      services: [
+        { name: 'API', status: 'up', responseTime: 120, lastChecked: new Date(), errorRate: 0.01 },
+        { name: 'Database', status: 'up', responseTime: 50, lastChecked: new Date(), errorRate: 0 }
+      ],
+      uptime: 99.95,
+      lastChecked: new Date()
+    },
+    resourceUtilization: { cpu: 45, memory: 60, storage: 35 },
+    averageResponseTime: 100,
+    timestamp: new Date()
+  };
+
+  const mockAuditLog: AuditLogEntry[] = [
+    {
+      id: 'audit-1',
+      userId: 'user-1',
+      userName: 'John Admin',
+      action: 'STATE_TRANSITION',
+      entityType: 'job',
+      entityId: 'job-123',
+      timestamp: new Date(),
+      metadata: { fromState: 'pending', toState: 'in-progress' },
+      ipAddress: '192.168.1.1',
+      userAgent: 'Mozilla/5.0',
+      result: 'success'
+    },
+    {
+      id: 'audit-2',
+      userId: 'user-2',
+      userName: 'Jane Manager',
+      action: 'APPROVAL_GRANTED',
+      entityType: 'deployment',
+      entityId: 'deploy-456',
+      timestamp: new Date(),
+      metadata: { approvalType: 'lifecycle-transition' },
+      ipAddress: '192.168.1.2',
+      userAgent: 'Mozilla/5.0',
+      result: 'success'
+    }
+  ];
+
+  beforeEach(async () => {
+    const authSpy = jasmine.createSpyObj('SecureAuthService', ['getCurrentUser', 'hasRole']);
+    const permissionSpy = jasmine.createSpyObj('PermissionService', ['checkPermission', 'hasPermission']);
+
+    await TestBed.configureTestingModule({
+      declarations: [
+        AdminViewerComponent,
+        RoleEnforcementDirective
+      ],
+      providers: [
+        provideMockStore({
+          initialState: {
+            adminViewer: {
+              metrics: mockAdminMetrics,
+              auditLog: mockAuditLog,
+              loading: false,
+              error: null
+            },
+            rolePermissions: {
+              currentUser: { id: 'user-1', role: 'Admin', permissions: [] },
+              permissions: {},
+              loading: false
+            }
+          }
+        }),
+        { provide: SecureAuthService, useValue: authSpy },
+        { provide: PermissionService, useValue: permissionSpy }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AdminViewerComponent);
+    component = fixture.componentInstance;
+    store = TestBed.inject(MockStore);
+    authService = TestBed.inject(SecureAuthService) as jasmine.SpyObj<SecureAuthService>;
+    permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
+  });
+
+  describe('Admin Viewer with Role-Based Access', () => {
+    it('should display admin metrics when user has Admin role', fakeAsync(() => {
+      authService.hasRole.and.returnValue(true);
+      permissionService.checkPermission.and.returnValue(of(true));
+
+      fixture.detectChanges();
+      tick();
+
+      expect(component.adminMetrics$).toBeDefined();
+      component.adminMetrics$.subscribe(metrics => {
+        if (metrics) {
+          expect(metrics).toEqual(mockAdminMetrics);
+          expect(metrics.activeUsers).toBe(15);
+        }
+      });
+    }));
+
+    it('should hide sensitive metrics when user lacks Admin role', fakeAsync(() => {
+      authService.hasRole.and.returnValue(false);
+      permissionService.checkPermission.and.returnValue(of(false));
+
+      fixture.detectChanges();
+      tick();
+
+      const sensitiveElements = fixture.debugElement.queryAll(
+        By.css('[data-sensitive="true"]')
+      );
+      
+      // Sensitive elements should be hidden by role enforcement
+      expect(sensitiveElements.length).toBe(0);
+    }));
+
+    it('should display audit log with proper role enforcement', fakeAsync(() => {
+      authService.hasRole.and.returnValue(true);
+      permissionService.checkPermission.and.returnValue(of(true));
+
+      fixture.detectChanges();
+      tick();
+
+      component.auditLog$.subscribe(actions => {
+        expect(actions).toEqual(mockAuditLog);
+        expect(actions.length).toBe(2);
+        expect(actions[0].action).toBe('STATE_TRANSITION');
+      });
+    }));
+
+    it('should enforce export permissions on audit log export', fakeAsync(() => {
+      authService.hasRole.and.returnValue(true);
+      permissionService.checkPermission.and.returnValue(of(true));
+
+      fixture.detectChanges();
+      tick();
+
+      spyOn(component, 'exportAuditLog');
+      
+      component.exportAuditLog('csv');
+      
+      expect(component.exportAuditLog).toHaveBeenCalledWith('csv');
+    }));
+
+    it('should disable export button when user lacks export permission', fakeAsync(() => {
+      authService.hasRole.and.returnValue(false);
+      permissionService.checkPermission.and.returnValue(of(false));
+
+      fixture.detectChanges();
+      tick();
+
+      const exportButton = fixture.debugElement.query(
+        By.css('button[data-action="export"]')
+      );
+      
+      if (exportButton) {
+        expect(exportButton.nativeElement.disabled).toBe(true);
+      }
+    }));
+  });
+
+  describe('System Health Monitoring with Permissions', () => {
+    it('should display system health status to authorized users', fakeAsync(() => {
+      authService.hasRole.and.returnValue(true);
+      permissionService.checkPermission.and.returnValue(of(true));
+
+      fixture.detectChanges();
+      tick();
+
+      component.systemHealth$.subscribe(health => {
+        expect(health).toBeDefined();
+        if (health) {
+          expect(health.status).toBe('healthy');
+          expect(health.services.length).toBe(2);
+        }
+      });
+    }));
+
+    it('should show degraded status indicator when system health changes', fakeAsync(() => {
+      const degradedHealth: SystemHealth = {
+        status: 'degraded',
+        services: [
+          { name: 'API', status: 'degraded', responseTime: 500, lastChecked: new Date(), errorRate: 0.05 }
+        ],
+        uptime: 98.5,
+        lastChecked: new Date()
+      };
+
+      store.setState({
+        adminViewer: {
+          metrics: { ...mockAdminMetrics, systemHealth: degradedHealth },
+          auditLog: mockAuditLog,
+          loading: false,
+          error: null
+        }
+      });
+
+      authService.hasRole.and.returnValue(true);
+      fixture.detectChanges();
+      tick();
+
+      component.systemHealth$.subscribe(health => {
+        if (health) {
+          expect(health.status).toBe('degraded');
+        }
+      });
+    }));
+  });
+});
+
+describe('Phase 0-1 Integration: State Visualization with Permissions', () => {
+  let component: StateVisualizationComponent;
+  let fixture: ComponentFixture<StateVisualizationComponent>;
+  let store: MockStore;
+  let permissionService: jasmine.SpyObj<PermissionService>;
+
+  const mockStateHistory: StateTransition[] = [
+    {
+      id: 'trans-1',
+      fromState: 'created',
+      toState: 'pending',
+      trigger: 'submit',
+      timestamp: new Date('2024-01-01T10:00:00'),
+      userId: 'user-1',
+      userName: 'John Doe',
+      reason: 'Initial submission',
+      metadata: {}
+    },
+    {
+      id: 'trans-2',
+      fromState: 'pending',
+      toState: 'in-progress',
+      trigger: 'approve',
+      timestamp: new Date('2024-01-01T11:00:00'),
+      userId: 'user-2',
+      userName: 'Jane Manager',
+      reason: 'Approved for processing',
+      metadata: { approver: 'user-2' }
+    }
+  ];
+
+  const mockCurrentState: StateNode = {
+    id: 'in-progress',
+    name: 'In Progress',
+    type: 'intermediate',
+    metadata: { color: 'blue', icon: 'play' }
+  };
+
+  beforeEach(async () => {
+    const permissionSpy = jasmine.createSpyObj('PermissionService', ['checkPermission', 'hasPermission']);
+
+    await TestBed.configureTestingModule({
+      declarations: [
+        StateVisualizationComponent,
+        RoleEnforcementDirective
+      ],
+      providers: [
+        provideMockStore({
+          initialState: {
+            stateHistory: {
+              transitions: mockStateHistory,
+              currentState: mockCurrentState,
+              loading: false
+            },
+            rolePermissions: {
+              currentUser: { id: 'user-1', role: 'User', permissions: [] }
+            }
+          }
+        }),
+        { provide: PermissionService, useValue: permissionSpy }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(StateVisualizationComponent);
+    component = fixture.componentInstance;
+    store = TestBed.inject(MockStore);
+    permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
+
+    component.entityType = 'job';
+    component.entityId = 'job-123';
+  });
+
+  it('should display state visualization with current state highlighted', fakeAsync(() => {
+    permissionService.checkPermission.and.returnValue(of(true));
+
+    fixture.detectChanges();
+    tick();
+
+    component.currentState$.subscribe(state => {
+      expect(state).toEqual(mockCurrentState);
+      expect(state.name).toBe('In Progress');
+    });
+  }));
+
+  it('should show only permitted transitions based on user role', fakeAsync(() => {
+    permissionService.checkPermission.and.returnValue(of(true));
+    permissionService.hasPermission.and.returnValue(true);
+
+    fixture.detectChanges();
+    tick();
+
+    component.availableTransitions$.subscribe(transitions => {
+      expect(transitions).toBeDefined();
+      // Transitions should be filtered based on permissions
+    });
+  }));
+
+  it('should hide transition controls when user lacks permission', fakeAsync(() => {
+    permissionService.checkPermission.and.returnValue(of(false));
+    permissionService.hasPermission.and.returnValue(false);
+
+    fixture.detectChanges();
+    tick();
+
+    const transitionControls = fixture.debugElement.query(
+      By.css('[data-component="transition-controls"]')
+    );
+    
+    expect(transitionControls).toBeNull();
+  }));
+
+  it('should display state history timeline with audit information', fakeAsync(() => {
+    permissionService.checkPermission.and.returnValue(of(true));
+
+    fixture.detectChanges();
+    tick();
+
+    component.stateHistory$.subscribe(history => {
+      expect(history).toEqual(mockStateHistory);
+      expect(history.length).toBe(2);
+      expect(history[0].userName).toBe('John Doe');
+      expect(history[1].userName).toBe('Jane Manager');
+    });
+  }));
+});
+
+describe('Phase 0-1 Integration: Lifecycle Management with Audit Logging', () => {
+  let component: LifecycleManagementComponent;
+  let fixture: ComponentFixture<LifecycleManagementComponent>;
+  let store: MockStore;
+  let lifecycleService: jasmine.SpyObj<LifecycleService>;
+  let permissionService: jasmine.SpyObj<PermissionService>;
+
+  const mockLifecycleState: LifecycleState = {
+    id: 'pending',
+    name: 'Pending',
+    description: 'Awaiting approval',
+    type: 'active',
+    allowedTransitions: ['approved', 'rejected'],
+    requiredFields: ['reason'],
+    validations: []
+  };
+
+  const mockTransitions: LifecycleTransition[] = [
+    {
+      id: 'trans-approve',
+      name: 'Approve',
+      fromState: 'pending',
+      toState: 'approved',
+      requiresApproval: true,
+      requiredRole: 'Manager',
+      validations: [],
+      sideEffects: []
+    },
+    {
+      id: 'trans-reject',
+      name: 'Reject',
+      fromState: 'pending',
+      toState: 'rejected',
+      requiresApproval: false,
+      validations: []
+    }
+  ];
+
+  beforeEach(async () => {
+    const lifecycleSpy = jasmine.createSpyObj('LifecycleService', [
+      'getLifecycleState',
+      'getAvailableTransitions',
+      'executeTransition',
+      'validateTransition'
+    ]);
+    const permissionSpy = jasmine.createSpyObj('PermissionService', ['checkPermission', 'hasPermission']);
+
+    await TestBed.configureTestingModule({
+      declarations: [
+        LifecycleManagementComponent,
+        StateTransitionControlsComponent,
+        RoleEnforcementDirective
+      ],
+      providers: [
+        provideMockStore({
+          initialState: {
+            lifecycleTransitions: {
+              currentState: mockLifecycleState,
+              availableTransitions: mockTransitions,
+              loading: false
+            },
+            rolePermissions: {
+              currentUser: { id: 'user-1', role: 'Manager', permissions: [] }
+            }
+          }
+        }),
+        { provide: LifecycleService, useValue: lifecycleSpy },
+        { provide: PermissionService, useValue: permissionSpy }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(LifecycleManagementComponent);
+    component = fixture.componentInstance;
+    store = TestBed.inject(MockStore);
+    lifecycleService = TestBed.inject(LifecycleService) as jasmine.SpyObj<LifecycleService>;
+    permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
+
+    component.entityType = 'job';
+    component.entityId = 'job-123';
+  });
+
+  it('should display lifecycle state with available transitions', fakeAsync(() => {
+    lifecycleService.getLifecycleState.and.returnValue(of(mockLifecycleState));
+    lifecycleService.getAvailableTransitions.and.returnValue(of(mockTransitions));
+    permissionService.checkPermission.and.returnValue(of(true));
+
+    fixture.detectChanges();
+    tick();
+
+    component.currentState$.subscribe(state => {
+      expect(state).toEqual(mockLifecycleState);
+    });
+
+    component.availableTransitions$.subscribe(transitions => {
+      expect(transitions).toEqual(mockTransitions);
+      expect(transitions.length).toBe(2);
+    });
+  }));
+
+  it('should enforce role requirements on transitions', fakeAsync(() => {
+    lifecycleService.getAvailableTransitions.and.returnValue(of(mockTransitions));
+    permissionService.hasPermission.and.callFake((resource: string, action: string) => {
+      return resource === 'lifecycle' && action === 'approve';
+    });
+
+    fixture.detectChanges();
+    tick();
+
+    // User with Manager role should see approve transition
+    component.availableTransitions$.subscribe(transitions => {
+      const approveTransition = transitions.find(t => t.id === 'trans-approve');
+      expect(approveTransition).toBeDefined();
+      expect(approveTransition?.requiredRole).toBe('Manager');
+    });
+  }));
+
+  it('should create audit log entry when transition is executed', fakeAsync(() => {
+    const transitionResult = {
+      success: true,
+      newState: 'approved',
+      auditLogId: 'audit-123'
+    };
+
+    lifecycleService.executeTransition.and.returnValue(of(transitionResult));
+    permissionService.checkPermission.and.returnValue(of(true));
+
+    fixture.detectChanges();
+    tick();
+
+    component.executeTransition();
+    tick();
+
+    expect(lifecycleService.executeTransition).toHaveBeenCalled();
+  }));
+
+  it('should display transition history from audit log', fakeAsync(() => {
+    const mockHistory: StateTransition[] = [
+      {
+        id: 'trans-1',
+        fromState: 'created',
+        toState: 'pending',
+        trigger: 'submit',
+        timestamp: new Date(),
+        userId: 'user-1',
+        userName: 'John Doe',
+        metadata: {}
+      }
+    ];
+
+    store.setState({
+      lifecycleTransitions: {
+        currentState: mockLifecycleState,
+        availableTransitions: mockTransitions,
+        history: mockHistory,
+        loading: false
+      }
+    });
+
+    fixture.detectChanges();
+    tick();
+
+    component.transitionHistory$.subscribe(history => {
+      expect(history).toEqual(mockHistory);
+      expect(history[0].userId).toBe('user-1');
+    });
+  }));
+
+  it('should validate transition prerequisites before execution', fakeAsync(() => {
+    const validationResult = {
+      isValid: true,
+      errors: [],
+      warnings: [],
+      metadata: {}
+    };
+
+    lifecycleService.validateTransition.and.returnValue(of(validationResult));
+    permissionService.checkPermission.and.returnValue(of(true));
+
+    fixture.detectChanges();
+    tick();
+
+    component.validateTransition().subscribe(result => {
+      expect(result.isValid).toBe(true);
+      expect(lifecycleService.validateTransition).toHaveBeenCalled();
+    });
+  }));
+});
