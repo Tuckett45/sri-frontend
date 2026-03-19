@@ -28,6 +28,7 @@ const routes: Routes = [
   { path: 'expenses', loadChildren: () => import('./components/expense/expense.module').then(m => m.ExpenseModule), canActivate: [AuthGuard] },
   { path: 'tps', loadChildren: () => import('./components/tps/tps.module').then(m => m.TpsModule), canActivate: [AuthGuard] },
   { path: 'deployments', loadChildren: () => import('./features/deployment/deployment.module').then(m => m.DeploymentModule), canActivate: [AuthGuard] },
+  { path: 'field-resources', loadChildren: () => import('./components/features/field-resource-management/field-resource-management.module').then(m => m.FieldResourceManagementModule), canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/login' }
 ];
 

@@ -67,6 +67,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.authService.isAdmin() || this.authService.isHR()
     },
     {
+      label: 'Field Resources',
+      route: '/field-resources',
+      shouldShow: () => this.authService.isAdmin()
+    },
+    {
       label: 'Notifications',
       route: '/notifications',
       shouldShow: () => this.featureFlags.flagEnabled('notifications')()
