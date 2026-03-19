@@ -33,8 +33,8 @@ export class CMGuard implements CanActivate {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): boolean {
-    // Check if user has CM or Admin role
-    if (this.authService.isUserInRole([UserRole.CM, UserRole.Admin])) {
+    // Check if user has CM, Admin, or related management role
+    if (this.authService.isUserInRole([UserRole.CM, UserRole.Admin, UserRole.Controller, UserRole.OSPCoordinator])) {
       return true;
     }
 

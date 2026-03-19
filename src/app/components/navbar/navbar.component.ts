@@ -73,11 +73,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.authService.isAdmin() || this.authService.isHR()
     },
     {
-      label: 'Field Resources',
-      route: '/field-resources',
-      shouldShow: () => this.authService.isAdmin()
-    },
-    {
       label: 'Notifications',
       route: '/notifications',
       shouldShow: () => this.featureFlags.flagEnabled('notifications')()
@@ -91,12 +86,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
       label: 'Field Resources',
       route: '/field-resource-management',
       shouldShow: () => {
-        // Show for Admin, Dispatcher roles (PM, CM, OSPCoordinator), and Technician roles
-        return this.authService.isAdmin() || 
-               this.authService.isPM() || 
-               this.authService.isCM() || 
-               this.authService.isCoordinator() ||
-               this.authService.isUserInRole([UserRole.Technician, UserRole.DeploymentEngineer, UserRole.SRITech]);
+        return this.authService.isUserInRole([
+          UserRole.User,
+          UserRole.Technician,
+          UserRole.CM,
+          UserRole.Admin,
+          UserRole.HR,
+          UserRole.OSPCoordinator,
+          UserRole.Controller,
+          UserRole.EngineeringFieldSupport,
+          UserRole.MaterialsManager,
+          UserRole.PM
+        ]);
       }
     },
     {

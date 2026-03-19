@@ -39,6 +39,7 @@ export class TechnicianGuard implements CanActivate {
     // Check if user has Technician role
     // Map existing ATLAS roles to Technician capabilities
     const allowedRoles = [
+      UserRole.Admin,
       UserRole.Technician,
       UserRole.DeploymentEngineer,
       UserRole.SRITech

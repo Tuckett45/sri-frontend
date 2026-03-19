@@ -48,7 +48,50 @@
 
   <!-- Main Content Grid -->
   <div class="content-grid">
-    <!-- Quick Actions -->
+    <!-- My Assignments Widget -->
+    <mat-card class="my-assignments-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>assignment</mat-icon>
+          My Assignments
+        </mat-card-title>
+        <button mat-button color="primary" (click)="navigateToAssignments()">
+          View All
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <ng-container *ngIf="(myAssignments$ | async) as assignments; else loadingAssignments">
+          <div *ngIf="assignments.length === 0" class="empty-state">
+            <mat-icon>assignment_turned_in</mat-icon>
+            <p>No active assignments</p>
+          </div>
+          <div *ngFor="let assignment of assignments" 
+               class="assignment-item"
+               (click)="navigateToJobDetail(assignment.jobId)">
+            <div class="assignment-status-indicator" [ngClass]="getAssignmentStatusClass(assignment.status)"></div>
+            <div class="assignment-info">
+              <div class="assignment-job">{{ assignment.job?.siteName || 'Job ' + assignment.jobId }}</div>
+              <div class="assignment-meta">
+                <span class="assignment-status-text">{{ assignment.status }}</span>
+                <span *ngIf="assignment.startTime" class="assignment-time">
+                  {{ formatDate(assignment.startTime) }}
+                </span>
+              </div>
+            </div>
+            <mat-icon class="assignment-chevron">chevron_right</mat-icon>
+          </div>
+        </ng-container>
+        <ng-template #loadingAssignments>
+          <div class="empty-state">
+            <mat-icon>hourglass_empty</mat-icon>
+            <p>Loading assignments...</p>
+          </div>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Quick Actions (side by side with My Assignments) -->
     <mat-card class="quick-actions-card">
       <mat-card-header>
         <mat-card-title>

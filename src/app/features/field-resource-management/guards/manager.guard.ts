@@ -31,11 +31,13 @@ export class ManagerGuard implements CanActivate {
       return of(false);
     }
     
-    // Allow Manager, HR, and Admin roles
+    // Allow Manager, HR, Admin, CM, and Controller roles
     const allowedRoles = [
       UserRole.Admin,
       UserRole.Manager,
-      UserRole.HR
+      UserRole.HR,
+      UserRole.CM,
+      UserRole.Controller
     ];
     
     const hasAccess = allowedRoles.includes(user.role as UserRole);
