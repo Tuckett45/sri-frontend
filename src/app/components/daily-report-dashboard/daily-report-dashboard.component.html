@@ -108,8 +108,8 @@
             <td mat-cell *matCellDef="let user">{{ formatDate(user.lastSubmissionDate) }}</td>
           </ng-container>
 
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions" *ngIf="canSubmitReports">
+          <!-- Actions Column (visibility controlled by userStatusColumns) -->
+          <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let user">
               <button
