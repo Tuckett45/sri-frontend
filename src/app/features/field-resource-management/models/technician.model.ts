@@ -71,6 +71,7 @@ export interface Technician {
   availability: Availability[];
   hourlyCostRate?: number; // Admin only
   isActive: boolean;
+  canTravel: boolean;
   currentLocation?: GeoLocation;
   createdAt: Date;
   updatedAt: Date;

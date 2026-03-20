@@ -177,6 +177,7 @@ export class MockDataService {
         availability,
         hourlyCostRate: 45 + (i % 5) * 5,
         isActive: i % 10 !== 9,
+        canTravel: i % 3 !== 0,
         currentLocation: {
           latitude: location.latitude + (Math.random() - 0.5) * 0.1,
           longitude: location.longitude + (Math.random() - 0.5) * 0.1,

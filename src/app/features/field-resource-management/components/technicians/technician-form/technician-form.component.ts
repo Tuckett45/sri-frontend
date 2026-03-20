@@ -81,7 +81,8 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
         employmentType: ['', Validators.required],
         homeBase: ['', Validators.required],
         region: ['', Validators.required],
-        hourlyCostRate: [null]
+        hourlyCostRate: [null],
+        canTravel: [false]
       }),
       
       // Step 2: Skills
@@ -124,7 +125,8 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       employmentType: technician.employmentType,
       homeBase: technician.homeBase,
       region: technician.region,
-      hourlyCostRate: technician.hourlyCostRate
+      hourlyCostRate: technician.hourlyCostRate,
+      canTravel: technician.canTravel ?? false
     });
     
     // Populate skills

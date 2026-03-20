@@ -58,6 +58,12 @@
             {{ technician.isActive ? 'Active' : 'Inactive' }}
           </span>
         </div>
+        <div class="info-item">
+          <label>Can Travel?</label>
+          <span class="status-badge" [class.active]="technician.canTravel" [class.inactive]="!technician.canTravel">
+            {{ technician.canTravel ? 'Yes' : 'No' }}
+          </span>
+        </div>
       </div>
     </mat-card-content>
   </mat-card>

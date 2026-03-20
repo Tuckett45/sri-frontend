@@ -323,12 +323,15 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
    */
   getTravelStatus(technician: Technician): { willing: boolean; label: string } | null {
     const profile = this.travelProfilesMap.get(technician.id);
-    if (!profile) {
-      return null;
+    if (profile) {
+      return {
+        willing: profile.willingToTravel,
+        label: profile.willingToTravel ? 'Willing' : 'Not Willing'
+      };
     }
     return {
-      willing: profile.willingToTravel,
-      label: profile.willingToTravel ? 'Willing' : 'Not Willing'
+      willing: technician.canTravel,
+      label: technician.canTravel ? 'Willing' : 'Not Willing'
     };
   }
 

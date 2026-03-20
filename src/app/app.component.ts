@@ -144,6 +144,7 @@ export class AppComponent {
         availability: [],
         hourlyCostRate: 75,
         isActive: true,
+        canTravel: true,
         currentLocation: { latitude: 33.7490, longitude: -84.3880, accuracy: 10, timestamp: new Date() },
         createdAt: new Date('2023-01-15'),
         updatedAt: new Date()
@@ -167,6 +168,7 @@ export class AppComponent {
         availability: [],
         hourlyCostRate: 65,
         isActive: true,
+        canTravel: true,
         currentLocation: { latitude: 33.7550, longitude: -84.3900, accuracy: 15, timestamp: new Date() },
         createdAt: new Date('2023-02-01'),
         updatedAt: new Date()
@@ -189,6 +191,7 @@ export class AppComponent {
         certifications: [],
         availability: [],
         isActive: true,
+        canTravel: false,
         currentLocation: { latitude: 33.7600, longitude: -84.3950, accuracy: 12, timestamp: new Date() },
         createdAt: new Date('2023-03-10'),
         updatedAt: new Date()
@@ -212,6 +215,7 @@ export class AppComponent {
         availability: [],
         hourlyCostRate: 70,
         isActive: true,
+        canTravel: true,
         currentLocation: { latitude: 32.7767, longitude: -96.7970, accuracy: 8, timestamp: new Date() },
         createdAt: new Date('2023-01-20'),
         updatedAt: new Date()
@@ -234,6 +238,7 @@ export class AppComponent {
         certifications: [],
         availability: [],
         isActive: true,
+        canTravel: false,
         currentLocation: { latitude: 32.7800, longitude: -96.8000, accuracy: 20, timestamp: new Date() },
         createdAt: new Date('2024-01-05'),
         updatedAt: new Date()

@@ -16,7 +16,7 @@
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Technician ID</mat-label>
-              <input matInput formControlName="technicianId" placeholder="TECH001">
+              <input matInput formControlName="technicianId">
               <mat-error *ngIf="basicInfoGroup.get('technicianId')?.hasError('required')">
                 Technician ID is required
               </mat-error>
@@ -26,7 +26,7 @@
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>First Name</mat-label>
-              <input matInput formControlName="firstName" placeholder="John">
+              <input matInput formControlName="firstName">
               <mat-error *ngIf="basicInfoGroup.get('firstName')?.hasError('required')">
                 First name is required
               </mat-error>
@@ -34,7 +34,7 @@
 
             <mat-form-field appearance="outline">
               <mat-label>Last Name</mat-label>
-              <input matInput formControlName="lastName" placeholder="Doe">
+              <input matInput formControlName="lastName">
               <mat-error *ngIf="basicInfoGroup.get('lastName')?.hasError('required')">
                 Last name is required
               </mat-error>
@@ -44,7 +44,7 @@
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Email</mat-label>
-              <input matInput type="email" formControlName="email" placeholder="john.doe@example.com">
+              <input matInput type="email" formControlName="email">
               <mat-error *ngIf="basicInfoGroup.get('email')?.hasError('required')">
                 Email is required
               </mat-error>
@@ -55,7 +55,7 @@
 
             <mat-form-field appearance="outline">
               <mat-label>Phone</mat-label>
-              <input matInput formControlName="phone" placeholder="555-0100">
+              <input matInput formControlName="phone">
               <mat-error *ngIf="basicInfoGroup.get('phone')?.hasError('required')">
                 Phone is required
               </mat-error>
@@ -94,7 +94,7 @@
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Home Base</mat-label>
-              <input matInput formControlName="homeBase" placeholder="New York">
+              <input matInput formControlName="homeBase">
               <mat-error *ngIf="basicInfoGroup.get('homeBase')?.hasError('required')">
                 Home base is required
               </mat-error>
@@ -102,7 +102,7 @@
 
             <mat-form-field appearance="outline">
               <mat-label>Region</mat-label>
-              <input matInput formControlName="region" placeholder="Northeast">
+              <input matInput formControlName="region">
               <mat-error *ngIf="basicInfoGroup.get('region')?.hasError('required')">
                 Region is required
               </mat-error>
@@ -112,9 +112,15 @@
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Hourly Cost Rate (Admin Only)</mat-label>
-              <input matInput type="number" formControlName="hourlyCostRate" placeholder="50.00">
-              <span matPrefix>$&nbsp;</span>
+              <input matInput type="number" formControlName="hourlyCostRate" >
+              <span style="color: black !important;" matPrefix>&nbsp;$</span>
             </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-checkbox formControlName="canTravel" color="primary">
+              Can Travel?
+            </mat-checkbox>
           </div>
 
           <div class="step-actions">

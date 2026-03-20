@@ -1,7 +1,11 @@
 <div class="technician-list-container">
   <!-- Header -->
   <div class="list-header">
-    <h2>Technicians</h2>
+    <div class="header-title">
+      <mat-icon class="page-icon">engineering</mat-icon>
+      <h2>Technicians</h2>
+      <span class="page-subtitle">Manage field technicians and their profiles</span>
+    </div>
     <div class="header-actions">
       <button mat-stroked-button [matMenuTriggerFor]="exportMenu">
         <mat-icon>download</mat-icon>
@@ -17,7 +21,7 @@
           <span>Export to PDF</span>
         </button>
       </mat-menu>
-      <button mat-raised-button class="btn-orange" routerLink="./new" *roleBasedShow="[UserRole.Admin, UserRole.PM, UserRole.CM]">
+      <button mat-raised-button class="btn-orange" routerLink="./new">
         <mat-icon>add</mat-icon>
         Add Technician
       </button>

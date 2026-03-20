@@ -15,6 +15,7 @@ import * as JobSelectors from '../../../state/jobs/job.selectors';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { BatchStatusDialogComponent } from '../../shared/batch-status-dialog/batch-status-dialog.component';
 import { BatchTechnicianDialogComponent } from '../../shared/batch-technician-dialog/batch-technician-dialog.component';
+import { JobFormComponent } from '../job-form/job-form.component';
 import { ExportService } from '../../../services/export.service';
 import { AuthService } from '../../../../../services/auth.service';
 import { UserRole } from '../../../../../models/role.enum';
@@ -393,7 +394,21 @@ export class JobListComponent implements OnInit, OnDestroy {
    * Navigate to job edit form
    */
   editJob(job: Job): void {
-    this.router.navigate(['/field-resource-management/jobs', job.id, 'edit']);
+    const dialogRef = this.dialog.open(JobFormComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      panelClass: 'job-form-dialog',
+      autoFocus: false,
+      data: { jobId: job.id }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.applyFilters();
+      }
+    });
   }
 
   /**
@@ -429,7 +444,20 @@ export class JobListComponent implements OnInit, OnDestroy {
    * Navigate to create new job
    */
   createJob(): void {
-    this.router.navigate(['/field-resource-management/jobs/new']);
+    const dialogRef = this.dialog.open(JobFormComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      panelClass: 'job-form-dialog',
+      autoFocus: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.applyFilters();
+      }
+    });
   }
 
   /**

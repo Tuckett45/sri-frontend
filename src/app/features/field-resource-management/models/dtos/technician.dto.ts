@@ -19,6 +19,7 @@ export interface CreateTechnicianDto {
   certifications?: Certification[];
   availability?: Availability[];
   hourlyCostRate?: number;
+  canTravel?: boolean;
 }
 
 export interface UpdateTechnicianDto {
@@ -35,5 +36,6 @@ export interface UpdateTechnicianDto {
   availability?: Availability[];
   hourlyCostRate?: number;
   isActive?: boolean;
+  canTravel?: boolean;
   currentLocation?: GeoLocation;
 }

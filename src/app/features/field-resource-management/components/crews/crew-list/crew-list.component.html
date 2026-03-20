@@ -1,7 +1,11 @@
 <div class="crew-list-container">
   <!-- Header -->
   <div class="list-header">
-    <h2>Crews</h2>
+    <div class="header-title">
+      <mat-icon class="page-icon">groups</mat-icon>
+      <h2>Crews</h2>
+      <span class="page-subtitle">Manage crew assignments and composition</span>
+    </div>
     <div class="header-actions">
       <button mat-stroked-button [matMenuTriggerFor]="exportMenu">
         <mat-icon>download</mat-icon>
@@ -17,7 +21,7 @@
           <span>Export to PDF</span>
         </button>
       </mat-menu>
-      <button mat-raised-button class="btn-orange" routerLink="./new" *roleBasedShow="[UserRole.Admin, UserRole.CM]">
+      <button mat-raised-button class="btn-orange" routerLink="./new">
         <mat-icon>add</mat-icon>
         Add Crew
       </button>

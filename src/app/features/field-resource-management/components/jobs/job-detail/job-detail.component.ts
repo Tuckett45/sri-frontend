@@ -17,6 +17,7 @@ import * as BudgetActions from '../../../state/budgets/budget.actions';
 import * as BudgetSelectors from '../../../state/budgets/budget.selectors';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { AssignmentDialogComponent } from '../../scheduling/assignment-dialog/assignment-dialog.component';
+import { JobFormComponent } from '../job-form/job-form.component';
 import { ReportingService } from '../../../services/reporting.service';
 
 /**
@@ -184,14 +185,22 @@ export class JobDetailComponent implements OnInit, OnDestroy {
    */
   editJob(): void {
     if (!this.job) return;
-    
-    try {
-      // Use relative navigation from current route
-      this.router.navigate(['edit'], { relativeTo: this.route });
-    } catch (error) {
-      console.error('Navigation error:', error);
-      this.snackBar.open('Unable to navigate to edit page', 'Close', { duration: 3000 });
-    }
+
+    const dialogRef = this.dialog.open(JobFormComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      panelClass: 'job-form-dialog',
+      autoFocus: false,
+      data: { jobId: this.job.id }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.store.dispatch(JobActions.selectJob({ id: this.job!.id }));
+      }
+    });
   }
 
   /**
