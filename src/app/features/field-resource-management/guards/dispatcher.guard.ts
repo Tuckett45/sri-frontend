@@ -38,13 +38,19 @@ export class DispatcherGuard implements CanActivate {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): boolean {
-    // Check if user has Dispatcher or Admin role
-    // Map existing ATLAS roles to Dispatcher capabilities
+    // Check if user has a role with FRM access
+    // All roles that should be able to access Field Resource Management features
     const allowedRoles = [
-      UserRole.Admin,
-      UserRole.PM,
+      UserRole.User,
+      UserRole.Technician,
       UserRole.CM,
-      UserRole.OSPCoordinator
+      UserRole.Admin,
+      UserRole.HR,
+      UserRole.OSPCoordinator,
+      UserRole.Controller,
+      UserRole.EngineeringFieldSupport,
+      UserRole.MaterialsManager,
+      UserRole.PM
     ];
 
     if (this.authService.isUserInRole(allowedRoles)) {

@@ -25,45 +25,45 @@ const routes: Routes = [
   { path: 'my-deployments', component: DeploymentListComponent, canActivate: [AuthGuard] },
   { path: 'admin/user-approvals', component: AdminUserApprovalComponent, canActivate: [AuthGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { 
-    path: 'preliminary-punch-list', 
-    loadChildren: () => import('./components/preliminary-punch-list/preliminary-punch-list.module').then(m => m.PreliminaryPunchListModule), 
+  {
+    path: 'preliminary-punch-list',
+    loadChildren: () => import('./components/preliminary-punch-list/preliminary-punch-list.module').then(m => m.PreliminaryPunchListModule),
     canActivate: [AuthGuard],
     data: { preload: true }
   },
-  { 
-    path: 'expenses', 
-    loadChildren: () => import('./components/expense/expense.module').then(m => m.ExpenseModule), 
+  {
+    path: 'expenses',
+    loadChildren: () => import('./components/expense/expense.module').then(m => m.ExpenseModule),
     canActivate: [AuthGuard],
     data: { preload: false }
   },
-  { 
-    path: 'tps', 
-    loadChildren: () => import('./components/tps/tps.module').then(m => m.TpsModule), 
+  {
+    path: 'tps',
+    loadChildren: () => import('./components/tps/tps.module').then(m => m.TpsModule),
     canActivate: [AuthGuard],
     data: { preload: false }
   },
-  { 
-    path: 'deployments', 
-    loadChildren: () => import('./features/deployment/deployment.module').then(m => m.DeploymentModule), 
+  {
+    path: 'deployments',
+    loadChildren: () => import('./features/deployment/deployment.module').then(m => m.DeploymentModule),
     canActivate: [AuthGuard],
     data: { preload: true }
   },
-  { 
-    path: 'atlas', 
-    loadChildren: () => import('./features/atlas/atlas.module').then(m => m.AtlasModule), 
+  {
+    path: 'atlas',
+    loadChildren: () => import('./features/atlas/atlas.module').then(m => m.AtlasModule),
     canActivate: [AuthGuard, AtlasFeatureGuard],
     data: { preload: true }
   },
-  { 
-    path: 'field-resource-management', 
-    loadChildren: () => import('./features/field-resource-management/field-resource-management.module').then(m => m.FieldResourceManagementModule), 
+  {
+    path: 'field-resource-management',
+    loadChildren: () => import('./features/field-resource-management/field-resource-management.module').then(m => m.FieldResourceManagementModule),
     canActivate: [AuthGuard],
     data: { preload: true }
   },
-  { 
-    path: 'admin-dashboard', 
-    loadChildren: () => import('./features/admin-dashboard/admin-dashboard.module').then(m => m.AdminDashboardModule), 
+  {
+    path: 'admin-dashboard',
+    loadChildren: () => import('./features/admin-dashboard/admin-dashboard.module').then(m => m.AdminDashboardModule),
     canActivate: [AuthGuard],
     data: { preload: false }
   },

@@ -81,7 +81,7 @@
 
 .content-grid {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
   margin-bottom: 32px;
   
@@ -189,6 +189,7 @@
 
 .recent-jobs-card {
   background-color: #ffffff;
+  grid-column: 1 / -1;
   
   mat-card-header {
     display: flex;
@@ -289,6 +290,95 @@
           color: #666;
         }
       }
+    }
+  }
+}
+
+.my-assignments-card {
+  background-color: #ffffff;
+  border-left: 4px solid #144f80;
+  
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      
+      mat-icon {
+        color: #144f80;
+      }
+    }
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 32px 20px;
+    color: #999;
+    
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 8px;
+    }
+    
+    p { margin: 0; }
+  }
+  
+  .assignment-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    
+    &:last-child { border-bottom: none; }
+    &:hover { background-color: #f5f5f5; }
+    
+    .assignment-status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      
+      &.status-assigned { background-color: #2196f3; }
+      &.status-accepted { background-color: #4caf50; }
+      &.status-in-progress { background-color: #ff9800; }
+      &.status-completed { background-color: #9e9e9e; }
+      &.status-rejected { background-color: #f44336; }
+    }
+    
+    .assignment-info {
+      flex: 1;
+      
+      .assignment-job {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 2px;
+      }
+      
+      .assignment-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: #666;
+        
+        .assignment-status-text {
+          font-weight: 500;
+        }
+      }
+    }
+    
+    .assignment-chevron {
+      color: #999;
+      flex-shrink: 0;
     }
   }
 }

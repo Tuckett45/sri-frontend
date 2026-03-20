@@ -559,26 +559,19 @@ export class PermissionService {
       restrictions: []
     });
 
-    // User role - basic permissions
+    // User role - basic FRM access
     this.setRolePermissions('User', {
       role: 'User',
       permissions: [
-        {
-          resource: 'jobs',
-          actions: ['read']
-        },
-        {
-          resource: 'deployments',
-          actions: ['read']
-        },
-        {
-          resource: 'reports',
-          actions: ['read']
-        },
-        {
-          resource: 'budgets',
-          actions: ['read']
-        }
+        { resource: 'jobs', actions: ['read'] },
+        { resource: 'deployments', actions: ['read'] },
+        { resource: 'reports', actions: ['read'] },
+        { resource: 'budgets', actions: ['read'] },
+        { resource: 'technicians', actions: ['read'] },
+        { resource: 'crews', actions: ['read'] },
+        { resource: 'assignments', actions: ['read'] },
+        { resource: 'kpis', actions: ['read'] },
+        { resource: 'time_entries', actions: ['create', 'read', 'update'] }
       ],
       restrictions: []
     });
@@ -616,6 +609,122 @@ export class PermissionService {
           actions: ['read', 'update'],
           conditions: [{ field: 'id', operator: 'equals' as const, value: 'self' }]
         }
+      ],
+      restrictions: []
+    });
+
+    // HR role - personnel and timecard management
+    this.setRolePermissions('HR', {
+      role: 'HR',
+      permissions: [
+        { resource: 'technicians', actions: ['create', 'read', 'update'] },
+        { resource: 'crews', actions: ['read'] },
+        { resource: 'jobs', actions: ['read'] },
+        { resource: 'assignments', actions: ['read'] },
+        { resource: 'reports', actions: ['read'] },
+        { resource: 'kpis', actions: ['read'] },
+        { resource: 'time_entries', actions: ['create', 'read', 'update', 'delete'] },
+        { resource: 'budgets', actions: ['read'] },
+        { resource: 'travel_profiles', actions: ['read'] },
+        { resource: 'home_addresses', actions: ['read'] },
+        { resource: 'inventory', actions: ['read'] },
+        { resource: 'materials', actions: ['read'] }
+      ],
+      restrictions: []
+    });
+
+    // OSPCoordinator role - dispatching and coordination
+    this.setRolePermissions('OSPCoordinator', {
+      role: 'OSPCoordinator',
+      permissions: [
+        { resource: 'jobs', actions: ['create', 'read', 'update'] },
+        { resource: 'technicians', actions: ['read', 'update'] },
+        { resource: 'crews', actions: ['read', 'update'] },
+        { resource: 'assignments', actions: ['create', 'read', 'update'] },
+        { resource: 'reports', actions: ['read'] },
+        { resource: 'kpis', actions: ['read'] },
+        { resource: 'time_entries', actions: ['create', 'read', 'update'] },
+        { resource: 'budgets', actions: ['read'] },
+        { resource: 'approvals', actions: ['read', 'update'] },
+        { resource: 'travel_profiles', actions: ['read'] },
+        { resource: 'inventory', actions: ['read', 'update'] },
+        { resource: 'materials', actions: ['read'] }
+      ],
+      restrictions: []
+    });
+
+    // Controller role - financial oversight
+    this.setRolePermissions('Controller', {
+      role: 'Controller',
+      permissions: [
+        { resource: 'jobs', actions: ['read'] },
+        { resource: 'technicians', actions: ['read'] },
+        { resource: 'crews', actions: ['read'] },
+        { resource: 'assignments', actions: ['read'] },
+        { resource: 'reports', actions: ['create', 'read'] },
+        { resource: 'kpis', actions: ['read'] },
+        { resource: 'time_entries', actions: ['read', 'update'] },
+        { resource: 'budgets', actions: ['create', 'read', 'update'] },
+        { resource: 'approvals', actions: ['read', 'update'] },
+        { resource: 'travel_profiles', actions: ['read'] },
+        { resource: 'inventory', actions: ['read'] },
+        { resource: 'materials', actions: ['read'] }
+      ],
+      restrictions: []
+    });
+
+    // EngineeringFieldSupport role - field support and technical oversight
+    this.setRolePermissions('EngineeringFieldSupport', {
+      role: 'EngineeringFieldSupport',
+      permissions: [
+        { resource: 'jobs', actions: ['read', 'update'] },
+        { resource: 'technicians', actions: ['read'] },
+        { resource: 'crews', actions: ['read'] },
+        { resource: 'assignments', actions: ['read'] },
+        { resource: 'reports', actions: ['read'] },
+        { resource: 'kpis', actions: ['read'] },
+        { resource: 'time_entries', actions: ['create', 'read', 'update'] },
+        { resource: 'budgets', actions: ['read'] },
+        { resource: 'travel_profiles', actions: ['read'] },
+        { resource: 'inventory', actions: ['read', 'update'] },
+        { resource: 'materials', actions: ['read', 'update'] }
+      ],
+      restrictions: []
+    });
+
+    // MaterialsManager role - inventory and materials management
+    this.setRolePermissions('MaterialsManager', {
+      role: 'MaterialsManager',
+      permissions: [
+        { resource: 'jobs', actions: ['read'] },
+        { resource: 'technicians', actions: ['read'] },
+        { resource: 'crews', actions: ['read'] },
+        { resource: 'assignments', actions: ['read'] },
+        { resource: 'reports', actions: ['read'] },
+        { resource: 'kpis', actions: ['read'] },
+        { resource: 'time_entries', actions: ['create', 'read', 'update'] },
+        { resource: 'budgets', actions: ['read'] },
+        { resource: 'inventory', actions: ['create', 'read', 'update', 'delete'] },
+        { resource: 'materials', actions: ['create', 'read', 'update', 'delete'] }
+      ],
+      restrictions: []
+    });
+
+    // PM role - project management
+    this.setRolePermissions('PM', {
+      role: 'PM',
+      permissions: [
+        { resource: 'jobs', actions: ['create', 'read', 'update'] },
+        { resource: 'technicians', actions: ['read'] },
+        { resource: 'crews', actions: ['read'] },
+        { resource: 'assignments', actions: ['create', 'read', 'update'] },
+        { resource: 'reports', actions: ['create', 'read'] },
+        { resource: 'kpis', actions: ['read'] },
+        { resource: 'time_entries', actions: ['read'] },
+        { resource: 'budgets', actions: ['read', 'update'] },
+        { resource: 'travel_profiles', actions: ['read'] },
+        { resource: 'inventory', actions: ['read'] },
+        { resource: 'materials', actions: ['read'] }
       ],
       restrictions: []
     });

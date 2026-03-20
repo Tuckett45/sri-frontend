@@ -137,7 +137,7 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       route: '/field-resource-management/approvals',
       resource: 'approvals',
       action: 'read',
-      roles: [UserRole.Admin, UserRole.CM]
+      roles: [UserRole.Admin, UserRole.CM, UserRole.Controller, UserRole.OSPCoordinator]
     },
     {
       label: 'Admin',
@@ -161,15 +161,15 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       route: '/field-resource-management/timecard-manager',
       resource: 'time_entries',
       action: 'approve',
-      roles: [UserRole.Admin, UserRole.Manager, UserRole.HR]
+      roles: [UserRole.Admin, UserRole.Manager, UserRole.HR, UserRole.CM, UserRole.Controller]
     },
     {
       label: 'My Assignments',
       icon: 'assignment',
-      route: '/field-resource-management/mobile/assignments',
+      route: '/field-resource-management/mobile/daily',
       resource: 'assignments',
       action: 'read',
-      roles: [UserRole.Technician]
+      roles: [UserRole.Admin, UserRole.Technician]
     },
     {
       label: 'CM Dashboard',
@@ -177,7 +177,7 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       route: '/field-resource-management/cm/dashboard',
       resource: 'kpis',
       action: 'read',
-      roles: [UserRole.Admin, UserRole.CM]
+      roles: [UserRole.Admin, UserRole.CM, UserRole.Controller, UserRole.OSPCoordinator]
     },
     {
       label: 'Admin Dashboard',
