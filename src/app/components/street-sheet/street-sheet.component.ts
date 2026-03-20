@@ -8,7 +8,6 @@ import { MapMarker } from 'src/app/models/map-marker.model';
 import { StreetSheet } from 'src/app/models/street-sheet.model';
 import { StreetSheetService } from 'src/app/services/street-sheet.service';
 import { MapMarkerService } from 'src/app/services/map-marker.service';
-import { forkJoin, map } from 'rxjs';
 import { DeleteConfirmationModalComponent } from '../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { ToastrService } from 'ngx-toastr';
 import { MapMarkerModalComponent } from '../modals/map-marker-modal/map-marker-modal.component';
@@ -117,32 +116,33 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   }
 
   getStreetSheets() {
-    this.streetSheetService.getStreetSheets(this.user).subscribe(streetSheets => {
-        forkJoin(
-            streetSheets.map((sheet: StreetSheet) =>
-                this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).pipe(
-                    map((mapMarkers: MapMarker[]) => ({ sheet, mapMarkers }))
-                )
-            )
-        ).subscribe(results => {
-            const filteredStreetSheets = results.map((result: any) => {
-                    result.sheet.marker = result.mapMarkers;
-                    result.sheet.marker.forEach((marker: MapMarker) => {
-                        this.getReversedAddress(marker).then((reversedAddress) => {
-                            this.reversedAddresses[marker.id] = reversedAddress;
-                            this.streetSheetMapComponent.addMarker(marker, result.sheet)
-                        });
-                    })
-                    return result.sheet;
-                });
+    this.streetSheetService.getStreetSheets(this.user).subscribe({
+      next: (streetSheets) => {
+        this.streetSheets = streetSheets;
+        this.filteredStreetSheets = streetSheets;
+        this.getLocationFilter();
+        this.getUniqueCreatedByUsers();
+        this.refreshLookupOptions();
+        this.refreshDashboardData();
 
-            this.streetSheets = filteredStreetSheets;
-            this.filteredStreetSheets = this.streetSheets;
-            this.getLocationFilter();
-            this.getUniqueCreatedByUsers();
-            this.refreshLookupOptions();
-            this.refreshDashboardData();
+        // Fetch markers for each sheet, then refresh the map with filtered results
+        streetSheets.forEach((sheet: StreetSheet) => {
+          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe({
+            next: (mapMarkers: MapMarker[]) => {
+              sheet.marker = mapMarkers;
+              this.refreshMapMarkers();
+              this.getReversedAddress(mapMarkers[0]).catch(() => {});
+            },
+            error: () => {
+              sheet.marker = [];
+            }
+          });
         });
+      },
+      error: () => {
+        this.streetSheets = [];
+        this.filteredStreetSheets = [];
+      }
     });
   }
   
@@ -261,7 +261,6 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.streetSheetMapComponent.addMarker(result.marker, result);
         this.getStreetSheets();
       }
     });
@@ -326,7 +325,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
 
   deleteMarker(marker: MapMarker): void {
     this.mapMarkerService.deleteMapMarker(marker).subscribe(() => {
-      this.mapMarkers = this.mapMarkers.filter(marker => marker.id !== marker.id);
+      this.mapMarkers = this.mapMarkers.filter(m => m.id !== marker.id);
       this.streetSheetMapComponent.removeMarker(marker);
       this.toastr.success('Map Marker deleted');
     },
@@ -443,33 +442,30 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   applyFilters(): void {
     if (this.startDate && this.endDate) {
       this.streetSheetMapComponent.clearAllMapMarkers();
-      this.streetSheetService.getStreetSheets(this.user, this.startDate, this.endDate).subscribe(streetSheets => {
-        forkJoin(
-            streetSheets.map((sheet: StreetSheet) =>
-                this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).pipe(
-                    map((mapMarkers: MapMarker[]) => ({ sheet, mapMarkers }))
-                )
-            )
-        ).subscribe(results => {
-            const filteredStreetSheets = results.map((result: any) => {
-                    result.sheet.marker = result.mapMarkers;
-                    result.sheet.marker.forEach((marker: MapMarker) => {
-                        this.getReversedAddress(marker).then((reversedAddress) => {
-                            this.reversedAddresses[marker.id] = reversedAddress;
-                            this.streetSheetMapComponent.addMarker(marker, result.sheet)
-                        });
-                    })
-                    return result.sheet;
-                });
+      this.streetSheetService.getStreetSheets(this.user, this.startDate, this.endDate).subscribe({
+        next: (streetSheets) => {
+          this.streetSheets = streetSheets;
+          this.filteredStreetSheets = streetSheets;
+          this.getLocationFilter();
+          this.getUniqueCreatedByUsers();
+          this.refreshLookupOptions();
+          this.refreshDashboardData();
 
-            this.streetSheets = filteredStreetSheets;
-            this.filteredStreetSheets = this.streetSheets;
-            this.getLocationFilter();
-            this.getUniqueCreatedByUsers();
-            this.refreshLookupOptions();
-            this.refreshDashboardData();
-        });
-    });
+          streetSheets.forEach((sheet: StreetSheet) => {
+            this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe({
+              next: (mapMarkers: MapMarker[]) => {
+                sheet.marker = mapMarkers;
+                this.refreshMapMarkers();
+              },
+              error: () => { sheet.marker = []; }
+            });
+          });
+        },
+        error: () => {
+          this.streetSheets = [];
+          this.filteredStreetSheets = [];
+        }
+      });
     } else {
       this.applyLocalFilters();
     }
@@ -512,6 +508,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.missingPageIndex = 0;
     this.sortDashboardSheets();
     this.loadCmStats();
+    this.refreshMapMarkers();
   }
 
   onDashboardDateChange(): void {
@@ -615,7 +612,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
 
           const withCount = stats?.submittedCount ?? this.cmsWithEntries.length;
           const withoutCount = stats?.notSubmittedCount ?? this.cmsWithoutEntries.length;
-          const totalSheets = stats?.totalSheetCount ?? this.dashboardStreetSheets.length;
+          const totalSheets = this.dashboardStreetSheets.length;
 
           this.submittedPageIndex = 0;
           this.missingPageIndex = 0;
@@ -837,10 +834,13 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
       return false;
     }
 
-    if (start && date < this.startOfDay(start)) {
+    // Compare date-only (ignore time) so timezone offsets don't exclude sheets
+    const sheetDay = this.startOfDay(date);
+
+    if (start && sheetDay < this.startOfDay(start)) {
       return false;
     }
-    if (end && date > this.endOfDay(end)) {
+    if (end && sheetDay > this.startOfDay(end)) {
       return false;
     }
     return true;
@@ -875,6 +875,25 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
       return undefined;
     }
     return new Date(Math.max(...dates));
+  }
+
+  get filteredMarkerCount(): number {
+    if (!this.dashboardStreetSheets) return 0;
+    return this.dashboardStreetSheets.reduce((sum, sheet) =>
+      sum + (Array.isArray(sheet.marker) ? sheet.marker.length : 0), 0);
+  }
+
+  private refreshMapMarkers(): void {
+    if (!this.streetSheetMapComponent) return;
+    this.streetSheetMapComponent.clearAllMapMarkers();
+    const sheetsToShow = this.dashboardStreetSheets || [];
+    sheetsToShow.forEach(sheet => {
+      if (Array.isArray(sheet.marker)) {
+        sheet.marker.forEach(marker => {
+          this.streetSheetMapComponent.addMarker(marker, sheet);
+        });
+      }
+    });
   }
   
   

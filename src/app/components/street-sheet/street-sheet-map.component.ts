@@ -1,17 +1,20 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import * as L from 'leaflet';
-import 'leaflet-search';
-import 'leaflet-draw';
-import 'leaflet.markercluster';
 import { MapMarker } from 'src/app/models/map-marker.model';
 import { StreetSheet } from 'src/app/models/street-sheet.model';
-import { MapMarkerService } from 'src/app/services/map-marker.service';
-import { GeocodingService } from 'src/app/services/geocoding.service';
-import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { StreetSheetService } from 'src/app/services/street-sheet.service';
+import { MapMarkerService } from 'src/app/services/map-marker.service';
 import { DatePipe } from '@angular/common';
 import { User } from 'src/app/models/user.model';
 import { StateLocation } from 'src/app/models/state-location.enum';
+
+// Fix Leaflet default icon paths broken by webpack
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'assets/images/marker-icon-2x.png',
+  iconUrl: 'assets/images/marker-icon.png',
+  shadowUrl: 'assets/images/marker-shadow.png',
+});
 
 @Component({
   selector: 'street-sheet-map',
@@ -21,47 +24,35 @@ import { StateLocation } from 'src/app/models/state-location.enum';
   standalone: false
 })
 export class StreetSheetMapComponent implements AfterViewInit {
-  [x: string]: any;
+  @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef;
+
   map!: L.Map;
   streetSheets: StreetSheet[] = [];
   osmLayer!: L.TileLayer;
-  markersClusterGroup!: L.MarkerClusterGroup;
-  mapMarkers: { id: string, marker: L.Marker }[] = []; 
-  stateAbbreviations!: StateAbbreviation;
-  formattedDate!: string;
+  mapMarkers: { id: string, marker: L.Marker }[] = [];
   userData!: User;
-
-  reversedAddresses: { [markerId: string]: { street: string, city: string, state: string } } = {};
+  private mapReady = false;
+  private pendingMarkers: { marker: MapMarker, streetSheet: StreetSheet }[] = [];
 
   constructor(
-    private streetSheetService: StreetSheetService, 
+    private streetSheetService: StreetSheetService,
     private mapMarkerService: MapMarkerService,
-    private geocodingService: GeocodingService,
     private datePipe: DatePipe
   ) {}
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     this.loadUserProfile();
-    // this.loadStreetSheets();
     this.initMap();
   }
 
-  loadUserProfile(): void {
+  private loadUserProfile(): void {
     const userString = localStorage.getItem('user');
     if (userString) {
       const userObj = JSON.parse(userString);
-
       this.userData = new User(
-        userObj.id,
-        userObj.name,
-        userObj.email,
-        userObj.password,
-        userObj.role,
-        userObj.market,
-        userObj.company,
-        new Date(userObj.createdDate),
-        userObj.isApproved,
-        userObj.approvalToken  
+        userObj.id, userObj.name, userObj.email, userObj.password,
+        userObj.role, userObj.market, userObj.company,
+        new Date(userObj.createdDate), userObj.isApproved, userObj.approvalToken
       );
     }
   }
@@ -70,141 +61,83 @@ export class StreetSheetMapComponent implements AfterViewInit {
     this.streetSheetService.getStreetSheets(this.userData).subscribe(streetSheets => {
       this.streetSheets = streetSheets;
       streetSheets.forEach((sheet: StreetSheet) => {
-          this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe(mapMarkers => {
-            sheet.marker = mapMarkers;
-            mapMarkers.forEach(marker => {
-              if (marker.latitude && marker.longitude) {
-                this.addMarker(marker, sheet);
-              }
-            });
+        this.mapMarkerService.getMapMarkersForStreetSheet(sheet.id).subscribe(mapMarkers => {
+          sheet.marker = mapMarkers;
+          mapMarkers.forEach(marker => {
+            if (marker.latitude && marker.longitude) {
+              this.addMarker(marker, sheet);
+            }
           });
+        });
       });
     });
   }
 
-  getReversedAddress(marker: MapMarker): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.geocodingService.reverseGeocode(marker.latitude, marker.longitude).subscribe(suggestion => {
-  
-        let bestResult = suggestion.results[0];
-        for (let result of suggestion.results) {
-          if (result.geometry.location_type === 'ROOFTOP') {
-            bestResult = result;
-            break;
-          }
-        }
-  
-        const address = bestResult.address_components || [];
-        const formattedAddress = bestResult.formatted_address;
-  
-        const streetAddress = address.find((component: { types: string | string[]; }) => component.types.includes('street_number'))?.long_name 
-                              + ' ' + 
-                              address.find((component: { types: string | string[]; }) => component.types.includes('route'))?.long_name || '';
-  
-        const city = address.find((component: { types: string | string[]; }) => component.types.includes('locality'))?.long_name || ''; 
-        const state = address.find((component: { types: string | string[]; }) => component.types.includes('administrative_area_level_1'))?.long_name || '';  
-        const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || ''; 
-  
-        this.reversedAddresses[marker.id] = {
-          street: streetAddress.trim(),
-          city: city,
-          state: abbreviatedState,
-        };
-  
-        resolve(this.reversedAddresses[marker.id]);
-      }, error => {
-        reject(error);
-      });
-    });
-  }
-
-  public async addMarker(marker: MapMarker, streetSheet: StreetSheet) {
-      this.getReversedAddress(marker).then(address => {
-        if (marker.latitude && marker.longitude) {
-          const date = new Date(marker.dateCreated + "Z")
-          this.formattedDate = this.datePipe.transform(date, 'MMMM d, yyyy hh:mm a', 'America/Denver') || '';
-  
-          const customIcon = L.icon({
-            iconUrl: 'assets/images/marker-icon-2x.png',
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
-            shadowUrl: 'assets/images/marker-shadow.png',
-            popupAnchor: [0, -32],
-            shadowSize: [41, 41],
-            shadowAnchor: [12, 41]
-          });
-  
-          const newMarker = L.marker([marker.latitude, marker.longitude], { icon: customIcon }).addTo(this.map)
-          .bindPopup(`
-            <b>${streetSheet.vendorName}</b><br>
-            <b>Segment ID:</b> ${streetSheet.segmentId}<br>
-            <b>Street:</b> ${address.street}<br>
-            <b>City:</b> ${address.city}<br>
-            <b>State:</b> ${address.state}<br>
-            <b>Date Added:</b> ${this.formattedDate} MST<br>
-            <b>Created By:</b> ${streetSheet.createdBy}<br>
-            <b>PM On Site:</b> ${streetSheet.pm}<br>
-          `);
-          this.mapMarkers.push({ id: marker.id, marker: newMarker });
-        }
-      });
-  }
-
-  async centerMapOnStreetSheet(streetSheet: StreetSheet): Promise<void> {
-    if (this.map && streetSheet.marker && streetSheet.marker.length > 0) {
-      
-      const firstMarker = streetSheet.marker[0];
-      const bounds = new L.LatLngBounds([firstMarker.latitude, firstMarker.longitude], [firstMarker.latitude, firstMarker.longitude]);
-  
-      for (const marker of streetSheet.marker) {
-        if (marker.latitude && marker.longitude) {
-          const latLng = new L.LatLng(marker.latitude, marker.longitude);
-          bounds.extend(latLng);
-  
-          const reversedAddress = await this.getReversedAddress(marker);  
-          const date = new Date(marker.dateCreated + "Z")
-          this.formattedDate = this.datePipe.transform(date, 'MMMM d, yyyy hh:mm a', 'America/Denver') || '';
-  
-          L.marker(latLng)
-            .bindPopup(`
-              <b>${streetSheet.vendorName}</b><br>
-              <b>Segment ID:</b> ${streetSheet.segmentId}<br>
-              <b>Street:</b> ${reversedAddress.street}<br>
-              <b>City:</b> ${reversedAddress.city}<br>
-              <b>State:</b> ${reversedAddress.state}<br>
-              Date Added: <b>${this.formattedDate} MST</b><br>
-              Created By: ${streetSheet.createdBy}<br>
-              <b>Marker ID:</b> ${marker.id}
-            `);
-        }
-      }
-  
-      this.map.fitBounds(bounds);
-      const center = bounds.getCenter();
-      this.map.flyTo(center, 17, { animate: true, duration: 1 });
-    }
-  }
-  
-  async centerMapOnMarker(marker: MapMarker, streetSheet: StreetSheet): Promise<void> {
-    if (this.map) {
-      const latLng = new L.LatLng(marker.latitude, marker.longitude);
-      this.map.flyTo(latLng, 18, { animate: true, duration: 1 });
-      const existingMarker = this.mapMarkers.find(m => m.id == marker.id);
-      
-      if (existingMarker) {
-        existingMarker.marker.openPopup();
-      }
-    }
-  }
-
-  openStreetSheetPopup(streetSheet: StreetSheet): void {
-    if (!streetSheet || !streetSheet.marker || !streetSheet.marker.length) {
+  public addMarker(marker: MapMarker, streetSheet: StreetSheet): void {
+    if (!marker.latitude || !marker.longitude) {
       return;
     }
-    const firstMarker = streetSheet.marker[0];
-    const existingMarker = this.mapMarkers.find(m => m.id === firstMarker.id);
-    if (existingMarker) {
-      existingMarker.marker.openPopup();
+
+    // Queue markers if map isn't ready yet
+    if (!this.mapReady) {
+      this.pendingMarkers.push({ marker, streetSheet });
+      return;
+    }
+
+    const date = marker.dateCreated
+      ? this.datePipe.transform(new Date(marker.dateCreated + 'Z'), 'MMM d, yyyy h:mm a', 'America/Denver') || ''
+      : '';
+
+    const popupContent = `
+      <div style="font-size:13px;line-height:1.6">
+        <b>${streetSheet.vendorName || ''}</b><br>
+        <b>Segment:</b> ${streetSheet.segmentId || ''}<br>
+        <b>Address:</b> ${streetSheet.streetAddress || ''}<br>
+        <b>City:</b> ${streetSheet.city || ''}<br>
+        <b>State:</b> ${streetSheet.state || ''}<br>
+        <b>Deployment:</b> ${streetSheet.deployment || ''}<br>
+        <b>PM:</b> ${streetSheet.pm || 'N/A'}<br>
+        <b>Date:</b> ${date}<br>
+      </div>`;
+
+    const newMarker = L.marker([marker.latitude, marker.longitude])
+      .addTo(this.map)
+      .bindPopup(popupContent);
+
+    this.mapMarkers.push({ id: marker.id, marker: newMarker });
+  }
+
+  public centerMapOnStreetSheet(streetSheet: StreetSheet): void {
+    if (!this.map || !streetSheet.marker || streetSheet.marker.length === 0) {
+      return;
+    }
+
+    const validMarkers = streetSheet.marker.filter(m => m.latitude && m.longitude);
+    if (!validMarkers.length) return;
+
+    const bounds = L.latLngBounds(validMarkers.map(m => [m.latitude, m.longitude] as L.LatLngTuple));
+    this.map.fitBounds(bounds, { maxZoom: 17, padding: [30, 30] });
+
+    const existing = this.mapMarkers.find(m => m.id === validMarkers[0].id);
+    if (existing) {
+      setTimeout(() => existing.marker.openPopup(), 400);
+    }
+  }
+
+  public centerMapOnMarker(marker: MapMarker, _streetSheet: StreetSheet): void {
+    if (!this.map) return;
+    this.map.flyTo([marker.latitude, marker.longitude], 17, { animate: true, duration: 1 });
+    const existing = this.mapMarkers.find(m => m.id === marker.id);
+    if (existing) {
+      setTimeout(() => existing.marker.openPopup(), 400);
+    }
+  }
+
+  public openStreetSheetPopup(streetSheet: StreetSheet): void {
+    if (!streetSheet?.marker?.length) return;
+    const existing = this.mapMarkers.find(m => m.id === streetSheet.marker[0].id);
+    if (existing) {
+      existing.marker.openPopup();
     }
   }
 
@@ -216,55 +149,59 @@ export class StreetSheetMapComponent implements AfterViewInit {
       }
     });
     this.mapMarkers = [];
-    this.reversedAddresses = {};
   }
 
-  removeMarker(marker: MapMarker){
-    const existingMarker = this.mapMarkers.find(m => m.id === marker.id);
-    if (existingMarker) {
-      existingMarker.marker.closePopup();
-      this.map.removeLayer(existingMarker.marker);
+  public removeMarker(marker: MapMarker): void {
+    const index = this.mapMarkers.findIndex(m => m.id === marker.id);
+    if (index !== -1) {
+      const entry = this.mapMarkers[index];
+      entry.marker.closePopup();
+      this.map.removeLayer(entry.marker);
+      this.mapMarkers.splice(index, 1);
     }
   }
 
-  goToLocation(location: string): void {
-    if(location !== ''){
-      const stateCoordinates = StateLocation[location as keyof typeof StateLocation];
-      if (stateCoordinates) {
-        this.map.flyTo([stateCoordinates.latitude, stateCoordinates.longitude], 10, { animate: true, duration: 1 }); 
-      } else {
-        // If state not found, default to Utah
-        this.map.flyTo([40.7608, -111.8910], 10, { animate: true, duration: 1 }); 
+  public goToLocation(location: string): void {
+    const defaultLat = 40.7608;
+    const defaultLng = -111.8910;
+    if (location) {
+      const coords = StateLocation[location as keyof typeof StateLocation];
+      if (coords) {
+        this.map.flyTo([coords.latitude, coords.longitude], 10, { animate: true, duration: 1 });
+        return;
       }
-    }else{
-      // Reset to Utah default view
-      this.map.flyTo([40.7608, -111.8910], 10, { animate: true, duration: 1 }); 
     }
+    this.map.flyTo([defaultLat, defaultLng], 10, { animate: true, duration: 1 });
   }
 
   private initMap(): void {
-    let initialLat = 40.7608;  // Utah default
+    let initialLat = 40.7608;
     let initialLng = -111.8910;
-    
-    if(this.userData.market && this.userData.market !== 'RG'){
-      const stateCoordinates = StateLocation[this.userData.market as keyof typeof StateLocation];
-      if (stateCoordinates) {
-        initialLat = stateCoordinates.latitude;
-        initialLng = stateCoordinates.longitude;
+
+    if (this.userData?.market && this.userData.market !== 'RG') {
+      const coords = StateLocation[this.userData.market as keyof typeof StateLocation];
+      if (coords) {
+        initialLat = coords.latitude;
+        initialLng = coords.longitude;
       }
     }
-    
-    this.map = L.map('map').setView([initialLat, initialLng], 10);
 
-    this.osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: ''
+    this.map = L.map(this.mapContainer.nativeElement, {
+      center: [initialLat, initialLng],
+      zoom: 10,
+      zoomControl: true,
     });
 
-    this.osmLayer.addTo(this.map);
-
-    L.control.layers({
-      'OpenStreetMap': this.osmLayer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(this.map);
 
+    // Mark ready and flush any markers that arrived before init
+    this.mapReady = true;
+    this.pendingMarkers.forEach(p => this.addMarker(p.marker, p.streetSheet));
+    this.pendingMarkers = [];
+
+    // Leaflet needs a size recalc after CSS grid settles
+    setTimeout(() => this.map.invalidateSize(), 300);
   }
 }

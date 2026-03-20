@@ -12,11 +12,6 @@
         <button mat-stroked-button class="reset-btn" (click)="clearDashboardFilters()">Reset</button>
         <button mat-raised-button class="refresh-btn" (click)="applyDashboardFilters()">Refresh</button>
         <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" 
-                mat-raised-button class="map-btn" (click)="addMapMarker()">
-          <mat-icon>add_location</mat-icon>
-          Add Marker
-        </button>
-        <button *ngIf="this.user.role === 'CM' || this.user.role === 'Admin'" 
                 mat-raised-button class="map-btn" (click)="createStreetSheet()">
           <mat-icon>note_add</mat-icon>
           New Street Sheet
@@ -98,42 +93,8 @@
       </div>
     </div>
 
-    <div class="main-grid">
-      <div class="left-column">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Submitted</h3>
-            <span class="muted-text">CMs with sheets in range</span>
-          </div>
-          <table class="dashboard-table compact">
-            <thead>
-              <tr>
-                <th>CM</th>
-                <th>Market</th>
-                <th>Count</th>
-                <th>Last Submitted</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let row of pagedSubmitted">
-                <td>{{ row.user.name }}</td>
-                <td>{{ row.user.market || 'N/A' }}</td>
-                <td>{{ row.sheetCount }}</td>
-                <td>{{ row.lastSubmitted | date:'MMM d, h:mm a' }}</td>
-              </tr>
-              <tr *ngIf="!cmsWithEntries.length">
-                <td colspan="4" class="muted-text">No CM submissions for the selected window.</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="table-pagination" *ngIf="cmsWithEntries.length">
-            <button mat-stroked-button class="reset-btn" (click)="prevSubmittedPage()" [disabled]="submittedPageIndex === 0">Prev</button>
-            <span>Page {{ submittedPageIndex + 1 }} of {{ submittedPageCount }}</span>
-            <button mat-stroked-button class="refresh-btn" (click)="nextSubmittedPage()" [disabled]="submittedPageIndex + 1 >= submittedPageCount">Next</button>
-          </div>
-        </div>
-      </div>
-
+    <!-- Map + key section -->
+    <div class="map-section">
       <div class="panel map-panel">
         <div class="panel-header">
           <h3 style="color: white;">Street Sheet Map</h3>
@@ -142,7 +103,7 @@
               <mat-label>Go to Location</mat-label>
               <mat-select placeholder="Select a Location" [(ngModel)]="filterLocation" (selectionChange)="goToLocation($event.value)">
                 <mat-option value="">Reset view</mat-option>
-                <mat-option *ngFor="let location of this.filteredLocations" [value]="location">
+                <mat-option *ngFor="let location of filteredLocations" [value]="location">
                   {{ location }}
                 </mat-option>
               </mat-select>
@@ -152,13 +113,79 @@
         <div class="mini-map-container">
           <street-sheet-map></street-sheet-map>
         </div>
-        <div class="map-hint muted-text">Select rows to focus the map on that street sheet.</div>
+        <div class="map-legend">
+          <span class="legend-item"><span class="legend-dot"></span> Street Sheet Location</span>
+          <span class="legend-count">{{ dashboardStreetSheets?.length || 0 }} sheets &middot; {{ filteredMarkerCount }} markers</span>
+        </div>
       </div>
-      <div class="panel">
-          <div class="panel-header">
-            <h3>Missing</h3>
-            <span class="muted-text">CMs without sheets in range</span>
+
+      <!-- Submitted sheets list — click to fly to location -->
+      <div class="panel sheets-list-panel">
+        <div class="panel-header">
+          <h3>Submitted Sheets</h3>
+          <span class="muted-text">Click to view on map</span>
+        </div>
+        <div class="sheets-scroll">
+          <div *ngFor="let sheet of dashboardStreetSheets; let i = index"
+               class="sheet-row"
+               [class.active]="selectedStreetSheet?.id === sheet.id"
+               (click)="selectStreetSheet(sheet)">
+            <div class="sheet-row-left">
+              <div class="sheet-segment">{{ sheet.segmentId }}</div>
+              <div class="sheet-address muted-text">{{ sheet.streetAddress }}, {{ sheet.city }}, {{ sheet.state }}</div>
+            </div>
+            <div class="sheet-row-right">
+              <div class="sheet-vendor">{{ sheet.vendorName }}</div>
+              <div class="sheet-date muted-text">{{ sheet.date | date:'MMM d' }}</div>
+            </div>
           </div>
+          <div *ngIf="!dashboardStreetSheets?.length" class="muted-text" style="padding:16px;text-align:center;">
+            No street sheets found.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CM summary tables -->
+    <div class="main-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Submitted</h3>
+          <span class="muted-text">CMs with sheets in range</span>
+        </div>
+        <table class="dashboard-table compact">
+          <thead>
+            <tr>
+              <th>CM</th>
+              <th>Market</th>
+              <th>Count</th>
+              <th>Last Submitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of pagedSubmitted">
+              <td>{{ row.user.name }}</td>
+              <td>{{ row.user.market || 'N/A' }}</td>
+              <td>{{ row.sheetCount }}</td>
+              <td>{{ row.lastSubmitted | date:'MMM d, h:mm a' }}</td>
+            </tr>
+            <tr *ngIf="!cmsWithEntries.length">
+              <td colspan="4" class="muted-text">No CM submissions for the selected window.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-pagination" *ngIf="cmsWithEntries.length">
+          <button mat-stroked-button class="reset-btn" (click)="prevSubmittedPage()" [disabled]="submittedPageIndex === 0">Prev</button>
+          <span>Page {{ submittedPageIndex + 1 }} of {{ submittedPageCount }}</span>
+          <button mat-stroked-button class="refresh-btn" (click)="nextSubmittedPage()" [disabled]="submittedPageIndex + 1 >= submittedPageCount">Next</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Missing</h3>
+          <span class="muted-text">CMs without sheets in range</span>
+        </div>
         <ul class="missing-list">
           <li *ngFor="let row of pagedMissing">
             <div>
@@ -174,7 +201,7 @@
           <span>Page {{ missingPageIndex + 1 }} of {{ missingPageCount }}</span>
           <button mat-stroked-button class="refresh-btn" (click)="nextMissingPage()" [disabled]="missingPageIndex + 1 >= missingPageCount">Next</button>
         </div>
-        </div>
+      </div>
     </div>
   </div>
 </div>

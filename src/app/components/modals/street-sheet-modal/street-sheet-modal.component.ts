@@ -445,11 +445,11 @@ export class StreetSheetModalComponent implements OnInit {
         streetSheet.pm = null;
       }
 
-      if(this.isEditMode || streetSheet.updatedBy == null){
-        streetSheet.updatedBy = this.userData.id
+      if(this.isEditMode){
+        streetSheet.updatedBy = this.userData.id;
         streetSheet.updatedDate = new Date().toISOString();
       }else{
-        streetSheet.createdBy = this.userData.id
+        streetSheet.createdBy = this.userData.id;
         // Always set updatedDate to avoid backend validation error
         streetSheet.updatedDate = new Date().toISOString();
       }
@@ -508,17 +508,18 @@ export class StreetSheetModalComponent implements OnInit {
       formData.append('MarkerJson', JSON.stringify(normalizedMarkers));
       
       // Append files only if they exist (avoid appending undefined)
-      if (this.imageFiles['SWPPPImage']) {
-        formData.append('SWPPPImage', this.imageFiles['SWPPPImage']);
+      // Keys match the camelCase field names used in uploadImage()
+      if (this.imageFiles['swpppImage']) {
+        formData.append('SWPPPImage', this.imageFiles['swpppImage']);
       }
-      if (this.imageFiles['PPEImage']) {
-        formData.append('PPEImage', this.imageFiles['PPEImage']);
+      if (this.imageFiles['ppeImage']) {
+        formData.append('PPEImage', this.imageFiles['ppeImage']);
       }
-      if (this.imageFiles['TrafficControlImage']) {
-        formData.append('TrafficControlImage', this.imageFiles['TrafficControlImage']);
+      if (this.imageFiles['trafficControlImage']) {
+        formData.append('TrafficControlImage', this.imageFiles['trafficControlImage']);
       }
-      if (this.imageFiles['SignageImage']) {
-        formData.append('SignageImage', this.imageFiles['SignageImage']);
+      if (this.imageFiles['signageImage']) {
+        formData.append('SignageImage', this.imageFiles['signageImage']);
       }
   
       console.log('📤 Submitting street sheet:', {

@@ -1,18 +1,10 @@
-#map {
-    width: 100%;
-    height: 500px; // Adjust the height as needed
-    border: 1px solid #ccc; // Optional: add a border for visual clarity
-  }
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 
-  .my-div-icon {
-    background-color: #ff5722; /* Set background color */
-    color: white; /* Set text color */
-    border-radius: 50%; /* Circular icon */
-    width: 30px; /* Width of the icon */
-    height: 30px; /* Height of the icon */
-    text-align: center; /* Center the content */
-    line-height: 30px; /* Vertically center the content */
-    font-size: 14px; /* Font size for the content */
-    font-weight: bold;
-    border: 2px solid #fff; /* Optional border */
-  }
+.map-wrapper {
+  width: 100%;
+  height: 100%;
+}
