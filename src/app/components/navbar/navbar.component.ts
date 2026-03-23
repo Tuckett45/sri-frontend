@@ -62,11 +62,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       route: '/market-controller-tracker',
       shouldShow: () => this.authService.isMarketController() || this.authService.isAdmin()
     },
-    {
-      label: 'TPS Dashboard',
-      route: '/tps',
-      shouldShow: () => this.authService.isAdmin() || this.authService.isClient()
-    },
+    // {
+    //   label: 'TPS Dashboard',
+    //   route: '/tps',
+    //   shouldShow: () => this.authService.isAdmin() || this.authService.isClient()
+    // },
     {
       label: 'Expenses',
       route: '/expenses',
