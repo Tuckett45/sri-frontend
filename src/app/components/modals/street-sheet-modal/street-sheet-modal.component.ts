@@ -28,6 +28,7 @@ export class StreetSheetModalComponent implements OnInit {
   isAddressLoading: boolean = false;
   isDisabled: boolean = false;
   isLocating = false;
+  isSaving = false;
 
   galleryImages: Image[] = [];
   imageFiles: { [key: string]: File } = {};               // actual files for submission
@@ -428,11 +429,14 @@ export class StreetSheetModalComponent implements OnInit {
   }
 
   save(): void {
+    if (this.isSaving) return;
+
     console.log('💾 Save button clicked');
     console.log('📋 Form valid:', this.streetSheetForm.valid);
     console.log('📋 Form errors:', this.getFormValidationErrors());
     
     if (this.streetSheetForm.valid) {
+      this.isSaving = true;
 
       const streetSheet = {
         ...this.streetSheetForm.value,
@@ -551,18 +555,18 @@ export class StreetSheetModalComponent implements OnInit {
       this.streetSheetService.saveStreetSheet(formData).subscribe(
         (response: StreetSheet) => {
           console.log('✅ Street sheet saved successfully:', response);
+          this.isSaving = false;
           this.toastr.success('Street Sheet Saved');
           this.dialogRef.close(response); 
         },
         (error) => {
+          this.isSaving = false;
           console.error('❌ Error saving street sheet:', error);
-          console.error('Error details:', {
-            status: error.status,
-            statusText: error.statusText,
-            message: error.message,
-            error: error.error
-          });
-          this.toastr.error(`Error saving Street Sheet: ${error.message || 'Unknown error'}`);
+          if (error.status === 409) {
+            this.toastr.error('A street sheet with this Segment ID already exists. Please use a unique Segment ID.');
+          } else {
+            this.toastr.error(`Error saving Street Sheet: ${error.error || error.message || 'Unknown error'}`);
+          }
         }
       );
     } else {
