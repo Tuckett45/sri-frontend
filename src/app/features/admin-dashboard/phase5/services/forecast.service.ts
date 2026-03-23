@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
@@ -44,10 +44,10 @@ export class ForecastService {
   // Minimum historical data points required for forecasting
   private readonly MIN_HISTORICAL_DATA_POINTS = 30;
 
-  constructor(
-    private http: HttpClient,
-    private cacheService: CacheService
-  ) {}
+  private readonly http = inject(HttpClient);
+  private readonly cacheService = inject(CacheService);
+
+  constructor() {}
 
   /**
    * Fetches forecasts for given parameters
