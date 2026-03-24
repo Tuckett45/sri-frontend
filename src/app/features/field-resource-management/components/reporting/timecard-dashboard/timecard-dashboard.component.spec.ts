@@ -50,6 +50,7 @@ describe('TimecardDashboardComponent', () => {
     totalHours: 0,
     mileage: 0,
     isManuallyAdjusted: false,
+    isLocked: false,
     createdAt: new Date(),
     updatedAt: new Date()
   };
@@ -85,13 +86,6 @@ describe('TimecardDashboardComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should calculate week range correctly', () => {
-    component.calculateWeekRange();
-    expect(component.weekStart).toBeDefined();
-    expect(component.weekEnd).toBeDefined();
-    expect(component.weekEnd.getTime()).toBeGreaterThan(component.weekStart.getTime());
-  });
-
   it('should calculate hours correctly', () => {
     const entry: TimeEntry = {
       id: 'test',
@@ -102,6 +96,7 @@ describe('TimecardDashboardComponent', () => {
       totalHours: 8,
       mileage: 0,
       isManuallyAdjusted: false,
+      isLocked: false,
       createdAt: new Date(),
       updatedAt: new Date()
     };

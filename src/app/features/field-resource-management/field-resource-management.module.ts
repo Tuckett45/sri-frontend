@@ -58,6 +58,9 @@ import { HomeDashboardComponent } from './components/home/home-dashboard.compone
 // Notification Components (needed for real-time updates)
 import { NotificationPanelComponent } from './components/notifications/notification-panel/notification-panel.component';
 
+// Directives
+import { FrmHasPermissionDirective } from './directives/frm-has-permission.directive';
+
 // Services
 import { FrmRealtimeIntegratorService } from './services/frm-realtime-integrator.service';
 import { GlobalErrorHandlerService } from './services/global-error-handler.service';
@@ -113,7 +116,10 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     HomeDashboardComponent,
     
     // Notification Components
-    NotificationPanelComponent
+    NotificationPanelComponent,
+
+    // Directives
+    FrmHasPermissionDirective
     
     // Note: All feature components (technicians, jobs, crews, scheduling, mobile, admin, mapping)
     // and analytics dashboard are now in their respective lazy-loaded feature modules

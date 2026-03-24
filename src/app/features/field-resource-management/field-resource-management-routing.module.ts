@@ -8,6 +8,8 @@ import { TechnicianGuard } from './guards/technician.guard';
 import { PMGuard } from './guards/pm.guard';
 import { CMGuard } from '../../guards/cm.guard';
 import { ManagerGuard } from './guards/manager.guard';
+import { HrGuard } from './guards/hr.guard';
+import { PayrollGuard } from './guards/payroll.guard';
 import { EnhancedRoleGuard } from '../../guards/enhanced-role.guard';
 import { UserRole } from '../../models/role.enum';
 
@@ -109,7 +111,7 @@ const routes: Routes = [
       {
         path: 'timecard-manager',
         component: TimecardManagerViewComponent,
-        canActivate: [ManagerGuard],
+        canActivate: [HrGuard],
         data: { 
           title: 'Timecard Management',
           breadcrumb: 'Timecard Management'
@@ -169,7 +171,14 @@ const routes: Routes = [
       {
         path: 'approvals',
         loadChildren: () => import('./components/approvals/approvals.module').then(m => m.ApprovalsModule),
-        canActivate: [CMGuard]
+        canActivate: [HrGuard]
+      },
+
+      // Payroll Routes - Lazy Loaded
+      {
+        path: 'payroll',
+        loadChildren: () => import('./components/payroll/payroll.module').then(m => m.PayrollModule),
+        canActivate: [PayrollGuard]
       },
 
       // Admin Routes - Lazy Loaded

@@ -46,6 +46,8 @@ export interface ApprovalTask {
   market: string;
   comments: ApprovalComment[];
   metadata?: Record<string, any>;
+  approvedBy?: string;
+  approvedAt?: Date;
 }
 
 /**

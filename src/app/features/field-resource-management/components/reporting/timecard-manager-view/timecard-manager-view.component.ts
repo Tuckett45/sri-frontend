@@ -14,6 +14,7 @@ import { Crew } from '../../../models/crew.model';
 import { Job } from '../../../models/job.model';
 import { TimecardService } from '../../../services/timecard.service';
 import { AccessibilityService } from '../../../services/accessibility.service';
+import { AuthService } from '../../../../../services/auth.service';
 
 import * as TimeEntrySelectors from '../../../state/time-entries/time-entry.selectors';
 import * as TimecardSelectors from '../../../state/timecards/timecard.selectors';
@@ -86,7 +87,8 @@ export class TimecardManagerViewComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store,
     private timecardService: TimecardService,
-    private accessibilityService: AccessibilityService
+    private accessibilityService: AccessibilityService,
+    private authService: AuthService
   ) {
     // Initialize date range (current week)
     this.startDate = this.timecardService.getWeekStart();
@@ -276,12 +278,13 @@ export class TimecardManagerViewComponent implements OnInit, OnDestroy {
    * Approve timecard period
    */
   approvePeriod(period: TimecardPeriod): void {
+    const user = this.authService.getUser();
     this.store.dispatch(TimecardActions.updateTimecardPeriod({
       id: period.id,
       changes: { 
         status: 'approved' as any,
         approvedAt: new Date(),
-        approvedBy: 'current-user-id' // Would come from auth
+        approvedBy: user?.id ?? user?.name ?? 'unknown'
       }
     }));
     this.accessibilityService.announce('Timecard approved');
@@ -316,13 +319,15 @@ export class TimecardManagerViewComponent implements OnInit, OnDestroy {
    * Bulk approve selected periods
    */
   bulkApprove(): void {
+    const user = this.authService.getUser();
+    const approvedBy = user?.id ?? user?.name ?? 'unknown';
     this.selectedPeriodIds.forEach(id => {
       this.store.dispatch(TimecardActions.updateTimecardPeriod({
         id,
         changes: { 
           status: 'approved' as any,
           approvedAt: new Date(),
-          approvedBy: 'current-user-id'
+          approvedBy
         }
       }));
     });

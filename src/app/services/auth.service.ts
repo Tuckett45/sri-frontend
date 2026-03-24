@@ -89,6 +89,10 @@ export class AuthService {
     return this.userRole.getValue();
   }
 
+  getUserRole$(): Observable<UserRole> {
+    return this.userRole.asObservable();
+  }
+
   getUser(): any {
     return this.currentUser;
   }

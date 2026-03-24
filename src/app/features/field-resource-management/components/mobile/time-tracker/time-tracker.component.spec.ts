@@ -63,6 +63,7 @@ describe('TimeTrackerComponent', () => {
     clockInTime: new Date(),
     clockInLocation: mockLocation,
     isManuallyAdjusted: false,
+    isLocked: false,
     createdAt: new Date(),
     updatedAt: new Date()
   };

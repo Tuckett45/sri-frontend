@@ -50,6 +50,7 @@ describe('CrewDetailComponent', () => {
     availability: [],
     isActive: true,
     currentLocation: { latitude: 40.7128, longitude: -74.0060, accuracy: 10 },
+    canTravel: false,
     createdAt: new Date(),      updatedAt: new Date()
   };
 
@@ -77,6 +78,7 @@ describe('CrewDetailComponent', () => {
       certifications: [],
       availability: [],
       isActive: true,
+      canTravel: false,
       createdAt: new Date(),      updatedAt: new Date()
     },
     {
@@ -94,6 +96,7 @@ describe('CrewDetailComponent', () => {
       certifications: [],
       availability: [],
       isActive: false,
+      canTravel: false,
       createdAt: new Date(),      updatedAt: new Date()
     }
   ];

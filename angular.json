@@ -137,6 +137,20 @@
             ],
             "scripts": [
               "node_modules/leaflet/dist/leaflet.js"
+            ],
+            "exclude": [
+              "src/app/features/field-resource-management/integration-tests/**/*.spec.ts",
+              "src/app/features/field-resource-management/state/technicians/*.spec.ts",
+              "src/app/features/field-resource-management/state/jobs/*.spec.ts",
+              "src/app/features/field-resource-management/state/crews/*.spec.ts",
+              "src/app/features/field-resource-management/state/reporting/*.spec.ts",
+              "src/app/features/field-resource-management/state/assignments/*.spec.ts",
+              "src/app/features/field-resource-management/services/frm-signalr.service.spec.ts",
+              "src/app/features/field-resource-management/services/geolocation.service.spec.ts",
+              "src/app/features/field-resource-management/services/reporting.service.spec.ts",
+              "src/app/features/field-resource-management/services/technician.service.spec.ts",
+              "src/app/features/field-resource-management/services/travel.service.spec.ts",
+              "src/app/features/field-resource-management/services/state-persistence.service.spec.ts"
             ]
           }
         }

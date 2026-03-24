@@ -44,6 +44,7 @@ describe('TechnicianListComponent', () => {
       certifications: [],
       availability: [],
       isActive: true,
+      canTravel: false,
       createdAt: new Date(),
       updatedAt: new Date()
     },
@@ -64,6 +65,7 @@ describe('TechnicianListComponent', () => {
       certifications: [],
       availability: [],
       isActive: true,
+      canTravel: false,
       createdAt: new Date(),
       updatedAt: new Date()
     }

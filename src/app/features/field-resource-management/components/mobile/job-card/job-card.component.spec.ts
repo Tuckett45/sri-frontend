@@ -52,6 +52,7 @@ describe('JobCardComponent', () => {
     technicianId: 'tech-1',
     clockInTime: new Date(),
     isManuallyAdjusted: false,
+    isLocked: false,
     createdAt: new Date(),
     updatedAt: new Date()
   };

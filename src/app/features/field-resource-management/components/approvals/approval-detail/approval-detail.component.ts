@@ -212,6 +212,11 @@ export class ApprovalDetailComponent implements OnInit, OnDestroy {
 
     action$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (updatedTask) => {
+        if (this.actionType === 'approve') {
+          const user = this.authService.getUser();
+          updatedTask.approvedBy = user?.id ?? user?.name ?? 'unknown';
+          updatedTask.approvedAt = new Date();
+        }
         this.task = updatedTask;
         this.processingAction = false;
         this.closeActionDialog();

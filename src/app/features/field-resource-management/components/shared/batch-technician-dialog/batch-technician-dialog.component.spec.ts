@@ -29,6 +29,7 @@ describe('BatchTechnicianDialogComponent', () => {
       certifications: [],
       availability: [],
       isActive: true,
+      canTravel: false,
       createdAt: new Date(),
       updatedAt: new Date()
     }

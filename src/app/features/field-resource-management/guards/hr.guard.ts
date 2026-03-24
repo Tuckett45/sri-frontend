@@ -1,27 +1,16 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
+import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { UserRole } from '../../../models/role.enum';
 
-/**
- * Manager Guard
- *
- * Protects routes that require Manager_Group access.
- * Allows access for users with PM, Admin, DCOps, OSPCoordinator,
- * EngineeringFieldSupport, MaterialsManager, or Manager roles.
- */
 @Injectable({
   providedIn: 'root'
 })
-export class ManagerGuard implements CanActivate {
+export class HrGuard implements CanActivate {
   private readonly allowedRoles = [
-    UserRole.PM,
-    UserRole.Admin,
-    UserRole.DCOps,
-    UserRole.OSPCoordinator,
-    UserRole.EngineeringFieldSupport,
-    UserRole.MaterialsManager,
-    UserRole.Manager
+    UserRole.HR,
+    UserRole.Payroll,
+    UserRole.Admin
   ];
 
   constructor(
@@ -40,7 +29,7 @@ export class ManagerGuard implements CanActivate {
     this.router.navigate(['/field-resource-management/dashboard'], {
       queryParams: {
         error: 'insufficient_permissions',
-        message: 'Manager access required'
+        message: 'HR access required'
       }
     });
     return false;

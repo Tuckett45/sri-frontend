@@ -3,7 +3,7 @@
  * Tests all selectors for UI state management
  */
 
-import { UIState, CalendarViewType, MapViewState, FilterState } from './ui.state';
+import { UIState, CalendarViewType, MapViewState, FilterState, ConnectionStatus } from './ui.state';
 import * as UISelectors from './ui.selectors';
 import { Notification, NotificationType } from '../../models/notification.model';
 import { JobStatus } from '../../models/job.model';
@@ -70,7 +70,12 @@ describe('UI Selectors', () => {
         searchTerm: 'Installation'
       }
     },
-    notifications: [mockNotification1, mockNotification2, mockNotification3]
+    notifications: [mockNotification1, mockNotification2, mockNotification3],
+    connectionState: {
+      status: ConnectionStatus.Connected,
+      reconnectAttempts: 0,
+      lastConnected: new Date('2024-01-15T10:00:00Z')
+    }
   };
 
   describe('selectUIState', () => {
@@ -556,6 +561,27 @@ describe('UI Selectors', () => {
   });
 });
 
+describe('UI Connection Status Selectors', () => {
+  const mockState: UIState = {
+    calendarView: CalendarViewType.Week,
+    selectedDate: new Date('2024-01-15T00:00:00Z'),
+    sidebarOpen: true,
+    mobileMenuOpen: false,
+    mapView: {
+      center: { lat: 32.7767, lng: -96.7970 },
+      zoom: 12,
+      showTechnicians: true,
+      showCrews: true,
+      showJobs: true,
+      clusteringEnabled: true
+    },
+    selectedFilters: {},
+    notifications: [],
+    connectionState: {
+      status: ConnectionStatus.Connected,
+      reconnectAttempts: 0
+    }
+  };
 
   describe('Connection Status Selectors', () => {
     const connectedState: UIState = {
@@ -613,41 +639,41 @@ describe('UI Selectors', () => {
 
     describe('selectIsConnected', () => {
       it('should return true when connected', () => {
-        const result = UISelectors.selectIsConnected.projector('connected');
+        const result = UISelectors.selectIsConnected.projector(ConnectionStatus.Connected);
         expect(result).toBe(true);
       });
 
       it('should return false when disconnected', () => {
-        const result = UISelectors.selectIsConnected.projector('disconnected');
+        const result = UISelectors.selectIsConnected.projector(ConnectionStatus.Disconnected);
         expect(result).toBe(false);
       });
 
       it('should return false when reconnecting', () => {
-        const result = UISelectors.selectIsConnected.projector('reconnecting');
+        const result = UISelectors.selectIsConnected.projector(ConnectionStatus.Reconnecting);
         expect(result).toBe(false);
       });
     });
 
     describe('selectIsDisconnected', () => {
       it('should return true when disconnected', () => {
-        const result = UISelectors.selectIsDisconnected.projector('disconnected');
+        const result = UISelectors.selectIsDisconnected.projector(ConnectionStatus.Disconnected);
         expect(result).toBe(true);
       });
 
       it('should return false when connected', () => {
-        const result = UISelectors.selectIsDisconnected.projector('connected');
+        const result = UISelectors.selectIsDisconnected.projector(ConnectionStatus.Connected);
         expect(result).toBe(false);
       });
     });
 
     describe('selectIsReconnecting', () => {
       it('should return true when reconnecting', () => {
-        const result = UISelectors.selectIsReconnecting.projector('reconnecting');
+        const result = UISelectors.selectIsReconnecting.projector(ConnectionStatus.Reconnecting);
         expect(result).toBe(true);
       });
 
       it('should return false when connected', () => {
-        const result = UISelectors.selectIsReconnecting.projector('connected');
+        const result = UISelectors.selectIsReconnecting.projector(ConnectionStatus.Connected);
         expect(result).toBe(false);
       });
     });
@@ -799,3 +825,4 @@ describe('UI Selectors', () => {
       });
     });
   });
+});

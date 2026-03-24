@@ -15,5 +15,6 @@ export enum UserRole {
     OSPCoordinator = 'OSPCoordinator',
     Controller = 'Controller',
     EngineeringFieldSupport = 'EngineeringFieldSupport',
-    MaterialsManager = 'MaterialsManager'
+    MaterialsManager = 'MaterialsManager',
+    Payroll = 'Payroll'
 }

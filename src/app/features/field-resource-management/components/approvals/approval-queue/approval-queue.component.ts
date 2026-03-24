@@ -233,6 +233,11 @@ export class ApprovalQueueComponent implements OnInit, OnDestroy {
 
     action$.pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
+        if (this.actionType === 'approve' && this.selectedTask) {
+          const user = this.authService.getUser();
+          this.selectedTask.approvedBy = user?.id ?? user?.name ?? 'unknown';
+          this.selectedTask.approvedAt = new Date();
+        }
         this.processingAction = false;
         this.closeActionDialog();
         this.loadApprovalTasks(); // Reload to get updated list

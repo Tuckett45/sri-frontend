@@ -6,13 +6,12 @@ import { UserRole } from '../../../models/role.enum';
 /**
  * Technician Guard
  * 
- * Protects routes that require Technician role access.
- * Technicians can view their daily schedule, update job status, and track time.
+ * Protects routes that require Field_Group or Manager_Group role access.
+ * Covers field technicians and managers who need access to mobile/field routes.
  * 
  * Mapped Roles:
- * - Technician: Field technician access
- * - DeploymentEngineer: Field technician access
- * - SRITech: Field technician access
+ * - Field_Group: Technician, DeploymentEngineer, CM, SRITech
+ * - Manager_Group: PM, Admin, DCOps, OSPCoordinator, EngineeringFieldSupport, MaterialsManager
  * 
  * Usage:
  * ```typescript
@@ -39,10 +38,18 @@ export class TechnicianGuard implements CanActivate {
     // Check if user has Technician role
     // Map existing ATLAS roles to Technician capabilities
     const allowedRoles = [
-      UserRole.Admin,
+      // Field_Group
       UserRole.Technician,
       UserRole.DeploymentEngineer,
-      UserRole.SRITech
+      UserRole.CM,
+      UserRole.SRITech,
+      // Manager_Group
+      UserRole.PM,
+      UserRole.Admin,
+      UserRole.DCOps,
+      UserRole.OSPCoordinator,
+      UserRole.EngineeringFieldSupport,
+      UserRole.MaterialsManager
     ];
 
     if (this.authService.isUserInRole(allowedRoles)) {

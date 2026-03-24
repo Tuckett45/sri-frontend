@@ -18,6 +18,9 @@ export * from './travel.model';
 export * from './inventory.model';
 export * from './material.model';
 
+// Payroll models
+export * from './payroll.models';
+
 // DTOs
 export * from './dtos/technician.dto';
 export * from './dtos/job.dto';

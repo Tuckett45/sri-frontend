@@ -50,6 +50,7 @@ describe('MapComponent', () => {
       availability: [],
       isActive: true,
       currentLocation: { latitude: 32.7767, longitude: -96.7970, accuracy: 10 },
+      canTravel: false,
       createdAt: new Date(),
       updatedAt: new Date()
     },
@@ -71,6 +72,7 @@ describe('MapComponent', () => {
       availability: [],
       isActive: true,
       currentLocation: { latitude: 29.7604, longitude: -95.3698, accuracy: 10 },
+      canTravel: false,
       createdAt: new Date(),
       updatedAt: new Date()
     },
@@ -90,6 +92,7 @@ describe('MapComponent', () => {
       availability: [],
       isActive: false,
       currentLocation: { latitude: 30.2672, longitude: -97.7431, accuracy: 10 },
+      canTravel: false,
       createdAt: new Date(),
       updatedAt: new Date()
     }

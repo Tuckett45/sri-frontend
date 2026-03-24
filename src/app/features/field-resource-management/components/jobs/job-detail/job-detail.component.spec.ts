@@ -272,6 +272,7 @@ describe('JobDetailComponent', () => {
         clockOutTime: new Date(),
         totalHours: 4,
         isManuallyAdjusted: false,
+        isLocked: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -283,6 +284,7 @@ describe('JobDetailComponent', () => {
         clockOutTime: new Date(),
         totalHours: 3.5,
         isManuallyAdjusted: false,
+        isLocked: false,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -301,6 +303,7 @@ describe('JobDetailComponent', () => {
         clockOutTime: new Date(),
         mileage: 25.5,
         isManuallyAdjusted: false,
+        isLocked: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -312,6 +315,7 @@ describe('JobDetailComponent', () => {
         clockOutTime: new Date(),
         mileage: 30.2,
         isManuallyAdjusted: false,
+        isLocked: false,
         createdAt: new Date(),
         updatedAt: new Date()
       }

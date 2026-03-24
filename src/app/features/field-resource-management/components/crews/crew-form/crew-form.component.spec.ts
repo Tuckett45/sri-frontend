@@ -47,6 +47,7 @@ describe('CrewFormComponent', () => {
       availability: [],
       hourlyCostRate: 50,
       isActive: true,
+      canTravel: false,
       createdAt: new Date(),      updatedAt: new Date()
     },
     {
@@ -65,6 +66,7 @@ describe('CrewFormComponent', () => {
       availability: [],
       hourlyCostRate: 55,
       isActive: true,
+      canTravel: false,
       createdAt: new Date(),      updatedAt: new Date()
     },
     {
@@ -83,6 +85,7 @@ describe('CrewFormComponent', () => {
       availability: [],
       hourlyCostRate: 60,
       isActive: true,
+      canTravel: false,
       createdAt: new Date(),      updatedAt: new Date()
     }
   ];

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { User } from '../../../models/user.model';
 import { RolePermission } from '../../../models/permission.model';
+import { UserRole } from '../../../models/role.enum';
 
 /**
  * Represents an entity that can be scoped by market, company, and ownership
@@ -203,20 +204,32 @@ export class DataScopeService {
    * @returns Array of DataScope objects for the role
    */
   getDataScopesForRole(role: string): DataScope[] {
-    switch (role.toUpperCase()) {
-      case 'ADMIN':
+    switch (role) {
+      // 'all' scope
+      case UserRole.Admin:
+      case UserRole.DCOps:
+      case UserRole.Controller:
+      case UserRole.HR:
+      case UserRole.Payroll:
         return [{ scopeType: 'all' }];
 
-      case 'CM':
-      case 'CONSTRUCTIONMANAGER':
+      // 'market' scope
+      case UserRole.CM:
+      case UserRole.OSPCoordinator:
+      case UserRole.EngineeringFieldSupport:
+      case UserRole.MaterialsManager:
         return [{ scopeType: 'market' }];
 
-      case 'PM':
-      case 'PROJECTMANAGER':
-      case 'VENDOR':
+      // 'company' scope
+      case UserRole.PM:
+      case UserRole.VendorRep:
+      case UserRole.Client:
         return [{ scopeType: 'company' }];
 
-      case 'TECHNICIAN':
+      // 'self' scope
+      case UserRole.Technician:
+      case UserRole.DeploymentEngineer:
+      case UserRole.SRITech:
         return [{ scopeType: 'self' }];
 
       default:
