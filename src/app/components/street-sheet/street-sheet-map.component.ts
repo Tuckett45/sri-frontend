@@ -97,6 +97,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
         <b>State:</b> ${streetSheet.state || ''}<br>
         <b>Deployment:</b> ${streetSheet.deployment || ''}<br>
         <b>PM:</b> ${streetSheet.pm || 'N/A'}<br>
+        <b>Created By:</b> ${streetSheet.createdBy || 'N/A'}<br>
         <b>Date:</b> ${date}<br>
       </div>`;
 
