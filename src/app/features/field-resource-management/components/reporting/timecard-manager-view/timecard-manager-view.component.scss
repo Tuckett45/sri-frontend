@@ -6,11 +6,6 @@
   margin: 0 auto;
   background-color: var(--surface-ground, #f5f7fa);
   min-height: 100vh;
-  
-  app-breadcrumb {
-    display: block;
-    margin-bottom: 1rem;
-  }
 }
 
 .manager-header {
@@ -386,6 +381,26 @@
       .mat-mdc-text-field-wrapper {
         background-color: var(--surface-card, #ffffff);
       }
+    }
+
+    .mat-mdc-input-element {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-value-text {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-trigger {
+      color: #000000 !important;
+    }
+
+    mat-label {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-option .mdc-list-item__primary-text {
+      color: #000000 !important;
     }
     
     button[mat-raised-button] {

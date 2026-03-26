@@ -1,0 +1,24 @@
+<mat-card class="quick-actions-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>flash_on</mat-icon>
+      Quick Actions
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="links-grid">
+      <ng-container *ngFor="let action of actions">
+        <a
+          *ngIf="action.visible"
+          mat-raised-button
+          [color]="getButtonColor(action)"
+          [routerLink]="action.route"
+          [class.btn-orange]="isOrange(action)"
+        >
+          <mat-icon>{{ action.icon }}</mat-icon>
+          {{ action.label }}
+        </a>
+      </ng-container>
+    </div>
+  </mat-card-content>
+</mat-card>

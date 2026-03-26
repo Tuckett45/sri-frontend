@@ -15,6 +15,7 @@ import {
 import { Job } from '../../../models/job.model';
 import { TimecardService } from '../../../services/timecard.service';
 import { AccessibilityService } from '../../../services/accessibility.service';
+import { TimeEntryDialogComponent, TimeEntryDialogData } from '../time-entry-dialog/time-entry-dialog.component';
 
 import * as TimeEntrySelectors from '../../../state/time-entries/time-entry.selectors';
 import * as TimecardSelectors from '../../../state/timecards/timecard.selectors';
@@ -65,6 +66,12 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
   // Lock countdown
   lockCountdown$: Observable<string>;
   private countdownInterval: any;
+
+  // Mobile accordion: track which day index is expanded (-1 = none)
+  expandedDayIndex: number = -1;
+
+  // Selected day index for the detail entries section (-1 = show all)
+  selectedDayIndex: number = -1;
   
   constructor(
     private store: Store,
@@ -127,6 +134,13 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
     
     // Start countdown timer
     this.startCountdownTimer();
+
+    // Default expanded day to today (if within current week)
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    // Convert Sunday=0 to index 6, Monday=1 to index 0, etc.
+    this.expandedDayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    this.selectedDayIndex = this.expandedDayIndex;
     
     // Subscribe to error state
     this.error$.pipe(takeUntil(this.destroy$)).subscribe(error => {
@@ -275,8 +289,25 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
    * Open add time entry dialog
    */
   addTimeEntry(date?: Date): void {
-    // TODO: Open time entry dialog
-    this.snackBar.open('Add time entry dialog - Coming soon', 'Close', { duration: 3000 });
+    const isMobile = window.innerWidth <= 768;
+    const dialogRef = this.dialog.open(TimeEntryDialogComponent, {
+      width: isMobile ? '100vw' : '550px',
+      maxWidth: isMobile ? '100vw' : '600px',
+      maxHeight: isMobile ? '100vh' : '90vh',
+      panelClass: isMobile ? 'mobile-dialog' : '',
+      data: {
+        mode: 'add',
+        date: date || new Date(),
+        technicianId: this.currentTechnicianId
+      } as TimeEntryDialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (result) {
+        this.snackBar.open('Time entry added', 'Close', { duration: 3000 });
+        this.refresh();
+      }
+    });
   }
   
   /**
@@ -291,16 +322,61 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
    * Edit time entry
    */
   editTimeEntry(entry: TimeEntry): void {
-    // TODO: Open edit dialog
-    this.snackBar.open('Edit time entry dialog - Coming soon', 'Close', { duration: 3000 });
+    const isMobile = window.innerWidth <= 768;
+    const dialogRef = this.dialog.open(TimeEntryDialogComponent, {
+      width: isMobile ? '100vw' : '550px',
+      maxWidth: isMobile ? '100vw' : '600px',
+      maxHeight: isMobile ? '100vh' : '90vh',
+      panelClass: isMobile ? 'mobile-dialog' : '',
+      data: {
+        mode: 'edit',
+        entry,
+        technicianId: this.currentTechnicianId
+      } as TimeEntryDialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (result) {
+        this.snackBar.open('Time entry updated', 'Close', { duration: 3000 });
+        this.refresh();
+      }
+    });
   }
   
   /**
-   * View day details
+   * View day details — select the day for the entries section
    */
   viewDayDetails(dailySummary: DailyTimeSummary): void {
-    // TODO: Open day details dialog
-    this.snackBar.open('Day details dialog - Coming soon', 'Close', { duration: 3000 });
+    // Find the index of this day
+    const dayIndex = this.daysOfWeek.findIndex((_, i) => {
+      const date = this.getDateForDay(i);
+      return date.toDateString() === dailySummary.date.toDateString();
+    });
+    this.selectedDayIndex = dayIndex;
+  }
+
+  /**
+   * Select a day by index (for desktop grid clicks)
+   */
+  selectDay(index: number): void {
+    this.selectedDayIndex = index;
+  }
+
+  /**
+   * Get the selected day's summary, or null
+   */
+  getSelectedDaySummary(summary: WeeklyTimeSummary): DailyTimeSummary | null {
+    if (this.selectedDayIndex < 0) return null;
+    return this.getDailySummary(summary, this.selectedDayIndex);
+  }
+
+  /**
+   * Get the selected day's formatted label
+   */
+  getSelectedDayLabel(): string {
+    if (this.selectedDayIndex < 0) return '';
+    const date = this.getDateForDay(this.selectedDayIndex);
+    return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
   
   /**
@@ -333,5 +409,20 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
   refresh(): void {
     this.loadCurrentPeriod();
     this.accessibilityService.announce('Timecard data refreshed');
+  }
+
+  /**
+   * Toggle expanded day in mobile accordion view
+   */
+  toggleDay(index: number): void {
+    this.expandedDayIndex = this.expandedDayIndex === index ? -1 : index;
+  }
+
+  /**
+   * Check if a given date is today
+   */
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
   }
 }

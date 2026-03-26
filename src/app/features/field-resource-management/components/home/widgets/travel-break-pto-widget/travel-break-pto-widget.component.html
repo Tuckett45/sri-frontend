@@ -1,0 +1,38 @@
+<mat-card class="travel-break-pto-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>flight</mat-icon>
+      Travel, Break &amp; PTO
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>{{ error }}</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Data state -->
+    <ng-container *ngIf="!loading && !error">
+      <div *ngIf="summary as s" class="summary-grid">
+        <div class="summary-item">
+          <span class="summary-count">{{ s.pendingTravelRequests }}</span>
+          <span class="summary-label">Travel Requests</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-count">{{ s.pendingBreakRequests }}</span>
+          <span class="summary-label">Break Requests</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-count">{{ s.pendingPtoRequests }}</span>
+          <span class="summary-label">PTO Requests</span>
+        </div>
+      </div>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

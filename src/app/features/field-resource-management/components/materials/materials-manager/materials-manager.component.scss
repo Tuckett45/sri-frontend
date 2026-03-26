@@ -180,16 +180,29 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    min-width: 0;
+    flex: 1;
   }
 
-  .urgency-icon { font-size: 20px; width: 20px; height: 20px; }
+  .urgency-icon { font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; }
 
-  .rec-details { display: flex; flex-direction: column; }
+  .rec-details { display: flex; flex-direction: column; min-width: 0; }
   .rec-name { font-weight: 600; font-size: 0.875rem; color: #424242; }
   .rec-qty { font-size: 0.8125rem; color: #757575; }
 
-  .rec-action { display: flex; align-items: center; gap: 1rem; }
+  .rec-action { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
   .rec-cost { font-size: 0.8125rem; color: #757575; }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+
+    .rec-action {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
 }
 
 // KPI Hero Cards
@@ -302,6 +315,8 @@
     box-shadow: none;
     border-radius: 0;
     margin-bottom: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .consume-card,
@@ -383,7 +398,8 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-bottom: 2rem;
 }
 
@@ -683,6 +699,16 @@
       font-weight: 700;
       color: $frm-primary;
     }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+
+      .usage-value {
+        font-size: 1.25rem;
+      }
+    }
   }
 
   .usage-breakdown {
@@ -710,18 +736,34 @@
         flex: 1;
         font-size: 0.875rem;
         color: #424242;
+        min-width: 0;
       }
 
       .item-qty {
         font-size: 0.75rem;
         color: #9e9e9e;
         margin: 0 1rem;
+        flex-shrink: 0;
       }
 
       .item-cost {
         font-size: 0.875rem;
         font-weight: 600;
         color: #212121;
+        flex-shrink: 0;
+      }
+
+      @media (max-width: 768px) {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+
+        .item-name {
+          flex-basis: 100%;
+        }
+
+        .item-qty {
+          margin: 0;
+        }
       }
     }
   }
@@ -834,5 +876,35 @@
 @media (max-width: 768px) {
   .materials-dashboard {
     padding: 1rem;
+  }
+
+  .alerts-banner {
+    padding: 1rem;
+    overflow: hidden;
+  }
+
+  .consume-card .consume-form {
+    flex-direction: column;
+
+    mat-form-field {
+      width: 100%;
+      min-width: unset;
+    }
+  }
+
+  .consume-card .consume-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .materials-table {
+    min-width: 600px;
+  }
+
+  .transaction-table {
+    min-width: 500px;
   }
 }

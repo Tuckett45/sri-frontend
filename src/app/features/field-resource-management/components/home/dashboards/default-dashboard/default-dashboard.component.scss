@@ -1,0 +1,53 @@
+.default-dashboard {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.welcome-card {
+  text-align: center;
+  padding: 48px 24px;
+  margin-bottom: 24px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #144f80;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 500;
+    color: #144f80;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    padding: 32px 16px;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+    }
+
+    h2 {
+      font-size: 20px;
+    }
+
+    p {
+      font-size: 14px;
+    }
+  }
+}

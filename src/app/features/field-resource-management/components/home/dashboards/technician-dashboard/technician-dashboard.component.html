@@ -1,0 +1,20 @@
+<div class="technician-dashboard">
+  <app-quick-actions-widget [actions]="quickActions"></app-quick-actions-widget>
+
+  <div class="dashboard-grid">
+    <app-current-job-status-widget></app-current-job-status-widget>
+
+    <app-assignments-widget
+      (assignmentSelected)="onAssignmentSelected($event)"
+      (viewAllClicked)="onViewAllAssignments()">
+    </app-assignments-widget>
+
+    <app-timecard-widget
+      (viewTimecardClicked)="onViewTimecard()">
+    </app-timecard-widget>
+
+    <app-schedule-widget
+      (viewScheduleClicked)="onViewSchedule()">
+    </app-schedule-widget>
+  </div>
+</div>

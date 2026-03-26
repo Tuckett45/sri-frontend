@@ -1,0 +1,49 @@
+<mat-card class="timecard-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>schedule</mat-icon>
+      My Timecard
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading$ | async" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>Unable to load data. Please try again.</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Data state -->
+    <ng-container *ngIf="!(loading$ | async) && !error">
+      <ng-container *ngIf="(currentPeriod$ | async) as period; else noPeriod">
+        <div class="period-info">
+          <div class="period-dates">
+            <span class="label">Pay Period</span>
+            <span class="value">{{ period.startDate | date:'MMM d' }} - {{ period.endDate | date:'MMM d, yyyy' }}</span>
+          </div>
+          <div class="period-hours">
+            <span class="label">Total Hours</span>
+            <span class="value hours">{{ period.totalHours }}</span>
+          </div>
+          <div class="period-status">
+            <span class="label">Status</span>
+            <span class="value status-badge" [ngClass]="{'status-locked': period.isLocked}">{{ period.status }}</span>
+          </div>
+        </div>
+        <button mat-stroked-button color="primary" class="view-btn" (click)="onViewTimecard()">
+          View Full Timecard
+        </button>
+      </ng-container>
+      <ng-template #noPeriod>
+        <div class="empty-state">
+          <mat-icon>schedule</mat-icon>
+          <p>No current pay period</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

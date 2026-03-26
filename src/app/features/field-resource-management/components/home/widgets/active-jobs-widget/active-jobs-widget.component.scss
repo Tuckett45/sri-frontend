@@ -1,0 +1,139 @@
+.active-jobs-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #144f80;
+      }
+    }
+  }
+
+  mat-card-content {
+    .widget-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .widget-error {
+      text-align: center;
+      padding: 1.5rem;
+      color: #d32f2f;
+
+      p {
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    .jobs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .job-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: #f5f7fa;
+        border-color: #144f80;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(20, 79, 128, 0.1);
+      }
+
+      &:focus {
+        outline: 2px solid #144f80;
+        outline-offset: 2px;
+      }
+    }
+
+    .job-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .job-id {
+      font-weight: 600;
+      color: #144f80;
+      font-size: 14px;
+    }
+
+    .job-client {
+      font-size: 13px;
+      color: #333;
+    }
+
+    .job-site {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .status-badge {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+
+      &.status-en-route {
+        background-color: #e3f2fd;
+        color: #1565c0;
+      }
+
+      &.status-on-site {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      &.status-not-started {
+        background-color: #fff3e0;
+        color: #e65100;
+      }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #999;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .active-jobs-card mat-card-content {
+    .job-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }
+}

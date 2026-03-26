@@ -55,6 +55,28 @@ import { BreadcrumbComponent } from './components/layout/breadcrumb/breadcrumb.c
 // Home Dashboard Component (eagerly loaded as landing page)
 import { HomeDashboardComponent } from './components/home/home-dashboard.component';
 
+// Widget Components
+import { QuickActionsWidgetComponent } from './components/home/widgets/quick-actions-widget/quick-actions-widget.component';
+import { ActiveJobsWidgetComponent } from './components/home/widgets/active-jobs-widget/active-jobs-widget.component';
+import { RecentJobsWidgetComponent } from './components/home/widgets/recent-jobs-widget/recent-jobs-widget.component';
+import { AssignmentsWidgetComponent } from './components/home/widgets/assignments-widget/assignments-widget.component';
+import { TimecardWidgetComponent } from './components/home/widgets/timecard-widget/timecard-widget.component';
+import { ScheduleWidgetComponent } from './components/home/widgets/schedule-widget/schedule-widget.component';
+import { CurrentJobStatusWidgetComponent } from './components/home/widgets/current-job-status-widget/current-job-status-widget.component';
+import { AvailableTechniciansWidgetComponent } from './components/home/widgets/available-technicians-widget/available-technicians-widget.component';
+import { KpiSummaryCardComponent } from './components/home/widgets/kpi-summary-card/kpi-summary-card.component';
+import { ApprovalsWidgetComponent } from './components/home/widgets/approvals-widget/approvals-widget.component';
+import { TimecardReviewWidgetComponent } from './components/home/widgets/timecard-review-widget/timecard-review-widget.component';
+import { ExpensesWidgetComponent } from './components/home/widgets/expenses-widget/expenses-widget.component';
+import { TravelBreakPtoWidgetComponent } from './components/home/widgets/travel-break-pto-widget/travel-break-pto-widget.component';
+
+// Role-Specific Dashboard Components
+import { TechnicianDashboardComponent } from './components/home/dashboards/technician-dashboard/technician-dashboard.component';
+import { AdminDashboardComponent } from './components/home/dashboards/admin-dashboard/admin-dashboard.component';
+import { CmDashboardComponent } from './components/home/dashboards/cm-dashboard/cm-dashboard.component';
+import { HrPayrollDashboardComponent } from './components/home/dashboards/hr-payroll-dashboard/hr-payroll-dashboard.component';
+import { DefaultDashboardComponent } from './components/home/dashboards/default-dashboard/default-dashboard.component';
+
 // Notification Components (needed for real-time updates)
 import { NotificationPanelComponent } from './components/notifications/notification-panel/notification-panel.component';
 
@@ -114,6 +136,28 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     
     // Home Dashboard (landing page)
     HomeDashboardComponent,
+
+    // Widget Components
+    QuickActionsWidgetComponent,
+    ActiveJobsWidgetComponent,
+    RecentJobsWidgetComponent,
+    AssignmentsWidgetComponent,
+    TimecardWidgetComponent,
+    ScheduleWidgetComponent,
+    CurrentJobStatusWidgetComponent,
+    AvailableTechniciansWidgetComponent,
+    KpiSummaryCardComponent,
+    ApprovalsWidgetComponent,
+    TimecardReviewWidgetComponent,
+    ExpensesWidgetComponent,
+    TravelBreakPtoWidgetComponent,
+
+    // Role-Specific Dashboard Components
+    TechnicianDashboardComponent,
+    AdminDashboardComponent,
+    CmDashboardComponent,
+    HrPayrollDashboardComponent,
+    DefaultDashboardComponent,
     
     // Notification Components
     NotificationPanelComponent,

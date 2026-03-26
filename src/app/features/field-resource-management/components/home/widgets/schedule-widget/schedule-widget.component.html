@@ -1,0 +1,44 @@
+<mat-card class="schedule-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>calendar_today</mat-icon>
+      My Schedule
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading$ | async" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>Unable to load data. Please try again.</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Data state -->
+    <ng-container *ngIf="!(loading$ | async) && !error">
+      <div *ngIf="(scheduledJobs$ | async) as jobs" class="schedule-list">
+        <div *ngFor="let job of jobs" class="schedule-item">
+          <div class="schedule-date">
+            <span class="day">{{ job.scheduledStartDate | date:'EEE' }}</span>
+            <span class="date">{{ job.scheduledStartDate | date:'MMM d' }}</span>
+          </div>
+          <div class="schedule-details">
+            <span class="site-name">{{ job.siteName }}</span>
+            <span class="job-id">{{ job.jobId }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="jobs.length === 0" class="empty-state">
+          <mat-icon>event_available</mat-icon>
+          <p>No jobs scheduled this week</p>
+        </div>
+      </div>
+      <button mat-stroked-button color="primary" class="view-btn" (click)="onViewSchedule()">
+        View Full Schedule
+      </button>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

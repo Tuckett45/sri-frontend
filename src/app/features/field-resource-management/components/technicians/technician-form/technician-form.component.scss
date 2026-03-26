@@ -394,14 +394,30 @@ mat-error {
 }
 
 // Stepper customization for mobile
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   ::ng-deep {
     .mat-horizontal-stepper-header-container {
-      display: none;
+      padding: 0 8px;
+    }
+
+    .mat-step-header {
+      padding: 8px 4px !important;
+
+      .mat-step-label {
+        display: none !important;
+      }
+
+      .mat-step-icon {
+        margin: 0 !important;
+      }
+    }
+
+    .mat-stepper-horizontal-line {
+      min-width: 16px !important;
     }
 
     .mat-horizontal-content-container {
-      padding: 0;
+      padding: 16px 0;
     }
   }
 }

@@ -113,6 +113,7 @@
       width: 40px;
       height: 40px;
       color: var(--primary-color, #1976d2);
+      flex-shrink: 0;
     }
     
     mat-card-title {
@@ -460,6 +461,7 @@
 
 .entries-table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   color: #212121;
 }
 
@@ -728,9 +730,10 @@
 
   .entries-table {
     font-size: 0.875rem;
+    min-width: 550px;
 
     th, td {
-      padding: 8px 4px;
+      padding: 12px 8px;
     }
   }
   

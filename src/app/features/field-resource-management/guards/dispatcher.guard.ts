@@ -46,6 +46,7 @@ export class DispatcherGuard implements CanActivate {
       UserRole.CM,
       UserRole.Admin,
       UserRole.HR,
+      UserRole.Payroll,
       UserRole.OSPCoordinator,
       UserRole.Controller,
       UserRole.EngineeringFieldSupport,

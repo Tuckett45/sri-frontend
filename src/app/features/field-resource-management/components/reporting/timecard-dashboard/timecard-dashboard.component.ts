@@ -51,6 +51,9 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
   // Active job for time tracker
   activeJob: Job | null = null;
   
+  // Whether the user is truly clocked in (active entry with no clock-out)
+  isClockedIn = false;
+  
   // Date range for filtering
   selectedDate = new Date();
   
@@ -77,13 +80,22 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
     
     // Subscribe to active time entry to get active job
     this.activeTimeEntry$.pipe(takeUntil(this.destroy$)).subscribe(entry => {
-      if (entry) {
+      if (entry && entry.clockOutTime === undefined) {
+        this.isClockedIn = true;
         this.loadActiveJob(entry.jobId);
       } else {
+        this.isClockedIn = false;
         this.activeJob = null;
       }
     });
     
+    // Auto-select job if only one is available
+    this.jobs$.pipe(takeUntil(this.destroy$)).subscribe(jobs => {
+      if (jobs.length === 1 && !this.selectedJobId) {
+        this.selectedJobId = jobs[0].id;
+      }
+    });
+
     // Subscribe to today's entries for calculations
     this.todayTimeEntries$.pipe(takeUntil(this.destroy$)).subscribe(entries => {
       this.todayTimeEntriesData = entries;

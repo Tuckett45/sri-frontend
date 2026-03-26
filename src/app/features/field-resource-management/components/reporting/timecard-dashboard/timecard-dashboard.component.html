@@ -34,11 +34,11 @@
     <mat-tab label="Daily View">
       <ng-template matTabContent>
         <!-- Start Time Entry Card (shown when not clocked in) -->
-        <section class="start-entry-section" *ngIf="!(activeTimeEntry$ | async)" role="region" aria-labelledby="start-entry-heading">
+        <section class="start-entry-section" *ngIf="!isClockedIn" role="region" aria-labelledby="start-entry-heading">
           <mat-card class="start-entry-card">
             <mat-card-header>
               <div class="start-entry-card-header">
-                <mat-icon class="start-entry-icon">play_circle</mat-icon>
+                <mat-icon class="start-entry-icon">access_time</mat-icon>
                 <div>
                   <mat-card-title id="start-entry-heading">Start a New Time Entry</mat-card-title>
                   <mat-card-subtitle>Select a job to clock in and start tracking your time</mat-card-subtitle>
@@ -92,7 +92,7 @@
         </section>
         
         <!-- Active Time Entry Section -->
-        <section class="active-section" *ngIf="(activeTimeEntry$ | async) as activeEntry" role="region" aria-labelledby="active-entry-heading">
+        <section class="active-section" *ngIf="isClockedIn" role="region" aria-labelledby="active-entry-heading">
           <h2 id="active-entry-heading">Currently Clocked In</h2>
           <mat-card class="active-card">
             <mat-card-content>

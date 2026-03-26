@@ -21,6 +21,9 @@ export * from './material.model';
 // Payroll models
 export * from './payroll.models';
 
+// Dashboard models
+export * from './dashboard.models';
+
 // DTOs
 export * from './dtos/technician.dto';
 export * from './dtos/job.dto';

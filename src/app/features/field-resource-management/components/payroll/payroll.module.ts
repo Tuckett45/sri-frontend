@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { PayrollRoutingModule } from './payroll-routing.module';
 
+import { PayrollNavComponent } from './payroll-nav/payroll-nav.component';
 import { IncidentReportsComponent } from './incident-reports/incident-reports.component';
 import { DirectDepositComponent } from './direct-deposit/direct-deposit.component';
 import { W4Component } from './w4/w4.component';
@@ -14,6 +15,7 @@ import { W2Component } from './w2/w2.component';
 
 @NgModule({
   declarations: [
+    PayrollNavComponent,
     IncidentReportsComponent,
     DirectDepositComponent,
     W4Component,

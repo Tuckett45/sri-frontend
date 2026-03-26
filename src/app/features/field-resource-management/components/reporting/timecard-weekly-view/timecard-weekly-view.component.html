@@ -74,8 +74,8 @@
     </mat-card-content>
   </mat-card>
 
-  <!-- Week Grid -->
-  <mat-card class="week-grid-card">
+  <!-- Week Grid (Desktop) -->
+  <mat-card class="week-grid-card desktop-only">
     <mat-card-content>
       <div class="week-grid">
         <!-- Header Row -->
@@ -94,10 +94,12 @@
             [class.has-data]="getDailySummary(summary, i)"
             [class.locked]="getDailySummary(summary, i)?.isLocked"
             [class.overtime]="hasOvertime(getDailySummary(summary, i))"
-            (click)="viewDayDetails(getDailySummary(summary, i)!)"
-            [attr.tabindex]="getDailySummary(summary, i) ? 0 : -1"
-            [attr.role]="getDailySummary(summary, i) ? 'button' : null"
-            [attr.aria-label]="getDailySummary(summary, i) ? 'View details for ' + day : null">
+            [class.selected]="selectedDayIndex === i"
+            (click)="selectDay(i)"
+            tabindex="0"
+            role="button"
+            [attr.aria-label]="'View details for ' + day"
+            [attr.aria-pressed]="selectedDayIndex === i">
             
             <ng-container *ngIf="getDailySummary(summary, i) as dailySummary">
               <!-- Hours -->
@@ -136,6 +138,78 @@
       </div>
     </mat-card-content>
   </mat-card>
+
+  <!-- Week Accordion (Mobile) -->
+  <div class="week-accordion mobile-only">
+    <div 
+      class="accordion-day" 
+      *ngFor="let day of daysOfWeek; let i = index"
+      [class.expanded]="expandedDayIndex === i"
+      [class.has-data]="getDailySummary(summary, i)"
+      [class.is-today]="isToday(getDateForDay(i))">
+      
+      <!-- Day Header (always visible) -->
+      <button 
+        class="accordion-day-header"
+        (click)="toggleDay(i)"
+        [attr.aria-expanded]="expandedDayIndex === i"
+        [attr.aria-controls]="'day-content-' + i">
+        <div class="accordion-day-info">
+          <span class="accordion-day-name">{{ day }}</span>
+          <span class="accordion-day-date">{{ formatDate(getDateForDay(i)) }}</span>
+        </div>
+        <div class="accordion-day-summary">
+          <ng-container *ngIf="getDailySummary(summary, i) as dailySummary">
+            <span class="accordion-hours">{{ formatHours(dailySummary.totalHours) }}</span>
+            <span class="accordion-jobs">{{ dailySummary.jobCount }} {{ dailySummary.jobCount === 1 ? 'job' : 'jobs' }}</span>
+          </ng-container>
+          <span *ngIf="!getDailySummary(summary, i)" class="accordion-empty">No entries</span>
+        </div>
+        <mat-icon class="accordion-chevron">{{ expandedDayIndex === i ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+
+      <!-- Day Content (collapsible) -->
+      <div 
+        class="accordion-day-content" 
+        [id]="'day-content-' + i"
+        *ngIf="expandedDayIndex === i">
+        
+        <ng-container *ngIf="getDailySummary(summary, i) as dailySummary">
+          <!-- Time Entries -->
+          <div class="accordion-entries">
+            <div class="accordion-entry" *ngFor="let entry of dailySummary.timeEntries">
+              <div class="accordion-entry-job">
+                <mat-icon>work</mat-icon>
+                <span>{{ entry.jobId }}</span>
+              </div>
+              <div class="accordion-entry-time">
+                <span>{{ entry.clockInTime | date:'shortTime' }}</span>
+                <mat-icon>arrow_forward</mat-icon>
+                <span>{{ entry.clockOutTime ? (entry.clockOutTime | date:'shortTime') : 'Active' }}</span>
+              </div>
+              <div class="accordion-entry-hours">
+                {{ formatHours(timecardService.calculateEntryHours(entry)) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Expenses -->
+          <div class="accordion-expenses" *ngIf="dailySummary.expenses.length > 0">
+            <div class="accordion-expense-header">Expenses</div>
+            <div class="accordion-expense" *ngFor="let expense of dailySummary.expenses">
+              <span class="expense-type">{{ expense.type }}</span>
+              <span class="expense-amount">${{ expense.amount | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </ng-container>
+
+        <div class="accordion-no-entries" *ngIf="!getDailySummary(summary, i)">
+          <mat-icon>event_busy</mat-icon>
+          <span>No time entries for this day</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Quick Actions -->
   <div class="quick-actions">
@@ -182,65 +256,75 @@
     </button>
   </div>
 
-  <!-- Detailed Entries Section -->
+  <!-- Detailed Entries Section (Selected Day) -->
   <mat-card class="entries-detail">
     <mat-card-header>
-      <mat-card-title>Time Entries</mat-card-title>
+      <mat-card-title>
+        Time Entries — {{ getSelectedDayLabel() }}
+      </mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <div class="entries-by-day" *ngFor="let dailySummary of summary.dailySummaries">
-        <div class="day-header-detail">
-          <h3>{{ dailySummary.date | date:'EEEE, MMMM d' }}</h3>
-          <span class="day-total">{{ formatHours(dailySummary.totalHours) }}</span>
-        </div>
+      <!-- Selected Day Entries -->
+      <ng-container *ngIf="getSelectedDaySummary(summary) as dailySummary">
+        <div class="entries-by-day">
+          <div class="day-header-detail">
+            <h3>{{ dailySummary.date | date:'EEEE, MMMM d' }}</h3>
+            <span class="day-total">{{ formatHours(dailySummary.totalHours) }}</span>
+          </div>
 
-        <div class="day-entries">
-          <div class="entry-row" *ngFor="let entry of dailySummary.timeEntries">
-            <div class="entry-job">
-              <mat-icon>work</mat-icon>
-              <span>{{ entry.jobId }}</span>
+          <div class="day-entries" *ngIf="dailySummary.timeEntries.length > 0">
+            <div class="entry-row" *ngFor="let entry of dailySummary.timeEntries">
+              <div class="entry-job">
+                <mat-icon>work</mat-icon>
+                <span>{{ entry.jobId }}</span>
+              </div>
+              <div class="entry-time">
+                <span>{{ entry.clockInTime | date:'shortTime' }}</span>
+                <mat-icon>arrow_forward</mat-icon>
+                <span>{{ entry.clockOutTime ? (entry.clockOutTime | date:'shortTime') : 'Active' }}</span>
+              </div>
+              <div class="entry-hours">
+                {{ formatHours(timecardService.calculateEntryHours(entry)) }}
+              </div>
+              <div class="entry-actions">
+                <button 
+                  mat-icon-button 
+                  (click)="editTimeEntry(entry); $event.stopPropagation()"
+                  [disabled]="dailySummary.isLocked"
+                  matTooltip="Edit entry">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </div>
             </div>
-            <div class="entry-time">
-              <span>{{ entry.clockInTime | date:'shortTime' }}</span>
-              <mat-icon>arrow_forward</mat-icon>
-              <span>{{ entry.clockOutTime ? (entry.clockOutTime | date:'shortTime') : 'Active' }}</span>
-            </div>
-            <div class="entry-hours">
-              {{ formatHours(timecardService.calculateEntryHours(entry)) }}
-            </div>
-            <div class="entry-actions">
-              <button 
-                mat-icon-button 
-                (click)="editTimeEntry(entry); $event.stopPropagation()"
-                [disabled]="dailySummary.isLocked"
-                matTooltip="Edit entry">
-                <mat-icon>edit</mat-icon>
-              </button>
+          </div>
+
+          <div class="empty-day-entries" *ngIf="dailySummary.timeEntries.length === 0">
+            <mat-icon>event_busy</mat-icon>
+            <p>No time entries for this day</p>
+          </div>
+
+          <!-- Day Expenses -->
+          <div class="day-expenses" *ngIf="dailySummary.expenses.length > 0">
+            <h4>Expenses</h4>
+            <div class="expense-row" *ngFor="let expense of dailySummary.expenses">
+              <div class="expense-type">
+                <mat-icon>receipt</mat-icon>
+                <span>{{ expense.type }}</span>
+              </div>
+              <div class="expense-description">{{ expense.description }}</div>
+              <div class="expense-amount">${{ expense.amount | number:'1.2-2' }}</div>
             </div>
           </div>
         </div>
+      </ng-container>
 
-        <!-- Day Expenses -->
-        <div class="day-expenses" *ngIf="dailySummary.expenses.length > 0">
-          <h4>Expenses</h4>
-          <div class="expense-row" *ngFor="let expense of dailySummary.expenses">
-            <div class="expense-type">
-              <mat-icon>receipt</mat-icon>
-              <span>{{ expense.type }}</span>
-            </div>
-            <div class="expense-description">{{ expense.description }}</div>
-            <div class="expense-amount">${{ expense.amount | number:'1.2-2' }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div class="empty-state" *ngIf="summary.dailySummaries.length === 0">
-        <mat-icon>info</mat-icon>
-        <p>No time entries for this week</p>
-        <button mat-raised-button class="btn-orange" (click)="addTimeEntry()">
+      <!-- No Data for Selected Day -->
+      <div class="empty-state" *ngIf="!getSelectedDaySummary(summary)">
+        <mat-icon>event_busy</mat-icon>
+        <p>No time entries for {{ getSelectedDayLabel() }}</p>
+        <button mat-raised-button class="btn-orange" (click)="addTimeEntry(getDateForDay(selectedDayIndex))">
           <mat-icon>add</mat-icon>
-          Add Your First Entry
+          Add Entry
         </button>
       </div>
     </mat-card-content>

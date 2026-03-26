@@ -114,7 +114,7 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       label: 'Travel',
       icon: 'flight',
       route: '/field-resource-management/travel',
-      resource: 'technicians',
+      resource: 'travel_profiles',
       action: 'read'
     },
     {
@@ -137,7 +137,7 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       route: '/field-resource-management/approvals',
       resource: 'approvals',
       action: 'read',
-      roles: [UserRole.Admin, UserRole.CM, UserRole.Controller, UserRole.OSPCoordinator]
+      roles: [UserRole.Admin, UserRole.CM, UserRole.Controller, UserRole.OSPCoordinator, UserRole.HR, UserRole.Payroll]
     },
     {
       label: 'Admin',
@@ -160,8 +160,8 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       icon: 'fact_check',
       route: '/field-resource-management/timecard-manager',
       resource: 'time_entries',
-      action: 'approve',
-      roles: [UserRole.Admin, UserRole.Manager, UserRole.HR, UserRole.CM, UserRole.Controller]
+      action: 'execute',
+      roles: [UserRole.Admin, UserRole.Manager, UserRole.HR, UserRole.CM, UserRole.Controller, UserRole.Payroll]
     },
     {
       label: 'My Assignments',
@@ -186,6 +186,14 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       resource: 'kpis',
       action: 'read',
       roles: [UserRole.Admin]
+    },
+    {
+      label: 'Back Office',
+      icon: 'business_center',
+      route: '/field-resource-management/payroll',
+      resource: 'payroll',
+      action: 'read',
+      roles: [UserRole.Admin, UserRole.HR, UserRole.Payroll]
     }
   ];
 

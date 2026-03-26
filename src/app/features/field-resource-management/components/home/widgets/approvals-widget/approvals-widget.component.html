@@ -1,0 +1,42 @@
+<mat-card class="approvals-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>approval</mat-icon>
+      Pending Approvals
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>{{ error }}</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Data state -->
+    <ng-container *ngIf="!loading && !error">
+      <div *ngIf="counts as c" class="approvals-grid">
+        <div class="approval-item">
+          <span class="approval-count">{{ c.pendingTimecards }}</span>
+          <span class="approval-label">Timecards</span>
+        </div>
+        <div class="approval-item">
+          <span class="approval-count">{{ c.pendingExpenses }}</span>
+          <span class="approval-label">Expenses</span>
+        </div>
+        <div class="approval-item">
+          <span class="approval-count">{{ c.pendingTravelRequests }}</span>
+          <span class="approval-label">Travel Requests</span>
+        </div>
+        <div class="approval-item">
+          <span class="approval-count">{{ c.pendingBreakRequests }}</span>
+          <span class="approval-label">Break Requests</span>
+        </div>
+      </div>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

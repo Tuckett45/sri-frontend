@@ -29,9 +29,16 @@
     height: 100vh;
     z-index: 1000;
     transform: translateX(-100%);
+    overflow: hidden;
 
     &.open {
       transform: translateX(0);
+    }
+
+    app-frm-nav-menu {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
   }
 }
@@ -114,6 +121,7 @@
 
 .menu-toggle {
   margin-right: 8px;
+  color: #3b82f6;
 
   @media (min-width: 769px) {
     display: none;

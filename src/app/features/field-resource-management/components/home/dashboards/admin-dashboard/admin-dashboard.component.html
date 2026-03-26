@@ -1,0 +1,24 @@
+<div class="admin-dashboard">
+  <app-kpi-summary-card
+    *ngIf="kpis$ | async as kpis"
+    [kpis]="kpis">
+  </app-kpi-summary-card>
+
+  <app-quick-actions-widget [actions]="quickActions"></app-quick-actions-widget>
+
+  <div class="dashboard-grid">
+    <app-active-jobs-widget
+      (jobSelected)="onJobSelected($event)">
+    </app-active-jobs-widget>
+
+    <app-available-technicians-widget
+      (technicianSelected)="onTechnicianSelected($event)">
+    </app-available-technicians-widget>
+
+    <div class="full-width">
+      <app-recent-jobs-widget
+        (jobSelected)="onJobSelected($event)">
+      </app-recent-jobs-widget>
+    </div>
+  </div>
+</div>

@@ -24,6 +24,7 @@ import { CMDashboardComponent } from './cm-dashboard/cm-dashboard.component';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
 import { JobCostReportComponent } from './job-cost-report/job-cost-report.component';
 import { BudgetDashboardComponent } from './budget-dashboard/budget-dashboard.component';
+import { TimeEntryDialogComponent } from './time-entry-dialog/time-entry-dialog.component';
 
 const routes: Routes = [
   {
@@ -91,7 +92,8 @@ const routes: Routes = [
     CMDashboardComponent,
     AdminDashboardComponent,
     JobCostReportComponent,
-    BudgetDashboardComponent
+    BudgetDashboardComponent,
+    TimeEntryDialogComponent
   ],
   imports: [
     CommonModule,

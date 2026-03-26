@@ -133,6 +133,10 @@ export class AuthService {
       return this.userRole.getValue() === UserRole.HR;
   }
 
+  isPayroll() {
+      return this.userRole.getValue() === UserRole.Payroll;
+  }
+
   isEngineeringFieldSupport() {
     return this.userRole.getValue() === UserRole.EngineeringFieldSupport;
   }

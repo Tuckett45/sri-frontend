@@ -70,7 +70,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     {
       label: 'Expenses',
       route: '/expenses',
-      shouldShow: () => this.authService.isAdmin() || this.authService.isHR()
+      shouldShow: () => this.authService.isAdmin() || this.authService.isHR() || this.authService.isPayroll()
     },
     {
       label: 'Notifications',
@@ -78,7 +78,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.featureFlags.flagEnabled('notifications')()
     },
     {
-      label: 'ATLAS',
+      label: 'Agents',
       route: '/atlas',
       shouldShow: () => this.featureFlags.flagEnabled('atlas')()
     },
@@ -92,6 +92,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
           UserRole.CM,
           UserRole.Admin,
           UserRole.HR,
+          UserRole.Payroll,
           UserRole.OSPCoordinator,
           UserRole.Controller,
           UserRole.EngineeringFieldSupport,

@@ -728,6 +728,20 @@ export class PermissionService {
       ],
       restrictions: []
     });
+
+    // Payroll role - timecards, approvals, travel, expenses, and back-office HR functions
+    this.setRolePermissions('Payroll', {
+      role: 'Payroll',
+      permissions: [
+        { resource: 'kpis', actions: ['read'] },
+        { resource: 'time_entries', actions: ['read', 'update', 'execute'] },
+        { resource: 'approvals', actions: ['read', 'update'] },
+        { resource: 'travel_profiles', actions: ['read', 'update'] },
+        { resource: 'reports', actions: ['read'] },
+        { resource: 'payroll', actions: ['create', 'read', 'update'] }
+      ],
+      restrictions: []
+    });
   }
 
   /**

@@ -1,0 +1,50 @@
+<mat-card class="current-job-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>location_on</mat-icon>
+      Current Job
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading$ | async" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>Unable to load data. Please try again.</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Data state -->
+    <ng-container *ngIf="!(loading$ | async) && !error">
+      <ng-container *ngIf="(activeJob$ | async) as active; else noActiveJob">
+        <div class="job-details">
+          <div class="detail-row">
+            <span class="label">Status</span>
+            <span class="value status-badge">{{ active.job.status }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Site</span>
+            <span class="value">{{ active.job.siteName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Client</span>
+            <span class="value">{{ active.job.client }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Job ID</span>
+            <span class="value job-id">{{ active.job.jobId }}</span>
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #noActiveJob>
+        <div class="empty-state">
+          <mat-icon>location_off</mat-icon>
+          <p>No active job</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

@@ -772,6 +772,34 @@ button.delete-action {
 }
 
 // ============================================================================
+// PAGINATOR MOBILE STYLES
+// ============================================================================
+
+@media (max-width: 768px) {
+  :host ::ng-deep mat-paginator {
+    .mat-mdc-paginator-range-label,
+    .mat-mdc-paginator-page-size-label {
+      color: #000000;
+    }
+
+    .mat-mdc-paginator-navigation-previous,
+    .mat-mdc-paginator-navigation-next,
+    .mat-mdc-paginator-navigation-first,
+    .mat-mdc-paginator-navigation-last {
+      color: #000000;
+
+      .mat-mdc-paginator-icon {
+        fill: #000000;
+      }
+    }
+
+    .mat-mdc-select-value-text {
+      color: #000000;
+    }
+  }
+}
+
+// ============================================================================
 // RESPONSIVE UTILITIES
 // ============================================================================
 

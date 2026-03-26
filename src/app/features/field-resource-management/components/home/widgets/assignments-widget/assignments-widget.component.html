@@ -1,0 +1,48 @@
+<mat-card class="assignments-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>assignment</mat-icon>
+      My Assignments
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading$ | async" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>Unable to load data. Please try again.</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Data state -->
+    <ng-container *ngIf="!(loading$ | async) && !error">
+      <div *ngIf="(assignments$ | async) as assignments" class="assignments-list">
+        <div
+          *ngFor="let assignment of assignments"
+          class="assignment-item"
+          (click)="onAssignmentClick(assignment.id)"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="onAssignmentClick(assignment.id)"
+          [attr.aria-label]="'Assignment ' + (assignment.job?.siteName || 'Unknown') + ' - ' + assignment.status"
+        >
+          <div class="assignment-info">
+            <span class="status-dot" [ngClass]="getStatusClass(assignment.status)"></span>
+            <div class="assignment-details">
+              <span class="site-name">{{ assignment.job?.siteName || 'Unknown Site' }}</span>
+              <span class="status-text">{{ assignment.status }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="assignments.length === 0" class="empty-state">
+          <mat-icon>assignment_turned_in</mat-icon>
+          <p>No active assignments</p>
+        </div>
+      </div>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

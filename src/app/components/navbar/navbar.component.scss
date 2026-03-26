@@ -199,35 +199,38 @@ mat-toolbar {
 
     .logo-img {
       height: 36px;
-      order: 1;
+      order: 0;
     }
 
     .spacer {
       display: block;
       flex: 1;
+      order: 1;
     }
 
     .logo {
-      order: 1;
+      order: 0;
       font-size: 1.25rem;
     }
 
     .menu-toggle {
-      display: flex !important; /* Ensure hamburger shows on mobile */
+      display: flex !important;
       height: 48px;
       width: 48px;
+      order: 2;
+      margin-left: 0;
     }
 
     /* On mobile, nav-links should only be visible when .mobile.open */
     .nav-links:not(.mobile) {
-      display: none !important; /* Hide if mobile class not applied */
+      display: none !important;
     }
 
     .nav-links.mobile {
-      display: none !important; /* Hidden by default */
+      display: none !important;
       
       &.open {
-        display: flex !important; /* Show when open */
+        display: flex !important;
         z-index: 999;
       }
 
