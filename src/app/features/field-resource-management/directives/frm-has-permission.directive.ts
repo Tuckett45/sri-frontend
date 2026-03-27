@@ -4,7 +4,7 @@ import { AuthService } from '../../../services/auth.service';
 import { FrmPermissionKey, FrmPermissionService } from '../services/frm-permission.service';
 
 const ALL_PERMISSION_KEYS: ReadonlySet<string> = new Set<FrmPermissionKey>([
-  'canStartJob', 'canEditJob',
+  'canCreateJob', 'canStartJob', 'canEditJob',
   'canViewOwnSchedule', 'canViewAllSchedules', 'canEditSchedule', 'canAssignCrew',
   'canTrackTime', 'canSubmitTimecard', 'canApproveTimecard',
   'canApproveExpense', 'canApproveTravelRequest', 'canApproveBreakRequest',
@@ -12,7 +12,7 @@ const ALL_PERMISSION_KEYS: ReadonlySet<string> = new Set<FrmPermissionKey>([
   'canViewReports', 'canViewManagementReports',
   'canManageIncidentReports', 'canManageDirectDeposit', 'canManageW4',
   'canManageContactInfo', 'canSignPRC', 'canViewPayStubs', 'canViewW2',
-  'canAccessAdminPanel', 'canViewReadOnly',
+  'canAccessAdminPanel', 'canViewReadOnly', 'canManageOnboarding',
 ]);
 
 @Directive({ selector: '[frmHasPermission]' })

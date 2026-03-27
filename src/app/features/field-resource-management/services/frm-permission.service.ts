@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { UserRole } from '../../../models/role.enum';
 
 export type FrmPermissionKey =
+  | 'canCreateJob'
   | 'canStartJob'
   | 'canEditJob'
   | 'canViewOwnSchedule'
@@ -26,11 +27,13 @@ export type FrmPermissionKey =
   | 'canViewPayStubs'
   | 'canViewW2'
   | 'canAccessAdminPanel'
-  | 'canViewReadOnly';
+  | 'canViewReadOnly'
+  | 'canManageOnboarding';
 
 export type FrmPermissionSet = Record<FrmPermissionKey, boolean>;
 
 const ALL_FALSE: FrmPermissionSet = {
+  canCreateJob: false,
   canStartJob: false,
   canEditJob: false,
   canViewOwnSchedule: false,
@@ -56,6 +59,7 @@ const ALL_FALSE: FrmPermissionSet = {
   canViewW2: false,
   canAccessAdminPanel: false,
   canViewReadOnly: false,
+  canManageOnboarding: false,
 };
 
 const FIELD_GROUP_PERMISSIONS: FrmPermissionSet = {
@@ -82,14 +86,17 @@ const MANAGER_GROUP_PERMISSIONS: FrmPermissionSet = {
 
 const HR_GROUP_PERMISSIONS: FrmPermissionSet = {
   ...ALL_FALSE,
+  canCreateJob: true,
   canApproveExpense: true,
   canApproveTravelRequest: true,
   canApproveTimecard: true,
   canApproveBreakRequest: true,
+  canManageOnboarding: true,
 };
 
 const PAYROLL_GROUP_PERMISSIONS: FrmPermissionSet = {
   ...HR_GROUP_PERMISSIONS,
+  canCreateJob: true,
   canManageIncidentReports: true,
   canManageDirectDeposit: true,
   canManageW4: true,
@@ -105,6 +112,7 @@ const READONLY_GROUP_PERMISSIONS: FrmPermissionSet = {
 };
 
 const ADMIN_PERMISSIONS: FrmPermissionSet = {
+  canCreateJob: true,
   canStartJob: true,
   canEditJob: true,
   canViewOwnSchedule: true,
@@ -130,6 +138,7 @@ const ADMIN_PERMISSIONS: FrmPermissionSet = {
   canViewW2: true,
   canAccessAdminPanel: true,
   canViewReadOnly: true,
+  canManageOnboarding: true,
 };
 
 @Injectable({ providedIn: 'root' })

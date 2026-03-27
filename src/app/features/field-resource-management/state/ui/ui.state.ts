@@ -11,6 +11,13 @@ export enum CalendarViewType {
   Week = 'week'
 }
 
+export enum ScheduleViewMode {
+  Technicians = 'technicians',
+  Crews = 'crews',
+  Jobs = 'jobs',
+  Sites = 'sites'
+}
+
 export interface MapViewState {
   center: { lat: number; lng: number };
   zoom: number;
@@ -43,6 +50,7 @@ export interface ConnectionState {
 
 export interface UIState {
   calendarView: CalendarViewType;
+  scheduleViewMode: ScheduleViewMode;
   selectedDate: Date;
   sidebarOpen: boolean;
   mobileMenuOpen: boolean;

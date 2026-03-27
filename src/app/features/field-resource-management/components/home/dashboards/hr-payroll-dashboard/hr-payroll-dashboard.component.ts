@@ -24,7 +24,12 @@ export class HrPayrollDashboardComponent implements OnInit {
   }
 
   private buildQuickActions(): void {
+    const canCreateJob = this.frmPermissionService.hasPermission(
+      this.authService.getUserRole(), 'canCreateJob'
+    );
+
     const hrActions: QuickAction[] = [
+      { label: 'Create Job', icon: 'add', route: '/field-resource-management/jobs/new', color: 'orange', visible: canCreateJob },
       { label: 'Approvals', icon: 'approval', route: '/field-resource-management/approvals', color: 'primary', visible: true },
       { label: 'Timecard Management', icon: 'receipt_long', route: '/field-resource-management/timecards', color: 'primary', visible: true },
       { label: 'Reports', icon: 'bar_chart', route: '/field-resource-management/reports', color: 'primary', visible: true }

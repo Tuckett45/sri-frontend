@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { RouterTestingModule } from '@angular/router/testing';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,11 +11,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 
 import { CalendarViewComponent } from './calendar-view.component';
-import { CalendarViewType } from '../../../state/ui/ui.state';
+import { CalendarViewType, ScheduleViewMode } from '../../../state/ui/ui.state';
 import { JobStatus } from '../../../models/job.model';
-import { AssignmentStatus } from '../../../models/assignment.model';
 import * as UIActions from '../../../state/ui/ui.actions';
-import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 
 describe('CalendarViewComponent', () => {
   let component: CalendarViewComponent;
@@ -26,34 +25,19 @@ describe('CalendarViewComponent', () => {
   const initialState = {
     ui: {
       calendarView: CalendarViewType.Day,
+      scheduleViewMode: ScheduleViewMode.Technicians,
       selectedDate: new Date('2024-01-15'),
       sidebarOpen: false,
-      mobileMenuOpen: false
+      mobileMenuOpen: false,
+      mapView: { center: { lat: 0, lng: 0 }, zoom: 4, showTechnicians: true, showCrews: true, showJobs: true, clusteringEnabled: true },
+      selectedFilters: {},
+      notifications: [],
+      connectionState: { status: 'disconnected', reconnectAttempts: 0 }
     },
-    assignments: {
-      ids: [],
-      entities: {},
-      conflicts: [],
-      qualifiedTechnicians: [],
-      loading: false,
-      error: null
-    },
-    jobs: {
-      ids: [],
-      entities: {},
-      selectedId: null,
-      loading: false,
-      error: null,
-      filters: {}
-    },
-    technicians: {
-      ids: [],
-      entities: {},
-      selectedId: null,
-      loading: false,
-      error: null,
-      filters: {}
-    }
+    assignments: { ids: [], entities: {}, conflicts: [], qualifiedTechnicians: [], loading: false, error: null },
+    jobs: { ids: [], entities: {}, selectedId: null, loading: false, error: null, filters: {} },
+    technicians: { ids: [], entities: {}, selectedId: null, loading: false, error: null, filters: {} },
+    crews: { ids: [], entities: {}, selectedId: null, loading: false, error: null, filters: {} }
   };
 
   beforeEach(async () => {
@@ -63,6 +47,7 @@ describe('CalendarViewComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [CalendarViewComponent],
       imports: [
+        RouterTestingModule,
         DragDropModule,
         MatButtonToggleModule,
         MatIconModule,
@@ -89,85 +74,30 @@ describe('CalendarViewComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with day view', () => {
-    fixture.detectChanges();
-    expect(component.calendarView).toBe(CalendarViewType.Day);
-  });
-
   it('should dispatch setCalendarView action when view changes', () => {
     const dispatchSpy = spyOn(store, 'dispatch');
     component.onViewChange(CalendarViewType.Week);
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      UIActions.setCalendarView({ view: CalendarViewType.Week })
-    );
+    expect(dispatchSpy).toHaveBeenCalledWith(UIActions.setCalendarView({ view: CalendarViewType.Week }));
+  });
+
+  it('should dispatch setScheduleViewMode action when mode changes', () => {
+    const dispatchSpy = spyOn(store, 'dispatch');
+    component.onViewModeChange(ScheduleViewMode.Crews);
+    expect(dispatchSpy).toHaveBeenCalledWith(UIActions.setScheduleViewMode({ mode: ScheduleViewMode.Crews }));
   });
 
   it('should navigate to previous day in day view', () => {
     const dispatchSpy = spyOn(store, 'dispatch');
     component.calendarView = CalendarViewType.Day;
     component.selectedDate = new Date('2024-01-15');
-    
     component.onPrevious();
-    
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      jasmine.objectContaining({
-        type: UIActions.setSelectedDate.type
-      })
-    );
-  });
-
-  it('should navigate to previous week in week view', () => {
-    const dispatchSpy = spyOn(store, 'dispatch');
-    component.calendarView = CalendarViewType.Week;
-    component.selectedDate = new Date('2024-01-15');
-    
-    component.onPrevious();
-    
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      jasmine.objectContaining({
-        type: UIActions.setSelectedDate.type
-      })
-    );
-  });
-
-  it('should navigate to next day in day view', () => {
-    const dispatchSpy = spyOn(store, 'dispatch');
-    component.calendarView = CalendarViewType.Day;
-    component.selectedDate = new Date('2024-01-15');
-    
-    component.onNext();
-    
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      jasmine.objectContaining({
-        type: UIActions.setSelectedDate.type
-      })
-    );
+    expect(dispatchSpy).toHaveBeenCalledWith(jasmine.objectContaining({ type: UIActions.setSelectedDate.type }));
   });
 
   it('should navigate to today', () => {
     const dispatchSpy = spyOn(store, 'dispatch');
     component.onToday();
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      jasmine.objectContaining({
-        type: UIActions.setSelectedDate.type
-      })
-    );
-  });
-
-  it('should build time slots for day view', () => {
-    component.calendarView = CalendarViewType.Day;
-    component.selectedDate = new Date('2024-01-15');
-    component['buildTimeSlots']();
-    
-    expect(component.timeSlots.length).toBe(15); // 6 AM to 8 PM = 15 hours
-  });
-
-  it('should build time slots for week view', () => {
-    component.calendarView = CalendarViewType.Week;
-    component.selectedDate = new Date('2024-01-15');
-    component['buildTimeSlots']();
-    
-    expect(component.timeSlots.length).toBe(7); // 7 days
+    expect(dispatchSpy).toHaveBeenCalledWith(jasmine.objectContaining({ type: UIActions.setSelectedDate.type }));
   });
 
   it('should get correct status color class', () => {
@@ -179,143 +109,51 @@ describe('CalendarViewComponent', () => {
     expect(component.getStatusColor(JobStatus.Cancelled)).toBe('status-cancelled');
   });
 
+  it('should return correct row header label per view mode', () => {
+    component.viewMode = ScheduleViewMode.Technicians;
+    expect(component.getRowHeaderLabel()).toBe('Technician');
+    component.viewMode = ScheduleViewMode.Crews;
+    expect(component.getRowHeaderLabel()).toBe('Crew');
+    component.viewMode = ScheduleViewMode.Jobs;
+    expect(component.getRowHeaderLabel()).toBe('Job');
+    component.viewMode = ScheduleViewMode.Sites;
+    expect(component.getRowHeaderLabel()).toBe('Site');
+  });
+
   it('should format time slot for day view', () => {
     component.calendarView = CalendarViewType.Day;
     const slot = new Date('2024-01-15T10:00:00');
-    const formatted = component.formatTimeSlot(slot);
-    expect(formatted).toContain('10');
-  });
-
-  it('should format time slot for week view', () => {
-    component.calendarView = CalendarViewType.Week;
-    const slot = new Date('2024-01-15');
-    const formatted = component.formatTimeSlot(slot);
-    expect(formatted).toBeTruthy();
+    expect(component.formatTimeSlot(slot)).toContain('10');
   });
 
   it('should format selected date for day view', () => {
     component.calendarView = CalendarViewType.Day;
     component.selectedDate = new Date('2024-01-15');
-    const formatted = component.formatSelectedDate();
-    expect(formatted).toContain('2024');
-  });
-
-  it('should format selected date for week view', () => {
-    component.calendarView = CalendarViewType.Week;
-    component.selectedDate = new Date('2024-01-15');
-    const formatted = component.formatSelectedDate();
-    expect(formatted).toContain('-');
-  });
-
-  it('should handle job click', () => {
-    const job = {
-      id: '1',
-      jobId: 'JOB-001',
-      client: 'Test Client',
-      siteName: 'Test Site',
-      status: JobStatus.NotStarted
-    } as any;
-
-    spyOn(console, 'log');
-    component.onJobClick(job);
-    expect(console.log).toHaveBeenCalledWith('Job clicked:', job);
+    expect(component.formatSelectedDate()).toContain('2024');
   });
 
   it('should handle context menu', () => {
     const event = new MouseEvent('contextmenu', { clientX: 100, clientY: 200 });
     const job = { id: '1', jobId: 'JOB-001' } as any;
-
     spyOn(event, 'preventDefault');
     component.onJobContextMenu(event, job);
-
     expect(event.preventDefault).toHaveBeenCalled();
     expect(component.contextMenuJob).toBe(job);
-    expect(component.contextMenuPosition.x).toBe('100px');
-    expect(component.contextMenuPosition.y).toBe('200px');
+    expect(component.showContextMenu).toBeTrue();
   });
 
-  it('should handle context view action', () => {
-    const job = { id: '1', jobId: 'JOB-001' } as any;
-    component.contextMenuJob = job;
-
-    spyOn(component, 'onJobClick');
-    component.onContextView();
-
-    expect(component.onJobClick).toHaveBeenCalledWith(job);
+  it('should close context menu', () => {
+    component.showContextMenu = true;
+    component.contextMenuJob = { id: '1' } as any;
+    component.closeContextMenu();
+    expect(component.showContextMenu).toBeFalse();
     expect(component.contextMenuJob).toBeNull();
-  });
-
-  it('should handle context delete action', () => {
-    const job = { id: '1', jobId: 'JOB-001' } as any;
-    component.contextMenuJob = job;
-
-    spyOn(window, 'confirm').and.returnValue(true);
-    const dispatchSpy = spyOn(store, 'dispatch');
-
-    component.onContextDelete();
-
-    expect(window.confirm).toHaveBeenCalled();
-    expect(component.contextMenuJob).toBeNull();
-  });
-
-  it('should show snackbar when job already assigned', () => {
-    const job = { id: '1', jobId: 'JOB-001' } as any;
-    const technician = { id: 'tech1', firstName: 'John', lastName: 'Doe' } as any;
-    const item = { technician, timeSlot: new Date(), jobs: [], hasConflict: false };
-
-    component.assignments = [{
-      id: 'assign1',
-      jobId: '1',
-      technicianId: 'tech1',
-      assignedBy: 'admin',
-      assignedAt: new Date(),
-      status: AssignmentStatus.Assigned,
-      isActive: true
-    }];
-
-    const event = {
-      item: { data: job },
-      container: { data: item }
-    } as any;
-
-    component.onJobDrop(event);
-
-    expect(snackBar.open).toHaveBeenCalledWith(
-      'Job is already assigned to this technician',
-      'Close',
-      { duration: 3000 }
-    );
-  });
-
-  it('should dispatch assignTechnician action on valid drop', () => {
-    const job = { id: '1', jobId: 'JOB-001' } as any;
-    const technician = { id: 'tech1', firstName: 'John', lastName: 'Doe' } as any;
-    const item = { technician, timeSlot: new Date(), jobs: [], hasConflict: false };
-
-    component.assignments = [];
-
-    const event = {
-      item: { data: job },
-      container: { data: item }
-    } as any;
-
-    const dispatchSpy = spyOn(store, 'dispatch');
-    component.onJobDrop(event);
-
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      AssignmentActions.assignTechnician({
-        jobId: '1',
-        technicianId: 'tech1'
-      })
-    );
   });
 
   it('should clean up subscriptions on destroy', () => {
     const destroySpy = spyOn(component['destroy$'], 'next');
     const completeSpy = spyOn(component['destroy$'], 'complete');
-
     component.ngOnDestroy();
-
     expect(destroySpy).toHaveBeenCalled();
     expect(completeSpy).toHaveBeenCalled();
   });

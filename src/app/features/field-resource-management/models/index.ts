@@ -24,6 +24,9 @@ export * from './payroll.models';
 // Dashboard models
 export * from './dashboard.models';
 
+// Job Setup models
+export * from './job-setup.models';
+
 // DTOs
 export * from './dtos/technician.dto';
 export * from './dtos/job.dto';

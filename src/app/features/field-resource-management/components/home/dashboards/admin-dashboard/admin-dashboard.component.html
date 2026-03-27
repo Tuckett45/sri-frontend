@@ -3,20 +3,24 @@
     *ngIf="kpis$ | async as kpis"
     [kpis]="kpis">
   </app-kpi-summary-card>
+  <br>
 
   <app-quick-actions-widget [actions]="quickActions"></app-quick-actions-widget>
 
-  <div class="dashboard-grid">
-    <app-active-jobs-widget
-      (jobSelected)="onJobSelected($event)">
-    </app-active-jobs-widget>
+  <div class="dashboard-widgets">
+    <div class="widgets-left">
+      <app-active-jobs-widget
+        (jobSelected)="onJobSelected($event)">
+      </app-active-jobs-widget>
+    </div>
 
-    <app-available-technicians-widget
-      (technicianSelected)="onTechnicianSelected($event)">
-    </app-available-technicians-widget>
+    <div class="widgets-right">
+      <app-available-technicians-widget
+        (technicianSelected)="onTechnicianSelected($event)">
+      </app-available-technicians-widget>
 
-    <div class="full-width">
       <app-recent-jobs-widget
+        [limit]="3"
         (jobSelected)="onJobSelected($event)">
       </app-recent-jobs-widget>
     </div>

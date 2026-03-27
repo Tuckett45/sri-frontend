@@ -15,6 +15,7 @@ import { AppComponent } from './app.component';
 import { ConfigurationInterceptor } from './interceptors/configuration.interceptor';
 import { AuthorizationInterceptor } from './interceptors/authorization.interceptor';
 import { MarketFilterInterceptor } from './interceptors/market-filter.interceptor';
+import { MockOnboardingInterceptor } from './features/field-resource-management/interceptors/mock-onboarding.interceptor';
 import { ConfigurationStatusComponent } from './components/configuration-status/configuration-status.component';
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -256,6 +257,12 @@ export const customCurrencyMaskConfig = {
     // Always resolve AuthService to the secure implementation so user info/role
     // is set immediately after login without needing a refresh
     { provide: AuthService, useExisting: SecureAuthService },
+    // Mock onboarding data (remove when real API is available)
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: MockOnboardingInterceptor,
+      multi: true
+    },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ConfigurationInterceptor,

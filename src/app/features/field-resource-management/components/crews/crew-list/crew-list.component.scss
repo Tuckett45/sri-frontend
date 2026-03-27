@@ -419,3 +419,25 @@
     }
   }
 }
+
+// Sticky first column (name) on mobile side scroll
+::ng-deep .mat-column-name {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background-color: inherit;
+  border-right: 1px solid #e0e0e0;
+
+  &.mat-mdc-header-cell {
+    z-index: 11;
+    background-color: #fafafa !important;
+  }
+}
+
+::ng-deep .mat-mdc-row .mat-column-name {
+  background-color: #ffffff !important;
+}
+
+::ng-deep .mat-mdc-row:hover .mat-column-name {
+  background-color: #f5f5f5 !important;
+}

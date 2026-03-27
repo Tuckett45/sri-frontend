@@ -8,13 +8,13 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, forkJoin } from 'rxjs';
-import { map, catchError, switchMap, tap, filter, withLatestFrom } from 'rxjs/operators';
+import { map, catchError, switchMap, tap, filter, withLatestFrom, delay } from 'rxjs/operators';
 import * as JobActions from './job.actions';
 import * as BudgetActions from '../budgets/budget.actions';
 import * as ReportingActions from '../reporting/reporting.actions';
 import { JobService } from '../../services/job.service';
 import { ReportingService } from '../../services/reporting.service';
-import { JobStatus } from '../../models/job.model';
+import { Job, JobStatus } from '../../models/job.model';
 import { HttpEventType } from '@angular/common/http';
 
 @Injectable()
@@ -38,22 +38,44 @@ export class JobEffects {
     )
   );
 
-  // Create Job Effect
+  // Create Job Effect — saves locally (no backend)
   createJob$ = createEffect(() =>
     this.actions$.pipe(
       ofType(JobActions.createJob),
-      switchMap(({ job }) =>
-        this.jobService.createJob(job).pipe(
-          map((createdJob) =>
-            JobActions.createJobSuccess({ job: createdJob })
-          ),
-          catchError((error) =>
-            of(JobActions.createJobFailure({ 
-              error: error.message || 'Failed to create job' 
-            }))
-          )
-        )
-      )
+      switchMap(({ job }) => {
+        const now = new Date();
+        const id = 'job-' + Math.random().toString(36).substring(2, 9);
+        const jobId = 'JOB-' + String(Math.floor(10000 + Math.random() * 90000));
+        const createdJob: Job = {
+          id,
+          jobId,
+          client: job.client,
+          siteName: job.siteName,
+          siteAddress: job.siteAddress,
+          jobType: job.jobType,
+          priority: job.priority,
+          status: JobStatus.NotStarted,
+          scopeDescription: job.scopeDescription,
+          requiredSkills: job.requiredSkills,
+          requiredCrewSize: job.requiredCrewSize,
+          estimatedLaborHours: job.estimatedLaborHours,
+          scheduledStartDate: job.scheduledStartDate,
+          scheduledEndDate: job.scheduledEndDate,
+          customerPOC: job.customerPOC,
+          attachments: [],
+          notes: [],
+          market: 'DALLAS',
+          company: 'SRI',
+          createdBy: 'current-user',
+          createdAt: now,
+          updatedAt: now
+        };
+        // Simulate a short delay for realism
+        return of(createdJob).pipe(
+          delay(300),
+          map((created) => JobActions.createJobSuccess({ job: created }))
+        );
+      })
     )
   );
 

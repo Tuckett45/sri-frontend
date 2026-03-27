@@ -4,13 +4,13 @@ import { FrmPermissionService, FrmPermissionKey, FrmPermissionSet } from './frm-
 import { UserRole } from '../../../models/role.enum';
 
 const ALL_PERMISSION_KEYS: FrmPermissionKey[] = [
-  'canStartJob', 'canEditJob', 'canViewOwnSchedule', 'canViewAllSchedules',
+  'canCreateJob', 'canStartJob', 'canEditJob', 'canViewOwnSchedule', 'canViewAllSchedules',
   'canEditSchedule', 'canAssignCrew', 'canTrackTime', 'canSubmitTimecard',
   'canApproveTimecard', 'canApproveExpense', 'canApproveTravelRequest',
   'canApproveBreakRequest', 'canViewBudget', 'canManageBudget', 'canViewReports',
   'canViewManagementReports', 'canManageIncidentReports', 'canManageDirectDeposit',
   'canManageW4', 'canManageContactInfo', 'canSignPRC', 'canViewPayStubs', 'canViewW2',
-  'canAccessAdminPanel', 'canViewReadOnly',
+  'canAccessAdminPanel', 'canViewReadOnly', 'canManageOnboarding',
 ];
 
 const ALL_ROLES = Object.values(UserRole);
@@ -118,7 +118,7 @@ describe('FrmPermissionService', () => {
             expect(fromHasPermission).toBe(fromGetPermissions);
 
             const allPerms = service.getPermissionsForRole(role);
-            expect(Object.keys(allPerms).length).toBe(25);
+            expect(Object.keys(allPerms).length).toBe(27);
           }
         ),
         { numRuns: 20 }
@@ -172,6 +172,7 @@ describe('FrmPermissionService', () => {
               expect(perms.canApproveTravelRequest).withContext(`${role}.canApproveTravelRequest`).toBeTrue();
               expect(perms.canApproveTimecard).withContext(`${role}.canApproveTimecard`).toBeTrue();
               expect(perms.canApproveBreakRequest).withContext(`${role}.canApproveBreakRequest`).toBeTrue();
+              expect(perms.canManageOnboarding).withContext(`${role}.canManageOnboarding`).toBeTrue();
               // Payroll-specific and admin must be false
               expect(perms.canManageDirectDeposit).withContext(`${role}.canManageDirectDeposit`).toBeFalse();
               expect(perms.canManageW4).withContext(`${role}.canManageW4`).toBeFalse();
@@ -184,6 +185,7 @@ describe('FrmPermissionService', () => {
               expect(perms.canApproveTravelRequest).withContext(`${role}.canApproveTravelRequest`).toBeTrue();
               expect(perms.canApproveTimecard).withContext(`${role}.canApproveTimecard`).toBeTrue();
               expect(perms.canApproveBreakRequest).withContext(`${role}.canApproveBreakRequest`).toBeTrue();
+              expect(perms.canManageOnboarding).withContext(`${role}.canManageOnboarding`).toBeTrue();
               // Plus payroll permissions
               expect(perms.canManageIncidentReports).withContext(`${role}.canManageIncidentReports`).toBeTrue();
               expect(perms.canManageDirectDeposit).withContext(`${role}.canManageDirectDeposit`).toBeTrue();

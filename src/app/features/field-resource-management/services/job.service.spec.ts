@@ -226,7 +226,18 @@ describe('JobService', () => {
       estimatedLaborHours: 8,
       scheduledStartDate: new Date('2024-02-01T08:00:00'),
       scheduledEndDate: new Date('2024-02-01T17:00:00'),
-      customerPOC: mockContactInfo
+      customerPOC: mockContactInfo,
+      authorizationStatus: 'authorized',
+      hasPurchaseOrders: false,
+      standardBillRate: 75,
+      overtimeBillRate: 112.5,
+      perDiem: 50,
+      invoicingProcess: 'weekly',
+      projectDirector: 'Director',
+      targetResources: 5,
+      bizDevContact: 'BizDev',
+      requestedHours: 160,
+      overtimeRequired: false,
     };
 
     it('should create a job with valid data', () => {
@@ -755,7 +766,18 @@ describe('JobService', () => {
         requiredCrewSize: 1,
         estimatedLaborHours: 4,
         scheduledStartDate: new Date(),
-        scheduledEndDate: new Date()
+        scheduledEndDate: new Date(),
+        authorizationStatus: 'pending',
+        hasPurchaseOrders: false,
+        standardBillRate: 50,
+        overtimeBillRate: 75,
+        perDiem: 0,
+        invoicingProcess: 'monthly',
+        projectDirector: 'Director',
+        targetResources: 1,
+        bizDevContact: 'Contact',
+        requestedHours: 40,
+        overtimeRequired: false,
       };
 
       service.createJob(createDto).subscribe({

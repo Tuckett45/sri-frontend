@@ -4,12 +4,13 @@
  */
 
 import { createReducer, on } from '@ngrx/store';
-import { UIState, CalendarViewType, ConnectionStatus } from './ui.state';
+import { UIState, CalendarViewType, ConnectionStatus, ScheduleViewMode } from './ui.state';
 import * as UIActions from './ui.actions';
 
 // Initial state
 export const initialState: UIState = {
   calendarView: CalendarViewType.Week,
+  scheduleViewMode: ScheduleViewMode.Technicians,
   selectedDate: new Date(),
   sidebarOpen: true,
   mobileMenuOpen: false,
@@ -37,6 +38,12 @@ export const uiReducer = createReducer(
   on(UIActions.setCalendarView, (state, { view }) => ({
     ...state,
     calendarView: view
+  })),
+
+  // Schedule View Mode
+  on(UIActions.setScheduleViewMode, (state, { mode }) => ({
+    ...state,
+    scheduleViewMode: mode
   })),
 
   // Selected Date

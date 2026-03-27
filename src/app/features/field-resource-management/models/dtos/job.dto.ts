@@ -18,6 +18,23 @@ export interface CreateJobDto {
   scheduledStartDate: Date;
   scheduledEndDate: Date;
   customerPOC?: ContactInfo;
+
+  // Pricing/Billing fields (Job Setup Workflow)
+  authorizationStatus: 'authorized' | 'pending';
+  hasPurchaseOrders: boolean;
+  purchaseOrderNumber?: string;
+  standardBillRate: number;
+  overtimeBillRate: number;
+  perDiem: number;
+  invoicingProcess: 'weekly' | 'bi-weekly' | 'monthly' | 'per-milestone' | 'upon-completion';
+
+  // SRI Internal fields (Job Setup Workflow)
+  projectDirector: string;
+  targetResources: number;
+  bizDevContact: string;
+  requestedHours: number;
+  overtimeRequired: boolean;
+  estimatedOvertimeHours?: number;
 }
 
 export interface UpdateJobDto {
@@ -36,4 +53,21 @@ export interface UpdateJobDto {
   actualStartDate?: Date;
   actualEndDate?: Date;
   customerPOC?: ContactInfo;
+
+  // Pricing/Billing fields (Job Setup Workflow)
+  authorizationStatus?: 'authorized' | 'pending';
+  hasPurchaseOrders?: boolean;
+  purchaseOrderNumber?: string;
+  standardBillRate?: number;
+  overtimeBillRate?: number;
+  perDiem?: number;
+  invoicingProcess?: 'weekly' | 'bi-weekly' | 'monthly' | 'per-milestone' | 'upon-completion';
+
+  // SRI Internal fields (Job Setup Workflow)
+  projectDirector?: string;
+  targetResources?: number;
+  bizDevContact?: string;
+  requestedHours?: number;
+  overtimeRequired?: boolean;
+  estimatedOvertimeHours?: number;
 }

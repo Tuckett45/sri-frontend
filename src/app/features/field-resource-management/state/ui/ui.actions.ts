@@ -4,13 +4,19 @@
  */
 
 import { createAction, props } from '@ngrx/store';
-import { CalendarViewType, MapViewState, FilterState } from './ui.state';
+import { CalendarViewType, MapViewState, FilterState, ScheduleViewMode } from './ui.state';
 import { Notification } from '../../models/notification.model';
 
 // Set Calendar View
 export const setCalendarView = createAction(
   '[UI] Set Calendar View',
   props<{ view: CalendarViewType }>()
+);
+
+// Set Schedule View Mode
+export const setScheduleViewMode = createAction(
+  '[UI] Set Schedule View Mode',
+  props<{ mode: ScheduleViewMode }>()
 );
 
 // Set Selected Date

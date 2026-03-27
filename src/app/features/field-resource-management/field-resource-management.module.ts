@@ -7,7 +7,6 @@ import { EffectsModule } from '@ngrx/effects';
 
 // Shared Material Module
 import { SharedMaterialModule } from './shared-material.module';
-
 // Routing
 import { FieldResourceManagementRoutingModule } from './field-resource-management-routing.module';
 

@@ -257,6 +257,124 @@
 
     <mat-card class="form-section">
       <mat-card-header>
+        <mat-card-title>Authorization &amp; Purchase Orders</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Authorization Status</mat-label>
+            <mat-select formControlName="authorizationStatus">
+              <mat-option value="authorized">Authorized</mat-option>
+              <mat-option value="pending">Pending Authorization</mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('authorizationStatus') }}</mat-error>
+          </mat-form-field>
+
+          <div class="toggle-field">
+            <mat-slide-toggle formControlName="hasPurchaseOrders" color="primary">
+              Client will work off purchase orders
+            </mat-slide-toggle>
+          </div>
+        </div>
+
+        <div class="form-row" *ngIf="jobForm.get('hasPurchaseOrders')?.value">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Purchase Order Number</mat-label>
+            <input matInput formControlName="purchaseOrderNumber" />
+            <mat-error>{{ getErrorMessage('purchaseOrderNumber') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Pricing &amp; Billing</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Standard Bill Rate ($)</mat-label>
+            <input matInput type="number" formControlName="standardBillRate" min="0.01" step="0.01" />
+            <mat-error>{{ getErrorMessage('standardBillRate') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Overtime Bill Rate ($)</mat-label>
+            <input matInput type="number" formControlName="overtimeBillRate" min="0.01" step="0.01" />
+            <mat-error>{{ getErrorMessage('overtimeBillRate') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Per Diem ($)</mat-label>
+            <input matInput type="number" formControlName="perDiem" min="0" step="0.01" />
+            <mat-error>{{ getErrorMessage('perDiem') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Invoicing Process</mat-label>
+            <mat-select formControlName="invoicingProcess">
+              <mat-option *ngFor="let opt of invoicingOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('invoicingProcess') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>SRI Internal</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Project Director</mat-label>
+            <input matInput formControlName="projectDirector" maxlength="150" />
+            <mat-error>{{ getErrorMessage('projectDirector') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Biz Dev Contact</mat-label>
+            <input matInput formControlName="bizDevContact" maxlength="150" />
+            <mat-error>{{ getErrorMessage('bizDevContact') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Target Resources</mat-label>
+            <input matInput type="number" formControlName="targetResources" min="1" max="500" step="1" />
+            <mat-error>{{ getErrorMessage('targetResources') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Requested Hours</mat-label>
+            <input matInput type="number" formControlName="requestedHours" min="0.01" step="0.01" />
+            <mat-error>{{ getErrorMessage('requestedHours') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-slide-toggle formControlName="overtimeRequired" color="primary">
+            Overtime is required for this job
+          </mat-slide-toggle>
+        </div>
+
+        <div class="form-row" *ngIf="jobForm.get('overtimeRequired')?.value">
+          <mat-form-field appearance="outline">
+            <mat-label>Estimated Overtime Hours</mat-label>
+            <input matInput type="number" formControlName="estimatedOvertimeHours" min="0.01" step="0.01" />
+            <mat-error>{{ getErrorMessage('estimatedOvertimeHours') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
         <mat-card-title>Attachments (Optional)</mat-card-title>
       </mat-card-header>
       <mat-card-content>

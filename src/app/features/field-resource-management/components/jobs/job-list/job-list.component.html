@@ -165,7 +165,7 @@
   <div class="table-container" *ngIf="!(loading$ | async)">
     <table mat-table [dataSource]="displayedJobs" class="job-table">
       <!-- Checkbox Column -->
-      <ng-container matColumnDef="select">
+      <ng-container matColumnDef="select" sticky>
         <th mat-header-cell *matHeaderCellDef>
           <mat-checkbox
             (change)="$event ? toggleAllRows() : null"
@@ -187,7 +187,7 @@
       </ng-container>
 
       <!-- Job ID Column -->
-      <ng-container matColumnDef="jobId">
+      <ng-container matColumnDef="jobId" sticky>
         <th mat-header-cell *matHeaderCellDef>Job ID</th>
         <td mat-cell *matCellDef="let job">
           <a [routerLink]="['/field-resource-management/jobs', job.id]" class="job-id-link">
@@ -295,7 +295,7 @@
         </td>
       </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
       <tr
         mat-row
         *matRowDef="let row; columns: displayedColumns"

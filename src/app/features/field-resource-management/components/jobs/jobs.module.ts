@@ -22,6 +22,16 @@ import { JobFormComponent } from './job-form/job-form.component';
 import { JobNotesComponent } from './job-notes/job-notes.component';
 import { JobStatusTimelineComponent } from './job-status-timeline/job-status-timeline.component';
 
+// Job Setup Workflow Components
+import { JobSetupComponent } from './job-setup/job-setup.component';
+import { CustomerInfoStepComponent } from './job-setup/steps/customer-info-step.component';
+import { PricingBillingStepComponent } from './job-setup/steps/pricing-billing-step.component';
+import { SriInternalStepComponent } from './job-setup/steps/sri-internal-step.component';
+import { ReviewStepComponent } from './job-setup/steps/review-step.component';
+
+// Guards
+import { CreateJobGuard } from '../../guards/create-job.guard';
+
 const routes: Routes = [
   {
     path: '',
@@ -33,10 +43,11 @@ const routes: Routes = [
   },
   {
     path: 'new',
-    component: JobFormComponent,
+    component: JobSetupComponent,
+    canActivate: [CreateJobGuard],
     data: { 
-      title: 'New Job',
-      breadcrumb: 'New'
+      title: 'New Job Setup',
+      breadcrumb: 'New Job'
     }
   },
   {
@@ -70,7 +81,12 @@ const routes: Routes = [
     JobDetailComponent,
     JobFormComponent,
     JobNotesComponent,
-    JobStatusTimelineComponent
+    JobStatusTimelineComponent,
+    JobSetupComponent,
+    CustomerInfoStepComponent,
+    PricingBillingStepComponent,
+    SriInternalStepComponent,
+    ReviewStepComponent
   ],
   imports: [
     CommonModule,

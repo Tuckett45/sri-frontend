@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, filter } from 'rxjs/operators';
 import { AuthService } from '../../../../../services/auth.service';
 import { PermissionService } from '../../../../../services/permission.service';
+import { FrmPermissionService, FrmPermissionKey } from '../../../services/frm-permission.service';
 import { User } from '../../../../../models/user.model';
 import { UserRole } from '../../../../../models/role.enum';
 
@@ -18,6 +19,7 @@ interface MenuItem {
   action?: string;
   children?: MenuItem[];
   roles?: UserRole[];
+  frmPermission?: FrmPermissionKey;
 }
 
 /**
@@ -140,7 +142,7 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       roles: [UserRole.Admin, UserRole.CM, UserRole.Controller, UserRole.OSPCoordinator, UserRole.HR, UserRole.Payroll]
     },
     {
-      label: 'Admin',
+      label: 'System Config',
       icon: 'admin_panel_settings',
       route: '/field-resource-management/admin',
       resource: 'system_config',
@@ -188,6 +190,12 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       roles: [UserRole.Admin]
     },
     {
+      label: 'Onboarding',
+      icon: 'person_add',
+      route: '/field-resource-management/onboarding',
+      frmPermission: 'canManageOnboarding'
+    },
+    {
       label: 'Back Office',
       icon: 'business_center',
       route: '/field-resource-management/payroll',
@@ -200,6 +208,7 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private permissionService: PermissionService,
+    private frmPermissionService: FrmPermissionService,
     private router: Router
   ) {}
 
@@ -252,6 +261,14 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
   private canAccessMenuItem(item: MenuItem): boolean {
     if (!this.currentUser) {
       return false;
+    }
+
+    // Check FRM-specific permission if defined
+    if (item.frmPermission) {
+      return this.frmPermissionService.hasPermission(
+        this.currentUser.role,
+        item.frmPermission
+      );
     }
 
     // Check role-specific items

@@ -30,13 +30,25 @@ export class ActiveJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
   @Output() jobSelected = new EventEmitter<string>();
 
   activeJobs$!: Observable<Job[]>;
+  pagedJobs$!: Observable<Job[]>;
+  totalJobs$!: Observable<number>;
   loading$!: Observable<boolean>;
   error: string | null = null;
 
+  currentPage = 0;
+  pageSize = 5;
+
   private marketFilter$ = new BehaviorSubject<string | null>(null);
+  private page$ = new BehaviorSubject<number>(0);
   private destroy$ = new Subject<void>();
 
   constructor(private store: Store) {}
+
+  get totalPages$(): Observable<number> {
+    return this.totalJobs$.pipe(
+      map(total => Math.ceil(total / this.pageSize))
+    );
+  }
 
   ngOnInit(): void {
     this.loading$ = this.store.select(selectJobsLoading);
@@ -57,6 +69,21 @@ export class ActiveJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
         return filtered;
       })
     );
+
+    this.totalJobs$ = this.activeJobs$.pipe(map(jobs => jobs.length));
+
+    this.pagedJobs$ = combineLatest([this.activeJobs$, this.page$]).pipe(
+      map(([jobs, page]) => {
+        const start = page * this.pageSize;
+        return jobs.slice(start, start + this.pageSize);
+      })
+    );
+
+    // Reset to first page when the underlying data changes
+    this.activeJobs$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.currentPage = 0;
+      this.page$.next(0);
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -95,6 +122,18 @@ export class ActiveJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
       case JobStatus.OnSite: return 'On Site';
       case JobStatus.NotStarted: return 'Not Started';
       default: return status;
+    }
+  }
+
+  nextPage(): void {
+    this.currentPage++;
+    this.page$.next(this.currentPage);
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.page$.next(this.currentPage);
     }
   }
 }

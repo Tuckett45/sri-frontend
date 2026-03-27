@@ -207,6 +207,13 @@ const routes: Routes = [
         path: 'materials',
         loadChildren: () => import('./components/materials/materials.module').then(m => m.MaterialsModule),
         canActivate: [DispatcherGuard]
+      },
+
+      // Onboarding Routes - Lazy Loaded
+      {
+        path: 'onboarding',
+        loadChildren: () => import('./components/onboarding/onboarding.module').then(m => m.OnboardingModule),
+        canActivate: [HrGuard]
       }
     ]
   }

@@ -80,6 +80,15 @@ export class JobFormComponent implements OnInit, OnDestroy {
     'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
   ];
 
+  // Invoicing process options
+  invoicingOptions = [
+    { value: 'weekly', label: 'Weekly' },
+    { value: 'bi-weekly', label: 'Bi-Weekly' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'per-milestone', label: 'Per Milestone' },
+    { value: 'upon-completion', label: 'Upon Completion' }
+  ];
+
   constructor(
     private fb: FormBuilder,
     @Optional() private route: ActivatedRoute,
@@ -208,7 +217,22 @@ export class JobFormComponent implements OnInit, OnDestroy {
         name: ['', Validators.maxLength(200)],
         phone: ['', [Validators.pattern(/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/)]],
         email: ['', [Validators.email, Validators.maxLength(200)]]
-      })
+      }),
+      // Pricing/Billing
+      authorizationStatus: ['pending', Validators.required],
+      hasPurchaseOrders: [false],
+      purchaseOrderNumber: [''],
+      standardBillRate: [null, [Validators.required, Validators.min(0.01)]],
+      overtimeBillRate: [null, [Validators.required, Validators.min(0.01)]],
+      perDiem: [null, [Validators.required, Validators.min(0)]],
+      invoicingProcess: ['', Validators.required],
+      // SRI Internal
+      projectDirector: ['', [Validators.required, Validators.maxLength(150)]],
+      targetResources: [null, [Validators.required, Validators.min(1), Validators.max(500)]],
+      bizDevContact: ['', [Validators.required, Validators.maxLength(150)]],
+      requestedHours: [null, [Validators.required, Validators.min(0.01)]],
+      overtimeRequired: [false],
+      estimatedOvertimeHours: [null]
       }, { validators: this.dateRangeValidator });
 
       // Disable market field for non-admin users
@@ -241,7 +265,22 @@ export class JobFormComponent implements OnInit, OnDestroy {
           name: ['', Validators.maxLength(200)],
           phone: ['', [Validators.pattern(/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/)]],
           email: ['', [Validators.email, Validators.maxLength(200)]]
-        })
+        }),
+        // Pricing/Billing
+        authorizationStatus: ['pending', Validators.required],
+        hasPurchaseOrders: [false],
+        purchaseOrderNumber: [''],
+        standardBillRate: [null, [Validators.required, Validators.min(0.01)]],
+        overtimeBillRate: [null, [Validators.required, Validators.min(0.01)]],
+        perDiem: [null, [Validators.required, Validators.min(0)]],
+        invoicingProcess: ['', Validators.required],
+        // SRI Internal
+        projectDirector: ['', [Validators.required, Validators.maxLength(150)]],
+        targetResources: [null, [Validators.required, Validators.min(1), Validators.max(500)]],
+        bizDevContact: ['', [Validators.required, Validators.maxLength(150)]],
+        requestedHours: [null, [Validators.required, Validators.min(0.01)]],
+        overtimeRequired: [false],
+        estimatedOvertimeHours: [null]
       }, { validators: this.dateRangeValidator });
       
       this.snackBar.open('Warning: Some features may be limited', 'Close', { duration: 3000 });
@@ -327,7 +366,22 @@ export class JobFormComponent implements OnInit, OnDestroy {
         name: '',
         phone: '',
         email: ''
-      }
+      },
+      // Pricing/Billing
+      authorizationStatus: (job as any).authorizationStatus || 'pending',
+      hasPurchaseOrders: (job as any).hasPurchaseOrders || false,
+      purchaseOrderNumber: (job as any).purchaseOrderNumber || '',
+      standardBillRate: (job as any).standardBillRate || null,
+      overtimeBillRate: (job as any).overtimeBillRate || null,
+      perDiem: (job as any).perDiem || null,
+      invoicingProcess: (job as any).invoicingProcess || '',
+      // SRI Internal
+      projectDirector: (job as any).projectDirector || '',
+      targetResources: (job as any).targetResources || null,
+      bizDevContact: (job as any).bizDevContact || '',
+      requestedHours: (job as any).requestedHours || null,
+      overtimeRequired: (job as any).overtimeRequired || false,
+      estimatedOvertimeHours: (job as any).estimatedOvertimeHours || null
     });
   }
 
@@ -390,7 +444,20 @@ export class JobFormComponent implements OnInit, OnDestroy {
       estimatedLaborHours: formValue.estimatedLaborHours,
       scheduledStartDate: formValue.scheduledStartDate,
       scheduledEndDate: formValue.scheduledEndDate,
-      customerPOC: formValue.customerPOC
+      customerPOC: formValue.customerPOC,
+      authorizationStatus: formValue.authorizationStatus ?? 'pending',
+      hasPurchaseOrders: formValue.hasPurchaseOrders ?? false,
+      purchaseOrderNumber: formValue.purchaseOrderNumber,
+      standardBillRate: formValue.standardBillRate ?? 0,
+      overtimeBillRate: formValue.overtimeBillRate ?? 0,
+      perDiem: formValue.perDiem ?? 0,
+      invoicingProcess: formValue.invoicingProcess ?? 'weekly',
+      projectDirector: formValue.projectDirector ?? '',
+      targetResources: formValue.targetResources ?? 1,
+      bizDevContact: formValue.bizDevContact ?? '',
+      requestedHours: formValue.requestedHours ?? 0,
+      overtimeRequired: formValue.overtimeRequired ?? false,
+      estimatedOvertimeHours: formValue.estimatedOvertimeHours,
     };
 
     this.store.dispatch(JobActions.createJob({ job: createDto }));
@@ -435,7 +502,22 @@ export class JobFormComponent implements OnInit, OnDestroy {
       estimatedLaborHours: formValue.estimatedLaborHours,
       scheduledStartDate: formValue.scheduledStartDate,
       scheduledEndDate: formValue.scheduledEndDate,
-      customerPOC: formValue.customerPOC
+      customerPOC: formValue.customerPOC,
+      // Pricing/Billing
+      authorizationStatus: formValue.authorizationStatus,
+      hasPurchaseOrders: formValue.hasPurchaseOrders,
+      purchaseOrderNumber: formValue.hasPurchaseOrders ? formValue.purchaseOrderNumber : undefined,
+      standardBillRate: formValue.standardBillRate,
+      overtimeBillRate: formValue.overtimeBillRate,
+      perDiem: formValue.perDiem,
+      invoicingProcess: formValue.invoicingProcess,
+      // SRI Internal
+      projectDirector: formValue.projectDirector,
+      targetResources: formValue.targetResources,
+      bizDevContact: formValue.bizDevContact,
+      requestedHours: formValue.requestedHours,
+      overtimeRequired: formValue.overtimeRequired,
+      estimatedOvertimeHours: formValue.overtimeRequired ? formValue.estimatedOvertimeHours : undefined
     };
 
     this.store.dispatch(JobActions.updateJob({ id: this.jobId, job: updateDto }));

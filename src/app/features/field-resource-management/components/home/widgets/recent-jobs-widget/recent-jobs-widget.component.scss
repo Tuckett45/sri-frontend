@@ -1,6 +1,9 @@
 .recent-jobs-card {
   background-color: #ffffff;
   border-radius: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
   mat-card-header {
     mat-card-title {

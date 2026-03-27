@@ -5,29 +5,29 @@
   background-color: #fafafa;
 }
 
-// Header
+// ── Header ───────────────────────────────────────────────────────────
 .calendar-header {
   background-color: white;
   padding: 16px;
   border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .calendar-controls {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
 .date-navigation {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .today-button {
-  min-width: 80px;
+  min-width: 72px;
   color: #1976d2 !important;
 }
 
@@ -35,16 +35,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: #333;
-
-  mat-icon {
-    color: #1976d2;
-  }
+  mat-icon { color: #1976d2; }
 }
 
-// Blue theme overrides for Material toggle group and buttons
+// ── Toggle overrides ─────────────────────────────────────────────────
 ::ng-deep {
   .mat-button-toggle-group {
     border: 1px solid #bbdefb !important;
@@ -59,11 +56,12 @@
 
       .mat-button-toggle-label-content {
         color: #666 !important;
-        padding: 0 14px !important;
-        line-height: 36px !important;
+        padding: 0 12px !important;
+        line-height: 34px !important;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
+        font-size: 13px;
       }
 
       mat-icon {
@@ -75,14 +73,8 @@
 
       &.mat-button-toggle-checked {
         background-color: #1976d2 !important;
-
-        .mat-button-toggle-label-content {
-          color: white !important;
-        }
-
-        mat-icon {
-          color: white !important;
-        }
+        .mat-button-toggle-label-content { color: white !important; }
+        mat-icon { color: white !important; }
       }
 
       &:hover:not(.mat-button-toggle-checked) {
@@ -90,47 +82,16 @@
       }
     }
 
-    .mat-button-toggle-separator {
-      display: none !important;
-    }
+    .mat-button-toggle-separator { display: none !important; }
   }
 
-  // Navigation icon buttons
   .date-navigation {
-    .mat-mdc-icon-button {
-      color: #1976d2 !important;
-
-      .mat-icon {
-        color: #1976d2 !important;
-      }
-
-      &:hover {
-        background-color: #e3f2fd !important;
-      }
-    }
-
-    .mat-mdc-button {
-      color: #1976d2 !important;
-    }
-  }
-
-  // Calendar icon in date display
-  .selected-date .mat-icon {
-    color: #1976d2 !important;
-  }
-
-  // Technician person icon
-  .technician-icon {
-    color: #1976d2 !important;
-  }
-
-  // Empty state icon
-  .empty-state .mat-icon {
-    color: #90caf9 !important;
+    .mat-mdc-icon-button, .mat-mdc-button { color: #1976d2 !important; }
+    .mat-mdc-icon-button:hover { background-color: #e3f2fd !important; }
   }
 }
 
-// Calendar Grid
+// ── Grid ─────────────────────────────────────────────────────────────
 .calendar-grid-container {
   flex: 1;
   overflow: auto;
@@ -138,344 +99,220 @@
 }
 
 .calendar-grid {
-  min-width: 100%;
+  display: grid;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  min-width: max-content;
 }
 
-// Grid Header
-.grid-header {
-  display: grid;
-  grid-template-columns: 200px repeat(auto-fit, minmax(150px, 1fr));
+// Header cells
+.grid-header-cell {
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #333;
+  text-align: center;
   background-color: #f5f5f5;
   border-bottom: 2px solid #e0e0e0;
+  border-right: 1px solid #e0e0e0;
   position: sticky;
   top: 0;
   z-index: 10;
-}
 
-.technician-header,
-.time-slot-header {
-  padding: 12px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #333;
-  text-align: center;
-  border-right: 1px solid #e0e0e0;
-
-  &:last-child {
-    border-right: none;
+  &.row-header {
+    text-align: left;
+    background-color: #eee;
   }
+
+  &:last-child { border-right: none; }
 }
 
-.technician-header {
-  text-align: left;
-  background-color: #eeeeee;
-}
-
-// Grid Body
-.grid-body {
+// Row label cell
+.row-label-cell {
   display: flex;
-  flex-direction: column;
-}
-
-.technician-row {
-  display: grid;
-  grid-template-columns: 200px repeat(auto-fit, minmax(150px, 1fr));
-  border-bottom: 1px solid #e0e0e0;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:hover {
-    background-color: #fafafa;
-  }
-}
-
-// Technician Cell
-.technician-cell {
-  padding: 12px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
   background-color: #f9f9f9;
   border-right: 1px solid #e0e0e0;
-  display: flex;
-  align-items: center;
+  border-bottom: 1px solid #eeeeee;
+
+  &.even-row { background-color: #f5f7fa; }
 }
 
-.technician-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.row-icon {
+  color: #1976d2;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
-.technician-icon {
-  color: #666;
+.row-label-text {
+  min-width: 0;
+  overflow: hidden;
 }
 
-.technician-details {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.technician-name {
+.row-label-primary {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.technician-role {
-  font-size: 12px;
-  color: #666;
+.row-label-secondary {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-// Time Slot Cell
-.time-slot-cell {
-  padding: 8px;
-  min-height: 100px;
-  border-right: 1px solid #e0e0e0;
+// Schedule cell
+.schedule-cell {
+  padding: 6px;
+  min-height: 80px;
+  border-right: 1px solid #eeeeee;
+  border-bottom: 1px solid #eeeeee;
   position: relative;
   background-color: white;
-  transition: background-color 0.2s;
+  transition: background-color 0.15s;
 
-  &:last-child {
-    border-right: none;
-  }
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-
-  &.has-conflict {
-    background-color: #ffebee;
-    border: 2px solid #f44336;
-  }
-
-  &.cdk-drop-list-dragging {
-    background-color: #e3f2fd;
-  }
+  &.even-row { background-color: #fafbfd; }
+  &:hover { background-color: #f0f4ff; }
+  &.has-conflict { background-color: #fff3f3; border: 2px solid #ef5350; }
+  &.cdk-drop-list-dragging { background-color: #e3f2fd; }
 }
 
-// Job Card
+// ── Job card ─────────────────────────────────────────────────────────
 .job-card {
   background-color: white;
   border-radius: 4px;
-  padding: 8px;
-  margin-bottom: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  padding: 7px 8px;
+  margin-bottom: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.15s, box-shadow 0.15s;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
   }
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  &.cdk-drag-preview {
-    opacity: 0.8;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-
-  &.cdk-drag-animating {
-    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-  }
+  &:last-child { margin-bottom: 0; }
+  &.cdk-drag-preview { opacity: 0.85; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+  &.cdk-drag-animating { transition: transform 200ms cubic-bezier(0, 0, 0.2, 1); }
 }
 
 .job-card-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
-.job-id {
-  font-weight: 600;
-  font-size: 12px;
-  color: #333;
-}
+.job-id { font-weight: 600; font-size: 11px; color: #333; }
+.job-client { font-size: 11px; color: #555; }
+.job-site { font-size: 10px; color: #888; }
+.job-time { font-size: 10px; color: #999; margin-top: 2px; }
 
-.job-client {
-  font-size: 11px;
-  color: #666;
-  font-weight: 500;
-}
-
-.job-site {
-  font-size: 11px;
-  color: #888;
-}
-
-.job-time {
+.job-assigned {
+  display: flex;
+  align-items: center;
+  gap: 3px;
   font-size: 10px;
-  color: #999;
-  margin-top: 4px;
+  color: #1976d2;
+  margin-top: 2px;
 }
 
-// Status Indicator
-.status-indicator {
+.assigned-icon {
+  font-size: 12px !important;
+  width: 12px !important;
+  height: 12px !important;
+}
+
+// Status dot (top-right corner)
+.status-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+// Status colors (left border + dot)
+.status-not-started { border-left: 3px solid #9e9e9e; }
+.status-not-started-dot { background-color: #9e9e9e; }
+.status-en-route { border-left: 3px solid #2196f3; }
+.status-en-route-dot { background-color: #2196f3; }
+.status-on-site { border-left: 3px solid #ff9800; }
+.status-on-site-dot { background-color: #ff9800; }
+.status-completed { border-left: 3px solid #4caf50; }
+.status-completed-dot { background-color: #4caf50; }
+.status-issue { border-left: 3px solid #f44336; }
+.status-issue-dot { background-color: #f44336; }
+.status-cancelled { border-left: 3px solid #757575; opacity: 0.6; }
+.status-cancelled-dot { background-color: #757575; }
+
+// Conflict badge
+.conflict-badge {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    color: white;
-  }
+  color: #ef5350;
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
 }
 
-// Status Colors
-.status-not-started {
-  border-left: 4px solid #9e9e9e;
-
-  .status-indicator {
-    background-color: #9e9e9e;
-  }
-}
-
-.status-en-route {
-  border-left: 4px solid #2196f3;
-
-  .status-indicator {
-    background-color: #2196f3;
-  }
-}
-
-.status-on-site {
-  border-left: 4px solid #ff9800;
-
-  .status-indicator {
-    background-color: #ff9800;
-  }
-}
-
-.status-completed {
-  border-left: 4px solid #4caf50;
-
-  .status-indicator {
-    background-color: #4caf50;
-  }
-}
-
-.status-issue {
-  border-left: 4px solid #f44336;
-
-  .status-indicator {
-    background-color: #f44336;
-  }
-}
-
-.status-cancelled {
-  border-left: 4px solid #757575;
-  opacity: 0.6;
-
-  .status-indicator {
-    background-color: #757575;
-  }
-}
-
-// Conflict Indicator
-.conflict-indicator {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background-color: #f44336;
-  color: white;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-  }
-}
-
-// Empty Slot
+// Empty slot
 .empty-slot {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 80px;
-  color: #bbb;
-  font-size: 12px;
-  font-style: italic;
-
+  min-height: 60px;
   .drop-hint {
+    color: #ccc;
+    font-size: 11px;
+    font-style: italic;
     opacity: 0;
     transition: opacity 0.2s;
   }
-
-  .time-slot-cell:hover & .drop-hint {
-    opacity: 1;
-  }
+  .schedule-cell:hover & .drop-hint { opacity: 1; }
 }
 
-// Context Menu
+// ── Context menu ─────────────────────────────────────────────────────
 .context-menu {
   position: fixed;
   background-color: white;
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   z-index: 1000;
-  min-width: 200px;
-  padding: 8px 0;
+  min-width: 180px;
+  padding: 6px 0;
 
   button {
     width: 100%;
     text-align: left;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border: none;
     background: none;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 14px;
+    gap: 10px;
+    font-size: 13px;
     color: #333;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background-color: #f5f5f5;
-    }
-
-    &.delete-action {
-      color: #f44336;
-
-      mat-icon {
-        color: #f44336;
-      }
-    }
-
-    mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      color: #666;
-    }
+    &:hover { background-color: #f5f5f5; }
+    &.delete-action { color: #f44336; mat-icon { color: #f44336; } }
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: #666; }
   }
 }
 
-// Empty State
+// ── Empty state ──────────────────────────────────────────────────────
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -485,111 +322,18 @@
   text-align: center;
   color: #999;
 
-  mat-icon {
-    font-size: 64px;
-    width: 64px;
-    height: 64px;
-    margin-bottom: 16px;
-    color: #ccc;
-  }
-
-  h3 {
-    margin: 0 0 8px 0;
-    font-size: 20px;
-    font-weight: 500;
-    color: #666;
-  }
-
-  p {
-    margin: 0;
-    font-size: 14px;
-  }
+  mat-icon { font-size: 56px; width: 56px; height: 56px; margin-bottom: 16px; color: #ccc; }
+  h3 { margin: 0 0 8px; font-size: 18px; font-weight: 500; color: #666; }
+  p { margin: 0; font-size: 14px; }
 }
 
-// Responsive Design
+// ── Responsive ───────────────────────────────────────────────────────
 @media (max-width: 1024px) {
-  .calendar-controls {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .grid-header,
-  .technician-row {
-    grid-template-columns: 150px repeat(auto-fit, minmax(120px, 1fr));
-  }
-
-  .technician-cell {
-    padding: 8px;
-  }
-
-  .technician-name {
-    font-size: 13px;
-  }
-
-  .technician-role {
-    font-size: 11px;
-  }
+  .calendar-controls { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
 
 @media (max-width: 768px) {
-  .calendar-header {
-    padding: 12px;
-  }
-
-  .calendar-controls {
-    gap: 12px;
-  }
-
-  .selected-date {
-    font-size: 14px;
-  }
-
-  .grid-header,
-  .technician-row {
-    grid-template-columns: 120px repeat(auto-fit, minmax(100px, 1fr));
-  }
-
-  .time-slot-cell {
-    min-height: 80px;
-    padding: 6px;
-  }
-
-  .job-card {
-    padding: 6px;
-  }
-
-  .job-id {
-    font-size: 11px;
-  }
-
-  .job-client,
-  .job-site {
-    font-size: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .calendar-grid-container {
-    padding: 8px;
-  }
-
-  .grid-header,
-  .technician-row {
-    grid-template-columns: 100px repeat(auto-fit, minmax(80px, 1fr));
-  }
-
-  .technician-header,
-  .time-slot-header {
-    padding: 8px;
-    font-size: 12px;
-  }
-
-  .technician-info {
-    gap: 8px;
-  }
-
-  .technician-icon {
-    display: none;
-  }
+  .calendar-header { padding: 12px; }
+  .row-label-cell { padding: 8px; }
+  .schedule-cell { min-height: 64px; padding: 4px; }
 }

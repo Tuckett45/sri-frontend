@@ -5,7 +5,7 @@ import { Observable, Subject, combineLatest } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { QuickAction, KpiItem } from '../../../../models/dashboard.models';
 import { selectActiveJobsCount } from '../../../../state/jobs/job.selectors';
-import { selectAvailableTechniciansCount, selectActiveTechnicians } from '../../../../state/technicians/technician.selectors';
+import { selectActiveTechnicians } from '../../../../state/technicians/technician.selectors';
 import { selectActiveAssignments } from '../../../../state/assignments/assignment.selectors';
 
 @Component({
@@ -15,7 +15,7 @@ import { selectActiveAssignments } from '../../../../state/assignments/assignmen
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   quickActions: QuickAction[] = [
-    { label: 'Create New Job', icon: 'add', route: '/field-resource-management/jobs/new', color: 'orange', visible: true },
+    { label: 'Create Job', icon: 'add', route: '/field-resource-management/jobs/new', color: 'orange', visible: true },
     { label: 'View All Jobs', icon: 'work', route: '/field-resource-management/jobs', color: 'primary', visible: true },
     { label: 'Manage Technicians', icon: 'engineering', route: '/field-resource-management/technicians', color: 'primary', visible: true },
     { label: 'Open Schedule', icon: 'calendar_today', route: '/field-resource-management/schedule', color: 'primary', visible: true },
@@ -35,20 +35,20 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.kpis$ = combineLatest([
       this.store.select(selectActiveJobsCount),
-      this.store.select(selectAvailableTechniciansCount),
       this.store.select(selectActiveTechnicians),
       this.store.select(selectActiveAssignments)
     ]).pipe(
       takeUntil(this.destroy$),
-      map(([activeJobsCount, availableTechsCount, activeTechnicians, activeAssignments]) => {
+      map(([activeJobsCount, activeTechnicians, activeAssignments]) => {
         const totalActive = activeTechnicians.length;
         const assignedTechIds = new Set(activeAssignments.map(a => a.technicianId));
         const assignedCount = activeTechnicians.filter(t => assignedTechIds.has(t.id)).length;
+        const availableCount = totalActive - assignedCount;
         const utilization = totalActive > 0 ? Math.round((assignedCount / totalActive) * 100) : 0;
 
         return [
           { label: 'Active Jobs', value: activeJobsCount, icon: 'work', color: 'primary' as const },
-          { label: 'Available Technicians', value: availableTechsCount, icon: 'engineering', color: 'success' as const },
+          { label: 'Available Technicians', value: availableCount, icon: 'engineering', color: 'success' as const },
           { label: 'Utilization', value: `${utilization}%`, icon: 'trending_up', color: 'accent' as const }
         ];
       })

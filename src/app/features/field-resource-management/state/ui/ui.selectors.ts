@@ -9,7 +9,7 @@
  */
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { UIState, CalendarViewType, MapViewState, FilterState } from './ui.state';
+import { UIState, CalendarViewType, MapViewState, FilterState, ScheduleViewMode } from './ui.state';
 import { Notification, NotificationType } from '../../models/notification.model';
 
 // Feature selector
@@ -41,6 +41,12 @@ export const selectIsCalendarDayView = createSelector(
 export const selectIsCalendarWeekView = createSelector(
   selectCalendarView,
   (view) => view === CalendarViewType.Week
+);
+
+// Select schedule view mode
+export const selectScheduleViewMode = createSelector(
+  selectUIState,
+  (state) => state.scheduleViewMode
 );
 
 // ============================================================================
