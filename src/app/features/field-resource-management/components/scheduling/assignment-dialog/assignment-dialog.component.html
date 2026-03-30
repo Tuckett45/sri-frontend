@@ -50,19 +50,43 @@
 
     <!-- Qualified Technicians Section -->
     <div class="technicians-section">
-      <h3>Qualified Technicians</h3>
+      <div class="technicians-header">
+        <h3>{{ showingAllTechnicians ? 'All Technicians' : 'Qualified Technicians' }}</h3>
+        <button mat-button class="toggle-all-btn" (click)="toggleShowAll()">
+          <mat-icon>{{ showingAllTechnicians ? 'filter_list' : 'people' }}</mat-icon>
+          {{ showingAllTechnicians ? 'Show Qualified Only' : 'Show All Technicians' }}
+        </button>
+      </div>
+
+      <!-- Search -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search technicians</mat-label>
+        <input matInput [(ngModel)]="searchText" placeholder="Name, role, or region...">
+        <mat-icon matPrefix>search</mat-icon>
+        <button mat-icon-button matSuffix *ngIf="searchText" (click)="searchText = ''" aria-label="Clear search">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
 
       <!-- Empty State -->
-      <div class="empty-state" *ngIf="qualifiedTechnicians.length === 0">
+      <div class="empty-state" *ngIf="getDisplayedTechnicians().length === 0 && !searchText">
         <mat-icon>person_off</mat-icon>
-        <p>No qualified technicians available for this job.</p>
+        <p>No technicians available.</p>
+        <button mat-button color="primary" *ngIf="!showingAllTechnicians" (click)="toggleShowAll()">
+          Show all technicians instead
+        </button>
+      </div>
+
+      <div class="empty-state" *ngIf="getDisplayedTechnicians().length === 0 && searchText">
+        <mat-icon>search_off</mat-icon>
+        <p>No technicians match "{{ searchText }}"</p>
       </div>
 
       <!-- Technicians List -->
-      <div class="technicians-list" *ngIf="qualifiedTechnicians.length > 0">
+      <div class="technicians-list" *ngIf="getDisplayedTechnicians().length > 0">
         <div 
           class="technician-card"
-          *ngFor="let techMatch of qualifiedTechnicians"
+          *ngFor="let techMatch of getDisplayedTechnicians()"
           [class.selected]="isSelected(techMatch)"
           [class.has-conflicts]="techMatch.hasConflicts"
           (click)="onSelectTechnician(techMatch)">

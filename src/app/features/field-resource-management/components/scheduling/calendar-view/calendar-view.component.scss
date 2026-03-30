@@ -41,6 +41,12 @@
   mat-icon { color: #1976d2; }
 }
 
+.add-task-button {
+  margin-left: auto;
+  white-space: nowrap;
+  mat-icon { margin-right: 4px; }
+}
+
 // ── Toggle overrides ─────────────────────────────────────────────────
 ::ng-deep {
   .mat-button-toggle-group {
@@ -142,6 +148,18 @@
   &.even-row { background-color: #f5f7fa; }
 }
 
+.row-add-button {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #1976d2;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+  .row-label-cell:hover & { opacity: 1; }
+}
+
 .row-icon {
   color: #1976d2;
   font-size: 20px;
@@ -186,6 +204,7 @@
   &:hover { background-color: #f0f4ff; }
   &.has-conflict { background-color: #fff3f3; border: 2px solid #ef5350; }
   &.cdk-drop-list-dragging { background-color: #e3f2fd; }
+  &.cdk-drop-list-receiving { background-color: #e8f5e9; }
 }
 
 // ── Job card ─────────────────────────────────────────────────────────
@@ -195,17 +214,43 @@
   padding: 7px 8px;
   margin-bottom: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
+  cursor: grab;
   position: relative;
   transition: transform 0.15s, box-shadow 0.15s;
+
+  &:active { cursor: grabbing; }
 
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
   }
   &:last-child { margin-bottom: 0; }
-  &.cdk-drag-preview { opacity: 0.85; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-  &.cdk-drag-animating { transition: transform 200ms cubic-bezier(0, 0, 0.2, 1); }
+}
+
+// CDK drag preview (the floating card while dragging)
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 4px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.35);
+  background-color: white;
+  padding: 7px 8px;
+  opacity: 0.9;
+  cursor: grabbing;
+}
+
+// CDK drag placeholder (the ghost left behind in the original slot)
+.cdk-drag-placeholder {
+  opacity: 0.3;
+  background: #e3f2fd;
+  border: 2px dashed #1976d2;
+  border-radius: 4px;
+  min-height: 40px;
+  margin-bottom: 6px;
+}
+
+// CDK drag animating (snap-back animation)
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
 }
 
 .job-card-content {

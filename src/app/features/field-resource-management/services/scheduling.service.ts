@@ -94,16 +94,16 @@ export class SchedulingService {
     justification?: string
   ): Observable<Assignment> {
     // Validate preconditions
-    if (!jobId || !this.isValidUUID(jobId)) {
-      return throwError(() => new Error('Invalid jobId: must be a valid UUID'));
+    if (!jobId || jobId.trim().length === 0) {
+      return throwError(() => new Error('Invalid jobId: must be a non-empty string'));
     }
     
-    if (!technicianId || !this.isValidUUID(technicianId)) {
-      return throwError(() => new Error('Invalid technicianId: must be a valid UUID'));
+    if (!technicianId || technicianId.trim().length === 0) {
+      return throwError(() => new Error('Invalid technicianId: must be a non-empty string'));
     }
     
-    if (!assignedBy || !this.isValidUUID(assignedBy)) {
-      return throwError(() => new Error('Invalid assignedBy: must be a valid UUID'));
+    if (!assignedBy || assignedBy.trim().length === 0) {
+      return throwError(() => new Error('Invalid assignedBy: must be a non-empty string'));
     }
     
     if (overrideConflicts && (!justification || justification.trim().length === 0)) {
@@ -168,14 +168,14 @@ export class SchedulingService {
    * @param fromTechnicianId Current technician ID
    * @param toTechnicianId New technician ID
    * @param reason Optional reason for reassignment
-   * @returns Observable of new assignment
+   * @returns Observable of reassignment result with old and new assignment info
    */
   reassignJob(
     jobId: string, 
     fromTechnicianId: string, 
     toTechnicianId: string, 
     reason?: string
-  ): Observable<Assignment> {
+  ): Observable<{ oldAssignmentId: string | null; newAssignment: Assignment }> {
     const dto: ReassignmentDto = {
       jobId,
       fromTechnicianId,
@@ -183,7 +183,7 @@ export class SchedulingService {
       reason
     };
 
-    return this.http.post<Assignment>(`${this.apiUrl}/reassign`, dto)
+    return this.http.post<{ oldAssignmentId: string | null; newAssignment: Assignment }>(`${this.apiUrl}/reassign`, dto)
       .pipe(
         catchError(this.handleError)
       );
@@ -279,12 +279,12 @@ export class SchedulingService {
     scheduledEnd: Date
   ): Observable<Conflict[]> {
     // Validate preconditions
-    if (!jobId || !this.isValidUUID(jobId)) {
-      return throwError(() => new Error('Invalid jobId: must be a valid UUID'));
+    if (!jobId || jobId.trim().length === 0) {
+      return throwError(() => new Error('Invalid jobId: must be a non-empty string'));
     }
     
-    if (!technicianId || !this.isValidUUID(technicianId)) {
-      return throwError(() => new Error('Invalid technicianId: must be a valid UUID'));
+    if (!technicianId || technicianId.trim().length === 0) {
+      return throwError(() => new Error('Invalid technicianId: must be a non-empty string'));
     }
     
     if (scheduledStart >= scheduledEnd) {

@@ -57,11 +57,17 @@
         <mat-icon>calendar_today</mat-icon>
         <span>{{ formatSelectedDate() }}</span>
       </div>
+
+      <!-- Add Task Button -->
+      <button mat-raised-button color="primary" class="add-task-button" (click)="onAddTask()">
+        <mat-icon>add</mat-icon>
+        Add Task
+      </button>
     </div>
   </div>
 
   <!-- Calendar Grid -->
-  <div class="calendar-grid-container" *ngIf="scheduleRows.length > 0">
+  <div class="calendar-grid-container" *ngIf="scheduleRows.length > 0" cdkDropListGroup>
     <div class="calendar-grid" [style.grid-template-columns]="'220px repeat(' + timeSlots.length + ', minmax(140px, 1fr))'">
       <!-- Header Row -->
       <div class="grid-header-cell row-header">{{ getRowHeaderLabel() }}</div>
@@ -78,6 +84,14 @@
             <div class="row-label-primary">{{ row.label }}</div>
             <div class="row-label-secondary">{{ row.sublabel }}</div>
           </div>
+          <button
+            mat-icon-button
+            class="row-add-button"
+            (click)="onAddTaskForRow(row); $event.stopPropagation()"
+            [matTooltip]="'Add task for ' + row.label"
+            aria-label="Add task for this row">
+            <mat-icon>add_circle_outline</mat-icon>
+          </button>
         </div>
 
         <!-- Time Slot Cells -->
@@ -146,10 +160,6 @@
     [style.top]="contextMenuPosition.y"
     (click)="$event.stopPropagation()">
 
-    <button mat-menu-item (click)="onContextView()">
-      <mat-icon>visibility</mat-icon>
-      <span>View Details</span>
-    </button>
     <button mat-menu-item (click)="onContextEdit()">
       <mat-icon>edit</mat-icon>
       <span>Edit Job</span>

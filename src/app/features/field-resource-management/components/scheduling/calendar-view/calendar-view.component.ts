@@ -26,6 +26,9 @@ import { selectAllTechnicians } from '../../../state/technicians/technician.sele
 import { selectAllCrews } from '../../../state/crews/crew.selectors';
 
 import { AssignmentDialogComponent } from '../assignment-dialog/assignment-dialog.component';
+import { AddTaskDialogComponent, AddTaskDialogData } from '../add-task-dialog/add-task-dialog.component';
+import { EditJobDialogComponent, EditJobDialogData } from '../edit-job-dialog/edit-job-dialog.component';
+import { ReassignDialogComponent, ReassignDialogData } from '../reassign-dialog/reassign-dialog.component';
 
 /**
  * CalendarViewComponent
@@ -328,22 +331,174 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     const job = event.item.data as Job;
     if (!job) return;
 
+    // Determine the source row from the previous container's data
+    const sourceCell = event.previousContainer.data as ScheduleCell;
+
+    // Target cell we dropped onto
+    const targetCell = event.container.data as ScheduleCell;
+
     if (this.viewMode === ScheduleViewMode.Technicians) {
-      // Reassign job to this technician
+      // Check if already assigned to this technician
       const existingAssignment = this.assignments.find(
         a => a.jobId === job.id && a.technicianId === row.id && a.isActive
       );
       if (existingAssignment) {
-        this.snackBar.open('Job is already assigned to this technician', 'Close', { duration: 3000 });
+        // Same technician — check if different time slot to reschedule
+        if (targetCell && targetCell.timeSlot && sourceCell.timeSlot
+            && targetCell.timeSlot.getTime() !== sourceCell.timeSlot.getTime()) {
+          this.rescheduleJobToSlot(job, targetCell.timeSlot);
+        }
         return;
       }
-      this.store.dispatch(AssignmentActions.assignTechnician({ jobId: job.id, technicianId: row.id }));
-      this.snackBar.open(`Assigned ${job.jobId} to ${row.label}`, 'Close', { duration: 3000 });
+
+      // Find the source technician row to handle reassignment
+      const sourceRow = this.scheduleRows.find(r =>
+        r.cells.some(c => c === sourceCell)
+      );
+
+      if (sourceRow && sourceRow.id !== row.id) {
+        // Reassign: remove from old technician, assign to new
+        const oldAssignment = this.assignments.find(
+          a => a.jobId === job.id && a.technicianId === sourceRow.id && a.isActive
+        );
+        if (oldAssignment) {
+          // Unassign from old tech, then assign to new
+          this.store.dispatch(AssignmentActions.unassignTechnician({ assignmentId: oldAssignment.id }));
+          this.store.dispatch(AssignmentActions.assignTechnician({ jobId: job.id, technicianId: row.id }));
+          this.snackBar.open(`Moved ${job.jobId} from ${sourceRow.label} to ${row.label}`, 'Close', { duration: 3000 });
+        } else {
+          this.store.dispatch(AssignmentActions.assignTechnician({ jobId: job.id, technicianId: row.id }));
+          this.snackBar.open(`Assigned ${job.jobId} to ${row.label}`, 'Close', { duration: 3000 });
+        }
+      } else {
+        // No source row found (e.g. from Jobs/Sites view) — just assign
+        this.store.dispatch(AssignmentActions.assignTechnician({ jobId: job.id, technicianId: row.id }));
+        this.snackBar.open(`Assigned ${job.jobId} to ${row.label}`, 'Close', { duration: 3000 });
+      }
     } else if (this.viewMode === ScheduleViewMode.Crews) {
-      // Assign job to crew
-      this.store.dispatch(CrewActions.assignJobToCrew({ crewId: row.id, jobId: job.id }));
-      this.snackBar.open(`Assigned ${job.jobId} to crew ${row.label}`, 'Close', { duration: 3000 });
+      const sourceRow = this.scheduleRows.find(r =>
+        r.cells.some(c => c === sourceCell)
+      );
+
+      if (sourceRow && sourceRow.id === row.id) {
+        // Same crew, different time slot — reschedule the job
+        if (targetCell && targetCell.timeSlot && sourceCell.timeSlot
+            && targetCell.timeSlot.getTime() !== sourceCell.timeSlot.getTime()) {
+          this.rescheduleJobToSlot(job, targetCell.timeSlot);
+        }
+        return;
+      }
+
+      // Different crew — reassign all crew member assignments to the new crew's members
+      if (sourceRow) {
+        // Find the source crew to get its member IDs
+        const sourceCrew = this.crews.find(c => c.id === sourceRow.id);
+        if (sourceCrew) {
+          const sourceMembers = [sourceCrew.leadTechnicianId, ...sourceCrew.memberIds];
+          // Unassign from all source crew members
+          sourceMembers.forEach(techId => {
+            const oldAssignment = this.assignments.find(
+              a => a.jobId === job.id && a.technicianId === techId && a.isActive
+            );
+            if (oldAssignment) {
+              this.store.dispatch(AssignmentActions.unassignTechnician({ assignmentId: oldAssignment.id }));
+            }
+          });
+        }
+      }
+
+      // Assign to the new crew's lead technician
+      const targetCrew = this.crews.find(c => c.id === row.id);
+      if (targetCrew) {
+        this.store.dispatch(AssignmentActions.assignTechnician({ jobId: job.id, technicianId: targetCrew.leadTechnicianId }));
+      }
+
+      this.snackBar.open(`Moved ${job.jobId} to crew ${row.label}`, 'Close', { duration: 3000 });
+    } else if (this.viewMode === ScheduleViewMode.Jobs) {
+      // Jobs view: rows are jobs, so only time slot changes make sense
+      if (targetCell && targetCell.timeSlot && sourceCell.timeSlot
+          && targetCell.timeSlot.getTime() !== sourceCell.timeSlot.getTime()) {
+        this.rescheduleJobToSlot(job, targetCell.timeSlot);
+      }
+    } else if (this.viewMode === ScheduleViewMode.Sites) {
+      const sourceRow = this.scheduleRows.find(r =>
+        r.cells.some(c => c === sourceCell)
+      );
+
+      // Same site row — reschedule to different time slot
+      if (sourceRow && sourceRow.id === row.id) {
+        if (targetCell && targetCell.timeSlot && sourceCell.timeSlot
+            && targetCell.timeSlot.getTime() !== sourceCell.timeSlot.getTime()) {
+          this.rescheduleJobToSlot(job, targetCell.timeSlot);
+        }
+        return;
+      }
+
+      // Different site row — update the job's site name and reschedule if different slot
+      const newSiteName = row.label;
+      const updates: any = { siteName: newSiteName };
+
+      // Also update address from the first job at the target site
+      const targetSiteJob = this.jobs.find(j => j.siteName === newSiteName && j.id !== job.id);
+      if (targetSiteJob?.siteAddress) {
+        updates.siteAddress = targetSiteJob.siteAddress;
+      }
+
+      // Reschedule if dropped on a different time slot
+      if (targetCell && targetCell.timeSlot && sourceCell.timeSlot
+          && targetCell.timeSlot.getTime() !== sourceCell.timeSlot.getTime()) {
+        const oldStart = new Date(job.scheduledStartDate);
+        const oldEnd = new Date(job.scheduledEndDate);
+        const durationMs = oldEnd.getTime() - oldStart.getTime();
+        let newStart: Date;
+        if (this.calendarView === CalendarViewType.Day) {
+          newStart = new Date(targetCell.timeSlot);
+        } else {
+          newStart = new Date(targetCell.timeSlot);
+          newStart.setHours(oldStart.getHours(), oldStart.getMinutes(), 0, 0);
+        }
+        updates.scheduledStartDate = newStart;
+        updates.scheduledEndDate = new Date(newStart.getTime() + durationMs);
+      }
+
+      this.store.dispatch(JobActions.updateJob({ id: job.id, job: updates }));
+      this.snackBar.open(`Moved ${job.jobId} to ${newSiteName}`, 'Close', { duration: 3000 });
     }
+  }
+
+  /**
+   * Reschedule a job to a new time slot, preserving its duration
+   */
+  private rescheduleJobToSlot(job: Job, targetSlot: Date): void {
+    const oldStart = new Date(job.scheduledStartDate);
+    const oldEnd = new Date(job.scheduledEndDate);
+    const durationMs = oldEnd.getTime() - oldStart.getTime();
+
+    let newStart: Date;
+    if (this.calendarView === CalendarViewType.Day) {
+      // Day view: move to the target hour, same day
+      newStart = new Date(targetSlot);
+    } else {
+      // Week view: move to the target day, keep the same time of day
+      newStart = new Date(targetSlot);
+      newStart.setHours(oldStart.getHours(), oldStart.getMinutes(), 0, 0);
+    }
+
+    const newEnd = new Date(newStart.getTime() + durationMs);
+
+    this.store.dispatch(JobActions.updateJob({
+      id: job.id,
+      job: {
+        scheduledStartDate: newStart,
+        scheduledEndDate: newEnd
+      }
+    }));
+
+    const label = this.calendarView === CalendarViewType.Day
+      ? newStart.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })
+      : newStart.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+    this.snackBar.open(`Moved ${job.jobId} to ${label}`, 'Close', { duration: 3000 });
   }
 
   onAssignClick(job: Job): void {
@@ -353,10 +508,44 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ── Add Task ────────────────────────────────────────────────────
+
+  onAddTask(): void {
+    const dialogData: AddTaskDialogData = {
+      preselectedDate: this.selectedDate
+    };
+
+    this.dialog.open(AddTaskDialogComponent, {
+      width: '650px',
+      data: dialogData
+    }).afterClosed().subscribe(result => {
+      if (result?.created) {
+        this.snackBar.open('Task created successfully', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  onAddTaskForRow(row: ScheduleRow): void {
+    const dialogData: AddTaskDialogData = {
+      preselectedDate: this.selectedDate,
+      preselectedTechnicianId: this.viewMode === ScheduleViewMode.Technicians ? row.id : undefined,
+      preselectedCrewId: this.viewMode === ScheduleViewMode.Crews ? row.id : undefined
+    };
+
+    this.dialog.open(AddTaskDialogComponent, {
+      width: '650px',
+      data: dialogData
+    }).afterClosed().subscribe(result => {
+      if (result?.created) {
+        this.snackBar.open('Task created successfully', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
   // ── Job interactions ──────────────────────────────────────────────
 
   onJobClick(job: Job): void {
-    this.router.navigate(['/field-resource-management/jobs', job.id]);
+    this.openEditJobDialog(job);
   }
 
   onJobContextMenu(event: MouseEvent, job: Job): void {
@@ -372,20 +561,77 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   }
 
   onContextView(): void {
-    if (this.contextMenuJob) this.onJobClick(this.contextMenuJob);
+    if (this.contextMenuJob) this.openEditJobDialog(this.contextMenuJob);
     this.closeContextMenu();
   }
 
   onContextEdit(): void {
-    if (this.contextMenuJob) {
-      this.router.navigate(['/field-resource-management/jobs', this.contextMenuJob.id, 'edit']);
-    }
+    if (this.contextMenuJob) this.openEditJobDialog(this.contextMenuJob);
     this.closeContextMenu();
   }
 
   onContextReassign(): void {
-    if (this.contextMenuJob) this.onAssignClick(this.contextMenuJob);
+    if (!this.contextMenuJob) {
+      this.closeContextMenu();
+      return;
+    }
+
+    const job = this.contextMenuJob;
     this.closeContextMenu();
+
+    const currentCrewId = this.findCrewForJob(job.id);
+    const currentTechAssignment = this.assignments.find(a => a.jobId === job.id && a.isActive);
+
+    const dialogData: ReassignDialogData = {
+      job,
+      currentAssignType: this.viewMode === ScheduleViewMode.Crews ? 'crew' : 'technician',
+      currentTechnicianId: currentTechAssignment?.technicianId,
+      currentCrewId: currentCrewId || undefined
+    };
+
+    this.dialog.open(ReassignDialogComponent, {
+      width: '520px',
+      data: dialogData
+    }).afterClosed().subscribe(result => {
+      if (!result?.reassigned) return;
+
+      // Unassign from current
+      if (currentCrewId) {
+        const sourceCrew = this.crews.find(c => c.id === currentCrewId);
+        if (sourceCrew) {
+          [sourceCrew.leadTechnicianId, ...sourceCrew.memberIds].forEach(techId => {
+            const old = this.assignments.find(a => a.jobId === job.id && a.technicianId === techId && a.isActive);
+            if (old) this.store.dispatch(AssignmentActions.unassignTechnician({ assignmentId: old.id }));
+          });
+        }
+      } else if (currentTechAssignment) {
+        this.store.dispatch(AssignmentActions.unassignTechnician({ assignmentId: currentTechAssignment.id }));
+      }
+
+      // Assign to new target
+      if (result.assignTo === 'technician' && result.technicianId) {
+        this.store.dispatch(AssignmentActions.assignTechnician({ jobId: job.id, technicianId: result.technicianId }));
+        const tech = this.technicians.find(t => t.id === result.technicianId);
+        this.snackBar.open(`Reassigned ${job.jobId} to ${tech?.firstName} ${tech?.lastName}`, 'Close', { duration: 3000 });
+      } else if (result.assignTo === 'crew' && result.crewId) {
+        const targetCrew = this.crews.find(c => c.id === result.crewId);
+        if (targetCrew) {
+          this.store.dispatch(AssignmentActions.assignTechnician({ jobId: job.id, technicianId: targetCrew.leadTechnicianId }));
+          this.snackBar.open(`Reassigned ${job.jobId} to ${targetCrew.name}`, 'Close', { duration: 3000 });
+        }
+      }
+    });
+  }
+
+  private findCrewForJob(jobId: string): string | null {
+    for (const crew of this.crews) {
+      const memberIds = [crew.leadTechnicianId, ...crew.memberIds];
+      const hasAssignment = memberIds.some(techId =>
+        this.assignments.some(a => a.jobId === jobId && a.technicianId === techId && a.isActive)
+      );
+      if (hasAssignment) return crew.id;
+    }
+    return null;
   }
 
   onContextDelete(): void {
@@ -393,6 +639,19 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
       this.store.dispatch(JobActions.deleteJob({ id: this.contextMenuJob.id }));
     }
     this.closeContextMenu();
+  }
+
+  private openEditJobDialog(job: Job): void {
+    const dialogData: EditJobDialogData = { job };
+
+    this.dialog.open(EditJobDialogComponent, {
+      width: '700px',
+      data: dialogData
+    }).afterClosed().subscribe(result => {
+      if (result?.saved) {
+        this.snackBar.open('Job updated', 'Close', { duration: 3000 });
+      }
+    });
   }
 
   // ── Formatting ────────────────────────────────────────────────────

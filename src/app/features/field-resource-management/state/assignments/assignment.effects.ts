@@ -162,14 +162,10 @@ export class AssignmentEffects {
           fromTechnicianId,
           toTechnicianId
         ).pipe(
-          map((newAssignment) => {
-            // Note: We need to determine the old assignment ID
-            // This would typically be returned by the backend
-            // For now, we'll use a placeholder
-            const oldAssignmentId = `${jobId}-${fromTechnicianId}`;
+          map((result) => {
             return AssignmentActions.reassignJobSuccess({ 
-              oldAssignmentId, 
-              newAssignment 
+              oldAssignmentId: result.oldAssignmentId || '', 
+              newAssignment: result.newAssignment 
             });
           }),
           catchError((error) =>

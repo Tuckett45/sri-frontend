@@ -6,11 +6,13 @@ import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { Job } from '../../../models/job.model';
+import { Technician } from '../../../models/technician.model';
 import { TechnicianMatch, Conflict } from '../../../models/assignment.model';
 import { TechnicianDistance, PerDiemConfig } from '../../../models/travel.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 import * as TravelActions from '../../../state/travel/travel.actions';
 import { selectQualifiedTechnicians, selectAssignmentConflicts } from '../../../state/assignments/assignment.selectors';
+import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
 import { 
   selectTechniciansSortedByDistance, 
   selectPerDiemConfig,
@@ -44,14 +46,18 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
 
   job: Job;
   qualifiedTechnicians$: Observable<TechnicianMatch[]>;
+  allTechnicians$: Observable<Technician[]>;
   conflicts$: Observable<Conflict[]>;
   techniciansWithDistance$!: Observable<TechnicianDistance[]>;
   perDiemConfig$!: Observable<PerDiemConfig>;
   distanceLoading$!: Observable<boolean>;
 
   qualifiedTechnicians: TechnicianMatch[] = [];
+  allTechnicianMatches: TechnicianMatch[] = [];
+  showingAllTechnicians = false;
   selectedTechnician: TechnicianMatch | null = null;
   assignmentForm: FormGroup;
+  searchText = '';
   
   // Distance map for quick lookup by technician ID
   distanceMap: Map<string, TechnicianDistance> = new Map();
@@ -71,6 +77,7 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   ) {
     this.job = data.job;
     this.qualifiedTechnicians$ = this.store.select(selectQualifiedTechnicians);
+    this.allTechnicians$ = this.store.select(selectAllTechnicians);
     this.conflicts$ = this.store.select(selectAssignmentConflicts);
 
     this.assignmentForm = this.fb.group({
@@ -99,6 +106,23 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
         this.qualifiedTechnicians = technicians;
+        // If qualified list is populated, use it; otherwise we'll fall back to all technicians
+        if (technicians.length > 0) {
+          this.showingAllTechnicians = false;
+        }
+      });
+
+    // Subscribe to all technicians as fallback
+    this.allTechnicians$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(technicians => {
+        this.allTechnicianMatches = technicians
+          .filter(t => t.isActive)
+          .map(t => this.toTechnicianMatch(t));
+        // Auto-show all if qualified list is empty and we have technicians
+        if (this.qualifiedTechnicians.length === 0 && this.allTechnicianMatches.length > 0) {
+          this.showingAllTechnicians = true;
+        }
       });
     
     // Subscribe to distances to build the map
@@ -270,6 +294,43 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
       assigned: true,
       technicianId: formValue.technicianId
     });
+  }
+
+  /**
+   * Get the list of technicians to display — qualified if available, all as fallback
+   */
+  getDisplayedTechnicians(): TechnicianMatch[] {
+    const list = this.showingAllTechnicians ? this.allTechnicianMatches : this.qualifiedTechnicians;
+    if (!this.searchText.trim()) return list;
+    const term = this.searchText.toLowerCase();
+    return list.filter(tm => {
+      const name = `${tm.technician.firstName} ${tm.technician.lastName}`.toLowerCase();
+      return name.includes(term) || tm.technician.role.toLowerCase().includes(term)
+        || tm.technician.region?.toLowerCase().includes(term);
+    });
+  }
+
+  /**
+   * Toggle between qualified and all technicians
+   */
+  toggleShowAll(): void {
+    this.showingAllTechnicians = !this.showingAllTechnicians;
+    this.selectedTechnician = null;
+    this.assignmentForm.patchValue({ technicianId: '', override: false, justification: '' });
+  }
+
+  /**
+   * Wrap a raw Technician as a TechnicianMatch with defaults
+   */
+  private toTechnicianMatch(tech: Technician): TechnicianMatch {
+    return {
+      technician: tech,
+      matchPercentage: 100,
+      missingSkills: [],
+      currentWorkload: 0,
+      hasConflicts: false,
+      conflicts: []
+    };
   }
 
   /**

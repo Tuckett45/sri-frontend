@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
 // Shared Material Module
@@ -15,6 +15,9 @@ import { TravelSharedModule } from '../travel/travel.module';
 // Scheduling Components
 import { CalendarViewComponent } from './calendar-view/calendar-view.component';
 import { AssignmentDialogComponent } from './assignment-dialog/assignment-dialog.component';
+import { AddTaskDialogComponent } from './add-task-dialog/add-task-dialog.component';
+import { EditJobDialogComponent } from './edit-job-dialog/edit-job-dialog.component';
+import { ReassignDialogComponent } from './reassign-dialog/reassign-dialog.component';
 import { ConflictResolverComponent } from './conflict-resolver/conflict-resolver.component';
 import { TechnicianScheduleComponent } from './technician-schedule/technician-schedule.component';
 
@@ -56,12 +59,16 @@ const routes: Routes = [
   declarations: [
     CalendarViewComponent,
     AssignmentDialogComponent,
+    AddTaskDialogComponent,
+    EditJobDialogComponent,
+    ReassignDialogComponent,
     ConflictResolverComponent,
     TechnicianScheduleComponent
   ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     SharedMaterialModule,
     SharedComponentsModule,
     TravelSharedModule,

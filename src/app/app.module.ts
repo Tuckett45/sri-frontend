@@ -16,6 +16,7 @@ import { ConfigurationInterceptor } from './interceptors/configuration.intercept
 import { AuthorizationInterceptor } from './interceptors/authorization.interceptor';
 import { MarketFilterInterceptor } from './interceptors/market-filter.interceptor';
 import { MockOnboardingInterceptor } from './features/field-resource-management/interceptors/mock-onboarding.interceptor';
+import { MockSchedulingInterceptor } from './features/field-resource-management/interceptors/mock-scheduling.interceptor';
 import { ConfigurationStatusComponent } from './components/configuration-status/configuration-status.component';
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -261,6 +262,12 @@ export const customCurrencyMaskConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: MockOnboardingInterceptor,
+      multi: true
+    },
+    // Mock scheduling data (remove when real API is available)
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: MockSchedulingInterceptor,
       multi: true
     },
     {
