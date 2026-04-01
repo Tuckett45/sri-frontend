@@ -515,3 +515,35 @@
     padding: 1rem;
   }
 }
+
+.clickable-row {
+  cursor: pointer;
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.toggle-label {
+  margin-left: 8px;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+// Travel Willing toggle in table
+::ng-deep .profiles-table {
+  mat-slide-toggle.mat-mdc-slide-toggle {
+    .mdc-switch--selected .mdc-switch__handle::after {
+      background-color: #4caf50;
+    }
+    .mdc-switch--selected .mdc-switch__track::after {
+      background-color: rgba(76, 175, 80, 0.38);
+    }
+  }
+
+  .actions-edit-btn {
+    color: #1976d2;
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.08);
+    }
+  }
+}

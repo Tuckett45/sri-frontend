@@ -1,12 +1,23 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import * as L from 'leaflet';
 import { Job } from '../../../models/job.model';
 import { TimeEntry, GeoLocation } from '../../../models/time-entry.model';
 import { clockIn, clockOut, updateTimeEntry } from '../../../state/time-entries/time-entry.actions';
 import { selectActiveTimeEntry, selectLastCompletedTimeEntry } from '../../../state/time-entries/time-entry.selectors';
 import { GeolocationService, GeolocationError, GeolocationErrorType } from '../../../services/geolocation.service';
+import { AuthService } from '../../../../../services/auth.service';
+import { FrmPermissionService } from '../../../services/frm-permission.service';
+
+// Fix Leaflet default icon paths broken by webpack
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'assets/images/marker-icon-2x.png',
+  iconUrl: 'assets/images/marker-icon.png',
+  shadowUrl: 'assets/images/marker-shadow.png',
+});
 
 /**
  * Location capture status
@@ -44,6 +55,7 @@ enum LocationStatus {
 export class TimeTrackerComponent implements OnInit, OnDestroy {
   @Input() job!: Job;
   @Input() isAdmin = false; // For admin override features
+  @ViewChild('routeMapContainer') mapContainerRef!: ElementRef;
 
   private destroy$ = new Subject<void>();
   
@@ -58,17 +70,30 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
 
   showManualTimeAdjustment = false;
   showManualMileageEntry = false;
+  showClockOutReasons = false;
+  showRouteMap = false;
   manualMileage: number | null = null;
+  canEditMileage = false;
+
+  // Map
+  private routeMap: L.Map | null = null;
+  mapLoading = false;
+  mapError: string | null = null;
 
   // Expose enum for template
   LocationStatus = LocationStatus;
 
   constructor(
     private store: Store,
-    private geolocationService: GeolocationService
+    private geolocationService: GeolocationService,
+    private authService: AuthService,
+    private frmPermissionService: FrmPermissionService
   ) {}
 
   ngOnInit(): void {
+    this.canEditMileage = this.frmPermissionService.hasPermission(
+      this.authService.getUserRole(), 'canEditMileage'
+    );
     this.subscribeToActiveTimeEntry();
     this.startElapsedTimeTimer();
   }
@@ -76,6 +101,7 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.destroyRouteMap();
   }
 
   /**
@@ -172,11 +198,12 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
   /**
    * Handle clock out
    */
-  async onClockOut(): Promise<void> {
+  async onClockOut(reason?: 'end_of_day' | 'break' | 'lunch' | 'other'): Promise<void> {
     if (!this.activeTimeEntry) {
       return;
     }
 
+    this.showClockOutReasons = false;
     this.locationStatus = LocationStatus.Pending;
     this.locationError = null;
 
@@ -185,10 +212,10 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
       const location = await this.captureLocation();
       this.locationStatus = LocationStatus.Success;
 
-      // Dispatch clock out action with location (mileage was calculated on clock in)
       this.store.dispatch(clockOut({
         timeEntryId: this.activeTimeEntry.id,
-        location
+        location,
+        reason
       }));
 
     } catch (error) {
@@ -196,9 +223,24 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
       
       // Still allow clock out without location
       this.store.dispatch(clockOut({
-        timeEntryId: this.activeTimeEntry.id
+        timeEntryId: this.activeTimeEntry.id,
+        reason
       }));
     }
+  }
+
+  /**
+   * Toggle clock out reason selection
+   */
+  toggleClockOutReasons(): void {
+    this.showClockOutReasons = !this.showClockOutReasons;
+  }
+
+  /**
+   * Clock out with a specific reason
+   */
+  clockOutWithReason(reason: 'end_of_day' | 'break' | 'lunch' | 'other'): void {
+    this.onClockOut(reason);
   }
 
   /**
@@ -318,6 +360,140 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
         this.handleLocationError(error);
       }
     });
+  }
+
+  /**
+   * Toggle route map visibility
+   */
+  toggleRouteMap(): void {
+    this.showRouteMap = !this.showRouteMap;
+    if (this.showRouteMap) {
+      this.initRouteMap();
+    } else {
+      this.destroyRouteMap();
+    }
+  }
+
+  /**
+   * Get Google Maps directions URL
+   */
+  getDirectionsUrl(): string {
+    const addr = this.job.siteAddress;
+    if (addr?.latitude != null && addr?.longitude != null) {
+      return `https://www.google.com/maps/dir/?api=1&destination=${addr.latitude},${addr.longitude}`;
+    }
+    const dest = encodeURIComponent(`${addr.street}, ${addr.city}, ${addr.state} ${addr.zipCode}`);
+    return `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+  }
+
+  /**
+   * Initialize the Leaflet route map
+   */
+  private initRouteMap(): void {
+    this.mapLoading = true;
+    this.mapError = null;
+
+    // Get user location first, then render map
+    this.geolocationService.getCurrentPositionWithFallback().subscribe({
+      next: (userLocation) => {
+        this.mapLoading = false;
+        // Small delay to let the DOM render the container
+        setTimeout(() => this.renderMap(userLocation), 50);
+      },
+      error: () => {
+        this.mapLoading = false;
+        // Still show map centered on job site if user location unavailable
+        this.mapError = 'Could not get your location. Showing job site only.';
+        setTimeout(() => this.renderMap(null), 50);
+      }
+    });
+  }
+
+  /**
+   * Render the Leaflet map with markers and route line
+   */
+  private renderMap(userLocation: GeoLocation | null): void {
+    if (!this.mapContainerRef) return;
+
+    const jobAddr = this.job.siteAddress;
+    const jobLat = jobAddr?.latitude;
+    const jobLng = jobAddr?.longitude;
+
+    if (jobLat == null || jobLng == null) {
+      this.mapError = 'Job site coordinates are not available.';
+      return;
+    }
+
+    // Destroy previous map if any
+    this.destroyRouteMap();
+
+    this.routeMap = L.map(this.mapContainerRef.nativeElement, {
+      zoomControl: true,
+      attributionControl: true
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(this.routeMap);
+
+    const jobIcon = L.icon({
+      iconUrl: 'assets/images/marker-icon.png',
+      iconRetinaUrl: 'assets/images/marker-icon-2x.png',
+      shadowUrl: 'assets/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34]
+    });
+
+    // Job site marker
+    const jobMarker = L.marker([jobLat, jobLng], { icon: jobIcon })
+      .addTo(this.routeMap)
+      .bindPopup(`<b>${this.job.siteName}</b><br>${jobAddr.street}<br>${jobAddr.city}, ${jobAddr.state}`);
+
+    if (userLocation) {
+      const userIcon = L.divIcon({
+        html: '<div style="background:#1976d2;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.3);"></div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        className: ''
+      });
+
+      const userMarker = L.marker([userLocation.latitude, userLocation.longitude], { icon: userIcon })
+        .addTo(this.routeMap)
+        .bindPopup('Your location');
+
+      // Draw a dashed line between user and job site
+      L.polyline(
+        [[userLocation.latitude, userLocation.longitude], [jobLat, jobLng]],
+        { color: '#1976d2', weight: 3, dashArray: '8, 8', opacity: 0.7 }
+      ).addTo(this.routeMap);
+
+      // Fit bounds to show both markers
+      const bounds = L.latLngBounds(
+        [userLocation.latitude, userLocation.longitude],
+        [jobLat, jobLng]
+      );
+      this.routeMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+    } else {
+      this.routeMap.setView([jobLat, jobLng], 14);
+    }
+
+    jobMarker.openPopup();
+
+    // Leaflet needs a size recalc after CSS settles
+    setTimeout(() => this.routeMap?.invalidateSize(), 200);
+  }
+
+  /**
+   * Destroy the route map instance
+   */
+  private destroyRouteMap(): void {
+    if (this.routeMap) {
+      this.routeMap.remove();
+      this.routeMap = null;
+    }
   }
 
   /**

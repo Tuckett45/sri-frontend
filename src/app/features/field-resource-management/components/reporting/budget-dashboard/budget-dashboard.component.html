@@ -1,4 +1,11 @@
 <div class="budget-dashboard" role="main" aria-label="Budget Dashboard">
+  <!-- Access Denied -->
+  <div *ngIf="accessDenied" class="dashboard-error" role="alert">
+    <mat-icon>lock</mat-icon>
+    <p>You don't have permission to view budget information. Contact your administrator for access.</p>
+  </div>
+
+  <ng-container *ngIf="!accessDenied">
   <!-- Loading State -->
   <mat-progress-bar *ngIf="loading$ | async" mode="indeterminate"></mat-progress-bar>
 
@@ -224,4 +231,5 @@
       </ng-container>
     </div>
   </div>
+  </ng-container>
 </div>

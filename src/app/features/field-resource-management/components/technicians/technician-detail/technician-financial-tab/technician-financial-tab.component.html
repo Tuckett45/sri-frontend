@@ -1,0 +1,247 @@
+<div class="financial-tab">
+  <!-- Section Nav -->
+  <div class="section-nav">
+    <button mat-stroked-button [class.active]="activeSection === 'pay-stubs'" (click)="switchSection('pay-stubs')">
+      <mat-icon>receipt</mat-icon> Pay Stubs
+    </button>
+    <button mat-stroked-button [class.active]="activeSection === 'w2'" (click)="switchSection('w2')">
+      <mat-icon>article</mat-icon> W-2
+    </button>
+    <button mat-stroked-button [class.active]="activeSection === 'w4'" (click)="switchSection('w4')">
+      <mat-icon>assignment</mat-icon> W-4
+    </button>
+    <button mat-stroked-button [class.active]="activeSection === 'direct-deposit'" (click)="switchSection('direct-deposit')">
+      <mat-icon>account_balance</mat-icon> Direct Deposit
+    </button>
+  </div>
+
+  <!-- ═══ PAY STUBS ═══ -->
+  <div class="section-content" *ngIf="activeSection === 'pay-stubs'">
+    <div class="error-banner" *ngIf="payStubsError"><mat-icon>error</mat-icon> {{ payStubsError }}</div>
+
+    <div *ngIf="payStubsLoaded && payStubs.length === 0" class="empty-state">
+      <mat-icon>receipt_long</mat-icon>
+      <p>No pay stubs on file yet.</p>
+    </div>
+
+    <table mat-table [dataSource]="payStubs" class="data-table" *ngIf="payStubs.length > 0">
+      <ng-container matColumnDef="period">
+        <th mat-header-cell *matHeaderCellDef>Pay Period</th>
+        <td mat-cell *matCellDef="let s">{{ s.payPeriodStart }} – {{ s.payPeriodEnd }}</td>
+      </ng-container>
+      <ng-container matColumnDef="gross">
+        <th mat-header-cell *matHeaderCellDef>Gross Pay</th>
+        <td mat-cell *matCellDef="let s">{{ s.grossPay | currency }}</td>
+      </ng-container>
+      <ng-container matColumnDef="deductions">
+        <th mat-header-cell *matHeaderCellDef>Deductions</th>
+        <td mat-cell *matCellDef="let s">{{ s.totalDeductions | currency }}</td>
+      </ng-container>
+      <ng-container matColumnDef="net">
+        <th mat-header-cell *matHeaderCellDef>Net Pay</th>
+        <td mat-cell *matCellDef="let s"><strong>{{ s.netPay | currency }}</strong></td>
+      </ng-container>
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef>Payment Date</th>
+        <td mat-cell *matCellDef="let s">{{ s.paymentDate | date:'shortDate' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let s">
+          <button mat-icon-button matTooltip="Download" (click)="downloadPayStub(s)"><mat-icon>download</mat-icon></button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="['period','gross','deductions','net','date','actions']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['period','gross','deductions','net','date','actions']"></tr>
+    </table>
+  </div>
+
+
+  <!-- ═══ W-2 ═══ -->
+  <div class="section-content" *ngIf="activeSection === 'w2'">
+    <div class="error-banner" *ngIf="w2Error"><mat-icon>error</mat-icon> {{ w2Error }}</div>
+
+    <div class="year-selector" *ngIf="availableTaxYears.length > 0">
+      <mat-form-field appearance="outline">
+        <mat-label>Tax Year</mat-label>
+        <mat-select [(value)]="selectedTaxYear" (selectionChange)="loadW2Documents()">
+          <mat-option *ngFor="let y of availableTaxYears" [value]="y + ''">{{ y }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div *ngIf="w2Loaded && w2Documents.length === 0" class="empty-state">
+      <mat-icon>article</mat-icon>
+      <p>No W-2 documents on file yet.</p>
+    </div>
+
+    <mat-card class="w2-card" *ngFor="let doc of w2Documents">
+      <mat-card-header>
+        <mat-card-title>W-2 — {{ doc.taxYear }}</mat-card-title>
+        <mat-card-subtitle>{{ doc.employerName }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="w2-grid">
+          <div class="w2-item"><label>Wages &amp; Tips</label><span>{{ doc.wagesTips | currency }}</span></div>
+          <div class="w2-item"><label>Federal Tax Withheld</label><span>{{ doc.federalIncomeTaxWithheld | currency }}</span></div>
+          <div class="w2-item"><label>SS Wages</label><span>{{ doc.socialSecurityWages | currency }}</span></div>
+          <div class="w2-item"><label>SS Tax Withheld</label><span>{{ doc.socialSecurityTaxWithheld | currency }}</span></div>
+          <div class="w2-item"><label>Medicare Wages</label><span>{{ doc.medicareWages | currency }}</span></div>
+          <div class="w2-item"><label>Medicare Tax Withheld</label><span>{{ doc.medicareTaxWithheld | currency }}</span></div>
+        </div>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-stroked-button color="primary" (click)="downloadW2(doc)"><mat-icon>download</mat-icon> Download PDF</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- ═══ W-4 ═══ -->
+  <div class="section-content" *ngIf="activeSection === 'w4'">
+    <div class="error-banner" *ngIf="w4Error"><mat-icon>error</mat-icon> {{ w4Error }}</div>
+    <div class="success-banner" *ngIf="w4Success"><mat-icon>check_circle</mat-icon> {{ w4Success }}</div>
+
+    <!-- Current W-4 Summary -->
+    <mat-card class="current-info-card" *ngIf="w4Loaded && w4History.length > 0 && !showW4Form">
+      <mat-card-header>
+        <mat-card-title>Current W-4</mat-card-title>
+        <mat-card-subtitle>Last updated {{ w4History[0].submittedAt | date:'medium' }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid-2col">
+          <div class="info-pair"><label>Filing Status</label><span>{{ getFilingStatusLabel(w4History[0].filingStatus) }}</span></div>
+          <div class="info-pair"><label>Multiple Jobs / Spouse Works</label><span>{{ w4History[0].multipleJobsOrSpouseWorks ? 'Yes' : 'No' }}</span></div>
+          <div class="info-pair"><label>Dependents Claimed</label><span>{{ w4History[0].claimDependents | currency }}</span></div>
+          <div class="info-pair"><label>Other Income</label><span>{{ w4History[0].otherIncome | currency }}</span></div>
+          <div class="info-pair"><label>Deductions</label><span>{{ w4History[0].deductions | currency }}</span></div>
+          <div class="info-pair"><label>Extra Withholding</label><span>{{ w4History[0].extraWithholding | currency }}</span></div>
+        </div>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-raised-button color="primary" (click)="showW4Form = true"><mat-icon>edit</mat-icon> Update W-4</button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- No W-4 yet -->
+    <div *ngIf="w4Loaded && w4History.length === 0 && !showW4Form" class="empty-state">
+      <mat-icon>assignment</mat-icon>
+      <p>No W-4 on file. Set up your withholding information.</p>
+      <button mat-raised-button color="primary" (click)="showW4Form = true"><mat-icon>add</mat-icon> Set Up W-4</button>
+    </div>
+
+    <!-- W-4 Edit Form -->
+    <mat-card class="edit-form-card" *ngIf="showW4Form">
+      <mat-card-header>
+        <mat-card-title>{{ w4History.length > 0 ? 'Update' : 'Set Up' }} W-4</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="w4Form" (ngSubmit)="submitW4()" class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Filing Status</mat-label>
+            <mat-select formControlName="filingStatus">
+              <mat-option *ngFor="let opt of filingStatusOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="checkbox-field">
+            <mat-checkbox formControlName="multipleJobsOrSpouseWorks">Multiple jobs or spouse works</mat-checkbox>
+          </div>
+          <mat-form-field appearance="outline">
+            <mat-label>Claim Dependents ($)</mat-label>
+            <input matInput type="number" formControlName="claimDependents" min="0">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Other Income ($)</mat-label>
+            <input matInput type="number" formControlName="otherIncome" min="0">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Deductions ($)</mat-label>
+            <input matInput type="number" formControlName="deductions" min="0">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Extra Withholding ($)</mat-label>
+            <input matInput type="number" formControlName="extraWithholding" min="0">
+          </mat-form-field>
+          <div class="form-actions">
+            <button mat-stroked-button type="button" (click)="showW4Form = false">Cancel</button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="w4Form.invalid || w4Submitting">
+              {{ w4Submitting ? 'Saving...' : 'Save W-4' }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- ═══ DIRECT DEPOSIT ═══ -->
+  <div class="section-content" *ngIf="activeSection === 'direct-deposit'">
+    <div class="error-banner" *ngIf="ddError"><mat-icon>error</mat-icon> {{ ddError }}</div>
+    <div class="success-banner" *ngIf="ddSuccess"><mat-icon>check_circle</mat-icon> {{ ddSuccess }}</div>
+
+    <!-- Current DD Summary -->
+    <mat-card class="current-info-card" *ngIf="ddLoaded && ddHistory.length > 0 && !showDDForm">
+      <mat-card-header>
+        <mat-card-title>Current Direct Deposit</mat-card-title>
+        <mat-card-subtitle>Last updated {{ ddHistory[0].submittedAt | date:'medium' }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid-2col">
+          <div class="info-pair"><label>Bank</label><span>{{ ddHistory[0].bankName }}</span></div>
+          <div class="info-pair"><label>Account Type</label><span class="capitalize">{{ ddHistory[0].accountType }}</span></div>
+          <div class="info-pair"><label>Account</label><span>****{{ ddHistory[0].bankAccountLast4 }}</span></div>
+          <div class="info-pair"><label>Routing</label><span>****{{ ddHistory[0].routingNumberLast4 }}</span></div>
+        </div>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-raised-button color="primary" (click)="showDDForm = true"><mat-icon>edit</mat-icon> Update Direct Deposit</button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- No DD yet -->
+    <div *ngIf="ddLoaded && ddHistory.length === 0 && !showDDForm" class="empty-state">
+      <mat-icon>account_balance</mat-icon>
+      <p>No direct deposit on file. Set up your bank information.</p>
+      <button mat-raised-button color="primary" (click)="showDDForm = true"><mat-icon>add</mat-icon> Set Up Direct Deposit</button>
+    </div>
+
+    <!-- DD Edit Form -->
+    <mat-card class="edit-form-card" *ngIf="showDDForm">
+      <mat-card-header>
+        <mat-card-title>{{ ddHistory.length > 0 ? 'Update' : 'Set Up' }} Direct Deposit</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="ddForm" (ngSubmit)="submitDD()" class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Bank Name</mat-label>
+            <input matInput formControlName="bankName">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Account Type</mat-label>
+            <mat-select formControlName="accountType">
+              <mat-option value="checking">Checking</mat-option>
+              <mat-option value="savings">Savings</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Routing Number</mat-label>
+            <input matInput formControlName="routingNumber">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Account Number</mat-label>
+            <input matInput formControlName="accountNumber" type="password">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Confirm Account Number</mat-label>
+            <input matInput formControlName="accountNumberConfirm" type="password">
+            <mat-error *ngIf="ddForm.hasError('accountNumberMismatch')">Account numbers do not match.</mat-error>
+          </mat-form-field>
+          <div class="form-actions">
+            <button mat-stroked-button type="button" (click)="showDDForm = false">Cancel</button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="ddForm.invalid || ddSubmitting">
+              {{ ddSubmitting ? 'Saving...' : 'Save Direct Deposit' }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

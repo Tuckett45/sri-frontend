@@ -31,16 +31,10 @@ const {
 } = travelAdapter.getSelectors(selectProfilesState);
 
 // Select all travel profiles
-export const selectAllTravelProfiles = createSelector(
-  selectTravelState,
-  selectAll
-);
+export const selectAllTravelProfiles = selectAll;
 
 // Select travel profile entities
-export const selectTravelProfileEntities = createSelector(
-  selectTravelState,
-  selectEntities
-);
+export const selectTravelProfileEntities = selectEntities;
 
 // Select travel profile by technician ID
 export const selectTravelProfile = (technicianId: string) => createSelector(
@@ -93,10 +87,7 @@ export const selectIsGeocodingInProgress = (technicianId: string) => createSelec
 );
 
 // Select total count
-export const selectTravelProfilesTotal = createSelector(
-  selectProfilesState,
-  selectTotal
-);
+export const selectTravelProfilesTotal = selectTotal;
 
 // Select geocoding status for a technician
 export const selectGeocodingStatus = (technicianId: string) => createSelector(
@@ -331,10 +322,7 @@ export const selectHasProfilesError = createSelector(
 );
 
 // Select profile IDs only (useful for performance)
-export const selectTravelProfileIds = createSelector(
-  selectProfilesState,
-  selectIds
-);
+export const selectTravelProfileIds = selectIds;
 
 // Select technicians with geocoded addresses (for distance calculations)
 export const selectTechniciansWithGeocodedAddresses = createSelector(

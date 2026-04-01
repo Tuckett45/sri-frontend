@@ -68,6 +68,7 @@ import { ApprovalsWidgetComponent } from './components/home/widgets/approvals-wi
 import { TimecardReviewWidgetComponent } from './components/home/widgets/timecard-review-widget/timecard-review-widget.component';
 import { ExpensesWidgetComponent } from './components/home/widgets/expenses-widget/expenses-widget.component';
 import { TravelBreakPtoWidgetComponent } from './components/home/widgets/travel-break-pto-widget/travel-break-pto-widget.component';
+import { ClockInWidgetComponent } from './components/home/widgets/clock-in-widget/clock-in-widget.component';
 
 // Role-Specific Dashboard Components
 import { TechnicianDashboardComponent } from './components/home/dashboards/technician-dashboard/technician-dashboard.component';
@@ -150,6 +151,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     TimecardReviewWidgetComponent,
     ExpensesWidgetComponent,
     TravelBreakPtoWidgetComponent,
+    ClockInWidgetComponent,
 
     // Role-Specific Dashboard Components
     TechnicianDashboardComponent,

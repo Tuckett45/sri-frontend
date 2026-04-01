@@ -19,6 +19,8 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
 import { AssignmentDialogComponent } from '../../scheduling/assignment-dialog/assignment-dialog.component';
 import { JobFormComponent } from '../job-form/job-form.component';
 import { ReportingService } from '../../../services/reporting.service';
+import { AuthService } from '../../../../../services/auth.service';
+import { FrmPermissionService } from '../../../services/frm-permission.service';
 
 /**
  * Job Detail Component
@@ -93,6 +95,9 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   // File upload
   isUploadingFile = false;
   
+  // Budget visibility
+  canViewBudget = false;
+
   // Enum references for template
   JobStatus = JobStatus;
 
@@ -102,10 +107,15 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     private store: Store,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private reportingService: ReportingService
+    private reportingService: ReportingService,
+    private authService: AuthService,
+    private frmPermissionService: FrmPermissionService
   ) {
     this.loading$ = this.store.select(JobSelectors.selectJobsLoading);
     this.job$ = this.store.select(JobSelectors.selectSelectedJob);
+    this.canViewBudget = this.frmPermissionService.hasPermission(
+      this.authService.getUserRole(), 'canViewBudget'
+    );
   }
 
   ngOnInit(): void {

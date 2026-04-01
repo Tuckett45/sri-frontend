@@ -38,10 +38,21 @@
           </div>
         </div>
 
-        <div *ngIf="assignments.length === 0" class="empty-state">
+        <div *ngIf="assignments.length === 0 && currentPage === 0" class="empty-state">
           <mat-icon>assignment_turned_in</mat-icon>
           <p>No active assignments</p>
         </div>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1" class="widget-pagination" role="navigation" aria-label="Assignments pagination">
+        <button mat-icon-button [disabled]="!hasPrevPage" (click)="prevPage()" aria-label="Previous page">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="page-info">{{ currentPage + 1 }} / {{ totalPages }}</span>
+        <button mat-icon-button [disabled]="!hasNextPage" (click)="nextPage()" aria-label="Next page">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
       </div>
     </ng-container>
   </mat-card-content>

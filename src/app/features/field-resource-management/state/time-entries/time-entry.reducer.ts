@@ -37,7 +37,8 @@ export const timeEntryReducer = createReducer(
   on(TimeEntryActions.clockInSuccess, (state, { timeEntry }) =>
     timeEntryAdapter.addOne(timeEntry, {
       ...state,
-      activeEntry: timeEntry,
+      // Only set as active entry if it's actually open (no clockOutTime)
+      activeEntry: !timeEntry.clockOutTime ? timeEntry : state.activeEntry,
       loading: false,
       error: null
     })
@@ -82,7 +83,7 @@ export const timeEntryReducer = createReducer(
   })),
 
   on(TimeEntryActions.loadTimeEntriesSuccess, (state, { timeEntries }) =>
-    timeEntryAdapter.setAll(timeEntries, {
+    timeEntryAdapter.upsertMany(timeEntries, {
       ...state,
       loading: false,
       error: null

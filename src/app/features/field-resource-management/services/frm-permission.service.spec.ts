@@ -7,10 +7,11 @@ const ALL_PERMISSION_KEYS: FrmPermissionKey[] = [
   'canCreateJob', 'canStartJob', 'canEditJob', 'canViewOwnSchedule', 'canViewAllSchedules',
   'canEditSchedule', 'canAssignCrew', 'canTrackTime', 'canSubmitTimecard',
   'canApproveTimecard', 'canApproveExpense', 'canApproveTravelRequest',
-  'canApproveBreakRequest', 'canViewBudget', 'canManageBudget', 'canViewReports',
-  'canViewManagementReports', 'canManageIncidentReports', 'canManageDirectDeposit',
-  'canManageW4', 'canManageContactInfo', 'canSignPRC', 'canViewPayStubs', 'canViewW2',
-  'canAccessAdminPanel', 'canViewReadOnly', 'canManageOnboarding',
+  'canApproveBreakRequest', 'canViewBudget', 'canManageBudget', 'canEditMileage',
+  'canViewReports', 'canViewManagementReports', 'canManageIncidentReports',
+  'canManageDirectDeposit', 'canManageW4', 'canManageContactInfo', 'canSignPRC',
+  'canViewPayStubs', 'canViewW2', 'canAccessAdminPanel', 'canViewReadOnly',
+  'canManageOnboarding',
 ];
 
 const ALL_ROLES = Object.values(UserRole);
@@ -118,7 +119,7 @@ describe('FrmPermissionService', () => {
             expect(fromHasPermission).toBe(fromGetPermissions);
 
             const allPerms = service.getPermissionsForRole(role);
-            expect(Object.keys(allPerms).length).toBe(27);
+            expect(Object.keys(allPerms).length).toBe(28);
           }
         ),
         { numRuns: 20 }
@@ -160,6 +161,7 @@ describe('FrmPermissionService', () => {
               expect(perms.canApproveExpense).withContext(`${role}.canApproveExpense`).toBeTrue();
               expect(perms.canApproveTravelRequest).withContext(`${role}.canApproveTravelRequest`).toBeTrue();
               expect(perms.canViewBudget).withContext(`${role}.canViewBudget`).toBeTrue();
+              expect(perms.canEditMileage).withContext(`${role}.canEditMileage`).toBeTrue();
               expect(perms.canViewReports).withContext(`${role}.canViewReports`).toBeTrue();
               expect(perms.canViewManagementReports).withContext(`${role}.canViewManagementReports`).toBeTrue();
               // Payroll/admin permissions must be false
@@ -168,6 +170,7 @@ describe('FrmPermissionService', () => {
             }
 
             if (HR_GROUP.includes(role as UserRole)) {
+              expect(perms.canCreateJob).withContext(`${role}.canCreateJob`).toBeFalse();
               expect(perms.canApproveExpense).withContext(`${role}.canApproveExpense`).toBeTrue();
               expect(perms.canApproveTravelRequest).withContext(`${role}.canApproveTravelRequest`).toBeTrue();
               expect(perms.canApproveTimecard).withContext(`${role}.canApproveTimecard`).toBeTrue();
@@ -180,6 +183,8 @@ describe('FrmPermissionService', () => {
             }
 
             if (PAYROLL_GROUP.includes(role as UserRole)) {
+              // Payroll should NOT have canCreateJob
+              expect(perms.canCreateJob).withContext(`${role}.canCreateJob`).toBeFalse();
               // All HR permissions
               expect(perms.canApproveExpense).withContext(`${role}.canApproveExpense`).toBeTrue();
               expect(perms.canApproveTravelRequest).withContext(`${role}.canApproveTravelRequest`).toBeTrue();

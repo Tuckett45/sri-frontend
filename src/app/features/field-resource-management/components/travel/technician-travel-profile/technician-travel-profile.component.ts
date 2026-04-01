@@ -2,7 +2,7 @@ import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy } from '@a
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil, filter } from 'rxjs/operators';
+import { takeUntil, filter, take } from 'rxjs/operators';
 
 import { TravelProfile, GeocodingStatus, Address, Coordinates } from '../../../models/travel.model';
 import * as TravelActions from '../../../state/travel/travel.actions';
@@ -65,7 +65,14 @@ export class TechnicianTravelProfileComponent implements OnInit, OnDestroy {
   }
 
   private loadProfile(): void {
-    this.store.dispatch(TravelActions.loadTravelProfile({ technicianId: this.technicianId }));
+    // Only fetch from API if profile isn't already in the store
+    this.store.select(selectTravelProfile(this.technicianId)).pipe(
+      take(1)
+    ).subscribe(profile => {
+      if (!profile) {
+        this.store.dispatch(TravelActions.loadTravelProfile({ technicianId: this.technicianId }));
+      }
+    });
   }
 
   private setupObservables(): void {

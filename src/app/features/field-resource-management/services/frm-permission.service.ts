@@ -17,6 +17,7 @@ export type FrmPermissionKey =
   | 'canApproveBreakRequest'
   | 'canViewBudget'
   | 'canManageBudget'
+  | 'canEditMileage'
   | 'canViewReports'
   | 'canViewManagementReports'
   | 'canManageIncidentReports'
@@ -48,6 +49,7 @@ const ALL_FALSE: FrmPermissionSet = {
   canApproveBreakRequest: false,
   canViewBudget: false,
   canManageBudget: false,
+  canEditMileage: false,
   canViewReports: false,
   canViewManagementReports: false,
   canManageIncidentReports: false,
@@ -80,13 +82,13 @@ const MANAGER_GROUP_PERMISSIONS: FrmPermissionSet = {
   canApproveExpense: true,
   canApproveTravelRequest: true,
   canViewBudget: true,
+  canEditMileage: true,
   canViewReports: true,
   canViewManagementReports: true,
 };
 
 const HR_GROUP_PERMISSIONS: FrmPermissionSet = {
   ...ALL_FALSE,
-  canCreateJob: true,
   canApproveExpense: true,
   canApproveTravelRequest: true,
   canApproveTimecard: true,
@@ -96,7 +98,6 @@ const HR_GROUP_PERMISSIONS: FrmPermissionSet = {
 
 const PAYROLL_GROUP_PERMISSIONS: FrmPermissionSet = {
   ...HR_GROUP_PERMISSIONS,
-  canCreateJob: true,
   canManageIncidentReports: true,
   canManageDirectDeposit: true,
   canManageW4: true,
@@ -127,6 +128,7 @@ const ADMIN_PERMISSIONS: FrmPermissionSet = {
   canApproveBreakRequest: true,
   canViewBudget: true,
   canManageBudget: true,
+  canEditMileage: true,
   canViewReports: true,
   canViewManagementReports: true,
   canManageIncidentReports: true,

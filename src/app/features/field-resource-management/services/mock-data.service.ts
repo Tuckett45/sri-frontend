@@ -12,6 +12,7 @@ import { loadCrewsSuccess } from '../state/crews/crew.actions';
 import { clockInSuccess } from '../state/time-entries/time-entry.actions';
 import { loadAssignmentsSuccess } from '../state/assignments/assignment.actions';
 import { loadDashboardSuccess, loadKPIsSuccess, loadUtilizationSuccess, loadJobPerformanceSuccess } from '../state/reporting/reporting.actions';
+import { loadTimecardPeriodSuccess } from '../state/timecards/timecard.actions';
 import { Material, MaterialCategory, Supplier, PurchaseOrder, PurchaseOrderStatus, PurchaseOrderItem, ReorderRecommendation, ReorderUrgency } from '../models/material.model';
 import { loadMaterialsSuccess, loadSuppliersSuccess, loadPurchaseOrdersSuccess, loadReorderRecommendationsSuccess } from '../state/materials/materials.actions';
 import { TravelProfile, GeocodingStatus, Address as TravelAddress } from '../models/travel.model';
@@ -63,6 +64,41 @@ export class MockDataService {
     timeEntries.forEach(entry => {
       this.store.dispatch(clockInSuccess({ timeEntry: entry }));
     });
+
+    // Seed a current timecard period so the My Timecard widget has data
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    const completedEntries = timeEntries.filter(e => e.clockOutTime);
+    const periodTotalHours = completedEntries.reduce((sum, e) => sum + (e.totalHours || 0), 0);
+    const periodRegularHours = completedEntries.reduce((sum, e) => sum + (e.regularHours || 0), 0);
+    const periodOvertimeHours = completedEntries.reduce((sum, e) => sum + (e.overtimeHours || 0), 0);
+
+    this.store.dispatch(loadTimecardPeriodSuccess({
+      period: {
+        id: 'mock-period-current',
+        technicianId: 'current-technician-id',
+        startDate: weekStart,
+        endDate: weekEnd,
+        periodType: 'weekly',
+        status: 'draft' as any,
+        isLocked: false,
+        totalHours: periodTotalHours,
+        regularHours: periodRegularHours,
+        overtimeHours: periodOvertimeHours,
+        totalExpenses: 0,
+        timeEntries: completedEntries,
+        expenses: [],
+        createdAt: weekStart,
+        updatedAt: now
+      }
+    }));
 
     // Dispatch reporting data
     this.store.dispatch(loadDashboardSuccess({ dashboard: reportingData.dashboard }));

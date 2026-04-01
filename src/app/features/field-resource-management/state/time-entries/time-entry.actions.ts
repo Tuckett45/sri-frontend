@@ -26,7 +26,7 @@ export const clockInFailure = createAction(
 // Clock Out
 export const clockOut = createAction(
   '[Time Entry] Clock Out',
-  props<{ timeEntryId: string; location?: GeoLocation }>()
+  props<{ timeEntryId: string; location?: GeoLocation; reason?: 'end_of_day' | 'break' | 'lunch' | 'other' }>()
 );
 
 export const clockOutSuccess = createAction(

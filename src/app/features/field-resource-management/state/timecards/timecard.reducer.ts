@@ -3,9 +3,11 @@ import {
   TimecardPeriod, 
   TimecardLockConfig, 
   Expense,
-  UnlockRequest 
+  UnlockRequest,
+  TimeEntry
 } from '../../models/time-entry.model';
 import * as TimecardActions from './timecard.actions';
+import * as TimeEntryActions from '../time-entries/time-entry.actions';
 
 export interface TimecardState {
   currentPeriod: TimecardPeriod | null;
@@ -284,7 +286,76 @@ export const timecardReducer = createReducer(
   })),
 
   // Clear State
-  on(TimecardActions.clearTimecardState, () => initialState)
+  on(TimecardActions.clearTimecardState, () => initialState),
+
+  // ── Cross-store sync: time-entry clock-in/out updates the current period ──
+
+  on(TimeEntryActions.clockInSuccess, (state, { timeEntry }) => {
+    // Only sync active (open) entries — skip completed mock data
+    if (timeEntry.clockOutTime) return state;
+
+    const period = state.currentPeriod;
+    if (period) {
+      return {
+        ...state,
+        currentPeriod: {
+          ...period,
+          timeEntries: [...period.timeEntries, timeEntry],
+          updatedAt: new Date()
+        }
+      };
+    }
+    // Auto-create a draft period for the current week
+    const now = new Date();
+    const day = now.getDay();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+    return {
+      ...state,
+      currentPeriod: {
+        id: `period-auto-${Date.now()}`,
+        technicianId: timeEntry.technicianId,
+        startDate: weekStart,
+        endDate: weekEnd,
+        periodType: 'weekly' as const,
+        status: 'draft' as any,
+        isLocked: false,
+        totalHours: 0,
+        regularHours: 0,
+        overtimeHours: 0,
+        totalExpenses: 0,
+        timeEntries: [timeEntry],
+        expenses: [],
+        createdAt: now,
+        updatedAt: now
+      }
+    };
+  }),
+
+  on(TimeEntryActions.clockOutSuccess, (state, { timeEntry }) => {
+    if (!state.currentPeriod) return state;
+    const updatedEntries = state.currentPeriod.timeEntries.map(e =>
+      e.id === timeEntry.id ? { ...e, ...timeEntry } : e
+    );
+    const totalHours = updatedEntries.reduce((sum, e) => sum + (e.totalHours || 0), 0);
+    const regularHours = updatedEntries.reduce((sum, e) => sum + (e.regularHours || 0), 0);
+    const overtimeHours = updatedEntries.reduce((sum, e) => sum + (e.overtimeHours || 0), 0);
+    return {
+      ...state,
+      currentPeriod: {
+        ...state.currentPeriod,
+        timeEntries: updatedEntries,
+        totalHours,
+        regularHours,
+        overtimeHours,
+        updatedAt: new Date()
+      }
+    };
+  })
 );
 
 /**

@@ -6,19 +6,38 @@
     </mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <!-- Loading state -->
     <div *ngIf="loading$ | async" class="widget-loading">
       <mat-spinner diameter="40"></mat-spinner>
     </div>
 
-    <!-- Error state -->
     <div *ngIf="error" class="widget-error">
       <p>Unable to load data. Please try again.</p>
       <button mat-button color="primary" (click)="retry()">Retry</button>
     </div>
 
-    <!-- Data state -->
     <ng-container *ngIf="!(loading$ | async) && !error">
+      <!-- Active clock-in indicator -->
+      <div *ngIf="(isClockedIn$ | async) && (activeEntry$ | async) as entry" class="active-entry-banner">
+        <mat-icon>timer</mat-icon>
+        <span>Clocked in since {{ entry.clockInTime | date:'shortTime' }}</span>
+      </div>
+
+      <!-- Today's quick stats -->
+      <div class="today-stats">
+        <div class="stat">
+          <span class="stat-value">{{ (todayHours$ | async) || 0 | number:'1.1-1' }}h</span>
+          <span class="stat-label">Today</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ (todayEntryCount$ | async) || 0 }}</span>
+          <span class="stat-label">Entries</span>
+        </div>
+        <div class="stat" *ngIf="(lastEntryDuration$ | async) as dur">
+          <span class="stat-value">{{ dur }}</span>
+          <span class="stat-label">Last Entry</span>
+        </div>
+      </div>
+
       <ng-container *ngIf="(currentPeriod$ | async) as period; else noPeriod">
         <div class="period-info">
           <div class="period-dates">
@@ -26,8 +45,8 @@
             <span class="value">{{ period.startDate | date:'MMM d' }} - {{ period.endDate | date:'MMM d, yyyy' }}</span>
           </div>
           <div class="period-hours">
-            <span class="label">Total Hours</span>
-            <span class="value hours">{{ period.totalHours }}</span>
+            <span class="label">Period Total</span>
+            <span class="value hours">{{ formatHours(period.totalHours) }}</span>
           </div>
           <div class="period-status">
             <span class="label">Status</span>

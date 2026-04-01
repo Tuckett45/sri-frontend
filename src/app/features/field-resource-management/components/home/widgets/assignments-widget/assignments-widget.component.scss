@@ -130,5 +130,22 @@
         font-size: 14px;
       }
     }
+
+    .widget-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e0e0e0;
+
+      .page-info {
+        font-size: 13px;
+        color: #666;
+        min-width: 40px;
+        text-align: center;
+      }
+    }
   }
 }

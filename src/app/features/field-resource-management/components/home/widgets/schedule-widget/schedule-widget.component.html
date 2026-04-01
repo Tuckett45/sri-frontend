@@ -31,11 +31,23 @@
           </div>
         </div>
 
-        <div *ngIf="jobs.length === 0" class="empty-state">
+        <div *ngIf="jobs.length === 0 && currentPage === 0" class="empty-state">
           <mat-icon>event_available</mat-icon>
           <p>No jobs scheduled this week</p>
         </div>
       </div>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1" class="widget-pagination" role="navigation" aria-label="Schedule pagination">
+        <button mat-icon-button [disabled]="!hasPrevPage" (click)="prevPage()" aria-label="Previous page">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="page-info">{{ currentPage + 1 }} / {{ totalPages }}</span>
+        <button mat-icon-button [disabled]="!hasNextPage" (click)="nextPage()" aria-label="Next page">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+
       <button mat-stroked-button color="primary" class="view-btn" (click)="onViewSchedule()">
         View Full Schedule
       </button>

@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { map, takeUntil } from 'rxjs/operators';
 import { selectThisWeeksJobs, selectJobsLoading, selectJobsError } from '../../../../state/jobs/job.selectors';
 import { Job } from '../../../../models/job.model';
 
@@ -23,6 +23,10 @@ export class ScheduleWidgetComponent implements OnInit, OnDestroy {
   loading$!: Observable<boolean>;
   error: string | null = null;
 
+  readonly pageSize = 3;
+  currentPage = 0;
+  totalItems = 0;
+
   private destroy$ = new Subject<void>();
 
   constructor(private store: Store) {}
@@ -34,12 +38,57 @@ export class ScheduleWidgetComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(err => this.error = err);
 
-    this.scheduledJobs$ = this.store.select(selectThisWeeksJobs);
+    const allJobs$ = this.store.select(selectThisWeeksJobs);
+
+    allJobs$.pipe(takeUntil(this.destroy$))
+      .subscribe(jobs => this.totalItems = jobs.length);
+
+    this.scheduledJobs$ = allJobs$.pipe(
+      map(jobs => {
+        const start = this.currentPage * this.pageSize;
+        return jobs.slice(start, start + this.pageSize);
+      })
+    );
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.pageSize);
+  }
+
+  get hasNextPage(): boolean {
+    return this.currentPage < this.totalPages - 1;
+  }
+
+  get hasPrevPage(): boolean {
+    return this.currentPage > 0;
+  }
+
+  nextPage(): void {
+    if (this.hasNextPage) {
+      this.currentPage++;
+      this.refreshPage();
+    }
+  }
+
+  prevPage(): void {
+    if (this.hasPrevPage) {
+      this.currentPage--;
+      this.refreshPage();
+    }
+  }
+
+  private refreshPage(): void {
+    this.scheduledJobs$ = this.store.select(selectThisWeeksJobs).pipe(
+      map(jobs => {
+        const start = this.currentPage * this.pageSize;
+        return jobs.slice(start, start + this.pageSize);
+      })
+    );
   }
 
   onViewSchedule(): void {

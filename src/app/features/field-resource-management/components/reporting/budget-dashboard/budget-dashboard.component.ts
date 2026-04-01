@@ -7,6 +7,8 @@ import { takeUntil } from 'rxjs/operators';
 import { JobBudget, BudgetStatus, BudgetAdjustment } from '../../../models/budget.model';
 import * as BudgetSelectors from '../../../state/budgets/budget.selectors';
 import * as BudgetActions from '../../../state/budgets/budget.actions';
+import { AuthService } from '../../../../../services/auth.service';
+import { FrmPermissionService } from '../../../services/frm-permission.service';
 
 /**
  * BudgetDashboardComponent
@@ -52,15 +54,27 @@ export class BudgetDashboardComponent implements OnInit, OnDestroy {
   budgetColumns = ['jobId', 'allocated', 'consumed', 'remaining', 'status', 'actions'];
 
   readonly BudgetStatus = BudgetStatus;
+  accessDenied = false;
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private store: Store,
-    private router: Router
+    private router: Router,
+    private authService: AuthService,
+    private frmPermissionService: FrmPermissionService
   ) {}
 
   ngOnInit(): void {
+    // Check budget access permission
+    const canViewBudget = this.frmPermissionService.hasPermission(
+      this.authService.getUserRole(), 'canViewBudget'
+    );
+    if (!canViewBudget) {
+      this.accessDenied = true;
+      return;
+    }
+
     // Initialize observables from store
     this.allBudgets$ = this.store.select(BudgetSelectors.selectAllBudgets);
     this.budgetStatistics$ = this.store.select(BudgetSelectors.selectBudgetStatistics);

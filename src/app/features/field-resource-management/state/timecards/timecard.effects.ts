@@ -2,9 +2,10 @@ import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, tap, mergeMap } from 'rxjs/operators';
+import { map, catchError, switchMap, tap, mergeMap, withLatestFrom, filter } from 'rxjs/operators';
 import * as TimecardActions from './timecard.actions';
 import * as BudgetActions from '../budgets/budget.actions';
+import { selectCurrentPeriod } from './timecard.selectors';
 import { TimecardService } from '../../services/timecard.service';
 import { TimecardRoundingService } from '../../services/timecard-rounding.service';
 import { TimecardPeriod, TimecardStatus, TimeEntry } from '../../models/time-entry.model';
@@ -42,11 +43,19 @@ export class TimecardEffects {
   
   /**
    * Load timecard period
+   * If a period is already seeded (e.g. from mock data), keep it.
    */
   loadTimecardPeriod$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimecardActions.loadTimecardPeriod),
-      switchMap(({ technicianId, startDate, endDate }) => {
+      withLatestFrom(this.store.select(selectCurrentPeriod)),
+      switchMap(([{ technicianId, startDate, endDate }, existingPeriod]) => {
+        // If a period already exists in the store, don't overwrite it
+        if (existingPeriod) {
+          return of(TimecardActions.loadTimecardPeriodSuccess({ period: existingPeriod }));
+        }
+
+        // TODO: Replace with real API call
         const period: TimecardPeriod = {
           id: `period-${Date.now()}`,
           technicianId,

@@ -20,10 +20,20 @@
     <!-- Data state -->
     <ng-container *ngIf="!(loading$ | async) && !error">
       <ng-container *ngIf="(activeJob$ | async) as active; else noActiveJob">
+        <!-- Clocked-in indicator -->
+        <div *ngIf="isClockedIn$ | async" class="clocked-in-banner">
+          <mat-icon>timer</mat-icon>
+          <span class="clocked-label">Clocked In</span>
+          <span class="clocked-time">{{ elapsedTime }}</span>
+        </div>
+
         <div class="job-details">
           <div class="detail-row">
             <span class="label">Status</span>
-            <span class="value status-badge">{{ active.job.status }}</span>
+            <span class="value status-badge" [ngClass]="{
+              'status-in-progress': active.job.status === 'OnSite' || active.job.status === 'EnRoute',
+              'status-not-started': active.job.status === 'NotStarted'
+            }">{{ active.job.status }}</span>
           </div>
           <div class="detail-row">
             <span class="label">Site</span>

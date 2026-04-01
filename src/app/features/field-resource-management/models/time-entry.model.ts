@@ -15,6 +15,7 @@ export interface TimeEntry {
   technicianId: string;
   clockInTime: Date;
   clockOutTime?: Date;
+  clockOutReason?: 'end_of_day' | 'break' | 'lunch' | 'other';
   clockInLocation?: GeoLocation;
   clockOutLocation?: GeoLocation;
   totalHours?: number;

@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
 // Shared Material Module
@@ -16,6 +16,7 @@ import { TravelSharedModule } from '../travel/travel.module';
 import { TechnicianListComponent } from './technician-list/technician-list.component';
 import { TechnicianDetailComponent } from './technician-detail/technician-detail.component';
 import { TechnicianFormComponent } from './technician-form/technician-form.component';
+import { TechnicianFinancialTabComponent } from './technician-detail/technician-financial-tab/technician-financial-tab.component';
 
 const routes: Routes = [
   {
@@ -63,10 +64,12 @@ const routes: Routes = [
   declarations: [
     TechnicianListComponent,
     TechnicianDetailComponent,
-    TechnicianFormComponent
+    TechnicianFormComponent,
+    TechnicianFinancialTabComponent
   ],
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     SharedMaterialModule,
     SharedComponentsModule,

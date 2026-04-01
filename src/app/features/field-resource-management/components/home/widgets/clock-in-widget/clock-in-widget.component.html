@@ -1,0 +1,93 @@
+<mat-card class="clock-in-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>punch_clock</mat-icon>
+      Clock In
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div *ngIf="storeError$ | async as storeError" class="widget-error">
+      <p>{{ storeError }}</p>
+    </div>
+
+    <ng-container *ngIf="(activeJob$ | async) as active; else noJob">
+      <div class="job-summary">
+        <span class="site-name">{{ active.job.siteName }}</span>
+        <span class="job-id">{{ active.job.jobId }}</span>
+      </div>
+
+      <div class="proximity-row" *ngIf="isClockedIn$ | async">
+        <div class="proximity-badge" [ngClass]="{
+          'on-site': proximityStatus === 'On Site',
+          'en-route': proximityStatus === 'En Route',
+          'unknown': proximityStatus === 'Unknown'
+        }">
+          <mat-icon *ngIf="proximityStatus === 'On Site'">location_on</mat-icon>
+          <mat-icon *ngIf="proximityStatus === 'En Route'">directions_car</mat-icon>
+          <mat-icon *ngIf="proximityStatus === 'Unknown'">location_searching</mat-icon>
+          <span>{{ proximityStatus }}</span>
+        </div>
+        <button mat-icon-button (click)="refreshLocation(active.job)"
+                [disabled]="checkingLocation" aria-label="Refresh location">
+          <mat-icon [class.spinning]="checkingLocation">refresh</mat-icon>
+        </button>
+      </div>
+
+      <div *ngIf="locationError" class="location-error">
+        <mat-icon>warning</mat-icon>
+        <span>{{ locationError }}</span>
+      </div>
+
+      <div *ngIf="isClockedIn$ | async" class="timer">
+        <span class="elapsed">{{ elapsedTime }}</span>
+        <span class="timer-label">Time on job</span>
+      </div>
+
+      <!-- Clocked-in actions -->
+      <ng-container *ngIf="isClockedIn$ | async; else showClockIn">
+        <div class="break-actions">
+          <button mat-stroked-button class="break-btn"
+                  [disabled]="(loading$ | async) || false"
+                  (click)="clockOutWithReason('break')">
+            <mat-icon>free_breakfast</mat-icon> Break
+          </button>
+          <button mat-stroked-button class="break-btn"
+                  [disabled]="(loading$ | async) || false"
+                  (click)="clockOutWithReason('lunch')">
+            <mat-icon>restaurant</mat-icon> Lunch
+          </button>
+        </div>
+
+        <button mat-raised-button color="warn" class="clock-btn"
+                [disabled]="(loading$ | async) || false"
+                (click)="toggleClockOutOptions()">
+          <mat-icon>stop</mat-icon> Clock Out
+        </button>
+
+        <div *ngIf="showClockOutOptions" class="clockout-reasons">
+          <button mat-button (click)="clockOutWithReason('end_of_day')">
+            <mat-icon>logout</mat-icon> End of Day
+          </button>
+          <button mat-button (click)="clockOutWithReason('other')">
+            <mat-icon>more_horiz</mat-icon> Other
+          </button>
+        </div>
+      </ng-container>
+
+      <ng-template #showClockIn>
+        <button mat-raised-button color="primary" class="clock-btn"
+                [disabled]="(loading$ | async) || checkingLocation"
+                (click)="clockIn(active.job)">
+          <mat-icon>play_arrow</mat-icon> Clock In
+        </button>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #noJob>
+      <div class="empty-state">
+        <mat-icon>work_off</mat-icon>
+        <p>No active job to clock into</p>
+      </div>
+    </ng-template>
+  </mat-card-content>
+</mat-card>

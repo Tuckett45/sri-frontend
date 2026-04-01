@@ -166,7 +166,7 @@ export const selectWeekTimeEntries = createSelector(
 // Select has active entry
 export const selectHasActiveEntry = createSelector(
   selectActiveTimeEntry,
-  (activeEntry) => activeEntry !== null
+  (activeEntry) => activeEntry !== null && !activeEntry.clockOutTime
 );
 
 // Select total mileage by technician

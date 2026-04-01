@@ -232,6 +232,20 @@
         </div>
       </ng-template>
     </mat-tab>
+
+    <!-- Pay & Benefits Tab -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">payments</mat-icon>
+        Pay &amp; Benefits
+      </ng-template>
+      <ng-template matTabContent>
+        <div class="financial-tab-content" *ngIf="technicianId">
+          <app-technician-financial-tab [technicianId]="technicianId">
+          </app-technician-financial-tab>
+        </div>
+      </ng-template>
+    </mat-tab>
   </mat-tab-group>
 </div>
 

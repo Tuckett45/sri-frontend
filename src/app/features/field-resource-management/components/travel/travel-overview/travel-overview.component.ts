@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
+import { MatDialog } from '@angular/material/dialog';
 import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TravelProfile, GeocodingStatus, PerDiemConfig } from '../../../models/travel.model';
@@ -11,7 +12,8 @@ import {
   selectTravelError,
   selectPerDiemConfig
 } from '../../../state/travel/travel.selectors';
-import { updatePerDiemConfig } from '../../../state/travel/travel.actions';
+import { updatePerDiemConfig, updateTravelFlag } from '../../../state/travel/travel.actions';
+import { TravelProfileDialogComponent } from '../travel-profile-dialog/travel-profile-dialog.component';
 
 interface TravelProfileRow {
   technicianId: string;
@@ -40,13 +42,13 @@ export class TravelOverviewComponent implements OnInit {
   searchTerm$ = new BehaviorSubject<string>('');
   statusFilter$ = new BehaviorSubject<string>('');
 
-  displayedColumns = ['technicianId', 'address', 'city', 'willingToTravel', 'geocodingStatus'];
+  displayedColumns = ['technicianId', 'address', 'city', 'willingToTravel', 'geocodingStatus', 'actions'];
 
   configForm!: FormGroup;
   editingConfig = false;
   configSaved = false;
 
-  constructor(private store: Store, private fb: FormBuilder) {}
+  constructor(private store: Store, private fb: FormBuilder, private dialog: MatDialog) {}
 
   ngOnInit(): void {
     this.loading$ = this.store.select(selectTravelLoading);
@@ -169,5 +171,20 @@ export class TravelOverviewComponent implements OnInit {
       this.configSaved = true;
       setTimeout(() => this.configSaved = false, 3000);
     }
+  }
+
+  toggleTravelFlag(row: TravelProfileRow): void {
+    this.store.dispatch(updateTravelFlag({
+      technicianId: row.technicianId,
+      willing: !row.willingToTravel
+    }));
+  }
+
+  openProfileDialog(row: TravelProfileRow): void {
+    this.dialog.open(TravelProfileDialogComponent, {
+      data: { technicianId: row.technicianId },
+      width: '600px',
+      autoFocus: false
+    });
   }
 }

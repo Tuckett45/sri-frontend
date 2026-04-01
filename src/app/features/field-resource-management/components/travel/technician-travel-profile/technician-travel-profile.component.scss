@@ -30,6 +30,19 @@
 
 // Travel Flag Card
 .travel-flag-card {
+  background-color: $frm-bg-primary;
+  border-radius: $frm-border-radius-lg;
+  border-left: 4px solid $frm-primary;
+  box-shadow: $frm-shadow-sm;
+
+  mat-card-header {
+    mat-card-title {
+      font-size: $frm-font-size-lg;
+      font-weight: $frm-font-weight-medium;
+      color: $frm-text-primary;
+    }
+  }
+
   .travel-flag-row {
     display: flex;
     align-items: center;
@@ -59,11 +72,21 @@
 
 // Address Card
 .address-card {
+  background-color: $frm-bg-primary;
+  border-radius: $frm-border-radius-lg;
+  box-shadow: $frm-shadow-sm;
+
   mat-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: $frm-spacing-md;
+
+    mat-card-title {
+      font-size: $frm-font-size-lg;
+      font-weight: $frm-font-weight-medium;
+      color: $frm-text-primary;
+    }
   }
 
   .geocoding-status-chip {
@@ -107,6 +130,38 @@
 .address-form {
   .full-width {
     width: 100%;
+  }
+
+  // Ensure form field text is visible on white background
+  ::ng-deep {
+    .mat-mdc-text-field-wrapper {
+      background-color: $frm-bg-primary;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      background-color: transparent;
+    }
+
+    .mdc-text-field--outlined .mdc-notched-outline__leading,
+    .mdc-text-field--outlined .mdc-notched-outline__notch,
+    .mdc-text-field--outlined .mdc-notched-outline__trailing {
+      border-color: $frm-border-medium;
+    }
+
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__leading,
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__notch,
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__trailing {
+      border-color: $frm-primary;
+    }
+
+    .mat-mdc-input-element {
+      color: $frm-text-primary !important;
+    }
+
+    .mat-mdc-form-field-label,
+    .mdc-floating-label {
+      color: $frm-text-secondary !important;
+    }
   }
 
   .address-row {
@@ -217,11 +272,15 @@
   align-items: center;
   padding: $frm-spacing-xxl;
   color: $frm-text-secondary;
+  background-color: $frm-bg-primary;
+  border-radius: $frm-border-radius-lg;
+  box-shadow: $frm-shadow-sm;
 
   mat-icon {
     font-size: 64px;
     width: 64px;
     height: 64px;
     margin-bottom: $frm-spacing-md;
+    color: $frm-gray-400;
   }
 }

@@ -25,6 +25,10 @@ export class AssignmentsWidgetComponent implements OnInit, OnDestroy {
   loading$!: Observable<boolean>;
   error: string | null = null;
 
+  readonly pageSize = 3;
+  currentPage = 0;
+  totalItems = 0;
+
   private destroy$ = new Subject<void>();
 
   constructor(private store: Store) {}
@@ -36,8 +40,18 @@ export class AssignmentsWidgetComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(err => this.error = err);
 
-    this.assignments$ = this.store.select(selectAllAssignments).pipe(
+    const activeAssignments$ = this.store.select(selectAllAssignments).pipe(
       map(assignments => assignments.filter(a => a.isActive))
+    );
+
+    activeAssignments$.pipe(takeUntil(this.destroy$))
+      .subscribe(a => this.totalItems = a.length);
+
+    this.assignments$ = activeAssignments$.pipe(
+      map(assignments => {
+        const start = this.currentPage * this.pageSize;
+        return assignments.slice(start, start + this.pageSize);
+      })
     );
   }
 
@@ -46,12 +60,46 @@ export class AssignmentsWidgetComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onAssignmentClick(id: string): void {
-    this.assignmentSelected.emit(id);
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.pageSize);
   }
 
-  retry(): void {
-    this.error = null;
+  get hasNextPage(): boolean {
+    return this.currentPage < this.totalPages - 1;
+  }
+
+  get hasPrevPage(): boolean {
+    return this.currentPage > 0;
+  }
+
+  nextPage(): void {
+    if (this.hasNextPage) {
+      this.currentPage++;
+      this.refreshPage();
+    }
+  }
+
+  prevPage(): void {
+    if (this.hasPrevPage) {
+      this.currentPage--;
+      this.refreshPage();
+    }
+  }
+
+  private refreshPage(): void {
+    const activeAssignments$ = this.store.select(selectAllAssignments).pipe(
+      map(assignments => assignments.filter(a => a.isActive))
+    );
+    this.assignments$ = activeAssignments$.pipe(
+      map(assignments => {
+        const start = this.currentPage * this.pageSize;
+        return assignments.slice(start, start + this.pageSize);
+      })
+    );
+  }
+
+  onAssignmentClick(id: string): void {
+    this.assignmentSelected.emit(id);
   }
 
   getStatusClass(status: AssignmentStatus): string {
@@ -63,5 +111,9 @@ export class AssignmentsWidgetComponent implements OnInit, OnDestroy {
       case AssignmentStatus.Rejected: return 'status-rejected';
       default: return '';
     }
+  }
+
+  retry(): void {
+    this.error = null;
   }
 }

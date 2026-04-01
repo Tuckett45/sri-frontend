@@ -9,7 +9,7 @@ import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
 import { map, catchError, switchMap, withLatestFrom } from 'rxjs/operators';
 import * as TimeEntryActions from './time-entry.actions';
-import { selectTimeEntryById } from './time-entry.selectors';
+import { selectTimeEntryById, selectActiveTimeEntry } from './time-entry.selectors';
 import { GeolocationService } from '../../services/geolocation.service';
 
 @Injectable()
@@ -22,13 +22,14 @@ export class TimeEntryEffects {
         // TODO: Replace with actual TimeTrackingService call when service is implemented
         // this.timeTrackingService.clockIn(jobId, technicianId, location, mileage).pipe(
         of({
-          id: 'temp-time-entry-id',
+          id: `time-entry-${Date.now()}`,
           jobId,
           technicianId,
           clockInTime: new Date(),
           clockInLocation: location,
           mileage: mileage || 0,
           isManuallyAdjusted: false,
+          isLocked: false,
           createdAt: new Date(),
           updatedAt: new Date()
         } as any).pipe( // Placeholder
@@ -56,7 +57,7 @@ export class TimeEntryEffects {
         )
       ),
       switchMap(([action, existingEntry]) => {
-        const { timeEntryId, location } = action;
+        const { timeEntryId, location, reason } = action;
         
         // Calculate mileage if not manually entered and both locations are available
         let calculatedMileage: number | undefined;
@@ -75,6 +76,7 @@ export class TimeEntryEffects {
           id: timeEntryId,
           clockOutTime: new Date(),
           clockOutLocation: location,
+          clockOutReason: reason,
           totalHours: 8, // Placeholder calculation
           mileage: calculatedMileage || existingEntry?.mileage || 0
         } as any).pipe( // Placeholder
@@ -92,19 +94,20 @@ export class TimeEntryEffects {
   );
 
   // Load Time Entries Effect
+  // Uses upsertMany in the reducer so existing entries are preserved, not replaced.
+  // TODO: Replace with actual API call when backend is ready.
   loadTimeEntries$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimeEntryActions.loadTimeEntries),
-      switchMap(({ technicianId, jobId, dateRange }) =>
-        // TODO: Replace with actual TimeTrackingService call when service is implemented
-        // this.timeTrackingService.getTimeEntries({ technicianId, jobId, dateRange }).pipe(
-        of([]).pipe( // Placeholder - returns empty array
+      switchMap(() =>
+        // TODO: Replace with actual TimeTrackingService call
+        of([]).pipe(
           map((timeEntries) =>
             TimeEntryActions.loadTimeEntriesSuccess({ timeEntries })
           ),
           catchError((error) =>
-            of(TimeEntryActions.loadTimeEntriesFailure({ 
-              error: error.message || 'Failed to load time entries' 
+            of(TimeEntryActions.loadTimeEntriesFailure({
+              error: error.message || 'Failed to load time entries'
             }))
           )
         )
@@ -134,13 +137,15 @@ export class TimeEntryEffects {
   );
 
   // Load Active Entry Effect
+  // Returns existing active entry from store until a real API is wired up.
   loadActiveEntry$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimeEntryActions.loadActiveEntry),
-      switchMap(({ technicianId }) =>
+      withLatestFrom(this.store.select(selectActiveTimeEntry)),
+      switchMap(([_action, existingActive]) =>
         // TODO: Replace with actual TimeTrackingService call when service is implemented
         // this.timeTrackingService.getActiveTimeEntry(technicianId).pipe(
-        of(null).pipe( // Placeholder - returns null (no active entry)
+        of(existingActive).pipe(
           map((timeEntry) =>
             TimeEntryActions.loadActiveEntrySuccess({ timeEntry })
           ),

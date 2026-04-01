@@ -141,7 +141,7 @@
     </mat-card>
 
     <!-- Section: Budget Tracking -->
-    <mat-card class="detail-section budget-section" *ngIf="budget$ | async as budget">
+    <mat-card class="detail-section budget-section" *ngIf="canViewBudget && (budget$ | async) as budget">
       <mat-card-header>
         <mat-card-title>
           <mat-icon>account_balance_wallet</mat-icon>
@@ -192,7 +192,7 @@
     </mat-card>
 
     <!-- Budget Management (full view with adjustment dialog) -->
-    <app-budget-view *ngIf="job" [jobId]="job.id"></app-budget-view>
+    <app-budget-view *ngIf="canViewBudget && job" [jobId]="job.id"></app-budget-view>
 
     <!-- Time Tracker Section (for assigned technicians) -->
     <mat-card class="detail-section time-tracker-section" *ngIf="isAssignedToCurrentUser">

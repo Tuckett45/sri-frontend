@@ -293,6 +293,16 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
     if (!address) return 'No address';
     return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`;
   }
+
+  formatClockOutReason(reason: string): string {
+    const labels: Record<string, string> = {
+      end_of_day: 'End of Day',
+      break: 'Break',
+      lunch: 'Lunch',
+      other: 'Other'
+    };
+    return labels[reason] || reason;
+  }
   
   /**
    * Format geolocation for display

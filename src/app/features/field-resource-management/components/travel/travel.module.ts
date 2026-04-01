@@ -8,6 +8,7 @@ import { SharedMaterialModule } from '../../shared-material.module';
 import { TechnicianTravelProfileComponent } from './technician-travel-profile/technician-travel-profile.component';
 import { TechnicianDistanceListComponent } from './technician-distance-list/technician-distance-list.component';
 import { TravelOverviewComponent } from './travel-overview/travel-overview.component';
+import { TravelProfileDialogComponent } from './travel-profile-dialog/travel-profile-dialog.component';
 
 const routes: Routes = [
   {
@@ -42,7 +43,8 @@ export class TravelSharedModule { }
  */
 @NgModule({
   declarations: [
-    TravelOverviewComponent
+    TravelOverviewComponent,
+    TravelProfileDialogComponent
   ],
   imports: [
     CommonModule,

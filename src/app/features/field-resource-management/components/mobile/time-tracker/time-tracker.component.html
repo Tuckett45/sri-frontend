@@ -31,15 +31,35 @@
     </button>
 
     <button
-      *ngIf="isClockedIn"
+      *ngIf="isClockedIn && !showClockOutReasons"
       mat-fab
       extended
       color="warn"
       class="time-tracker__clock-button time-tracker__clock-button--out"
-      (click)="onClockOut()">
+      (click)="toggleClockOutReasons()">
       <mat-icon>stop_circle</mat-icon>
       <span>Clock Out</span>
     </button>
+  </div>
+
+  <!-- Clock Out Reason Selection -->
+  <div class="time-tracker__clockout-reasons" *ngIf="showClockOutReasons">
+    <p class="time-tracker__clockout-reasons-label">Select a reason:</p>
+    <div class="time-tracker__clockout-reasons-grid">
+      <button mat-stroked-button (click)="clockOutWithReason('end_of_day')">
+        <mat-icon>logout</mat-icon> End of Day
+      </button>
+      <button mat-stroked-button (click)="clockOutWithReason('break')">
+        <mat-icon>free_breakfast</mat-icon> Break
+      </button>
+      <button mat-stroked-button (click)="clockOutWithReason('lunch')">
+        <mat-icon>restaurant</mat-icon> Lunch
+      </button>
+      <button mat-stroked-button (click)="clockOutWithReason('other')">
+        <mat-icon>more_horiz</mat-icon> Other
+      </button>
+    </div>
+    <button mat-button (click)="toggleClockOutReasons()">Cancel</button>
   </div>
 
   <!-- Location Status -->
@@ -95,13 +115,42 @@
       class="time-tracker__edit-button"
       (click)="onManualMileageEntry()"
       aria-label="Enter mileage manually"
-      *ngIf="!showManualMileageEntry">
+      *ngIf="!showManualMileageEntry && canEditMileage">
       <mat-icon>edit</mat-icon>
     </button>
   </div>
 
+  <!-- Route Map Section -->
+  <div class="time-tracker__route-section">
+    <button mat-stroked-button color="primary" class="time-tracker__map-toggle" (click)="toggleRouteMap()">
+      <mat-icon>{{ showRouteMap ? 'map' : 'directions' }}</mat-icon>
+      {{ showRouteMap ? 'Hide Map' : 'View Route to Job Site' }}
+    </button>
+
+    <a mat-stroked-button
+       [href]="getDirectionsUrl()"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="time-tracker__directions-link">
+      <mat-icon>navigation</mat-icon>
+      Get Directions
+    </a>
+  </div>
+
+  <div class="time-tracker__route-map-wrapper" *ngIf="showRouteMap">
+    <div *ngIf="mapLoading" class="time-tracker__map-loading">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>Loading map...</span>
+    </div>
+    <div *ngIf="mapError" class="time-tracker__map-error">
+      <mat-icon>info</mat-icon>
+      <span>{{ mapError }}</span>
+    </div>
+    <div #routeMapContainer class="time-tracker__route-map"></div>
+  </div>
+
   <!-- Manual Mileage Entry Form -->
-  <mat-card class="time-tracker__manual-entry" *ngIf="showManualMileageEntry">
+  <mat-card class="time-tracker__manual-entry" *ngIf="showManualMileageEntry && canEditMileage">
     <mat-card-header>
       <mat-card-title>Enter Mileage Manually</mat-card-title>
     </mat-card-header>
