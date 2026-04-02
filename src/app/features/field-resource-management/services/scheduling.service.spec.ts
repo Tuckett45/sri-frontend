@@ -1269,9 +1269,11 @@ describe('SchedulingService', () => {
           isActive: true
         };
 
+      const mockResponse = { oldAssignmentId: '123e4567-e89b-12d3-a456-426614174009', newAssignment: mockAssignment };
+
       service.reassignJob(jobId, fromTechnicianId, toTechnicianId, reason).subscribe({
-        next: (assignment) => {
-          expect(assignment).toEqual(mockAssignment);
+        next: (result) => {
+          expect(result.newAssignment).toEqual(mockAssignment);
           done();
         },
         error: done.fail
@@ -1285,7 +1287,7 @@ describe('SchedulingService', () => {
         toTechnicianId,
         reason
       });
-      req.flush(mockAssignment);
+      req.flush(mockResponse);
     });
   });
 

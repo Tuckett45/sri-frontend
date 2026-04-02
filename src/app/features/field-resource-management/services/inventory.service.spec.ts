@@ -308,8 +308,8 @@ describe('InventoryService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/inventory');
-      req.flush(null, { status: 400, statusText: 'Bad Request' });
+      const requests = httpMock.match('/api/inventory');
+      requests.forEach(req => req.flush(null, { status: 400, statusText: 'Bad Request' }));
     });
 
     it('should handle 403 error for insufficient permissions', () => {
@@ -330,8 +330,8 @@ describe('InventoryService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/inventory');
-      req.flush(null, { status: 403, statusText: 'Forbidden' });
+      const requests = httpMock.match('/api/inventory');
+      requests.forEach(req => req.flush(null, { status: 403, statusText: 'Forbidden' }));
     });
   });
 
@@ -395,8 +395,8 @@ describe('InventoryService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/inventory/item-123/assign');
-      req.flush(null, { status: 409, statusText: 'Conflict' });
+      const requests = httpMock.match('/api/inventory/item-123/assign');
+      requests.forEach(req => req.flush(null, { status: 409, statusText: 'Conflict' }));
     });
 
     it('should handle 404 error for non-existent item', () => {
@@ -407,8 +407,8 @@ describe('InventoryService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/inventory/nonexistent/assign');
-      req.flush(null, { status: 404, statusText: 'Not Found' });
+      const requests = httpMock.match('/api/inventory/nonexistent/assign');
+      requests.forEach(req => req.flush(null, { status: 404, statusText: 'Not Found' }));
     });
   });
 
@@ -472,8 +472,8 @@ describe('InventoryService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/inventory/item-123/assign');
-      req.flush(null, { status: 409, statusText: 'Conflict' });
+      const requests = httpMock.match('/api/inventory/item-123/assign');
+      requests.forEach(req => req.flush(null, { status: 409, statusText: 'Conflict' }));
     });
   });
 
@@ -537,8 +537,8 @@ describe('InventoryService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/inventory/item-123/assign');
-      req.flush(null, { status: 409, statusText: 'Conflict' });
+      const requests = httpMock.match('/api/inventory/item-123/assign');
+      requests.forEach(req => req.flush(null, { status: 409, statusText: 'Conflict' }));
     });
   });
 

@@ -5,7 +5,7 @@
 
 import { uiReducer, initialState } from './ui.reducer';
 import * as UIActions from './ui.actions';
-import { UIState, CalendarViewType, MapViewState, FilterState } from './ui.state';
+import { UIState, CalendarViewType, ScheduleViewMode, MapViewState, FilterState } from './ui.state';
 import { Notification, NotificationType } from '../../models/notification.model';
 import { JobStatus } from '../../models/job.model';
 import { TechnicianRole } from '../../models/technician.model';
@@ -534,6 +534,7 @@ describe('UI Reducer', () => {
     it('should reset to initial state', () => {
       const modifiedState: UIState = {
         calendarView: CalendarViewType.Day,
+        scheduleViewMode: ScheduleViewMode.Technicians,
         selectedDate: new Date('2024-01-15'),
         sidebarOpen: false,
         mobileMenuOpen: true,

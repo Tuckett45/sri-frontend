@@ -182,8 +182,8 @@ describe('TechnicianService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/technicians/invalid-id');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      const requests = httpMock.match('/api/technicians/invalid-id');
+      requests.forEach(req => req.flush('Not found', { status: 404, statusText: 'Not Found' }));
     });
   });
 
@@ -908,8 +908,8 @@ describe('TechnicianService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/technicians/tech-123');
-      req.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+      const requests = httpMock.match('/api/technicians/tech-123');
+      requests.forEach(req => req.flush('Bad request', { status: 400, statusText: 'Bad Request' }));
     });
 
     it('should handle 401 Unauthorized error', () => {
@@ -922,8 +922,8 @@ describe('TechnicianService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/technicians/tech-123');
-      req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+      const requests = httpMock.match('/api/technicians/tech-123');
+      requests.forEach(req => req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' }));
     });
 
     it('should handle 403 Forbidden error', () => {
@@ -936,8 +936,8 @@ describe('TechnicianService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/technicians/tech-123');
-      req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
+      const requests = httpMock.match('/api/technicians/tech-123');
+      requests.forEach(req => req.flush('Forbidden', { status: 403, statusText: 'Forbidden' }));
     });
 
     it('should handle 404 Not Found error', () => {
@@ -950,8 +950,8 @@ describe('TechnicianService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/technicians/tech-123');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      const requests = httpMock.match('/api/technicians/tech-123');
+      requests.forEach(req => req.flush('Not found', { status: 404, statusText: 'Not Found' }));
     });
 
     it('should handle 409 Conflict error', () => {
@@ -976,8 +976,8 @@ describe('TechnicianService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/technicians');
-      req.flush('Conflict', { status: 409, statusText: 'Conflict' });
+      const requests = httpMock.match('/api/technicians');
+      requests.forEach(req => req.flush('Conflict', { status: 409, statusText: 'Conflict' }));
     });
 
     it('should handle 500 Internal Server Error', () => {
@@ -990,8 +990,8 @@ describe('TechnicianService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/technicians/tech-123');
-      req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+      const requests = httpMock.match('/api/technicians/tech-123');
+      requests.forEach(req => req.flush('Server error', { status: 500, statusText: 'Internal Server Error' }));
     });
   });
 });

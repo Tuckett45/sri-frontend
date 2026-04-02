@@ -191,8 +191,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/invalid-id');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/invalid-id');
+      }        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
 
     it('should retry on failure', () => {
@@ -260,8 +263,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs');
-      req.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs');
+      }        req.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+      }
     });
 
     it('should handle 409 conflict error', () => {
@@ -272,8 +278,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs');
-      req.flush('Conflict', { status: 409, statusText: 'Conflict' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs');
+      }        req.flush('Conflict', { status: 409, statusText: 'Conflict' });
+      }
     });
   });
 
@@ -302,8 +311,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/invalid-id');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/invalid-id');
+      }        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
   });
 
@@ -326,8 +338,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/invalid-id');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/invalid-id');
+      }        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
   });
 
@@ -441,8 +456,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/invalid-id/status');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/invalid-id/status');
+      }        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
   });
 
@@ -523,8 +541,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/invalid-id/notes');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/invalid-id/notes');
+      }        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
   });
 
@@ -608,8 +629,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123/attachments');
-      req.flush('File too large', { status: 413, statusText: 'Payload Too Large' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123/attachments');
+      }        req.flush('File too large', { status: 413, statusText: 'Payload Too Large' });
+      }
     });
 
     it('should handle 415 error for unsupported file type', () => {
@@ -622,8 +646,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123/attachments');
-      req.flush('Unsupported', { status: 415, statusText: 'Unsupported Media Type' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123/attachments');
+      }        req.flush('Unsupported', { status: 415, statusText: 'Unsupported Media Type' });
+      }
     });
   });
 
@@ -700,8 +727,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/from-template/invalid-template');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/from-template/invalid-template');
+      }        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
   });
 
@@ -714,8 +744,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+      }        req.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+      }
     });
 
     it('should handle 401 Unauthorized error', () => {
@@ -726,8 +759,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+      }        req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+      }
     });
 
     it('should handle 403 Forbidden error', () => {
@@ -738,8 +774,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+      }        req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
+      }
     });
 
     it('should handle 404 Not Found error', () => {
@@ -750,8 +789,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+      }        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
 
     it('should handle 409 Conflict error', () => {
@@ -787,8 +829,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs');
-      req.flush('Conflict', { status: 409, statusText: 'Conflict' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs');
+      }        req.flush('Conflict', { status: 409, statusText: 'Conflict' });
+      }
     });
 
     it('should handle 413 Payload Too Large error', () => {
@@ -801,8 +846,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123/attachments');
-      req.flush('Too large', { status: 413, statusText: 'Payload Too Large' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123/attachments');
+      }        req.flush('Too large', { status: 413, statusText: 'Payload Too Large' });
+      }
     });
 
     it('should handle 415 Unsupported Media Type error', () => {
@@ -815,8 +863,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123/attachments');
-      req.flush('Unsupported', { status: 415, statusText: 'Unsupported Media Type' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123/attachments');
+      }        req.flush('Unsupported', { status: 415, statusText: 'Unsupported Media Type' });
+      }
     });
 
     it('should handle 500 Internal Server Error', () => {
@@ -827,8 +878,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+      }        req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+      }
     });
 
     it('should handle client-side errors', () => {
@@ -839,8 +893,10 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.error(new ProgressEvent('error', { loaded: 0, total: 0 }));
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+      requests.forEach(req => req.error(new ProgressEvent('error', { loaded: 0, total: 0 })));
     });
   });
 });

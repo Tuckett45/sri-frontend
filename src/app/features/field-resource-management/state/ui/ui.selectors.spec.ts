@@ -3,7 +3,7 @@
  * Tests all selectors for UI state management
  */
 
-import { UIState, CalendarViewType, MapViewState, FilterState, ConnectionStatus } from './ui.state';
+import { UIState, CalendarViewType, ScheduleViewMode, MapViewState, FilterState, ConnectionStatus } from './ui.state';
 import * as UISelectors from './ui.selectors';
 import { Notification, NotificationType } from '../../models/notification.model';
 import { JobStatus } from '../../models/job.model';
@@ -48,6 +48,7 @@ describe('UI Selectors', () => {
 
   const mockUIState: UIState = {
     calendarView: CalendarViewType.Week,
+    scheduleViewMode: ScheduleViewMode.Technicians,
     selectedDate: new Date('2024-01-15T00:00:00Z'),
     sidebarOpen: true,
     mobileMenuOpen: false,
@@ -564,6 +565,7 @@ describe('UI Selectors', () => {
 describe('UI Connection Status Selectors', () => {
   const mockState: UIState = {
     calendarView: CalendarViewType.Week,
+    scheduleViewMode: ScheduleViewMode.Technicians,
     selectedDate: new Date('2024-01-15T00:00:00Z'),
     sidebarOpen: true,
     mobileMenuOpen: false,
