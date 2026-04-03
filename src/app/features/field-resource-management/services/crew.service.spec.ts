@@ -297,10 +297,9 @@ describe('CrewService', () => {
         }
       });
 
-      for (let i = 0; i < 3; i++) {
-        const req = httpMock.expectOne(apiUrl);
-        req.flush('Bad Request', { status: 400, statusText: 'Bad Request' });
-      }
+      // createCrew does not use retry, so only 1 request
+      const req = httpMock.expectOne(apiUrl);
+      req.flush('Bad Request', { status: 400, statusText: 'Bad Request' });
     });
   });
 
@@ -335,10 +334,9 @@ describe('CrewService', () => {
         }
       });
 
-      for (let i = 0; i < 3; i++) {
-        const req = httpMock.expectOne(`${apiUrl}/${crewId}`);
-        req.flush('Not Found', { status: 404, statusText: 'Not Found' });
-      }
+      // updateCrew does not use retry, so only 1 request
+      const req = httpMock.expectOne(`${apiUrl}/${crewId}`);
+      req.flush('Not Found', { status: 404, statusText: 'Not Found' });
     });
   });
 
@@ -365,10 +363,9 @@ describe('CrewService', () => {
         }
       });
 
-      for (let i = 0; i < 3; i++) {
-        const req = httpMock.expectOne(`${apiUrl}/${crewId}`);
-        req.flush('Not Found', { status: 404, statusText: 'Not Found' });
-      }
+      // deleteCrew does not use retry, so only 1 request
+      const req = httpMock.expectOne(`${apiUrl}/${crewId}`);
+      req.flush('Not Found', { status: 404, statusText: 'Not Found' });
     });
   });
 
@@ -488,10 +485,9 @@ describe('CrewService', () => {
         }
       });
 
-      for (let i = 0; i < 3; i++) {
-        const req = httpMock.expectOne(apiUrl);
-        req.flush('Conflict', { status: 409, statusText: 'Conflict' });
-      }
+      // createCrew does not use retry, so only 1 request
+      const req = httpMock.expectOne(apiUrl);
+      req.flush('Conflict', { status: 409, statusText: 'Conflict' });
     });
 
     it('should handle 500 server error', () => {

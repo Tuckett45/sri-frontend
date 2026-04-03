@@ -197,8 +197,11 @@ describe('MaterialsService', () => {
         }
       });
 
-      const requests = httpMock.match('/api/materials/invalid-id');
-      requests.forEach(req => req.flush('Not found', { status: 404, statusText: 'Not Found' }));
+      // getMaterial uses retry(2), so 3 total requests (1 initial + 2 retries)
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/materials/invalid-id');
+        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
   });
 
@@ -432,8 +435,10 @@ describe('MaterialsService', () => {
       const recommendations = [mockReorderRecommendation];
 
       service.getReorderRecommendations().subscribe(recs => {
-        expect(recs).toEqual(recommendations);
+        expect(recs.length).toBe(1);
         expect(recs[0].urgency).toBeDefined();
+        // Service recalculates urgency: 150/200 = 75% => Low
+        expect(recs[0].urgency).toBe(ReorderUrgency.Low);
       });
 
       const req = httpMock.expectOne('/api/materials/reorder-recommendations');
@@ -835,8 +840,11 @@ describe('MaterialsService', () => {
         }
       });
 
-      const requests = httpMock.match('/api/materials/invalid');
-      requests.forEach(req => req.flush('Bad request', { status: 400, statusText: 'Bad Request' }));
+      // getMaterial uses retry(2), so 3 total requests
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/materials/invalid');
+        req.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+      }
     });
 
     it('should handle 403 Forbidden', () => {
@@ -847,8 +855,11 @@ describe('MaterialsService', () => {
         }
       });
 
-      const requests = httpMock.match('/api/materials/mat-1');
-      requests.forEach(req => req.flush('Forbidden', { status: 403, statusText: 'Forbidden' }));
+      // getMaterial uses retry(2), so 3 total requests
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/materials/mat-1');
+        req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
+      }
     });
 
     it('should handle 404 Not Found', () => {
@@ -859,8 +870,11 @@ describe('MaterialsService', () => {
         }
       });
 
-      const requests = httpMock.match('/api/materials/nonexistent');
-      requests.forEach(req => req.flush('Not found', { status: 404, statusText: 'Not Found' }));
+      // getMaterial uses retry(2), so 3 total requests
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/materials/nonexistent');
+        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
 
     it('should handle client-side errors', () => {
@@ -871,10 +885,13 @@ describe('MaterialsService', () => {
         }
       });
 
-      const requests = httpMock.match('/api/materials');
-      requests.forEach(req => req.error(new ErrorEvent('Network error', {
-        message: 'Connection failed'
-      })));
+      // getMaterials uses retry(2), so 3 total requests
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/materials');
+        req.error(new ErrorEvent('Network error', {
+          message: 'Connection failed'
+        }));
+      }
     });
   });
 });
