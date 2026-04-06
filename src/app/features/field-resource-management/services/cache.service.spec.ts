@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { of, throwError, delay } from 'rxjs';
 import { CacheService } from './cache.service';
 
@@ -43,6 +43,8 @@ describe('CacheService', () => {
       const stats = service.getStats();
       expect(stats.hits).toBe(1);
       expect(stats.misses).toBe(1);
+
+      flush(); // Drain pending timers from cache TTL
     }));
 
     it('should fetch fresh data on cache miss', fakeAsync(() => {
@@ -60,6 +62,8 @@ describe('CacheService', () => {
       const stats = service.getStats();
       expect(stats.misses).toBe(1);
       expect(stats.hits).toBe(0);
+
+      flush();
     }));
   });
 
@@ -96,6 +100,8 @@ describe('CacheService', () => {
       tick();
 
       expect(fetcher).toHaveBeenCalledTimes(2);
+
+      flush();
     }));
 
     it('should automatically clean up expired entries', fakeAsync(() => {
@@ -113,6 +119,8 @@ describe('CacheService', () => {
       tick(ttl + 100);
 
       expect(service.has(key)).toBe(false);
+
+      flush();
     }));
   });
 
@@ -130,6 +138,8 @@ describe('CacheService', () => {
       service.invalidate(key);
 
       expect(service.has(key)).toBe(false);
+
+      flush();
     }));
 
     it('should invalidate cache entries matching pattern', fakeAsync(() => {
@@ -150,6 +160,8 @@ describe('CacheService', () => {
       expect(service.has('user-1')).toBe(false);
       expect(service.has('user-2')).toBe(false);
       expect(service.has('product-1')).toBe(true);
+
+      flush();
     }));
 
     it('should clear all cache entries', fakeAsync(() => {
@@ -169,6 +181,8 @@ describe('CacheService', () => {
       keys.forEach(key => {
         expect(service.has(key)).toBe(false);
       });
+
+      flush();
     }));
   });
 

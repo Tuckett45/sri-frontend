@@ -163,11 +163,12 @@ describe('JobNotesComponent', () => {
   });
 
   it('should not save empty edited note', () => {
+    component.editingNoteId = mockNotes[0].id;
     component.editingNoteText = '   ';
     const note = mockNotes[0];
-    
+
     component.saveEditNote(note);
-    
+
     expect(component.editingNoteId).not.toBeNull();
   });
 
@@ -231,13 +232,13 @@ describe('JobNotesComponent', () => {
   });
 
   it('should display empty state when no notes', () => {
-    component.notes = [];
+    fixture.componentRef.setInput('notes', []);
     component.isAddingNote = false;
     fixture.detectChanges();
-    
+
     const compiled = fixture.nativeElement;
     const emptyState = compiled.querySelector('.empty-state');
-    
+
     expect(emptyState).toBeTruthy();
   });
 

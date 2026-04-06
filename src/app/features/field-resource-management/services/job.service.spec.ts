@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, HttpEventType } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { JobService, StatusHistory } from './job.service';
 import { 
@@ -191,8 +191,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/invalid-id');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/invalid-id');
+        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
 
     it('should retry on failure', () => {
@@ -602,7 +605,9 @@ describe('JobService', () => {
       const mockFile = new File(['content'], 'large.jpg', { type: 'image/jpeg' });
 
       service.uploadJobAttachment('job-123', mockFile).subscribe({
-        next: () => fail('should have failed'),
+        next: (event) => {
+          if (event.type === HttpEventType.Response) { fail('should have failed'); }
+        },
         error: (error) => {
           expect(error.message).toContain('File too large');
         }
@@ -616,7 +621,9 @@ describe('JobService', () => {
       const mockFile = new File(['content'], 'test.exe', { type: 'application/exe' });
 
       service.uploadJobAttachment('job-123', mockFile).subscribe({
-        next: () => fail('should have failed'),
+        next: (event) => {
+          if (event.type === HttpEventType.Response) { fail('should have failed'); }
+        },
         error: (error) => {
           expect(error.message).toContain('Unsupported file type');
         }
@@ -714,8 +721,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+        req.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+      }
     });
 
     it('should handle 401 Unauthorized error', () => {
@@ -726,8 +736,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+        req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+      }
     });
 
     it('should handle 403 Forbidden error', () => {
@@ -738,8 +751,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+        req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
+      }
     });
 
     it('should handle 404 Not Found error', () => {
@@ -750,8 +766,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+        req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      }
     });
 
     it('should handle 409 Conflict error', () => {
@@ -795,7 +814,9 @@ describe('JobService', () => {
       const mockFile = new File(['content'], 'large.jpg', { type: 'image/jpeg' });
 
       service.uploadJobAttachment('job-123', mockFile).subscribe({
-        next: () => fail('should have failed'),
+        next: (event) => {
+          if (event.type === HttpEventType.Response) { fail('should have failed'); }
+        },
         error: (error) => {
           expect(error.message).toContain('File too large');
         }
@@ -809,7 +830,9 @@ describe('JobService', () => {
       const mockFile = new File(['content'], 'test.exe', { type: 'application/exe' });
 
       service.uploadJobAttachment('job-123', mockFile).subscribe({
-        next: () => fail('should have failed'),
+        next: (event) => {
+          if (event.type === HttpEventType.Response) { fail('should have failed'); }
+        },
         error: (error) => {
           expect(error.message).toContain('Unsupported file type');
         }
@@ -827,8 +850,11 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+      // Flush the initial request plus all retries
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+        req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+      }
     });
 
     it('should handle client-side errors', () => {
@@ -839,8 +865,10 @@ describe('JobService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/jobs/job-123');
-      req.error(new ProgressEvent('error', { loaded: 0, total: 0 }));
+      for (let i = 0; i < 3; i++) {
+        const req = httpMock.expectOne('/api/jobs/job-123');
+        req.error(new ProgressEvent('error', { loaded: 0, total: 0 }));
+      }
     });
   });
 });

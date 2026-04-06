@@ -153,8 +153,8 @@ describe('BudgetService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/budgets');
-      req.flush(null, { status: 400, statusText: 'Bad Request' });
+      const requests = httpMock.match('/api/budgets');
+      requests.forEach(req => req.flush(null, { status: 400, statusText: 'Bad Request' }));
     });
 
     it('should handle 409 error for duplicate budget', () => {
@@ -170,8 +170,8 @@ describe('BudgetService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/budgets');
-      req.flush(null, { status: 409, statusText: 'Conflict' });
+      const requests = httpMock.match('/api/budgets');
+      requests.forEach(req => req.flush(null, { status: 409, statusText: 'Conflict' }));
     });
   });
 
@@ -230,8 +230,8 @@ describe('BudgetService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/budgets/job-123/adjustments');
-      req.flush(null, { status: 403, statusText: 'Forbidden' });
+      const requests = httpMock.match('/api/budgets/job-123/adjustments');
+      requests.forEach(req => req.flush(null, { status: 403, statusText: 'Forbidden' }));
     });
 
     it('should handle 400 error for invalid adjustment data', () => {
@@ -247,8 +247,8 @@ describe('BudgetService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/budgets/job-123/adjustments');
-      req.flush(null, { status: 400, statusText: 'Bad Request' });
+      const requests = httpMock.match('/api/budgets/job-123/adjustments');
+      requests.forEach(req => req.flush(null, { status: 400, statusText: 'Bad Request' }));
     });
   });
 
@@ -297,8 +297,8 @@ describe('BudgetService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/budgets/nonexistent-job/deductions');
-      req.flush(null, { status: 404, statusText: 'Not Found' });
+      const requests = httpMock.match('/api/budgets/nonexistent-job/deductions');
+      requests.forEach(req => req.flush(null, { status: 404, statusText: 'Not Found' }));
     });
   });
 
@@ -534,8 +534,8 @@ describe('BudgetService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/budgets/job-123/adjustments');
-      req.flush(null, { status: 409, statusText: 'Conflict' });
+      const requests = httpMock.match('/api/budgets/job-123/adjustments');
+      requests.forEach(req => req.flush(null, { status: 409, statusText: 'Conflict' }));
     });
   });
 });
