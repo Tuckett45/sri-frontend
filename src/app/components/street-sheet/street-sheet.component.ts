@@ -88,6 +88,13 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   sortField: keyof StreetSheet | '' = '';
   sortDirection: 'asc' | 'desc' = 'asc';
 
+  // Sheet search/filter state
+  sheetSearchText: string = '';
+  sheetFilterVendor: string = '';
+  sheetFilterState: string = '';
+  sheetFilterCreatedBy: string = '';
+  displayedStreetSheets: StreetSheet[] = [];
+
   constructor(
     private dialog: MatDialog, 
     private streetSheetService: StreetSheetService, 
@@ -101,8 +108,9 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.fetchPMOptions();
     this.user = this.authService.getUser();
     this.isAdmin = this.user?.role === 'Admin';
-    this.dashboardStartDate = this.startOfDay(new Date());
-    this.dashboardEndDate = this.endOfDay(new Date());
+    const today = new Date();
+    this.dashboardEndDate = this.endOfDay(today);
+    this.dashboardStartDate = this.startOfDay(new Date(today.getTime() - 10 * 24 * 60 * 60 * 1000));
     if (this.isAdmin) {
       this.loadCmUsers();
     } else if (this.user) {
@@ -529,8 +537,9 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.dashboardPmFilter = '';
     this.dashboardMarketFilter = '';
     this.dashboardCmFilter = '';
-    this.dashboardStartDate = this.startOfDay(new Date());
-    this.dashboardEndDate = this.endOfDay(new Date());
+    const today = new Date();
+    this.dashboardStartDate = this.startOfDay(new Date(today.getTime() - 10 * 24 * 60 * 60 * 1000));
+    this.dashboardEndDate = this.endOfDay(today);
     this.pageIndex = 0;
     this.submittedPageIndex = 0;
     this.missingPageIndex = 0;
@@ -544,6 +553,7 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   private refreshDashboardData(): void {
     this.dashboardStreetSheets = this.applyDashboardFiltersInternal();
     this.sortDashboardSheets();
+    this.applySheetSearchFilter();
     this.loadCmStats();
   }
 
@@ -883,10 +893,86 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
       sum + (Array.isArray(sheet.marker) ? sheet.marker.length : 0), 0);
   }
 
+  applySheetSearchFilter(): void {
+    let results = this.dashboardStreetSheets;
+
+    // Text search across multiple fields
+    if (this.sheetSearchText.trim()) {
+      const term = this.sheetSearchText.trim().toLowerCase();
+      results = results.filter(sheet => {
+        // Check state against both abbreviation and full name
+        const sheetState = (sheet.state || '').toLowerCase();
+        const stateFullName = this.getStateFullName(sheet.state)?.toLowerCase() || '';
+        const stateMatch = sheetState.includes(term) || stateFullName.includes(term);
+
+        return (
+          sheet.segmentId?.toLowerCase().includes(term) ||
+          sheet.vendorName?.toLowerCase().includes(term) ||
+          sheet.streetAddress?.toLowerCase().includes(term) ||
+          sheet.city?.toLowerCase().includes(term) ||
+          stateMatch ||
+          sheet.deployment?.toLowerCase().includes(term) ||
+          sheet.pm?.toLowerCase().includes(term) ||
+          sheet.createdBy?.toLowerCase().includes(term)
+        );
+      });
+    }
+
+    // Dropdown filters (exact match)
+    if (this.sheetFilterVendor) {
+      results = results.filter(sheet =>
+        sheet.vendorName?.toLowerCase() === this.sheetFilterVendor.toLowerCase()
+      );
+    }
+
+    if (this.sheetFilterState) {
+      results = results.filter(sheet =>
+        sheet.state?.toLowerCase() === this.sheetFilterState.toLowerCase()
+      );
+    }
+
+    if (this.sheetFilterCreatedBy) {
+      results = results.filter(sheet =>
+        sheet.createdBy?.toLowerCase() === this.sheetFilterCreatedBy.toLowerCase()
+      );
+    }
+
+    this.displayedStreetSheets = results;
+    this.refreshMapMarkers();
+  }
+
+  clearSheetSearchFilter(): void {
+    this.sheetSearchText = '';
+    this.sheetFilterVendor = '';
+    this.sheetFilterState = '';
+    this.sheetFilterCreatedBy = '';
+    this.applySheetSearchFilter();
+  }
+
+  hasActiveSheetFilter(): boolean {
+    return !!(
+      this.sheetSearchText.trim() ||
+      this.sheetFilterVendor ||
+      this.sheetFilterState ||
+      this.sheetFilterCreatedBy
+    );
+  }
+
+  private getStateFullName(abbreviation: string | undefined): string | undefined {
+    if (!abbreviation) return undefined;
+    const abbr = abbreviation.toUpperCase();
+    for (const [fullName, abbrev] of Object.entries(StateAbbreviation)) {
+      if (abbrev === abbr) return fullName;
+    }
+    return undefined;
+  }
+
   private refreshMapMarkers(): void {
     if (!this.streetSheetMapComponent) return;
     this.streetSheetMapComponent.clearAllMapMarkers();
-    const sheetsToShow = this.dashboardStreetSheets || [];
+    const sheetsToShow = this.hasActiveSheetFilter()
+      ? this.displayedStreetSheets
+      : this.dashboardStreetSheets;
     sheetsToShow.forEach(sheet => {
       if (Array.isArray(sheet.marker)) {
         sheet.marker.forEach(marker => {

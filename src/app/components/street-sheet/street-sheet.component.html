@@ -125,8 +125,18 @@
           <h3>Submitted Sheets</h3>
           <span class="muted-text">Click to view on map</span>
         </div>
+        <div class="sheet-search-toolbar">
+          <mat-form-field appearance="outline" class="sheet-search-field">
+            <mat-label>Search by segment, vendor, address, state, created by...</mat-label>
+            <input matInput [(ngModel)]="sheetSearchText" (ngModelChange)="applySheetSearchFilter()">
+            <button matSuffix mat-icon-button *ngIf="sheetSearchText" (click)="clearSheetSearchFilter()" aria-label="Clear search">
+              <mat-icon>clear</mat-icon>
+            </button>
+          </mat-form-field>
+          <span class="sheet-result-count" *ngIf="hasActiveSheetFilter()">{{ displayedStreetSheets.length }} results</span>
+        </div>
         <div class="sheets-scroll">
-          <div *ngFor="let sheet of dashboardStreetSheets; let i = index"
+          <div *ngFor="let sheet of displayedStreetSheets; let i = index"
                class="sheet-row"
                [class.active]="selectedStreetSheet?.id === sheet.id"
                (click)="selectStreetSheet(sheet)">
@@ -136,8 +146,12 @@
             </div>
             <div class="sheet-row-right">
               <div class="sheet-vendor">{{ sheet.vendorName }}</div>
+              <div class="sheet-created-by muted-text">{{ sheet.createdBy }}</div>
               <div class="sheet-date muted-text">{{ sheet.date | date:'MMM d' }}</div>
             </div>
+          </div>
+          <div *ngIf="displayedStreetSheets.length === 0 && hasActiveSheetFilter()" class="no-results-message">
+            No matching street sheets found.
           </div>
           <div *ngIf="!dashboardStreetSheets?.length" class="muted-text" style="padding:16px;text-align:center;">
             No street sheets found.
