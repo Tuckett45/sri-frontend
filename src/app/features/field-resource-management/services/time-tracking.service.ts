@@ -10,6 +10,7 @@ import {
   TimeEntryFilters 
 } from '../models/dtos';
 import { DateRange } from '../models/assignment.model';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Labor summary for a job
@@ -31,7 +32,7 @@ export interface LaborSummary {
   providedIn: 'root'
 })
 export class TimeTrackingService {
-  private readonly apiUrl = '/api/time-entries';
+  private readonly apiUrl = `${environment.apiUrl}/time-entries`;
   private readonly retryCount = 2;
 
   constructor(private http: HttpClient) {}

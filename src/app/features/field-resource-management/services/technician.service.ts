@@ -17,6 +17,7 @@ import { DateRange } from '../models/assignment.model';
 import { GeoLocation } from '../models/time-entry.model';
 import { RoleBasedDataService } from '../../../services/role-based-data.service';
 import { AuthService } from '../../../services/auth.service';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Service for managing technician data and operations
@@ -26,7 +27,7 @@ import { AuthService } from '../../../services/auth.service';
   providedIn: 'root'
 })
 export class TechnicianService {
-  private readonly apiUrl = '/api/technicians';
+  private readonly apiUrl = `${environment.apiUrl}/technicians`;
   private readonly retryCount = 2;
 
   constructor(

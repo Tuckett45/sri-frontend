@@ -14,6 +14,7 @@ import {
 import { GeocodingService } from './geocoding.service';
 import { selectJobById } from '../state/jobs/job.selectors';
 import { selectAllTechnicians } from '../state/technicians/technician.selectors';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Service for managing technician travel profiles and distance calculations
@@ -22,7 +23,7 @@ import { selectAllTechnicians } from '../state/technicians/technician.selectors'
   providedIn: 'root'
 })
 export class TravelService {
-  private readonly apiUrl = '/api/travel';
+  private readonly apiUrl = `${environment.apiUrl}/travel`;
   
   constructor(
     private http: HttpClient,

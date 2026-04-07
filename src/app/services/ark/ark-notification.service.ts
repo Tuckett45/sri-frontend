@@ -42,7 +42,7 @@ import { environment } from '../../../environments/environments';
   providedIn: 'root'
 })
 export class ArkNotificationService {
-  private readonly apiUrl = `${environment.apiUrl}/api/ark/notifications`;
+  private readonly apiUrl = `${environment.apiUrl}/ark/notifications`;
 
   constructor(
     private http: HttpClient,

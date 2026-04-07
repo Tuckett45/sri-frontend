@@ -8,11 +8,12 @@ import {
   JobNote, 
   Attachment 
 } from '../models/job.model';
-import { 
-  CreateJobDto, 
-  UpdateJobDto, 
-  JobFilters 
+import {
+  CreateJobDto,
+  UpdateJobDto,
+  JobFilters
 } from '../models/dtos';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Status history entry for tracking job status changes
@@ -34,7 +35,7 @@ export interface StatusHistory {
   providedIn: 'root'
 })
 export class JobService {
-  private readonly apiUrl = '/api/jobs';
+  private readonly apiUrl = `${environment.apiUrl}/jobs`;
   private readonly retryCount = 2;
 
   constructor(private http: HttpClient) {}

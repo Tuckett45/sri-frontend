@@ -7,10 +7,12 @@
  * Requirements: 1.1-1.7, 2.1-2.8, 4.1-4.7, 5.1-5.9, 6.1-6.11, 7.1-7.13, 9.1-9.6, 10.1-10.6, 11.1-11.7, 12.1-12.10
  */
 
+import { environment } from '../../../../environments/environments';
+
 /**
- * Base API URL - can be configured per environment
+ * Base API URL - uses environment configuration for correct backend targeting
  */
-export const API_BASE_URL = '/api';
+export const API_BASE_URL = environment.apiUrl;
 
 /**
  * Budget API Endpoints

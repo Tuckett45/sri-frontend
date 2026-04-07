@@ -28,6 +28,7 @@ import { JobType, Priority, Job, JobStatus } from '../models/job.model';
 import { JobBudget, BudgetStatus } from '../models/budget.model';
 import { CacheService } from './cache.service';
 import { DataScope } from './data-scope.service';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Export format options
@@ -95,7 +96,7 @@ export interface AdherenceMetrics {
   providedIn: 'root'
 })
 export class ReportingService {
-  private readonly apiUrl = '/api/reports';
+  private readonly apiUrl = `${environment.apiUrl}/reports`;
   private readonly retryCount = 2;
 
   // Cache TTL constants (in milliseconds)

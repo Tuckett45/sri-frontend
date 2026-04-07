@@ -13,6 +13,7 @@ import {
   AdjustBudgetDto 
 } from '../models/dtos/budget.dto';
 import { CacheService } from './cache.service';
+import { environment } from '../../../../environments/environments';
 
 /** 5 minutes in milliseconds — budget status changes frequently */
 const BUDGET_CACHE_TTL = 5 * 60 * 1000;
@@ -25,7 +26,7 @@ const BUDGET_CACHE_TTL = 5 * 60 * 1000;
   providedIn: 'root'
 })
 export class BudgetService {
-  private readonly apiUrl = '/api/budgets';
+  private readonly apiUrl = `${environment.apiUrl}/budgets`;
   private readonly retryCount = 2;
 
   constructor(

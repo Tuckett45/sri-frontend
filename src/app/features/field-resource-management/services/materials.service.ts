@@ -15,26 +15,27 @@ import {
   PurchaseOrderStatus,
   ReorderUrgency
 } from '../models/material.model';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Service for managing materials tracking and supplier integration
- * 
+ *
  * Implements:
  * - Material inventory management
  * - Material consumption and receipt tracking
  * - Purchase order creation and management
  * - Reorder recommendation generation
  * - Supplier integration logic
- * 
+ *
  * Requirements: 7.1-7.13, 11.1-11.7
  */
 @Injectable({
   providedIn: 'root'
 })
 export class MaterialsService {
-  private readonly apiUrl = '/api/materials';
-  private readonly purchaseOrderUrl = '/api/purchase-orders';
-  private readonly supplierUrl = '/api/suppliers';
+  private readonly apiUrl = `${environment.apiUrl}/materials`;
+  private readonly purchaseOrderUrl = `${environment.apiUrl}/purchase-orders`;
+  private readonly supplierUrl = `${environment.apiUrl}/suppliers`;
 
   constructor(private http: HttpClient) {}
 
