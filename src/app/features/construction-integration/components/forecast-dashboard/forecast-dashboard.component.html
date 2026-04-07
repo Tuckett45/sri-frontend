@@ -1,0 +1,87 @@
+<div class="forecast-dashboard" *ngIf="{ grid: grid$ | async, year: selectedYear$ | async, loading: loading$ | async, saving: saving$ | async, error: error$ | async } as vm">
+
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h2>Resource Forecast — {{ vm.year }}</h2>
+    <div class="header-actions">
+      <label for="yearSelect" class="year-label">Year:</label>
+      <select id="yearSelect"
+              [ngModel]="vm.year"
+              (ngModelChange)="onYearChange($event)"
+              class="year-select">
+        <option *ngFor="let y of getYearOptions(vm.year!)" [ngValue]="y">{{ y }}</option>
+      </select>
+      <button class="btn-export" (click)="exportForecast(vm.grid!)" [disabled]="vm.loading">
+        <i class="pi pi-download"></i> Export CSV
+      </button>
+      <a *ngIf="isAdmin" routerLink="../projects/create" class="btn-add">
+        <i class="pi pi-plus"></i> Add Project
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="vm.loading" class="loading-indicator">Loading forecast data…</div>
+
+  <!-- Error -->
+  <div *ngIf="vm.error" class="error-banner" role="alert">{{ vm.error }}</div>
+
+  <!-- Grid -->
+  <div *ngIf="!vm.loading && vm.grid" class="grid-wrapper">
+    <div *ngFor="let catGroup of vm.grid!.categories" class="category-section">
+      <h3 class="category-title">{{ getCategoryLabel(catGroup.category) }}</h3>
+
+      <table class="forecast-table" role="grid" [attr.aria-label]="getCategoryLabel(catGroup.category) + ' forecast grid'">
+        <thead>
+          <tr>
+            <th class="project-col">Project</th>
+            <th *ngFor="let m of MONTHS" class="month-col">{{ m }}</th>
+            <th class="total-col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of catGroup.rows">
+            <td class="project-col">
+              <a [routerLink]="['../projects', row.project.id]" class="project-link">
+                {{ row.project.name }}
+              </a>
+              <span class="client-name">{{ row.project.clientName }}</span>
+            </td>
+            <td *ngFor="let cell of row.months" class="month-cell"
+                [class.editable]="isAdmin"
+                [class.editing]="isEditing(row.project.id, cell.month)"
+                (click)="startEdit(row.project.id, cell)">
+              <!-- Editing mode -->
+              <input *ngIf="isEditing(row.project.id, cell.month)"
+                     type="text"
+                     class="cell-input"
+                     [(ngModel)]="editValue"
+                     (blur)="saveEdit(cell, row.project.id, vm.grid!.year)"
+                     (keydown.enter)="saveEdit(cell, row.project.id, vm.grid!.year)"
+                     (keydown.escape)="cancelEdit()"
+                     [attr.aria-label]="'Headcount for ' + row.project.name + ' ' + MONTHS[cell.month - 1]"
+                     autofocus />
+              <!-- Read-only mode -->
+              <span *ngIf="!isEditing(row.project.id, cell.month)">
+                {{ cell.headcount || '' }}
+              </span>
+            </td>
+            <td class="total-col total-value">{{ row.total }}</td>
+          </tr>
+
+          <!-- Category totals row -->
+          <tr class="totals-row">
+            <td class="project-col"><strong>Total</strong></td>
+            <td *ngFor="let monthTotal of catGroup.monthTotals" class="month-cell total-value">
+              {{ monthTotal }}
+            </td>
+            <td class="total-col total-value"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Saving indicator -->
+  <div *ngIf="vm.saving" class="saving-indicator">Saving…</div>
+</div>

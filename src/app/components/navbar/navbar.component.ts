@@ -68,6 +68,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
     //   shouldShow: () => this.authService.isAdmin() || this.authService.isClient()
     // },
     {
+      label: 'Construction',
+      route: '/construction',
+      shouldShow: () => true
+    },
+    {
       label: 'Expenses',
       route: '/expenses',
       shouldShow: () => this.authService.isAdmin() || this.authService.isHR() || this.authService.isPayroll()

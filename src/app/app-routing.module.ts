@@ -67,6 +67,12 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     data: { preload: false }
   },
+  {
+    path: 'construction',
+    loadChildren: () => import('./features/construction-integration/construction-integration.module').then(m => m.ConstructionIntegrationModule),
+    canActivate: [AuthGuard],
+    data: { preload: true }
+  },
   { path: '**', redirectTo: '/login' }
 ];
 

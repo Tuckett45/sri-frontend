@@ -1,0 +1,161 @@
+.forecast-dashboard {
+  max-width: 100%;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  h2 { margin: 0; font-size: 1.4rem; color: #333; }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.year-label { font-size: 14px; color: #555; }
+
+.year-select {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.btn-export, .btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-export {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #ccc;
+  &:hover { background: #eee; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.btn-add {
+  background: #1565c0;
+  color: #fff;
+  &:hover { background: #1256a8; }
+}
+
+.loading-indicator, .saving-indicator {
+  padding: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.saving-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 8px 16px;
+  z-index: 100;
+}
+
+.error-banner {
+  padding: 10px 14px;
+  background: #fdecea;
+  color: #b71c1c;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.grid-wrapper { overflow-x: auto; }
+
+.category-section { margin-bottom: 28px; }
+
+.category-title {
+  font-size: 1rem;
+  color: #1565c0;
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #1565c0;
+}
+
+.forecast-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+
+  th, td {
+    padding: 6px 8px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #555;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+}
+
+.project-col {
+  text-align: left !important;
+  min-width: 180px;
+  width: 200px;
+}
+
+.month-col { width: 60px; }
+.total-col { width: 70px; font-weight: 600; }
+
+.project-link {
+  color: #1565c0;
+  text-decoration: none;
+  font-weight: 500;
+  display: block;
+  &:hover { text-decoration: underline; }
+}
+
+.client-name {
+  display: block;
+  font-size: 11px;
+  color: #888;
+}
+
+.month-cell {
+  cursor: default;
+  &.editable { cursor: pointer; }
+  &.editable:hover { background: #e3f2fd; }
+  &.editing { padding: 2px; background: #fff; }
+}
+
+.cell-input {
+  width: 100%;
+  border: 1px solid #1565c0;
+  border-radius: 2px;
+  padding: 4px;
+  text-align: center;
+  font-size: 13px;
+  outline: none;
+}
+
+.total-value { font-weight: 600; background: #fafafa; }
+
+.totals-row {
+  td { background: #f0f0f0; font-weight: 600; }
+}
