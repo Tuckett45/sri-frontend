@@ -43,8 +43,29 @@
     </div>
   </div>
 
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading schedule...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load schedule</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" class="retry-button" (click)="onRetry()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
   <!-- Summary Card -->
-  <div class="summary-card">
+  <div class="summary-card" *ngIf="!loading && !error">
     <div class="summary-item">
       <mat-icon>work</mat-icon>
       <div class="summary-content">
@@ -71,7 +92,7 @@
   </div>
 
   <!-- Jobs List -->
-  <div class="jobs-section">
+  <div class="jobs-section" *ngIf="!loading && !error">
     <h3>Scheduled Jobs</h3>
 
     <!-- Empty State -->

@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { JobCardComponent } from './job-card.component';
 import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
@@ -60,6 +62,8 @@ describe('JobCardComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [JobCardComponent],
+      imports: [NoopAnimationsModule],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({
           selectors: [

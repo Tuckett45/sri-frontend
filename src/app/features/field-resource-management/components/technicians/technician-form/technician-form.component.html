@@ -12,16 +12,6 @@
       <mat-step [stepControl]="basicInfoGroup" label="Basic Information">
         <div formGroupName="basicInfo" class="step-content">
           <h3>Basic Information</h3>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Technician ID</mat-label>
-              <input matInput formControlName="technicianId">
-              <mat-error *ngIf="basicInfoGroup.get('technicianId')?.hasError('required')">
-                Technician ID is required
-              </mat-error>
-            </mat-form-field>
-          </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline">
@@ -260,10 +250,20 @@
       </mat-step>
     </mat-stepper>
 
+    <!-- Server Error Display -->
+    <div class="server-error" *ngIf="serverError$ | async as serverError">
+      <mat-card class="error-card">
+        <mat-card-content>
+          <mat-icon color="warn">error</mat-icon>
+          <span>{{ serverError }}</span>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
     <!-- Form Actions -->
     <div class="form-actions">
       <button mat-button color="warn" type="button" (click)="onCancel()">Cancel</button>
-      <button mat-raised-button color="primary" type="submit">
+      <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
         {{ isEditMode ? 'Update' : 'Create' }} Technician
       </button>
     </div>

@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { DailyViewComponent } from './daily-view.component';
 import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
@@ -44,6 +46,8 @@ describe('DailyViewComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [DailyViewComponent],
+      imports: [NoopAnimationsModule],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({
           selectors: [
@@ -92,9 +96,10 @@ describe('DailyViewComponent', () => {
   });
 
   it('should sort jobs by scheduled time', () => {
-    const job1 = { ...mockJobs[0], id: '1', scheduledStartDate: new Date('2024-01-01T10:00:00') };
-    const job2 = { ...mockJobs[0], id: '2', scheduledStartDate: new Date('2024-01-01T08:00:00') };
-    const job3 = { ...mockJobs[0], id: '3', scheduledStartDate: new Date('2024-01-01T14:00:00') };
+    const today = new Date();
+    const job1 = { ...mockJobs[0], id: '1', scheduledStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0, 0) };
+    const job2 = { ...mockJobs[0], id: '2', scheduledStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 8, 0, 0) };
+    const job3 = { ...mockJobs[0], id: '3', scheduledStartDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0, 0) };
 
     store.overrideSelector(selectAllJobs, [job1, job2, job3]);
     store.refreshState();

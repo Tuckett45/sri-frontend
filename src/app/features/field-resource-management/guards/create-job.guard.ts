@@ -7,7 +7,8 @@ import { FrmPermissionService } from '../services/frm-permission.service';
  * CreateJobGuard
  *
  * Protects the job setup route (`jobs/new`) by checking the `canCreateJob` permission.
- * Only Admin, Payroll, and HR roles are granted access.
+ * Only Dispatcher (PM, Manager, DCOps, OSPCoordinator, EngineeringFieldSupport, MaterialsManager)
+ * and Admin roles are granted access.
  * Redirects unauthorized users to `/field-resource-management/dashboard`.
  *
  * Usage:

@@ -72,12 +72,21 @@ export class TimeEntryEffects {
         
         // TODO: Replace with actual TimeTrackingService call when service is implemented
         // this.timeTrackingService.clockOut(timeEntryId, location, calculatedMileage).pipe(
+        const clockOutTime = new Date();
+        let totalHours = 0;
+        if (existingEntry?.clockInTime) {
+          const clockInMs = new Date(existingEntry.clockInTime).getTime();
+          const clockOutMs = clockOutTime.getTime();
+          totalHours = Math.max(0, (clockOutMs - clockInMs) / (1000 * 60 * 60));
+          totalHours = Math.round(totalHours * 100) / 100; // Round to 2 decimal places
+        }
+        
         return of({
           id: timeEntryId,
-          clockOutTime: new Date(),
+          clockOutTime,
           clockOutLocation: location,
           clockOutReason: reason,
-          totalHours: 8, // Placeholder calculation
+          totalHours,
           mileage: calculatedMileage || existingEntry?.mileage || 0
         } as any).pipe( // Placeholder
           map((timeEntry) =>

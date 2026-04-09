@@ -58,6 +58,7 @@ export class JobListComponent implements OnInit, OnDestroy {
     'jobId',
     'client',
     'siteName',
+    'jobType',
     'status',
     'priority',
     'scheduledDate',
@@ -79,7 +80,13 @@ export class JobListComponent implements OnInit, OnDestroy {
   selectedStatus: JobStatus | null = null;
   selectedPriority: Priority | null = null;
   selectedJobType: JobType | null = null;
+  selectedClient: string | null = null;
+  selectedMarket: string | null = null;
   dateRange: { start: Date | null; end: Date | null } = { start: null, end: null };
+
+  // Dynamic dropdown options
+  clientOptions: string[] = [];
+  marketOptions: string[] = [];
 
   // Enum references for template
   JobStatus = JobStatus;
@@ -150,10 +157,16 @@ export class JobListComponent implements OnInit, OnDestroy {
     // Load jobs on init
     this.store.dispatch(JobActions.loadJobs({ filters: {} }));
 
-    // Subscribe to jobs for pagination
+    // Subscribe to jobs for pagination and dynamic filter options
     this.jobs$.pipe(takeUntil(this.destroy$)).subscribe(jobs => {
       this.totalJobs = jobs.length;
       this.updateDisplayedJobs(jobs);
+    });
+
+    // Populate dynamic filter options from all jobs
+    this.store.select(JobSelectors.selectAllJobs).pipe(takeUntil(this.destroy$)).subscribe(allJobs => {
+      this.clientOptions = [...new Set(allJobs.map(j => j.client).filter(Boolean))].sort();
+      this.marketOptions = [...new Set(allJobs.map(j => j.market).filter(Boolean))].sort();
     });
 
     // Setup search debounce
@@ -197,6 +210,8 @@ export class JobListComponent implements OnInit, OnDestroy {
       status: this.selectedStatus || undefined,
       priority: this.selectedPriority || undefined,
       jobType: this.selectedJobType || undefined,
+      client: this.selectedClient || undefined,
+      region: this.selectedMarket || undefined,
       dateRange: (this.dateRange.start && this.dateRange.end) ? {
         startDate: this.dateRange.start,
         endDate: this.dateRange.end
@@ -210,6 +225,7 @@ export class JobListComponent implements OnInit, OnDestroy {
     // Reset to first page when filters change (not when pagination changes)
     const hasActiveFilters = this.searchTerm || this.selectedStatus || 
                             this.selectedPriority || this.selectedJobType ||
+                            this.selectedClient || this.selectedMarket ||
                             (this.dateRange.start && this.dateRange.end);
     if (hasActiveFilters && this.pageIndex !== 0) {
       this.pageIndex = 0;
@@ -275,6 +291,12 @@ export class JobListComponent implements OnInit, OnDestroy {
     if (this.selectedJobType) {
       filters.push({ label: 'Job Type', value: this.selectedJobType, key: 'jobType' });
     }
+    if (this.selectedClient) {
+      filters.push({ label: 'Client', value: this.selectedClient, key: 'client' });
+    }
+    if (this.selectedMarket) {
+      filters.push({ label: 'Market', value: this.selectedMarket, key: 'market' });
+    }
     if (this.dateRange.start && this.dateRange.end) {
       const dateStr = `${this.formatDate(this.dateRange.start)} - ${this.formatDate(this.dateRange.end)}`;
       filters.push({ label: 'Date Range', value: dateStr, key: 'dateRange' });
@@ -300,6 +322,12 @@ export class JobListComponent implements OnInit, OnDestroy {
       case 'jobType':
         this.selectedJobType = null;
         break;
+      case 'client':
+        this.selectedClient = null;
+        break;
+      case 'market':
+        this.selectedMarket = null;
+        break;
       case 'dateRange':
         this.dateRange = { start: null, end: null };
         break;
@@ -315,9 +343,18 @@ export class JobListComponent implements OnInit, OnDestroy {
     this.selectedStatus = null;
     this.selectedPriority = null;
     this.selectedJobType = null;
+    this.selectedClient = null;
+    this.selectedMarket = null;
     this.dateRange = { start: null, end: null };
     this.store.dispatch(JobActions.clearJobFilters());
     this.pageIndex = 0;
+  }
+
+  /**
+   * Retry loading jobs after an error
+   */
+  retryLoad(): void {
+    this.store.dispatch(JobActions.loadJobs({ filters: {} }));
   }
 
   /**

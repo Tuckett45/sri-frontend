@@ -117,15 +117,32 @@
   padding: 48px;
 }
 
-.error-card {
-  margin-bottom: 24px;
-  background-color: #ffebee;
+.error-state {
+  .error-card {
+    background-color: #ffffff !important;
+    border: 1px solid #f44336;
+    border-radius: 8px;
+    margin-bottom: 24px;
 
-  mat-card-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #c62828;
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 24px;
+      gap: 8px;
+
+      h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+        color: #424242;
+      }
+
+      p {
+        margin: 0;
+        color: #757575;
+      }
+    }
   }
 }
 
@@ -325,6 +342,35 @@
 
 mat-paginator {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: rgba(0, 0, 0, 0.26);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #616161;
+  }
+
+  p {
+    margin: 0;
+    color: #9e9e9e;
+  }
 }
 
 // Mobile responsive styles

@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
-import { takeUntil, filter } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil, filter, skip, take } from 'rxjs/operators';
 import { Technician, TechnicianRole, EmploymentType, Skill, Certification, SkillLevel } from '../../../models/technician.model';
 import { CreateTechnicianDto, UpdateTechnicianDto } from '../../../models/dtos/technician.dto';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
@@ -19,11 +19,13 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
   technicianForm!: FormGroup;
   isEditMode = false;
   technicianId: string | null = null;
-  
+  serverError$!: Observable<string | null>;
+  submitting = false;
+
   // Available options
   roles = Object.values(TechnicianRole);
   employmentTypes = Object.values(EmploymentType);
-  
+
   // Available skills (will be populated from store or API)
   availableSkills: Skill[] = [
     { id: 's1', name: 'Cat6', category: 'Cabling', level: SkillLevel.Intermediate },
@@ -32,22 +34,23 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
     { id: 's4', name: 'Ladder Safety', category: 'Safety', level: SkillLevel.Intermediate },
     { id: 's5', name: 'Confined Space', category: 'Safety', level: SkillLevel.Intermediate }
   ];
-  
+
   // Calendar selection
   selectedUnavailableDates: Date[] = [];
-  
+
   private destroy$ = new Subject<void>();
-  
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private store: Store
   ) {}
-  
+
   ngOnInit(): void {
     this.initializeForm();
-    
+    this.serverError$ = this.store.select(TechnicianSelectors.selectTechniciansError);
+
     // Check if we're in edit mode
     this.route.params
       .pipe(
@@ -62,17 +65,16 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
         }
       });
   }
-  
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
-  
+
   initializeForm(): void {
     this.technicianForm = this.fb.group({
-      // Step 1: Basic Info
       basicInfo: this.fb.group({
-        technicianId: ['', Validators.required],
+        technicianId: [''],
         firstName: ['', Validators.required],
         lastName: ['', Validators.required],
         email: ['', [Validators.required, Validators.email]],
@@ -84,22 +86,16 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
         hourlyCostRate: [null],
         canTravel: [false]
       }),
-      
-      // Step 2: Skills
       skills: this.fb.group({
         selectedSkills: [[]]
       }),
-      
-      // Step 3: Certifications
       certifications: this.fb.array([]),
-      
-      // Step 4: Availability
       availability: this.fb.group({
         unavailableDates: [[]]
       })
     });
   }
-  
+
   loadTechnician(id: string): void {
     this.store.select(TechnicianSelectors.selectTechnicianById(id))
       .pipe(
@@ -112,9 +108,8 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
         }
       });
   }
-  
+
   populateForm(technician: Technician): void {
-    // Populate basic info
     this.basicInfoGroup.patchValue({
       technicianId: technician.technicianId,
       firstName: technician.firstName,
@@ -128,46 +123,41 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       hourlyCostRate: technician.hourlyCostRate,
       canTravel: technician.canTravel ?? false
     });
-    
-    // Populate skills
+
     this.skillsGroup.patchValue({
       selectedSkills: technician.skills
     });
-    
-    // Populate certifications
+
     technician.certifications.forEach(cert => {
       this.addCertification(cert);
     });
-    
-    // Populate availability
+
     const unavailableDates = technician.availability
       .filter(avail => !avail.isAvailable)
       .map(avail => new Date(avail.date));
-    
+
     this.selectedUnavailableDates = unavailableDates;
     this.availabilityGroup.patchValue({
       unavailableDates: unavailableDates
     });
   }
-  
-  // Form group getters
+
   get basicInfoGroup(): FormGroup {
     return this.technicianForm.get('basicInfo') as FormGroup;
   }
-  
+
   get skillsGroup(): FormGroup {
     return this.technicianForm.get('skills') as FormGroup;
   }
-  
+
   get certificationsArray(): FormArray {
     return this.technicianForm.get('certifications') as FormArray;
   }
-  
+
   get availabilityGroup(): FormGroup {
     return this.technicianForm.get('availability') as FormGroup;
   }
-  
-  // Certification management
+
   createCertificationGroup(cert?: Certification): FormGroup {
     return this.fb.group({
       id: [cert?.id || null],
@@ -176,45 +166,41 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       expirationDate: [cert?.expirationDate || null, Validators.required]
     });
   }
-  
+
   addCertification(cert?: Certification): void {
     this.certificationsArray.push(this.createCertificationGroup(cert));
   }
-  
+
   removeCertification(index: number): void {
     this.certificationsArray.removeAt(index);
   }
-  
-  // Date selection for availability
+
   onDateSelected(date: Date | null): void {
     if (!date) return;
-    const dateIndex = this.selectedUnavailableDates.findIndex(d => 
+    const dateIndex = this.selectedUnavailableDates.findIndex(d =>
       d.getTime() === date.getTime()
     );
-    
+
     if (dateIndex >= 0) {
-      // Date already selected, remove it
       this.selectedUnavailableDates.splice(dateIndex, 1);
     } else {
-      // Add new date
       this.selectedUnavailableDates.push(date);
     }
-    
+
     this.availabilityGroup.patchValue({
       unavailableDates: this.selectedUnavailableDates
     });
   }
-  
+
   dateClass = (date: Date): string => {
-    const isSelected = this.selectedUnavailableDates.some(d => 
+    const isSelected = this.selectedUnavailableDates.some(d =>
       d.getFullYear() === date.getFullYear() &&
       d.getMonth() === date.getMonth() &&
       d.getDate() === date.getDate()
     );
     return isSelected ? 'selected-unavailable-date' : '';
   }
-  
-  // Validators
+
   phoneValidator(control: AbstractControl): { [key: string]: any } | null {
     const phoneRegex = /^[\d\s\-\(\)]+$/;
     if (control.value && !phoneRegex.test(control.value)) {
@@ -222,45 +208,62 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
     }
     return null;
   }
-  
-  // Form submission
+
   onSubmit(): void {
     if (this.technicianForm.invalid) {
       this.markFormGroupTouched(this.technicianForm);
       return;
     }
-    
+
     const formValue = this.technicianForm.value;
-    
+
     if (this.isEditMode && this.technicianId) {
       this.updateTechnician(formValue);
     } else {
       this.createTechnician(formValue);
     }
   }
-  
+
   createTechnician(formValue: any): void {
+    const { technicianId, ...basicInfo } = formValue.basicInfo;
     const dto: CreateTechnicianDto = {
-      ...formValue.basicInfo,
+      ...basicInfo,
       skills: formValue.skills.selectedSkills,
-      certifications: formValue.certifications,
+      certifications: (formValue.certifications || []).map((cert: any) => ({
+        name: cert.name,
+        issueDate: cert.issueDate,
+        expirationDate: cert.expirationDate
+      })),
       availability: this.selectedUnavailableDates.map(date => ({
-        id: '',
-        technicianId: '',
         date: date,
         isAvailable: false,
         reason: 'PTO'
       }))
     };
-    
+
+    this.submitting = true;
     this.store.dispatch(TechnicianActions.createTechnician({ technician: dto }));
-    
-    // Navigate back to list after a short delay (to allow action to complete)
-    setTimeout(() => {
-      this.router.navigate(['../'], { relativeTo: this.route });
-    }, 500);
+
+    // Watch loading state: when loading goes from true back to false, check for errors
+    this.store.select(TechnicianSelectors.selectTechniciansLoading).pipe(
+      skip(1), // skip current value
+      filter(loading => !loading), // wait for loading to become false
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.submitting = false;
+      // Check if there's an error
+      this.store.select(TechnicianSelectors.selectTechniciansError).pipe(
+        take(1)
+      ).subscribe(error => {
+        if (!error) {
+          this.router.navigate(['../'], { relativeTo: this.route });
+        }
+        // If error exists, form data is retained and error is displayed via serverError$
+      });
+    });
   }
-  
+
   updateTechnician(formValue: any): void {
     const dto: UpdateTechnicianDto = {
       ...formValue.basicInfo,
@@ -274,18 +277,31 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
         reason: 'PTO'
       }))
     };
-    
-    this.store.dispatch(TechnicianActions.updateTechnician({ 
-      id: this.technicianId!, 
-      technician: dto 
+
+    this.submitting = true;
+    this.store.dispatch(TechnicianActions.updateTechnician({
+      id: this.technicianId!,
+      technician: dto
     }));
-    
-    // Navigate back to detail view
-    setTimeout(() => {
-      this.router.navigate(['../../', this.technicianId], { relativeTo: this.route });
-    }, 500);
+
+    // Watch loading state: when loading goes from true back to false, check for errors
+    this.store.select(TechnicianSelectors.selectTechniciansLoading).pipe(
+      skip(1),
+      filter(loading => !loading),
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.submitting = false;
+      this.store.select(TechnicianSelectors.selectTechniciansError).pipe(
+        take(1)
+      ).subscribe(error => {
+        if (!error) {
+          this.router.navigate(['../../', this.technicianId], { relativeTo: this.route });
+        }
+      });
+    });
   }
-  
+
   onCancel(): void {
     if (this.isEditMode && this.technicianId) {
       this.router.navigate(['../../', this.technicianId], { relativeTo: this.route });
@@ -293,25 +309,23 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       this.router.navigate(['../'], { relativeTo: this.route });
     }
   }
-  
-  // Helper method to mark all controls as touched
+
   private markFormGroupTouched(formGroup: FormGroup | FormArray): void {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
       control?.markAsTouched();
-      
+
       if (control instanceof FormGroup || control instanceof FormArray) {
         this.markFormGroupTouched(control);
       }
     });
   }
-  
-  // Error message helpers
+
   getErrorMessage(controlName: string, groupName?: string): string {
-    const control = groupName 
+    const control = groupName
       ? this.technicianForm.get(groupName)?.get(controlName)
       : this.technicianForm.get(controlName);
-    
+
     if (control?.hasError('required')) {
       return 'This field is required';
     }

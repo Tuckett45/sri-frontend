@@ -341,6 +341,10 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.store.dispatch(CrewActions.selectCrew({ id: crew.id }));
     this.router.navigate(['/field-resource-management/crews', crew.id, 'edit']);
   }
+
+  retryLoad(): void {
+    this.store.dispatch(CrewActions.loadCrews({ filters: {} }));
+  }
   
   getMemberCount(crew: Crew): number {
     return crew.memberIds.length;

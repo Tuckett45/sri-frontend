@@ -11,6 +11,9 @@ describe('CMGuard', () => {
   let mockRoute: ActivatedRouteSnapshot;
   let mockState: RouterStateSnapshot;
 
+  // The full set of roles the CMGuard allows
+  const expectedAllowedRoles = [UserRole.CM, UserRole.Admin, UserRole.Controller, UserRole.OSPCoordinator];
+
   beforeEach(() => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['isUserInRole']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
@@ -43,7 +46,7 @@ describe('CMGuard', () => {
       const result = guard.canActivate(mockRoute, mockState);
 
       expect(result).toBe(true);
-      expect(authService.isUserInRole).toHaveBeenCalledWith([UserRole.CM, UserRole.Admin]);
+      expect(authService.isUserInRole).toHaveBeenCalledWith(expectedAllowedRoles);
       expect(router.navigate).not.toHaveBeenCalled();
     });
 
@@ -53,7 +56,7 @@ describe('CMGuard', () => {
       const result = guard.canActivate(mockRoute, mockState);
 
       expect(result).toBe(true);
-      expect(authService.isUserInRole).toHaveBeenCalledWith([UserRole.CM, UserRole.Admin]);
+      expect(authService.isUserInRole).toHaveBeenCalledWith(expectedAllowedRoles);
       expect(router.navigate).not.toHaveBeenCalled();
     });
 
@@ -63,7 +66,7 @@ describe('CMGuard', () => {
       const result = guard.canActivate(mockRoute, mockState);
 
       expect(result).toBe(false);
-      expect(authService.isUserInRole).toHaveBeenCalledWith([UserRole.CM, UserRole.Admin]);
+      expect(authService.isUserInRole).toHaveBeenCalledWith(expectedAllowedRoles);
       expect(router.navigate).toHaveBeenCalledWith(['/unauthorized'], {
         queryParams: { returnUrl: '/cm/dashboard' }
       });

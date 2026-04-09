@@ -86,8 +86,6 @@ import { FrmHasPermissionDirective } from './directives/frm-has-permission.direc
 // Services
 import { FrmRealtimeIntegratorService } from './services/frm-realtime-integrator.service';
 import { GlobalErrorHandlerService } from './services/global-error-handler.service';
-import { MockDataService } from './services/mock-data.service';
-
 // Interceptors
 import { ErrorInterceptor } from './interceptors/error.interceptor';
 
@@ -225,19 +223,12 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
 })
 export class FieldResourceManagementModule {
   constructor(
-    private realtimeIntegrator: FrmRealtimeIntegratorService,
-    private mockDataService: MockDataService
+    private realtimeIntegrator: FrmRealtimeIntegratorService
   ) {
     // Initialize SignalR real-time updates on module load
     this.realtimeIntegrator.initialize().catch(error => {
       console.error('Failed to initialize FRM real-time updates:', error);
       // Application continues to function without real-time updates
     });
-
-    // Initialize mock data for demo
-    // TODO: Remove this in production or add environment check
-    setTimeout(() => {
-      this.mockDataService.initializeAllMockData();
-    }, 1000); // Delay to ensure store is ready
   }
 }

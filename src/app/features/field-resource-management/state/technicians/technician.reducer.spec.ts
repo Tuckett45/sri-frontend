@@ -24,8 +24,9 @@ describe('TechnicianReducer', () => {
     certifications: [],
     availability: [],
     isActive: true,
+    canTravel: true,
     createdAt: new Date('2024-01-01'),
-    company: 'TEST_COMPANY',    updatedAt: new Date('2024-01-01')
+    updatedAt: new Date('2024-01-01')
   };
 
   const mockLocation: GeoLocation = {

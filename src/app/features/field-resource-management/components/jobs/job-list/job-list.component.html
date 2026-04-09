@@ -98,6 +98,26 @@
             </mat-select>
           </mat-form-field>
 
+          <mat-form-field appearance="outline">
+            <mat-label>Client</mat-label>
+            <mat-select [(ngModel)]="selectedClient" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let client of clientOptions" [value]="client">
+                {{ client }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Market</mat-label>
+            <mat-select [(ngModel)]="selectedMarket" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let market of marketOptions" [value]="market">
+                {{ market }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
           <frm-date-range-picker
             [(ngModel)]="dateRange"
             (ngModelChange)="applyFilters()"
@@ -161,8 +181,23 @@
     <mat-spinner></mat-spinner>
   </div>
 
+  <!-- Error State -->
+  <div class="error-state" *ngIf="(error$ | async) as error">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load jobs</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" (click)="retryLoad()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
   <!-- Job Table -->
-  <div class="table-container" *ngIf="!(loading$ | async)">
+  <div class="table-container" *ngIf="!(loading$ | async) && !(error$ | async)">
     <table mat-table [dataSource]="displayedJobs" class="job-table">
       <!-- Checkbox Column -->
       <ng-container matColumnDef="select" sticky>
@@ -224,6 +259,14 @@
         <th mat-header-cell *matHeaderCellDef>Status</th>
         <td mat-cell *matCellDef="let job">
           <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+        </td>
+      </ng-container>
+
+      <!-- Job Type Column -->
+      <ng-container matColumnDef="jobType">
+        <th mat-header-cell *matHeaderCellDef>Job Type</th>
+        <td mat-cell *matCellDef="let job">
+          {{ job.jobType }}
         </td>
       </ng-container>
 

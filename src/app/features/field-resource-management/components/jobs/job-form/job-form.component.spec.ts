@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,8 +14,36 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { NO_ERRORS_SCHEMA, Component, forwardRef } from '@angular/core';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
+
+/**
+ * Stub for SkillSelectorComponent that implements ControlValueAccessor
+ * so Angular forms can bind to formControlName="requiredSkills".
+ */
+@Component({
+  selector: 'frm-skill-selector',
+  template: '',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => SkillSelectorStubComponent),
+      multi: true
+    }
+  ]
+})
+class SkillSelectorStubComponent implements ControlValueAccessor {
+  writeValue(_: any): void {}
+  registerOnChange(_: any): void {}
+  registerOnTouched(_: any): void {}
+}
 
 import { JobFormComponent } from './job-form.component';
 import { JobType, Priority } from '../../../models/job.model';
@@ -38,7 +67,7 @@ describe('JobFormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [JobFormComponent],
+      declarations: [JobFormComponent, SkillSelectorStubComponent],
       imports: [
         ReactiveFormsModule,
         RouterTestingModule,
@@ -52,8 +81,16 @@ describe('JobFormComponent', () => {
         MatButtonModule,
         MatIconModule,
         MatSnackBarModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        MatChipsModule,
+        MatTooltipModule,
+        MatStepperModule,
+        MatCheckboxModule,
+        MatAutocompleteModule,
+        MatSlideToggleModule,
+        HttpClientTestingModule
       ],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({ initialState }),
         {
@@ -206,6 +243,7 @@ describe('JobFormComponent', () => {
     component.jobForm.patchValue({
       client: 'Test Client',
       siteName: 'Test Site',
+      market: 'North',
       siteAddress: {
         street: '123 Main St',
         city: 'Test City',
@@ -219,7 +257,16 @@ describe('JobFormComponent', () => {
       requiredCrewSize: 2,
       estimatedLaborHours: 8,
       scheduledStartDate: new Date('2024-01-15'),
-      scheduledEndDate: new Date('2024-01-15')
+      scheduledEndDate: new Date('2024-01-15'),
+      authorizationStatus: 'authorized',
+      standardBillRate: 75,
+      overtimeBillRate: 112.5,
+      perDiem: 50,
+      invoicingProcess: 'weekly',
+      projectDirector: 'Bob Smith',
+      targetResources: 5,
+      bizDevContact: 'Alice Jones',
+      requestedHours: 160
     });
     
     component.onSubmit();

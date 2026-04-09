@@ -168,7 +168,7 @@ export class CrewFormComponent implements OnInit, OnDestroy {
    * Populate form with crew data
    */
   private populateForm(crew: Crew): void {
-    this.selectedMemberIds = [...crew.memberIds];
+    this.selectedMemberIds = [...(crew.memberIds ?? [])];
     
     this.crewForm.patchValue({
       name: crew.name,

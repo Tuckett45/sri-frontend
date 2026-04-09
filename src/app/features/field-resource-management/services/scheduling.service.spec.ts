@@ -3,10 +3,12 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { SchedulingService } from './scheduling.service';
 import { Assignment, Conflict, ConflictSeverity, AssignmentStatus } from '../models/assignment.model';
 import { Skill, SkillLevel } from '../models/technician.model';
+import { environment } from '../../../../environments/environments';
 
 describe('SchedulingService', () => {
   let service: SchedulingService;
   let httpMock: HttpTestingController;
+  const apiUrl = `${environment.apiUrl}/scheduling`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -906,7 +908,7 @@ describe('SchedulingService', () => {
           error: done.fail
         });
 
-        const req = httpMock.expectOne('/api/scheduling/assign');
+        const req = httpMock.expectOne(`${apiUrl}/assign`);
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({
           jobId: validJobId,
@@ -942,7 +944,7 @@ describe('SchedulingService', () => {
           error: done.fail
         });
 
-        const req = httpMock.expectOne('/api/scheduling/assign');
+        const req = httpMock.expectOne(`${apiUrl}/assign`);
         expect(req.request.body).toEqual({
           jobId: validJobId,
           technicianId: validTechnicianId,
@@ -963,7 +965,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        httpMock.expectNone('/api/scheduling/assign');
+        httpMock.expectNone(`${apiUrl}/assign`);
       });
 
       it('should throw error for empty jobId', (done) => {
@@ -975,7 +977,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        httpMock.expectNone('/api/scheduling/assign');
+        httpMock.expectNone(`${apiUrl}/assign`);
       });
 
       it('should throw error for invalid technicianId', (done) => {
@@ -987,7 +989,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        httpMock.expectNone('/api/scheduling/assign');
+        httpMock.expectNone(`${apiUrl}/assign`);
       });
 
       it('should throw error for invalid assignedBy', (done) => {
@@ -999,7 +1001,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        httpMock.expectNone('/api/scheduling/assign');
+        httpMock.expectNone(`${apiUrl}/assign`);
       });
 
       it('should throw error when overrideConflicts is true but justification is missing', (done) => {
@@ -1011,7 +1013,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        httpMock.expectNone('/api/scheduling/assign');
+        httpMock.expectNone(`${apiUrl}/assign`);
       });
 
       it('should throw error when overrideConflicts is true but justification is empty', (done) => {
@@ -1023,7 +1025,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        httpMock.expectNone('/api/scheduling/assign');
+        httpMock.expectNone(`${apiUrl}/assign`);
       });
     });
 
@@ -1037,7 +1039,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        const req = httpMock.expectOne('/api/scheduling/assign');
+        const req = httpMock.expectOne(`${apiUrl}/assign`);
         req.flush(null, { status: 409, statusText: 'Conflict' });
       });
 
@@ -1050,7 +1052,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        const req = httpMock.expectOne('/api/scheduling/assign');
+        const req = httpMock.expectOne(`${apiUrl}/assign`);
         req.flush(null, { status: 422, statusText: 'Unprocessable Entity' });
       });
 
@@ -1063,7 +1065,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        const req = httpMock.expectOne('/api/scheduling/assign');
+        const req = httpMock.expectOne(`${apiUrl}/assign`);
         req.flush(null, { status: 404, statusText: 'Not Found' });
       });
     });
@@ -1100,7 +1102,7 @@ describe('SchedulingService', () => {
         });
 
         const req = httpMock.expectOne((request) => {
-          return request.url === '/api/scheduling/conflicts/detect' &&
+          return request.url === `${apiUrl}/conflicts/detect` &&
                  request.params.get('jobId') === validJobId &&
                  request.params.get('technicianId') === validTechnicianId;
         });
@@ -1117,7 +1119,7 @@ describe('SchedulingService', () => {
           error: done.fail
         });
 
-        const req = httpMock.expectOne((request) => request.url === '/api/scheduling/conflicts/detect');
+        const req = httpMock.expectOne((request) => request.url === `${apiUrl}/conflicts/detect`);
         req.flush([]);
       });
     });
@@ -1132,7 +1134,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        httpMock.expectNone('/api/scheduling/conflicts/detect');
+        httpMock.expectNone(`${apiUrl}/conflicts/detect`);
       });
 
       it('should throw error for invalid technicianId', (done) => {
@@ -1144,7 +1146,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        httpMock.expectNone('/api/scheduling/conflicts/detect');
+        httpMock.expectNone(`${apiUrl}/conflicts/detect`);
       });
 
       it('should throw error when scheduledStart is after scheduledEnd', (done) => {
@@ -1159,7 +1161,7 @@ describe('SchedulingService', () => {
           }
         });
 
-        httpMock.expectNone('/api/scheduling/conflicts/detect');
+        httpMock.expectNone(`${apiUrl}/conflicts/detect`);
       });
     });
   });
@@ -1186,7 +1188,7 @@ describe('SchedulingService', () => {
         error: done.fail
       });
 
-      const req = httpMock.expectOne('/api/scheduling/assignments');
+      const req = httpMock.expectOne(`${apiUrl}/assignments`);
       expect(req.request.method).toBe('GET');
       req.flush(mockAssignments);
     });
@@ -1210,7 +1212,7 @@ describe('SchedulingService', () => {
       });
 
       const req = httpMock.expectOne((request) => {
-        return request.url === '/api/scheduling/assignments' &&
+        return request.url === `${apiUrl}/assignments` &&
                request.params.get('technicianId') === 'tech-1' &&
                request.params.get('jobId') === 'job-1' &&
                request.params.get('isActive') === 'true' &&
@@ -1229,15 +1231,15 @@ describe('SchedulingService', () => {
       });
 
       // First attempt fails
-      const req1 = httpMock.expectOne('/api/scheduling/assignments');
+      const req1 = httpMock.expectOne(`${apiUrl}/assignments`);
       req1.flush(null, { status: 500, statusText: 'Server Error' });
 
       // Second attempt fails
-      const req2 = httpMock.expectOne('/api/scheduling/assignments');
+      const req2 = httpMock.expectOne(`${apiUrl}/assignments`);
       req2.flush(null, { status: 500, statusText: 'Server Error' });
 
       // Third attempt succeeds
-      const req3 = httpMock.expectOne('/api/scheduling/assignments');
+      const req3 = httpMock.expectOne(`${apiUrl}/assignments`);
       req3.flush([]);
     });
   });
@@ -1251,7 +1253,7 @@ describe('SchedulingService', () => {
         error: done.fail
       });
 
-      const req = httpMock.expectOne(`/api/scheduling/assignments/${assignmentId}`);
+      const req = httpMock.expectOne(`${apiUrl}/assignments/${assignmentId}`);
       expect(req.request.method).toBe('DELETE');
       req.flush(null);
     });
@@ -1284,7 +1286,7 @@ describe('SchedulingService', () => {
         error: done.fail
       });
 
-      const req = httpMock.expectOne('/api/scheduling/reassign');
+      const req = httpMock.expectOne(`${apiUrl}/reassign`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({
         jobId,
@@ -1317,7 +1319,7 @@ describe('SchedulingService', () => {
         error: done.fail
       });
 
-      const req = httpMock.expectOne(`/api/scheduling/assignments/${assignmentId}/accept`);
+      const req = httpMock.expectOne(`${apiUrl}/assignments/${assignmentId}/accept`);
       expect(req.request.method).toBe('POST');
       req.flush(mockAssignment);
     });
@@ -1345,7 +1347,7 @@ describe('SchedulingService', () => {
         error: done.fail
       });
 
-      const req = httpMock.expectOne(`/api/scheduling/assignments/${assignmentId}/reject`);
+      const req = httpMock.expectOne(`${apiUrl}/assignments/${assignmentId}/reject`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ reason });
       req.flush(mockAssignment);

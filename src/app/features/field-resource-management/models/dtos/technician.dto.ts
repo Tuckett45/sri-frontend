@@ -6,7 +6,6 @@ import { TechnicianRole, EmploymentType, Skill, Certification, Availability } fr
 import { GeoLocation } from '../time-entry.model';
 
 export interface CreateTechnicianDto {
-  technicianId: string;
   firstName: string;
   lastName: string;
   email: string;

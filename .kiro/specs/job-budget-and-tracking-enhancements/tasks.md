@@ -109,7 +109,7 @@ This implementation plan covers the development of comprehensive job budget trac
     - Test per diem calculation at various distances
     - _Requirements: 4.1-4.7, 5.1-5.9, 9.1-9.6_
 
-- [~] 5. Checkpoint - Ensure all tests pass
+- [ ] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 6. Implement Inventory Tracking System
@@ -204,7 +204,7 @@ This implementation plan covers the development of comprehensive job budget trac
     - Test transaction history recording
     - _Requirements: 7.1-7.13, 11.1-11.7_
 
-- [~] 8. Checkpoint - Ensure all tests pass
+- [ ] 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 9. Implement NgRx State Management for Budget
@@ -301,7 +301,7 @@ This implementation plan covers the development of comprehensive job budget trac
     - Test reorder recommendation generation
     - _Requirements: 7.1-7.13, 11.1-11.7_
 
-- [~] 13. Checkpoint - Ensure all tests pass
+- [ ] 13. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 14. Implement Budget UI Components
@@ -412,7 +412,7 @@ This implementation plan covers the development of comprehensive job budget trac
     - Test material consumption flow
     - _Requirements: 7.1-7.13_
 
-- [~] 19. Checkpoint - Ensure all tests pass
+- [ ] 19. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 20. Implement Reporting Components
@@ -589,20 +589,20 @@ This implementation plan covers the development of comprehensive job budget trac
     - _Requirements: All requirements (performance aspect)_
 
 - [ ] 25. Final checkpoint and deployment preparation
-  - [~] 25.1 Run full test suite
+  - [ ] 25.1 Run full test suite
     - Verify all unit tests pass
     - Verify all property-based tests pass (100+ iterations)
     - Verify all integration tests pass
     - Verify all end-to-end tests pass
     - _Requirements: All requirements_
   
-  - [~] 25.2 Create database migrations
+  - [ ] 25.2 Create database migrations
     - Create migration scripts for all new tables
     - Add indexes for performance
     - Migrate existing job data to create initial budgets
     - _Requirements: All requirements (data persistence aspect)_
   
-  - [~] 25.3 Configure environment settings
+  - [ ] 25.3 Configure environment settings
     - Set up Azure Maps API key
     - Configure budget alert thresholds
     - Configure per diem settings
@@ -610,7 +610,7 @@ This implementation plan covers the development of comprehensive job budget trac
     - Configure inventory and materials settings
     - _Requirements: All requirements (configuration aspect)_
   
-  - [~] 25.4 Set up monitoring and alerts
+  - [ ] 25.4 Set up monitoring and alerts
     - Monitor Azure Maps API usage
     - Monitor budget deduction latency
     - Monitor geocoding success rate
@@ -618,7 +618,7 @@ This implementation plan covers the development of comprehensive job budget trac
     - Set up alerts for authorization failures
     - _Requirements: All requirements (monitoring aspect)_
   
-  - [~] 25.5 Final verification
+  - [ ] 25.5 Final verification
     - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

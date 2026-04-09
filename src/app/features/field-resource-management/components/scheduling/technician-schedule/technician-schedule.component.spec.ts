@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,6 +10,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableModule } from '@angular/material/table';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { TechnicianScheduleComponent } from './technician-schedule.component';
@@ -21,6 +29,7 @@ describe('TechnicianScheduleComponent', () => {
   let component: TechnicianScheduleComponent;
   let fixture: ComponentFixture<TechnicianScheduleComponent>;
   let store: MockStore;
+  let router: Router;
 
   const mockTechnician: Technician = {
     id: 'tech1',
@@ -112,20 +121,28 @@ describe('TechnicianScheduleComponent', () => {
       imports: [
         BrowserAnimationsModule,
         ReactiveFormsModule,
+        RouterTestingModule,
         MatIconModule,
         MatButtonModule,
         MatFormFieldModule,
         MatInputModule,
         MatDatepickerModule,
         MatNativeDateModule,
-        MatChipsModule
+        MatChipsModule,
+        MatCardModule,
+        MatTooltipModule,
+        MatSelectModule,
+        MatProgressSpinnerModule,
+        MatTableModule
       ],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({ initialState })
       ]
     }).compileComponents();
 
     store = TestBed.inject(MockStore);
+    router = TestBed.inject(Router);
 
     fixture = TestBed.createComponent(TechnicianScheduleComponent);
     component = fixture.componentInstance;
@@ -146,7 +163,7 @@ describe('TechnicianScheduleComponent', () => {
     fixture.detectChanges();
     
     expect(dispatchSpy).toHaveBeenCalledWith(AssignmentActions.loadAssignments({}));
-    expect(dispatchSpy).toHaveBeenCalledWith(JobActions.loadJobs({}));
+    expect(dispatchSpy).toHaveBeenCalledWith(JobActions.loadJobs({ filters: {} }));
   });
 
   it('should set date range to today', () => {
@@ -212,9 +229,9 @@ describe('TechnicianScheduleComponent', () => {
   });
 
   it('should handle job click', () => {
-    spyOn(console, 'log');
+    const navigateSpy = spyOn(router, 'navigate');
     component.onJobClick(mockJob);
-    expect(console.log).toHaveBeenCalledWith('Job clicked:', mockJob);
+    expect(navigateSpy).toHaveBeenCalledWith(['/field-resource-management/jobs', 'job1']);
   });
 
   it('should filter jobs by date range', () => {
@@ -286,5 +303,37 @@ describe('TechnicianScheduleComponent', () => {
 
     expect(destroySpy).toHaveBeenCalled();
     expect(completeSpy).toHaveBeenCalled();
+  });
+
+  it('should display loading indicator when loading is true', () => {
+    store.setState({
+      ...initialState,
+      assignments: { ...initialState.assignments, loading: true }
+    });
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.loading-container')).toBeTruthy();
+    expect(compiled.querySelector('mat-spinner')).toBeTruthy();
+  });
+
+  it('should display error message when error is set', () => {
+    store.setState({
+      ...initialState,
+      assignments: { ...initialState.assignments, error: 'Failed to load assignments' }
+    });
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.error-card')).toBeTruthy();
+    expect(compiled.textContent).toContain('Failed to load assignments');
+  });
+
+  it('should dispatch load actions on retry', () => {
+    const dispatchSpy = spyOn(store, 'dispatch');
+    component.onRetry();
+
+    expect(dispatchSpy).toHaveBeenCalledWith(AssignmentActions.loadAssignments({}));
+    expect(dispatchSpy).toHaveBeenCalledWith(JobActions.loadJobs({ filters: {} }));
   });
 });

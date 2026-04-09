@@ -27,7 +27,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
   
-  displayedColumns: string[] = ['name', 'role', 'skills', 'travelStatus', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'role', 'region', 'skills', 'travelStatus', 'status', 'actions'];
   
   // Expose UserRole enum for template
   UserRole = UserRole;
@@ -38,6 +38,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   skillsControl = new FormControl([]);
   availabilityControl = new FormControl(false);
   travelWillingnessControl = new FormControl('');
+  regionControl = new FormControl('');
+  activeStatusControl = new FormControl('');
   
   // Travel profiles map for display
   travelProfilesMap: Map<string, TravelProfile> = new Map();
@@ -50,6 +52,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   // Available options for filters
   roles = Object.values(TechnicianRole);
   availableSkills: string[] = []; // Will be populated from technicians
+  availableRegions: string[] = []; // Will be populated from technicians
   
   private destroy$ = new Subject<void>();
   
@@ -83,6 +86,12 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       }
       if (params['travelWillingness']) {
         this.travelWillingnessControl.setValue(params['travelWillingness']);
+      }
+      if (params['region']) {
+        this.regionControl.setValue(params['region']);
+      }
+      if (params['activeStatus']) {
+        this.activeStatusControl.setValue(params['activeStatus']);
       }
       // Load pagination from URL
       if (params['page']) {
@@ -137,15 +146,28 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.applyFilters());
     
-    // Extract unique skills from all technicians
+    this.regionControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
+    
+    this.activeStatusControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
+    
+    // Extract unique skills and regions from all technicians
     this.technicians$
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
         const skillsSet = new Set<string>();
+        const regionsSet = new Set<string>();
         technicians.forEach(tech => {
           tech.skills.forEach(skill => skillsSet.add(skill.name));
+          if (tech.region) {
+            regionsSet.add(tech.region);
+          }
         });
         this.availableSkills = Array.from(skillsSet).sort();
+        this.availableRegions = Array.from(regionsSet).sort();
       });
   }
   
@@ -162,6 +184,10 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
         ? this.skillsControl.value 
         : undefined,
       isAvailable: this.availabilityControl.value || undefined,
+      region: this.regionControl.value || undefined,
+      isActive: this.activeStatusControl.value === 'active' ? true 
+        : this.activeStatusControl.value === 'inactive' ? false 
+        : undefined,
       page: this.pageIndex,
       pageSize: this.pageSize
     };
@@ -201,6 +227,12 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     }
     if (this.travelWillingnessControl.value) {
       queryParams.travelWillingness = this.travelWillingnessControl.value;
+    }
+    if (this.regionControl.value) {
+      queryParams.region = this.regionControl.value;
+    }
+    if (this.activeStatusControl.value) {
+      queryParams.activeStatus = this.activeStatusControl.value;
     }
     // Add pagination to URL
     if (this.pageIndex > 0) {
@@ -245,6 +277,13 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
         : 'Not Willing to Travel';
       filters.push({ label: 'Travel', value: travelLabel, key: 'travelWillingness' });
     }
+    if (this.regionControl.value) {
+      filters.push({ label: 'Region', value: this.regionControl.value, key: 'region' });
+    }
+    if (this.activeStatusControl.value) {
+      const statusLabel = this.activeStatusControl.value === 'active' ? 'Active' : 'Inactive';
+      filters.push({ label: 'Status', value: statusLabel, key: 'activeStatus' });
+    }
     
     return filters;
   }
@@ -269,6 +308,12 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       case 'travelWillingness':
         this.travelWillingnessControl.setValue('');
         break;
+      case 'region':
+        this.regionControl.setValue('');
+        break;
+      case 'activeStatus':
+        this.activeStatusControl.setValue('');
+        break;
     }
     this.applyFilters();
   }
@@ -279,6 +324,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.skillsControl.setValue([]);
     this.availabilityControl.setValue(false);
     this.travelWillingnessControl.setValue('');
+    this.regionControl.setValue('');
+    this.activeStatusControl.setValue('');
     this.pageIndex = 0; // Reset to first page
     this.store.dispatch(TechnicianActions.clearTechnicianFilters());
   }
@@ -308,6 +355,10 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   
   getFullName(technician: Technician): string {
     return `${technician.firstName} ${technician.lastName}`;
+  }
+
+  retryLoad(): void {
+    this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
   }
   
   getSkillNames(technician: Technician): string[] {

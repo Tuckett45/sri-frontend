@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialogRef } from '@angular/material/dialog';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { StartTimeEntryModalComponent } from './start-time-entry-modal.component';
 import { SharedMaterialModule } from '../../../shared-material.module';
@@ -31,8 +32,10 @@ describe('StartTimeEntryModalComponent', () => {
       imports: [
         SharedMaterialModule,
         FormsModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        MatDialogModule
       ],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({
           initialState: {

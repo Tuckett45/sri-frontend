@@ -124,16 +124,23 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <!-- Error Message -->
-  <mat-card *ngIf="error$ | async as error" class="error-card">
-    <mat-card-content>
-      <mat-icon color="warn">error</mat-icon>
-      <span>{{ error }}</span>
-    </mat-card-content>
-  </mat-card>
+  <!-- Error State -->
+  <div class="error-state" *ngIf="(error$ | async) as error">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load crews</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" class="retry-button" (click)="retryLoad()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
 
   <!-- Crews Table with Virtual Scrolling -->
-  <div class="table-container" *ngIf="!(loading$ | async)">
+  <div class="table-container" *ngIf="!(loading$ | async) && !(error$ | async)">
     <cdk-virtual-scroll-viewport itemSize="72" class="crew-viewport">
       <table mat-table [dataSource]="dataSource" matSort class="crews-table">
         
@@ -219,18 +226,15 @@
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="crew-row"></tr>
-
-        <!-- No Data Row -->
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-            <div class="no-data">
-              <mat-icon>groups_off</mat-icon>
-              <p>No crews found</p>
-            </div>
-          </td>
-        </tr>
       </table>
     </cdk-virtual-scroll-viewport>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="dataSource.data.length === 0">
+      <mat-icon>groups_off</mat-icon>
+      <h3>No crews found</h3>
+      <p>Try adjusting your search or filters</p>
+    </div>
 
     <!-- Paginator -->
     <mat-paginator 

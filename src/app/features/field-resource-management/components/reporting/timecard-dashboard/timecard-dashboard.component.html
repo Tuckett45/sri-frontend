@@ -26,6 +26,12 @@
       <mat-icon color="warn" aria-hidden="true">error</mat-icon>
       <span>{{ error }}</span>
     </mat-card-content>
+    <mat-card-actions>
+      <button mat-button color="primary" (click)="onRefresh()" aria-label="Retry loading timecard data">
+        <mat-icon aria-hidden="true">refresh</mat-icon>
+        Retry
+      </button>
+    </mat-card-actions>
   </mat-card>
   
   <!-- Tab Group -->

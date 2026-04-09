@@ -75,6 +75,7 @@ const FIELD_GROUP_PERMISSIONS: FrmPermissionSet = {
 
 const MANAGER_GROUP_PERMISSIONS: FrmPermissionSet = {
   ...FIELD_GROUP_PERMISSIONS,
+  canCreateJob: true,
   canViewAllSchedules: true,
   canEditSchedule: true,
   canAssignCrew: true,

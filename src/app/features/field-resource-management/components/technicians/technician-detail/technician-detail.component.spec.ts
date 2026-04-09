@@ -12,6 +12,10 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { TechnicianDetailComponent } from './technician-detail.component';
 import { Technician, TechnicianRole, EmploymentType, CertificationStatus, SkillLevel } from '../../../models/technician.model';
@@ -88,8 +92,12 @@ describe('TechnicianDetailComponent', () => {
         MatDatepickerModule,
         MatNativeDateModule,
         MatProgressSpinnerModule,
-        MatDialogModule
+        MatDialogModule,
+        MatTabsModule,
+        MatTooltipModule,
+        MatMenuModule
       ],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({ initialState }),
         {

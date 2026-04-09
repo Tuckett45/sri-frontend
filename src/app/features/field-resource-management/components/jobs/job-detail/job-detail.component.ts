@@ -98,6 +98,19 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   // Budget visibility
   canViewBudget = false;
 
+  // Status transition error
+  statusTransitionError: string | null = null;
+
+  // Valid status transitions map
+  private readonly validTransitions: Record<JobStatus, JobStatus[]> = {
+    [JobStatus.NotStarted]: [JobStatus.EnRoute, JobStatus.Issue, JobStatus.Cancelled],
+    [JobStatus.EnRoute]: [JobStatus.OnSite, JobStatus.Issue, JobStatus.Cancelled],
+    [JobStatus.OnSite]: [JobStatus.Completed, JobStatus.Issue, JobStatus.Cancelled],
+    [JobStatus.Completed]: [JobStatus.Cancelled],
+    [JobStatus.Issue]: [JobStatus.Cancelled],
+    [JobStatus.Cancelled]: []
+  };
+
   // Enum references for template
   JobStatus = JobStatus;
 
@@ -188,6 +201,42 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     // For demo purposes, allow time tracking on all jobs
     // Remove this line in production
     this.isAssignedToCurrentUser = true;
+  }
+
+  /**
+   * Check if a status transition is valid
+   */
+  isValidStatusTransition(from: JobStatus, to: JobStatus): boolean {
+    const allowed = this.validTransitions[from];
+    return allowed ? allowed.includes(to) : false;
+  }
+
+  /**
+   * Get valid target statuses for the current job status
+   */
+  getValidTransitions(status: JobStatus): JobStatus[] {
+    return this.validTransitions[status] || [];
+  }
+
+  /**
+   * Change job status with validation
+   */
+  changeStatus(newStatus: JobStatus, reason?: string): void {
+    if (!this.job) return;
+
+    this.statusTransitionError = null;
+
+    if (!this.isValidStatusTransition(this.job.status, newStatus)) {
+      this.statusTransitionError = `Invalid status transition from ${this.job.status} to ${newStatus}`;
+      this.snackBar.open(this.statusTransitionError, 'Close', { duration: 5000 });
+      return;
+    }
+
+    this.store.dispatch(JobActions.updateJobStatus({
+      id: this.job.id,
+      status: newStatus,
+      reason
+    }));
   }
 
   /**

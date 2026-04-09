@@ -9,6 +9,22 @@ describe('TechnicianGuard', () => {
   let authService: jasmine.SpyObj<AuthService>;
   let router: jasmine.SpyObj<Router>;
 
+  // The full set of roles the TechnicianGuard allows (Field_Group + Manager_Group)
+  const expectedAllowedRoles = [
+    // Field_Group
+    UserRole.Technician,
+    UserRole.DeploymentEngineer,
+    UserRole.CM,
+    UserRole.SRITech,
+    // Manager_Group
+    UserRole.PM,
+    UserRole.Admin,
+    UserRole.DCOps,
+    UserRole.OSPCoordinator,
+    UserRole.EngineeringFieldSupport,
+    UserRole.MaterialsManager
+  ];
+
   beforeEach(() => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['isUserInRole']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
@@ -36,11 +52,7 @@ describe('TechnicianGuard', () => {
     const result = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
 
     expect(result).toBe(true);
-    expect(authService.isUserInRole).toHaveBeenCalledWith([
-      UserRole.Technician,
-      UserRole.DeploymentEngineer,
-      UserRole.SRITech
-    ]);
+    expect(authService.isUserInRole).toHaveBeenCalledWith(expectedAllowedRoles);
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
@@ -53,17 +65,6 @@ describe('TechnicianGuard', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('should deny access for non-Technician role', () => {
-    authService.isUserInRole.and.returnValue(false);
-
-    const result = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
-
-    expect(result).toBe(false);
-    expect(router.navigate).toHaveBeenCalledWith(['/unauthorized'], {
-      queryParams: { returnUrl: '/mobile/daily' }
-    });
-  });
-
   it('should allow access for SRITech role', () => {
     authService.isUserInRole.and.returnValue(true);
 
@@ -73,33 +74,56 @@ describe('TechnicianGuard', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('should deny access for Admin role', () => {
+  it('should allow access for Admin role (Manager_Group)', () => {
+    authService.isUserInRole.and.returnValue(true);
+
+    const result = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
+
+    expect(result).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should allow access for PM role (Manager_Group)', () => {
+    authService.isUserInRole.and.returnValue(true);
+
+    const result = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
+
+    expect(result).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should deny access for unauthorized role and redirect to dashboard', () => {
     authService.isUserInRole.and.returnValue(false);
 
     const result = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
 
     expect(result).toBe(false);
-    expect(router.navigate).toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/field-resource-management/dashboard'],
+      {
+        queryParams: {
+          error: 'insufficient_permissions',
+          message: 'Technician access required'
+        }
+      }
+    );
   });
 
-  it('should deny access for PM role', () => {
-    authService.isUserInRole.and.returnValue(false);
-
-    const result = guard.canActivate({} as any, { url: '/mobile/daily' } as any);
-
-    expect(result).toBe(false);
-    expect(router.navigate).toHaveBeenCalled();
-  });
-
-  it('should redirect with correct return URL for different routes', () => {
+  it('should redirect with correct query params for different routes', () => {
     authService.isUserInRole.and.returnValue(false);
     const testUrl = '/mobile/schedule';
 
     guard.canActivate({} as any, { url: testUrl } as any);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/unauthorized'], {
-      queryParams: { returnUrl: testUrl }
-    });
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/field-resource-management/dashboard'],
+      {
+        queryParams: {
+          error: 'insufficient_permissions',
+          message: 'Technician access required'
+        }
+      }
+    );
   });
 
   it('should handle multiple consecutive calls consistently', () => {
