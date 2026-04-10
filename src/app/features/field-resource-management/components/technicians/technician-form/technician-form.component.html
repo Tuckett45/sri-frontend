@@ -127,7 +127,7 @@
                   <div class="form-row">
                     <mat-form-field appearance="outline">
                       <mat-label>Certification Name</mat-label>
-                      <input matInput formControlName="name" placeholder="OSHA10">
+                      <input matInput formControlName="name">
                       <mat-error *ngIf="cert.get('name')?.hasError('required')">
                         Certification name is required
                       </mat-error>
@@ -213,16 +213,6 @@
         </div>
       </mat-step>
     </mat-stepper>
-
-    <!-- Server Error Display -->
-    <div class="server-error" *ngIf="serverError$ | async as serverError">
-      <mat-card class="error-card">
-        <mat-card-content>
-          <mat-icon color="warn">error</mat-icon>
-          <span>{{ serverError }}</span>
-        </mat-card-content>
-      </mat-card>
-    </div>
 
     <!-- Form Actions -->
     <div class="form-actions">

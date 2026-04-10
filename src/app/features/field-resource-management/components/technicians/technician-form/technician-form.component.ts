@@ -1,11 +1,13 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, forkJoin } from 'rxjs';
 import { takeUntil, filter, skip, take } from 'rxjs/operators';
-import { Technician, TechnicianRole, Skill, SkillLevel, Certification } from '../../../models/technician.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Technician, TechnicianRole, Skill, SkillLevel, Certification, Availability } from '../../../models/technician.model';
 import { CreateTechnicianDto, UpdateTechnicianDto } from '../../../models/dtos/technician.dto';
+import { TechnicianService } from '../../../services/technician.service';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 
@@ -19,7 +21,6 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
   technicianForm!: FormGroup;
   isEditMode = false;
   technicianId: string | null = null;
-  serverError$!: Observable<string | null>;
   submitting = false;
 
   // Available options
@@ -43,12 +44,15 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private store: Store
+    private store: Store,
+    private snackBar: MatSnackBar,
+    private technicianService: TechnicianService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
-    this.serverError$ = this.store.select(TechnicianSelectors.selectTechniciansError);
+    this.store.dispatch(TechnicianActions.clearTechnicianError());
 
     // Check if we're in edit mode
     this.route.params
@@ -100,8 +104,36 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       .subscribe(technician => {
         if (technician) {
           this.populateForm(technician);
+          this.loadTechnicianDetails(id);
         }
       });
+  }
+
+  private loadTechnicianDetails(id: string): void {
+    const now = new Date();
+    const dateRange = {
+      startDate: now,
+      endDate: new Date(now.getFullYear(), now.getMonth() + 6, now.getDate())
+    };
+
+    forkJoin({
+      skills: this.technicianService.getTechnicianSkills(id),
+      certifications: this.technicianService.getTechnicianCertifications(id),
+      availability: this.technicianService.getTechnicianAvailability(id, dateRange)
+    }).pipe(
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: ({ skills, certifications, availability }) => {
+        this.populateSkills(skills);
+        this.populateCertifications(certifications);
+        this.populateAvailability(availability);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Failed to load technician details:', err);
+      }
+    });
   }
 
   populateForm(technician: Technician): void {
@@ -112,6 +144,32 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       phone: technician.phone,
       role: technician.role,
       region: technician.region
+    });
+  }
+
+  private populateSkills(skills: Skill[]): void {
+    if (!skills?.length) return;
+    // Match fetched skills against availableSkills by name, and include any that aren't in the hardcoded list
+    const matched = skills.map(s =>
+      this.availableSkills.find(a => a.name === s.name) || s
+    );
+    this.skillsGroup.patchValue({ selectedSkills: matched });
+  }
+
+  private populateCertifications(certifications: Certification[]): void {
+    if (!certifications?.length) return;
+    // Clear existing entries and populate from API data
+    this.certificationsArray.clear();
+    certifications.forEach(cert => this.addCertification(cert));
+  }
+
+  private populateAvailability(availability: Availability[]): void {
+    if (!availability?.length) return;
+    this.selectedUnavailableDates = availability
+      .filter(a => !a.isAvailable)
+      .map(a => new Date(a.date));
+    this.availabilityGroup.patchValue({
+      unavailableDates: this.selectedUnavailableDates
     });
   }
 
@@ -204,7 +262,19 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       email: formValue.basicInfo.email,
       phone: formValue.basicInfo.phone,
       role: formValue.basicInfo.role,
-      region: formValue.basicInfo.region
+      region: formValue.basicInfo.region,
+      skills: formValue.skills?.selectedSkills || [],
+      certifications: (formValue.certifications || []).map((cert: any) => ({
+        name: cert.name,
+        issueDate: cert.issueDate,
+        expirationDate: cert.expirationDate
+      })),
+      availability: this.selectedUnavailableDates.map(date => ({
+        technicianId: '',
+        date: date,
+        isAvailable: false,
+        reason: 'PTO'
+      }))
     };
 
     this.submitting = true;
@@ -223,9 +293,11 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
         take(1)
       ).subscribe(error => {
         if (!error) {
+          this.snackBar.open('Technician created successfully', 'Close', { duration: 3000 });
           this.router.navigate(['../'], { relativeTo: this.route });
+        } else {
+          this.snackBar.open(error, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
         }
-        // If error exists, form data is retained and error is displayed via serverError$
       });
     });
   }
@@ -237,7 +309,19 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       email: formValue.basicInfo.email,
       phone: formValue.basicInfo.phone,
       role: formValue.basicInfo.role,
-      region: formValue.basicInfo.region
+      region: formValue.basicInfo.region,
+      skills: formValue.skills?.selectedSkills || [],
+      certifications: (formValue.certifications || []).map((cert: any) => ({
+        name: cert.name,
+        issueDate: cert.issueDate,
+        expirationDate: cert.expirationDate
+      })),
+      availability: this.selectedUnavailableDates.map(date => ({
+        technicianId: this.technicianId!,
+        date: date,
+        isAvailable: false,
+        reason: 'PTO'
+      }))
     };
 
     this.submitting = true;
@@ -258,7 +342,10 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
         take(1)
       ).subscribe(error => {
         if (!error) {
+          this.snackBar.open('Technician updated successfully', 'Close', { duration: 3000 });
           this.router.navigate(['../../', this.technicianId], { relativeTo: this.route });
+        } else {
+          this.snackBar.open(error, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
         }
       });
     });

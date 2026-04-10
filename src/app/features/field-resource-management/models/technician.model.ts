@@ -66,6 +66,9 @@ export interface Technician {
   lastKnownLatitude?: number;
   lastKnownLongitude?: number;
   locationUpdatedAt?: Date;
+  skills?: Skill[];
+  certifications?: Certification[];
+  availability?: Availability[];
   createdAt: Date;
   updatedAt: Date;
 }

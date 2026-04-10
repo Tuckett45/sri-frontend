@@ -90,6 +90,11 @@ export const clearTechnicianFilters = createAction(
   '[Technician] Clear Filters'
 );
 
+// Clear Error
+export const clearTechnicianError = createAction(
+  '[Technician] Clear Error'
+);
+
 // Update Technician Location (Real-time tracking)
 export const updateTechnicianLocation = createAction(
   '[Technician] Update Technician Location',

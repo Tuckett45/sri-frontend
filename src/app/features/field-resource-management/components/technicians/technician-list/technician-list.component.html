@@ -158,9 +158,6 @@
               <strong>
                 <span [innerHTML]="getFullName(technician) | highlight: (searchControl.value || '')"></span>
               </strong>
-              <span class="technician-id">
-                <span [innerHTML]="technician.id | highlight: (searchControl.value || '')"></span>
-              </span>
             </div>
           </td>
         </ng-container>

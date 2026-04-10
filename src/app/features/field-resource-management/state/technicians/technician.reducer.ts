@@ -135,6 +135,12 @@ export const technicianReducer = createReducer(
     filters: {}
   })),
 
+  // Clear Error
+  on(TechnicianActions.clearTechnicianError, (state) => ({
+    ...state,
+    error: null
+  })),
+
   // Update Technician Location (Real-time tracking)
   on(TechnicianActions.updateTechnicianLocation, (state) => ({
     ...state,

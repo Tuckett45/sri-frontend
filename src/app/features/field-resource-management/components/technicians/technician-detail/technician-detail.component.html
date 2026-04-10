@@ -71,7 +71,17 @@
             <mat-card-title>Skills</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <p class="no-data">Skills data not available in current model</p>
+            <div *ngIf="technicianSkills.length > 0; else noSkills">
+              <mat-chip-set>
+                <mat-chip *ngFor="let skill of technicianSkills" [title]="skill.category">
+                  <strong>{{ skill.name }}</strong>
+                  <span class="skill-category"> - {{ skill.category }}</span>
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+            <ng-template #noSkills>
+              <p class="no-data">No skills assigned</p>
+            </ng-template>
           </mat-card-content>
         </mat-card>
 
@@ -81,7 +91,27 @@
             <mat-card-title>Certifications</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <p class="no-data">Certifications data not available in current model</p>
+            <div *ngIf="technicianCertifications.length > 0; else noCertifications">
+              <table mat-table [dataSource]="technicianCertifications" class="certifications-table">
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef>Certification</th>
+                  <td mat-cell *matCellDef="let cert">{{ cert.name }}</td>
+                </ng-container>
+                <ng-container matColumnDef="issueDate">
+                  <th mat-header-cell *matHeaderCellDef>Issue Date</th>
+                  <td mat-cell *matCellDef="let cert">{{ cert.issueDate | date:'shortDate' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="expirationDate">
+                  <th mat-header-cell *matHeaderCellDef>Expiration Date</th>
+                  <td mat-cell *matCellDef="let cert">{{ cert.expirationDate | date:'shortDate' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="['name', 'issueDate', 'expirationDate']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['name', 'issueDate', 'expirationDate'];"></tr>
+              </table>
+            </div>
+            <ng-template #noCertifications>
+              <p class="no-data">No certifications on file</p>
+            </ng-template>
           </mat-card-content>
         </mat-card>
 

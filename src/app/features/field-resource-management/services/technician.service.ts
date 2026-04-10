@@ -93,10 +93,14 @@ export class TechnicianService {
       }
     }
 
-    return this.http.get<Technician[]>(this.apiUrl, { params })
+    return this.http.get<any>(this.apiUrl, { params })
       .pipe(
         retry(this.retryCount),
-        map(technicians => this.applyRoleBasedFiltering(technicians)),
+        map(response => {
+          // API returns paginated response with items array
+          const technicians: Technician[] = response.items || response;
+          return this.applyRoleBasedFiltering(technicians);
+        }),
         catchError(this.handleError)
       );
   }

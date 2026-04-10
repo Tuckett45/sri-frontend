@@ -13,11 +13,11 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { combineLatest, Subject } from 'rxjs';
-import { takeUntil, filter, debounceTime, throttleTime } from 'rxjs/operators';
+import { combineLatest, Subject, forkJoin } from 'rxjs';
+import { takeUntil, filter, debounceTime, throttleTime, take } from 'rxjs/operators';
 import * as L from 'leaflet';
 import 'leaflet.markercluster';
-import { Technician } from '../../../models/technician.model';
+import { Technician, Skill, Availability } from '../../../models/technician.model';
 import { Crew } from '../../../models/crew.model';
 import { Job, JobStatus, Priority } from '../../../models/job.model';
 import { selectScopedTechnicians } from '../../../state/technicians/technician.selectors';
@@ -26,6 +26,7 @@ import { selectScopedJobsForMap } from '../../../state/jobs/job.selectors';
 import { PermissionService } from '../../../../../services/permission.service';
 import { GeoLocation } from '../../../models/time-entry.model';
 import { FrmSignalRService, LocationUpdate, CrewLocationUpdate } from '../../../services/frm-signalr.service';
+import { TechnicianService } from '../../../services/technician.service';
 
 /**
  * Map configuration interface
@@ -242,10 +243,26 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     scheduledStartDate: Date;
   }> = [];
 
+  /**
+   * Cache for technician skills keyed by technician ID
+   */
+  private technicianSkillsCache: Map<string, Skill[]> = new Map();
+
+  /**
+   * Cache for technician availability keyed by technician ID
+   */
+  private technicianAvailabilityCache: Map<string, Availability[]> = new Map();
+
+  /**
+   * Set of technician IDs currently being fetched to avoid duplicate requests
+   */
+  private pendingDetailFetches: Set<string> = new Set();
+
   constructor(
     private store: Store,
     private permissionService: PermissionService,
-    private signalRService: FrmSignalRService
+    private signalRService: FrmSignalRService,
+    private technicianService: TechnicianService
   ) {}
 
   ngOnInit(): void {
