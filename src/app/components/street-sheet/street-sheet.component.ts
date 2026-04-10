@@ -515,8 +515,8 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.submittedPageIndex = 0;
     this.missingPageIndex = 0;
     this.sortDashboardSheets();
+    this.applySheetSearchFilter();
     this.loadCmStats();
-    this.refreshMapMarkers();
   }
 
   onDashboardDateChange(): void {
@@ -529,7 +529,23 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
     this.pageIndex = 0;
     this.submittedPageIndex = 0;
     this.missingPageIndex = 0;
-    this.applyDashboardFilters();
+
+    // Re-fetch from API so the sheet list covers the new date window
+    if (this.dashboardStartDate && this.dashboardEndDate) {
+      this.streetSheetService.getStreetSheets(this.user, this.dashboardStartDate, this.dashboardEndDate).subscribe({
+        next: (streetSheets) => {
+          this.streetSheets = streetSheets;
+          this.filteredStreetSheets = streetSheets;
+          this.refreshLookupOptions();
+          this.applyDashboardFilters();
+        },
+        error: () => {
+          this.applyDashboardFilters();
+        }
+      });
+    } else {
+      this.applyDashboardFilters();
+    }
   }
 
   clearDashboardFilters(): void {
