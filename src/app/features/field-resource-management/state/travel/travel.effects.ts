@@ -35,6 +35,74 @@ export class TravelEffects {
     )
   );
 
+  // Create Travel Profile Effect
+  createTravelProfile$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TravelActions.createTravelProfile),
+      switchMap(({ technicianId }) =>
+        this.travelService.createTravelProfile(technicianId).pipe(
+          map((profile) =>
+            TravelActions.createTravelProfileSuccess({ profile })
+          ),
+          catchError((error) =>
+            of(TravelActions.createTravelProfileFailure({ 
+              error: error.message || 'Failed to create travel profile' 
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  createTravelProfileSuccess$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(TravelActions.createTravelProfileSuccess),
+        tap(() => {
+          this.snackBar.open('Travel profile created successfully', 'Close', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        })
+      ),
+    { dispatch: false }
+  );
+
+  // Update Travel Preferences Effect
+  updateTravelPreferences$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TravelActions.updateTravelPreferences),
+      switchMap(({ technicianId, preferences }) =>
+        this.travelService.updateTravelPreferences(technicianId, preferences).pipe(
+          map((profile) =>
+            TravelActions.updateTravelPreferencesSuccess({ profile })
+          ),
+          catchError((error) =>
+            of(TravelActions.updateTravelPreferencesFailure({ 
+              error: error.message || 'Failed to update travel preferences' 
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  updateTravelPreferencesSuccess$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(TravelActions.updateTravelPreferencesSuccess),
+        tap(() => {
+          this.snackBar.open('Travel preferences updated', 'Close', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        })
+      ),
+    { dispatch: false }
+  );
+
   // Load Multiple Travel Profiles Effect
   loadTravelProfiles$ = createEffect(() =>
     this.actions$.pipe(
@@ -275,7 +343,9 @@ export class TravelEffects {
           TravelActions.loadAllTravelProfilesFailure,
           TravelActions.updateTravelFlagFailure,
           TravelActions.updateHomeAddressFailure,
-          TravelActions.calculateDistancesFailure
+          TravelActions.calculateDistancesFailure,
+          TravelActions.createTravelProfileFailure,
+          TravelActions.updateTravelPreferencesFailure
         ),
         tap(({ error }) => {
           this.snackBar.open(`Error: ${error}`, 'Close', {

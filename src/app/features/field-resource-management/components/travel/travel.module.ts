@@ -9,6 +9,7 @@ import { TechnicianTravelProfileComponent } from './technician-travel-profile/te
 import { TechnicianDistanceListComponent } from './technician-distance-list/technician-distance-list.component';
 import { TravelOverviewComponent } from './travel-overview/travel-overview.component';
 import { TravelProfileDialogComponent } from './travel-profile-dialog/travel-profile-dialog.component';
+import { CreateTravelProfileDialogComponent } from './create-travel-profile-dialog/create-travel-profile-dialog.component';
 
 const routes: Routes = [
   {
@@ -24,7 +25,8 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     TechnicianTravelProfileComponent,
-    TechnicianDistanceListComponent
+    TechnicianDistanceListComponent,
+    CreateTravelProfileDialogComponent
   ],
   imports: [
     CommonModule,
@@ -33,7 +35,8 @@ const routes: Routes = [
   ],
   exports: [
     TechnicianTravelProfileComponent,
-    TechnicianDistanceListComponent
+    TechnicianDistanceListComponent,
+    CreateTravelProfileDialogComponent
   ]
 })
 export class TravelSharedModule { }

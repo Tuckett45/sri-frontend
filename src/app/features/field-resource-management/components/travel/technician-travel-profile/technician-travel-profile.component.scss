@@ -26,6 +26,10 @@
   color: $frm-error;
   background: rgba($frm-error, 0.08);
   border-radius: $frm-border-radius-md;
+
+  &.hidden {
+    display: none;
+  }
 }
 
 // Travel Flag Card
@@ -35,12 +39,10 @@
   border-left: 4px solid $frm-primary;
   box-shadow: $frm-shadow-sm;
 
-  mat-card-header {
-    mat-card-title {
-      font-size: $frm-font-size-lg;
-      font-weight: $frm-font-weight-medium;
-      color: $frm-text-primary;
-    }
+  mat-card-header mat-card-title {
+    font-size: $frm-font-size-lg;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
   }
 
   .travel-flag-row {
@@ -61,13 +63,8 @@
     font-weight: $frm-font-weight-medium;
   }
 
-  .travel-willing {
-    color: $frm-success;
-  }
-
-  .travel-not-willing {
-    color: $frm-text-secondary;
-  }
+  .travel-willing { color: $frm-success; }
+  .travel-not-willing { color: $frm-text-secondary; }
 }
 
 // Address Card
@@ -98,93 +95,39 @@
     font-size: $frm-font-size-sm;
     font-weight: $frm-font-weight-medium;
 
-    mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
 
-    &.success {
-      background: rgba($frm-success, 0.12);
-      color: $frm-success-dark;
-    }
-
-    &.pending {
-      background: rgba($frm-info, 0.12);
-      color: $frm-info-dark;
-    }
-
-    &.error {
-      background: rgba($frm-error, 0.12);
-      color: $frm-error-dark;
-    }
-
-    &.not-geocoded {
-      background: rgba($frm-gray-500, 0.12);
-      color: $frm-gray-600;
-    }
+    &.success { background: rgba($frm-success, 0.12); color: $frm-success-dark; }
+    &.pending { background: rgba($frm-info, 0.12); color: $frm-info-dark; }
+    &.error { background: rgba($frm-error, 0.12); color: $frm-error-dark; }
+    &.not-geocoded { background: rgba($frm-gray-500, 0.12); color: $frm-gray-600; }
   }
 }
 
 // Address Form
 .address-form {
-  .full-width {
-    width: 100%;
-  }
+  .full-width { width: 100%; }
 
-  // Ensure form field text is visible on white background
   ::ng-deep {
-    .mat-mdc-text-field-wrapper {
-      background-color: $frm-bg-primary;
-    }
-
-    .mat-mdc-form-field-focus-overlay {
-      background-color: transparent;
-    }
-
+    .mat-mdc-text-field-wrapper { background-color: $frm-bg-primary; }
+    .mat-mdc-form-field-focus-overlay { background-color: transparent; }
     .mdc-text-field--outlined .mdc-notched-outline__leading,
     .mdc-text-field--outlined .mdc-notched-outline__notch,
-    .mdc-text-field--outlined .mdc-notched-outline__trailing {
-      border-color: $frm-border-medium;
-    }
-
+    .mdc-text-field--outlined .mdc-notched-outline__trailing { border-color: $frm-border-medium; }
     .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__leading,
     .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__notch,
-    .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__trailing {
-      border-color: $frm-primary;
-    }
-
-    .mat-mdc-input-element {
-      color: $frm-text-primary !important;
-    }
-
-    .mat-mdc-form-field-label,
-    .mdc-floating-label {
-      color: $frm-text-secondary !important;
-    }
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__trailing { border-color: $frm-primary; }
+    .mat-mdc-input-element { color: $frm-text-primary !important; }
+    .mat-mdc-form-field-label, .mdc-floating-label { color: $frm-text-secondary !important; }
   }
 
   .address-row {
     display: flex;
     gap: $frm-spacing-md;
-
-    @media (max-width: 600px) {
-      flex-direction: column;
-    }
-
-    .city-field {
-      flex: 2;
-    }
-
-    .state-field {
-      flex: 1;
-      min-width: 100px;
-    }
-
-    .postal-field {
-      flex: 1;
-      min-width: 120px;
-    }
+    @media (max-width: 600px) { flex-direction: column; }
+    .city-field { flex: 2; }
+    .state-field { flex: 1; min-width: 100px; }
+    .postal-field { flex: 1; min-width: 120px; }
   }
 
   .address-actions {
@@ -229,43 +172,161 @@
     display: flex;
     align-items: center;
     gap: $frm-spacing-sm;
-
-    mat-icon {
-      color: $frm-success;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-    }
+    mat-icon { color: $frm-success; font-size: 20px; width: 20px; height: 20px; }
   }
 
   .coord-info {
     display: flex;
     flex-direction: column;
+    .coord-label { font-size: $frm-font-size-xs; color: $frm-text-secondary; }
+    .coord-value { font-size: $frm-font-size-sm; font-family: $frm-font-family-mono; color: $frm-text-primary; }
+  }
+}
 
-    .coord-label {
-      font-size: $frm-font-size-xs;
-      color: $frm-text-secondary;
+.spinning { animation: spin 1.5s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+// Preferences Card
+.preferences-card {
+  background-color: $frm-bg-primary;
+  border-radius: $frm-border-radius-lg;
+  box-shadow: $frm-shadow-sm;
+
+  mat-card-header mat-card-title {
+    font-size: $frm-font-size-lg;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
+  }
+
+  .preferences-form {
+    .full-width { width: 100%; }
+
+    .preferences-row {
+      display: flex;
+      gap: $frm-spacing-md;
+      @media (max-width: 600px) { flex-direction: column; }
+      .radius-field { flex: 1; }
+      .transport-field { flex: 1; }
     }
 
-    .coord-value {
-      font-size: $frm-font-size-sm;
-      font-family: $frm-font-family-mono;
-      color: $frm-text-primary;
+    .preferences-actions {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: $frm-spacing-sm;
     }
   }
 }
 
-// Spinning animation for geocoding
-.spinning {
-  animation: spin 1.5s linear infinite;
+// Per Diem Summary Card
+.per-diem-card {
+  background-color: $frm-bg-primary;
+  border-radius: $frm-border-radius-lg;
+  border-left: 4px solid $frm-accent;
+  box-shadow: $frm-shadow-sm;
+
+  mat-card-header mat-card-title {
+    font-size: $frm-font-size-lg;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: $frm-spacing-md;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: $frm-spacing-sm;
+    padding: $frm-spacing-md;
+    background: $frm-bg-secondary;
+    border-radius: $frm-border-radius-md;
+  }
+
+  .stat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    &.trips { color: $frm-primary; }
+    &.distance { color: $frm-info; }
+    &.eligible { color: $frm-success; }
+    &.amount { color: $frm-accent; }
+  }
+
+  .stat-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-value {
+    font-size: $frm-font-size-xl;
+    font-weight: $frm-font-weight-semibold;
+    color: $frm-text-primary;
+    line-height: $frm-line-height-tight;
+  }
+
+  .stat-label {
+    font-size: $frm-font-size-xs;
+    color: $frm-text-secondary;
+  }
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+// Travel History Card
+.history-card {
+  background-color: $frm-bg-primary;
+  border-radius: $frm-border-radius-lg;
+  box-shadow: $frm-shadow-sm;
+
+  mat-card-header mat-card-title {
+    font-size: $frm-font-size-lg;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
+  }
+
+  .travel-history-table {
+    width: 100%;
+
+    th.mat-header-cell {
+      font-weight: $frm-font-weight-medium;
+      color: $frm-text-secondary;
+      font-size: $frm-font-size-sm;
+    }
+
+    td.mat-cell {
+      font-size: $frm-font-size-base;
+      color: $frm-text-primary;
+    }
+  }
+
+  .per-diem-eligible {
+    color: $frm-success-dark;
+    font-weight: $frm-font-weight-medium;
+  }
+
+  .per-diem-ineligible {
+    color: $frm-text-disabled;
+  }
+
+  .no-history {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: $frm-spacing-xl;
+    color: $frm-text-secondary;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: $frm-gray-400;
+      margin-bottom: $frm-spacing-sm;
+    }
+  }
 }
 
-// No Profile State
+// No Profile State — Create CTA
 .no-profile {
   display: flex;
   flex-direction: column;
@@ -275,12 +336,30 @@
   background-color: $frm-bg-primary;
   border-radius: $frm-border-radius-lg;
   box-shadow: $frm-shadow-sm;
+  text-align: center;
 
-  mat-icon {
+  > mat-icon {
     font-size: 64px;
     width: 64px;
     height: 64px;
     margin-bottom: $frm-spacing-md;
-    color: $frm-gray-400;
+    color: $frm-primary-light;
+  }
+
+  h3 {
+    margin: 0 0 $frm-spacing-sm;
+    font-size: $frm-font-size-xl;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
+  }
+
+  p {
+    max-width: 400px;
+    margin-bottom: $frm-spacing-lg;
+    line-height: $frm-line-height-normal;
+  }
+
+  button {
+    mat-icon { margin-right: $frm-spacing-xs; }
   }
 }

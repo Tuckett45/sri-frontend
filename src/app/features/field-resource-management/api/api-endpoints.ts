@@ -46,6 +46,12 @@ export const TRAVEL_ENDPOINTS = {
   /** GET /api/travel/profiles/:technicianId - Get travel profile */
   getProfile: (technicianId: string) => `${API_BASE_URL}/travel/profiles/${technicianId}`,
   
+  /** POST /api/travel/profiles - Create travel profile */
+  createProfile: () => `${API_BASE_URL}/travel/profiles`,
+  
+  /** PATCH /api/travel/profiles/:technicianId/preferences - Update travel preferences */
+  updatePreferences: (technicianId: string) => `${API_BASE_URL}/travel/profiles/${technicianId}/preferences`,
+  
   /** PATCH /api/travel/profiles/:technicianId/flag - Update travel flag */
   updateFlag: (technicianId: string) => `${API_BASE_URL}/travel/profiles/${technicianId}/flag`,
   

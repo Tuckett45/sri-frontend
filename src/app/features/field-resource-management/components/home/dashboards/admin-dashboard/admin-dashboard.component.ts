@@ -7,6 +7,9 @@ import { QuickAction, KpiItem } from '../../../../models/dashboard.models';
 import { selectActiveJobsCount } from '../../../../state/jobs/job.selectors';
 import { selectActiveTechnicians } from '../../../../state/technicians/technician.selectors';
 import { selectActiveAssignments } from '../../../../state/assignments/assignment.selectors';
+import { loadTechnicians } from '../../../../state/technicians/technician.actions';
+import { loadAssignments } from '../../../../state/assignments/assignment.actions';
+import { loadJobs } from '../../../../state/jobs/job.actions';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -33,6 +36,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Dispatch load actions so dashboard data is fetched independently
+    // of navigating to the individual feature pages
+    this.store.dispatch(loadTechnicians({}));
+    this.store.dispatch(loadAssignments({}));
+    this.store.dispatch(loadJobs({}));
+
     this.kpis$ = combineLatest([
       this.store.select(selectActiveJobsCount),
       this.store.select(selectActiveTechnicians),

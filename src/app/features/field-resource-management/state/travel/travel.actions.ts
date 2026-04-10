@@ -10,8 +10,25 @@ import {
   Address, 
   Coordinates, 
   GeocodingStatus,
-  PerDiemConfig 
+  PerDiemConfig,
+  TravelPreferences 
 } from '../../models/travel.model';
+
+// Create Travel Profile
+export const createTravelProfile = createAction(
+  '[Travel] Create Travel Profile',
+  props<{ technicianId: string }>()
+);
+
+export const createTravelProfileSuccess = createAction(
+  '[Travel] Create Travel Profile Success',
+  props<{ profile: TravelProfile }>()
+);
+
+export const createTravelProfileFailure = createAction(
+  '[Travel] Create Travel Profile Failure',
+  props<{ error: string }>()
+);
 
 // Load Travel Profile
 export const loadTravelProfile = createAction(
@@ -145,6 +162,22 @@ export const updatePerDiemConfig = createAction(
 export const selectTechnician = createAction(
   '[Travel] Select Technician',
   props<{ technicianId: string }>()
+);
+
+// Update Travel Preferences
+export const updateTravelPreferences = createAction(
+  '[Travel] Update Travel Preferences',
+  props<{ technicianId: string; preferences: TravelPreferences }>()
+);
+
+export const updateTravelPreferencesSuccess = createAction(
+  '[Travel] Update Travel Preferences Success',
+  props<{ profile: TravelProfile }>()
+);
+
+export const updateTravelPreferencesFailure = createAction(
+  '[Travel] Update Travel Preferences Failure',
+  props<{ error: string }>()
 );
 
 // Clear Travel Error

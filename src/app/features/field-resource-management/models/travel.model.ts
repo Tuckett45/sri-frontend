@@ -33,6 +33,39 @@ export interface Coordinates {
 }
 
 /**
+ * Travel preferences
+ */
+export interface TravelPreferences {
+  maxTravelRadiusMiles: number | null;
+  preferredTransportation: TransportationMode;
+  notes: string;
+}
+
+/**
+ * Transportation mode enum
+ */
+export enum TransportationMode {
+  PersonalVehicle = 'personal-vehicle',
+  CompanyVehicle = 'company-vehicle',
+  Flight = 'flight',
+  Any = 'any'
+}
+
+/**
+ * Travel history entry
+ */
+export interface TravelHistoryEntry {
+  jobId: string;
+  clientName: string;
+  destination: string;
+  distanceMiles: number;
+  drivingTimeMinutes: number;
+  perDiemEligible: boolean;
+  perDiemAmount: number | null;
+  travelDate: Date;
+}
+
+/**
  * Technician travel profile
  */
 export interface TravelProfile {
@@ -43,6 +76,8 @@ export interface TravelProfile {
   geocodingStatus: GeocodingStatus;
   geocodingError: string | null;
   lastGeocodedAt: Date | null;
+  preferences: TravelPreferences | null;
+  travelHistory: TravelHistoryEntry[];
   updatedAt: Date;
 }
 

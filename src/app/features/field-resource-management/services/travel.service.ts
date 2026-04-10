@@ -9,7 +9,8 @@ import {
   Coordinates, 
   GeocodingStatus, 
   TechnicianDistance,
-  PerDiemConfig 
+  PerDiemConfig,
+  TravelPreferences 
 } from '../models/travel.model';
 import { GeocodingService } from './geocoding.service';
 import { selectJobById } from '../state/jobs/job.selectors';
@@ -31,6 +32,17 @@ export class TravelService {
     private store: Store
   ) {}
   
+  /**
+   * Create a new travel profile for a technician
+   * @param technicianId The technician ID
+   * @returns Observable of created travel profile
+   */
+  createTravelProfile(technicianId: string): Observable<TravelProfile> {
+    return this.http.post<TravelProfile>(`${this.apiUrl}/profiles`, { technicianId }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   /**
    * Get travel profile for technician
    * @param technicianId The technician ID
@@ -211,6 +223,21 @@ export class TravelService {
     );
   }
   
+  /**
+   * Update travel preferences for technician
+   * @param technicianId The technician ID
+   * @param preferences The travel preferences
+   * @returns Observable of updated travel profile
+   */
+  updateTravelPreferences(technicianId: string, preferences: TravelPreferences): Observable<TravelProfile> {
+    return this.http.patch<TravelProfile>(
+      `${this.apiUrl}/profiles/${technicianId}/preferences`,
+      { preferences }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   /**
    * Calculate per diem amount based on distance
    * @param distanceMiles The distance in miles

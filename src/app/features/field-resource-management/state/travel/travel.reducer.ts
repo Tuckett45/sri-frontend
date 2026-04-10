@@ -55,6 +55,26 @@ export const travelReducer = createReducer(
     error: null
   })),
 
+  // Create Travel Profile
+  on(TravelActions.createTravelProfile, (state) => ({
+    ...state,
+    loading: true,
+    error: null
+  })),
+
+  on(TravelActions.createTravelProfileSuccess, (state, { profile }) => ({
+    ...state,
+    profiles: travelAdapter.upsertOne(profile, state.profiles),
+    loading: false,
+    error: null
+  })),
+
+  on(TravelActions.createTravelProfileFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error
+  })),
+
   on(TravelActions.loadTravelProfileSuccess, (state, { profile }) => ({
     ...state,
     profiles: travelAdapter.upsertOne(profile, state.profiles),
@@ -269,6 +289,29 @@ export const travelReducer = createReducer(
   on(TravelActions.updatePerDiemConfig, (state, { config }) => ({
     ...state,
     perDiemConfig: config
+  })),
+
+  // Update Travel Preferences
+  on(TravelActions.updateTravelPreferences, (state) => ({
+    ...state,
+    loading: true,
+    error: null
+  })),
+
+  on(TravelActions.updateTravelPreferencesSuccess, (state, { profile }) => ({
+    ...state,
+    profiles: travelAdapter.updateOne(
+      { id: profile.technicianId, changes: profile },
+      state.profiles
+    ),
+    loading: false,
+    error: null
+  })),
+
+  on(TravelActions.updateTravelPreferencesFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error
   })),
 
   // Select Technician
