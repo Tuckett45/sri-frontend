@@ -85,7 +85,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
     }
 
     const date = marker.dateCreated
-      ? this.datePipe.transform(new Date(marker.dateCreated + 'Z'), 'MMM d, yyyy h:mm a', 'America/Denver') || ''
+      ? this.datePipe.transform(new Date(marker.dateCreated + 'Z'), 'MMM d, yyyy h:mm a') || ''
       : '';
 
     const popupContent = `
