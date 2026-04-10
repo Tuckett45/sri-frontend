@@ -610,7 +610,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
 
     // Filter technicians with valid locations and matching status filter
     const techniciansWithLocation = technicians.filter(tech => {
-      if (!tech.currentLocation || !this.isValidCoordinate(tech.currentLocation)) {
+      if (tech.lastKnownLatitude == null || tech.lastKnownLongitude == null) {
+        return false;
+      }
+      
+      if (!this.isValidCoordinate({ latitude: tech.lastKnownLatitude, longitude: tech.lastKnownLongitude, accuracy: 0 })) {
         return false;
       }
       
@@ -655,14 +659,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
    * @param technician - Technician to display
    */
   private addOrUpdateMarker(technician: Technician): void {
-    if (!this.map || !technician.currentLocation || !this.technicianClusterGroup) {
+    if (!this.map || technician.lastKnownLatitude == null || technician.lastKnownLongitude == null || !this.technicianClusterGroup) {
       return;
     }
 
     const existingMarker = this.technicianMarkers.get(technician.id);
     const latlng: L.LatLngExpression = [
-      technician.currentLocation.latitude,
-      technician.currentLocation.longitude
+      technician.lastKnownLatitude,
+      technician.lastKnownLongitude
     ];
 
     if (existingMarker) {
@@ -765,16 +769,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       return 'off-duty';
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const todayAvailability = technician.availability.find(avail => {
-      const availDate = new Date(avail.date);
-      availDate.setHours(0, 0, 0, 0);
-      return availDate.getTime() === today.getTime();
-    });
-
-    if (todayAvailability && !todayAvailability.isAvailable) {
+    if (!technician.isAvailable) {
       return 'unavailable';
     }
 
@@ -894,14 +889,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     const statusColor = this.getStatusColor(status);
     const statusLabel = status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-    // Limit skills display to first 3 for performance
-    const displaySkills = technician.skills.slice(0, 3);
-    const skills = displaySkills.map(s => s.name).join(', ') || 'No skills listed';
-    const moreSkills = technician.skills.length > 3 ? ` (+${technician.skills.length - 3} more)` : '';
+    const skills = 'No skills data';
+    const moreSkills = '';
 
     // Format location timestamp
-    const locationTimestamp = this.formatLocationTimestamp(technician.currentLocation?.timestamp);
-    const isStale = this.isLocationStale(technician.currentLocation?.timestamp);
+    const locationTimestamp = this.formatLocationTimestamp(technician.locationUpdatedAt);
+    const isStale = this.isLocationStale(technician.locationUpdatedAt);
     const timestampColor = isStale ? '#ef4444' : '#6b7280'; // Red if stale, gray if fresh
 
     return `
@@ -931,7 +924,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
             </div>
           </div>
           <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-            ID: ${technician.technicianId}
+            ID: ${technician.id}
           </div>
         </div>
       </div>

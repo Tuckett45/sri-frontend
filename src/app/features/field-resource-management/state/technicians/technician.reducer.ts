@@ -146,7 +146,9 @@ export const technicianReducer = createReducer(
       {
         id: technicianId,
         changes: {
-          currentLocation: location,
+          lastKnownLatitude: location.latitude,
+          lastKnownLongitude: location.longitude,
+          locationUpdatedAt: new Date(),
           updatedAt: new Date()
         }
       },

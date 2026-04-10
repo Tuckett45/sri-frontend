@@ -401,10 +401,7 @@ export class CrewFormComponent implements OnInit, OnDestroy {
    * Format technician skills for display (first 2 skills)
    */
   formatTechnicianSkills(tech: Technician): string {
-    if (!tech.skills || tech.skills.length === 0) {
-      return '';
-    }
-    return tech.skills.slice(0, 2).map(s => s.name).join(', ');
+    return '';
   }
 
   /**

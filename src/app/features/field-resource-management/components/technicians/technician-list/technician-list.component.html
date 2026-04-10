@@ -72,26 +72,6 @@
             </mat-select>
           </mat-form-field>
 
-          <!-- Skills Filter -->
-          <mat-form-field appearance="outline">
-            <mat-label>Skills</mat-label>
-            <mat-select [formControl]="skillsControl" multiple>
-              <mat-option *ngFor="let skill of availableSkills" [value]="skill">
-                {{ skill }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <!-- Travel Willingness Filter -->
-          <mat-form-field appearance="outline">
-            <mat-label>Travel Willingness</mat-label>
-            <mat-select [formControl]="travelWillingnessControl">
-              <mat-option value="">All</mat-option>
-              <mat-option value="willing">Willing to Travel</mat-option>
-              <mat-option value="not-willing">Not Willing to Travel</mat-option>
-            </mat-select>
-          </mat-form-field>
-
           <!-- Region Filter -->
           <mat-form-field appearance="outline">
             <mat-label>Region</mat-label>
@@ -179,7 +159,7 @@
                 <span [innerHTML]="getFullName(technician) | highlight: (searchControl.value || '')"></span>
               </strong>
               <span class="technician-id">
-                <span [innerHTML]="technician.technicianId | highlight: (searchControl.value || '')"></span>
+                <span [innerHTML]="technician.id | highlight: (searchControl.value || '')"></span>
               </span>
             </div>
           </td>

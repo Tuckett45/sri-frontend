@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil, filter, skip, take } from 'rxjs/operators';
-import { Technician, TechnicianRole, EmploymentType, Skill, Certification, SkillLevel } from '../../../models/technician.model';
+import { Technician, TechnicianRole, Skill, SkillLevel, Certification } from '../../../models/technician.model';
 import { CreateTechnicianDto, UpdateTechnicianDto } from '../../../models/dtos/technician.dto';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
@@ -24,9 +24,8 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
 
   // Available options
   roles = Object.values(TechnicianRole);
-  employmentTypes = Object.values(EmploymentType);
 
-  // Available skills (will be populated from store or API)
+  // Available skills for selection
   availableSkills: Skill[] = [
     { id: 's1', name: 'Cat6', category: 'Cabling', level: SkillLevel.Intermediate },
     { id: 's2', name: 'Fiber Splicing', category: 'Fiber', level: SkillLevel.Intermediate },
@@ -35,7 +34,7 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
     { id: 's5', name: 'Confined Space', category: 'Safety', level: SkillLevel.Intermediate }
   ];
 
-  // Calendar selection
+  // Calendar selection for availability
   selectedUnavailableDates: Date[] = [];
 
   private destroy$ = new Subject<void>();
@@ -74,17 +73,13 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
   initializeForm(): void {
     this.technicianForm = this.fb.group({
       basicInfo: this.fb.group({
-        technicianId: [''],
         firstName: ['', Validators.required],
         lastName: ['', Validators.required],
         email: ['', [Validators.required, Validators.email]],
         phone: ['', [Validators.required, this.phoneValidator]],
         role: ['', Validators.required],
-        employmentType: ['', Validators.required],
-        homeBase: ['', Validators.required],
         region: ['', Validators.required],
-        hourlyCostRate: [null],
-        canTravel: [false]
+        isAvailable: [true]
       }),
       skills: this.fb.group({
         selectedSkills: [[]]
@@ -111,34 +106,12 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
 
   populateForm(technician: Technician): void {
     this.basicInfoGroup.patchValue({
-      technicianId: technician.technicianId,
       firstName: technician.firstName,
       lastName: technician.lastName,
       email: technician.email,
       phone: technician.phone,
       role: technician.role,
-      employmentType: technician.employmentType,
-      homeBase: technician.homeBase,
-      region: technician.region,
-      hourlyCostRate: technician.hourlyCostRate,
-      canTravel: technician.canTravel ?? false
-    });
-
-    this.skillsGroup.patchValue({
-      selectedSkills: technician.skills
-    });
-
-    technician.certifications.forEach(cert => {
-      this.addCertification(cert);
-    });
-
-    const unavailableDates = technician.availability
-      .filter(avail => !avail.isAvailable)
-      .map(avail => new Date(avail.date));
-
-    this.selectedUnavailableDates = unavailableDates;
-    this.availabilityGroup.patchValue({
-      unavailableDates: unavailableDates
+      region: technician.region
     });
   }
 
@@ -225,20 +198,13 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
   }
 
   createTechnician(formValue: any): void {
-    const { technicianId, ...basicInfo } = formValue.basicInfo;
     const dto: CreateTechnicianDto = {
-      ...basicInfo,
-      skills: formValue.skills.selectedSkills,
-      certifications: (formValue.certifications || []).map((cert: any) => ({
-        name: cert.name,
-        issueDate: cert.issueDate,
-        expirationDate: cert.expirationDate
-      })),
-      availability: this.selectedUnavailableDates.map(date => ({
-        date: date,
-        isAvailable: false,
-        reason: 'PTO'
-      }))
+      firstName: formValue.basicInfo.firstName,
+      lastName: formValue.basicInfo.lastName,
+      email: formValue.basicInfo.email,
+      phone: formValue.basicInfo.phone,
+      role: formValue.basicInfo.role,
+      region: formValue.basicInfo.region
     };
 
     this.submitting = true;
@@ -266,16 +232,12 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
 
   updateTechnician(formValue: any): void {
     const dto: UpdateTechnicianDto = {
-      ...formValue.basicInfo,
-      skills: formValue.skills.selectedSkills,
-      certifications: formValue.certifications,
-      availability: this.selectedUnavailableDates.map(date => ({
-        id: '',
-        technicianId: this.technicianId!,
-        date: date,
-        isAvailable: false,
-        reason: 'PTO'
-      }))
+      firstName: formValue.basicInfo.firstName,
+      lastName: formValue.basicInfo.lastName,
+      email: formValue.basicInfo.email,
+      phone: formValue.basicInfo.phone,
+      role: formValue.basicInfo.role,
+      region: formValue.basicInfo.region
     };
 
     this.submitting = true;

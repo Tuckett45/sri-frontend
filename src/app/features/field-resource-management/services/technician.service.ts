@@ -17,7 +17,7 @@ import { DateRange } from '../models/assignment.model';
 import { GeoLocation } from '../models/time-entry.model';
 import { RoleBasedDataService } from '../../../services/role-based-data.service';
 import { AuthService } from '../../../services/auth.service';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Service for managing technician data and operations
@@ -27,7 +27,7 @@ import { environment } from '../../../../environments/environments';
   providedIn: 'root'
 })
 export class TechnicianService {
-  private readonly apiUrl = `${environment.apiUrl}/v1/technicians`;
+  private readonly apiUrl = `${local_environment.apiUrl}/v1/technicians`;
   private readonly retryCount = 2;
 
   constructor(
@@ -180,34 +180,6 @@ export class TechnicianService {
       if (technician.region !== userMarket) {
         return throwError(() => new Error('You can only create technicians in your own market'));
       }
-    }
-
-    // Validate skills if provided
-    if (technician.skills && technician.skills.length > 0) {
-      for (const skill of technician.skills) {
-        if (!skill.name || !skill.category) {
-          return throwError(() => new Error('All skills must have a name and category'));
-        }
-      }
-    }
-
-    // Validate certifications if provided
-    if (technician.certifications && technician.certifications.length > 0) {
-      for (const cert of technician.certifications) {
-        if (!cert.name || !cert.issueDate) {
-          return throwError(() => new Error('All certifications must have name and issue date'));
-        }
-        
-        // Validate expiry date is after issue date if provided
-        if (cert.expirationDate && new Date(cert.expirationDate) <= new Date(cert.issueDate)) {
-          return throwError(() => new Error('Certification expiration date must be after issue date'));
-        }
-      }
-    }
-
-    // Validate hourly cost rate if provided
-    if (technician.hourlyCostRate !== undefined && technician.hourlyCostRate < 0) {
-      return throwError(() => new Error('Hourly cost rate must be a positive number'));
     }
 
     return this.http.post<Technician>(this.apiUrl, technician)

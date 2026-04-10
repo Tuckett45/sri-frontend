@@ -2,7 +2,7 @@ export const environment = {
   production: true,
   apiUrl: 'https://sri-api.azurewebsites.net/api',
   // ATLAS platform backend (governance & lifecycle API)
-  atlasApiUrl: 'https://atlas-api.azurewebsites.net',
+  atlasApiUrl: 'https://sri-backend.azure-api.net/atlas',
   // API subscription key and VAPID key are now fetched securely at runtime
   // from the backend configuration service for security
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
@@ -27,7 +27,7 @@ export const staging_environment = {
 // Local server
 export const local_environment = {
   production: false,
-  apiUrl: 'https://localhost:44376/api',
+  apiUrl: 'https://localhost:44350',
   // ATLAS platform backend (local)
   atlasApiUrl: 'https://localhost:7028',
   // API subscription key and VAPID key are now fetched securely at runtime

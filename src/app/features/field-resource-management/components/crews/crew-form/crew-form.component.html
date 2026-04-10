@@ -51,7 +51,7 @@
                       (selectionChange)="onLeadTechnicianChange($any($event).value)"
                       required>
             <mat-option *ngFor="let tech of availableTechnicians" [value]="tech.id">
-              {{ tech.firstName }} {{ tech.lastName }} ({{ tech.technicianId }})
+              {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }})
             </mat-option>
           </mat-select>
           <mat-error *ngIf="hasError('leadTechnicianId', 'required')">
@@ -71,10 +71,7 @@
                       multiple
                       (selectionChange)="onMemberSelectionChange($any($event).value)">
             <mat-option *ngFor="let tech of availableMemberTechnicians" [value]="tech.id">
-              {{ tech.firstName }} {{ tech.lastName }} ({{ tech.technicianId }})
-              <span class="tech-skills" *ngIf="tech.skills && tech.skills.length > 0">
-                - {{ formatTechnicianSkills(tech) }}
-              </span>
+              {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }})
             </mat-option>
           </mat-select>
           <mat-error *ngIf="hasError('memberIds', 'leadInMembers')">
@@ -105,15 +102,8 @@
                   <div class="member-details">
                     <div class="member-name">{{ getTechnicianDisplayName(memberId) }}</div>
                     <div class="member-meta" *ngIf="getTechnicianById(memberId) as tech">
-                      <span class="tech-id">ID: {{ tech.technicianId }}</span>
+                      <span class="tech-id">ID: {{ tech.id }}</span>
                       <span class="tech-role">{{ tech.role }}</span>
-                    </div>
-                    <div class="member-skills" *ngIf="getTechnicianById(memberId)?.skills as skills">
-                      <mat-chip-set>
-                        <mat-chip *ngFor="let skill of skills.slice(0, 3)" class="skill-chip">
-                          {{ skill.name }}
-                        </mat-chip>
-                      </mat-chip-set>
                     </div>
                   </div>
                   <button mat-icon-button

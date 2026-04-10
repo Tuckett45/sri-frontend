@@ -139,7 +139,7 @@
             <mat-label>Select Technician</mat-label>
             <mat-select (selectionChange)="addMemberToCrew($event.value)" placeholder="Choose a technician to add">
               <mat-option *ngFor="let tech of availableTechnicians$ | async" [value]="tech.id">
-                {{ tech.firstName }} {{ tech.lastName }} ({{ tech.technicianId }}) — {{ tech.role }}
+                {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }}) — {{ tech.role }}
               </mat-option>
             </mat-select>
             <mat-hint>Select a technician to add to this crew</mat-hint>
@@ -178,15 +178,8 @@
                     <mat-icon inline aria-hidden="true">phone</mat-icon>
                     {{ member.phone }}
                   </p>
-                  <div class="member-skills" *ngIf="member.skills.length">
-                    <mat-chip-set aria-label="Member skills">
-                      <mat-chip *ngFor="let skill of member.skills.slice(0, 3)">
-                        {{ skill.name }}
-                      </mat-chip>
-                      <mat-chip *ngIf="member.skills.length > 3">
-                        +{{ member.skills.length - 3 }} more
-                      </mat-chip>
-                    </mat-chip-set>
+                  <div class="member-skills" *ngIf="false">
+                    <!-- Skills removed from Technician model -->
                   </div>
                 </div>
               </div>

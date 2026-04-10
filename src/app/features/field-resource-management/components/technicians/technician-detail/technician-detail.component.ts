@@ -73,9 +73,7 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
       )
       .subscribe(technician => {
         if (technician) {
-          this.unavailableDates = technician.availability
-            .filter(avail => !avail.isAvailable)
-            .map(avail => new Date(avail.date));
+          this.unavailableDates = [];
           
           // TODO: Load assignment history and performance metrics
           // This would typically come from additional API calls or state
