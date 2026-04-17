@@ -148,11 +148,11 @@ export class SecureFileService {
    */
   validateFileForUpload(file: File): { valid: boolean; error?: string } {
     // Check file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic'];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(file.type.toLowerCase())) {
       return {
         valid: false,
-        error: `Invalid file type. Allowed types: JPEG, PNG, HEIC. Received: ${file.type}`
+        error: `Invalid file type. Allowed types: JPEG, PNG, HEIC, PDF, DOC, DOCX. Received: ${file.type}`
       };
     }
 

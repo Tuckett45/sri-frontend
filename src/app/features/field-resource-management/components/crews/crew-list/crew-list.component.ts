@@ -8,10 +8,14 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
+import { MatDialog } from '@angular/material/dialog';
 import { Crew, CrewStatus } from '../../../models/crew.model';
 import { CrewFilters } from '../../../models/dtos/filters.dto';
 import * as CrewActions from '../../../state/crews/crew.actions';
 import * as CrewSelectors from '../../../state/crews/crew.selectors';
+import * as TechnicianActions from '../../../state/technicians/technician.actions';
+import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
+import { CrewFormComponent } from '../crew-form/crew-form.component';
 import { ExportService } from '../../../services/export.service';
 import { UserRole } from '../../../../../models/role.enum';
 import { PermissionService } from '../../../../../services/permission.service';
@@ -79,6 +83,9 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   availableMarkets: string[] = [];
   availableCompanies: string[] = [];
   
+  // Technician name lookup
+  technicianNameMap: Map<string, string> = new Map();
+  
   // Enum references for template
   CrewStatus = CrewStatus;
   UserRole = UserRole;
@@ -90,6 +97,7 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
     private router: Router,
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
+    private dialog: MatDialog,
     private exportService: ExportService,
     private permissionService: PermissionService
   ) {
@@ -159,6 +167,17 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Load crews on init
     this.store.dispatch(CrewActions.loadCrews({ filters: {} }));
+
+    // Load technicians for name lookups
+    this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
+    this.store.select(selectAllTechnicians).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(technicians => {
+      this.technicianNameMap.clear();
+      technicians.forEach(t => {
+        this.technicianNameMap.set(t.id, `${t.firstName} ${t.lastName}`);
+      });
+    });
     
     // Setup search with debounce
     this.searchControl.valueChanges
@@ -342,8 +361,37 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.router.navigate(['/field-resource-management/crews', crew.id, 'edit']);
   }
 
+  openCrewDialog(crewId?: string): void {
+    const dialogRef = this.dialog.open(CrewFormComponent, {
+      width: '700px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      autoFocus: false,
+      data: crewId ? { crewId } : {}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.store.dispatch(CrewActions.loadCrews({ filters: {} }));
+      }
+    });
+  }
+
   retryLoad(): void {
     this.store.dispatch(CrewActions.loadCrews({ filters: {} }));
+  }
+
+  deleteCrew(crew: Crew): void {
+    const confirmed = confirm(`Are you sure you want to delete crew "${crew.name}"?`);
+    if (confirmed) {
+      this.store.dispatch(CrewActions.deleteCrew({ id: crew.id }));
+      this.snackBar.open('Crew deleted', 'Close', { duration: 3000 });
+    }
+  }
+
+  getTechnicianName(technicianId: string): string {
+    return this.technicianNameMap.get(technicianId) || technicianId.substring(0, 8) + '...';
   }
   
   getMemberCount(crew: Crew): number {

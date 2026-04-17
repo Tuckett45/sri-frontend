@@ -12,13 +12,13 @@ import { CreateCrewDto, UpdateCrewDto } from '../models/dtos/crew.dto';
 import { CrewFilters } from '../models/dtos/filters.dto';
 import { GeoLocation } from '../models/time-entry.model';
 import { LocationHistoryEntry, LocationHistoryFilters } from '../models/location-history.model';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CrewService {
-  private readonly apiUrl = `${environment.apiUrl}/crews`;
+  private readonly apiUrl = `${local_environment.apiUrl}/crews`;
   private readonly retryCount = 2;
 
   constructor(private http: HttpClient) {}

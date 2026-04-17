@@ -148,7 +148,8 @@
   <!-- Technicians Table -->
   <ng-container *ngIf="technicians$ | async as technicians">
     <div class="table-container" *ngIf="!(loading$ | async) && !(error$ | async)">
-      <table mat-table [dataSource]="technicians" class="technicians-table">
+      <div class="table-scroll-area">
+        <table mat-table [dataSource]="technicians" class="technicians-table">
         
         <!-- Name Column -->
         <ng-container matColumnDef="name" sticky>
@@ -175,6 +176,19 @@
           <th mat-header-cell *matHeaderCellDef>Region</th>
           <td mat-cell *matCellDef="let technician">
             {{ technician.region }}
+          </td>
+        </ng-container>
+
+        <!-- Crew Column -->
+        <ng-container matColumnDef="crew">
+          <th mat-header-cell *matHeaderCellDef>Crew</th>
+          <td mat-cell *matCellDef="let technician">
+            <span *ngIf="technicianCrewMap[technician.id] as crewName; else noCrew" class="crew-name">
+              {{ crewName }}
+            </span>
+            <ng-template #noCrew>
+              <span class="no-crew">—</span>
+            </ng-template>
           </td>
         </ng-container>
 
@@ -222,27 +236,42 @@
           </td>
         </ng-container>
 
+        <!-- Current Job Column -->
+        <ng-container matColumnDef="currentJob">
+          <th mat-header-cell *matHeaderCellDef>Current Job</th>
+          <td mat-cell *matCellDef="let technician">
+            <span *ngIf="technicianJobMap[technician.id] as jobName; else noJob" class="current-job">
+              {{ jobName }}
+            </span>
+            <ng-template #noJob>
+              <span class="no-job">—</span>
+            </ng-template>
+          </td>
+        </ng-container>
+
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let technician">
-            <button mat-icon-button 
-                    [routerLink]="['./', technician.id]"
-                    matTooltip="View Details"
-                    (click)="viewTechnician(technician)">
-              <mat-icon>visibility</mat-icon>
-            </button>
-            <button mat-icon-button 
-                    [routerLink]="['./', technician.id, 'edit']"
-                    matTooltip="Edit"
-                    (click)="editTechnician(technician)">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button 
-                    [matTooltip]="technician.isActive ? 'Deactivate' : 'Activate'"
-                    (click)="toggleTechnicianStatus(technician)">
-              <mat-icon>{{ technician.isActive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
-            </button>
+            <div class="actions-row">
+              <button mat-icon-button 
+                      [routerLink]="['./', technician.id]"
+                      matTooltip="View Details"
+                      (click)="viewTechnician(technician)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button 
+                      [routerLink]="['./', technician.id, 'edit']"
+                      matTooltip="Edit"
+                      (click)="editTechnician(technician)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button 
+                      matTooltip="Delete"
+                      (click)="toggleTechnicianStatus(technician)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
           </td>
         </ng-container>
 
@@ -255,6 +284,7 @@
         <mat-icon>person_off</mat-icon>
         <h3>No technicians found</h3>
         <p>Try adjusting your search or filters</p>
+      </div>
       </div>
 
       <!-- Paginator -->

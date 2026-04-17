@@ -62,7 +62,8 @@ export interface JobNote {
 
 export interface Job {
   id: string;
-  jobId: string; // Business ID
+  jobId: string; // Business ID / Title
+  title?: string;
   client: string;
   siteName: string;
   siteAddress: Address;
@@ -80,8 +81,30 @@ export interface Job {
   customerPOC?: ContactInfo;
   attachments: Attachment[];
   notes: JobNote[];
-  market: string; // Market/region identifier (e.g., 'DALLAS', 'HOUSTON', 'RG')
-  company: string; // Company identifier for PM/Vendor scoping
+  region?: string;
+  market: string;
+  company: string;
+  technicianId?: string;
+  crewId?: string;
+  templateId?: string;
+
+  // Pricing / Billing
+  authorizationStatus?: string;
+  hasPurchaseOrders?: boolean;
+  purchaseOrderNumber?: string;
+  standardBillRate?: number;
+  overtimeBillRate?: number;
+  perDiem?: number;
+  invoicingProcess?: string;
+
+  // SRI Internal
+  projectDirector?: string;
+  targetResources?: number;
+  bizDevContact?: string;
+  requestedHours?: number;
+  overtimeRequired?: boolean;
+  estimatedOvertimeHours?: number;
+
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

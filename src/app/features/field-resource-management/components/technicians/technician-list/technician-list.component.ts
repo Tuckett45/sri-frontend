@@ -10,6 +10,7 @@ import { Technician, TechnicianRole } from '../../../models/technician.model';
 import { TechnicianFilters } from '../../../models/dtos/filters.dto';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
+import { selectTechnicianCurrentJobMap, selectTechnicianCrewMap } from '../../../state/technicians/technician.selectors';
 import { ExportService } from '../../../services/export.service';
 import { UserRole } from '../../../../../models/role.enum';
 
@@ -24,7 +25,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
   
-  displayedColumns: string[] = ['name', 'role', 'region', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'role', 'region', 'crew', 'travelStatus', 'status', 'currentJob', 'actions'];
   
   // Expose UserRole enum for template
   UserRole = UserRole;
@@ -44,6 +45,12 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   // Available options for filters
   roles = Object.values(TechnicianRole);
   availableRegions: string[] = []; // Will be populated from technicians
+  
+  // Current job map (technicianId → job label)
+  technicianJobMap: Record<string, string> = {};
+  
+  // Crew map (technicianId → crew name)
+  technicianCrewMap: Record<string, string> = {};
   
   private destroy$ = new Subject<void>();
   
@@ -128,6 +135,20 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
           }
         });
         this.availableRegions = Array.from(regionsSet).sort();
+      });
+
+    // Subscribe to technician → current job map
+    this.store.select(selectTechnicianCurrentJobMap)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(jobMap => {
+        this.technicianJobMap = jobMap;
+      });
+
+    // Subscribe to technician → crew name map
+    this.store.select(selectTechnicianCrewMap)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(crewMap => {
+        this.technicianCrewMap = crewMap;
       });
   }
   

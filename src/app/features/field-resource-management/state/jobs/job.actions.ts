@@ -138,6 +138,38 @@ export const uploadAttachmentFailure = createAction(
   props<{ error: string }>()
 );
 
+// Load Job Attachments
+export const loadJobAttachments = createAction(
+  '[Job] Load Job Attachments',
+  props<{ jobId: string }>()
+);
+
+export const loadJobAttachmentsSuccess = createAction(
+  '[Job] Load Job Attachments Success',
+  props<{ jobId: string; attachments: Attachment[] }>()
+);
+
+export const loadJobAttachmentsFailure = createAction(
+  '[Job] Load Job Attachments Failure',
+  props<{ error: string }>()
+);
+
+// Load Job Notes
+export const loadJobNotes = createAction(
+  '[Job] Load Job Notes',
+  props<{ jobId: string }>()
+);
+
+export const loadJobNotesSuccess = createAction(
+  '[Job] Load Job Notes Success',
+  props<{ jobId: string; notes: JobNote[] }>()
+);
+
+export const loadJobNotesFailure = createAction(
+  '[Job] Load Job Notes Failure',
+  props<{ error: string }>()
+);
+
 // Batch Operations
 export interface BatchOperationResult {
   jobId: string;

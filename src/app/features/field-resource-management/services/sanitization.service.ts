@@ -18,7 +18,10 @@ export class SanitizationService {
     'image/jpeg',
     'image/jpg',
     'image/png',
-    'image/heic'
+    'image/heic',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ];
 
   // Maximum file size in bytes (10 MB)
@@ -120,13 +123,13 @@ export class SanitizationService {
     if (!this.ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase())) {
       return {
         valid: false,
-        error: `Invalid file type. Allowed types: JPEG, PNG, HEIC. Received: ${file.type}`
+        error: `Invalid file type. Allowed types: JPEG, PNG, HEIC, PDF, DOC, DOCX. Received: ${file.type}`
       };
     }
 
     // Check file extension as additional validation
     const extension = this.getFileExtension(file.name);
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'heic'];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'heic', 'pdf', 'doc', 'docx'];
     if (!allowedExtensions.includes(extension.toLowerCase())) {
       return {
         valid: false,

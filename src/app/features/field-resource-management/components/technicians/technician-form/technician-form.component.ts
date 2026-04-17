@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, forkJoin } from 'rxjs';
-import { takeUntil, filter, skip, take } from 'rxjs/operators';
+import { Observable, Subject, of } from 'rxjs';
+import { takeUntil, filter, skip, take, catchError } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Technician, TechnicianRole, Skill, SkillLevel, Certification, Availability } from '../../../models/technician.model';
 import { CreateTechnicianDto, UpdateTechnicianDto } from '../../../models/dtos/technician.dto';
@@ -99,42 +99,67 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
     this.store.select(TechnicianSelectors.selectTechnicianById(id))
       .pipe(
         takeUntil(this.destroy$),
-        filter(tech => !!tech)
+        filter(tech => !!tech),
+        take(1)
       )
       .subscribe(technician => {
         if (technician) {
           this.populateForm(technician);
-          this.loadTechnicianDetails(id);
+
+          // Use store data if available
+          const hasSkills = !!(technician.skills?.length);
+          const hasCerts = !!(technician.certifications?.length);
+          const hasAvailability = !!(technician.availability?.length);
+
+          if (hasSkills) this.populateSkills(technician.skills!);
+          if (hasCerts) this.populateCertifications(technician.certifications!);
+          if (hasAvailability) this.populateAvailability(technician.availability!);
+
+          // Fetch anything missing from the API
+          if (!hasSkills || !hasCerts || !hasAvailability) {
+            this.fetchMissingDetails(id, hasSkills, hasCerts, hasAvailability);
+          }
+
+          this.cdr.markForCheck();
         }
       });
   }
 
-  private loadTechnicianDetails(id: string): void {
+  private fetchMissingDetails(id: string, hasSkills: boolean, hasCerts: boolean, hasAvailability: boolean): void {
     const now = new Date();
     const dateRange = {
       startDate: now,
       endDate: new Date(now.getFullYear(), now.getMonth() + 6, now.getDate())
     };
 
-    forkJoin({
-      skills: this.technicianService.getTechnicianSkills(id),
-      certifications: this.technicianService.getTechnicianCertifications(id),
-      availability: this.technicianService.getTechnicianAvailability(id, dateRange)
-    }).pipe(
-      take(1),
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: ({ skills, certifications, availability }) => {
+    if (!hasSkills) {
+      this.technicianService.getTechnicianSkills(id).pipe(
+        take(1), catchError(() => of([] as Skill[]))
+      ).subscribe(skills => {
         this.populateSkills(skills);
-        this.populateCertifications(certifications);
+        this.cdr.markForCheck();
+      });
+    }
+
+    if (!hasCerts) {
+      this.technicianService.getTechnicianCertifications(id).pipe(
+        take(1), catchError(() => of([] as Certification[]))
+      ).subscribe(certs => {
+        this.populateCertifications(certs);
+        this.cdr.markForCheck();
+      });
+    }
+
+    if (!hasAvailability) {
+      this.technicianService.getTechnicianAvailability(id, dateRange).pipe(
+        take(1), catchError(() => of([] as Availability[]))
+      ).subscribe(availability => {
         this.populateAvailability(availability);
         this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Failed to load technician details:', err);
-      }
-    });
+      });
+    }
   }
+
 
   populateForm(technician: Technician): void {
     this.basicInfoGroup.patchValue({
@@ -165,12 +190,33 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
 
   private populateAvailability(availability: Availability[]): void {
     if (!availability?.length) return;
-    this.selectedUnavailableDates = availability
-      .filter(a => !a.isAvailable)
-      .map(a => new Date(a.date));
+    const unavailable = availability.filter(a => !a.isAvailable);
+    this.selectedUnavailableDates = this.expandAvailabilityToDates(unavailable);
     this.availabilityGroup.patchValue({
       unavailableDates: this.selectedUnavailableDates
     });
+  }
+
+  /**
+   * Expand availability records into individual dates.
+   * Handles both single-date (date field) and date-range (startDate/endDate) formats.
+   */
+  private expandAvailabilityToDates(records: Availability[]): Date[] {
+    const dates: Date[] = [];
+    for (const record of records) {
+      if (record.startDate && record.endDate) {
+        const start = new Date(record.startDate);
+        const end = new Date(record.endDate);
+        const current = new Date(start);
+        while (current <= end) {
+          dates.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+      } else if (record.date) {
+        dates.push(new Date(record.date));
+      }
+    }
+    return dates;
   }
 
   get basicInfoGroup(): FormGroup {
@@ -209,7 +255,9 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
   onDateSelected(date: Date | null): void {
     if (!date) return;
     const dateIndex = this.selectedUnavailableDates.findIndex(d =>
-      d.getTime() === date.getTime()
+      d.getFullYear() === date.getFullYear() &&
+      d.getMonth() === date.getMonth() &&
+      d.getDate() === date.getDate()
     );
 
     if (dateIndex >= 0) {
@@ -218,18 +266,23 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       this.selectedUnavailableDates.push(date);
     }
 
+    this.selectedUnavailableDates = [...this.selectedUnavailableDates];
     this.availabilityGroup.patchValue({
       unavailableDates: this.selectedUnavailableDates
     });
   }
 
   dateClass = (date: Date): string => {
-    const isSelected = this.selectedUnavailableDates.some(d =>
+    const isUnavailable = this.selectedUnavailableDates.some(d =>
       d.getFullYear() === date.getFullYear() &&
       d.getMonth() === date.getMonth() &&
       d.getDate() === date.getDate()
     );
-    return isSelected ? 'selected-unavailable-date' : '';
+    if (isUnavailable) return 'selected-unavailable-date';
+    // Weekdays (Mon-Fri) are work days — show as orange
+    const day = date.getDay();
+    if (day > 0 && day < 6) return 'available-work-date';
+    return '';
   }
 
   phoneValidator(control: AbstractControl): { [key: string]: any } | null {

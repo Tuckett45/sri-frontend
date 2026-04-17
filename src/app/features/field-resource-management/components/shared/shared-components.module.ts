@@ -17,6 +17,7 @@ import { EmptyStateComponent } from './empty-state/empty-state.component';
 import { BatchOperationsToolbarComponent } from './batch-operations-toolbar/batch-operations-toolbar.component';
 import { BatchStatusDialogComponent } from './batch-status-dialog/batch-status-dialog.component';
 import { BatchTechnicianDialogComponent } from './batch-technician-dialog/batch-technician-dialog.component';
+import { AssignJobDialogComponent } from './assign-job-dialog/assign-job-dialog.component';
 import { FrmNavMenuComponent } from './frm-nav-menu/frm-nav-menu.component';
 import { BreadcrumbComponent } from './breadcrumb/breadcrumb.component';
 import { StartTimeEntryModalComponent } from './start-time-entry-modal/start-time-entry-modal.component';
@@ -43,6 +44,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
     BatchOperationsToolbarComponent,
     BatchStatusDialogComponent,
     BatchTechnicianDialogComponent,
+    AssignJobDialogComponent,
     FrmNavMenuComponent,
     BreadcrumbComponent,
     StartTimeEntryModalComponent,
@@ -66,6 +68,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
     BatchOperationsToolbarComponent,
     BatchStatusDialogComponent,
     BatchTechnicianDialogComponent,
+    AssignJobDialogComponent,
     FrmNavMenuComponent,
     BreadcrumbComponent,
     StartTimeEntryModalComponent,

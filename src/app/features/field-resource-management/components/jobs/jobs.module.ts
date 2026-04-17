@@ -21,6 +21,7 @@ import { JobDetailComponent } from './job-detail/job-detail.component';
 import { JobFormComponent } from './job-form/job-form.component';
 import { JobNotesComponent } from './job-notes/job-notes.component';
 import { JobStatusTimelineComponent } from './job-status-timeline/job-status-timeline.component';
+import { AttachmentPreviewDialogComponent } from './attachment-preview-dialog/attachment-preview-dialog.component';
 
 // Job Setup Workflow Components
 import { JobSetupComponent } from './job-setup/job-setup.component';
@@ -82,6 +83,7 @@ const routes: Routes = [
     JobFormComponent,
     JobNotesComponent,
     JobStatusTimelineComponent,
+    AttachmentPreviewDialogComponent,
     JobSetupComponent,
     CustomerInfoStepComponent,
     PricingBillingStepComponent,

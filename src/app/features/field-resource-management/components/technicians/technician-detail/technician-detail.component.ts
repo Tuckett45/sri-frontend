@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, forkJoin, of } from 'rxjs';
 import { takeUntil, filter, switchMap, take, catchError } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
+import { MatCalendar } from '@angular/material/datepicker';
 import { Technician, CertificationStatus, Skill, Certification, Availability } from '../../../models/technician.model';
 import { TravelProfile } from '../../../models/travel.model';
 import { TechnicianService } from '../../../services/technician.service';
@@ -24,6 +25,8 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
   travelProfile$!: Observable<TravelProfile | null>;
   
   technicianId: string | null = null;
+  
+  @ViewChild(MatCalendar) calendar!: MatCalendar<Date>;
   
   // Tab management
   selectedTabIndex = 0;
@@ -91,19 +94,21 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
             }));
           }
           if (technician.availability && technician.availability.length > 0) {
-            this.unavailableDates = technician.availability
-              .filter(a => !a.isAvailable)
-              .map(a => new Date(a.date));
+            this.unavailableDates = this.expandAvailabilityToDates(
+              technician.availability.filter(a => !a.isAvailable)
+            );
           }
 
-          // If any data is still missing, fetch from dedicated API endpoints
-          if (!this.technicianSkills.length || !this.technicianCertifications.length || !this.unavailableDates.length) {
-            this.loadTechnicianDetails(technician.id);
-          }
+          // Always fetch full details from API since list endpoint doesn't include skills/certs/availability
+          this.loadTechnicianDetails(technician.id);
 
           this.loadAssignmentHistory(technician.id);
           this.loadPerformanceMetrics(technician.id);
           this.cdr.markForCheck();
+          // Force calendar to re-evaluate dateClass
+          if (this.calendar) {
+            this.calendar.updateTodaysDate();
+          }
         }
       });
   }
@@ -165,12 +170,16 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
           }));
         }
         if (availability.length > 0 && this.unavailableDates.length === 0) {
-          this.unavailableDates = availability
-            .filter(a => !a.isAvailable)
-            .map(a => new Date(a.date));
+          this.unavailableDates = this.expandAvailabilityToDates(
+            availability.filter(a => !a.isAvailable)
+          );
         }
 
         this.cdr.markForCheck();
+        // Force calendar to re-evaluate dateClass with new availability data
+        if (this.calendar) {
+          this.calendar.updateTodaysDate();
+        }
       }
     });
   }
@@ -186,6 +195,28 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
       utilizationRate: 0,
       jobsCompleted: 0
     };
+  }
+
+  /**
+   * Expand availability records into individual dates.
+   * Handles both single-date (date field) and date-range (startDate/endDate) formats.
+   */
+  private expandAvailabilityToDates(records: Availability[]): Date[] {
+    const dates: Date[] = [];
+    for (const record of records) {
+      if (record.startDate && record.endDate) {
+        const start = new Date(record.startDate);
+        const end = new Date(record.endDate);
+        const current = new Date(start);
+        while (current <= end) {
+          dates.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+      } else if (record.date) {
+        dates.push(new Date(record.date));
+      }
+    }
+    return dates;
   }
   
   getFullName(technician: Technician): string {
@@ -214,7 +245,31 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
   }
   
   dateClass = (date: Date): string => {
-    return this.isDateUnavailable(date) ? 'unavailable-date' : '';
+    if (this.isDateUnavailable(date)) return 'unavailable-date';
+    const day = date.getDay();
+    if (day > 0 && day < 6) return 'available-work-date';
+    return '';
+  }
+
+  onDateSelected(date: Date | null): void {
+    if (!date) return;
+    const dateIndex = this.unavailableDates.findIndex(d =>
+      d.getFullYear() === date.getFullYear() &&
+      d.getMonth() === date.getMonth() &&
+      d.getDate() === date.getDate()
+    );
+
+    if (dateIndex >= 0) {
+      this.unavailableDates.splice(dateIndex, 1);
+    } else {
+      this.unavailableDates.push(date);
+    }
+
+    this.unavailableDates = [...this.unavailableDates];
+    this.cdr.markForCheck();
+    if (this.calendar) {
+      this.calendar.updateTodaysDate();
+    }
   }
   
   editTechnician(): void {

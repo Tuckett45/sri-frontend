@@ -189,6 +189,14 @@ mat-calendar {
     }
   }
 
+  .available-work-date {
+    .mat-calendar-body-cell-content {
+      background-color: #fff3e0 !important;
+      color: #e65100 !important;
+      border-radius: 50%;
+    }
+  }
+
   // Calendar selected date styling
   .mat-calendar-body-selected {
     background-color: #1976d2 !important;
@@ -268,7 +276,7 @@ mat-calendar {
       }
 
       &.available {
-        background-color: #ffffff;
+        background-color: #fff3e0;
       }
     }
   }
@@ -278,15 +286,33 @@ mat-calendar {
   margin-top: 24px;
   padding: 16px;
   background-color: #f5f5f5;
-  border-radius: 4px;
+  border-radius: 8px;
 
   h4 {
     margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #424242;
   }
 
-  mat-chip-list {
-    mat-chip {
-      margin: 4px;
+  mat-chip-set {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  ::ng-deep {
+    .mat-mdc-chip,
+    .mdc-evolution-chip {
+      background-color: #ffcdd2 !important;
+      border: none !important;
+    }
+
+    .mdc-evolution-chip__text-label,
+    .mat-mdc-chip-action-label {
+      color: #c62828 !important;
+      font-weight: 500 !important;
     }
   }
 }

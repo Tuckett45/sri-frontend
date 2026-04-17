@@ -27,7 +27,7 @@ import { environment, local_environment } from '../../../../environments/environ
   providedIn: 'root'
 })
 export class TechnicianService {
-  private readonly apiUrl = `${local_environment.apiUrl}/v1/technicians`;
+  private readonly apiUrl = `${local_environment.apiUrl}/technicians`;
   private readonly retryCount = 2;
 
   constructor(

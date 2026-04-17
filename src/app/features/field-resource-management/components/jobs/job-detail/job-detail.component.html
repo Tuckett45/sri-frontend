@@ -301,7 +301,7 @@
     <!-- Section 4: Assigned Technicians -->
     <mat-card class="detail-section">
       <mat-card-header>
-        <mat-card-title>Assigned Technicians</mat-card-title>
+        <mat-card-title>Lead Technician</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <div class="technician-list" *ngIf="assignments.length > 0">
@@ -309,15 +309,22 @@
             <div class="technician-info">
               <mat-icon>person</mat-icon>
               <div>
-                <div class="technician-name">Technician Name</div>
-                <div class="technician-contact">
-                  <a href="tel:555-0100">
+                <div class="technician-name">
+                  {{ getTechnicianName(assignment) }}
+                </div>
+                <div class="technician-status">
+                  <span class="status-badge" [ngClass]="assignment.status?.toLowerCase()">
+                    {{ assignment.status }}
+                  </span>
+                </div>
+                <div class="technician-contact" *ngIf="assignment.technician">
+                  <a *ngIf="assignment.technician.phone" [href]="'tel:' + assignment.technician.phone">
                     <mat-icon>phone</mat-icon>
-                    (555) 010-0100
+                    {{ assignment.technician.phone }}
                   </a>
-                  <a href="mailto:tech&#64;example.com">
+                  <a *ngIf="assignment.technician.email" [href]="'mailto:' + assignment.technician.email">
                     <mat-icon>email</mat-icon>
-                    tech&#64;example.com
+                    {{ assignment.technician.email }}
                   </a>
                 </div>
               </div>
@@ -326,10 +333,52 @@
         </div>
         <div class="empty-message" *ngIf="assignments.length === 0">
           <mat-icon>person_off</mat-icon>
-          <p>No technicians assigned yet</p>
+          <p>No lead technician assigned yet</p>
           <button mat-stroked-button class="btn-orange" (click)="reassignJob()">
             Assign Technician
           </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 4b: Assigned Crew -->
+    <mat-card class="detail-section" *ngIf="assignedCrew">
+      <mat-card-header>
+        <mat-card-title>Assigned Crew</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="crew-header">
+          <mat-icon class="crew-icon">groups</mat-icon>
+          <div class="crew-name">{{ assignedCrew.name }}</div>
+          <span class="crew-status-badge" [ngClass]="assignedCrew.status?.toLowerCase()">
+            {{ assignedCrew.status }}
+          </span>
+        </div>
+        <div class="crew-meta">
+          <span *ngIf="assignedCrew.market"><strong>Market:</strong> {{ assignedCrew.market }}</span>
+          <span *ngIf="assignedCrew.company"><strong>Company:</strong> {{ assignedCrew.company }}</span>
+        </div>
+        <div class="crew-members-label">Crew Members ({{ crewMembers.length }})</div>
+        <div class="crew-members-list" *ngIf="crewMembers.length > 0">
+          <div class="crew-member-item" *ngFor="let member of crewMembers">
+            <mat-icon>person</mat-icon>
+            <div class="crew-member-info">
+              <span class="crew-member-name">{{ member.firstName }} {{ member.lastName }}</span>
+              <span class="crew-member-role">{{ member.role }}</span>
+              <span class="crew-member-lead" *ngIf="member.id === assignedCrew.leadTechnicianId">Lead</span>
+            </div>
+            <div class="crew-member-contact">
+              <a *ngIf="member.phone" [href]="'tel:' + member.phone" class="contact-link">
+                <mat-icon>phone</mat-icon>
+              </a>
+              <a *ngIf="member.email" [href]="'mailto:' + member.email" class="contact-link">
+                <mat-icon>email</mat-icon>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="empty-message" *ngIf="crewMembers.length === 0">
+          <p>No crew members found</p>
         </div>
       </mat-card-content>
     </mat-card>
@@ -420,19 +469,23 @@
       <mat-card-content>
         <div class="attachment-list" *ngIf="job.attachments.length > 0">
           <div class="attachment-item" *ngFor="let attachment of job.attachments">
-            <div class="attachment-icon">
-              <mat-icon *ngIf="isImage(attachment)">image</mat-icon>
-              <mat-icon *ngIf="!isImage(attachment)">description</mat-icon>
-            </div>
-            <div class="attachment-info">
-              <div class="attachment-name">{{ attachment.fileName }}</div>
-              <div class="attachment-meta">
-                {{ formatFileSize(attachment.fileSize) }} • 
-                Uploaded by {{ attachment.uploadedBy }} • 
-                {{ formatDate(attachment.uploadedAt) }}
+            <div class="attachment-clickable" (click)="previewAttachment(attachment)" role="button" tabindex="0"
+                 (keydown.enter)="previewAttachment(attachment)"
+                 [attr.aria-label]="'Preview ' + attachment.fileName">
+              <div class="attachment-icon">
+                <mat-icon *ngIf="isImage(attachment)">image</mat-icon>
+                <mat-icon *ngIf="!isImage(attachment)">description</mat-icon>
+              </div>
+              <div class="attachment-info">
+                <div class="attachment-name">{{ attachment.fileName }}</div>
+                <div class="attachment-meta">
+                  {{ formatFileSize(attachment.fileSize) }} • 
+                  Uploaded by {{ attachment.uploadedBy }} • 
+                  {{ formatDate(attachment.uploadedAt) }}
+                </div>
               </div>
             </div>
-            <button mat-icon-button (click)="downloadAttachment(attachment)">
+            <button mat-icon-button (click)="downloadAttachment(attachment)" aria-label="Download attachment">
               <mat-icon>download</mat-icon>
             </button>
           </div>

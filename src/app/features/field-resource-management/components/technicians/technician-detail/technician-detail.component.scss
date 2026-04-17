@@ -209,6 +209,14 @@ mat-calendar {
     }
   }
 
+  .available-work-date {
+    .mat-calendar-body-cell-content {
+      background-color: #fff3e0 !important;
+      color: #e65100 !important;
+      border-radius: 50%;
+    }
+  }
+
   // Calendar selected date styling
   .mat-calendar-body-selected {
     background-color: #1976d2 !important;
@@ -288,7 +296,7 @@ mat-calendar {
       }
 
       &.available {
-        background-color: #ffffff;
+        background-color: #fff3e0;
       }
     }
   }
@@ -376,6 +384,15 @@ mat-calendar {
 
     .mdc-tab-indicator__content--underline {
       border-color: #1976d2 !important;
+    }
+
+    // Tab scroll arrow buttons
+    .mat-mdc-tab-header-pagination {
+      color: #1976d2 !important;
+
+      .mat-mdc-tab-header-pagination-chevron {
+        border-color: #1976d2 !important;
+      }
     }
   }
 }

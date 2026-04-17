@@ -10,6 +10,7 @@ import { selectActiveAssignments } from '../../../../state/assignments/assignmen
 import { loadTechnicians } from '../../../../state/technicians/technician.actions';
 import { loadAssignments } from '../../../../state/assignments/assignment.actions';
 import { loadJobs } from '../../../../state/jobs/job.actions';
+import { loadCrews } from '../../../../state/crews/crew.actions';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -41,6 +42,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.store.dispatch(loadTechnicians({}));
     this.store.dispatch(loadAssignments({}));
     this.store.dispatch(loadJobs({}));
+    this.store.dispatch(loadCrews({}));
 
     this.kpis$ = combineLatest([
       this.store.select(selectActiveJobsCount),

@@ -231,8 +231,16 @@ export class FileUploadComponent implements ControlValueAccessor {
    * Get display string for allowed file types
    */
   private getAllowedTypesDisplay(): string {
+    const mimeLabels: Record<string, string> = {
+      'image/jpeg': 'JPEG',
+      'image/png': 'PNG',
+      'image/heic': 'HEIC',
+      'application/pdf': 'PDF',
+      'application/msword': 'DOC',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX'
+    };
     return this.allowedFileTypes
-      .map(type => type.split('/')[1].toUpperCase())
+      .map(type => mimeLabels[type] || type.split('/')[1].toUpperCase())
       .join(', ');
   }
 

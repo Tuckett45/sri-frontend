@@ -302,12 +302,32 @@
 
     // Action buttons styling
     .mat-column-actions {
+      .actions-row {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0;
+      }
+
+      ::ng-deep .mat-icon {
+        font-family: 'Material Icons' !important;
+        font-size: 24px !important;
+        width: 24px !important;
+        height: 24px !important;
+        overflow: visible !important;
+      }
+
       button[mat-icon-button] {
         transition: all 0.2s ease;
+        width: 40px;
+        height: 40px;
 
         mat-icon {
           color: #757575;
           transition: color 0.2s ease;
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+          overflow: visible;
         }
 
         &:hover {
@@ -337,6 +357,17 @@
             color: #f57c00;
           }
         }
+
+        // Delete icon
+        &:last-child {
+          mat-icon {
+            color: #f44336;
+          }
+
+          &:hover mat-icon {
+            color: #d32f2f;
+          }
+        }
       }
     }
   }
@@ -344,6 +375,32 @@
   mat-paginator {
     border-top: 1px solid #e0e0e0;
     background-color: #ffffff;
+
+    ::ng-deep {
+      .mat-mdc-paginator-range-label,
+      .mat-mdc-paginator-page-size-label {
+        color: #000000;
+      }
+
+      .mat-mdc-paginator-navigation-previous,
+      .mat-mdc-paginator-navigation-next,
+      .mat-mdc-paginator-navigation-first,
+      .mat-mdc-paginator-navigation-last {
+        color: #000000;
+
+        .mat-mdc-paginator-icon {
+          fill: #000000;
+        }
+      }
+
+      .mat-mdc-select-value-text {
+        color: #000000;
+      }
+
+      .mat-mdc-select-arrow {
+        color: #000000;
+      }
+    }
   }
 }
 

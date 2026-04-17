@@ -143,6 +143,7 @@
 
         <div class="form-row">
           <frm-skill-selector
+            [availableSkills]="availableSkills"
             formControlName="requiredSkills"
             label="Required Skills"
           ></frm-skill-selector>
@@ -150,7 +151,7 @@
 
         <div class="form-row two-columns">
           <mat-form-field appearance="outline">
-            <mat-label>Crew Size</mat-label>
+            <mat-label>Required Crew Size</mat-label>
             <input
               matInput
               type="number"
@@ -345,14 +346,16 @@
 
         <div class="form-row two-columns">
           <mat-form-field appearance="outline">
-            <mat-label>Target Resources</mat-label>
+            <mat-label>Target Resources (Crew Size)</mat-label>
             <input matInput type="number" formControlName="targetResources" min="1" max="500" step="1" />
+            <mat-hint>Number of technicians needed</mat-hint>
             <mat-error>{{ getErrorMessage('targetResources') }}</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Requested Hours</mat-label>
             <input matInput type="number" formControlName="requestedHours" min="0.01" step="0.01" />
+            <mat-hint>Total estimated labor hours</mat-hint>
             <mat-error>{{ getErrorMessage('requestedHours') }}</mat-error>
           </mat-form-field>
         </div>
@@ -375,13 +378,67 @@
 
     <mat-card class="form-section">
       <mat-card-header>
+        <mat-card-title>Assignment (Optional)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Lead Technician</mat-label>
+            <mat-select formControlName="leadTechnicianId">
+              <mat-option>None</mat-option>
+              <mat-option *ngFor="let tech of technicians" [value]="tech.id">
+                {{ tech.firstName }} {{ tech.lastName }} ({{ tech.role }})
+              </mat-option>
+            </mat-select>
+            <mat-hint>Assign a lead technician to this job</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Crew</mat-label>
+            <mat-select formControlName="crewId">
+              <mat-option>None</mat-option>
+              <mat-option *ngFor="let crew of crews" [value]="crew.id">
+                {{ crew.name }} ({{ crew.memberIds?.length || 0 }} members)
+              </mat-option>
+            </mat-select>
+            <mat-hint>Assign a crew to this job</mat-hint>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Notes (Optional)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Initial Note</mat-label>
+            <textarea
+              matInput
+              formControlName="initialNote"
+              rows="3"
+              placeholder="Add an initial note for this job"
+            ></textarea>
+            <mat-hint align="end">
+              {{ getControl('initialNote')?.value?.length || 0 }}/1000
+            </mat-hint>
+            <mat-error>{{ getErrorMessage('initialNote') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
         <mat-card-title>Attachments (Optional)</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <frm-file-upload
           [multiple]="true"
           [maxFileSize]="10485760"
-          [allowedFileTypes]="['image/jpeg', 'image/png', 'image/heic', 'application/pdf']"
+          [allowedFileTypes]="['image/jpeg', 'image/png', 'image/heic', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']"
           (filesSelected)="onFilesSelected($event)"
         ></frm-file-upload>
       </mat-card-content>

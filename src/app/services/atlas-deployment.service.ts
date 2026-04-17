@@ -36,7 +36,7 @@ export interface AtlasDeploymentQueryParams {
  */
 @Injectable({ providedIn: 'root' })
 export class AtlasDeploymentService {
-  private readonly baseUrl = `${environment.atlasApiUrl}/v1/deployments`;
+  private readonly baseUrl = `${environment.atlasApiUrl}/deployments`;
 
   constructor(private http: HttpClient) {}
 

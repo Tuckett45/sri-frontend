@@ -228,6 +228,52 @@ export const jobReducer = createReducer(
     error
   })),
 
+  // Load Job Attachments
+  on(JobActions.loadJobAttachmentsSuccess, (state, { jobId, attachments }) => {
+    const job = state.entities[jobId];
+    if (!job) {
+      return state;
+    }
+    return jobAdapter.updateOne(
+      {
+        id: jobId,
+        changes: { attachments }
+      },
+      {
+        ...state,
+        error: null
+      }
+    );
+  }),
+
+  on(JobActions.loadJobAttachmentsFailure, (state, { error }) => ({
+    ...state,
+    error
+  })),
+
+  // Load Job Notes
+  on(JobActions.loadJobNotesSuccess, (state, { jobId, notes }) => {
+    const job = state.entities[jobId];
+    if (!job) {
+      return state;
+    }
+    return jobAdapter.updateOne(
+      {
+        id: jobId,
+        changes: { notes }
+      },
+      {
+        ...state,
+        error: null
+      }
+    );
+  }),
+
+  on(JobActions.loadJobNotesFailure, (state, { error }) => ({
+    ...state,
+    error
+  })),
+
   // Batch Update Status
   on(JobActions.batchUpdateStatus, (state) => ({
     ...state,

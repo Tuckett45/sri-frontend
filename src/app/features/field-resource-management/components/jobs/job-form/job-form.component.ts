@@ -2,16 +2,20 @@ import { Component, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy, In
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
 import { Subject } from 'rxjs';
-import { takeUntil, filter } from 'rxjs/operators';
+import { takeUntil, filter, take } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { Job, JobType, Priority, ContactInfo } from '../../../models/job.model';
-import { Skill } from '../../../models/technician.model';
+import { Skill, SkillLevel, Technician } from '../../../models/technician.model';
+import { Crew } from '../../../models/crew.model';
 import { CreateJobDto, UpdateJobDto } from '../../../models/dtos/job.dto';
 import * as JobActions from '../../../state/jobs/job.actions';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
+import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
+import { selectAllCrews } from '../../../state/crews/crew.selectors';
 import { SanitizationService } from '../../../services/sanitization.service';
 import { AccessibilityService } from '../../../services/accessibility.service';
 import { AuthService } from '../../../../../services/auth.service';
@@ -69,7 +73,13 @@ export class JobFormComponent implements OnInit, OnDestroy {
   
   // Role-based fields
   isAdmin = false;
-  availableMarkets: string[] = ['North', 'South', 'East', 'West', 'Central', 'RG'];
+  availableMarkets: string[] = [
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+  ];
   
   // US States for dropdown
   states = [
@@ -89,11 +99,25 @@ export class JobFormComponent implements OnInit, OnDestroy {
     { value: 'upon-completion', label: 'Upon Completion' }
   ];
 
+  // Assignment options
+  technicians: Technician[] = [];
+  crews: Crew[] = [];
+
+  // Available skills for the skill selector
+  availableSkills: Skill[] = [
+    { id: 's1', name: 'Cat6', category: 'Cabling', level: SkillLevel.Intermediate },
+    { id: 's2', name: 'Fiber Splicing', category: 'Fiber', level: SkillLevel.Intermediate },
+    { id: 's3', name: 'OSHA10', category: 'Safety', level: SkillLevel.Intermediate },
+    { id: 's4', name: 'Ladder Safety', category: 'Safety', level: SkillLevel.Intermediate },
+    { id: 's5', name: 'Confined Space', category: 'Safety', level: SkillLevel.Intermediate }
+  ];
+
   constructor(
     private fb: FormBuilder,
     @Optional() private route: ActivatedRoute,
     @Optional() private router: Router,
     private store: Store,
+    private actions$: Actions,
     private snackBar: MatSnackBar,
     private sanitizationService: SanitizationService,
     private accessibilityService: AccessibilityService,
@@ -232,13 +256,24 @@ export class JobFormComponent implements OnInit, OnDestroy {
       bizDevContact: ['', [Validators.required, Validators.maxLength(150)]],
       requestedHours: [null, [Validators.required, Validators.min(0.01)]],
       overtimeRequired: [false],
-      estimatedOvertimeHours: [null]
+      estimatedOvertimeHours: [null],
+      // Assignment
+      leadTechnicianId: [null],
+      crewId: [null],
+      // Notes
+      initialNote: ['', [Validators.maxLength(1000)]]
       }, { validators: this.dateRangeValidator });
 
       // Disable market field for non-admin users
       if (!this.isAdmin) {
         this.jobForm.get('market')?.disable();
       }
+
+      // Load technicians and crews for assignment dropdowns
+      this.store.select(selectAllTechnicians).pipe(takeUntil(this.destroy$))
+        .subscribe(techs => this.technicians = techs);
+      this.store.select(selectAllCrews).pipe(takeUntil(this.destroy$))
+        .subscribe(crews => this.crews = crews);
     } catch (error) {
       console.error('Error initializing job form:', error);
       // Initialize with default values if auth service fails
@@ -280,7 +315,12 @@ export class JobFormComponent implements OnInit, OnDestroy {
         bizDevContact: ['', [Validators.required, Validators.maxLength(150)]],
         requestedHours: [null, [Validators.required, Validators.min(0.01)]],
         overtimeRequired: [false],
-        estimatedOvertimeHours: [null]
+        estimatedOvertimeHours: [null],
+        // Assignment
+        leadTechnicianId: [null],
+        crewId: [null],
+        // Notes
+        initialNote: ['', [Validators.maxLength(1000)]]
       }, { validators: this.dateRangeValidator });
       
       this.snackBar.open('Warning: Some features may be limited', 'Close', { duration: 3000 });
@@ -348,6 +388,7 @@ export class JobFormComponent implements OnInit, OnDestroy {
     this.jobForm.patchValue({
       client: job.client,
       siteName: job.siteName,
+      market: job.market || job.region || '',
       siteAddress: {
         street: job.siteAddress.street,
         city: job.siteAddress.city,
@@ -381,7 +422,10 @@ export class JobFormComponent implements OnInit, OnDestroy {
       bizDevContact: (job as any).bizDevContact || '',
       requestedHours: (job as any).requestedHours || null,
       overtimeRequired: (job as any).overtimeRequired || false,
-      estimatedOvertimeHours: (job as any).estimatedOvertimeHours || null
+      estimatedOvertimeHours: (job as any).estimatedOvertimeHours || null,
+      // Assignment
+      leadTechnicianId: job.technicianId || null,
+      crewId: job.crewId || null
     });
   }
 
@@ -409,7 +453,10 @@ export class JobFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const formValue = this.jobForm.value;
+    // Prevent double submission
+    if (this.isLoading) return;
+
+    const formValue = this.jobForm.getRawValue();
     
     // Remove empty customer POC if all fields are empty
     if (!formValue.customerPOC.name && !formValue.customerPOC.phone && !formValue.customerPOC.email) {
@@ -436,12 +483,14 @@ export class JobFormComponent implements OnInit, OnDestroy {
       client: sanitizedClient,
       siteName: sanitizedSiteName,
       siteAddress: formValue.siteAddress,
+      region: formValue.market,
+      market: formValue.market,
       jobType: formValue.jobType,
       priority: formValue.priority,
       scopeDescription: sanitizedDescription,
       requiredSkills: formValue.requiredSkills,
-      requiredCrewSize: formValue.requiredCrewSize,
-      estimatedLaborHours: formValue.estimatedLaborHours,
+      requiredCrewSize: formValue.targetResources ?? formValue.requiredCrewSize ?? 1,
+      estimatedLaborHours: formValue.requestedHours ?? formValue.estimatedLaborHours ?? 8,
       scheduledStartDate: formValue.scheduledStartDate,
       scheduledEndDate: formValue.scheduledEndDate,
       customerPOC: formValue.customerPOC,
@@ -458,25 +507,36 @@ export class JobFormComponent implements OnInit, OnDestroy {
       requestedHours: formValue.requestedHours ?? 0,
       overtimeRequired: formValue.overtimeRequired ?? false,
       estimatedOvertimeHours: formValue.estimatedOvertimeHours,
+      technicianId: formValue.leadTechnicianId || undefined,
+      crewId: formValue.crewId || undefined,
     };
 
     this.store.dispatch(JobActions.createJob({ job: createDto }));
+    this.isLoading = true;
     
-    // In a real implementation, we'd subscribe to success/failure actions
-    this.snackBar.open('Job created successfully', 'Close', { duration: 3000 });
-    
-    // Upload attachments if any
-    if (this.selectedFiles.length > 0) {
-      // In a real implementation, we'd wait for job creation success
-      // and then upload files with the new job ID
-    }
-    
-    // Close dialog if opened as modal, otherwise navigate
-    if (this.dialogRef) {
-      this.dialogRef.close({ success: true });
-    } else if (this.router) {
-      this.router.navigate(['/field-resource-management/jobs']);
-    }
+    // Wait for success/failure before navigating
+    this.actions$.pipe(
+      ofType(JobActions.createJobSuccess, JobActions.createJobFailure),
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(action => {
+      if (action.type === JobActions.createJobSuccess.type) {
+        const createdJob = (action as ReturnType<typeof JobActions.createJobSuccess>).job;
+
+        // Upload any selected attachments for the newly created job
+        this.uploadPendingAttachments(createdJob.id, () => {
+          this.isLoading = false;
+          // Close dialog if opened as modal, otherwise navigate
+          if (this.dialogRef) {
+            this.dialogRef.close({ success: true });
+          } else if (this.router) {
+            this.router.navigate(['/field-resource-management/jobs']);
+          }
+        });
+      } else {
+        this.isLoading = false;
+      }
+    });
   }
 
   /**
@@ -494,12 +554,14 @@ export class JobFormComponent implements OnInit, OnDestroy {
       client: sanitizedClient,
       siteName: sanitizedSiteName,
       siteAddress: formValue.siteAddress,
+      region: formValue.market,
+      market: formValue.market,
       jobType: formValue.jobType,
       priority: formValue.priority,
       scopeDescription: sanitizedDescription,
       requiredSkills: formValue.requiredSkills,
-      requiredCrewSize: formValue.requiredCrewSize,
-      estimatedLaborHours: formValue.estimatedLaborHours,
+      requiredCrewSize: formValue.targetResources ?? formValue.requiredCrewSize,
+      estimatedLaborHours: formValue.requestedHours ?? formValue.estimatedLaborHours,
       scheduledStartDate: formValue.scheduledStartDate,
       scheduledEndDate: formValue.scheduledEndDate,
       customerPOC: formValue.customerPOC,
@@ -517,19 +579,81 @@ export class JobFormComponent implements OnInit, OnDestroy {
       bizDevContact: formValue.bizDevContact,
       requestedHours: formValue.requestedHours,
       overtimeRequired: formValue.overtimeRequired,
-      estimatedOvertimeHours: formValue.overtimeRequired ? formValue.estimatedOvertimeHours : undefined
+      estimatedOvertimeHours: formValue.overtimeRequired ? formValue.estimatedOvertimeHours : undefined,
+      // Assignment
+      technicianId: formValue.leadTechnicianId || undefined,
+      crewId: formValue.crewId || undefined
     };
 
     this.store.dispatch(JobActions.updateJob({ id: this.jobId, job: updateDto }));
+    this.isLoading = true;
     
-    this.snackBar.open('Job updated successfully', 'Close', { duration: 3000 });
-    
-    // Close dialog if opened as modal, otherwise navigate
-    if (this.dialogRef) {
-      this.dialogRef.close({ success: true });
-    } else if (this.router) {
-      this.router.navigate(['/field-resource-management/jobs', this.jobId]);
+    // Wait for success/failure before navigating
+    this.actions$.pipe(
+      ofType(JobActions.updateJobSuccess, JobActions.updateJobFailure),
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(action => {
+      if (action.type === JobActions.updateJobSuccess.type) {
+        // Upload any selected attachments for the updated job
+        this.uploadPendingAttachments(this.jobId!, () => {
+          this.isLoading = false;
+          // Close dialog if opened as modal, otherwise navigate
+          if (this.dialogRef) {
+            this.dialogRef.close({ success: true });
+          } else if (this.router) {
+            this.router.navigate(['/field-resource-management/jobs', this.jobId]);
+          }
+        });
+      } else {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Upload any pending file attachments and save the initial note
+   * after a successful job save. Dispatches uploadAttachment actions
+   * for each selected file and an addJobNote action if a note was
+   * entered, then calls the provided callback once all operations
+   * have completed (or immediately if there is nothing to save).
+   */
+  private uploadPendingAttachments(jobId: string, onComplete: () => void): void {
+    const note = this.jobForm.get('initialNote')?.value?.trim();
+    const hasFiles = this.selectedFiles.length > 0;
+    const hasNote = !!note;
+
+    if (!hasFiles && !hasNote) {
+      onComplete();
+      return;
     }
+
+    const totalActions = this.selectedFiles.length + (hasNote ? 1 : 0);
+
+    // Dispatch all upload / note actions
+    for (const file of this.selectedFiles) {
+      this.store.dispatch(JobActions.uploadAttachment({ jobId, file }));
+    }
+    if (hasNote) {
+      this.store.dispatch(JobActions.addJobNote({ jobId, note }));
+    }
+
+    // Wait for all results before navigating
+    this.actions$.pipe(
+      ofType(
+        JobActions.uploadAttachmentSuccess,
+        JobActions.uploadAttachmentFailure,
+        JobActions.addJobNoteSuccess,
+        JobActions.addJobNoteFailure
+      ),
+      take(totalActions),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      complete: () => {
+        this.selectedFiles = [];
+        onComplete();
+      }
+    });
   }
 
   /**

@@ -507,3 +507,62 @@ export const selectAvailableTechniciansCount = createSelector(
   selectAllTechnicians,
   (technicians) => technicians.filter(tech => tech.isActive).length
 );
+
+// ============================================================================
+// CROSS-REFERENCE SELECTORS (Technician → Crew → Job)
+// ============================================================================
+
+import { selectAllCrews } from '../crews/crew.selectors';
+import { selectJobEntities } from '../jobs/job.selectors';
+
+/**
+ * Select a map of technician ID → current job name.
+ * Joins through crews: technician is in crew.memberIds or crew.leadTechnicianId,
+ * crew has activeJobId, job has client + siteName.
+ */
+export const selectTechnicianCurrentJobMap = createSelector(
+  selectAllCrews,
+  selectJobEntities,
+  (crews, jobEntities): Record<string, string> => {
+    const map: Record<string, string> = {};
+
+    for (const crew of crews) {
+      if (!crew.activeJobId) continue;
+      const job = jobEntities[crew.activeJobId];
+      if (!job) continue;
+
+      const jobLabel = `${job.client} – ${job.siteName}`;
+      const techIds = [crew.leadTechnicianId, ...crew.memberIds];
+
+      for (const techId of techIds) {
+        if (!map[techId]) {
+          map[techId] = jobLabel;
+        }
+      }
+    }
+
+    return map;
+  }
+);
+
+/**
+ * Select a map of technician ID → crew name.
+ * A technician belongs to a crew if they are the leadTechnicianId or in memberIds.
+ */
+export const selectTechnicianCrewMap = createSelector(
+  selectAllCrews,
+  (crews): Record<string, string> => {
+    const map: Record<string, string> = {};
+
+    for (const crew of crews) {
+      const techIds = [crew.leadTechnicianId, ...crew.memberIds];
+      for (const techId of techIds) {
+        if (!map[techId]) {
+          map[techId] = crew.name;
+        }
+      }
+    }
+
+    return map;
+  }
+);

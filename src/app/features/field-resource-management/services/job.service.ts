@@ -1,19 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpEvent, HttpRequest } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, retry, map } from 'rxjs/operators';
 import { 
   Job, 
   JobStatus, 
   JobNote, 
-  Attachment 
+  Attachment,
+  ContactInfo 
 } from '../models/job.model';
+import { Skill } from '../models/technician.model';
 import {
   CreateJobDto,
   UpdateJobDto,
   JobFilters
 } from '../models/dtos';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Status history entry for tracking job status changes
@@ -35,7 +37,7 @@ export interface StatusHistory {
   providedIn: 'root'
 })
 export class JobService {
-  private readonly apiUrl = `${environment.apiUrl}/jobs`;
+  private readonly apiUrl = `${local_environment.apiUrl}/jobs`;
   private readonly retryCount = 2;
 
   constructor(private http: HttpClient) {}
@@ -94,9 +96,20 @@ export class JobService {
       }
     }
 
-    return this.http.get<Job[]>(this.apiUrl, { params })
+    return this.http.get<any>(this.apiUrl, { params })
       .pipe(
         retry(this.retryCount),
+        map(response => {
+          // Handle wrapped responses from .NET APIs
+          let jobs: any[];
+          if (Array.isArray(response)) jobs = response;
+          else if (response?.$values) jobs = response.$values;
+          else if (response?.data) jobs = response.data;
+          else if (response?.items) jobs = response.items;
+          else if (response?.results) jobs = response.results;
+          else jobs = [];
+          return jobs.map(job => this.mapJobResponse(job));
+        }),
         catchError(this.handleError)
       );
   }
@@ -107,9 +120,10 @@ export class JobService {
    * @returns Observable of job
    */
   getJobById(id: string): Observable<Job> {
-    return this.http.get<Job>(`${this.apiUrl}/${id}`)
+    return this.http.get<any>(`${this.apiUrl}/${id}`)
       .pipe(
         retry(this.retryCount),
+        map(response => this.mapJobResponse(response?.data || response)),
         catchError(this.handleError)
       );
   }
@@ -120,7 +134,8 @@ export class JobService {
    * @returns Observable of created job
    */
   createJob(job: CreateJobDto): Observable<Job> {
-    return this.http.post<Job>(this.apiUrl, job)
+    const payload = this.prepareJobPayload(job);
+    return this.http.post<Job>(this.apiUrl, payload)
       .pipe(
         catchError(this.handleError)
       );
@@ -133,10 +148,26 @@ export class JobService {
    * @returns Observable of updated job
    */
   updateJob(id: string, job: UpdateJobDto): Observable<Job> {
-    return this.http.put<Job>(`${this.apiUrl}/${id}`, job)
+    const payload = this.prepareJobPayload(job);
+    return this.http.put<Job>(`${this.apiUrl}/${id}`, payload)
       .pipe(
         catchError(this.handleError)
       );
+  }
+
+  /**
+   * Transforms the DTO before sending to the API.
+   * Converts requiredSkills from Skill[] to the shape the backend expects
+   * (array of { skillName: string }).
+   */
+  private prepareJobPayload(dto: CreateJobDto | UpdateJobDto): any {
+    const payload: any = { ...dto };
+    if (dto.requiredSkills && Array.isArray(dto.requiredSkills)) {
+      payload.requiredSkills = dto.requiredSkills.map(s => ({
+        skillName: (s as any).name || (s as any).skillName || (s as any).SkillName || String(s)
+      }));
+    }
+    return payload;
   }
 
   /**
@@ -221,8 +252,9 @@ export class JobService {
    * @returns Observable of created job note
    */
   addJobNote(id: string, note: string): Observable<JobNote> {
-    return this.http.post<JobNote>(`${this.apiUrl}/${id}/notes`, { text: note })
+    return this.http.post<any>(`${this.apiUrl}/${id}/notes`, { text: note })
       .pipe(
+        map(raw => this.mapJobNoteResponse(raw)),
         catchError(this.handleError)
       );
   }
@@ -233,9 +265,17 @@ export class JobService {
    * @returns Observable of job note array
    */
   getJobNotes(id: string): Observable<JobNote[]> {
-    return this.http.get<JobNote[]>(`${this.apiUrl}/${id}/notes`)
+    return this.http.get<any>(`${this.apiUrl}/${id}/notes`)
       .pipe(
         retry(this.retryCount),
+        map(response => {
+          let items: any[];
+          if (Array.isArray(response)) items = response;
+          else if (response?.$values) items = response.$values;
+          else if (response?.data) items = response.data;
+          else items = [];
+          return items.map(n => this.mapJobNoteResponse(n));
+        }),
         catchError(this.handleError)
       );
   }
@@ -266,11 +306,34 @@ export class JobService {
    * @returns Observable of attachment array
    */
   getJobAttachments(id: string): Observable<Attachment[]> {
-    return this.http.get<Attachment[]>(`${this.apiUrl}/${id}/attachments`)
+    return this.http.get<any>(`${this.apiUrl}/${id}/attachments`)
       .pipe(
         retry(this.retryCount),
+        map(response => {
+          let items: any[];
+          if (Array.isArray(response)) items = response;
+          else if (response?.$values) items = response.$values;
+          else if (response?.data) items = response.data;
+          else items = [];
+          return items;
+        }),
         catchError(this.handleError)
       );
+  }
+
+  /**
+   * Downloads an attachment file as a Blob via the API (with auth headers).
+   * @param jobId Job ID
+   * @param attachmentId Attachment ID
+   * @returns Observable of Blob
+   */
+  downloadAttachment(jobId: string, attachmentId: string): Observable<Blob> {
+    return this.http.get(
+      `${this.apiUrl}/${jobId}/attachments/${attachmentId}/download`,
+      { responseType: 'blob' }
+    ).pipe(
+      catchError(this.handleError)
+    );
   }
 
   /**
@@ -283,6 +346,135 @@ export class JobService {
       .pipe(
         catchError(this.handleError)
       );
+  }
+
+  /**
+   * Maps API response fields (PascalCase / flat) to frontend model (camelCase / nested)
+   */
+  private mapJobResponse(raw: any): Job {
+    if (!raw) return raw;
+    return {
+      id: raw.id || raw.Id || '',
+      jobId: raw.jobId || raw.JobId || raw.title || raw.Title || '',
+      title: raw.title || raw.Title,
+      client: raw.client || raw.Client || '',
+      siteName: raw.siteName || raw.SiteName || '',
+      siteAddress: raw.siteAddress || raw.SiteAddress || {
+        street: raw.siteStreet || raw.SiteStreet || '',
+        city: raw.siteCity || raw.SiteCity || '',
+        state: raw.siteState || raw.SiteState || '',
+        zipCode: raw.siteZipCode || raw.SiteZipCode || ''
+      },
+      jobType: raw.jobType || raw.JobType || 'Install',
+      priority: raw.priority || raw.Priority || 'Normal',
+      status: this.normalizeJobStatus(raw.status || raw.Status) || JobStatus.NotStarted,
+      scopeDescription: raw.scopeDescription || raw.ScopeDescription || raw.description || raw.Description || '',
+      requiredSkills: this.mapRequiredSkills(raw.requiredSkills || raw.RequiredSkills || raw.jobRequiredSkills || raw.JobRequiredSkills),
+      requiredCrewSize: raw.requiredCrewSize ?? raw.RequiredCrewSize ?? 0,
+      estimatedLaborHours: raw.estimatedLaborHours ?? raw.EstimatedLaborHours ?? 0,
+      scheduledStartDate: raw.scheduledStartDate || raw.ScheduledStartDate || raw.scheduledStart || raw.ScheduledStart,
+      scheduledEndDate: raw.scheduledEndDate || raw.ScheduledEndDate || raw.scheduledEnd || raw.ScheduledEnd,
+      actualStartDate: raw.actualStartDate || raw.ActualStartDate || raw.actualStart || raw.ActualStart,
+      actualEndDate: raw.actualEndDate || raw.ActualEndDate || raw.actualEnd || raw.ActualEnd,
+      customerPOC: raw.customerPOC || raw.CustomerPOC || this.mapCustomerPOC(raw),
+      attachments: raw.attachments || raw.Attachments || [],
+      notes: raw.notes || raw.Notes || [],
+      region: raw.region || raw.Region || raw.market || raw.Market || '',
+      market: raw.market || raw.Market || raw.region || raw.Region || '',
+      company: raw.company || raw.Company || '',
+      technicianId: raw.technicianId || raw.TechnicianId,
+      crewId: raw.crewId || raw.CrewId,
+      templateId: raw.templateId || raw.TemplateId,
+      // Pricing / Billing
+      authorizationStatus: raw.authorizationStatus || raw.AuthorizationStatus,
+      hasPurchaseOrders: raw.hasPurchaseOrders ?? raw.HasPurchaseOrders,
+      purchaseOrderNumber: raw.purchaseOrderNumber || raw.PurchaseOrderNumber,
+      standardBillRate: raw.standardBillRate ?? raw.StandardBillRate,
+      overtimeBillRate: raw.overtimeBillRate ?? raw.OvertimeBillRate,
+      perDiem: raw.perDiem ?? raw.PerDiem,
+      invoicingProcess: raw.invoicingProcess || raw.InvoicingProcess,
+      // SRI Internal
+      projectDirector: raw.projectDirector || raw.ProjectDirector,
+      targetResources: raw.targetResources ?? raw.TargetResources,
+      bizDevContact: raw.bizDevContact || raw.BizDevContact,
+      requestedHours: raw.requestedHours ?? raw.RequestedHours,
+      overtimeRequired: raw.overtimeRequired ?? raw.OvertimeRequired,
+      estimatedOvertimeHours: raw.estimatedOvertimeHours ?? raw.EstimatedOvertimeHours,
+      createdBy: raw.createdBy || raw.CreatedBy || '',
+      createdAt: raw.createdAt || raw.CreatedAt,
+      updatedAt: raw.updatedAt || raw.UpdatedAt
+    };
+  }
+
+  /**
+   * Maps raw required-skills data from the API to the frontend Skill interface.
+   * Handles the JobRequiredSkills table shape (Id, SkillName) as well as
+   * the full Skill shape (id, name, category, level).
+   */
+  private mapRequiredSkills(raw: any[] | undefined | null): Skill[] {
+    if (!raw || !Array.isArray(raw)) return [];
+
+    // Handle $values wrapper from .NET serialization
+    const items = (raw as any).$values ?? raw;
+
+    return items.map((s: any) => ({
+      id: s.id || s.Id || '',
+      name: s.name || s.Name || s.skillName || s.SkillName || '',
+      category: s.category || s.Category || 'General',
+      level: s.level || s.Level || 'BEGINNER'
+    }));
+  }
+
+  /**
+   * Normalizes a status string from the API to a valid JobStatus enum value.
+   * Handles snake_case, lowercase, spaced, and PascalCase variants.
+   */
+  private normalizeJobStatus(value: string | undefined | null): JobStatus | null {
+    if (!value) return null;
+
+    // Build a lookup map keyed by lowercase enum value
+    const statusMap: Record<string, JobStatus> = {};
+    for (const s of Object.values(JobStatus)) {
+      statusMap[s.toLowerCase()] = s;
+    }
+
+    // Try direct lowercase match first (handles PascalCase & lowercase)
+    const lower = value.toLowerCase();
+    if (statusMap[lower]) return statusMap[lower];
+
+    // Try after stripping underscores, hyphens, and spaces
+    const stripped = lower.replace(/[_\- ]/g, '');
+    if (statusMap[stripped]) return statusMap[stripped];
+
+    // No match — return null so the caller falls back to default
+    console.warn(`JobService: unrecognised job status "${value}", defaulting to NotStarted`);
+    return null;
+  }
+
+  /**
+   * Maps API response fields (PascalCase / flat) to frontend JobNote model (camelCase)
+   */
+  private mapJobNoteResponse(raw: any): JobNote {
+    if (!raw) return raw;
+    return {
+      id: raw.id || raw.Id || '',
+      jobId: raw.jobId || raw.JobId || '',
+      text: raw.text || raw.Text || '',
+      author: raw.author || raw.Author || '',
+      createdAt: raw.createdAt || raw.CreatedAt || new Date(),
+      updatedAt: raw.updatedAt || raw.UpdatedAt
+    };
+  }
+
+  /**
+   * Maps flat CustomerPOC fields from DB response to nested ContactInfo
+   */
+  private mapCustomerPOC(raw: any): ContactInfo | undefined {
+    const name = raw.customerPOCName || raw.CustomerPOCName;
+    const phone = raw.customerPOCPhone || raw.CustomerPOCPhone;
+    const email = raw.customerPOCEmail || raw.CustomerPOCEmail;
+    if (!name && !phone && !email) return undefined;
+    return { name: name || '', phone: phone || '', email: email || '' };
   }
 
   /**
@@ -321,7 +513,7 @@ export class JobService {
           errorMessage = 'File too large. Maximum file size is 10 MB.';
           break;
         case 415:
-          errorMessage = 'Unsupported file type. Please upload JPEG, PNG, or HEIC files.';
+          errorMessage = 'Unsupported file type. Please upload JPEG, PNG, HEIC, PDF, DOC, or DOCX files.';
           break;
         case 500:
           errorMessage = 'Server error. Please try again later.';

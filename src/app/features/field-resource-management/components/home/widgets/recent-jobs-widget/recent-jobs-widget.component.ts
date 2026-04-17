@@ -12,7 +12,17 @@ import { Store } from '@ngrx/store';
 import { Observable, BehaviorSubject, combineLatest, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { selectAllJobs, selectJobsLoading, selectJobsError } from '../../../../state/jobs/job.selectors';
+import { selectActiveAssignments } from '../../../../state/assignments/assignment.selectors';
+import { selectTechnicianEntities } from '../../../../state/technicians/technician.selectors';
+import { selectCrewEntities } from '../../../../state/crews/crew.selectors';
 import { Job } from '../../../../models/job.model';
+import { Technician } from '../../../../models/technician.model';
+import { Crew } from '../../../../models/crew.model';
+
+export interface RecentJobWithTechnicians extends Job {
+  assignedTechnicians: Technician[];
+  crew: Crew | null;
+}
 
 @Component({
   selector: 'app-recent-jobs-widget',
@@ -24,7 +34,7 @@ export class RecentJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
   @Input() limit: number = 10;
   @Output() jobSelected = new EventEmitter<string>();
 
-  recentJobs$!: Observable<Job[]>;
+  recentJobs$!: Observable<RecentJobWithTechnicians[]>;
   loading$!: Observable<boolean>;
   error: string | null = null;
 
@@ -42,9 +52,12 @@ export class RecentJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
 
     this.recentJobs$ = combineLatest([
       this.store.select(selectAllJobs),
+      this.store.select(selectActiveAssignments),
+      this.store.select(selectTechnicianEntities),
+      this.store.select(selectCrewEntities),
       this.marketFilter$
     ]).pipe(
-      map(([jobs, market]) => {
+      map(([jobs, activeAssignments, techEntities, crewEntities, market]) => {
         let filtered = [...jobs];
         if (market != null && market !== '') {
           filtered = filtered.filter(job => job.market === market);
@@ -52,7 +65,14 @@ export class RecentJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
         filtered.sort((a, b) =>
           new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
-        return filtered.slice(0, this.limit);
+        return filtered.slice(0, this.limit).map(job => {
+          const jobAssignments = activeAssignments.filter(a => a.jobId === job.id);
+          const assignedTechnicians = jobAssignments
+            .map(a => techEntities[a.technicianId])
+            .filter((t): t is Technician => t != null);
+          const crew = job.crewId ? (crewEntities[job.crewId] ?? null) : null;
+          return { ...job, assignedTechnicians, crew };
+        });
       })
     );
   }

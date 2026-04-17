@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { catchError, retry, tap } from 'rxjs/operators';
 import { 
   JobBudget, 
@@ -13,7 +13,7 @@ import {
   AdjustBudgetDto 
 } from '../models/dtos/budget.dto';
 import { CacheService } from './cache.service';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /** 5 minutes in milliseconds — budget status changes frequently */
 const BUDGET_CACHE_TTL = 5 * 60 * 1000;
@@ -26,7 +26,7 @@ const BUDGET_CACHE_TTL = 5 * 60 * 1000;
   providedIn: 'root'
 })
 export class BudgetService {
-  private readonly apiUrl = `${environment.apiUrl}/budgets`;
+  private readonly apiUrl = `${local_environment.apiUrl}/budgets`;
   private readonly retryCount = 2;
 
   constructor(
@@ -44,7 +44,16 @@ export class BudgetService {
     
     return this.cacheService.get(cacheKey, () => {
       return this.http.get<JobBudget>(`${this.apiUrl}/job/${jobId}`).pipe(
-        retry(this.retryCount),
+        retry({
+          count: this.retryCount,
+          delay: (error: HttpErrorResponse) => {
+            // Don't retry 4xx client errors (404 not found, 403 forbidden, etc.)
+            if (error.status >= 400 && error.status < 500) {
+              return throwError(() => error);
+            }
+            return of(error);
+          }
+        }),
         catchError(this.handleError)
       );
     }, BUDGET_CACHE_TTL);

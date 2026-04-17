@@ -15,7 +15,7 @@ import {
   PurchaseOrderStatus,
   ReorderUrgency
 } from '../models/material.model';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Service for managing materials tracking and supplier integration
@@ -33,9 +33,9 @@ import { environment } from '../../../../environments/environments';
   providedIn: 'root'
 })
 export class MaterialsService {
-  private readonly apiUrl = `${environment.apiUrl}/materials`;
-  private readonly purchaseOrderUrl = `${environment.apiUrl}/purchase-orders`;
-  private readonly supplierUrl = `${environment.apiUrl}/suppliers`;
+  private readonly apiUrl = `${local_environment.apiUrl}/materials`;
+  private readonly purchaseOrderUrl = `${local_environment.apiUrl}/purchase-orders`;
+  private readonly supplierUrl = `${local_environment.apiUrl}/suppliers`;
 
   constructor(private http: HttpClient) {}
 

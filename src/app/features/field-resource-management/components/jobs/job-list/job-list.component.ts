@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { Observable, Subject, combineLatest } from 'rxjs';
+import { debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -12,9 +12,19 @@ import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
 import { JobFilters } from '../../../models/dtos/filters.dto';
 import * as JobActions from '../../../state/jobs/job.actions';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
+import { selectActiveAssignments } from '../../../state/assignments/assignment.selectors';
+import { selectTechnicianEntities } from '../../../state/technicians/technician.selectors';
+import { loadAssignments } from '../../../state/assignments/assignment.actions';
+import { assignTechnician } from '../../../state/assignments/assignment.actions';
+import { loadTechnicians } from '../../../state/technicians/technician.actions';
+import { loadCrews } from '../../../state/crews/crew.actions';
+import { selectAllCrews } from '../../../state/crews/crew.selectors';
+import { selectCrewEntities } from '../../../state/crews/crew.selectors';
+import { Technician } from '../../../models/technician.model';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { BatchStatusDialogComponent } from '../../shared/batch-status-dialog/batch-status-dialog.component';
 import { BatchTechnicianDialogComponent } from '../../shared/batch-technician-dialog/batch-technician-dialog.component';
+import { AssignJobDialogComponent } from '../../shared/assign-job-dialog/assign-job-dialog.component';
 import { JobFormComponent } from '../job-form/job-form.component';
 import { ExportService } from '../../../services/export.service';
 import { AuthService } from '../../../../../services/auth.service';
@@ -102,6 +112,12 @@ export class JobListComponent implements OnInit, OnDestroy {
   // Filtered and paginated jobs
   displayedJobs: Job[] = [];
 
+  // Technician names lookup by job ID
+  private techniciansByJobId: Record<string, string> = {};
+
+  // Crew names lookup by job ID
+  private crewByJobId: Record<string, string> = {};
+
   constructor(
     private store: Store,
     private router: Router,
@@ -156,6 +172,61 @@ export class JobListComponent implements OnInit, OnDestroy {
 
     // Load jobs on init
     this.store.dispatch(JobActions.loadJobs({ filters: {} }));
+
+    // Load supporting data only if not already in the store
+    this.store.select(selectTechnicianEntities).pipe(take(1)).subscribe(entities => {
+      if (Object.keys(entities).length === 0) {
+        this.store.dispatch(loadTechnicians({}));
+      }
+    });
+
+    this.store.select(selectActiveAssignments).pipe(take(1)).subscribe(assignments => {
+      if (assignments.length === 0) {
+        this.store.dispatch(loadAssignments({}));
+      }
+    });
+
+    this.store.select(selectAllCrews).pipe(take(1)).subscribe(crews => {
+      if (crews.length === 0) {
+        this.store.dispatch(loadCrews({}));
+      }
+    });
+
+    // Build technician and crew lookups per job
+    combineLatest([
+      this.store.select(selectActiveAssignments),
+      this.store.select(selectTechnicianEntities),
+      this.store.select(selectCrewEntities),
+      this.store.select(JobSelectors.selectAllJobs)
+    ]).pipe(takeUntil(this.destroy$)).subscribe(([assignments, techEntities, crewEntities, jobs]) => {
+      const techMap: Record<string, string[]> = {};
+      for (const a of assignments) {
+        const tech = techEntities[a.technicianId] as Technician | undefined;
+        if (tech) {
+          if (!techMap[a.jobId]) {
+            techMap[a.jobId] = [];
+          }
+          techMap[a.jobId].push(`${tech.firstName} ${tech.lastName}`);
+        }
+      }
+      const result: Record<string, string> = {};
+      for (const jobId of Object.keys(techMap)) {
+        result[jobId] = techMap[jobId].join(', ');
+      }
+      this.techniciansByJobId = result;
+
+      // Build crew lookup from job.crewId
+      const crewResult: Record<string, string> = {};
+      for (const job of jobs) {
+        if (job.crewId) {
+          const crew = crewEntities[job.crewId];
+          if (crew) {
+            crewResult[job.id] = crew.name;
+          }
+        }
+      }
+      this.crewByJobId = crewResult;
+    });
 
     // Subscribe to jobs for pagination and dynamic filter options
     this.jobs$.pipe(takeUntil(this.destroy$)).subscribe(jobs => {
@@ -449,10 +520,55 @@ export class JobListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Navigate to job assignment dialog
+   * Open assignment dialog for a single job (technician and/or crew)
    */
   assignJob(job: Job): void {
-    this.router.navigate(['/field-resource-management/jobs', job.id, 'assign']);
+    const dialogRef = this.dialog.open(AssignJobDialogComponent, {
+      width: '600px',
+      data: {
+        jobId: job.id,
+        jobTitle: job.jobId,
+        currentCrewId: job.crewId || undefined
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Build the job update payload
+        const jobUpdate: any = {};
+
+        if (result.technicianId) {
+          // Create the assignment record
+          this.store.dispatch(assignTechnician({
+            jobId: job.id,
+            technicianId: result.technicianId
+          }));
+          // Also set the technicianId on the job itself
+          jobUpdate.technicianId = result.technicianId;
+        }
+
+        if (result.crewId) {
+          jobUpdate.crewId = result.crewId;
+        }
+
+        // Update the job record with technicianId and/or crewId
+        if (Object.keys(jobUpdate).length > 0) {
+          this.store.dispatch(JobActions.updateJob({
+            id: job.id,
+            job: jobUpdate
+          }));
+        }
+
+        const parts: string[] = [];
+        if (result.technicianId) parts.push('lead technician');
+        if (result.crewId) parts.push('crew');
+        this.snackBar.open(
+          `Assigning ${parts.join(' and ')} to ${job.jobId}...`,
+          'Close',
+          { duration: 3000 }
+        );
+      }
+    });
   }
 
   /**
@@ -595,12 +711,22 @@ export class JobListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get assigned technician names for a job
+   * Get assigned technician/crew info for a job
    */
   getAssignedTechnicians(job: Job): string {
-    // This is a placeholder - in a real implementation, this would
-    // join with assignment state to get technician names
-    return 'N/A';
+    const techName = this.techniciansByJobId[job.id];
+    const crewName = this.crewByJobId[job.id];
+
+    if (techName && crewName) {
+      return `${techName} · ${crewName}`;
+    }
+    if (techName) {
+      return techName;
+    }
+    if (crewName) {
+      return crewName;
+    }
+    return 'Unassigned';
   }
 
   /**

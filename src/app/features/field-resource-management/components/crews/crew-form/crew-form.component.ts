@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, Inject, Optional } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -6,6 +6,7 @@ import { Actions, ofType } from '@ngrx/effects';
 import { Subject } from 'rxjs';
 import { takeUntil, filter, take } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { Crew, CrewStatus } from '../../../models/crew.model';
 import { Technician } from '../../../models/technician.model';
@@ -13,6 +14,7 @@ import { CreateCrewDto, UpdateCrewDto } from '../../../models/dtos/crew.dto';
 import * as CrewActions from '../../../state/crews/crew.actions';
 import * as CrewSelectors from '../../../state/crews/crew.selectors';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
+import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import { AuthService } from '../../../../../services/auth.service';
 
 /**
@@ -64,34 +66,52 @@ export class CrewFormComponent implements OnInit, OnDestroy {
   
   // Role-based fields
   isAdmin = false;
-  availableMarkets: string[] = ['North', 'South', 'East', 'West', 'Central', 'RG'];
+  availableMarkets: string[] = [
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+  ];
   availableCompanies: string[] = ['Internal', 'Vendor A', 'Vendor B', 'Vendor C'];
 
   constructor(
     private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
+    @Optional() private route: ActivatedRoute,
+    @Optional() private router: Router,
     private store: Store,
     private actions$: Actions,
     private snackBar: MatSnackBar,
-    private authService: AuthService
+    private authService: AuthService,
+    @Optional() public dialogRef: MatDialogRef<CrewFormComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) public dialogData: { crewId?: string }
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
     this.loadTechnicians();
     
-    // Check if edit mode or create mode
-    this.route.params
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(params => {
-        const id = params['id'];
-        if (id && id !== 'new') {
-          this.isEditMode = true;
-          this.crewId = id;
-          this.loadCrew(id);
-        }
-      });
+    // Check if opened as dialog with crew ID
+    if (this.dialogData?.crewId) {
+      this.isEditMode = true;
+      this.crewId = this.dialogData.crewId;
+      this.loadCrew(this.crewId);
+      return;
+    }
+    
+    // Check if edit mode or create mode via route
+    if (this.route) {
+      this.route.params
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(params => {
+          const id = params['id'];
+          if (id && id !== 'new') {
+            this.isEditMode = true;
+            this.crewId = id;
+            this.loadCrew(id);
+          }
+        });
+    }
   }
 
   ngOnDestroy(): void {
@@ -139,6 +159,7 @@ export class CrewFormComponent implements OnInit, OnDestroy {
    * Load available technicians from store
    */
   private loadTechnicians(): void {
+    this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
     this.store.select(TechnicianSelectors.selectAllTechnicians)
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
@@ -284,7 +305,11 @@ export class CrewFormComponent implements OnInit, OnDestroy {
       take(1)
     ).subscribe(() => {
       this.snackBar.open('Crew created successfully', 'Close', { duration: 3000 });
-      this.router.navigate(['/field-resource-management/crews']);
+      if (this.dialogRef) {
+        this.dialogRef.close({ success: true });
+      } else {
+        this.router.navigate(['/field-resource-management/crews']);
+      }
     });
     
     // Subscribe to failure action
@@ -338,6 +363,10 @@ export class CrewFormComponent implements OnInit, OnDestroy {
    * Cancel and go back
    */
   onCancel(): void {
+    if (this.dialogRef) {
+      this.dialogRef.close();
+      return;
+    }
     if (this.isEditMode && this.crewId) {
       this.router.navigate(['/field-resource-management/crews', this.crewId]);
     } else {

@@ -22,7 +22,7 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class AtlasQueryBuilderService {
-  private readonly baseUrl = `${environment.atlasApiUrl}/v1/query-builder`;
+  private readonly baseUrl = `${environment.atlasApiUrl}/query-builder`;
 
   constructor(private http: HttpClient) {}
 

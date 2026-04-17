@@ -48,7 +48,9 @@ export interface Certification {
 export interface Availability {
   id: string;
   technicianId: string;
-  date: Date;
+  date?: Date;
+  startDate?: Date;
+  endDate?: Date;
   isAvailable: boolean;
   reason?: string; // PTO, Sick, Training
 }

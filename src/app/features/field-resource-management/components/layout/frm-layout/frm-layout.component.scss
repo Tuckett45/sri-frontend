@@ -150,6 +150,20 @@
 
   @media (max-width: 768px) {
     padding: 16px;
+
+    // Show scrollbar on mobile so users know content is scrollable
+    scrollbar-width: thin;
+    -ms-overflow-style: auto;
+
+    &::-webkit-scrollbar {
+      display: block;
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
   }
 }
 

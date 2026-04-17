@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth.service';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 import {
   IncidentReport,
   IncidentReportFilters,
@@ -25,7 +25,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class PayrollService {
-  private readonly baseUrl = `${environment.apiUrl}/payroll`;
+  private readonly baseUrl = `${local_environment.apiUrl}/payroll`;
 
   constructor(
     private http: HttpClient,

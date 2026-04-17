@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { takeUntil, filter, map } from 'rxjs/operators';
+import { Actions, ofType } from '@ngrx/effects';
+import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
+import { takeUntil, filter, map, catchError, take, distinctUntilChanged } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -10,15 +11,24 @@ import { Job, JobStatus, Attachment, JobNote } from '../../../models/job.model';
 import { JobBudget, BudgetStatus } from '../../../models/budget.model';
 import { TimeEntry } from '../../../models/time-entry.model';
 import { Assignment } from '../../../models/assignment.model';
+import { Crew } from '../../../models/crew.model';
+import { Technician } from '../../../models/technician.model';
 import { JobCostBreakdown, BudgetComparison } from '../../../models/reporting.model';
 import * as JobActions from '../../../state/jobs/job.actions';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
 import * as BudgetActions from '../../../state/budgets/budget.actions';
 import * as BudgetSelectors from '../../../state/budgets/budget.selectors';
+import * as TechnicianActions from '../../../state/technicians/technician.actions';
+import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
+import { selectCrewById } from '../../../state/crews/crew.selectors';
+import { loadCrews } from '../../../state/crews/crew.actions';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { AssignmentDialogComponent } from '../../scheduling/assignment-dialog/assignment-dialog.component';
 import { JobFormComponent } from '../job-form/job-form.component';
+import { AttachmentPreviewDialogComponent } from '../attachment-preview-dialog/attachment-preview-dialog.component';
 import { ReportingService } from '../../../services/reporting.service';
+import { JobService } from '../../../services/job.service';
+import { SchedulingService } from '../../../services/scheduling.service';
 import { AuthService } from '../../../../../services/auth.service';
 import { FrmPermissionService } from '../../../services/frm-permission.service';
 
@@ -88,6 +98,13 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   editingNoteId: string | null = null;
   editingNoteText = '';
   
+  // Technician name lookup
+  technicianNameMap: Map<string, string> = new Map();
+
+  // Crew data
+  assignedCrew: Crew | null = null;
+  crewMembers: Technician[] = [];
+  
   // New note
   newNoteText = '';
   isAddingNote = false;
@@ -118,11 +135,15 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private store: Store,
+    private actions$: Actions,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private reportingService: ReportingService,
+    private jobService: JobService,
+    private schedulingService: SchedulingService,
     private authService: AuthService,
-    private frmPermissionService: FrmPermissionService
+    private frmPermissionService: FrmPermissionService,
+    private cdr: ChangeDetectorRef
   ) {
     this.loading$ = this.store.select(JobSelectors.selectJobsLoading);
     this.job$ = this.store.select(JobSelectors.selectSelectedJob);
@@ -132,6 +153,17 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Ensure technicians are loaded for name lookups
+    this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
+    this.store.select(selectAllTechnicians).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(technicians => {
+      this.technicianNameMap.clear();
+      technicians.forEach(t => {
+        this.technicianNameMap.set(t.id, `${t.firstName} ${t.lastName}`);
+      });
+    });
+
     // Get job ID from route
     this.route.params
       .pipe(takeUntil(this.destroy$))
@@ -139,10 +171,31 @@ export class JobDetailComponent implements OnInit, OnDestroy {
         const jobId = params['id'];
         if (jobId) {
           this.store.dispatch(JobActions.selectJob({ id: jobId }));
+          
+          // If job isn't in the store (direct navigation), load all jobs
+          this.store.select(JobSelectors.selectJobById(jobId)).pipe(
+            takeUntil(this.destroy$),
+            filter(job => !job)
+          ).subscribe(() => {
+            this.store.dispatch(JobActions.loadJobs({ filters: {} }));
+          });
         }
       });
 
-    // Subscribe to job data
+    // Subscribe to job data — only reload related data when the job ID changes
+    this.job$
+      .pipe(
+        takeUntil(this.destroy$),
+        filter(job => !!job),
+        distinctUntilChanged((prev, curr) => prev!.id === curr!.id)
+      )
+      .subscribe(job => {
+        this.job = job!;
+        this.loadRelatedData();
+      });
+
+    // Keep local job reference in sync for template bindings
+    // (without re-dispatching API calls)
     this.job$
       .pipe(
         takeUntil(this.destroy$),
@@ -150,8 +203,7 @@ export class JobDetailComponent implements OnInit, OnDestroy {
       )
       .subscribe(job => {
         this.job = job!;
-        // Load related data (time entries, assignments, status history)
-        this.loadRelatedData();
+        this.cdr.markForCheck();
       });
   }
 
@@ -167,25 +219,97 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   private loadRelatedData(): void {
     if (!this.job) return;
     
-    // Load budget data for this job
-    this.store.dispatch(BudgetActions.loadBudget({ jobId: this.job.id }));
+    // Load budget data for this job (silently skip if not found)
     this.budget$ = this.store.select(BudgetSelectors.selectBudgetByJobId(this.job.id));
     this.budgetStatus$ = this.store.select(BudgetSelectors.selectBudgetStatus(this.job.id));
     this.budgetConsumptionPercentage$ = this.store.select(
       BudgetSelectors.selectBudgetConsumptionPercentage(this.job.id)
     );
     
-    // In a real implementation, these would dispatch actions to load:
-    // - Time entries from time entry state
-    // - Assignments from assignment state
-    // - Status history from job service
+    // Only load budget if job is not brand new (budget is auto-created on job creation)
+    if (this.job.status !== 'NotStarted') {
+      this.store.dispatch(BudgetActions.loadBudget({ jobId: this.job.id }));
+    }
     
-    // Placeholder data
+    // Load attachments and notes from their dedicated endpoints
+    this.store.dispatch(JobActions.loadJobAttachments({ jobId: this.job.id }));
+    this.store.dispatch(JobActions.loadJobNotes({ jobId: this.job.id }));
+    
+    // Load status history from API
+    this.loadStatusHistory(this.job.id);
+    
+    // Load assignments from API
+    this.loadAssignments(this.job.id);
+    
+    // Load crew if assigned
+    this.loadCrew();
+    
+    // Placeholder data for time entries
     this.timeEntries = [];
-    this.assignments = [];
     
     // Check if current user is assigned to this job
     this.checkIfAssignedToCurrentUser();
+  }
+
+  /**
+   * Load crew data and resolve crew members if the job has a crewId
+   */
+  private loadCrew(): void {
+    if (!this.job?.crewId) {
+      this.assignedCrew = null;
+      this.crewMembers = [];
+      return;
+    }
+
+    this.store.dispatch(loadCrews({}));
+
+    this.store.select(selectCrewById(this.job.crewId))
+      .pipe(takeUntil(this.destroy$), filter(crew => !!crew))
+      .subscribe(crew => {
+        this.assignedCrew = crew!;
+        // Resolve crew members from the technician name map
+        this.store.select(selectAllTechnicians)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(technicians => {
+            this.crewMembers = (crew!.memberIds || [])
+              .map(id => technicians.find(t => t.id === id))
+              .filter((t): t is Technician => t != null);
+            this.cdr.markForCheck();
+          });
+      });
+  }
+
+  private loadStatusHistory(jobId: string): void {
+    this.jobService.getJobStatusHistory(jobId).pipe(
+      takeUntil(this.destroy$),
+      catchError(err => {
+        console.error('Failed to load status history:', err);
+        return of([]);
+      })
+    ).subscribe(history => {
+      this.statusHistory = history;
+      this.cdr.markForCheck();
+    });
+  }
+
+  private loadAssignments(jobId: string): void {
+    this.schedulingService.getAssignments({ jobId, isActive: true }).pipe(
+      takeUntil(this.destroy$),
+      map(response => {
+        if (Array.isArray(response)) return response;
+        if ((response as any)?.$values) return (response as any).$values;
+        if ((response as any)?.items) return (response as any).items;
+        return [];
+      }),
+      catchError(err => {
+        console.error('Failed to load assignments:', err);
+        return of([]);
+      })
+    ).subscribe(assignments => {
+      this.assignments = assignments;
+      this.checkIfAssignedToCurrentUser();
+      this.cdr.markForCheck();
+    });
   }
   
   /**
@@ -277,10 +401,23 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(result => {
       if (result?.assigned) {
         this.snackBar.open('Technician assigned successfully', 'Close', { duration: 3000 });
-        // Reload related data to show new assignment
-        this.loadRelatedData();
+        // Reload assignments to show new assignment
+        this.loadAssignments(this.job!.id);
       }
     });
+  }
+
+  /**
+   * Get technician display name from assignment
+   */
+  getTechnicianName(assignment: Assignment): string {
+    if (assignment.technician) {
+      return `${assignment.technician.firstName} ${assignment.technician.lastName}`;
+    }
+    // Fall back to looking up from the technician store
+    const techName = this.technicianNameMap.get(assignment.technicianId);
+    if (techName) return techName;
+    return `Technician ${assignment.technicianId.substring(0, 8)}...`;
   }
 
   /**
@@ -402,9 +539,9 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     }
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/heic', 'application/pdf'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/heic', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(file.type)) {
-      this.snackBar.open('Only JPEG, PNG, HEIC, and PDF files are allowed', 'Close', { duration: 3000 });
+      this.snackBar.open('Only JPEG, PNG, HEIC, PDF, DOC, and DOCX files are allowed', 'Close', { duration: 3000 });
       return;
     }
 
@@ -416,19 +553,73 @@ export class JobDetailComponent implements OnInit, OnDestroy {
 
     // Reset file input
     input.value = '';
-    
-    // In a real implementation, we'd subscribe to upload success/failure
-    setTimeout(() => {
+
+    // Listen for actual upload result
+    this.actions$.pipe(
+      ofType(JobActions.uploadAttachmentSuccess, JobActions.uploadAttachmentFailure),
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(action => {
       this.isUploadingFile = false;
-      this.snackBar.open('File uploaded successfully', 'Close', { duration: 3000 });
-    }, 1000);
+      this.cdr.markForCheck();
+    });
   }
 
   /**
-   * Download attachment
+   * Download attachment via the API (with auth headers)
    */
   downloadAttachment(attachment: Attachment): void {
-    window.open(attachment.blobUrl, '_blank');
+    if (!this.job) return;
+
+    this.jobService.downloadAttachment(this.job.id, attachment.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = attachment.fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.snackBar.open('Failed to download attachment', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  /**
+   * Preview attachment in a dialog overlay.
+   * Images and PDFs are rendered inline; other types trigger a download.
+   */
+  previewAttachment(attachment: Attachment): void {
+    if (!this.job) return;
+
+    const previewableTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    if (!previewableTypes.includes(attachment.fileType)) {
+      // Non-previewable — fall back to download
+      this.downloadAttachment(attachment);
+      return;
+    }
+
+    this.jobService.downloadAttachment(this.job.id, attachment.id).subscribe({
+      next: (blob) => {
+        const objectUrl = window.URL.createObjectURL(blob);
+        this.dialog.open(AttachmentPreviewDialogComponent, {
+          data: { url: objectUrl, fileName: attachment.fileName, fileType: attachment.fileType },
+          width: '90vw',
+          maxWidth: '1200px',
+          maxHeight: '90vh',
+          panelClass: 'attachment-preview-dialog',
+          autoFocus: false
+        }).afterClosed().subscribe(() => {
+          window.URL.revokeObjectURL(objectUrl);
+        });
+      },
+      error: () => {
+        this.snackBar.open('Failed to load preview', 'Close', { duration: 3000 });
+      }
+    });
   }
 
   /**

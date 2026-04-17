@@ -21,7 +21,7 @@
           <span>Export to PDF</span>
         </button>
       </mat-menu>
-      <button mat-raised-button class="btn-orange" routerLink="./new">
+      <button mat-raised-button class="btn-orange" (click)="openCrewDialog()">
         <mat-icon>add</mat-icon>
         Add Crew
       </button>
@@ -163,7 +163,7 @@
         <ng-container matColumnDef="leadTechnician">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Lead Technician</th>
           <td mat-cell *matCellDef="let crew">
-            <span class="lead-tech-id">{{ crew.leadTechnicianId }}</span>
+            <span class="lead-tech-name">{{ getTechnicianName(crew.leadTechnicianId) }}</span>
           </td>
         </ng-container>
 
@@ -208,19 +208,24 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let crew">
-            <button mat-icon-button 
-                    [routerLink]="['./', crew.id]"
-                    matTooltip="View Details"
-                    (click)="viewCrew(crew)">
-              <mat-icon>visibility</mat-icon>
-            </button>
-            <button mat-icon-button 
-                    [routerLink]="['./', crew.id, 'edit']"
-                    matTooltip="Edit"
-                    (click)="editCrew(crew)"
-                    *roleBasedShow="[UserRole.Admin, UserRole.CM]">
-              <mat-icon>edit</mat-icon>
-            </button>
+            <div class="actions-row">
+              <button mat-icon-button 
+                      [routerLink]="['./', crew.id]"
+                      matTooltip="View Details"
+                      (click)="viewCrew(crew)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button 
+                      matTooltip="Edit"
+                      (click)="openCrewDialog(crew.id)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button 
+                      matTooltip="Delete"
+                      (click)="deleteCrew(crew)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
           </td>
         </ng-container>
 

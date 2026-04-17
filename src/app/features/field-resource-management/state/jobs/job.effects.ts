@@ -124,8 +124,8 @@ export class JobEffects {
             JobActions.addJobNoteSuccess({ jobId, note: createdNote })
           ),
           catchError((error) =>
-            of(JobActions.addJobNoteFailure({ 
-              error: error.message || 'Failed to add job note' 
+            of(JobActions.addJobNoteFailure({
+              error: error.message || 'Failed to add job note'
             }))
           )
         )
@@ -140,13 +140,70 @@ export class JobEffects {
       switchMap(({ jobId, file }) =>
         this.jobService.uploadJobAttachment(jobId, file).pipe(
           filter(event => event.type === HttpEventType.Response),
-          map((event: any) => event.body),
-          map((attachment) =>
-            JobActions.uploadAttachmentSuccess({ jobId, attachment })
-          ),
+          map((event: any) => {
+            const raw = event.body;
+            // Map PascalCase API response to camelCase Attachment model
+            const attachment = {
+              id: raw?.id || raw?.Id || '',
+              fileName: raw?.fileName || raw?.FileName || file.name,
+              fileSize: raw?.fileSize ?? raw?.FileSize ?? file.size,
+              fileType: raw?.fileType || raw?.FileType || file.type,
+              blobUrl: raw?.blobUrl || raw?.BlobUrl || raw?.url || raw?.Url || '',
+              uploadedBy: raw?.uploadedBy || raw?.UploadedBy || '',
+              uploadedAt: raw?.uploadedAt || raw?.UploadedAt || new Date()
+            };
+            return JobActions.uploadAttachmentSuccess({ jobId, attachment });
+          }),
           catchError((error) =>
             of(JobActions.uploadAttachmentFailure({ 
               error: error.message || 'Failed to upload attachment' 
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  // Load Job Attachments Effect
+  loadJobAttachments$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.loadJobAttachments),
+      switchMap(({ jobId }) =>
+        this.jobService.getJobAttachments(jobId).pipe(
+          map((rawAttachments) => {
+            const attachments = (rawAttachments || []).map((raw: any) => ({
+              id: raw?.id || raw?.Id || '',
+              fileName: raw?.fileName || raw?.FileName || '',
+              fileSize: raw?.fileSize ?? raw?.FileSize ?? 0,
+              fileType: raw?.fileType || raw?.FileType || '',
+              blobUrl: raw?.blobUrl || raw?.BlobUrl || raw?.url || raw?.Url || '',
+              uploadedBy: raw?.uploadedBy || raw?.UploadedBy || '',
+              uploadedAt: raw?.uploadedAt || raw?.UploadedAt || new Date()
+            }));
+            return JobActions.loadJobAttachmentsSuccess({ jobId, attachments });
+          }),
+          catchError((error) =>
+            of(JobActions.loadJobAttachmentsFailure({
+              error: error.message || 'Failed to load attachments'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  // Load Job Notes Effect
+  loadJobNotes$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(JobActions.loadJobNotes),
+      switchMap(({ jobId }) =>
+        this.jobService.getJobNotes(jobId).pipe(
+          map((notes) =>
+            JobActions.loadJobNotesSuccess({ jobId, notes })
+          ),
+          catchError((error) =>
+            of(JobActions.loadJobNotesFailure({
+              error: error.message || 'Failed to load notes'
             }))
           )
         )
