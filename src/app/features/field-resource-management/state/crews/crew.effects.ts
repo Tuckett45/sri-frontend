@@ -152,11 +152,11 @@ export class CrewEffects {
       switchMap(({ crewId, technicianId }) =>
         this.crewService.addCrewMember(crewId, technicianId).pipe(
           map((updatedCrew) =>
-            CrewActions.addCrewMemberSuccess({ crew: updatedCrew })
+            CrewActions.addCrewMemberSuccess({ crew: updatedCrew, technicianId })
           ),
           catchError((error) =>
-            of(CrewActions.addCrewMemberFailure({ 
-              error: error.message || 'Failed to add crew member' 
+            of(CrewActions.addCrewMemberFailure({
+              error: error.message || 'Failed to add crew member'
             }))
           )
         )

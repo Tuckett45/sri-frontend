@@ -6,6 +6,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Notification } from '../../../models/notification.model';
 import * as NotificationActions from '../../../state/notifications/notification.actions';
 import * as NotificationSelectors from '../../../state/notifications/notification.selectors';
+import { AuthService } from '../../../../../services/auth.service';
 
 /**
  * Notification Panel Component
@@ -21,24 +22,24 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   unreadCount$: Observable<number>;
   groupedNotifications: { [key: string]: Notification[] } = {};
   
-  // Notification sound preference (can be stored in user preferences)
-  notificationSoundEnabled = true;
+  notificationSoundEnabled = localStorage.getItem('frm_notification_sound') !== 'false';
   
   private destroy$ = new Subject<void>();
   private previousUnreadCount = 0;
 
   constructor(
     private store: Store,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.notifications$ = this.store.select(NotificationSelectors.selectAllNotifications);
     this.unreadCount$ = this.store.select(NotificationSelectors.selectUnreadCount);
   }
 
   ngOnInit(): void {
-    // Load notifications for current user
-    // TODO: Get current user ID from auth service
-    this.store.dispatch(NotificationActions.loadNotifications({ userId: 'current-user' }));
+    const user = this.authService.getUser();
+    const userId = user?.id || '';
+    this.store.dispatch(NotificationActions.loadNotifications({ userId }));
     
     // Group notifications by date
     this.notifications$.pipe(takeUntil(this.destroy$)).subscribe(notifications => {
@@ -76,8 +77,9 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
    * Marks all notifications as read
    */
   onMarkAllAsRead(): void {
-    // TODO: Get current user ID from auth service
-    this.store.dispatch(NotificationActions.markAllAsRead({ userId: 'current-user' }));
+    const user = this.authService.getUser();
+    const userId = user?.id || '';
+    this.store.dispatch(NotificationActions.markAllAsRead({ userId }));
   }
 
   /**
@@ -200,6 +202,6 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
    */
   toggleNotificationSound(): void {
     this.notificationSoundEnabled = !this.notificationSoundEnabled;
-    // TODO: Save preference to user settings
+    localStorage.setItem('frm_notification_sound', String(this.notificationSoundEnabled));
   }
 }

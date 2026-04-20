@@ -32,6 +32,7 @@ import { CrewEffects } from './state/crews/crew.effects';
 import { AssignmentEffects } from './state/assignments/assignment.effects';
 import { TimeEntryEffects } from './state/time-entries/time-entry.effects';
 import { NotificationEffects } from './state/notifications/notification.effects';
+import { FrmNotificationTriggerEffects } from './state/notifications/frm-notification-trigger.effects';
 import { ReportingEffects } from './state/reporting/reporting.effects';
 import { TimecardEffects } from './state/timecards/timecard.effects';
 import { BudgetEffects } from './state/budgets/budget.effects';
@@ -207,6 +208,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
       AssignmentEffects,
       TimeEntryEffects,
       NotificationEffects,
+      FrmNotificationTriggerEffects,
       ReportingEffects,
       TimecardEffects,
       BudgetEffects,

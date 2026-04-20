@@ -147,7 +147,7 @@ export const addCrewMember = createAction(
 
 export const addCrewMemberSuccess = createAction(
   '[Crew] Add Crew Member Success',
-  props<{ crew: Crew }>()
+  props<{ crew: Crew; technicianId: string }>()
 );
 
 export const addCrewMemberFailure = createAction(

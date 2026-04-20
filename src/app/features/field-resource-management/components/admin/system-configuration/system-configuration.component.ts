@@ -4,6 +4,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Store } from '@ngrx/store';
 import { SystemConfiguration } from '../../../models/system-configuration.model';
 
+const SYSTEM_CONFIG_STORAGE_KEY = 'frm_system_config';
+
 @Component({
   selector: 'app-system-configuration',
   templateUrl: './system-configuration.component.html',
@@ -45,21 +47,32 @@ export class SystemConfigurationComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Load current configuration from state
-    // this.store.select(selectSystemConfiguration).subscribe(config => {
-    //   if (config) {
-    //     this.configForm.patchValue(config);
-    //   }
-    // });
+    const saved = localStorage.getItem(SYSTEM_CONFIG_STORAGE_KEY);
+    if (saved) {
+      try {
+        this.configForm.patchValue(JSON.parse(saved));
+      } catch {
+        // corrupt storage — use defaults
+      }
+    }
   }
 
   onSave(): void {
     if (this.configForm.valid) {
       const config: SystemConfiguration = this.configForm.value;
-      
-      // Dispatch action to save configuration
-      // this.store.dispatch(updateSystemConfiguration({ config }));
-      
+
+      localStorage.setItem(SYSTEM_CONFIG_STORAGE_KEY, JSON.stringify(config));
+
+      // Apply notification channel preferences globally so downstream services
+      // can read them via SystemConfigurationComponent.getConfig().
+      if (!config.notificationsEnabled) {
+        localStorage.setItem('frm_notifications_disabled', 'true');
+      } else {
+        localStorage.removeItem('frm_notifications_disabled');
+      }
+      localStorage.setItem('frm_email_notifications', String(config.emailNotificationsEnabled));
+      localStorage.setItem('frm_inapp_notifications', String(config.inAppNotificationsEnabled));
+
       this.snackBar.open('Configuration saved successfully', 'Close', {
         duration: 3000,
         horizontalPosition: 'end',
@@ -72,6 +85,12 @@ export class SystemConfigurationComponent implements OnInit {
         verticalPosition: 'top'
       });
     }
+  }
+
+  static getConfig(): SystemConfiguration | null {
+    const saved = localStorage.getItem(SYSTEM_CONFIG_STORAGE_KEY);
+    if (!saved) return null;
+    try { return JSON.parse(saved); } catch { return null; }
   }
 
   onResetToDefaults(): void {

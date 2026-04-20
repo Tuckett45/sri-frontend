@@ -11,6 +11,8 @@ import {
   ArkNotificationStatus,
   ArkNotificationPreferences
 } from '../../../models/ark/notification.model';
+import { Job } from '../models/job.model';
+import { TimecardPeriod, Expense } from '../models/time-entry.model';
 
 /**
  * FRM notification preferences interface
@@ -259,6 +261,156 @@ export class FrmNotificationAdapterService {
     return this.arkNotificationService.sendNotification(notification);
   }
 
+  sendJobCreatedNotification(job: Job, assignedTechnicianId?: string): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+    const recipientId = assignedTechnicianId || user.id;
+
+    const notification: Partial<ArkNotification> = {
+      userId: recipientId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'New Job Created',
+      message: `New job "${job.title || job.jobId}" has been created for ${job.client} at ${job.siteName}`,
+      type: ArkNotificationType.JobCreated,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.Email, ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: job.id,
+      relatedEntityType: 'job',
+      metadata: { jobId: job.id, jobBusinessId: job.jobId, client: job.client, createdBy: user.id }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  sendJobUpdatedNotification(job: Job, technicianId: string): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+
+    const notification: Partial<ArkNotification> = {
+      userId: technicianId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Job Updated',
+      message: `Job "${job.title || job.jobId}" for ${job.client} has been updated`,
+      type: ArkNotificationType.JobUpdated,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: job.id,
+      relatedEntityType: 'job',
+      metadata: { jobId: job.id, jobBusinessId: job.jobId, updatedBy: user.id }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  sendCrewMemberAddedNotification(technicianId: string, crewId: string, crewName: string): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+
+    const notification: Partial<ArkNotification> = {
+      userId: technicianId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Added to Crew',
+      message: `You have been added to crew "${crewName}"`,
+      type: ArkNotificationType.CrewMemberAdded,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.Email, ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: crewId,
+      relatedEntityType: 'crew',
+      metadata: { crewId, crewName, addedBy: user.id }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  sendTimecardSubmittedNotification(period: TimecardPeriod, managerId: string): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+    const startDate = new Date(period.startDate).toLocaleDateString();
+    const endDate = new Date(period.endDate).toLocaleDateString();
+
+    const notification: Partial<ArkNotification> = {
+      userId: managerId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Timecard Submitted for Review',
+      message: `Timecard for period ${startDate} – ${endDate} has been submitted and requires your review`,
+      type: ArkNotificationType.TimecardSubmitted,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.Email, ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: period.id,
+      relatedEntityType: 'timecard',
+      metadata: {
+        periodId: period.id,
+        technicianId: period.technicianId,
+        totalHours: period.totalHours,
+        startDate: period.startDate,
+        endDate: period.endDate,
+        submittedBy: user.id
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  sendTimecardApprovedNotification(period: TimecardPeriod): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+    const startDate = new Date(period.startDate).toLocaleDateString();
+    const endDate = new Date(period.endDate).toLocaleDateString();
+
+    const notification: Partial<ArkNotification> = {
+      userId: period.technicianId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Timecard Approved',
+      message: `Your timecard for ${startDate} – ${endDate} (${period.totalHours.toFixed(1)} hours) has been approved`,
+      type: ArkNotificationType.TimecardApproved,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.Email, ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: period.id,
+      relatedEntityType: 'timecard',
+      metadata: {
+        periodId: period.id,
+        technicianId: period.technicianId,
+        totalHours: period.totalHours,
+        approvedBy: user.id
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  sendExpenseSubmittedNotification(expense: Expense, managerId: string): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+
+    const notification: Partial<ArkNotification> = {
+      userId: managerId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Expense Submitted for Review',
+      message: `A ${expense.type} expense of $${expense.amount.toFixed(2)} has been submitted and requires your approval`,
+      type: ArkNotificationType.ExpenseSubmitted,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.Email, ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: expense.id,
+      relatedEntityType: 'expense',
+      metadata: {
+        expenseId: expense.id,
+        jobId: expense.jobId,
+        technicianId: expense.technicianId,
+        type: expense.type,
+        amount: expense.amount,
+        submittedBy: user.id
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
   /**
    * Get FRM notification preferences for a user
    * Maps ARK notification preferences to FRM-specific preferences
@@ -332,8 +484,14 @@ export class FrmNotificationAdapterService {
         [ArkNotificationType.JobReassigned]: frmPreferences.jobReassignedEnabled,
         [ArkNotificationType.JobStatusChanged]: frmPreferences.jobStatusChangedEnabled,
         [ArkNotificationType.JobCancelled]: frmPreferences.jobCancelledEnabled,
+        [ArkNotificationType.JobCreated]: true,
+        [ArkNotificationType.JobUpdated]: true,
         [ArkNotificationType.CertificationExpiring]: frmPreferences.certificationExpiringEnabled,
-        [ArkNotificationType.ConflictDetected]: frmPreferences.conflictDetectedEnabled
+        [ArkNotificationType.ConflictDetected]: frmPreferences.conflictDetectedEnabled,
+        [ArkNotificationType.CrewMemberAdded]: true,
+        [ArkNotificationType.TimecardSubmitted]: true,
+        [ArkNotificationType.TimecardApproved]: true,
+        [ArkNotificationType.ExpenseSubmitted]: true
       }
     };
   }

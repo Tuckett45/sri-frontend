@@ -18,7 +18,7 @@ export interface Notification {
   link?: string;
   metadata?: any;
   data?: any;
-  relatedEntityType?: 'job' | 'technician' | 'assignment' | 'timeEntry';
+  relatedEntityType?: 'job' | 'technician' | 'assignment' | 'timeEntry' | 'crew';
   relatedEntityId?: string;
 }
 

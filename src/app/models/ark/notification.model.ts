@@ -37,8 +37,14 @@ export enum ArkNotificationType {
   JobReassigned = 'job_reassigned',
   JobStatusChanged = 'job_status_changed',
   JobCancelled = 'job_cancelled',
+  JobCreated = 'job_created',
+  JobUpdated = 'job_updated',
   CertificationExpiring = 'certification_expiring',
-  ConflictDetected = 'conflict_detected'
+  ConflictDetected = 'conflict_detected',
+  CrewMemberAdded = 'crew_member_added',
+  TimecardSubmitted = 'timecard_submitted',
+  TimecardApproved = 'timecard_approved',
+  ExpenseSubmitted = 'expense_submitted'
 }
 
 export interface ArkNotification {
