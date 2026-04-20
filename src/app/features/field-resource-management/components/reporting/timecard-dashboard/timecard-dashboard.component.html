@@ -169,7 +169,8 @@
                     <th mat-header-cell *matHeaderCellDef role="columnheader">Job</th>
                     <td mat-cell *matCellDef="let entry" role="cell">
                       <div class="job-cell">
-                        <span class="job-id">{{ entry.jobId }}</span>
+                        <span class="job-name">{{ getJobDisplayName(entry.jobId) }}</span>
+                        <span class="job-site-info" *ngIf="getJobSiteInfo(entry.jobId)">{{ getJobSiteInfo(entry.jobId) }}</span>
                       </div>
                     </td>
                   </ng-container>

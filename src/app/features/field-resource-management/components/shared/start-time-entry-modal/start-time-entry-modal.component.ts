@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { Job } from '../../../models/job.model';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
 import * as TimeEntryActions from '../../../state/time-entries/time-entry.actions';
+import { AuthService } from '../../../../../services/auth.service';
 
 /**
  * Start Time Entry Modal Component
@@ -20,12 +21,14 @@ import * as TimeEntryActions from '../../../state/time-entries/time-entry.action
 export class StartTimeEntryModalComponent implements OnInit {
   jobs$: Observable<Job[]>;
   selectedJobId: string | null = null;
-  currentTechnicianId = 'current-technician-id'; // Mock - would come from auth
+  currentTechnicianId = '';
 
   constructor(
     private dialogRef: MatDialogRef<StartTimeEntryModalComponent>,
-    private store: Store
+    private store: Store,
+    private authService: AuthService
   ) {
+    this.currentTechnicianId = this.authService.getUser()?.id || '';
     // Get all jobs (in real app, filter by assigned to current user)
     this.jobs$ = this.store.select(JobSelectors.selectAllJobs);
   }

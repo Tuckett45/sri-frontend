@@ -298,87 +298,108 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Section 4: Assigned Technicians -->
+    <!-- Section 4: Assigned -->
     <mat-card class="detail-section">
       <mat-card-header>
-        <mat-card-title>Lead Technician</mat-card-title>
+        <mat-card-title>Assigned</mat-card-title>
+        <button mat-icon-button (click)="reassignJob()" aria-label="Edit assignments">
+          <mat-icon>edit</mat-icon>
+        </button>
       </mat-card-header>
       <mat-card-content>
-        <div class="technician-list" *ngIf="assignments.length > 0">
-          <div class="technician-item" *ngFor="let assignment of assignments">
-            <div class="technician-info">
-              <mat-icon>person</mat-icon>
-              <div>
-                <div class="technician-name">
-                  {{ getTechnicianName(assignment) }}
-                </div>
-                <div class="technician-status">
-                  <span class="status-badge" [ngClass]="assignment.status?.toLowerCase()">
-                    {{ assignment.status }}
-                  </span>
-                </div>
-                <div class="technician-contact" *ngIf="assignment.technician">
-                  <a *ngIf="assignment.technician.phone" [href]="'tel:' + assignment.technician.phone">
-                    <mat-icon>phone</mat-icon>
-                    {{ assignment.technician.phone }}
-                  </a>
-                  <a *ngIf="assignment.technician.email" [href]="'mailto:' + assignment.technician.email">
-                    <mat-icon>email</mat-icon>
-                    {{ assignment.technician.email }}
-                  </a>
+        <!-- Lead Technician -->
+        <div class="assigned-subsection">
+          <div class="assigned-subsection-header">
+            <mat-icon>person</mat-icon>
+            <span class="assigned-subsection-title">Lead Technician</span>
+          </div>
+          <div class="technician-list" *ngIf="assignments.length > 0">
+            <div class="technician-item" *ngFor="let assignment of assignments">
+              <div class="technician-info">
+                <mat-icon>person</mat-icon>
+                <div>
+                  <div class="technician-name">
+                    {{ getTechnicianName(assignment) }}
+                  </div>
+                  <div class="technician-status">
+                    <span class="status-badge" [ngClass]="assignment.status?.toLowerCase()">
+                      {{ assignment.status }}
+                    </span>
+                  </div>
+                  <div class="technician-contact" *ngIf="assignment.technician">
+                    <a *ngIf="assignment.technician.phone" [href]="'tel:' + assignment.technician.phone">
+                      <mat-icon>phone</mat-icon>
+                      {{ assignment.technician.phone }}
+                    </a>
+                    <a *ngIf="assignment.technician.email" [href]="'mailto:' + assignment.technician.email">
+                      <mat-icon>email</mat-icon>
+                      {{ assignment.technician.email }}
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="empty-message" *ngIf="assignments.length === 0">
-          <mat-icon>person_off</mat-icon>
-          <p>No lead technician assigned yet</p>
-          <button mat-stroked-button class="btn-orange" (click)="reassignJob()">
-            Assign Technician
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Section 4b: Assigned Crew -->
-    <mat-card class="detail-section" *ngIf="assignedCrew">
-      <mat-card-header>
-        <mat-card-title>Assigned Crew</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="crew-header">
-          <mat-icon class="crew-icon">groups</mat-icon>
-          <div class="crew-name">{{ assignedCrew.name }}</div>
-          <span class="crew-status-badge" [ngClass]="assignedCrew.status?.toLowerCase()">
-            {{ assignedCrew.status }}
-          </span>
-        </div>
-        <div class="crew-meta">
-          <span *ngIf="assignedCrew.market"><strong>Market:</strong> {{ assignedCrew.market }}</span>
-          <span *ngIf="assignedCrew.company"><strong>Company:</strong> {{ assignedCrew.company }}</span>
-        </div>
-        <div class="crew-members-label">Crew Members ({{ crewMembers.length }})</div>
-        <div class="crew-members-list" *ngIf="crewMembers.length > 0">
-          <div class="crew-member-item" *ngFor="let member of crewMembers">
-            <mat-icon>person</mat-icon>
-            <div class="crew-member-info">
-              <span class="crew-member-name">{{ member.firstName }} {{ member.lastName }}</span>
-              <span class="crew-member-role">{{ member.role }}</span>
-              <span class="crew-member-lead" *ngIf="member.id === assignedCrew.leadTechnicianId">Lead</span>
-            </div>
-            <div class="crew-member-contact">
-              <a *ngIf="member.phone" [href]="'tel:' + member.phone" class="contact-link">
-                <mat-icon>phone</mat-icon>
-              </a>
-              <a *ngIf="member.email" [href]="'mailto:' + member.email" class="contact-link">
-                <mat-icon>email</mat-icon>
-              </a>
-            </div>
+          <div class="assigned-empty" *ngIf="assignments.length === 0">
+            <span class="assigned-empty-text">No lead technician assigned</span>
           </div>
         </div>
-        <div class="empty-message" *ngIf="crewMembers.length === 0">
-          <p>No crew members found</p>
+
+        <mat-divider></mat-divider>
+
+        <!-- Crew -->
+        <div class="assigned-subsection">
+          <div class="assigned-subsection-header">
+            <mat-icon>groups</mat-icon>
+            <span class="assigned-subsection-title">Crew</span>
+          </div>
+          <ng-container *ngIf="assignedCrew; else noCrew">
+            <div class="crew-header">
+              <div class="crew-name">{{ assignedCrew.name }}</div>
+              <span class="crew-status-badge" [ngClass]="assignedCrew.status?.toLowerCase()">
+                {{ assignedCrew.status }}
+              </span>
+            </div>
+            <div class="crew-meta">
+              <span *ngIf="assignedCrew.market"><strong>Market:</strong> {{ assignedCrew.market }}</span>
+              <span *ngIf="assignedCrew.company"><strong>Company:</strong> {{ assignedCrew.company }}</span>
+            </div>
+            <div class="crew-members-label">Crew Members ({{ crewMembers.length }})</div>
+            <div class="crew-members-list" *ngIf="crewMembers.length > 0">
+              <div class="crew-member-item" *ngFor="let member of crewMembers">
+                <mat-icon>person</mat-icon>
+                <div class="crew-member-info">
+                  <span class="crew-member-name">{{ member.firstName }} {{ member.lastName }}</span>
+                  <span class="crew-member-role">{{ member.role }}</span>
+                  <span class="crew-member-lead" *ngIf="member.id === assignedCrew.leadTechnicianId">Lead</span>
+                </div>
+                <div class="crew-member-contact">
+                  <a *ngIf="member.phone" [href]="'tel:' + member.phone" class="contact-link">
+                    <mat-icon>phone</mat-icon>
+                  </a>
+                  <a *ngIf="member.email" [href]="'mailto:' + member.email" class="contact-link">
+                    <mat-icon>email</mat-icon>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="assigned-empty" *ngIf="crewMembers.length === 0">
+              <span class="assigned-empty-text">No crew members found</span>
+            </div>
+          </ng-container>
+          <ng-template #noCrew>
+            <div class="assigned-empty">
+              <span class="assigned-empty-text">No crew assigned</span>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Assign button when nothing is assigned -->
+        <div class="assigned-action" *ngIf="assignments.length === 0 && !assignedCrew">
+          <button mat-stroked-button class="btn-orange" (click)="reassignJob()">
+            <mat-icon>person_add</mat-icon>
+            Assign Technician or Crew
+          </button>
         </div>
       </mat-card-content>
     </mat-card>

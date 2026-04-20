@@ -85,8 +85,8 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   // Assignments (placeholder - would come from assignment state)
   assignments: Assignment[] = [];
   
-  // Current user (mock - would come from auth service)
-  currentTechnicianId = 'current-technician-id';
+  // Current user
+  currentTechnicianId = '';
   
   // Check if job is assigned to current user
   isAssignedToCurrentUser = false;
@@ -147,6 +147,7 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   ) {
     this.loading$ = this.store.select(JobSelectors.selectJobsLoading);
     this.job$ = this.store.select(JobSelectors.selectSelectedJob);
+    this.currentTechnicianId = this.authService.getUser()?.id || '';
     this.canViewBudget = this.frmPermissionService.hasPermission(
       this.authService.getUserRole(), 'canViewBudget'
     );
@@ -381,6 +382,8 @@ export class JobDetailComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result?.success) {
+        // Reload jobs from API to get the updated data
+        this.store.dispatch(JobActions.loadJobs({ filters: {} }));
         this.store.dispatch(JobActions.selectJob({ id: this.job!.id }));
       }
     });
@@ -401,8 +404,17 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(result => {
       if (result?.assigned) {
         this.snackBar.open('Technician assigned successfully', 'Close', { duration: 3000 });
-        // Reload assignments to show new assignment
-        this.loadAssignments(this.job!.id);
+
+        const jobId = this.job!.id;
+
+        // Reload the job to pick up the new technicianId/crewId
+        this.store.dispatch(JobActions.loadJobs({ filters: {} }));
+
+        // Give the backend a moment to persist, then reload assignments
+        setTimeout(() => {
+          this.loadAssignments(jobId);
+          this.loadCrew();
+        }, 500);
       }
     });
   }

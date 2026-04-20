@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewInit, NgZone } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, combineLatest } from 'rxjs';
@@ -52,9 +52,14 @@ import { UserRole } from '../../../../../models/role.enum';
   styleUrls: ['./job-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class JobListComponent implements OnInit, OnDestroy {
+export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
   private searchSubject$ = new Subject<string>();
+
+  @ViewChild('tableContainer') tableContainer!: ElementRef<HTMLDivElement>;
+
+  /** true when the table is scrolled horizontally — used to shrink the sticky Job ID column */
+  isScrolled = false;
 
   // Observable data
   jobs$: Observable<Job[]>;
@@ -125,7 +130,8 @@ export class JobListComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private exportService: ExportService,
-    private authService: AuthService
+    private authService: AuthService,
+    private ngZone: NgZone
   ) {
     this.jobs$ = this.store.select(JobSelectors.selectFilteredJobs);
     this.loading$ = this.store.select(JobSelectors.selectJobsLoading);
@@ -258,6 +264,22 @@ export class JobListComponent implements OnInit, OnDestroy {
         this.snackBar.open(`Error: ${error}`, 'Close', { duration: 5000 });
       }
     });
+  }
+
+  ngAfterViewInit(): void {
+    if (this.tableContainer) {
+      // Run scroll listener outside Angular zone for performance
+      this.ngZone.runOutsideAngular(() => {
+        this.tableContainer.nativeElement.addEventListener('scroll', () => {
+          const scrolled = this.tableContainer.nativeElement.scrollLeft > 20;
+          if (scrolled !== this.isScrolled) {
+            this.isScrolled = scrolled;
+            // Toggle a CSS class directly to avoid change detection on every scroll frame
+            this.tableContainer.nativeElement.classList.toggle('is-scrolled', scrolled);
+          }
+        }, { passive: true });
+      });
+    }
   }
 
   ngOnDestroy(): void {

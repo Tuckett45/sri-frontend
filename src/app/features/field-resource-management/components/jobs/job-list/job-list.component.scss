@@ -322,7 +322,8 @@
   @media (max-width: 767px) {
     // Hide additional columns on mobile
     .mat-column-priority,
-    .mat-column-scheduledDate {
+    .mat-column-scheduledDate,
+    .mat-column-client {
       display: none;
     }
 
@@ -587,6 +588,9 @@ mat-paginator {
     left: 0;
     z-index: 5;
     background-color: inherit;
+    min-width: 48px;
+    max-width: 48px;
+    width: 48px;
 
     &.mat-mdc-header-cell {
       z-index: 11;
@@ -601,10 +605,19 @@ mat-paginator {
     z-index: 5;
     background-color: inherit;
     border-right: 1px solid #e0e0e0;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: max-width 0.25s ease, padding 0.25s ease;
 
     &.mat-mdc-header-cell {
       z-index: 11;
       background-color: #fafafa !important;
+    }
+
+    @media (max-width: 767px) {
+      max-width: 150px;
     }
   }
 
@@ -616,6 +629,20 @@ mat-paginator {
   .mat-mdc-row:hover .mat-column-select,
   .mat-mdc-row:hover .mat-column-jobId {
     background-color: #f5f5f5 !important;
+  }
+}
+
+// When the table is scrolled horizontally, shrink the sticky Job ID column
+.table-container.is-scrolled ::ng-deep .job-table {
+  .mat-column-jobId {
+    max-width: 100px;
+    padding-left: 6px;
+    padding-right: 6px;
+    font-size: 12px;
+
+    @media (max-width: 767px) {
+      max-width: 80px;
+    }
   }
 }
 

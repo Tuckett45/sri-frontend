@@ -180,7 +180,10 @@
             <div class="accordion-entry" *ngFor="let entry of dailySummary.timeEntries">
               <div class="accordion-entry-job">
                 <mat-icon>work</mat-icon>
-                <span>{{ entry.jobId }}</span>
+                <div class="job-info-block">
+                  <span class="job-name">{{ getJobDisplayName(entry.jobId) }}</span>
+                  <span class="job-site-info" *ngIf="getJobSiteInfo(entry.jobId)">{{ getJobSiteInfo(entry.jobId) }}</span>
+                </div>
               </div>
               <div class="accordion-entry-time">
                 <span>{{ entry.clockInTime | date:'shortTime' }}</span>
@@ -276,7 +279,10 @@
             <div class="entry-row" *ngFor="let entry of dailySummary.timeEntries">
               <div class="entry-job">
                 <mat-icon>work</mat-icon>
-                <span>{{ entry.jobId }}</span>
+                <div class="job-info-block">
+                  <span class="job-name">{{ getJobDisplayName(entry.jobId) }}</span>
+                  <span class="job-site-info" *ngIf="getJobSiteInfo(entry.jobId)">{{ getJobSiteInfo(entry.jobId) }}</span>
+                </div>
               </div>
               <div class="entry-time">
                 <span>{{ entry.clockInTime | date:'shortTime' }}</span>

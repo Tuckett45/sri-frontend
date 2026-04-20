@@ -378,7 +378,7 @@
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -492,12 +492,18 @@
   .job-cell {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 
-    .job-id {
+    .job-name {
       font-weight: 600;
       color: var(--primary-color, #1976d2);
       font-size: 0.875rem;
+    }
+
+    .job-site-info {
+      font-size: 0.75rem;
+      color: #757575;
+      font-weight: 400;
     }
   }
   
@@ -665,6 +671,78 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+// Medium screens (tablets, narrow desktops) — prevent overflow between mobile and desktop
+@media (min-width: 769px) and (max-width: 1024px) {
+  .timecard-dashboard {
+    padding: 1rem;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .summary-card {
+    mat-card-content {
+      padding: 1rem !important;
+    }
+
+    .summary-icon {
+      width: 44px;
+      height: 44px;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .summary-value {
+      font-size: 1.5rem;
+    }
+
+    .summary-label {
+      font-size: 0.75rem;
+    }
+  }
+
+  .entries-table {
+    th, td {
+      padding: 10px 8px;
+      font-size: 0.8125rem;
+    }
+  }
+
+  .start-entry-card {
+    .job-selection .job-cards {
+      max-height: 300px;
+    }
+
+    .job-card .job-card-left {
+      .job-id {
+        font-size: 0.9rem;
+      }
+
+      .job-client, .job-site {
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  .weekly-header {
+    .week-navigation {
+      .week-range {
+        font-size: 0.8125rem;
+      }
+    }
+  }
+
+  .timecard-header h1 {
+    font-size: 1.5rem;
   }
 }
 

@@ -197,7 +197,7 @@
   </div>
 
   <!-- Job Table -->
-  <div class="table-container" *ngIf="!(loading$ | async) && !(error$ | async)">
+  <div class="table-container" #tableContainer *ngIf="!(loading$ | async) && !(error$ | async)">
     <table mat-table [dataSource]="displayedJobs" class="job-table">
       <!-- Checkbox Column -->
       <ng-container matColumnDef="select" sticky>

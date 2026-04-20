@@ -43,9 +43,10 @@ export class TimeEntryDialogComponent implements OnInit, OnDestroy {
       jobId: ['', Validators.required],
       date: [data.date || new Date(), Validators.required],
       clockInTime: ['', Validators.required],
-      clockOutTime: [''],
+      clockOutTime: ['', this.isEditMode ? Validators.required : []],
       breakMinutes: [0, [Validators.min(0), Validators.max(480)]],
-      notes: ['']
+      mileage: [null, [Validators.min(0), Validators.max(9999)]],
+      notes: ['', this.isEditMode ? Validators.required : []]
     });
   }
 
@@ -58,6 +59,7 @@ export class TimeEntryDialogComponent implements OnInit, OnDestroy {
         clockInTime: this.formatTimeValue(entry.clockInTime),
         clockOutTime: entry.clockOutTime ? this.formatTimeValue(entry.clockOutTime) : '',
         breakMinutes: entry.breakMinutes || 0,
+        mileage: entry.mileage ?? null,
         notes: entry.adjustmentReason || ''
       });
     }
@@ -88,6 +90,7 @@ export class TimeEntryDialogComponent implements OnInit, OnDestroy {
       clockInTime: clockIn,
       clockOutTime: clockOut,
       breakMinutes: formValue.breakMinutes,
+      mileage: formValue.mileage ?? undefined,
       isManuallyAdjusted: this.isEditMode,
       adjustmentReason: formValue.notes || undefined
     };
