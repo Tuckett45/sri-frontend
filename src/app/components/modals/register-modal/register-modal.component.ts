@@ -14,7 +14,7 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class RegisterModalComponent {
   registerForm!: FormGroup;
-  roles: string[] = ['CM', 'PM', 'Client', 'OSP Coordinator', 'Controller', 'HR'];
+  roles: string[] = ['CM', 'PM', 'Client', 'OSP Coordinator', 'Controller', 'HR', 'Technician', 'SRI Tech'];
   companys: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction'];
   markets: { name: string, abbreviation: string }[] = [
     { name: 'Arizona', abbreviation: 'AZ' },
@@ -53,6 +53,11 @@ export class RegisterModalComponent {
       : { mismatch: true };
   }
 
+  get isTechnicianRole(): boolean {
+    const role = this.registerForm.get('role')?.value;
+    return role === 'Technician' || role === 'SRI Tech';
+  }
+
   onRoleChange(): void {
     const role = this.registerForm.get('role')?.value;
     if (role !== 'PM') {
@@ -63,11 +68,11 @@ export class RegisterModalComponent {
   onSubmit(): void {
     const formValues = this.registerForm.value;
 
-    if (formValues.role == 'CM' || formValues.role == 'OSP Coordinator' || formValues.role == 'Controller' || formValues.role == 'HR'){
+    const sriRoles = ['CM', 'OSP Coordinator', 'Controller', 'HR', 'Technician', 'SRI Tech'];
+    if (sriRoles.includes(formValues.role)) {
       formValues.company = 'SRI';
-    }else if(formValues.role == 'Client'){
-      formValues.company = 'Google'; 
-      //Change values of companies in the future based on role
+    } else if (formValues.role === 'Client') {
+      formValues.company = 'Google';
     }
 
     const newUser: User = new User(

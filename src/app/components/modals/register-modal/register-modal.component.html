@@ -71,6 +71,11 @@
             </mat-error>
         </mat-form-field>
 
+        <div *ngIf="isTechnicianRole" class="technician-notice">
+            <mat-icon style="vertical-align: middle; margin-right: 6px; font-size: 18px;">info_outline</mat-icon>
+            <span>Your account will be synced to the Atlas dispatch system upon approval.</span>
+        </div>
+
     </form>
 </div>
 
