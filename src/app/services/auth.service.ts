@@ -1,5 +1,5 @@
 import { HttpHeaders, HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, Optional } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, tap } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -33,7 +33,7 @@ export class AuthService {
     protected router: Router,
     protected http: HttpClient,
     private statePersistenceService: StatePersistenceService,
-    private technicianService: TechnicianService
+    @Optional() private technicianService: TechnicianService | null
   ) {
     this.loadUserFromLocalStorage();
    }
@@ -73,7 +73,7 @@ export class AuthService {
     }
     return this.http.post<User>(`${environment.apiUrl}/auth/register`, user, this.httpOptions).pipe(
       switchMap(registeredUser => {
-        if (registeredUser.role === UserRole.Technician) {
+        if (registeredUser.role === UserRole.Technician && this.technicianService) {
           const techDto = this.buildTechnicianDto(registeredUser);
           return this.technicianService.createTechnician(techDto).pipe(
             map(() => registeredUser),

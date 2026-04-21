@@ -44,7 +44,7 @@ export class SecureAuthService extends AuthService implements OnDestroy {
     http: HttpClient,
     statePersistenceService: StatePersistenceService
   ) {
-    super(router, http, statePersistenceService);
+    super(router, http, statePersistenceService, null);
     // Don't initialize immediately - wait for explicit initialization
   }
 

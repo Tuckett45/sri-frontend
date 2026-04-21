@@ -87,6 +87,13 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
     // Load time entries for current user
     this.loadTimeEntries();
 
+    // Load active entry from the API (in case user refreshed while clocked in)
+    if (this.currentTechnicianId) {
+      this.store.dispatch(TimeEntryActions.loadActiveEntry({
+        technicianId: this.currentTechnicianId
+      }));
+    }
+
     // Ensure jobs are loaded for name lookups
     this.store.dispatch(loadJobs({}));
     

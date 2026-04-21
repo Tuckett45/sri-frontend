@@ -227,6 +227,10 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
     this.currentWeekStart.setDate(this.currentWeekStart.getDate() - 7);
     this.currentWeekEnd.setDate(this.currentWeekEnd.getDate() - 7);
     this.loadCurrentPeriod();
+    this.store.dispatch(TimeEntryActions.loadTimeEntries({
+      technicianId: this.currentTechnicianId,
+      dateRange: { startDate: new Date(this.currentWeekStart), endDate: new Date(this.currentWeekEnd) }
+    }));
     this.accessibilityService.announce('Navigated to previous week');
   }
   
@@ -237,6 +241,10 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
     this.currentWeekStart.setDate(this.currentWeekStart.getDate() + 7);
     this.currentWeekEnd.setDate(this.currentWeekEnd.getDate() + 7);
     this.loadCurrentPeriod();
+    this.store.dispatch(TimeEntryActions.loadTimeEntries({
+      technicianId: this.currentTechnicianId,
+      dateRange: { startDate: new Date(this.currentWeekStart), endDate: new Date(this.currentWeekEnd) }
+    }));
     this.accessibilityService.announce('Navigated to next week');
   }
   
@@ -247,6 +255,9 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
     this.currentWeekStart = this.timecardService.getWeekStart();
     this.currentWeekEnd = this.timecardService.getWeekEnd();
     this.loadCurrentPeriod();
+    this.store.dispatch(TimeEntryActions.loadTimeEntries({
+      technicianId: this.currentTechnicianId
+    }));
     this.accessibilityService.announce('Navigated to current week');
   }
   

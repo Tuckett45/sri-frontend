@@ -7,7 +7,7 @@ import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, withLatestFrom } from 'rxjs/operators';
+import { map, catchError, switchMap, take } from 'rxjs/operators';
 import * as TimeEntryActions from './time-entry.actions';
 import { selectTimeEntryById, selectActiveTimeEntry } from './time-entry.selectors';
 import { GeolocationService } from '../../services/geolocation.service';
@@ -38,36 +38,36 @@ export class TimeEntryEffects {
   clockOut$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimeEntryActions.clockOut),
-      withLatestFrom(
-        this.actions$.pipe(
-          ofType(TimeEntryActions.clockOut),
-          switchMap(action => this.store.select(selectTimeEntryById(action.timeEntryId)))
-        )
-      ),
-      switchMap(([action, existingEntry]) => {
+      switchMap((action) => {
         const { timeEntryId, location, reason } = action;
-        
-        // Calculate mileage if both locations are available
-        let calculatedMileage: number | undefined;
-        if (existingEntry && !existingEntry.mileage && existingEntry.clockInLocation && location) {
-          const distanceMeters = this.geolocationService.calculateDistance(
-            existingEntry.clockInLocation,
-            location
-          );
-          calculatedMileage = distanceMeters * 0.000621371; // meters to miles
-        }
 
-        return this.timeTrackingService.clockOut(
-          timeEntryId, location, calculatedMileage, reason
-        ).pipe(
-          map((timeEntry) =>
-            TimeEntryActions.clockOutSuccess({ timeEntry })
-          ),
-          catchError((error) =>
-            of(TimeEntryActions.clockOutFailure({ 
-              error: error.message || 'Failed to clock out' 
-            }))
-          )
+        // Look up the existing entry from the store for mileage calculation
+        return this.store.select(selectTimeEntryById(timeEntryId)).pipe(
+          take(1),
+          switchMap((existingEntry) => {
+            // Calculate mileage if both locations are available
+            let calculatedMileage: number | undefined;
+            if (existingEntry && !existingEntry.mileage && existingEntry.clockInLocation && location) {
+              const distanceMeters = this.geolocationService.calculateDistance(
+                existingEntry.clockInLocation,
+                location
+              );
+              calculatedMileage = distanceMeters * 0.000621371; // meters to miles
+            }
+
+            return this.timeTrackingService.clockOut(
+              timeEntryId, location, calculatedMileage, reason
+            ).pipe(
+              map((timeEntry) =>
+                TimeEntryActions.clockOutSuccess({ timeEntry })
+              ),
+              catchError((error) =>
+                of(TimeEntryActions.clockOutFailure({
+                  error: error.message || 'Failed to clock out'
+                }))
+              )
+            );
+          })
         );
       })
     )
