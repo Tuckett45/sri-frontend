@@ -287,8 +287,10 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
     });
   }
 
-  openGallery(imageType: 'issueImages' | 'resolutionImages', images: string[]): void {
-    this.galleryImages = images.map(img => ({ itemImageSrc: img }));
+  openGallery(imageType: 'issueImages' | 'resolutionImages', images: any[]): void {
+    this.galleryImages = images.map(img => ({
+      itemImageSrc: typeof img === 'string' ? img : (img?.imageData ?? img)
+    }));
     this.isIssueGalleryVisible = imageType === 'issueImages';
     this.isResolutionGalleryVisible = imageType === 'resolutionImages';
   }

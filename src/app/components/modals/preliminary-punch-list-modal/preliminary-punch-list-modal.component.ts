@@ -189,7 +189,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     this.getErrorCodes();
 
     this.preliminaryPunchListForm = this.fb.group({
-      id: [this.data?.id || ''],
+      id: [this.data?.id || uuidv4()],
       segmentId: [this.data?.segmentId || '', Validators.required],
       vendorName: [this.data?.vendorName || '', Validators.required],
       streetAddress: [this.data?.streetAddress || '', Validators.required],
@@ -523,6 +523,17 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     }
   }
 
+  /**
+   * Extract the displayable image source from a FormControl value.
+   * Handles both raw base64 strings (legacy) and PunchListImages objects.
+   */
+  getImageSrc(value: any): string {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (value.imageData) return typeof value.imageData === 'string' ? value.imageData : '';
+    return '';
+  }
+
   close(): void {
     this.dialogRef.close();
   }
@@ -575,6 +586,17 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       if(punchList.cmResolved && punchList.pmResolved){
         punchList.resolvedBy = this.userData.id;
       }
+
+      // Normalize images to flat string arrays (backend expects List<string>)
+      // New images are already base64 strings; existing images from API may be
+      // PunchListImages objects with imageData containing a blob URL.
+      punchList.issueImages = (punchList.issueImages || []).map((img: any) =>
+        typeof img === 'string' ? img : (img?.imageData ?? img?.image ?? '')
+      ).filter((s: string) => s);
+
+      punchList.resolutionImages = (punchList.resolutionImages || []).map((img: any) =>
+        typeof img === 'string' ? img : (img?.imageData ?? img?.image ?? '')
+      ).filter((s: string) => s);
   
       this.dialogRef.close(punchList);
     } else {
