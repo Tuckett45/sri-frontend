@@ -1,0 +1,218 @@
+<div class="technician-list-container">
+  <!-- Header -->
+  <div class="list-header">
+    <div class="header-title">
+      <mat-icon class="page-icon">engineering</mat-icon>
+      <h2>Technicians</h2>
+      <span class="page-subtitle">Manage field technicians and their profiles</span>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button [matMenuTriggerFor]="exportMenu">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <mat-menu #exportMenu="matMenu">
+        <button mat-menu-item (click)="exportToCSV()">
+          <mat-icon>description</mat-icon>
+          <span>Export to CSV</span>
+        </button>
+        <button mat-menu-item (click)="exportToPDF()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <span>Export to PDF</span>
+        </button>
+      </mat-menu>
+      <button mat-raised-button class="btn-orange" routerLink="./new">
+        <mat-icon>add</mat-icon>
+        Add Technician
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <mat-card class="filter-panel">
+    <mat-card-content>
+      <!-- Search Input -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search by name or ID</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Enter name or technician ID">
+        <mat-icon matPrefix>search</mat-icon>
+        <button
+          mat-icon-button
+          matSuffix
+          *ngIf="searchControl.value"
+          (click)="searchControl.setValue('')"
+          aria-label="Clear search"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Filter Expansion Panel -->
+      <mat-expansion-panel class="filter-expansion">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>filter_list</mat-icon>
+            <span>Filters</span>
+            <span class="filter-count" *ngIf="getActiveFilters().length > 0">
+              ({{ getActiveFilters().length }} active)
+            </span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <!-- Filters -->
+        <div class="filters-row">
+          <!-- Role Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Role</mat-label>
+            <mat-select [formControl]="roleControl">
+              <mat-option value="">All Roles</mat-option>
+              <mat-option *ngFor="let role of roles" [value]="role">
+                {{ role }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Region Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Region</mat-label>
+            <mat-select [formControl]="regionControl">
+              <mat-option value="">All Regions</mat-option>
+              <mat-option *ngFor="let region of availableRegions" [value]="region">
+                {{ region }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Active Status Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Active Status</mat-label>
+            <mat-select [formControl]="activeStatusControl">
+              <mat-option value="">All</mat-option>
+              <mat-option value="active">Active</mat-option>
+              <mat-option value="inactive">Inactive</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Availability Toggle -->
+          <mat-checkbox [formControl]="availabilityControl" class="availability-toggle">
+            Available Only
+          </mat-checkbox>
+
+          <!-- Clear Filters Button -->
+          <button mat-stroked-button (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Active Filter Chips -->
+      <div class="active-filters" *ngIf="getActiveFilters().length > 0">
+        <span class="filter-label">Active Filters:</span>
+        <div class="filter-chips">
+          <mat-chip
+            *ngFor="let filter of getActiveFilters()"
+            [removable]="true"
+            (removed)="removeFilter(filter.key)"
+          >
+            <strong>{{ filter.label }}:</strong> {{ filter.value }}
+            <button matChipRemove [attr.aria-label]="'Remove ' + filter.label + ' filter'">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="(error$ | async) as error">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load technicians</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" class="retry-button" (click)="retryLoad()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Card View -->
+  <ng-container *ngIf="technicians$ | async as technicians">
+    <div class="technician-cards" *ngIf="!(loading$ | async) && !(error$ | async)">
+      <div
+        class="technician-card"
+        *ngFor="let technician of technicians"
+        [routerLink]="['./', technician.id]"
+        role="button"
+        tabindex="0">
+        <div class="technician-card-header">
+          <span class="technician-card-title">{{ getFullName(technician) }}</span>
+          <span class="status-badge" [class.active]="technician.isActive" [class.inactive]="!technician.isActive">
+            {{ getCurrentStatus(technician) }}
+          </span>
+        </div>
+        <div class="technician-card-body">
+          <div class="technician-card-row">
+            <span class="technician-card-label">Role</span>
+            <span class="technician-card-value role-badge">{{ technician.role }}</span>
+          </div>
+          <div class="technician-card-row">
+            <span class="technician-card-label">Region</span>
+            <span class="technician-card-value">{{ technician.region || 'N/A' }}</span>
+          </div>
+          <div class="technician-card-row">
+            <span class="technician-card-label">Crew</span>
+            <span class="technician-card-value">{{ technicianCrewMap[technician.id] || '—' }}</span>
+          </div>
+          <div class="technician-card-row">
+            <span class="technician-card-label">Current Job</span>
+            <span class="technician-card-value">{{ technicianJobMap[technician.id] || '—' }}</span>
+          </div>
+          <div class="technician-card-row" *ngIf="technician.email">
+            <span class="technician-card-label">Email</span>
+            <span class="technician-card-value">{{ technician.email }}</span>
+          </div>
+          <div class="technician-card-row" *ngIf="technician.phone">
+            <span class="technician-card-label">Phone</span>
+            <span class="technician-card-value">{{ technician.phone }}</span>
+          </div>
+        </div>
+        <div class="technician-card-actions">
+          <button mat-icon-button [routerLink]="['./', technician.id]" (click)="$event.stopPropagation()" aria-label="View">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button [routerLink]="['./', technician.id, 'edit']" (click)="$event.stopPropagation()" aria-label="Edit">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="toggleTechnicianStatus(technician); $event.stopPropagation()" aria-label="Delete" class="delete-action">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="technicians.length === 0">
+        <mat-icon>person_off</mat-icon>
+        <h3>No technicians found</h3>
+        <p>Try adjusting your search or filters</p>
+      </div>
+
+      <mat-paginator
+        [length]="technicians.length"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        [pageIndex]="pageIndex"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </ng-container>
+</div>

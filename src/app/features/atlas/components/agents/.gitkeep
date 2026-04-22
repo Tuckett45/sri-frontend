@@ -1,0 +1,7 @@
+# Agent Components Directory
+
+Components to be implemented:
+- agent-list/ - Available agents with filtering
+- agent-detail/ - Agent configuration and metrics
+- agent-execution/ - Agent execution form and results
+- agent-health/ - Agent health status dashboard

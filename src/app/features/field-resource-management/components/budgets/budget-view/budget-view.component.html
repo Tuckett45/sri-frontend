@@ -1,0 +1,130 @@
+<ng-container *ngIf="viewModel$ | async as vm">
+  <!-- Loading State -->
+  <div *ngIf="vm.loading" class="budget-loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading budget...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="vm.error && !vm.loading" class="budget-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ vm.error }}</p>
+  </div>
+
+  <!-- Budget Content -->
+  <div *ngIf="vm.budget && !vm.loading" class="budget-view">
+    <!-- Budget Summary Card -->
+    <mat-card class="budget-summary-card">
+      <mat-card-header>
+        <mat-card-title>Job Budget</mat-card-title>
+        <span class="budget-status-chip" [ngClass]="getStatusColor(vm.budget.status)">
+          {{ getStatusLabel(vm.budget.status) }}
+        </span>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Progress Bar -->
+        <div class="budget-progress-section">
+          <div class="progress-label">
+            <span>Budget Consumption</span>
+            <span class="percentage">{{ vm.consumptionPercentage }}%</span>
+          </div>
+          <mat-progress-bar
+            [mode]="'determinate'"
+            [value]="vm.consumptionPercentage > 100 ? 100 : vm.consumptionPercentage"
+            [color]="getProgressBarColor(vm.budget.status)">
+          </mat-progress-bar>
+        </div>
+
+        <!-- Hours Breakdown -->
+        <div class="hours-breakdown">
+          <div class="hours-item">
+            <span class="hours-label">Allocated</span>
+            <span class="hours-value allocated">{{ vm.budget.allocatedHours | number:'1.1-1' }} hrs</span>
+          </div>
+          <div class="hours-item">
+            <span class="hours-label">Consumed</span>
+            <span class="hours-value consumed">{{ vm.budget.consumedHours | number:'1.1-1' }} hrs</span>
+          </div>
+          <div class="hours-item">
+            <span class="hours-label">Remaining</span>
+            <span class="hours-value remaining" [ngClass]="getStatusColor(vm.budget.status)">
+              {{ vm.budget.remainingHours | number:'1.1-1' }} hrs
+            </span>
+          </div>
+        </div>
+
+        <!-- Adjust Budget Button -->
+        <div class="budget-actions" *ngIf="canAdjustBudget">
+          <button mat-raised-button color="primary" (click)="openAdjustmentDialog(vm.budget)">
+            <mat-icon>tune</mat-icon>
+            Adjust Budget
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- History Tabs -->
+    <mat-card class="budget-history-card">
+      <mat-tab-group>
+        <!-- Adjustment History Tab -->
+        <mat-tab label="Adjustments ({{ vm.adjustments.length }})">
+          <div class="history-content">
+            <div *ngIf="!vm.hasAdjustments" class="empty-history">
+              <mat-icon>history</mat-icon>
+              <p>No budget adjustments yet</p>
+            </div>
+            <mat-list *ngIf="vm.hasAdjustments">
+              <mat-list-item *ngFor="let adj of vm.adjustments" class="history-item">
+                <mat-icon matListItemIcon [ngClass]="adj.amount >= 0 ? 'positive' : 'negative'">
+                  {{ adj.amount >= 0 ? 'add_circle' : 'remove_circle' }}
+                </mat-icon>
+                <div matListItemTitle>
+                  <span class="adjustment-amount" [ngClass]="adj.amount >= 0 ? 'positive' : 'negative'">
+                    {{ adj.amount >= 0 ? '+' : '' }}{{ adj.amount | number:'1.1-1' }} hrs
+                  </span>
+                  <span class="adjustment-by">by {{ adj.adjustedByName }}</span>
+                </div>
+                <div matListItemLine class="adjustment-details">
+                  <span class="adjustment-reason">{{ adj.reason }}</span>
+                </div>
+                <div matListItemLine class="adjustment-meta">
+                  <span>{{ formatDate(adj.timestamp) }}</span>
+                  <span class="budget-change">{{ adj.previousBudget | number:'1.1-1' }} → {{ adj.newBudget | number:'1.1-1' }} hrs</span>
+                </div>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </mat-tab>
+
+        <!-- Deduction History Tab -->
+        <mat-tab label="Deductions ({{ vm.deductions.length }})">
+          <div class="history-content">
+            <div *ngIf="!vm.hasDeductions" class="empty-history">
+              <mat-icon>schedule</mat-icon>
+              <p>No budget deductions yet</p>
+            </div>
+            <mat-list *ngIf="vm.hasDeductions">
+              <mat-list-item *ngFor="let ded of vm.deductions" class="history-item">
+                <mat-icon matListItemIcon class="deduction-icon">timer</mat-icon>
+                <div matListItemTitle>
+                  <span class="deduction-hours">-{{ ded.hoursDeducted | number:'1.1-1' }} hrs</span>
+                  <span class="deduction-tech">{{ ded.technicianName }}</span>
+                </div>
+                <div matListItemLine class="deduction-meta">
+                  <span>{{ formatDate(ded.timestamp) }}</span>
+                </div>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  </div>
+
+  <!-- No Budget State -->
+  <div *ngIf="!vm.budget && !vm.loading && !vm.error" class="no-budget">
+    <mat-icon>account_balance_wallet</mat-icon>
+    <p>No budget has been set for this job</p>
+  </div>
+</ng-container>

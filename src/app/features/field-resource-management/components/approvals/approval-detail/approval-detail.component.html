@@ -1,0 +1,272 @@
+<div class="approval-detail-container">
+  <!-- Header -->
+  <div class="detail-header">
+    <button class="btn-back" (click)="goBack()" title="Back to approval queue">
+      ← Back to Queue
+    </button>
+    <h2>Approval Task Details</h2>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading task details...</p>
+  </div>
+
+  <!-- Error state -->
+  <div class="error-container" *ngIf="error && !loading">
+    <p class="error-message">{{ error }}</p>
+    <button class="btn-retry" (click)="goBack()">Back to Queue</button>
+  </div>
+
+  <!-- Task details -->
+  <div class="detail-content" *ngIf="task && !loading && !error">
+    <!-- Task summary card -->
+    <div class="summary-card">
+      <div class="summary-header">
+        <div class="task-type-info">
+          <span class="type-badge">{{ getTaskTypeLabel(task.type) }}</span>
+          <span class="market-badge">{{ task.market }}</span>
+        </div>
+        <div class="task-status">
+          <span class="status-badge" [class]="getStatusClass(task.status)">
+            {{ task.status | titlecase }}
+          </span>
+        </div>
+      </div>
+
+      <div class="summary-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Task ID</span>
+            <span class="value">{{ task.id }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Entity ID</span>
+            <span class="value">{{ task.entityId }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Submitted By</span>
+            <span class="value">{{ task.submittedByName || task.submittedBy }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Submitted At</span>
+            <span class="value">{{ formatDate(task.submittedAt) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Current Approver</span>
+            <span class="value">{{ task.currentApproverName || task.currentApprover }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Approval Level</span>
+            <span class="value">Level {{ task.approvalLevel }}</span>
+          </div>
+        </div>
+
+        <!-- Workflow progress -->
+        <div class="workflow-progress">
+          <div class="progress-label">Workflow Progress</div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="workflowProgress"></div>
+          </div>
+          <div class="progress-text">{{ workflowProgress }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Related entity card -->
+    <div class="related-entity-card">
+      <div class="card-header">
+        <h3>Related {{ getTaskTypeLabel(task.type) }}</h3>
+        <button 
+          class="btn-view-entity" 
+          (click)="viewRelatedEntity()"
+          *ngIf="!loadingRelatedEntity">
+          View Full Details →
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="loading-entity" *ngIf="loadingRelatedEntity">
+          <div class="spinner-small"></div>
+          <span>Loading entity data...</span>
+        </div>
+        <div class="entity-summary" *ngIf="!loadingRelatedEntity && relatedEntityData">
+          <p><strong>ID:</strong> {{ relatedEntityData.id }}</p>
+          <p><strong>Type:</strong> {{ relatedEntityData.type }}</p>
+          <p><strong>Summary:</strong> {{ relatedEntityData.summary }}</p>
+          <!-- Additional entity-specific fields would be displayed here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Approval history timeline -->
+    <div class="history-card">
+      <div class="card-header">
+        <h3>Approval History</h3>
+        <span class="comment-count">{{ task.comments.length }} {{ task.comments.length === 1 ? 'entry' : 'entries' }}</span>
+      </div>
+      <div class="card-body">
+        <div class="empty-history" *ngIf="task.comments.length === 0">
+          <p>No comments or actions yet.</p>
+        </div>
+
+        <div class="timeline" *ngIf="task.comments.length > 0">
+          <div class="timeline-item" *ngFor="let comment of sortedComments" [class]="getActionClass(comment.action)">
+            <div class="timeline-marker">
+              <span class="action-icon">{{ getActionIcon(comment.action) }}</span>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <span class="user-name">{{ comment.userName }}</span>
+                <span class="action-type">{{ comment.action | titlecase }}</span>
+                <span class="timestamp">{{ formatRelativeDate(comment.timestamp) }}</span>
+              </div>
+              <div class="timeline-body" *ngIf="comment.comment">
+                <p>{{ comment.comment }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-buttons" *ngIf="canTakeAction">
+      <button 
+        class="btn-action btn-approve" 
+        (click)="openActionDialog('approve')"
+        title="Approve this task">
+        ✓ Approve
+      </button>
+      <button 
+        class="btn-action btn-reject" 
+        (click)="openActionDialog('reject')"
+        title="Reject this task">
+        ✗ Reject
+      </button>
+      <button 
+        class="btn-action btn-changes" 
+        (click)="openActionDialog('request_changes')"
+        title="Request changes">
+        ↻ Request Changes
+      </button>
+      <button 
+        class="btn-action btn-escalate" 
+        (click)="openActionDialog('escalate')"
+        *ngIf="isAdmin"
+        title="Escalate this task (Admin only)">
+        ⚠ Escalate
+      </button>
+    </div>
+
+    <!-- Read-only message for non-actionable tasks -->
+    <div class="info-message" *ngIf="!canTakeAction && task.status === 'pending'">
+      <p>This task is assigned to another approver. You can view the details but cannot take action.</p>
+    </div>
+
+    <div class="info-message" *ngIf="task.status !== 'pending'">
+      <p>This task has been {{ task.status }}. No further action is required.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Action Dialog Modal -->
+<div class="modal-overlay" *ngIf="actionType" (click)="closeActionDialog()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>
+        <span *ngIf="actionType === 'approve'">Approve Task</span>
+        <span *ngIf="actionType === 'reject'">Reject Task</span>
+        <span *ngIf="actionType === 'request_changes'">Request Changes</span>
+        <span *ngIf="actionType === 'escalate'">Escalate Task</span>
+      </h3>
+      <button class="btn-close" (click)="closeActionDialog()" aria-label="Close dialog">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="task-summary" *ngIf="task">
+        <p><strong>Type:</strong> {{ getTaskTypeLabel(task.type) }}</p>
+        <p><strong>Market:</strong> {{ task.market }}</p>
+        <p><strong>Submitted By:</strong> {{ task.submittedByName || task.submittedBy }}</p>
+      </div>
+
+      <!-- Approve action -->
+      <div *ngIf="actionType === 'approve'">
+        <label for="approve-comment">Comment (optional):</label>
+        <textarea 
+          id="approve-comment"
+          [(ngModel)]="actionComment"
+          placeholder="Add a comment with your approval..."
+          rows="4"
+          class="action-textarea"></textarea>
+      </div>
+
+      <!-- Reject action -->
+      <div *ngIf="actionType === 'reject'">
+        <label for="reject-reason">Reason (required):</label>
+        <textarea 
+          id="reject-reason"
+          [(ngModel)]="actionReason"
+          placeholder="Please provide a reason for rejection..."
+          rows="4"
+          class="action-textarea"
+          required></textarea>
+        <p class="field-hint">A reason is required for rejection.</p>
+      </div>
+
+      <!-- Request changes action -->
+      <div *ngIf="actionType === 'request_changes'">
+        <label for="changes-description">Changes Requested (required):</label>
+        <textarea 
+          id="changes-description"
+          [(ngModel)]="actionComment"
+          placeholder="Describe the changes you are requesting..."
+          rows="4"
+          class="action-textarea"
+          required></textarea>
+        <p class="field-hint">Please describe what changes are needed.</p>
+      </div>
+
+      <!-- Escalate action -->
+      <div *ngIf="actionType === 'escalate'">
+        <label for="escalate-reason">Escalation Reason (required):</label>
+        <textarea 
+          id="escalate-reason"
+          [(ngModel)]="actionReason"
+          placeholder="Please provide a reason for escalation..."
+          rows="4"
+          class="action-textarea"
+          required></textarea>
+        <p class="field-hint">A reason is required for escalation.</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        class="btn-cancel" 
+        (click)="closeActionDialog()"
+        [disabled]="processingAction">
+        Cancel
+      </button>
+      <button 
+        class="btn-submit" 
+        (click)="executeAction()"
+        [disabled]="processingAction || 
+                   (actionType === 'reject' && !actionReason.trim()) || 
+                   (actionType === 'request_changes' && !actionComment.trim()) ||
+                   (actionType === 'escalate' && !actionReason.trim())"
+        [class.btn-approve]="actionType === 'approve'"
+        [class.btn-reject]="actionType === 'reject'"
+        [class.btn-changes]="actionType === 'request_changes'"
+        [class.btn-escalate]="actionType === 'escalate'">
+        <span *ngIf="!processingAction">
+          <span *ngIf="actionType === 'approve'">Approve</span>
+          <span *ngIf="actionType === 'reject'">Reject</span>
+          <span *ngIf="actionType === 'request_changes'">Request Changes</span>
+          <span *ngIf="actionType === 'escalate'">Escalate</span>
+        </span>
+        <span *ngIf="processingAction">Processing...</span>
+      </button>
+    </div>
+  </div>
+</div>

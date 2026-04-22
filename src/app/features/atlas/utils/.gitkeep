@@ -1,0 +1,13 @@
+# ATLAS Utils Directory
+
+This directory contains utility functions and helpers for ATLAS features.
+
+Utils to be implemented:
+- atlas-error-mapper.ts - Maps API error responses to user-friendly messages
+- atlas-retry-strategy.ts - Implements retry logic with exponential backoff
+- atlas-validators.ts - Custom form validators for ATLAS data
+- atlas-date-utils.ts - Date formatting and manipulation utilities
+- atlas-state-utils.ts - State transition validation helpers
+- atlas-export-utils.ts - Data export formatting utilities
+
+Utilities provide reusable functionality across ATLAS components and services.

@@ -1,0 +1,21 @@
+@import '../../../../../styles/atlas-variables';
+
+:host {
+  display: inline-block;
+  
+  a {
+    display: inline-block;
+    text-decoration: none;
+    transition: opacity $atlas-transition-fast;
+    
+    &:hover {
+      opacity: 0.8;
+    }
+    
+    &:focus {
+      outline: 2px solid $atlas-accent;
+      outline-offset: 4px;
+      border-radius: $atlas-border-radius-sm;
+    }
+  }
+}

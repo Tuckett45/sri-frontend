@@ -10,5 +10,26 @@
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "src/app/features/atlas/tests/**/*.spec.ts",
+    "src/app/features/field-resource-management/state/technicians/technician.selectors.spec.ts",
+    "src/app/features/field-resource-management/state/technicians/technician.effects.spec.ts",
+    "src/app/features/field-resource-management/state/jobs/job.selectors.spec.ts",
+    "src/app/features/field-resource-management/state/jobs/job.effects.spec.ts",
+    "src/app/features/field-resource-management/state/crews/crew.effects.spec.ts",
+    "src/app/features/field-resource-management/state/crews/crew.selectors.spec.ts",
+    "src/app/features/field-resource-management/state/reporting/reporting.effects.spec.ts",
+    "src/app/features/field-resource-management/state/reporting/reporting.selectors.spec.ts",
+    "src/app/features/field-resource-management/state/assignments/assignment.actions.spec.ts",
+    "src/app/features/field-resource-management/state/assignments/assignment.effects.spec.ts",
+    "src/app/features/field-resource-management/state/assignments/assignment.reducer.spec.ts",
+    "src/app/features/field-resource-management/services/frm-signalr.service.spec.ts",
+    "src/app/features/field-resource-management/services/geolocation.service.spec.ts",
+    "src/app/features/field-resource-management/services/reporting.service.spec.ts",
+    "src/app/features/field-resource-management/services/technician.service.spec.ts",
+    "src/app/features/field-resource-management/services/travel.service.spec.ts",
+    "src/app/features/field-resource-management/services/state-persistence.service.spec.ts",
+    "src/app/features/field-resource-management/integration-tests/**/*.spec.ts"
   ]
 }

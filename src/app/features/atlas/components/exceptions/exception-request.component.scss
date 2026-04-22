@@ -1,0 +1,162 @@
+.exception-request-dialog {
+  .dialog-content {
+    padding: 1rem 0;
+
+    .error-message {
+      margin-bottom: 1.5rem;
+      width: 100%;
+    }
+
+    .warning-message {
+      margin-top: 1rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        label {
+          font-weight: 500;
+          color: var(--text-color);
+          font-size: 0.875rem;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+
+          .required {
+            color: var(--red-500);
+            font-weight: 600;
+          }
+
+          .optional {
+            color: var(--text-color-secondary);
+            font-weight: 400;
+            font-size: 0.75rem;
+          }
+        }
+
+        input,
+        textarea,
+        ::ng-deep .p-dropdown,
+        ::ng-deep .p-calendar {
+          width: 100%;
+        }
+
+        textarea {
+          font-family: inherit;
+          resize: vertical;
+          min-height: 80px;
+        }
+
+        .field-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .char-count {
+          color: var(--text-color-secondary);
+          font-size: 0.75rem;
+          margin-left: auto;
+
+          &.valid {
+            color: var(--green-500);
+            font-weight: 500;
+          }
+
+          &.invalid {
+            color: var(--orange-500);
+          }
+        }
+
+        .error-text {
+          color: var(--red-500);
+          font-size: 0.75rem;
+          display: block;
+        }
+
+        .help-text {
+          color: var(--text-color-secondary);
+          font-size: 0.75rem;
+          display: block;
+          font-style: italic;
+        }
+
+        // Validation styling
+        ::ng-deep .ng-invalid.ng-dirty {
+          border-color: var(--red-500);
+        }
+
+        ::ng-deep .p-dropdown.ng-invalid.ng-dirty {
+          .p-dropdown-trigger,
+          .p-dropdown-label {
+            border-color: var(--red-500);
+          }
+        }
+      }
+
+      .dialog-loading {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--surface-100);
+        border-radius: 6px;
+        justify-content: center;
+
+        span {
+          color: var(--text-color-secondary);
+          font-size: 0.875rem;
+        }
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .exception-request-dialog {
+    ::ng-deep .p-dialog {
+      width: 95vw !important;
+      max-width: 95vw !important;
+    }
+
+    .dialog-content {
+      form {
+        .form-field {
+          .field-footer {
+            flex-direction: column;
+            align-items: flex-start;
+
+            .char-count {
+              margin-left: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Global dropdown width fix
+::ng-deep .exception-request-dialog {
+  .p-dropdown {
+    width: 100%;
+  }
+
+  .p-calendar {
+    width: 100%;
+
+    .p-inputtext {
+      width: 100%;
+    }
+  }
+}

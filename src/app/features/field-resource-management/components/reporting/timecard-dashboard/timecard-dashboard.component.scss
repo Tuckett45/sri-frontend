@@ -1,0 +1,948 @@
+@import '../../../styles/accessibility';
+
+.timecard-dashboard {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: var(--surface-ground, #f5f7fa);
+  min-height: 100vh;
+  color: var(--text-color, #212121);
+  
+  // Breadcrumb spacing
+  app-breadcrumb {
+    display: block;
+    margin-bottom: 1rem;
+  }
+}
+
+.timecard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-color, #1976d2);
+  }
+  
+  button {
+    color: var(--primary-color, #1976d2);
+  }
+}
+
+// Tab styling
+.timecard-tabs {
+  background-color: transparent;
+  
+  ::ng-deep {
+    .mat-mdc-tab-labels {
+      background-color: var(--surface-card, #ffffff);
+      border: 1px solid var(--surface-border, #e0e0e0);
+      border-radius: 6px 6px 0 0;
+      padding: 0 8px;
+    }
+    
+    .mat-mdc-tab {
+      min-width: 120px;
+      font-weight: 500;
+      
+      .mdc-tab__text-label {
+        color: #000000 !important;
+      }
+      
+      &.mdc-tab--active {
+        .mdc-tab__text-label {
+          color: #000000 !important;
+        }
+      }
+    }
+    
+    .mat-mdc-tab-body-wrapper {
+      background-color: transparent;
+      padding-top: 1.5rem;
+    }
+    
+    .mat-mdc-tab-body-content {
+      overflow: visible !important; // Allow content to show
+    }
+    
+    .mdc-tab-indicator__content--underline {
+      border-color: var(--primary-color, #1976d2);
+      border-width: 3px;
+    }
+  }
+}
+
+.error-card {
+  margin-bottom: 1.5rem;
+  background-color: var(--surface-card, #ffffff);
+  border-left: 4px solid var(--red-500, #d32f2f);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--red-500, #d32f2f);
+  }
+}
+
+// Start Time Entry Card Section
+.start-entry-section {
+  margin-bottom: 1.5rem;
+}
+
+.start-entry-card {
+  background-color: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, #e0e0e0);
+  border-radius: 6px;
+  overflow: hidden;
+  border-left: 4px solid var(--primary-color, #1976d2);
+  
+  .start-entry-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    
+    .start-entry-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+      color: var(--primary-color, #1976d2);
+      flex-shrink: 0;
+    }
+    
+    mat-card-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-color, #212121);
+    }
+    
+    mat-card-subtitle {
+      margin: 0.25rem 0 0 0;
+      color: var(--text-color-secondary, #757575);
+    }
+  }
+  
+  .job-selection {
+    margin-top: 1rem;
+    
+    .no-jobs {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      color: var(--text-color-secondary, #9e9e9e);
+      
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+      }
+      
+      p {
+        margin: 0;
+        font-size: 1rem;
+      }
+    }
+    
+    .job-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 500px;
+      overflow-y: auto;
+      padding: 0.5rem 0;
+      
+      &::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: var(--surface-100, #f5f5f5);
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: var(--surface-300, #bdbdbd);
+        border-radius: 4px;
+        
+        &:hover {
+          background: var(--surface-400, #9e9e9e);
+        }
+      }
+    }
+    
+    .job-card {
+      background-color: var(--surface-card, #ffffff);
+      border: 2px solid var(--surface-border, #e0e0e0);
+      border-radius: 8px;
+      padding: 1rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      
+      &:hover {
+        border-color: var(--primary-color, #1976d2);
+        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
+        transform: translateY(-1px);
+      }
+      
+      &.selected {
+        border-color: var(--primary-color, #1976d2);
+        background-color: var(--blue-50, #e3f2fd);
+        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+      }
+      
+      .job-card-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .job-card-left {
+        flex: 1;
+        min-width: 0;
+        
+        .job-id {
+          font-weight: 600;
+          color: var(--primary-color, #1976d2);
+          font-size: 1rem;
+          margin-bottom: 0.5rem;
+        }
+        
+        .job-client {
+          font-weight: 500;
+          color: var(--text-color, #424242);
+          margin-bottom: 0.25rem;
+          font-size: 0.95rem;
+        }
+        
+        .job-site {
+          color: var(--text-color-secondary, #616161);
+          font-size: 0.9rem;
+          margin-bottom: 0.25rem;
+        }
+        
+        .job-address {
+          color: var(--text-color-secondary, #757575);
+          font-size: 0.85rem;
+          font-style: italic;
+        }
+      }
+      
+      .job-card-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.75rem;
+        flex-shrink: 0;
+        
+        mat-radio-button {
+          ::ng-deep {
+            .mdc-radio {
+              padding: 8px;
+            }
+            
+            .mdc-radio__outer-circle,
+            .mdc-radio__inner-circle {
+              border-width: 2px;
+            }
+            
+            .mdc-radio__outer-circle {
+              border-color: var(--primary-color, #1976d2);
+            }
+            
+            .mdc-radio__inner-circle {
+              border-color: var(--primary-color, #1976d2);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  mat-card-actions {
+    padding: 1rem 1.5rem;
+    
+    .start-button {
+      min-width: 180px;
+      font-weight: 500;
+      color: #ffffff !important;
+      
+      mat-icon {
+        margin-right: 0.5rem;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: #ffffff !important;
+      }
+    }
+  }
+}
+
+// Active Time Entry Section
+.active-section {
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-color, #1976d2);
+  }
+
+  .active-card {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-left: 4px solid var(--primary-color, #1976d2);
+    border: 1px solid var(--surface-border, #e0e0e0);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .loading-job {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 16px;
+
+    p {
+      margin: 0;
+      color: var(--text-color-secondary, #757575);
+    }
+  }
+}
+
+.no-active-section {
+  margin-bottom: 1.5rem;
+
+  .info-card {
+    background-color: var(--surface-card, #ffffff);
+    border: 1px solid var(--surface-border, #e0e0e0);
+    border-radius: 6px;
+    overflow: hidden;
+    
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+        color: var(--primary-color, #1976d2);
+      }
+
+      h3 {
+        margin: 0 0 8px 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-color, #212121);
+      }
+
+      p {
+        margin: 0;
+        color: var(--text-color-secondary, #757575);
+      }
+    }
+  }
+}
+
+// Summary Section
+.summary-section,
+.weekly-section {
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-color, #1976d2);
+  }
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  background-color: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, #e0e0e0);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem !important;
+  }
+
+  .summary-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--blue-500, #2196F3) 0%, var(--blue-600, #1976d2) 100%);
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #ffffff;
+    }
+  }
+
+  .summary-content {
+    flex: 1;
+  }
+
+  .summary-label {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary, #757575);
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+
+  .summary-value {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text-color, #212121);
+  }
+}
+
+// Entries Section
+.entries-section {
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-color, #1976d2);
+  }
+  
+  mat-card {
+    background-color: var(--surface-card, #ffffff);
+    border: 1px solid var(--surface-border, #e0e0e0);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+}
+
+.entries-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  color: #212121;
+}
+
+.entries-table {
+  width: 100%;
+  background-color: var(--surface-card, #ffffff);
+
+  th {
+    font-weight: 600;
+    color: var(--text-color-secondary, #757575);
+    background-color: var(--surface-100, #f5f5f5);
+    padding: 12px 16px;
+    text-transform: uppercase;
+    font-size: 0.8125rem;
+    letter-spacing: 0.5px;
+  }
+  
+  td {
+    padding: 12px 16px;
+    color: #212121;
+    border-bottom: 1px solid var(--surface-border, #e0e0e0);
+  }
+  
+  tr:hover {
+    background-color: var(--surface-hover, #f5f5f5);
+  }
+
+  .job-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .job-name {
+      font-weight: 600;
+      color: var(--primary-color, #1976d2);
+      font-size: 0.875rem;
+    }
+
+    .job-site-info {
+      font-size: 0.75rem;
+      color: #757575;
+      font-weight: 400;
+    }
+  }
+  
+  .time-location-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    
+    .time {
+      font-weight: 500;
+      color: var(--text-color, #212121);
+      font-size: 0.875rem;
+    }
+    
+    .location {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      font-size: 0.75rem;
+      
+      .location-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+        color: var(--text-color-secondary, #757575);
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+      
+      .location-details {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .location-link {
+        color: var(--primary-color, #1976d2);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: block;
+        
+        &:hover {
+          color: var(--blue-700, #1565c0);
+          
+          .location-address {
+            text-decoration: underline;
+          }
+        }
+        
+        &:focus {
+          outline: 2px solid var(--primary-color, #1976d2);
+          outline-offset: 2px;
+          border-radius: 2px;
+        }
+        
+        .location-address {
+          font-weight: 500;
+          color: var(--text-color, #424242);
+          margin-bottom: 2px;
+          line-height: 1.3;
+        }
+        
+        .location-coords {
+          font-size: 0.7rem;
+          color: var(--text-color-secondary, #757575);
+          font-family: 'Courier New', monospace;
+          line-height: 1.2;
+        }
+      }
+    }
+  }
+
+  .active-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, var(--green-400, #66bb6a) 0%, var(--green-500, #43a047) 100%);
+    color: #ffffff;
+    border-radius: 12px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(67, 160, 71, 0.2);
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .no-data {
+    color: var(--text-color-secondary, #9e9e9e);
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: var(--text-color-secondary, #9e9e9e);
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-color-secondary, #757575);
+    font-size: 1rem;
+  }
+}
+
+// Weekly Section
+.weekly-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color, #1976d2);
+  }
+}
+
+.week-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, #e0e0e0);
+  border-radius: 6px;
+  padding: 4px;
+  overflow: hidden;
+  max-width: 100%;
+
+  button {
+    color: var(--primary-color, #1976d2);
+    flex-shrink: 0;
+    
+    &:hover:not(:disabled) {
+      background-color: var(--blue-50, rgba(25, 118, 210, 0.08));
+    }
+  }
+
+  .week-range {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color, #424242);
+    min-width: 0;
+    text-align: center;
+    padding: 0 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// Medium screens (tablets, narrow desktops) — prevent overflow between mobile and desktop
+@media (min-width: 769px) and (max-width: 1024px) {
+  .timecard-dashboard {
+    padding: 1rem;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .summary-card {
+    mat-card-content {
+      padding: 1rem !important;
+    }
+
+    .summary-icon {
+      width: 44px;
+      height: 44px;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .summary-value {
+      font-size: 1.5rem;
+    }
+
+    .summary-label {
+      font-size: 0.75rem;
+    }
+  }
+
+  .entries-table {
+    th, td {
+      padding: 10px 8px;
+      font-size: 0.8125rem;
+    }
+  }
+
+  .start-entry-card {
+    .job-selection .job-cards {
+      max-height: 300px;
+    }
+
+    .job-card .job-card-left {
+      .job-id {
+        font-size: 0.9rem;
+      }
+
+      .job-client, .job-site {
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  .weekly-header {
+    .week-navigation {
+      .week-range {
+        font-size: 0.8125rem;
+      }
+    }
+  }
+
+  .timecard-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+// Mobile Responsive
+@media (max-width: 768px) {
+  .timecard-dashboard {
+    padding: 16px;
+    overflow-x: hidden;
+  }
+
+  .timecard-header {
+    h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .weekly-header {
+    flex-direction: column;
+    align-items: flex-start;
+    overflow: hidden;
+
+    .week-navigation {
+      width: 100%;
+      justify-content: space-between;
+      padding: 6px 4px;
+      overflow: hidden;
+
+      button[mat-icon-button] {
+        padding: 0;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+      
+      button[mat-button] {
+        padding: 0 12px;
+        min-width: auto;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+      }
+
+      .week-range {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.8125rem;
+        padding: 0 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  .entries-table {
+    font-size: 0.875rem;
+    min-width: 550px;
+
+    th, td {
+      padding: 12px 8px;
+    }
+  }
+  
+  .summary-card {
+    mat-card-content {
+      padding: 16px !important;
+    }
+    
+    .summary-icon {
+      width: 48px;
+      height: 48px;
+      
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+    }
+    
+    .summary-value {
+      font-size: 1.5rem;
+    }
+  }
+  
+  // Job card mobile adjustments
+  .job-card {
+    .job-card-content {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .job-card-right {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .timecard-header {
+    h1 {
+      font-size: 1.25rem;
+    }
+  }
+  
+  .summary-value {
+    font-size: 1.25rem;
+  }
+  
+  .weekly-header {
+    .week-navigation {
+      padding: 4px 2px;
+      
+      button[mat-icon-button] {
+        width: 32px;
+        height: 32px;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+      
+      button[mat-button] {
+        padding: 0 10px;
+        font-size: 0.8125rem;
+      }
+      
+      .week-range {
+        font-size: 0.75rem;
+        padding: 0 2px;
+      }
+    }
+  }
+}
+
+// Print Styles
+@media print {
+  .timecard-header button,
+  .week-navigation button {
+    display: none;
+  }
+
+  .active-card {
+    background: white !important;
+    border: 1px solid #ddd;
+  }
+  
+  .timecard-dashboard {
+    background-color: white;
+  }
+}
+
+// Material overrides for consistent theming
+::ng-deep {
+  .timecard-dashboard {
+    mat-card {
+      background-color: var(--surface-card, #ffffff);
+      color: var(--text-color, #212121);
+      border: 1px solid var(--surface-border, #e0e0e0);
+    }
+    
+    mat-progress-bar {
+      background-color: var(--blue-50, #e3f2fd);
+    }
+    
+    mat-icon-button {
+      color: var(--primary-color, #1976d2);
+      
+      &:hover:not(:disabled) {
+        color: var(--blue-700, #1565c0);
+        background-color: var(--blue-50, rgba(25, 118, 210, 0.08));
+      }
+    }
+    
+    button[mat-raised-button] {
+      background: linear-gradient(135deg, var(--blue-500, #2196F3) 0%, var(--blue-600, #1976d2) 100%);
+      color: #ffffff;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+      border: none;
+      
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+      }
+    }
+  }
+}
+
+

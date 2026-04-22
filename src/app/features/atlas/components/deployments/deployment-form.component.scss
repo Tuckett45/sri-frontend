@@ -1,0 +1,139 @@
+/**
+ * Deployment Form Component Styles
+ */
+
+.deployment-form-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+
+  ::ng-deep .p-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .p-card-header {
+      font-size: 1.5rem;
+      font-weight: 600;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .p-card-body {
+      padding: 2rem;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  gap: 1rem;
+
+  p {
+    color: var(--text-color-secondary);
+    margin: 0;
+  }
+}
+
+.field {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+
+    &.required::after {
+      content: ' *';
+      color: var(--red-500);
+    }
+  }
+
+  input[type="text"],
+  textarea {
+    width: 100%;
+  }
+
+  ::ng-deep .p-dropdown {
+    width: 100%;
+  }
+
+  .field-hint {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+  }
+
+  .p-error {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--red-500);
+    font-size: 0.875rem;
+  }
+
+  // Validation styling
+  input.ng-invalid.ng-dirty,
+  textarea.ng-invalid.ng-dirty,
+  ::ng-deep .p-dropdown.ng-invalid.ng-dirty {
+    border-color: var(--red-500);
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--surface-border);
+
+  ::ng-deep .p-button {
+    min-width: 120px;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .deployment-form-container {
+    margin: 1rem auto;
+    padding: 0 0.5rem;
+
+    ::ng-deep .p-card {
+      .p-card-header {
+        font-size: 1.25rem;
+        padding: 1rem;
+      }
+
+      .p-card-body {
+        padding: 1rem;
+      }
+    }
+  }
+
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+
+    ::ng-deep .p-button {
+      width: 100%;
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .deployment-form-container {
+    ::ng-deep .p-card {
+      background-color: var(--surface-card);
+      border-color: var(--surface-border);
+    }
+  }
+}

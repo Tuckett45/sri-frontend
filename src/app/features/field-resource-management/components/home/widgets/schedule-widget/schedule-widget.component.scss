@@ -1,0 +1,132 @@
+.schedule-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #144f80;
+      }
+    }
+  }
+
+  mat-card-content {
+    .widget-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .widget-error {
+      text-align: center;
+      padding: 1.5rem;
+      color: #d32f2f;
+
+      p {
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+
+      &:hover {
+        background-color: #f5f7fa;
+      }
+    }
+
+    .schedule-date {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 50px;
+
+      .day {
+        font-size: 11px;
+        color: #666;
+        text-transform: uppercase;
+      }
+
+      .date {
+        font-size: 13px;
+        font-weight: 600;
+        color: #144f80;
+      }
+    }
+
+    .schedule-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .site-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #333;
+      }
+
+      .job-id {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+
+    .widget-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e0e0e0;
+
+      .page-info {
+        font-size: 13px;
+        color: #666;
+        min-width: 40px;
+        text-align: center;
+      }
+    }
+
+    .view-btn {
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #999;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        font-size: 14px;
+      }
+    }
+  }
+}

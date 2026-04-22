@@ -143,12 +143,46 @@ export class DeploymentApiService {
   }
 
   /**
-   * Advance deployment to next phase
+   * Advance deployment to next phase.
+   * Calls the SRI backend /advance endpoint using phase-number conventions.
    */
   advancePhase(id: string, fromPhase: number, toPhase: number): Observable<void> {
     return this.http.post<void>(
       `${this.baseUrl}/${id}/advance`,
       { from: fromPhase, to: toPhase },
+      this.jsonOptions
+    );
+  }
+
+  /**
+   * Request an Atlas lifecycle state transition.
+   * Use this when the deployment is governed by the Atlas backend.
+   * Endpoint: POST /deployments/{id}/transition
+   */
+  requestAtlasTransition(id: string, targetState: string, reason: string): Observable<void> {
+    return this.http.post<void>(
+      `${this.baseUrl}/${id}/transition`,
+      { targetState, reason },
+      this.jsonOptions
+    );
+  }
+
+  /**
+   * Get available Atlas lifecycle transitions for a deployment.
+   */
+  getAvailableTransitions(id: string): Observable<string[]> {
+    return this.http.get<string[]>(
+      `${this.baseUrl}/${id}/transitions/available`,
+      this.jsonOptions
+    );
+  }
+
+  /**
+   * Get the audit trail for a deployment.
+   */
+  getAuditTrail(id: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.baseUrl}/${id}/audit`,
       this.jsonOptions
     );
   }

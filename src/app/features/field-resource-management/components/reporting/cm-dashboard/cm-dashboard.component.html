@@ -1,0 +1,367 @@
+<div class="cm-dashboard-container" role="main">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>Construction Manager Dashboard</h1>
+      <div class="header-info">
+        <span class="market-badge">
+          <mat-icon>location_on</mat-icon>
+          {{ market }}
+        </span>
+        <span class="user-name">{{ userName }}</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button (click)="refreshMetrics()" [disabled]="loading" matTooltip="Refresh Dashboard">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+  <!-- Error message -->
+  <mat-card *ngIf="error" class="error-card">
+    <mat-card-content>
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Dashboard content -->
+  <div *ngIf="dashboardData$ | async as data" class="dashboard-content">
+    
+    <!-- Key Metrics Section -->
+    <section class="metrics-section">
+      <h2 class="section-title">Key Metrics</h2>
+      
+      <!-- Skeleton loader for metrics -->
+      <div *ngIf="widgetLoading.metrics" class="metrics-grid">
+        <mat-card class="metric-card skeleton" *ngFor="let i of [1,2,3,4,5,6]">
+          <mat-card-content>
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-text short"></div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      
+      <!-- Actual metrics -->
+      <div *ngIf="!widgetLoading.metrics" class="metrics-grid">
+        <mat-card class="metric-card">
+          <mat-card-content>
+            <div class="metric-icon primary">
+              <mat-icon>work</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.activeProjects }}</div>
+              <div class="metric-label">Active Projects</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card">
+          <mat-card-content>
+            <div class="metric-icon accent">
+              <mat-icon>assignment</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.pendingTasks }}</div>
+              <div class="metric-label">Pending Tasks</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card">
+          <mat-card-content>
+            <div class="metric-icon success">
+              <mat-icon>people</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.availableTechnicians }}</div>
+              <div class="metric-label">Available Technicians</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card">
+          <mat-card-content>
+            <div class="metric-icon info">
+              <mat-icon>trending_up</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.resourceUtilization | number:'1.1-1' }}%</div>
+              <div class="metric-label">Resource Utilization</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card clickable" (click)="navigateToApprovals()">
+          <mat-card-content>
+            <div class="metric-icon warn">
+              <mat-icon>approval</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.pendingApprovals }}</div>
+              <div class="metric-label">Pending Approvals</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card" [class.warn]="data.metrics.overdueItems > 0">
+          <mat-card-content>
+            <div class="metric-icon" [class.warn]="data.metrics.overdueItems > 0">
+              <mat-icon>schedule</mat-icon>
+            </div>
+            <div class="metric-content">
+              <div class="metric-value">{{ data.metrics.overdueItems }}</div>
+              <div class="metric-label">Overdue Items</div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="main-content-grid">
+      
+      <!-- Recent Street Sheets -->
+      <section class="content-section">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>description</mat-icon>
+              Recent Street Sheets
+            </mat-card-title>
+            <button mat-button color="primary" (click)="navigateToStreetSheets()">
+              View All
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <!-- Skeleton loader -->
+            <div *ngIf="widgetLoading.streetSheets" class="skeleton-list">
+              <div class="skeleton-item" *ngFor="let i of [1,2,3]">
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text short"></div>
+              </div>
+            </div>
+            
+            <!-- Actual content -->
+            <div *ngIf="!widgetLoading.streetSheets">
+              <div *ngIf="data.recentStreetSheets.length === 0" class="no-data">
+                <mat-icon>info</mat-icon>
+                <p>No recent street sheets</p>
+              </div>
+              <div *ngIf="data.recentStreetSheets.length > 0" class="list-container">
+                <div *ngFor="let sheet of data.recentStreetSheets" 
+                     class="list-item clickable"
+                     (click)="navigateToStreetSheetDetail(sheet.id)">
+                  <div class="item-header">
+                    <span class="item-title">{{ sheet.projectName }}</span>
+                    <mat-chip [color]="getStatusColor(sheet.status)">
+                      {{ sheet.status }}
+                    </mat-chip>
+                  </div>
+                  <div class="item-details">
+                    <span class="item-market">
+                      <mat-icon>location_on</mat-icon>
+                      {{ sheet.market }}
+                    </span>
+                    <span class="item-time">
+                      Updated {{ formatRelativeTime(sheet.lastUpdated) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Pagination -->
+              <mat-paginator 
+                *ngIf="streetSheetsPagination.totalItems > streetSheetsPagination.pageSize"
+                [length]="streetSheetsPagination.totalItems"
+                [pageSize]="streetSheetsPagination.pageSize"
+                [pageIndex]="streetSheetsPagination.currentPage"
+                (page)="onStreetSheetsPageChange($event.pageIndex)"
+                [pageSizeOptions]="[5, 10, 25]">
+              </mat-paginator>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </section>
+
+      <!-- Pending Approvals -->
+      <section class="content-section">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>approval</mat-icon>
+              Pending Approvals
+            </mat-card-title>
+            <button mat-button color="primary" (click)="navigateToApprovals()">
+              View All
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <!-- Skeleton loader -->
+            <div *ngIf="widgetLoading.approvals" class="skeleton-list">
+              <div class="skeleton-item" *ngFor="let i of [1,2,3]">
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text short"></div>
+              </div>
+            </div>
+            
+            <!-- Actual content -->
+            <div *ngIf="!widgetLoading.approvals">
+              <div *ngIf="data.pendingApprovals.length === 0" class="no-data">
+                <mat-icon color="primary">check_circle</mat-icon>
+                <p>No pending approvals</p>
+              </div>
+              <div *ngIf="data.pendingApprovals.length > 0" class="list-container">
+                <div *ngFor="let approval of data.pendingApprovals" 
+                     class="list-item clickable"
+                     (click)="navigateToApprovalDetail(approval.id)">
+                  <div class="item-header">
+                    <span class="item-title">{{ approval.type | titlecase }} Approval</span>
+                    <mat-chip color="accent">{{ approval.status }}</mat-chip>
+                  </div>
+                  <div class="item-details">
+                    <span class="item-info">
+                      <mat-icon>person</mat-icon>
+                      {{ approval.submittedByName || approval.submittedBy }}
+                    </span>
+                    <span class="item-time">
+                      {{ formatRelativeTime(approval.submittedAt) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Pagination -->
+              <mat-paginator 
+                *ngIf="approvalsPagination.totalItems > approvalsPagination.pageSize"
+                [length]="approvalsPagination.totalItems"
+                [pageSize]="approvalsPagination.pageSize"
+                [pageIndex]="approvalsPagination.currentPage"
+                (page)="onApprovalsPageChange($event.pageIndex)"
+                [pageSizeOptions]="[5, 10, 25]">
+              </mat-paginator>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </section>
+
+      <!-- Technician Status -->
+      <section class="content-section">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>people</mat-icon>
+              Technician Status
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <!-- Skeleton loader -->
+            <div *ngIf="widgetLoading.technicians" class="skeleton-list">
+              <div class="skeleton-item" *ngFor="let i of [1,2,3]">
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text short"></div>
+              </div>
+            </div>
+            
+            <!-- Actual content -->
+            <div *ngIf="!widgetLoading.technicians">
+              <div *ngIf="data.technicianStatus.length === 0" class="no-data">
+                <mat-icon>info</mat-icon>
+                <p>No technician data available</p>
+              </div>
+              <div *ngIf="data.technicianStatus.length > 0" class="list-container">
+                <div *ngFor="let tech of data.technicianStatus" 
+                     class="list-item clickable"
+                     (click)="navigateToTechnicianDetail(tech.id)">
+                  <div class="item-header">
+                    <span class="item-title">{{ tech.name }}</span>
+                    <mat-icon [class]="tech.status">
+                      {{ getTechnicianStatusIcon(tech.status) }}
+                    </mat-icon>
+                  </div>
+                  <div class="item-details">
+                    <span class="item-info" *ngIf="tech.currentJob">
+                      <mat-icon>work</mat-icon>
+                      {{ tech.currentJob }}
+                    </span>
+                    <span class="item-info" *ngIf="tech.location">
+                      <mat-icon>location_on</mat-icon>
+                      {{ tech.location }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Pagination -->
+              <mat-paginator 
+                *ngIf="techniciansPagination.totalItems > techniciansPagination.pageSize"
+                [length]="techniciansPagination.totalItems"
+                [pageSize]="techniciansPagination.pageSize"
+                [pageIndex]="techniciansPagination.currentPage"
+                (page)="onTechniciansPageChange($event.pageIndex)"
+                [pageSizeOptions]="[5, 10, 25]">
+              </mat-paginator>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </section>
+
+      <!-- Upcoming Deadlines -->
+      <section class="content-section">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>event</mat-icon>
+              Upcoming Deadlines
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <!-- Skeleton loader -->
+            <div *ngIf="widgetLoading.deadlines" class="skeleton-list">
+              <div class="skeleton-item" *ngFor="let i of [1,2,3]">
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text short"></div>
+              </div>
+            </div>
+            
+            <!-- Actual content -->
+            <div *ngIf="!widgetLoading.deadlines">
+              <div *ngIf="data.upcomingDeadlines.length === 0" class="no-data">
+                <mat-icon>info</mat-icon>
+                <p>No upcoming deadlines</p>
+              </div>
+              <div *ngIf="data.upcomingDeadlines.length > 0" class="list-container">
+                <div *ngFor="let deadline of data.upcomingDeadlines" 
+                     class="list-item"
+                     [class.high-priority]="deadline.priority === 'high'">
+                  <div class="item-header">
+                    <span class="item-title">{{ deadline.title }}</span>
+                    <mat-chip [color]="getPriorityColor(deadline.priority)">
+                      {{ deadline.priority }}
+                    </mat-chip>
+                  </div>
+                  <div class="item-details">
+                    <span class="item-info">
+                      <mat-icon>category</mat-icon>
+                      {{ deadline.type | titlecase }}
+                    </span>
+                    <span class="item-time" [class.overdue]="formatTimeUntil(deadline.dueDate) === 'Overdue'">
+                      <mat-icon>schedule</mat-icon>
+                      {{ formatTimeUntil(deadline.dueDate) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </section>
+
+    </div>
+  </div>
+</div>

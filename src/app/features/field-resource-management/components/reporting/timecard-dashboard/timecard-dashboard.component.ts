@@ -1,0 +1,423 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { MatTabChangeEvent } from '@angular/material/tabs';
+import { TimeEntry, GeoLocation } from '../../../models/time-entry.model';
+import { Job } from '../../../models/job.model';
+import * as TimeEntryActions from '../../../state/time-entries/time-entry.actions';
+import * as TimeEntrySelectors from '../../../state/time-entries/time-entry.selectors';
+import * as JobSelectors from '../../../state/jobs/job.selectors';
+import { loadJobs } from '../../../state/jobs/job.actions';
+import { AccessibilityService } from '../../../services/accessibility.service';
+import { GeolocationService } from '../../../services/geolocation.service';
+import { GeocodingService } from '../../../../../services/geocoding.service';
+import { AuthService } from '../../../../../services/auth.service';
+
+/**
+ * Timecard Dashboard Component
+ * 
+ * Displays comprehensive time tracking overview for the current user:
+ * - Daily View: Active time entry, today's entries, and summary
+ * - Weekly View: Full week grid with lock status, expenses, and summaries
+ */
+@Component({
+  selector: 'frm-timecard-dashboard',
+  templateUrl: './timecard-dashboard.component.html',
+  styleUrls: ['./timecard-dashboard.component.scss']
+})
+export class TimecardDashboardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
+  // Current user (mock - would come from auth service)
+  currentTechnicianId = '';
+  
+  // Tab management
+  selectedTabIndex = 0;
+  
+  // Observable data streams
+  activeTimeEntry$: Observable<TimeEntry | null>;
+  todayTimeEntries$: Observable<TimeEntry[]>;
+  todayTimeEntriesData: TimeEntry[] = [];
+  loading$: Observable<boolean>;
+  error$: Observable<string | null>;
+  
+  // Jobs for start time entry
+  jobs$: Observable<Job[]>;
+  selectedJobId: string | null = null;
+  
+  // Computed values
+  todayTotalHours = 0;
+  todayTotalMileage = 0;
+  
+  // Active job for time tracker
+  activeJob: Job | null = null;
+  
+  // Whether the user is truly clocked in (active entry with no clock-out)
+  isClockedIn = false;
+  
+  // Date range for filtering
+  selectedDate = new Date();
+  
+  // Cache for reverse geocoded addresses
+  private addressCache: Map<string, string> = new Map();
+
+  // Job lookup map (id → Job) for displaying job info in time entries
+  jobMap: Map<string, Job> = new Map();
+  
+  constructor(
+    private store: Store,
+    private accessibilityService: AccessibilityService,
+    private geolocationService: GeolocationService,
+    private geocodingService: GeocodingService,
+    private authService: AuthService
+  ) {
+    // Set current technician ID from auth
+    this.currentTechnicianId = this.authService.getUser()?.id || '';
+
+    // Initialize observables
+    this.activeTimeEntry$ = this.store.select(TimeEntrySelectors.selectActiveTimeEntry);
+    this.todayTimeEntries$ = this.store.select(TimeEntrySelectors.selectTodayTimeEntries);
+    this.loading$ = this.store.select(TimeEntrySelectors.selectTimeEntryLoading);
+    this.error$ = this.store.select(TimeEntrySelectors.selectTimeEntryError);
+    this.jobs$ = this.store.select(JobSelectors.selectAllJobs);
+  }
+  
+  ngOnInit(): void {
+    // Load time entries for current user
+    this.loadTimeEntries();
+
+    // Load active entry from the API (in case user refreshed while clocked in)
+    if (this.currentTechnicianId) {
+      this.store.dispatch(TimeEntryActions.loadActiveEntry({
+        technicianId: this.currentTechnicianId
+      }));
+    }
+
+    // Ensure jobs are loaded for name lookups
+    this.store.dispatch(loadJobs({}));
+    
+    // Subscribe to active time entry to get active job
+    this.activeTimeEntry$.pipe(takeUntil(this.destroy$)).subscribe(entry => {
+      if (entry && entry.clockOutTime === undefined) {
+        this.isClockedIn = true;
+        this.loadActiveJob(entry.jobId);
+      } else {
+        this.isClockedIn = false;
+        this.activeJob = null;
+      }
+    });
+    
+    // Auto-select job if only one is available
+    this.jobs$.pipe(takeUntil(this.destroy$)).subscribe(jobs => {
+      if (jobs.length === 1 && !this.selectedJobId) {
+        this.selectedJobId = jobs[0].id;
+      }
+      // Build job lookup map
+      this.jobMap.clear();
+      jobs.forEach(j => this.jobMap.set(j.id, j));
+    });
+
+    // Subscribe to today's entries for calculations
+    this.todayTimeEntries$.pipe(takeUntil(this.destroy$)).subscribe(entries => {
+      this.todayTimeEntriesData = entries;
+      this.calculateTodayTotals(entries);
+    });
+    
+    // Subscribe to loading state for announcements
+    this.loading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
+      if (loading) {
+        this.accessibilityService.announce('Loading timecard data');
+      }
+    });
+    
+    // Subscribe to error state for announcements
+    this.error$.pipe(takeUntil(this.destroy$)).subscribe(error => {
+      if (error) {
+        this.accessibilityService.announceError(error);
+      }
+    });
+  }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
+  /**
+   * Load time entries
+   */
+  loadTimeEntries(): void {
+    this.store.dispatch(TimeEntryActions.loadTimeEntries({
+      technicianId: this.currentTechnicianId
+    }));
+  }
+  
+  /**
+   * Load active job details
+   */
+  loadActiveJob(jobId: string): void {
+    this.store.select(JobSelectors.selectJobById(jobId))
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(job => {
+        this.activeJob = job || null;
+      });
+  }
+  
+  /**
+   * Handle tab change
+   */
+  onTabChange(event: MatTabChangeEvent): void {
+    const tabLabels = ['Daily View', 'Weekly View'];
+    this.accessibilityService.announce(`Switched to ${tabLabels[event.index]}`);
+  }
+  
+  /**
+   * Calculate today's totals
+   */
+  calculateTodayTotals(entries: TimeEntry[]): void {
+    this.todayTotalHours = entries.reduce((sum, entry) => {
+      return sum + this.calculateHours(entry);
+    }, 0);
+    
+    this.todayTotalMileage = entries.reduce((sum, entry) => {
+      return sum + (entry.mileage || 0);
+    }, 0);
+  }
+  
+  /**
+   * Calculate hours for a time entry
+   */
+  calculateHours(entry: TimeEntry): number {
+    if (!entry.clockInTime) return 0;
+    
+    const clockIn = new Date(entry.clockInTime).getTime();
+    const clockOut = entry.clockOutTime 
+      ? new Date(entry.clockOutTime).getTime() 
+      : Date.now();
+    
+    const diffMs = clockOut - clockIn;
+    return diffMs / (1000 * 60 * 60); // Convert to hours
+  }
+  
+  /**
+   * Format hours for display
+   */
+  formatHours(hours: number): string {
+    const h = Math.floor(hours);
+    const m = Math.floor((hours - h) * 60);
+    return `${h}h ${m}m`;
+  }
+  
+  /**
+   * Format date for display
+   */
+  formatDate(date: Date | string): string {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+  
+  /**
+   * Format time for display
+   */
+  formatTime(date: Date | string): string {
+    const d = new Date(date);
+    return d.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+  
+  /**
+   * Get job name for time entry
+   */
+  getJobName(entry: TimeEntry): Observable<string> {
+    return new Observable(observer => {
+      this.store.select(JobSelectors.selectJobById(entry.jobId))
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(job => {
+          observer.next(job ? `${job.jobId} - ${job.client}` : 'Unknown Job');
+        });
+    });
+  }
+  
+  /**
+   * Get job display info for a time entry.
+   * Returns the job title, client, and site address instead of the raw UUID.
+   */
+  getJobDisplayName(jobId: string): string {
+    const job = this.jobMap.get(jobId);
+    if (!job) return jobId; // fallback to ID if not found
+    return job.jobId || `${job.client} - ${job.siteName}`;
+  }
+
+  getJobSiteInfo(jobId: string): string {
+    const job = this.jobMap.get(jobId);
+    if (!job) return '';
+    const addr = job.siteAddress;
+    return addr ? `${job.siteName} · ${addr.city}, ${addr.state}` : job.siteName || '';
+  }
+
+  /**
+   * Refresh data
+   */
+  onRefresh(): void {
+    this.loadTimeEntries();
+    this.accessibilityService.announce('Timecard data refreshed');
+  }
+  
+  /**
+   * Select a job for time entry
+   */
+  selectJob(jobId: string): void {
+    this.selectedJobId = jobId;
+    this.accessibilityService.announce('Job selected');
+  }
+  
+  /**
+   * Start time entry (clock in)
+   */
+  async startTimeEntry(): Promise<void> {
+    if (!this.selectedJobId) {
+      this.accessibilityService.announceError('Please select a job to start time entry');
+      return;
+    }
+
+    try {
+      // Attempt to capture current location
+      const location = await this.captureLocation();
+
+      // Dispatch clock in with location (mileage will be calculated on clock out)
+      this.store.dispatch(TimeEntryActions.clockIn({
+        jobId: this.selectedJobId,
+        technicianId: this.currentTechnicianId,
+        location
+      }));
+
+      this.accessibilityService.announce('Time entry started successfully with location captured');
+    } catch (error) {
+      // Still allow clock in without location
+      this.store.dispatch(TimeEntryActions.clockIn({
+        jobId: this.selectedJobId,
+        technicianId: this.currentTechnicianId
+      }));
+
+      this.accessibilityService.announce('Time entry started (location unavailable)');
+    }
+
+    this.selectedJobId = null;
+  }
+  
+  /**
+   * Capture current location
+   */
+  private captureLocation(): Promise<GeoLocation> {
+    return new Promise((resolve, reject) => {
+      this.geolocationService.getCurrentPositionWithFallback().subscribe({
+        next: (location) => resolve(location),
+        error: (error) => reject(error)
+      });
+    });
+  }
+  
+  /**
+   * Format address for display
+   */
+  formatAddress(address: any): string {
+    if (!address) return 'No address';
+    return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`;
+  }
+
+  formatClockOutReason(reason: string): string {
+    const labels: Record<string, string> = {
+      end_of_day: 'End of Day',
+      break: 'Break',
+      lunch: 'Lunch',
+      other: 'Other'
+    };
+    return labels[reason] || reason;
+  }
+  
+  /**
+   * Format geolocation for display
+   */
+  formatLocation(location: any): string {
+    if (!location) return 'Location not available';
+    return `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
+  }
+  
+  /**
+   * Get Google Maps link for a location
+   */
+  getGoogleMapsLink(location: any): string {
+    if (!location) return '#';
+    return `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+  }
+  
+  /**
+   * Get human-readable address from coordinates using reverse geocoding
+   */
+  getLocationAddress(location: any): string {
+    if (!location) return 'Location not available';
+    
+    const cacheKey = `${location.latitude},${location.longitude}`;
+    
+    // Check cache first
+    if (this.addressCache.has(cacheKey)) {
+      return this.addressCache.get(cacheKey)!;
+    }
+    
+    // Set loading placeholder
+    const loadingText = 'Loading address...';
+    this.addressCache.set(cacheKey, loadingText);
+    
+    // Fetch address asynchronously
+    this.geocodingService.reverseGeocode(location.latitude, location.longitude)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.status === 'OK' && response.results && response.results.length > 0) {
+            const result = response.results[0];
+            // Get the formatted address or construct from components
+            const address = result.formatted_address || this.formatGeocodingResult(result);
+            this.addressCache.set(cacheKey, address);
+          } else {
+            this.addressCache.set(cacheKey, 'Address not found');
+          }
+        },
+        error: (error) => {
+          console.error('Reverse geocoding failed:', error);
+          this.addressCache.set(cacheKey, 'Address unavailable');
+        }
+      });
+    
+    return loadingText;
+  }
+  
+  /**
+   * Format geocoding result into readable address
+   */
+  private formatGeocodingResult(result: any): string {
+    const components = result.address_components || [];
+    let street = '';
+    let city = '';
+    let state = '';
+    
+    components.forEach((component: any) => {
+      if (component.types.includes('street_number') || component.types.includes('route')) {
+        street += component.short_name + ' ';
+      } else if (component.types.includes('locality')) {
+        city = component.short_name;
+      } else if (component.types.includes('administrative_area_level_1')) {
+        state = component.short_name;
+      }
+    });
+    
+    return `${street.trim()}, ${city}, ${state}`.replace(/, ,/g, ',').trim();
+  }
+}
