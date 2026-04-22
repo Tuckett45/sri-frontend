@@ -1,0 +1,198 @@
+<div class="calendar-view-container" (click)="closeContextMenu()">
+  <!-- Header -->
+  <div class="calendar-header">
+    <div class="calendar-controls">
+      <!-- View Mode Toggle: Technicians / Crews / Jobs / Sites -->
+      <mat-button-toggle-group
+        [value]="viewMode"
+        (change)="onViewModeChange($event.value)"
+        aria-label="Schedule view mode">
+        <mat-button-toggle [value]="ScheduleViewMode.Technicians">
+          <mat-icon>person</mat-icon>
+          Technicians
+        </mat-button-toggle>
+        <mat-button-toggle [value]="ScheduleViewMode.Crews">
+          <mat-icon>groups</mat-icon>
+          Crews
+        </mat-button-toggle>
+        <mat-button-toggle [value]="ScheduleViewMode.Jobs">
+          <mat-icon>work</mat-icon>
+          Jobs
+        </mat-button-toggle>
+        <mat-button-toggle [value]="ScheduleViewMode.Sites">
+          <mat-icon>location_on</mat-icon>
+          Sites
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <!-- Day / Week Toggle -->
+      <mat-button-toggle-group
+        [value]="calendarView"
+        (change)="onViewChange($event.value)"
+        aria-label="Calendar view type"
+        class="time-toggle">
+        <mat-button-toggle [value]="CalendarViewType.Day">
+          <mat-icon>view_day</mat-icon>
+          Day
+        </mat-button-toggle>
+        <mat-button-toggle [value]="CalendarViewType.Week">
+          <mat-icon>view_week</mat-icon>
+          Week
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <!-- Date Navigation -->
+      <div class="date-navigation">
+        <button mat-icon-button (click)="onPrevious()" aria-label="Previous">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button mat-button (click)="onToday()" class="today-button">Today</button>
+        <button mat-icon-button (click)="onNext()" aria-label="Next">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+
+      <!-- Selected Date Display -->
+      <div class="selected-date">
+        <mat-icon>calendar_today</mat-icon>
+        <span>{{ formatSelectedDate() }}</span>
+      </div>
+
+      <!-- Add Task Button -->
+      <button mat-raised-button color="primary" class="add-task-button" (click)="onAddTask()">
+        <mat-icon>add</mat-icon>
+        Add Task
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading schedule...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load schedule</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" class="retry-button" (click)="onRetry()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="calendar-grid-container" *ngIf="scheduleRows.length > 0 && !loading && !error" cdkDropListGroup>
+    <div class="calendar-grid" [style.grid-template-columns]="'220px repeat(' + timeSlots.length + ', minmax(140px, 1fr))'">
+      <!-- Header Row -->
+      <div class="grid-header-cell row-header">{{ getRowHeaderLabel() }}</div>
+      <div class="grid-header-cell" *ngFor="let slot of timeSlots">
+        {{ formatTimeSlot(slot) }}
+      </div>
+
+      <!-- Data Rows -->
+      <ng-container *ngFor="let row of scheduleRows; let rowIdx = index">
+        <!-- Row Label -->
+        <div class="row-label-cell" [class.even-row]="rowIdx % 2 === 0">
+          <mat-icon class="row-icon">{{ row.icon }}</mat-icon>
+          <div class="row-label-text">
+            <div class="row-label-primary">{{ row.label }}</div>
+            <div class="row-label-secondary">{{ row.sublabel }}</div>
+          </div>
+          <button
+            mat-icon-button
+            class="row-add-button"
+            (click)="onAddTaskForRow(row); $event.stopPropagation()"
+            [matTooltip]="'Add task for ' + row.label"
+            aria-label="Add task for this row">
+            <mat-icon>add_circle_outline</mat-icon>
+          </button>
+        </div>
+
+        <!-- Time Slot Cells -->
+        <div
+          *ngFor="let cell of row.cells; let colIdx = index"
+          class="schedule-cell"
+          [class.has-conflict]="cell.hasConflict"
+          [class.even-row]="rowIdx % 2 === 0"
+          cdkDropList
+          [cdkDropListData]="cell"
+          (cdkDropListDropped)="onJobDrop($event, row)">
+
+          <!-- Job Cards -->
+          <div
+            *ngFor="let job of cell.jobs"
+            class="job-card"
+            [class]="getStatusColor(job.status)"
+            cdkDrag
+            [cdkDragData]="job"
+            (click)="onJobClick(job); $event.stopPropagation()"
+            (contextmenu)="onJobContextMenu($event, job)">
+
+            <div class="job-card-content">
+              <div class="job-id">{{ job.jobId }}</div>
+              <div class="job-client">{{ job.client }}</div>
+              <div class="job-site" *ngIf="viewMode !== ScheduleViewMode.Sites">{{ job.siteName }}</div>
+              <div class="job-time" *ngIf="calendarView === CalendarViewType.Day">
+                {{ job.scheduledStartDate | date:'shortTime' }} – {{ job.scheduledEndDate | date:'shortTime' }}
+              </div>
+              <!-- Show assigned tech names in Jobs/Sites view -->
+              <div class="job-assigned" *ngIf="cell.assignedNames.length > 0">
+                <mat-icon class="assigned-icon">person</mat-icon>
+                <span>{{ cell.assignedNames.join(', ') }}</span>
+              </div>
+            </div>
+
+            <div class="status-dot" [class]="getStatusColor(job.status) + '-dot'"></div>
+          </div>
+
+          <!-- Conflict badge -->
+          <div class="conflict-badge" *ngIf="cell.hasConflict">
+            <mat-icon>warning</mat-icon>
+          </div>
+
+          <!-- Empty drop hint -->
+          <div class="empty-slot" *ngIf="cell.jobs.length === 0">
+            <span class="drop-hint">Drop job here</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="scheduleRows.length === 0 && !loading && !error">
+    <mat-icon>event_busy</mat-icon>
+    <h3>No Data</h3>
+    <p>{{ getEmptyMessage() }}</p>
+  </div>
+
+  <!-- Context Menu -->
+  <div
+    class="context-menu"
+    *ngIf="showContextMenu && contextMenuJob"
+    [style.left]="contextMenuPosition.x"
+    [style.top]="contextMenuPosition.y"
+    (click)="$event.stopPropagation()">
+
+    <button mat-menu-item (click)="onContextEdit()">
+      <mat-icon>edit</mat-icon>
+      <span>Edit Job</span>
+    </button>
+    <button mat-menu-item (click)="onContextReassign()">
+      <mat-icon>swap_horiz</mat-icon>
+      <span>Reassign</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="onContextDelete()" class="delete-action">
+      <mat-icon>delete</mat-icon>
+      <span>Delete Job</span>
+    </button>
+  </div>
+</div>

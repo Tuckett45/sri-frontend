@@ -1,0 +1,185 @@
+<div class="technician-schedule-container">
+  <!-- Header -->
+  <div class="schedule-header">
+    <div class="technician-info" *ngIf="technician">
+      <mat-icon class="technician-icon">person</mat-icon>
+      <div class="technician-details">
+        <h2>{{ technician.firstName }} {{ technician.lastName }}</h2>
+        <p class="technician-role">{{ technician.role }} - {{ technician.region }}</p>
+      </div>
+    </div>
+
+    <!-- Date Range Selector -->
+    <div class="date-range-selector">
+      <div class="quick-filters">
+        <button mat-button (click)="setToday()" class="filter-button">
+          Today
+        </button>
+        <button mat-button (click)="setThisWeek()" class="filter-button">
+          This Week
+        </button>
+        <button mat-button (click)="setThisMonth()" class="filter-button">
+          This Month
+        </button>
+      </div>
+
+      <form [formGroup]="dateRangeForm" class="date-range-form">
+        <mat-form-field appearance="outline" class="date-field">
+          <mat-label>Start Date</mat-label>
+          <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+          <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <span class="date-separator">to</span>
+
+        <mat-form-field appearance="outline" class="date-field">
+          <mat-label>End Date</mat-label>
+          <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+          <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading schedule...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load schedule</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" class="retry-button" (click)="onRetry()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Summary Card -->
+  <div class="summary-card" *ngIf="!loading && !error">
+    <div class="summary-item">
+      <mat-icon>work</mat-icon>
+      <div class="summary-content">
+        <div class="summary-value">{{ filteredJobs.length }}</div>
+        <div class="summary-label">Total Jobs</div>
+      </div>
+    </div>
+
+    <div class="summary-item">
+      <mat-icon>schedule</mat-icon>
+      <div class="summary-content">
+        <div class="summary-value">{{ totalHours }}</div>
+        <div class="summary-label">Estimated Hours</div>
+      </div>
+    </div>
+
+    <div class="summary-item">
+      <mat-icon>date_range</mat-icon>
+      <div class="summary-content">
+        <div class="summary-value">{{ formatDateRange() }}</div>
+        <div class="summary-label">Date Range</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jobs List -->
+  <div class="jobs-section" *ngIf="!loading && !error">
+    <h3>Scheduled Jobs</h3>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredJobs.length === 0">
+      <mat-icon>event_busy</mat-icon>
+      <h4>No Jobs Scheduled</h4>
+      <p>No jobs found for the selected date range.</p>
+    </div>
+
+    <!-- Job Cards -->
+    <div class="jobs-list" *ngIf="filteredJobs.length > 0">
+      <div 
+        class="job-card"
+        *ngFor="let job of filteredJobs"
+        [class]="getStatusColor(job.status)"
+        (click)="onJobClick(job)">
+        
+        <!-- Job Header -->
+        <div class="job-header">
+          <div class="job-id-section">
+            <span class="job-id">{{ job.jobId }}</span>
+            <div class="status-badge" [class]="getStatusColor(job.status)">
+              <mat-icon>{{ getStatusIcon(job.status) }}</mat-icon>
+              <span>{{ getStatusLabel(job.status) }}</span>
+            </div>
+          </div>
+          <mat-icon class="chevron-icon">chevron_right</mat-icon>
+        </div>
+
+        <!-- Job Details -->
+        <div class="job-details">
+          <div class="detail-row">
+            <mat-icon>business</mat-icon>
+            <div class="detail-content">
+              <div class="detail-label">Client</div>
+              <div class="detail-value">{{ job.client }}</div>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <mat-icon>location_on</mat-icon>
+            <div class="detail-content">
+              <div class="detail-label">Site</div>
+              <div class="detail-value">{{ job.siteName }}</div>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <mat-icon>schedule</mat-icon>
+            <div class="detail-content">
+              <div class="detail-label">Time</div>
+              <div class="detail-value">
+                {{ job.scheduledStartDate | date:'short' }} - {{ job.scheduledEndDate | date:'shortTime' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <mat-icon>access_time</mat-icon>
+            <div class="detail-content">
+              <div class="detail-label">Estimated Hours</div>
+              <div class="detail-value">{{ job.estimatedLaborHours }} hours</div>
+            </div>
+          </div>
+
+          <!-- Required Skills -->
+          <div class="detail-row" *ngIf="job.requiredSkills.length > 0">
+            <mat-icon>build</mat-icon>
+            <div class="detail-content">
+              <div class="detail-label">Required Skills</div>
+              <div class="skills-list">
+                <mat-chip-set>
+                  <mat-chip *ngFor="let skill of job.requiredSkills" class="skill-chip">
+                    {{ skill.name }}
+                  </mat-chip>
+                </mat-chip-set>
+              </div>
+            </div>
+          </div>
+
+          <!-- Priority Badge -->
+          <div class="priority-badge" *ngIf="job.priority !== 'Normal'">
+            <mat-icon>priority_high</mat-icon>
+            <span>{{ job.priority }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,9 @@
+# Exception State Management
+
+Files to be implemented:
+- exception.state.ts - State interface definition
+- exception.actions.ts - Action definitions
+- exception.reducer.ts - Pure state transitions
+- exception.effects.ts - Side effects (API calls)
+- exception.selectors.ts - Memoized state selectors
+- index.ts - Public API exports

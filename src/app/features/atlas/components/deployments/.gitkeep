@@ -1,0 +1,8 @@
+# Deployment Components Directory
+
+Components to be implemented:
+- deployment-list/ - Paginated deployment list with filtering
+- deployment-detail/ - Comprehensive deployment detail view
+- deployment-form/ - Create/edit deployment form
+- state-transition-dialog/ - State transition modal
+- evidence-upload/ - Evidence submission form

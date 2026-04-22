@@ -1,0 +1,47 @@
+<!-- Overlay container -->
+<div *ngIf="overlay" class="loading-overlay">
+  <div class="loading-content">
+    <ng-container *ngTemplateOutlet="loadingTemplate"></ng-container>
+  </div>
+</div>
+
+<!-- Inline container -->
+<div *ngIf="!overlay" class="loading-inline">
+  <ng-container *ngTemplateOutlet="loadingTemplate"></ng-container>
+</div>
+
+<!-- Loading template -->
+<ng-template #loadingTemplate>
+  <!-- Spinner mode -->
+  <div *ngIf="mode === 'spinner'" class="spinner-container" [ngClass]="'spinner-' + size">
+    <div class="spinner" role="status" aria-live="polite" aria-label="Loading">
+      <div class="spinner-circle"></div>
+    </div>
+    <p *ngIf="message" class="loading-message">{{ message }}</p>
+  </div>
+
+  <!-- Progress bar mode -->
+  <div *ngIf="mode === 'progress'" class="progress-container">
+    <div class="progress-bar" role="progressbar" 
+         [attr.aria-valuenow]="progress" 
+         aria-valuemin="0" 
+         aria-valuemax="100"
+         [attr.aria-label]="message || 'Loading progress'">
+      <div class="progress-fill" [style.width.%]="progress"></div>
+    </div>
+    <div class="progress-info">
+      <span class="progress-percentage">{{ progress }}%</span>
+      <span *ngIf="message" class="progress-message">{{ message }}</span>
+    </div>
+  </div>
+
+  <!-- Skeleton screen mode -->
+  <div *ngIf="mode === 'skeleton'" class="skeleton-container">
+    <div class="skeleton-line" 
+         *ngFor="let line of [].constructor(skeletonLines); let i = index"
+         [ngClass]="{'skeleton-line-short': i === skeletonLines - 1}"
+         role="status"
+         aria-label="Loading content">
+    </div>
+  </div>
+</ng-template>

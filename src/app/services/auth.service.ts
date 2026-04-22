@@ -1,12 +1,17 @@
 import { HttpHeaders, HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, Optional } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, of, tap } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { User } from '../models/user.model';
 import { LoginModel } from '../models/login-model.model';
 import { environment, local_environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../models/role.enum';
+import { StatePersistenceService } from '../features/field-resource-management/services/state-persistence.service';
+import { TechnicianService } from '../features/field-resource-management/services/technician.service';
+import { TechnicianRole } from '../features/field-resource-management/models/technician.model';
+import { CreateTechnicianDto } from '../features/field-resource-management/models/dtos/technician.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +29,12 @@ export class AuthService {
     })
   };
   
-  constructor(protected router: Router, protected http: HttpClient) {
+  constructor(
+    protected router: Router,
+    protected http: HttpClient,
+    private statePersistenceService: StatePersistenceService,
+    @Optional() private technicianService: TechnicianService | null
+  ) {
     this.loadUserFromLocalStorage();
    }
  
@@ -61,7 +71,34 @@ export class AuthService {
       user.id = uuidv4();
       user.createdDate.toISOString();
     }
-    return this.http.post<User>(`${environment.apiUrl}/auth/register`, user, this.httpOptions);
+    return this.http.post<User>(`${environment.apiUrl}/auth/register`, user, this.httpOptions).pipe(
+      switchMap(registeredUser => {
+        if (registeredUser.role === UserRole.Technician && this.technicianService) {
+          const techDto = this.buildTechnicianDto(registeredUser);
+          return this.technicianService.createTechnician(techDto).pipe(
+            map(() => registeredUser),
+            catchError(err => {
+              console.error('Failed to sync technician to ATLAS:', err);
+              return of(registeredUser);
+            })
+          );
+        }
+        return of(registeredUser);
+      })
+    );
+  }
+
+  private buildTechnicianDto(user: User): CreateTechnicianDto {
+    const parts = user.name.trim().split(' ');
+    return {
+      firstName: parts[0] || '',
+      lastName: parts.slice(1).join(' ') || '',
+      email: user.email,
+      phone: '',
+      role: TechnicianRole.Level1,
+      region: user.market,
+      isAvailable: true
+    };
   }
 
   getUserById(userId: string){
@@ -82,6 +119,10 @@ export class AuthService {
 
   getUserRole(): UserRole {
     return this.userRole.getValue();
+  }
+
+  getUserRole$(): Observable<UserRole> {
+    return this.userRole.asObservable();
   }
 
   getUser(): any {
@@ -122,6 +163,18 @@ export class AuthService {
 
   isHR() {
       return this.userRole.getValue() === UserRole.HR;
+  }
+
+  isPayroll() {
+      return this.userRole.getValue() === UserRole.Payroll;
+  }
+
+  isEngineeringFieldSupport() {
+    return this.userRole.getValue() === UserRole.EngineeringFieldSupport;
+  }
+
+  isMaterialsManager() {
+    return this.userRole.getValue() === UserRole.MaterialsManager;
   }
 
   isLoggedIn(): boolean {
@@ -183,6 +236,22 @@ export class AuthService {
       this.setUserRole(this.resolveRole(parsedUser));
       this.currentUser = parsedUser; 
       this.loggedInStatus.next(true);
+    } else if (!environment.production) {
+      // In development mode, use a mock admin user if no user is logged in
+      this.currentUser = {
+        id: 'dev-admin-123',
+        name: 'Dev Admin',
+        email: 'admin@dev.local',
+        password: '',
+        role: 'Admin',
+        market: 'ALL',
+        company: 'INTERNAL',
+        createdDate: new Date(),
+        isApproved: true
+      };
+      this.setUserRole(UserRole.Admin);
+      this.loggedInStatus.next(true);
+      console.log('AuthService: Using development mock user (Admin)');
     }
   }
 
@@ -205,14 +274,18 @@ export class AuthService {
     this.clearStorage();
     this.resetCurrentUser();
     this.loggedInStatus.next(false);
+    
+    // Clear persisted FRM state to prevent data leakage between users
+    this.statePersistenceService.clearPersistedState();
+    
     this.router.navigate(['/login']);
-}
+  }
 
-protected clearStorage(): void {
+  protected clearStorage(): void {
     localStorage.removeItem('loggedIn');
     sessionStorage.removeItem(this.authTokenStorageKey);
     localStorage.removeItem('user');
-}
+  }
 
 private resetCurrentUser(): void {
     const userString = localStorage.getItem('user');

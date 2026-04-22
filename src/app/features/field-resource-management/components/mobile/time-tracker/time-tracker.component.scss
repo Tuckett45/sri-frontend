@@ -1,0 +1,636 @@
+.time-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+
+  // Job Information
+  &__job-info {
+    text-align: center;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 12px;
+  }
+
+  &__job-title {
+    margin: 0 0 12px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #212121;
+  }
+
+  &__job-client {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #424242;
+  }
+
+  &__job-site {
+    margin: 0;
+    font-size: 14px;
+    color: #757575;
+  }
+
+  // Timer Display
+  &__timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 20px;
+    background-color: #f5f5f5;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+
+    &--active {
+      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.25);
+    }
+  }
+
+  &__timer-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__timer-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  &__timer-time {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    line-height: 1;
+    letter-spacing: 1px;
+  }
+
+  &__timer-label {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.85;
+  }
+
+  // Clock Action Button
+  &__clock-action {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__clock-button {
+    height: 52px;
+    min-width: 200px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s;
+    color: #ffffff !important;
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      margin-right: 8px;
+      color: #ffffff !important;
+    }
+    
+    span {
+      color: #ffffff !important;
+    }
+
+    &--in {
+      background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    }
+
+    &--out {
+      background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    }
+  }
+
+  // Location Status
+  &__location-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 12px;
+    border-left: 4px solid #9e9e9e;
+
+    &--pending {
+      border-left-color: #ff9800;
+      background-color: #fff3e0;
+    }
+
+    &--success {
+      border-left-color: #4caf50;
+      background-color: #e8f5e9;
+    }
+
+    &--failed {
+      border-left-color: #f44336;
+      background-color: #ffebee;
+    }
+  }
+
+  &__location-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  &__location-info {
+    flex: 1;
+  }
+
+  &__location-message {
+    font-size: 14px;
+    font-weight: 500;
+    color: #424242;
+    margin-bottom: 8px;
+  }
+
+  &__location-coords {
+    font-size: 13px;
+    color: #616161;
+    line-height: 1.5;
+  }
+
+  // Error Message
+  &__error {
+    background-color: #ffebee;
+    border-left: 4px solid #f44336;
+  }
+
+  &__error-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+
+    mat-icon {
+      flex-shrink: 0;
+    }
+  }
+
+  &__error-text {
+    flex: 1;
+
+    strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #d32f2f;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #424242;
+    }
+  }
+
+  // Mileage Display
+  &__mileage {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    background-color: #e3f2fd;
+    border-radius: 12px;
+    border-left: 4px solid #2196f3;
+  }
+
+  &__mileage-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #1976d2;
+    flex-shrink: 0;
+  }
+
+  &__mileage-info {
+    flex: 1;
+  }
+
+  &__mileage-label {
+    font-size: 13px;
+    color: #616161;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  &__mileage-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1976d2;
+  }
+  
+  // Edit button for mileage
+  &__edit-button {
+    mat-icon {
+      color: #212121 !important;
+    }
+  }
+
+  // Manual Entry Forms
+  &__manual-entry {
+    border-left: 4px solid #ff9800;
+    
+    mat-card-actions {
+      button {
+        &[mat-button] {
+          color: #616161;
+        }
+        
+        &[mat-raised-button] {
+          color: #ffffff !important;
+          
+          mat-icon {
+            color: #ffffff !important;
+          }
+        }
+      }
+    }
+  }
+
+  &__manual-field {
+    width: 100%;
+    
+    // Fix placeholder color for better readability
+    ::ng-deep {
+      input::placeholder {
+        color: #757575 !important;
+        opacity: 1 !important;
+      }
+      
+      .mat-mdc-form-field-hint,
+      .mat-mdc-form-field-error {
+        color: #616161;
+      }
+      
+      // Make suffix icon black
+      .mat-icon[matSuffix] {
+        color: #212121 !important;
+      }
+    }
+  }
+
+  // Admin Actions
+  &__admin-actions {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+
+    button {
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  &__admin-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background-color: #fff3e0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #e65100;
+
+    mat-icon {
+      flex-shrink: 0;
+    }
+  }
+
+  // Route Map
+  &__route-section {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  &__map-toggle,
+  &__directions-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+
+  &__route-map-wrapper {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+  }
+
+  &__route-map {
+    height: 300px;
+    width: 100%;
+  }
+
+  &__map-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    color: #616161;
+  }
+
+  &__map-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: #fff3e0;
+    color: #e65100;
+    font-size: 13px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  // Clock Out Reasons
+  &__clockout-reasons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    background-color: #fff3e0;
+    border-radius: 12px;
+    border-left: 4px solid #ff9800;
+  }
+
+  &__clockout-reasons-label {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #424242;
+  }
+
+  &__clockout-reasons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+      font-size: 13px;
+      white-space: nowrap;
+      min-width: 0;
+      padding: 8px 12px;
+    }
+
+    @media (max-width: 374px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // Help Text
+  &__help {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background-color: #e3f2fd;
+    border-radius: 12px;
+    align-items: flex-start;
+
+    mat-icon {
+      color: #1976d2;
+      flex-shrink: 0;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #424242;
+      line-height: 1.5;
+    }
+  }
+}
+
+// Mobile Optimizations
+@media (max-width: 767px) {
+  .time-tracker {
+    padding: 12px;
+    gap: 12px;
+
+    &__job-info {
+      padding: 16px;
+    }
+
+    &__timer {
+      padding: 12px 16px;
+    }
+
+    &__timer-display {
+      gap: 8px;
+    }
+
+    &__timer-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &__timer-time {
+      font-size: 26px;
+      letter-spacing: 1px;
+    }
+
+    &__timer-label {
+      font-size: 12px;
+    }
+
+    &__clock-button {
+      height: 56px;
+      min-width: 180px;
+      font-size: 16px;
+      border-radius: 28px;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+        margin-right: 8px;
+      }
+    }
+
+    &__job-title {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    &__job-client {
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    &__job-site {
+      font-size: 13px;
+    }
+
+    &__location-status,
+    &__mileage,
+    &__help {
+      padding: 14px;
+      gap: 10px;
+    }
+
+    &__location-icon,
+    &__mileage-icon {
+      font-size: 26px;
+      width: 26px;
+      height: 26px;
+    }
+
+    &__location-message {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    &__location-coords {
+      font-size: 12px;
+    }
+
+    &__mileage-label {
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    &__mileage-value {
+      font-size: 16px;
+    }
+
+    &__help {
+      p {
+        font-size: 13px;
+      }
+    }
+
+    &__error {
+      mat-card-content {
+        padding: 12px;
+      }
+    }
+
+    &__error-content {
+      gap: 10px;
+
+      mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+    }
+
+    &__error-text {
+      strong {
+        font-size: 14px;
+      }
+
+      p {
+        font-size: 13px;
+      }
+    }
+
+    &__manual-entry {
+      mat-card-header {
+        padding: 12px 12px 0;
+      }
+
+      mat-card-content {
+        padding: 12px;
+      }
+
+      mat-card-actions {
+        padding: 8px 12px 12px;
+      }
+    }
+
+    &__admin-warning {
+      padding: 10px;
+      font-size: 13px;
+      margin-bottom: 12px;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}
+
+// Extra small mobile devices
+@media (max-width: 374px) {
+  .time-tracker {
+    padding: 10px;
+    gap: 10px;
+
+    &__timer {
+      padding: 10px 12px;
+    }
+
+    &__timer-time {
+      font-size: 22px;
+    }
+
+    &__clock-button {
+      height: 52px;
+      min-width: 160px;
+      font-size: 15px;
+
+      mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+        margin-right: 6px;
+      }
+    }
+  }
+}
+
+// Tablet Optimizations
+@media (min-width: 768px) and (max-width: 1023px) {
+  .time-tracker {
+    padding: 24px;
+    gap: 24px;
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.time-tracker__location-status--pending .time-tracker__location-icon {
+  animation: pulse 1.5s ease-in-out infinite;
+}

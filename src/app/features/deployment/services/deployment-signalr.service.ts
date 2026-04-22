@@ -52,18 +52,19 @@ export class DeploymentSignalRService {
    */
   async connect(userId: string): Promise<void> {
     if (!this.notificationsEnabled()) {
-      console.log('Deployment notifications are disabled');
+      console.log('📵 Deployment notifications are disabled by feature flag');
       return;
     }
 
     if (this.hubConnection) {
-      console.log('SignalR connection already exists');
+      console.log('ℹ️ SignalR connection already exists');
       return;
     }
 
     try {
       // Build the SignalR hub connection
       const hubUrl = this.getHubUrl();
+      console.log(`🔌 Attempting to connect to SignalR hub: ${hubUrl}`);
 
       this.hubConnection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl, {
@@ -90,10 +91,20 @@ export class DeploymentSignalRService {
       // Join user's notification group
       await this.hubConnection.invoke('JoinUserGroup', userId);
 
-    } catch (error) {
-      console.error('❌ Failed to connect to Deployment SignalR Hub:', error);
+    } catch (error: any) {
+      console.warn('⚠️ Failed to connect to Deployment SignalR Hub:', error?.message || error);
+      
+      // Check if it's a 405 error (hub not configured)
+      if (error?.message?.includes('405') || error?.statusCode === 405) {
+        console.warn('⚠️ SignalR hub endpoint not available (405). Real-time notifications disabled.');
+        console.warn('ℹ️ This is expected if the backend SignalR hub is not yet deployed.');
+      }
+      
       this.connectionState.set(signalR.HubConnectionState.Disconnected);
-      throw error;
+      this.hubConnection = null;
+      
+      // Don't throw - fail silently and continue without real-time notifications
+      // Users will still see notifications through other means (polling, page refresh, etc.)
     }
   }
 

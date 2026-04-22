@@ -1,0 +1,104 @@
+<!-- Deployment Form Component Template -->
+<div class="deployment-form-container">
+  <p-toast></p-toast>
+
+  <p-card [header]="getFormTitle()">
+    <!-- Loading Spinner -->
+    <div *ngIf="loading" class="loading-container">
+      <p-progressSpinner></p-progressSpinner>
+      <p>{{ mode === 'create' ? 'Creating deployment...' : 'Updating deployment...' }}</p>
+    </div>
+
+    <!-- Error Message -->
+    <p-message
+      *ngIf="error && !loading"
+      severity="error"
+      [text]="error"
+      styleClass="mb-3"
+    ></p-message>
+
+    <!-- Form -->
+    <form [formGroup]="deploymentForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+      <!-- Title Field -->
+      <div class="field">
+        <label for="title" class="required">Title</label>
+        <input
+          id="title"
+          type="text"
+          pInputText
+          formControlName="title"
+          placeholder="Enter deployment title"
+          [class.ng-invalid]="hasError('title', 'required') || hasError('title', 'minlength') || hasError('title', 'maxlength')"
+          [class.ng-dirty]="deploymentForm.get('title')?.dirty"
+        />
+        <small
+          *ngIf="hasError('title', 'required') || hasError('title', 'minlength') || hasError('title', 'maxlength')"
+          class="p-error"
+        >
+          {{ getErrorMessage('title') }}
+        </small>
+        <small class="field-hint">
+          Provide a descriptive title for the deployment (3-200 characters)
+        </small>
+      </div>
+
+      <!-- Type Field -->
+      <div class="field">
+        <label for="type" class="required">Type</label>
+        <p-dropdown
+          id="type"
+          formControlName="type"
+          [options]="typeOptions"
+          placeholder="Select deployment type"
+          [showClear]="false"
+          styleClass="w-full"
+          [class.ng-invalid]="hasError('type', 'required')"
+          [class.ng-dirty]="deploymentForm.get('type')?.dirty"
+        ></p-dropdown>
+        <small
+          *ngIf="hasError('type', 'required')"
+          class="p-error"
+        >
+          {{ getErrorMessage('type') }}
+        </small>
+        <small class="field-hint">
+          Select the type of deployment
+        </small>
+      </div>
+
+      <!-- Metadata Field (Optional) -->
+      <div class="field">
+        <label for="metadata">Metadata (Optional)</label>
+        <textarea
+          id="metadata"
+          pInputTextarea
+          formControlName="metadata"
+          placeholder='{"key": "value"}'
+          rows="6"
+          [autoResize]="true"
+        ></textarea>
+        <small class="field-hint">
+          Additional metadata in JSON format (optional)
+        </small>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <p-button
+          label="Cancel"
+          icon="pi pi-times"
+          severity="secondary"
+          (onClick)="onCancel()"
+          [disabled]="loading"
+        ></p-button>
+        <p-button
+          [label]="getSubmitButtonLabel()"
+          icon="pi pi-check"
+          type="submit"
+          [disabled]="loading || deploymentForm.invalid"
+          [loading]="loading"
+        ></p-button>
+      </div>
+    </form>
+  </p-card>
+</div>

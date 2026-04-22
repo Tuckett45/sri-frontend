@@ -1,0 +1,9 @@
+# Guards Directory
+
+This directory contains Angular route guards for authentication and authorization.
+
+## Planned Guards
+
+- `auth.guard.ts` - Authentication guard
+- `role.guard.ts` - Role-based authorization guard
+- `unsaved-changes.guard.ts` - Prevent navigation with unsaved changes

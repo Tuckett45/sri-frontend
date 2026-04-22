@@ -1,0 +1,241 @@
+@import '../../../styles/frm-mixins';
+
+.map-view-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f3f4f6;
+}
+
+.map-header {
+  background: white;
+  padding: 16px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex: 1;
+    min-width: 0;
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #1f2937;
+      white-space: nowrap;
+    }
+
+    .stats-summary {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background-color: #f9fafb;
+        border-radius: 6px;
+        font-size: 14px;
+
+        .stat-icon {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          flex-shrink: 0;
+
+          &.technician {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          }
+
+          &.crew {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 2px;
+          }
+
+          &.job {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+          }
+        }
+
+        .stat-value {
+          font-weight: 600;
+          color: #1f2937;
+        }
+
+        .stat-label {
+          color: #6b7280;
+        }
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    gap: 12px;
+
+    .control-btn {
+      @include frm-button-base;
+      @include frm-button-secondary;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-size: 14px;
+      transition: all 0.2s;
+
+      .btn-icon {
+        font-size: 16px;
+      }
+
+      &.active {
+        background-color: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+
+        &:hover {
+          background-color: #2563eb;
+          border-color: #2563eb;
+        }
+      }
+    }
+  }
+}
+
+.map-content {
+  display: flex;
+  flex: 1;
+  gap: 16px;
+  padding: 16px;
+  min-height: 0;
+  overflow: hidden;
+
+  .filter-panel {
+    flex-shrink: 0;
+    width: 300px;
+    animation: slideIn 0.3s ease;
+  }
+
+  .map-main {
+    flex: 1;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-width: 0;
+
+    frm-map {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .legend-overlay {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+  }
+}
+
+// Animations
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 1024px) {
+  .map-header {
+    .header-left {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+
+      h2 {
+        font-size: 20px;
+      }
+    }
+  }
+
+  .map-content {
+    .filter-panel {
+      width: 260px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .map-header {
+    padding: 12px 16px;
+
+    .header-left {
+      h2 {
+        font-size: 18px;
+      }
+
+      .stats-summary {
+        gap: 8px;
+
+        .stat-item {
+          padding: 4px 8px;
+          font-size: 12px;
+        }
+      }
+    }
+
+    .header-right {
+      .control-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+    }
+  }
+
+  .map-content {
+    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
+
+    .filter-panel {
+      width: 100%;
+      max-height: 40vh;
+      overflow-y: auto;
+    }
+
+    .map-main {
+      .legend-overlay {
+        bottom: 12px;
+        right: 12px;
+        left: 12px;
+        max-width: calc(100% - 24px);
+      }
+    }
+  }
+}

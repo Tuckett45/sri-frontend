@@ -1,0 +1,384 @@
+<!-- Risk Assessment Component Template -->
+<div class="risk-assessment-container">
+  <!-- Header -->
+  <div class="risk-assessment-header">
+    <h2 class="risk-assessment-title">Risk Assessment</h2>
+    <button 
+      pButton 
+      type="button" 
+      label="Assess Risk" 
+      icon="pi pi-shield"
+      class="p-button-primary"
+      (click)="onAssessRisk()"
+      [disabled]="loading">
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <p-message 
+    *ngIf="error && !loading" 
+    severity="error" 
+    [text]="error"
+    styleClass="assessment-error-message">
+  </p-message>
+
+  <div *ngIf="error && !loading" class="error-actions">
+    <button 
+      pButton 
+      type="button" 
+      label="Retry" 
+      icon="pi pi-refresh"
+      class="p-button-outlined"
+      (click)="onRetry()">
+    </button>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner 
+      styleClass="assessment-spinner"
+      strokeWidth="4"
+      animationDuration="1s">
+    </p-progressSpinner>
+    <p class="loading-text">Assessing risk...</p>
+  </div>
+
+  <!-- Risk Assessment Results -->
+  <div *ngIf="riskAssessment && !loading" class="assessment-results">
+    
+    <!-- Overall Risk Card -->
+    <p-card styleClass="overall-risk-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Overall Risk</h3>
+        </div>
+      </ng-template>
+
+      <div class="overall-risk-content">
+        <div class="risk-level-row">
+          <span class="risk-label">Risk Level:</span>
+          <p-tag 
+            [value]="formatRiskLevel(riskAssessment.overallRiskLevel)" 
+            [severity]="getRiskLevelSeverity(riskAssessment.overallRiskLevel)"
+            styleClass="risk-level-tag">
+          </p-tag>
+        </div>
+
+        <div class="risk-score-row">
+          <span class="risk-label">Risk Score:</span>
+          <div class="risk-score-display">
+            <span [class]="'risk-score ' + getRiskScoreColor(riskAssessment.overallRiskScore)">
+              {{ riskAssessment.overallRiskScore }}/100
+            </span>
+            <p-progressBar 
+              [value]="riskAssessment.overallRiskScore" 
+              [showValue]="false"
+              [styleClass]="getRiskScoreColor(riskAssessment.overallRiskScore)">
+            </p-progressBar>
+          </div>
+        </div>
+
+        <div class="risk-confidence-row">
+          <span class="risk-label">Confidence:</span>
+          <span class="risk-confidence">{{ formatConfidence(riskAssessment.confidenceLevel) }}</span>
+        </div>
+
+        <p-divider></p-divider>
+
+        <div *ngIf="riskAssessment.explanatoryReasoning" class="risk-reasoning">
+          <h4>Assessment Reasoning</h4>
+          <p>{{ riskAssessment.explanatoryReasoning }}</p>
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <div class="card-footer">
+          <small>
+            Completed: {{ formatDate(riskAssessment.completedAt) }} | 
+            Duration: {{ formatDuration(riskAssessment.assessmentDuration) }}
+          </small>
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- Identified Risks Card -->
+    <p-card *ngIf="riskAssessment.identifiedRisks && riskAssessment.identifiedRisks.length > 0" styleClass="risks-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Identified Risks ({{ riskAssessment.identifiedRisks.length }})</h3>
+        </div>
+      </ng-template>
+
+      <p-accordion [multiple]="true" styleClass="risks-accordion">
+        
+        <!-- Critical Risks -->
+        <p-accordionTab *ngIf="criticalRisks.length > 0" [header]="'Critical (' + criticalRisks.length + ')'">
+          <div class="risks-group">
+            <div *ngFor="let risk of criticalRisks" class="risk-item">
+              <div class="risk-header">
+                <p-tag 
+                  [value]="risk.severity" 
+                  [severity]="getRiskSeverity(risk.severity)"
+                  styleClass="risk-severity-tag">
+                </p-tag>
+                <span class="risk-title">{{ risk.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(risk.category)" 
+                  severity="info"
+                  styleClass="risk-category-tag">
+                </p-tag>
+              </div>
+              <p class="risk-description">{{ risk.description }}</p>
+              <div class="risk-meta">
+                <span class="risk-probability">
+                  <i class="pi pi-percentage"></i>
+                  Probability: {{ formatProbability(risk.probability) }}
+                </span>
+                <span class="risk-confidence">
+                  <i class="pi pi-chart-line"></i>
+                  Confidence: {{ formatConfidence(risk.confidence) }}
+                </span>
+                <span *ngIf="risk.potentialImpact" class="risk-impact">
+                  <i class="pi pi-exclamation-circle"></i>
+                  Impact: {{ risk.potentialImpact }}
+                </span>
+              </div>
+              <div *ngIf="risk.riskIndicators && risk.riskIndicators.length > 0" class="risk-indicators">
+                <strong>Risk Indicators:</strong>
+                <ul>
+                  <li *ngFor="let indicator of risk.riskIndicators">{{ indicator }}</li>
+                </ul>
+              </div>
+              <div *ngIf="risk.historicalOccurrences && risk.historicalOccurrences.length > 0" class="risk-history">
+                <strong>Historical Occurrences:</strong>
+                <ul>
+                  <li *ngFor="let occurrence of risk.historicalOccurrences">{{ occurrence }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Severe Risks -->
+        <p-accordionTab *ngIf="severeRisks.length > 0" [header]="'Severe (' + severeRisks.length + ')'">
+          <div class="risks-group">
+            <div *ngFor="let risk of severeRisks" class="risk-item">
+              <div class="risk-header">
+                <p-tag 
+                  [value]="risk.severity" 
+                  [severity]="getRiskSeverity(risk.severity)"
+                  styleClass="risk-severity-tag">
+                </p-tag>
+                <span class="risk-title">{{ risk.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(risk.category)" 
+                  severity="info"
+                  styleClass="risk-category-tag">
+                </p-tag>
+              </div>
+              <p class="risk-description">{{ risk.description }}</p>
+              <div class="risk-meta">
+                <span class="risk-probability">
+                  <i class="pi pi-percentage"></i>
+                  Probability: {{ formatProbability(risk.probability) }}
+                </span>
+                <span class="risk-confidence">
+                  <i class="pi pi-chart-line"></i>
+                  Confidence: {{ formatConfidence(risk.confidence) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Major Risks -->
+        <p-accordionTab *ngIf="majorRisks.length > 0" [header]="'Major (' + majorRisks.length + ')'">
+          <div class="risks-group">
+            <div *ngFor="let risk of majorRisks" class="risk-item">
+              <div class="risk-header">
+                <p-tag 
+                  [value]="risk.severity" 
+                  [severity]="getRiskSeverity(risk.severity)"
+                  styleClass="risk-severity-tag">
+                </p-tag>
+                <span class="risk-title">{{ risk.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(risk.category)" 
+                  severity="info"
+                  styleClass="risk-category-tag">
+                </p-tag>
+              </div>
+              <p class="risk-description">{{ risk.description }}</p>
+              <div class="risk-meta">
+                <span class="risk-probability">
+                  <i class="pi pi-percentage"></i>
+                  Probability: {{ formatProbability(risk.probability) }}
+                </span>
+                <span class="risk-confidence">
+                  <i class="pi pi-chart-line"></i>
+                  Confidence: {{ formatConfidence(risk.confidence) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Moderate Risks -->
+        <p-accordionTab *ngIf="moderateRisks.length > 0" [header]="'Moderate (' + moderateRisks.length + ')'">
+          <div class="risks-group">
+            <div *ngFor="let risk of moderateRisks" class="risk-item">
+              <div class="risk-header">
+                <p-tag 
+                  [value]="risk.severity" 
+                  [severity]="getRiskSeverity(risk.severity)"
+                  styleClass="risk-severity-tag">
+                </p-tag>
+                <span class="risk-title">{{ risk.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(risk.category)" 
+                  severity="info"
+                  styleClass="risk-category-tag">
+                </p-tag>
+              </div>
+              <p class="risk-description">{{ risk.description }}</p>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Minor Risks -->
+        <p-accordionTab *ngIf="minorRisks.length > 0" [header]="'Minor (' + minorRisks.length + ')'">
+          <div class="risks-group">
+            <div *ngFor="let risk of minorRisks" class="risk-item">
+              <div class="risk-header">
+                <p-tag 
+                  [value]="risk.severity" 
+                  [severity]="getRiskSeverity(risk.severity)"
+                  styleClass="risk-severity-tag">
+                </p-tag>
+                <span class="risk-title">{{ risk.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(risk.category)" 
+                  severity="info"
+                  styleClass="risk-category-tag">
+                </p-tag>
+              </div>
+              <p class="risk-description">{{ risk.description }}</p>
+            </div>
+          </div>
+        </p-accordionTab>
+
+      </p-accordion>
+    </p-card>
+
+    <!-- Mitigation Recommendations Card -->
+    <p-card *ngIf="riskAssessment.mitigationRecommendations && riskAssessment.mitigationRecommendations.length > 0" 
+            styleClass="mitigations-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Mitigation Recommendations ({{ riskAssessment.mitigationRecommendations.length }})</h3>
+        </div>
+      </ng-template>
+
+      <p-accordion [multiple]="true" styleClass="mitigations-accordion">
+        
+        <!-- High Priority Mitigations -->
+        <p-accordionTab *ngIf="highPriorityMitigations.length > 0" [header]="'High Priority (' + highPriorityMitigations.length + ')'">
+          <div class="mitigations-group">
+            <div *ngFor="let mitigation of highPriorityMitigations" class="mitigation-item">
+              <div class="mitigation-header">
+                <p-tag 
+                  [value]="mitigation.priority" 
+                  [severity]="getMitigationSeverity(mitigation.priority)"
+                  styleClass="mitigation-priority-tag">
+                </p-tag>
+                <span class="mitigation-title">{{ mitigation.title }}</span>
+                <p-tag 
+                  [value]="mitigation.type" 
+                  severity="info"
+                  styleClass="mitigation-type-tag">
+                </p-tag>
+              </div>
+              <p class="mitigation-description">{{ mitigation.description }}</p>
+              <div class="mitigation-meta">
+                <span class="mitigation-effectiveness">
+                  <i class="pi pi-check-circle"></i>
+                  Effectiveness: {{ formatEffectiveness(mitigation.expectedEffectiveness) }}
+                </span>
+                <span *ngIf="mitigation.estimatedEffort" class="mitigation-effort">
+                  <i class="pi pi-clock"></i>
+                  Effort: {{ mitigation.estimatedEffort }}
+                </span>
+              </div>
+              <div *ngIf="mitigation.implementationSteps && mitigation.implementationSteps.length > 0" 
+                   class="mitigation-steps">
+                <strong>Implementation Steps:</strong>
+                <ol>
+                  <li *ngFor="let step of mitigation.implementationSteps">{{ step }}</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Medium Priority Mitigations -->
+        <p-accordionTab *ngIf="mediumPriorityMitigations.length > 0" [header]="'Medium Priority (' + mediumPriorityMitigations.length + ')'">
+          <div class="mitigations-group">
+            <div *ngFor="let mitigation of mediumPriorityMitigations" class="mitigation-item">
+              <div class="mitigation-header">
+                <p-tag 
+                  [value]="mitigation.priority" 
+                  [severity]="getMitigationSeverity(mitigation.priority)"
+                  styleClass="mitigation-priority-tag">
+                </p-tag>
+                <span class="mitigation-title">{{ mitigation.title }}</span>
+                <p-tag 
+                  [value]="mitigation.type" 
+                  severity="info"
+                  styleClass="mitigation-type-tag">
+                </p-tag>
+              </div>
+              <p class="mitigation-description">{{ mitigation.description }}</p>
+              <div class="mitigation-meta">
+                <span class="mitigation-effectiveness">
+                  <i class="pi pi-check-circle"></i>
+                  Effectiveness: {{ formatEffectiveness(mitigation.expectedEffectiveness) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Low Priority Mitigations -->
+        <p-accordionTab *ngIf="lowPriorityMitigations.length > 0" [header]="'Low Priority (' + lowPriorityMitigations.length + ')'">
+          <div class="mitigations-group">
+            <div *ngFor="let mitigation of lowPriorityMitigations" class="mitigation-item">
+              <div class="mitigation-header">
+                <p-tag 
+                  [value]="mitigation.priority" 
+                  [severity]="getMitigationSeverity(mitigation.priority)"
+                  styleClass="mitigation-priority-tag">
+                </p-tag>
+                <span class="mitigation-title">{{ mitigation.title }}</span>
+                <p-tag 
+                  [value]="mitigation.type" 
+                  severity="info"
+                  styleClass="mitigation-type-tag">
+                </p-tag>
+              </div>
+              <p class="mitigation-description">{{ mitigation.description }}</p>
+            </div>
+          </div>
+        </p-accordionTab>
+
+      </p-accordion>
+    </p-card>
+
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!riskAssessment && !loading && !error" class="empty-state">
+    <i class="pi pi-shield empty-state-icon"></i>
+    <p class="empty-state-text">No risk assessment available</p>
+    <p class="empty-state-subtext">Click "Assess Risk" to evaluate deployment risks</p>
+  </div>
+</div>

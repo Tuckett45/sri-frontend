@@ -1,13 +1,20 @@
-﻿import { NgModule } from '@angular/core';
+﻿import { NgModule, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
+import { ServiceWorkerModule } from '@angular/service-worker';
+
+// NgRx
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
 
 import { AppComponent } from './app.component';
 import { ConfigurationInterceptor } from './interceptors/configuration.interceptor';
+import { AuthorizationInterceptor } from './interceptors/authorization.interceptor';
+import { MarketFilterInterceptor } from './interceptors/market-filter.interceptor';
 import { ConfigurationStatusComponent } from './components/configuration-status/configuration-status.component';
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -99,6 +106,8 @@ import { Magic8BallComponent } from './components/magic-8-ball/magic-8-ball.comp
 import { Magic8BallWidgetComponent } from './components/magic-8-ball-widget/magic-8-ball-widget.component';
 import { AuthService } from './services/auth.service';
 import { SecureAuthService } from './services/secure-auth.service';
+import { RoleBasedShowDirective } from './directives/role-based-show.directive';
+import { RoleBasedDisableDirective } from './directives/role-based-disable.directive';
 
 export const customCurrencyMaskConfig = {
   align: "left",
@@ -142,7 +151,9 @@ export const customCurrencyMaskConfig = {
     DailyReportModalComponent,
     AdminUserApprovalComponent,
     Magic8BallComponent,
-    Magic8BallWidgetComponent
+    Magic8BallWidgetComponent,
+    RoleBasedShowDirective,
+    RoleBasedDisableDirective
   ],
   imports: [
     NgxCurrencyDirective,
@@ -172,6 +183,16 @@ export const customCurrencyMaskConfig = {
     FormsModule,
     ReactiveFormsModule, 
     AppRoutingModule,
+    
+    // NgRx Store
+    StoreModule.forRoot({}, {
+      runtimeChecks: {
+        strictStateImmutability: true,
+        strictActionImmutability: true,
+      },
+    }),
+    EffectsModule.forRoot([]),
+    
     GalleriaModule,
     MatDialogModule,
     MatAutocompleteModule,
@@ -209,6 +230,12 @@ export const customCurrencyMaskConfig = {
     DividerModule,
     ChartComponent,
     ConfigurationStatusComponent
+    
+    // Service Worker for PWA support - Add manually after build
+    // ServiceWorkerModule.register('ngsw-worker.js', {
+    //   enabled: !isDevMode(),
+    //   registrationStrategy: 'registerWhenStable:30000'
+    // })
   ],
   providers: [provideCharts(withDefaultRegisterables()),
     provideEnvironmentNgxCurrency({
@@ -232,6 +259,16 @@ export const customCurrencyMaskConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ConfigurationInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthorizationInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: MarketFilterInterceptor,
       multi: true
     }
   ],

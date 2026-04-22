@@ -1,0 +1,321 @@
+.job-completion-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #fafafa;
+  min-height: 100vh;
+
+  // Header
+  &__header {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  }
+
+  &__header-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+    font-weight: 600;
+  }
+
+  &__job-info {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+
+  // Delay Warning
+  &__delay-warning {
+    background-color: #fff3e0;
+    border-left: 4px solid #ff9800;
+  }
+
+  &__delay-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+
+    mat-icon {
+      flex-shrink: 0;
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  &__delay-text {
+    flex: 1;
+
+    strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #e65100;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #424242;
+      line-height: 1.5;
+    }
+  }
+
+  // Form
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &__field {
+    width: 100%;
+
+    &--error {
+      .mat-form-field-outline {
+        color: #f44336 !important;
+      }
+    }
+  }
+
+  &__delay-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    background-color: #fff3e0;
+    border-radius: 8px;
+    border-left: 4px solid #ff9800;
+  }
+
+  // Photos Section
+  &__photos {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #212121;
+
+    mat-icon {
+      color: #1976d2;
+    }
+  }
+
+  &__section-description {
+    margin: 0;
+    font-size: 14px;
+    color: #757575;
+    line-height: 1.5;
+  }
+
+  // Actions
+  &__actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  &__cancel-button {
+    flex: 1;
+    height: 48px;
+    font-size: 16px;
+  }
+
+  &__submit-button {
+    flex: 2;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+
+  &__spinner {
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  // Help Text
+  &__help {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background-color: #e3f2fd;
+    border-radius: 12px;
+    align-items: flex-start;
+
+    mat-icon {
+      color: #1976d2;
+      flex-shrink: 0;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #424242;
+      line-height: 1.5;
+    }
+  }
+}
+
+// Mobile Optimizations
+@media (max-width: 767px) {
+  .job-completion-form {
+    padding: 16px;
+    gap: 16px;
+
+    &__header {
+      padding: 20px;
+    }
+
+    &__header-icon {
+      font-size: 56px;
+      width: 56px;
+      height: 56px;
+    }
+
+    &__title {
+      font-size: 24px;
+    }
+
+    &__job-info {
+      font-size: 13px;
+    }
+
+    &__form {
+      padding: 20px;
+      gap: 16px;
+    }
+
+    &__section-title {
+      font-size: 16px;
+    }
+
+    &__section-description {
+      font-size: 13px;
+    }
+
+    &__actions {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    &__cancel-button,
+    &__submit-button {
+      flex: 1;
+      width: 100%;
+    }
+
+    &__delay-content {
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+    }
+
+    &__delay-text {
+      strong {
+        font-size: 15px;
+      }
+
+      p {
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+// Tablet Optimizations
+@media (min-width: 768px) and (max-width: 1023px) {
+  .job-completion-form {
+    padding: 24px;
+    gap: 24px;
+
+    &__form {
+      padding: 28px;
+    }
+  }
+}
+
+// Form field customizations
+::ng-deep {
+  .job-completion-form {
+    .mat-form-field-appearance-outline {
+      .mat-form-field-outline {
+        color: rgba(0, 0, 0, 0.12);
+      }
+
+      &.mat-focused .mat-form-field-outline-thick {
+        color: #1976d2;
+      }
+
+      &.mat-form-field-invalid .mat-form-field-outline-thick {
+        color: #f44336;
+      }
+    }
+
+    .mat-form-field-label {
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .mat-focused .mat-form-field-label {
+      color: #1976d2;
+    }
+
+    .mat-form-field-invalid .mat-form-field-label {
+      color: #f44336;
+    }
+
+    textarea.mat-input-element {
+      resize: vertical;
+      min-height: 100px;
+    }
+  }
+}
+
+// Loading state
+.job-completion-form__submit-button {
+  &[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Touch target optimization
+@media (hover: none) and (pointer: coarse) {
+  .job-completion-form {
+    &__cancel-button,
+    &__submit-button {
+      min-height: 48px;
+      touch-action: manipulation;
+    }
+  }
+}

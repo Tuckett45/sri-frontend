@@ -1,0 +1,14 @@
+# ATLAS Interceptors Directory
+
+This directory contains HTTP interceptors for ATLAS API requests.
+
+Interceptors to be implemented:
+- atlas-auth.interceptor.ts - Automatically attaches authentication tokens and headers
+  - Adds JWT Bearer token or API key
+  - Adds ATLAS-specific headers (API version, client ID)
+  - Handles 401 Unauthorized with token refresh and retry
+  - Handles 403 Forbidden with appropriate error messages
+  - Enforces HTTPS for all ATLAS API communications
+  - Logs all requests and responses for debugging
+
+Interceptors are registered in the ATLAS module providers.

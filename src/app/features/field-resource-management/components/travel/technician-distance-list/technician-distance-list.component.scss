@@ -1,0 +1,246 @@
+@import '../../../styles/frm-variables';
+
+:host {
+  display: block;
+}
+
+.distance-list {
+  display: flex;
+  flex-direction: column;
+  gap: $frm-spacing-md;
+}
+
+.distance-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $frm-spacing-xl;
+  color: $frm-text-secondary;
+}
+
+.distance-error {
+  display: flex;
+  align-items: center;
+  gap: $frm-spacing-sm;
+  padding: $frm-spacing-md;
+  color: $frm-error;
+  background: rgba($frm-error, 0.08);
+  border-radius: $frm-border-radius-md;
+}
+
+// Header
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: $frm-spacing-sm;
+    margin: 0;
+    font-size: $frm-font-size-md;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
+
+    mat-icon {
+      color: $frm-primary;
+    }
+  }
+
+  .count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 $frm-spacing-xs;
+    border-radius: $frm-border-radius-round;
+    background: $frm-primary;
+    color: white;
+    font-size: $frm-font-size-xs;
+    font-weight: $frm-font-weight-medium;
+  }
+}
+
+// Filter indicator
+.filter-indicator {
+  display: flex;
+  align-items: center;
+  gap: $frm-spacing-xs;
+  padding: $frm-spacing-xs $frm-spacing-sm;
+  background: rgba($frm-info, 0.08);
+  border-radius: $frm-border-radius-md;
+  font-size: $frm-font-size-sm;
+  color: $frm-info-dark;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $frm-spacing-xxl;
+  color: $frm-text-secondary;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: $frm-spacing-sm;
+    color: $frm-gray-400;
+  }
+}
+
+// Table
+.table-container {
+  overflow-x: auto;
+  border-radius: $frm-border-radius-md;
+  border: 1px solid $frm-border-light;
+
+  table {
+    width: 100%;
+  }
+
+  th {
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-secondary;
+    font-size: $frm-font-size-sm;
+  }
+
+  td {
+    font-size: $frm-font-size-base;
+  }
+
+  tr.recommended {
+    background: rgba($frm-success, 0.04);
+  }
+
+  tr.not-eligible {
+    opacity: 0.6;
+  }
+}
+
+// Rank Badge
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: $frm-border-radius-round;
+  background: $frm-gray-200;
+  color: $frm-text-secondary;
+  font-size: $frm-font-size-sm;
+  font-weight: $frm-font-weight-medium;
+
+  &.recommended {
+    background: $frm-success;
+    color: white;
+  }
+}
+
+// Technician Info
+.technician-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .technician-name {
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
+  }
+}
+
+.recommended-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: $frm-font-size-xs;
+  color: $frm-success-dark;
+  font-weight: $frm-font-weight-medium;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: $frm-warning;
+  }
+}
+
+// Distance & Time
+.distance-value {
+  font-weight: $frm-font-weight-medium;
+  font-family: $frm-font-family-mono;
+  color: $frm-text-primary;
+}
+
+.driving-time {
+  color: $frm-text-secondary;
+  font-size: $frm-font-size-sm;
+}
+
+// Travel Status
+.travel-status {
+  display: inline-flex;
+  align-items: center;
+  gap: $frm-spacing-xs;
+  font-size: $frm-font-size-sm;
+  font-weight: $frm-font-weight-medium;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &.travel-willing {
+    color: $frm-success;
+  }
+
+  &.travel-not-willing {
+    color: $frm-text-secondary;
+  }
+}
+
+// Per Diem
+.per-diem-amount {
+  font-weight: $frm-font-weight-medium;
+  color: $frm-primary;
+}
+
+.per-diem-label {
+  display: block;
+  font-size: $frm-font-size-xs;
+  color: $frm-success;
+}
+
+.per-diem-not-eligible {
+  font-size: $frm-font-size-sm;
+  color: $frm-text-hint;
+}
+
+// Per Diem Info
+.per-diem-info {
+  display: flex;
+  align-items: center;
+  gap: $frm-spacing-xs;
+  padding: $frm-spacing-sm;
+  background: $frm-gray-50;
+  border-radius: $frm-border-radius-md;
+  font-size: $frm-font-size-sm;
+  color: $frm-text-secondary;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: $frm-info;
+  }
+}

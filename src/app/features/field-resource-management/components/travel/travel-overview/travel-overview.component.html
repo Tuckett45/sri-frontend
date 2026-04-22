@@ -1,0 +1,220 @@
+<div class="travel-dashboard">
+  <div class="dashboard-hero">
+    <div class="hero-content">
+      <div class="hero-icon"><mat-icon>flight</mat-icon></div>
+      <div class="hero-text">
+        <h1>Travel Management</h1>
+        <p class="hero-subtitle">Manage technician travel profiles, home addresses, and distance calculations</p>
+      </div>
+    </div>
+  </div>
+  <mat-progress-bar *ngIf="loading$ | async" mode="indeterminate" color="primary"></mat-progress-bar>
+  <div class="error-card" *ngIf="error$ | async as error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+  </div>
+  <ng-container *ngIf="stats$ | async as stats">
+    <div class="kpi-hero-grid" *ngIf="stats.total > 0">
+      <div class="kpi-hero-card primary-card">
+        <div class="kpi-hero-header"><mat-icon class="kpi-hero-icon">people</mat-icon></div>
+        <div class="kpi-hero-value">{{ stats.total }}</div>
+        <div class="kpi-hero-label">Total Profiles</div>
+        <div class="kpi-hero-footer">All registered travel profiles</div>
+      </div>
+      <div class="kpi-hero-card success-card">
+        <div class="kpi-hero-header">
+          <mat-icon class="kpi-hero-icon">flight_takeoff</mat-icon>
+          <span class="kpi-trend positive"><mat-icon>trending_up</mat-icon>{{ stats.willingToTravelPercentage }}%</span>
+        </div>
+        <div class="kpi-hero-value">{{ stats.willingToTravel }}</div>
+        <div class="kpi-hero-label">Willing to Travel</div>
+        <div class="kpi-hero-footer">{{ stats.notWillingToTravel }} not willing</div>
+      </div>
+      <div class="kpi-hero-card accent-card">
+        <div class="kpi-hero-header">
+          <mat-icon class="kpi-hero-icon">location_on</mat-icon>
+          <span class="kpi-trend positive"><mat-icon>check_circle</mat-icon>{{ stats.geocodedPercentage }}%</span>
+        </div>
+        <div class="kpi-hero-value">{{ stats.byGeocodingStatus['success'] || 0 }}</div>
+        <div class="kpi-hero-label">Geocoded</div>
+        <div class="kpi-hero-footer">Addresses verified with coordinates</div>
+      </div>
+      <div class="kpi-hero-card" [ngClass]="stats.needingGeocoding > 0 ? 'warn-card' : 'success-card'">
+        <div class="kpi-hero-header">
+          <mat-icon class="kpi-hero-icon">{{ stats.needingGeocoding > 0 ? 'warning' : 'check_circle' }}</mat-icon>
+        </div>
+        <div class="kpi-hero-value">{{ stats.needingGeocoding }}</div>
+        <div class="kpi-hero-label">Needs Geocoding</div>
+        <div class="kpi-hero-footer">{{ stats.byGeocodingStatus['failed'] || 0 }} failed</div>
+      </div>
+    </div>
+  </ng-container>
+  <div class="tab-container">
+    <mat-tab-group animationDuration="200ms">
+      <mat-tab>
+        <ng-template mat-tab-label><mat-icon class="tab-icon">person_pin</mat-icon>Travel Profiles</ng-template>
+        <ng-template matTabContent>
+          <div class="filter-section">
+            <div class="filter-row">
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Search by ID, address, or city</mat-label>
+                <mat-icon matPrefix>search</mat-icon>
+                <input matInput [value]="searchTerm" (input)="onSearchChange($any($event.target).value)">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Filter by Status</mat-label>
+                <mat-select [value]="statusFilter" (selectionChange)="onStatusFilter($event.value)">
+                  <mat-option value="">All Profiles</mat-option>
+                  <mat-option value="willing">Willing to Travel</mat-option>
+                  <mat-option value="not-willing">Not Willing</mat-option>
+                  <mat-option value="geocoded">Geocoded</mat-option>
+                  <mat-option value="needs-geocoding">Needs Geocoding</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button mat-stroked-button class="clear-filters-btn" [disabled]="!hasActiveFilters" (click)="clearFilters()">
+                <mat-icon>filter_list_off</mat-icon> Clear Filters
+              </button>
+              <span class="filter-spacer"></span>
+              <button mat-raised-button color="primary" class="create-profile-btn" (click)="openCreateDialog()">
+                <mat-icon>person_add</mat-icon> Create Profile
+              </button>
+            </div>
+          </div>
+          <div class="table-section">
+            <table mat-table [dataSource]="(filteredProfiles$ | async) || []" class="profiles-table">
+              <ng-container matColumnDef="technicianId">
+                <th mat-header-cell *matHeaderCellDef>Technician ID</th>
+                <td mat-cell *matCellDef="let row"><span class="tech-id">{{ row.technicianId }}</span></td>
+              </ng-container>
+              <ng-container matColumnDef="address">
+                <th mat-header-cell *matHeaderCellDef>Home Address</th>
+                <td mat-cell *matCellDef="let row">{{ row.address }}</td>
+              </ng-container>
+              <ng-container matColumnDef="city">
+                <th mat-header-cell *matHeaderCellDef>City / State</th>
+                <td mat-cell *matCellDef="let row">{{ row.city }}</td>
+              </ng-container>
+              <ng-container matColumnDef="willingToTravel">
+                <th mat-header-cell *matHeaderCellDef>Travel Willing</th>
+                <td mat-cell *matCellDef="let row">
+                  <mat-slide-toggle
+                    [checked]="row.willingToTravel"
+                    (change)="toggleTravelFlag(row)"
+                    (click)="$event.stopPropagation()"
+                    color="primary"
+                    aria-label="Toggle travel willingness">
+                  </mat-slide-toggle>
+                  <span class="toggle-label">{{ row.willingToTravel ? 'Yes' : 'No' }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="geocodingStatus">
+                <th mat-header-cell *matHeaderCellDef>Geocoding</th>
+                <td mat-cell *matCellDef="let row">
+                  <span class="status-chip" [ngClass]="row.geocodingStatus">
+                    <mat-icon class="chip-icon" *ngIf="row.geocodingStatus === 'success'">location_on</mat-icon>
+                    <mat-icon class="chip-icon" *ngIf="row.geocodingStatus === 'not-geocoded'">location_off</mat-icon>
+                    <mat-icon class="chip-icon" *ngIf="row.geocodingStatus === 'failed'">error</mat-icon>
+                    <mat-icon class="chip-icon" *ngIf="row.geocodingStatus === 'pending'">hourglass_empty</mat-icon>
+                    {{ row.geocodingStatus === 'success' ? 'Verified' : row.geocodingStatus === 'not-geocoded' ? 'Pending' : row.geocodingStatus === 'failed' ? 'Failed' : 'In Progress' }}
+                  </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let row">
+                  <button mat-icon-button class="actions-edit-btn" matTooltip="Edit profile" (click)="openProfileDialog(row); $event.stopPropagation()">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row" (click)="openProfileDialog(row)"></tr>
+            </table>
+            <div class="empty-state" *ngIf="(filteredProfiles$ | async)?.length === 0">
+              <mat-icon>person_off</mat-icon>
+              <p>No travel profiles match your filters</p>
+            </div>
+          </div>
+        </ng-template>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label><mat-icon class="tab-icon">attach_money</mat-icon>Per Diem &amp; Config</ng-template>
+        <ng-template matTabContent>
+          <div class="config-section">
+            <div class="success-banner" *ngIf="configSaved">
+              <mat-icon>check_circle</mat-icon>
+              <span>Configuration saved successfully</span>
+            </div>
+            <div class="config-card" *ngIf="perDiemConfig$ | async as config">
+              <div class="card-header">
+                <mat-icon class="header-icon">settings</mat-icon>
+                <h3 class="card-title">Per Diem Configuration</h3>
+                <span class="spacer"></span>
+                <button mat-stroked-button color="primary" *ngIf="!editingConfig" (click)="startEditConfig()">
+                  <mat-icon>edit</mat-icon> Edit
+                </button>
+              </div>
+              <div class="card-content" *ngIf="!editingConfig">
+                <div class="config-grid">
+                  <div class="config-item">
+                    <div class="config-label">Minimum Distance (miles)</div>
+                    <div class="config-value">{{ config.minimumDistanceMiles }}</div>
+                    <div class="config-desc">Minimum distance for per diem eligibility</div>
+                  </div>
+                  <div class="config-item">
+                    <div class="config-label">Mileage Rate</div>
+                    <div class="config-value">${{ config.ratePerMile }}/mi</div>
+                    <div class="config-desc">IRS standard mileage rate</div>
+                  </div>
+                  <div class="config-item">
+                    <div class="config-label">Flat Rate</div>
+                    <div class="config-value">{{ config.flatRateAmount ? ('$' + config.flatRateAmount) : 'Not Set' }}</div>
+                    <div class="config-desc">Optional flat per diem amount</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-content config-form" *ngIf="editingConfig">
+                <form [formGroup]="configForm">
+                  <div class="form-grid">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Minimum Distance (miles)</mat-label>
+                      <input matInput type="number" formControlName="minimumDistanceMiles">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Rate Per Mile ($)</mat-label>
+                      <input matInput type="number" step="0.001" formControlName="ratePerMile">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Flat Rate Amount ($)</mat-label>
+                      <input matInput type="number" formControlName="flatRateAmount">
+                    </mat-form-field>
+                  </div>
+                  <div class="form-actions">
+                    <button mat-stroked-button color="warn" (click)="cancelEditConfig()">Cancel</button>
+                    <button mat-raised-button color="primary" [disabled]="!configForm.valid" (click)="saveConfig()">
+                      <mat-icon>save</mat-icon> Save Configuration
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="config-card">
+              <div class="card-header">
+                <mat-icon class="header-icon">info</mat-icon>
+                <h3 class="card-title">Travel Policy Summary</h3>
+              </div>
+              <div class="card-content">
+                <div class="policy-list">
+                  <div class="policy-item"><mat-icon>check_circle</mat-icon><span>Technicians must opt-in to travel assignments</span></div>
+                  <div class="policy-item"><mat-icon>check_circle</mat-icon><span>Home addresses must be geocoded for distance calculations</span></div>
+                  <div class="policy-item"><mat-icon>check_circle</mat-icon><span>Per diem applies when job distance exceeds minimum miles from home</span></div>
+                  <div class="policy-item"><mat-icon>check_circle</mat-icon><span>Mileage reimbursement at configured rate per mile</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

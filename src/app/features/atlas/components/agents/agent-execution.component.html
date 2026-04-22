@@ -1,0 +1,236 @@
+<div class="agent-execution-container">
+  <!-- Header -->
+  <div class="execution-header">
+    <div class="header-left">
+      <button 
+        pButton 
+        icon="pi pi-arrow-left" 
+        class="p-button-text"
+        (click)="onBack()"
+        pTooltip="Back to Agent Details">
+      </button>
+      <h2>Execute Agent: {{ agent?.agentName || agent?.agentId || 'Agent' }}</h2>
+    </div>
+  </div>
+
+  <!-- Warning if agent is inactive -->
+  <p-message 
+    *ngIf="!isAgentActive()"
+    severity="warn" 
+    text="This agent is currently inactive. Execution may not be available."
+    styleClass="agent-inactive-warning">
+  </p-message>
+
+  <div class="execution-content">
+    <!-- Execution Form -->
+    <p-card header="Agent Execution" styleClass="execution-form-card">
+      <form [formGroup]="executionForm" (ngSubmit)="onExecute()">
+        <div class="form-field">
+          <label for="inputJson">Input Data (JSON) *</label>
+          <textarea 
+            id="inputJson"
+            pInputTextarea 
+            formControlName="inputJson"
+            rows="10"
+            placeholder='{"key": "value"}'
+            [class.ng-invalid]="executionForm.get('inputJson')?.invalid && executionForm.get('inputJson')?.touched">
+          </textarea>
+          <small 
+            *ngIf="executionForm.get('inputJson')?.invalid && executionForm.get('inputJson')?.touched"
+            class="p-error">
+            Input data is required
+          </small>
+          <small class="field-hint">
+            Enter the input data for the agent in JSON format
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="version">Agent Version (Optional)</label>
+          <input 
+            id="version"
+            type="text" 
+            pInputText 
+            formControlName="version"
+            placeholder="Leave empty to use latest version" />
+          <small class="field-hint">
+            Specify a version or leave empty to use the latest version
+          </small>
+        </div>
+
+        <div class="form-actions">
+          <button 
+            pButton 
+            type="button"
+            icon="pi pi-file" 
+            label="Load Example" 
+            class="p-button-outlined"
+            (click)="onLoadExample()"
+            [disabled]="executing"
+            pTooltip="Load example input data">
+          </button>
+          <button 
+            pButton 
+            type="submit"
+            icon="pi pi-play" 
+            label="Execute Agent" 
+            class="p-button-success"
+            [disabled]="!isFormValid() || !isAgentActive()"
+            [loading]="executing">
+          </button>
+        </div>
+      </form>
+
+      <!-- Execution Error -->
+      <p-message 
+        *ngIf="executionError"
+        severity="error" 
+        [text]="executionError"
+        styleClass="execution-error">
+      </p-message>
+
+      <!-- Executing State -->
+      <div *ngIf="executing" class="executing-state">
+        <p-progressSpinner [style]="{ width: '50px', height: '50px' }"></p-progressSpinner>
+        <p>Executing agent...</p>
+      </div>
+    </p-card>
+
+    <!-- Execution Results -->
+    <div *ngIf="lastExecution && !executing" class="execution-results">
+      <p-card styleClass="results-card">
+        <ng-template pTemplate="header">
+          <div class="results-header">
+            <h3>Execution Results</h3>
+            <button 
+              pButton 
+              icon="pi pi-times" 
+              label="Clear" 
+              class="p-button-text p-button-sm"
+              (click)="onClearResults()"
+              pTooltip="Clear results">
+            </button>
+          </div>
+        </ng-template>
+
+        <!-- Execution Status -->
+        <div class="result-section">
+          <h4>Status</h4>
+          <div class="status-info">
+            <p-tag 
+              [value]="lastExecution.status" 
+              [severity]="getStatusSeverity(lastExecution.status)"
+              [icon]="getStatusIcon(lastExecution.status)"
+              styleClass="large-tag">
+            </p-tag>
+            <div class="status-details">
+              <div class="status-item">
+                <label>Confidence Score</label>
+                <span class="value">{{ formatConfidence(lastExecution.confidenceScore) }}</span>
+              </div>
+              <div class="status-item">
+                <label>Execution Duration</label>
+                <span class="value">{{ lastExecution.executionDuration }}</span>
+              </div>
+              <div class="status-item">
+                <label>Timestamp</label>
+                <span class="value">{{ formatDate(lastExecution.timestamp) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p-divider></p-divider>
+
+        <!-- Recommendation -->
+        <div class="result-section">
+          <h4>Recommendation</h4>
+          <pre class="json-display">{{ formatJson(lastExecution.recommendation) }}</pre>
+        </div>
+
+        <!-- Reasoning -->
+        <div class="result-section" *ngIf="lastExecution.reasoning">
+          <h4>Reasoning</h4>
+          <p class="reasoning-text">{{ lastExecution.reasoning }}</p>
+        </div>
+
+        <p-divider *ngIf="lastExecution.reasoning"></p-divider>
+
+        <!-- Decision Factors -->
+        <div class="result-section" *ngIf="getDecisionFactors().length > 0">
+          <h4>Decision Factors</h4>
+          <div class="factors-list">
+            <div *ngFor="let factor of getDecisionFactors()" class="factor-item">
+              <pre class="json-display">{{ formatJson(factor) }}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Importance -->
+        <div class="result-section" *ngIf="getFeatureImportance().length > 0">
+          <h4>Feature Importance</h4>
+          <div class="feature-importance-list">
+            <div *ngFor="let item of getFeatureImportance()" class="importance-item">
+              <span class="feature-name">{{ item.feature }}</span>
+              <div class="importance-bar-container">
+                <div 
+                  class="importance-bar" 
+                  [style.width.%]="item.importance * 100">
+                </div>
+              </div>
+              <span class="importance-value">{{ formatConfidence(item.importance) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Sources -->
+        <div class="result-section" *ngIf="getDataSources().length > 0">
+          <h4>Data Sources</h4>
+          <div class="sources-list">
+            <div *ngFor="let source of getDataSources()" class="source-item">
+              <pre class="json-display">{{ formatJson(source) }}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metadata -->
+        <div class="result-section">
+          <h4>Metadata</h4>
+          <div class="metadata-grid">
+            <div class="metadata-item" *ngIf="lastExecution.recommendationId">
+              <label>Recommendation ID</label>
+              <span class="value">{{ lastExecution.recommendationId }}</span>
+            </div>
+            <div class="metadata-item" *ngIf="lastExecution.agentId">
+              <label>Agent ID</label>
+              <span class="value">{{ lastExecution.agentId }}</span>
+            </div>
+            <div class="metadata-item" *ngIf="lastExecution.agentVersion">
+              <label>Agent Version</label>
+              <span class="value version-badge">{{ lastExecution.agentVersion }}</span>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Recent Executions -->
+    <div *ngIf="recentExecutions.length > 1" class="recent-executions">
+      <p-panel header="Recent Executions" [toggleable]="true" [collapsed]="true">
+        <div class="executions-list">
+          <div *ngFor="let execution of recentExecutions.slice(1, 6)" class="execution-item">
+            <div class="execution-summary">
+              <p-tag 
+                [value]="execution.status" 
+                [severity]="getStatusSeverity(execution.status)"
+                [icon]="getStatusIcon(execution.status)">
+              </p-tag>
+              <span class="execution-time">{{ formatDate(execution.timestamp) }}</span>
+              <span class="execution-confidence">{{ formatConfidence(execution.confidenceScore) }}</span>
+            </div>
+          </div>
+        </div>
+      </p-panel>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+<!-- Query Builder Page Template -->
+<div class="query-builder-page">
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="pi pi-database"></i>
+      Query Builder
+    </h1>
+    <p class="page-description">
+      Build and execute dynamic queries, manage templates, and export results
+    </p>
+  </div>
+
+  <div class="page-content">
+    <p-tabView styleClass="query-builder-tabs">
+      <!-- Query Builder Tab -->
+      <p-tabPanel header="Build Query" leftIcon="pi pi-wrench">
+        <div class="tab-content">
+          <app-query-builder></app-query-builder>
+        </div>
+      </p-tabPanel>
+
+      <!-- Query Results Tab -->
+      <p-tabPanel header="Results" leftIcon="pi pi-table">
+        <div class="tab-content">
+          <app-query-results></app-query-results>
+        </div>
+      </p-tabPanel>
+
+      <!-- Templates Tab -->
+      <p-tabPanel header="Templates" leftIcon="pi pi-bookmark">
+        <div class="tab-content">
+          <app-query-template></app-query-template>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>

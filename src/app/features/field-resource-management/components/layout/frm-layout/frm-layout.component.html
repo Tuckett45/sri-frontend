@@ -1,0 +1,64 @@
+<div class="frm-layout">
+  <!-- Sidebar -->
+  <aside 
+    class="frm-sidebar" 
+    [class.open]="sidebarOpen$ | async"
+    role="navigation"
+    aria-label="Field Resource Management Navigation">
+    
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <h2 class="sidebar-title">Field Resources</h2>
+      <button 
+        mat-icon-button 
+        class="sidebar-toggle"
+        (click)="toggleSidebar()"
+        aria-label="Toggle sidebar">
+        <mat-icon>menu</mat-icon>
+      </button>
+    </div>
+
+    <!-- Navigation Menu -->
+    <app-frm-nav-menu (navigationClick)="closeSidebar()"></app-frm-nav-menu>
+  </aside>
+
+  <!-- Sidebar Overlay (for mobile) -->
+  <div 
+    class="sidebar-overlay" 
+    [class.visible]="sidebarOpen$ | async"
+    (click)="closeSidebar()"
+    aria-hidden="true">
+  </div>
+
+  <!-- Main Content Area -->
+  <main class="frm-main">
+    <!-- Top Bar -->
+    <div class="frm-topbar">
+      <!-- Menu Toggle Button (mobile) -->
+      <button 
+        mat-icon-button 
+        class="menu-toggle"
+        (click)="toggleSidebar()"
+        aria-label="Open navigation menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <!-- Breadcrumb Navigation -->
+      <app-breadcrumb></app-breadcrumb>
+
+      <!-- Spacer -->
+      <span class="spacer"></span>
+
+      <!-- Offline Indicator -->
+      <app-offline-indicator></app-offline-indicator>
+
+      <!-- Notification Panel -->
+      <app-notification-panel></app-notification-panel>
+    </div>
+
+    <!-- Content Area -->
+    <div class="frm-content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

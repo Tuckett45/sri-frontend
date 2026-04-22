@@ -1,0 +1,268 @@
+<div class="user-management-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>User Management</h1>
+    <button class="btn btn-primary" (click)="openCreateUserModal()">
+      <i class="icon-plus"></i> Create User
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <!-- Pending Approvals Section -->
+  <div *ngIf="pendingApprovals.length > 0" class="pending-approvals-section">
+    <h2>Pending User Approvals ({{ pendingApprovals.length }})</h2>
+    <div class="pending-approvals-list">
+      <div *ngFor="let user of pendingApprovals" class="pending-approval-card">
+        <div class="user-info">
+          <div class="user-name">{{ user.name }}</div>
+          <div class="user-email">{{ user.email }}</div>
+          <div class="user-details">
+            <span class="badge">{{ getRoleLabel(user.role) }}</span>
+            <span class="badge">{{ user.market }}</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-sm btn-success" (click)="approvePendingUser(user)">
+            Approve
+          </button>
+          <button class="btn btn-sm btn-secondary" (click)="openEditUserModal(user)">
+            Review
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label for="search">Search</label>
+      <input
+        id="search"
+        type="text"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="applyFilters()"
+        placeholder="Search by name or email..."
+        class="form-control"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label for="role-filter">Role</label>
+      <select
+        id="role-filter"
+        [(ngModel)]="selectedRole"
+        (ngModelChange)="applyFilters()"
+        class="form-control"
+      >
+        <option *ngFor="let role of roleOptions" [value]="role.value">
+          {{ role.label }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="market-filter">Market</label>
+      <select
+        id="market-filter"
+        [(ngModel)]="selectedMarket"
+        (ngModelChange)="applyFilters()"
+        class="form-control"
+      >
+        <option value="all">All Markets</option>
+        <option *ngFor="let market of availableMarkets" [value]="market">
+          {{ market }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="approval-filter">Status</label>
+      <select
+        id="approval-filter"
+        [(ngModel)]="selectedApprovalStatus"
+        (ngModelChange)="applyFilters()"
+        class="form-control"
+      >
+        <option value="all">All Status</option>
+        <option value="approved">Approved</option>
+        <option value="pending">Pending Approval</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading users...</p>
+  </div>
+
+  <!-- User List -->
+  <div *ngIf="!loading && filteredUsers.length > 0" class="user-list">
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Market</th>
+          <th>Company</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of filteredUsers">
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <span class="badge badge-role">{{ getRoleLabel(user.role) }}</span>
+          </td>
+          <td>{{ user.market }}</td>
+          <td>{{ user.company }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.badge-success]="user.isApproved"
+              [class.badge-warning]="!user.isApproved"
+            >
+              {{ user.isApproved ? 'Approved' : 'Pending' }}
+            </span>
+          </td>
+          <td>{{ formatDate(user.createdDate) }}</td>
+          <td>
+            <div class="action-buttons">
+              <button
+                class="btn btn-sm btn-secondary"
+                (click)="openEditUserModal(user)"
+                title="Edit User"
+              >
+                <i class="icon-edit"></i>
+              </button>
+              <button
+                class="btn btn-sm btn-info"
+                (click)="openPasswordResetModal(user)"
+                title="Reset Password"
+              >
+                <i class="icon-key"></i>
+              </button>
+              <button
+                class="btn btn-sm btn-danger"
+                (click)="openDeactivateModal(user)"
+                title="Deactivate User"
+              >
+                <i class="icon-ban"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredUsers.length === 0" class="empty-state">
+    <p>No users found matching the current filters.</p>
+  </div>
+</div>
+
+<!-- User Form Modal -->
+<div *ngIf="showUserModal" class="modal-overlay" (click)="closeUserModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ modalMode === 'create' ? 'Create User' : 'Edit User' }}</h2>
+      <button class="btn-close" (click)="closeUserModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <app-user-form
+        [mode]="modalMode"
+        [user]="selectedUser"
+        (formSubmit)="onUserFormSubmit($event)"
+        (formCancel)="closeUserModal()"
+      ></app-user-form>
+    </div>
+  </div>
+</div>
+
+<!-- Deactivate User Modal -->
+<div *ngIf="showDeactivateModal" class="modal-overlay" (click)="closeDeactivateModal()">
+  <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Deactivate User</h2>
+      <button class="btn-close" (click)="closeDeactivateModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to deactivate <strong>{{ userToDeactivate?.name }}</strong>?</p>
+      <div class="form-group">
+        <label for="deactivate-reason">Reason (required)</label>
+        <textarea
+          id="deactivate-reason"
+          [(ngModel)]="deactivateReason"
+          class="form-control"
+          rows="3"
+          placeholder="Enter reason for deactivation..."
+        ></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeDeactivateModal()">
+        Cancel
+      </button>
+      <button
+        class="btn btn-danger"
+        (click)="deactivateUser()"
+        [disabled]="processingDeactivate || !deactivateReason.trim()"
+      >
+        {{ processingDeactivate ? 'Deactivating...' : 'Deactivate' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Password Reset Modal -->
+<div *ngIf="showPasswordResetModal" class="modal-overlay" (click)="closePasswordResetModal()">
+  <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Reset Password</h2>
+      <button class="btn-close" (click)="closePasswordResetModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Reset password for <strong>{{ userForPasswordReset?.name }}</strong>?</p>
+      
+      <div *ngIf="!temporaryPassword">
+        <p class="info-text">A secure temporary password will be generated.</p>
+      </div>
+
+      <div *ngIf="temporaryPassword" class="password-result">
+        <div class="alert alert-success">
+          <p><strong>Temporary Password Generated:</strong></p>
+          <div class="password-display">
+            <code>{{ temporaryPassword }}</code>
+            <button class="btn btn-sm btn-secondary" (click)="copyPasswordToClipboard()">
+              Copy
+            </button>
+          </div>
+          <p class="info-text">Please provide this password to the user securely.</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closePasswordResetModal()">
+        {{ temporaryPassword ? 'Close' : 'Cancel' }}
+      </button>
+      <button
+        *ngIf="!temporaryPassword"
+        class="btn btn-primary"
+        (click)="resetPassword()"
+        [disabled]="processingPasswordReset"
+      >
+        {{ processingPasswordReset ? 'Generating...' : 'Generate Password' }}
+      </button>
+    </div>
+  </div>
+</div>

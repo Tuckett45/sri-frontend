@@ -1,0 +1,194 @@
+<div class="exception-list-container">
+  <div class="page-header">
+    <div class="header-content">
+      <div>
+        <h1>Exceptions</h1>
+        <p class="subtitle">Manage exception and waiver requests</p>
+      </div>
+      <p-button 
+        label="Request Exception" 
+        icon="pi pi-plus" 
+        (onClick)="onRequestException()"
+        styleClass="p-button-primary">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-container">
+    <div class="filter-group">
+      <label for="statusFilter">Status</label>
+      <p-dropdown 
+        id="statusFilter"
+        [options]="statusOptions" 
+        [(ngModel)]="selectedStatus"
+        (onChange)="onStatusFilterChange()"
+        placeholder="Select status"
+        [showClear]="true"
+        styleClass="filter-dropdown">
+      </p-dropdown>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+    <p>Loading exceptions...</p>
+  </div>
+
+  <!-- Error State -->
+  <p-message 
+    *ngIf="error && !loading" 
+    severity="error" 
+    [text]="error"
+    styleClass="error-message">
+  </p-message>
+  <div *ngIf="error && !loading" class="retry-container">
+    <p-button 
+      label="Retry" 
+      icon="pi pi-refresh" 
+      (onClick)="onRetry()"
+      styleClass="p-button-outlined">
+    </p-button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && exceptions.length === 0" class="empty-state">
+    <i class="pi pi-file"></i>
+    <h3>No Exceptions Found</h3>
+    <p>No exception requests match your current filters.</p>
+    <p-button 
+      label="Request Exception" 
+      icon="pi pi-plus" 
+      (onClick)="onRequestException()"
+      styleClass="p-button-outlined">
+    </p-button>
+  </div>
+
+  <!-- Exceptions Table -->
+  <div *ngIf="!loading && !error && exceptions.length > 0" class="table-container">
+    <p-table 
+      [value]="exceptions"
+      [paginator]="true"
+      [rows]="getRowsPerPage()"
+      [totalRecords]="getTotalRecords()"
+      [first]="getFirst()"
+      [lazy]="true"
+      (onLazyLoad)="onPageChange($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} exceptions"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="p-datatable-striped"
+      responsiveLayout="scroll">
+      
+      <!-- Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Exception ID</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Requested By</th>
+          <th>Requested At</th>
+          <th>Expires At</th>
+          <th>Justification</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+
+      <!-- Data Rows -->
+      <ng-template pTemplate="body" let-exception>
+        <tr [class.expired-row]="isExpired(exception)">
+          <!-- ID -->
+          <td>
+            <span class="exception-id" [pTooltip]="exception.id">
+              {{ exception.id.substring(0, 8) }}...
+            </span>
+          </td>
+
+          <!-- Type -->
+          <td>
+            <span class="exception-type">
+              {{ exception.exceptionType || 'N/A' }}
+            </span>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <p-tag 
+              [value]="formatStatusLabel(exception.status)" 
+              [severity]="getStatusSeverity(exception.status)">
+            </p-tag>
+            <i 
+              *ngIf="isExpired(exception)" 
+              class="pi pi-exclamation-triangle expired-icon"
+              pTooltip="This exception has expired"
+              tooltipPosition="top">
+            </i>
+          </td>
+
+          <!-- Requested By -->
+          <td>
+            {{ exception.requestedBy }}
+          </td>
+
+          <!-- Requested At -->
+          <td>
+            {{ formatDate(exception.requestedAt) }}
+          </td>
+
+          <!-- Expires At -->
+          <td>
+            <span [class.expired-date]="isExpired(exception)">
+              {{ formatDate(exception.expiresAt) }}
+            </span>
+          </td>
+
+          <!-- Justification -->
+          <td>
+            <span 
+              [pTooltip]="exception.justification || 'No justification provided'" 
+              tooltipPosition="top"
+              class="justification-text">
+              {{ exception.justification ? 
+                (exception.justification.length > 50 ? 
+                  exception.justification.substring(0, 50) + '...' : 
+                  exception.justification) : 
+                'N/A' }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <div class="action-buttons">
+              <p-button 
+                icon="pi pi-eye" 
+                (onClick)="onViewException(exception)"
+                styleClass="p-button-text p-button-sm"
+                pTooltip="View details"
+                tooltipPosition="top">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty Message -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center">
+            No exceptions found.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Request Exception Dialog -->
+  <app-exception-request
+    *ngIf="showRequestDialog"
+    [visible]="showRequestDialog"
+    [deploymentId]="deploymentId"
+    (close)="onCloseRequestDialog()"
+    (exceptionRequested)="onExceptionRequested()">
+  </app-exception-request>
+</div>

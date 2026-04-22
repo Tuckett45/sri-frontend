@@ -1,0 +1,619 @@
+@import '../../../styles/frm-styles';
+
+.technician-list-container {
+  padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .page-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+      color: #424242;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #9e9e9e;
+      margin-left: 8px;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+
+    button {
+      border-radius: 20px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    .header-title {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+
+      .page-subtitle {
+        margin-left: 0;
+      }
+    }
+
+    .header-actions {
+      width: 100%;
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.filter-panel {
+  margin-bottom: 24px;
+  background-color: white;
+
+  mat-card-content {
+    padding: 16px;
+  }
+
+  .search-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .filters-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    mat-form-field {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .availability-toggle {
+      margin-left: 8px;
+    }
+
+    button {
+      white-space: nowrap;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px;
+}
+
+.error-state {
+  .error-card {
+    background-color: #ffffff !important;
+    border: 1px solid #f44336;
+    border-radius: 8px;
+    margin-bottom: 24px;
+
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 24px;
+      gap: 8px;
+
+      h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+        color: #424242;
+      }
+
+      p {
+        margin: 0;
+        color: #757575;
+      }
+    }
+  }
+}
+
+.table-container {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  overflow-y: visible;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  .table-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 60vh;
+  }
+}
+
+.technicians-table {
+  width: 100%;
+
+  th {
+    font-weight: 600;
+    font-size: 14px;
+    color: #616161;
+  }
+
+  td {
+    padding: 16px 8px;
+    color: #616161;
+  }
+
+  .technician-name {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong {
+      font-size: 14px;
+      color: #424242;
+    }
+
+    .technician-id {
+      font-size: 12px;
+      color: #9e9e9e;
+    }
+  }
+
+  .role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  mat-chip-list {
+    mat-chip {
+      font-size: 11px;
+      min-height: 24px;
+      padding: 4px 8px;
+      margin: 2px;
+    }
+  }
+
+  .skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .skill-chip {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+
+    &.active {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    &.inactive {
+      background-color: #f5f5f5;
+      color: #757575;
+    }
+  }
+
+  .travel-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+
+    &.willing {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &.not-willing {
+      background-color: #fff3e0;
+      color: #e65100;
+    }
+
+    &.unknown {
+      background-color: #f5f5f5;
+      color: #9e9e9e;
+    }
+  }
+
+  .current-job {
+    font-size: 13px;
+    color: #424242;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+  }
+
+  .no-job {
+    color: #bdbdbd;
+  }
+
+  .crew-name {
+    font-size: 13px;
+    color: #424242;
+  }
+
+  .no-crew {
+    color: #bdbdbd;
+  }
+
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: #9e9e9e;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 16px;
+    }
+  }
+
+  // Action buttons styling
+  .mat-column-actions {
+    .actions-row {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0;
+    }
+
+    button[mat-icon-button] {
+      transition: all 0.2s ease;
+
+      mat-icon {
+        color: #757575;
+        transition: color 0.2s ease;
+      }
+
+      &:hover {
+        mat-icon {
+          color: #1976d2;
+        }
+      }
+
+      // View icon
+      &:first-child {
+        mat-icon {
+          color: #2196f3;
+        }
+
+        &:hover mat-icon {
+          color: #1565c0;
+        }
+      }
+
+      // Edit icon
+      &:nth-child(2) {
+        mat-icon {
+          color: #ff9800;
+        }
+
+        &:hover mat-icon {
+          color: #f57c00;
+        }
+      }
+
+      // Toggle icon
+      &:last-child {
+        mat-icon {
+          color: #f44336;
+        }
+
+        &:hover mat-icon {
+          color: #d32f2f;
+        }
+      }
+    }
+  }
+}
+
+mat-paginator {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: rgba(0, 0, 0, 0.26);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #616161;
+  }
+
+  p {
+    margin: 0;
+    color: #9e9e9e;
+  }
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+  .technician-list-container {
+    padding: 16px;
+  }
+
+  .list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .filter-panel {
+    .filters-row {
+      flex-direction: column;
+
+      mat-form-field {
+        width: 100%;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .technicians-table {
+    // All columns visible on mobile — table scrolls horizontally
+  }
+}
+
+@media (max-width: 480px) {
+  .technicians-table {
+    font-size: 12px;
+    // All columns visible — table scrolls horizontally
+  }
+}
+
+// Search highlighting
+::ng-deep .search-highlight {
+  background-color: #ffeb3b;
+  font-weight: 600;
+  padding: 2px 0;
+  border-radius: 2px;
+}
+
+// Filter expansion panel
+.filter-expansion {
+  margin-top: 16px;
+
+  mat-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .filter-count {
+      color: #1976d2;
+      font-weight: 500;
+    }
+  }
+}
+
+// Active filter chips
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+
+  .filter-label {
+    font-weight: 500;
+    color: #757575;
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  mat-chip {
+    background-color: #1565c0 !important;
+    color: #ffffff !important;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 400;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+
+    strong {
+      margin-right: 4px;
+      font-weight: 400;
+    }
+
+    button[matChipRemove] {
+      margin-left: 4px;
+      opacity: 0.85;
+      cursor: pointer;
+      color: #ffffff;
+
+      &:hover {
+        opacity: 1;
+      }
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+::ng-deep .active-filters {
+  .mat-mdc-chip,
+  .mat-mdc-chip-row,
+  .mdc-evolution-chip {
+    background-color: #1565c0 !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .mdc-evolution-chip__action--primary,
+  .mdc-evolution-chip__action--trailing {
+    border: none !important;
+    outline: none !important;
+  }
+
+  .mdc-evolution-chip__cell,
+  .mat-mdc-chip-action-label {
+    color: #ffffff !important;
+    font-weight: 400 !important;
+  }
+
+  .mdc-evolution-chip__text-label {
+    color: #ffffff !important;
+    font-weight: 400 !important;
+  }
+}
+
+
+// Force light theme override
+::ng-deep {
+  .technicians-table {
+    background-color: #ffffff !important;
+    
+    .mat-mdc-table {
+      background-color: #ffffff !important;
+    }
+    
+    .mat-mdc-header-row {
+      background-color: #fafafa !important;
+    }
+    
+    .mat-mdc-row {
+      background-color: #ffffff !important;
+      color: #616161 !important;
+      
+      &:hover {
+        background-color: #f5f5f5 !important;
+      }
+    }
+    
+    .mat-mdc-cell, .mat-mdc-header-cell {
+      color: #616161 !important;
+    }
+  }
+}
+
+// Sticky header and first column (name) on mobile side scroll
+::ng-deep .mat-mdc-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #fafafa !important;
+}
+
+::ng-deep .mat-column-name {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background-color: inherit;
+  border-right: 1px solid #e0e0e0;
+
+  &.mat-mdc-header-cell {
+    z-index: 11;
+    background-color: #fafafa !important;
+  }
+}
+
+::ng-deep .mat-mdc-row .mat-column-name {
+  background-color: #ffffff !important;
+}
+
+::ng-deep .mat-mdc-row:hover .mat-column-name {
+  background-color: #f5f5f5 !important;
+}

@@ -1,0 +1,92 @@
+<div class="map-legend" [class.collapsed]="isCollapsed">
+  <div class="legend-header" (click)="toggleCollapsed()">
+    <h3>Map Legend</h3>
+    <button 
+      class="toggle-btn" 
+      [attr.aria-label]="isCollapsed ? 'Expand legend' : 'Collapse legend'"
+      [attr.aria-expanded]="!isCollapsed">
+      <span class="toggle-icon" [class.collapsed]="isCollapsed">▼</span>
+    </button>
+  </div>
+
+  <div class="legend-content" *ngIf="!isCollapsed">
+    <!-- Technician Markers -->
+    <div class="legend-section">
+      <h4>
+        <span class="section-icon technician-icon"></span>
+        Technicians
+      </h4>
+      <div class="legend-items">
+        <div *ngFor="let item of technicianLegend" class="legend-item">
+          <span 
+            class="marker-shape" 
+            [class.circle]="item.shape === 'circle'"
+            [style.background-color]="item.color">
+          </span>
+          <span class="legend-label">{{ item.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crew Markers -->
+    <div class="legend-section">
+      <h4>
+        <span class="section-icon crew-icon"></span>
+        Crews
+      </h4>
+      <div class="legend-items">
+        <div *ngFor="let item of crewLegend" class="legend-item">
+          <span 
+            class="marker-shape" 
+            [class.square]="item.shape === 'square'"
+            [style.background-color]="item.color">
+          </span>
+          <span class="legend-label">{{ item.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Job Markers -->
+    <div class="legend-section">
+      <h4>
+        <span class="section-icon job-icon"></span>
+        Jobs
+      </h4>
+      <div class="legend-items">
+        <div *ngFor="let item of jobLegend" class="legend-item">
+          <span 
+            class="marker-shape" 
+            [class.diamond]="item.shape === 'diamond'"
+            [style.background-color]="item.color">
+          </span>
+          <span class="legend-label">{{ item.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Priority Indicators -->
+    <div class="legend-section">
+      <h4>
+        <span class="section-icon priority-icon">!</span>
+        Priority
+      </h4>
+      <div class="legend-items">
+        <div *ngFor="let item of priorityLegend" class="legend-item">
+          <span 
+            class="priority-badge"
+            [style.background-color]="item.color">
+          </span>
+          <span class="legend-label">{{ item.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Info -->
+    <div class="legend-footer">
+      <p class="legend-note">
+        <span class="info-icon">ℹ️</span>
+        Click markers for details. Clusters show grouped items.
+      </p>
+    </div>
+  </div>
+</div>

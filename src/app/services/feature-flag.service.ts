@@ -9,7 +9,8 @@ export type FeatureFlagKey =
   | 'signOffRequired'
   | 'deploymentAutoAssign'
   | 'deploymentStrictRoles'
-  | 'deploymentRoleColors';
+  | 'deploymentRoleColors'
+  | 'atlas';
 
 export interface FeatureFlagView {
   readonly key: FeatureFlagKey;
@@ -35,6 +36,12 @@ export class FeatureFlagService {
       key: 'notifications',
       label: 'Notifications',
       description: 'Enable in-app and push notifications to keep teams aware of project changes.',
+      defaultValue: true
+    },
+    {
+      key: 'atlas',
+      label: 'ATLAS Integration',
+      description: 'Enable ATLAS deployment management and AI-powered analysis features.',
       defaultValue: true
     }
     // {

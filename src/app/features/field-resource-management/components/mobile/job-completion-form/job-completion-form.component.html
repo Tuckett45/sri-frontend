@@ -1,0 +1,131 @@
+<div class="job-completion-form">
+  <!-- Header -->
+  <div class="job-completion-form__header">
+    <mat-icon class="job-completion-form__header-icon">check_circle</mat-icon>
+    <h2 class="job-completion-form__title">Complete Job</h2>
+    <p class="job-completion-form__job-info">{{ jobSummary }}</p>
+  </div>
+
+  <!-- Delay Warning -->
+  <mat-card class="job-completion-form__delay-warning" *ngIf="showDelaySection">
+    <mat-card-content>
+      <div class="job-completion-form__delay-content">
+        <mat-icon color="warn">schedule</mat-icon>
+        <div class="job-completion-form__delay-text">
+          <strong>Job Delayed</strong>
+          <p>This job is being completed after the scheduled end time. Please provide a reason for the delay.</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Form -->
+  <form [formGroup]="completionForm" (ngSubmit)="onSubmit()" class="job-completion-form__form">
+    
+    <!-- Completion Notes -->
+    <mat-form-field appearance="outline" class="job-completion-form__field">
+      <mat-label>Completion Notes</mat-label>
+      <textarea
+        matInput
+        formControlName="completionNotes"
+        rows="6"
+        placeholder="Describe the work completed, any issues encountered, and final status..."
+        [class.job-completion-form__field--error]="hasError('completionNotes')">
+      </textarea>
+      <mat-hint align="end">{{ getCharacterCount('completionNotes') }}</mat-hint>
+      <mat-error *ngIf="hasError('completionNotes')">
+        {{ getErrorMessage('completionNotes') }}
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Delay Section -->
+    <div class="job-completion-form__delay-section" *ngIf="showDelaySection">
+      <!-- Delay Reason -->
+      <mat-form-field appearance="outline" class="job-completion-form__field">
+        <mat-label>Delay Reason</mat-label>
+        <mat-select
+          formControlName="delayReason"
+          placeholder="Select reason for delay"
+          [class.job-completion-form__field--error]="hasError('delayReason')">
+          <mat-option *ngFor="let reason of delayReasons" [value]="reason">
+            {{ reason }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="hasError('delayReason')">
+          {{ getErrorMessage('delayReason') }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Delay Notes -->
+      <mat-form-field appearance="outline" class="job-completion-form__field">
+        <mat-label>Additional Delay Information (Optional)</mat-label>
+        <textarea
+          matInput
+          formControlName="delayNotes"
+          rows="3"
+          placeholder="Provide additional details about the delay...">
+        </textarea>
+        <mat-hint align="end">{{ getCharacterCount('delayNotes') }}</mat-hint>
+        <mat-error *ngIf="hasError('delayNotes')">
+          {{ getErrorMessage('delayNotes') }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Photo Upload -->
+    <div class="job-completion-form__photos">
+      <h3 class="job-completion-form__section-title">
+        <mat-icon>photo_camera</mat-icon>
+        <span>Completion Photos</span>
+      </h3>
+      <p class="job-completion-form__section-description">
+        Upload photos of the completed work (optional but recommended)
+      </p>
+      
+      <frm-file-upload
+        [multiple]="true"
+        [allowedFileTypes]="['image/jpeg', 'image/png', 'image/heic']"
+        [maxFileSize]="10485760"
+        label="Upload Photos"
+        (filesSelected)="onFilesSelected($event)">
+      </frm-file-upload>
+    </div>
+
+    <!-- Actions -->
+    <div class="job-completion-form__actions">
+      <button
+        type="button"
+        mat-stroked-button
+        color="warn"
+        class="job-completion-form__cancel-button"
+        (click)="onCancel()"
+        [disabled]="isSubmitting">
+        Cancel
+      </button>
+
+      <button
+        type="submit"
+        mat-raised-button
+        color="primary"
+        class="job-completion-form__submit-button"
+        [disabled]="isSubmitDisabled">
+        <mat-icon *ngIf="!isSubmitting">check_circle</mat-icon>
+        <mat-spinner
+          *ngIf="isSubmitting"
+          diameter="20"
+          class="job-completion-form__spinner">
+        </mat-spinner>
+        <span>{{ submitButtonText }}</span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Help Text -->
+  <div class="job-completion-form__help">
+    <mat-icon>info</mat-icon>
+    <p>
+      Please provide detailed completion notes and upload photos of the finished work.
+      This documentation is important for quality assurance and customer records.
+    </p>
+  </div>
+</div>

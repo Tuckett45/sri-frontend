@@ -1,0 +1,408 @@
+<!-- AI Analysis Component Template -->
+<div class="ai-analysis-container">
+  <!-- Header -->
+  <div class="ai-analysis-header">
+    <h2 class="ai-analysis-title">AI Analysis</h2>
+    <button 
+      pButton 
+      type="button" 
+      label="Run Analysis" 
+      icon="pi pi-play"
+      class="p-button-primary"
+      (click)="onRunAnalysis()"
+      [disabled]="loading">
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <p-message 
+    *ngIf="error && !loading" 
+    severity="error" 
+    [text]="error"
+    styleClass="analysis-error-message">
+  </p-message>
+
+  <div *ngIf="error && !loading" class="error-actions">
+    <button 
+      pButton 
+      type="button" 
+      label="Retry" 
+      icon="pi pi-refresh"
+      class="p-button-outlined"
+      (click)="onRetry()">
+    </button>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner 
+      styleClass="analysis-spinner"
+      strokeWidth="4"
+      animationDuration="1s">
+    </p-progressSpinner>
+    <p class="loading-text">Analyzing deployment...</p>
+  </div>
+
+  <!-- Analysis Results -->
+  <div *ngIf="analysisResult && !loading" class="analysis-results">
+    
+    <!-- Readiness Assessment Card -->
+    <p-card styleClass="readiness-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Readiness Assessment</h3>
+        </div>
+      </ng-template>
+
+      <div class="readiness-content">
+        <div class="readiness-status-row">
+          <span class="readiness-label">Status:</span>
+          <p-tag 
+            [value]="formatReadinessStatus(analysisResult.readinessAssessment.status)" 
+            [severity]="getReadinessSeverity(analysisResult.readinessAssessment.status)"
+            styleClass="readiness-tag">
+          </p-tag>
+        </div>
+
+        <div class="readiness-score-row">
+          <span class="readiness-label">Score:</span>
+          <span class="readiness-score">{{ analysisResult.readinessAssessment.score }}/100</span>
+        </div>
+
+        <div class="readiness-confidence-row">
+          <span class="readiness-label">Confidence:</span>
+          <span class="readiness-confidence">{{ formatConfidence(analysisResult.confidenceLevel) }}</span>
+        </div>
+
+        <p-divider></p-divider>
+
+        <div *ngIf="analysisResult.readinessAssessment.summary" class="readiness-summary">
+          <h4>Summary</h4>
+          <p>{{ analysisResult.readinessAssessment.summary }}</p>
+        </div>
+
+        <div *ngIf="analysisResult.readinessAssessment.keyFactors && analysisResult.readinessAssessment.keyFactors.length > 0" 
+             class="readiness-factors">
+          <h4>Key Factors</h4>
+          <ul>
+            <li *ngFor="let factor of analysisResult.readinessAssessment.keyFactors">{{ factor }}</li>
+          </ul>
+        </div>
+
+        <div *ngIf="analysisResult.readinessAssessment.criticalBlockers && analysisResult.readinessAssessment.criticalBlockers.length > 0" 
+             class="readiness-blockers">
+          <h4>Critical Blockers</h4>
+          <ul class="blocker-list">
+            <li *ngFor="let blocker of analysisResult.readinessAssessment.criticalBlockers" class="blocker-item">
+              <i class="pi pi-exclamation-triangle"></i>
+              {{ blocker }}
+            </li>
+          </ul>
+        </div>
+
+        <div *ngIf="analysisResult.readinessAssessment.improvementAreas && analysisResult.readinessAssessment.improvementAreas.length > 0" 
+             class="readiness-improvements">
+          <h4>Improvement Areas</h4>
+          <ul>
+            <li *ngFor="let area of analysisResult.readinessAssessment.improvementAreas">{{ area }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <div class="card-footer">
+          <small>
+            Completed: {{ formatDate(analysisResult.completedAt) }} | 
+            Duration: {{ formatDuration(analysisResult.analysisDuration) }}
+          </small>
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- Findings Card -->
+    <p-card *ngIf="analysisResult.findings && analysisResult.findings.length > 0" styleClass="findings-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Findings ({{ analysisResult.findings.length }})</h3>
+        </div>
+      </ng-template>
+
+      <p-accordion [multiple]="true" styleClass="findings-accordion">
+        
+        <!-- Critical Findings -->
+        <p-accordionTab *ngIf="criticalFindings.length > 0" [header]="'Critical (' + criticalFindings.length + ')'">
+          <div class="findings-group">
+            <div *ngFor="let finding of criticalFindings" class="finding-item">
+              <div class="finding-header">
+                <p-tag 
+                  [value]="finding.severity" 
+                  [severity]="getFindingSeverity(finding.severity)"
+                  styleClass="finding-severity-tag">
+                </p-tag>
+                <span class="finding-title">{{ finding.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(finding.category)" 
+                  severity="info"
+                  styleClass="finding-category-tag">
+                </p-tag>
+              </div>
+              <p class="finding-description">{{ finding.description }}</p>
+              <div class="finding-meta">
+                <span class="finding-confidence">
+                  <i class="pi pi-chart-line"></i>
+                  Confidence: {{ formatConfidence(finding.confidence) }}
+                </span>
+                <span *ngIf="finding.potentialImpact" class="finding-impact">
+                  <i class="pi pi-exclamation-circle"></i>
+                  Impact: {{ finding.potentialImpact }}
+                </span>
+              </div>
+              <div *ngIf="finding.supportingEvidence && finding.supportingEvidence.length > 0" class="finding-evidence">
+                <strong>Supporting Evidence:</strong>
+                <ul>
+                  <li *ngFor="let evidence of finding.supportingEvidence">{{ evidence }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- High Findings -->
+        <p-accordionTab *ngIf="highFindings.length > 0" [header]="'High (' + highFindings.length + ')'">
+          <div class="findings-group">
+            <div *ngFor="let finding of highFindings" class="finding-item">
+              <div class="finding-header">
+                <p-tag 
+                  [value]="finding.severity" 
+                  [severity]="getFindingSeverity(finding.severity)"
+                  styleClass="finding-severity-tag">
+                </p-tag>
+                <span class="finding-title">{{ finding.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(finding.category)" 
+                  severity="info"
+                  styleClass="finding-category-tag">
+                </p-tag>
+              </div>
+              <p class="finding-description">{{ finding.description }}</p>
+              <div class="finding-meta">
+                <span class="finding-confidence">
+                  <i class="pi pi-chart-line"></i>
+                  Confidence: {{ formatConfidence(finding.confidence) }}
+                </span>
+                <span *ngIf="finding.potentialImpact" class="finding-impact">
+                  <i class="pi pi-exclamation-circle"></i>
+                  Impact: {{ finding.potentialImpact }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Medium Findings -->
+        <p-accordionTab *ngIf="mediumFindings.length > 0" [header]="'Medium (' + mediumFindings.length + ')'">
+          <div class="findings-group">
+            <div *ngFor="let finding of mediumFindings" class="finding-item">
+              <div class="finding-header">
+                <p-tag 
+                  [value]="finding.severity" 
+                  [severity]="getFindingSeverity(finding.severity)"
+                  styleClass="finding-severity-tag">
+                </p-tag>
+                <span class="finding-title">{{ finding.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(finding.category)" 
+                  severity="info"
+                  styleClass="finding-category-tag">
+                </p-tag>
+              </div>
+              <p class="finding-description">{{ finding.description }}</p>
+              <div class="finding-meta">
+                <span class="finding-confidence">
+                  <i class="pi pi-chart-line"></i>
+                  Confidence: {{ formatConfidence(finding.confidence) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Low Findings -->
+        <p-accordionTab *ngIf="lowFindings.length > 0" [header]="'Low (' + lowFindings.length + ')'">
+          <div class="findings-group">
+            <div *ngFor="let finding of lowFindings" class="finding-item">
+              <div class="finding-header">
+                <p-tag 
+                  [value]="finding.severity" 
+                  [severity]="getFindingSeverity(finding.severity)"
+                  styleClass="finding-severity-tag">
+                </p-tag>
+                <span class="finding-title">{{ finding.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(finding.category)" 
+                  severity="info"
+                  styleClass="finding-category-tag">
+                </p-tag>
+              </div>
+              <p class="finding-description">{{ finding.description }}</p>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Info Findings -->
+        <p-accordionTab *ngIf="infoFindings.length > 0" [header]="'Info (' + infoFindings.length + ')'">
+          <div class="findings-group">
+            <div *ngFor="let finding of infoFindings" class="finding-item">
+              <div class="finding-header">
+                <p-tag 
+                  [value]="finding.severity" 
+                  [severity]="getFindingSeverity(finding.severity)"
+                  styleClass="finding-severity-tag">
+                </p-tag>
+                <span class="finding-title">{{ finding.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(finding.category)" 
+                  severity="info"
+                  styleClass="finding-category-tag">
+                </p-tag>
+              </div>
+              <p class="finding-description">{{ finding.description }}</p>
+            </div>
+          </div>
+        </p-accordionTab>
+
+      </p-accordion>
+    </p-card>
+
+    <!-- Recommendations Card -->
+    <p-card *ngIf="analysisResult.recommendations && analysisResult.recommendations.length > 0" styleClass="recommendations-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Recommendations ({{ analysisResult.recommendations.length }})</h3>
+        </div>
+      </ng-template>
+
+      <p-accordion [multiple]="true" styleClass="recommendations-accordion">
+        
+        <!-- High Priority Recommendations -->
+        <p-accordionTab *ngIf="highPriorityRecommendations.length > 0" [header]="'High Priority (' + highPriorityRecommendations.length + ')'">
+          <div class="recommendations-group">
+            <div *ngFor="let rec of highPriorityRecommendations" class="recommendation-item">
+              <div class="recommendation-header">
+                <p-tag 
+                  [value]="rec.priority" 
+                  [severity]="getRecommendationSeverity(rec.priority)"
+                  styleClass="recommendation-priority-tag">
+                </p-tag>
+                <span class="recommendation-title">{{ rec.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(rec.category)" 
+                  severity="info"
+                  styleClass="recommendation-category-tag">
+                </p-tag>
+              </div>
+              <p class="recommendation-description">{{ rec.description }}</p>
+              <div *ngIf="rec.rationale" class="recommendation-rationale">
+                <strong>Rationale:</strong> {{ rec.rationale }}
+              </div>
+              <div *ngIf="rec.expectedBenefits && rec.expectedBenefits.length > 0" class="recommendation-benefits">
+                <strong>Expected Benefits:</strong>
+                <ul>
+                  <li *ngFor="let benefit of rec.expectedBenefits">{{ benefit }}</li>
+                </ul>
+              </div>
+              <div *ngIf="rec.risksIfIgnored && rec.risksIfIgnored.length > 0" class="recommendation-risks">
+                <strong>Risks if Ignored:</strong>
+                <ul>
+                  <li *ngFor="let risk of rec.risksIfIgnored">{{ risk }}</li>
+                </ul>
+              </div>
+              <div class="recommendation-meta">
+                <span class="recommendation-confidence">
+                  <i class="pi pi-chart-line"></i>
+                  Confidence: {{ formatConfidence(rec.confidence) }}
+                </span>
+                <span *ngIf="rec.estimatedEffort" class="recommendation-effort">
+                  <i class="pi pi-clock"></i>
+                  Effort: {{ rec.estimatedEffort }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Medium Priority Recommendations -->
+        <p-accordionTab *ngIf="mediumPriorityRecommendations.length > 0" [header]="'Medium Priority (' + mediumPriorityRecommendations.length + ')'">
+          <div class="recommendations-group">
+            <div *ngFor="let rec of mediumPriorityRecommendations" class="recommendation-item">
+              <div class="recommendation-header">
+                <p-tag 
+                  [value]="rec.priority" 
+                  [severity]="getRecommendationSeverity(rec.priority)"
+                  styleClass="recommendation-priority-tag">
+                </p-tag>
+                <span class="recommendation-title">{{ rec.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(rec.category)" 
+                  severity="info"
+                  styleClass="recommendation-category-tag">
+                </p-tag>
+              </div>
+              <p class="recommendation-description">{{ rec.description }}</p>
+              <div *ngIf="rec.rationale" class="recommendation-rationale">
+                <strong>Rationale:</strong> {{ rec.rationale }}
+              </div>
+              <div class="recommendation-meta">
+                <span class="recommendation-confidence">
+                  <i class="pi pi-chart-line"></i>
+                  Confidence: {{ formatConfidence(rec.confidence) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Low Priority Recommendations -->
+        <p-accordionTab *ngIf="lowPriorityRecommendations.length > 0" [header]="'Low Priority (' + lowPriorityRecommendations.length + ')'">
+          <div class="recommendations-group">
+            <div *ngFor="let rec of lowPriorityRecommendations" class="recommendation-item">
+              <div class="recommendation-header">
+                <p-tag 
+                  [value]="rec.priority" 
+                  [severity]="getRecommendationSeverity(rec.priority)"
+                  styleClass="recommendation-priority-tag">
+                </p-tag>
+                <span class="recommendation-title">{{ rec.title }}</span>
+                <p-tag 
+                  [value]="formatCategory(rec.category)" 
+                  severity="info"
+                  styleClass="recommendation-category-tag">
+                </p-tag>
+              </div>
+              <p class="recommendation-description">{{ rec.description }}</p>
+            </div>
+          </div>
+        </p-accordionTab>
+
+      </p-accordion>
+    </p-card>
+
+    <!-- Explanatory Reasoning -->
+    <p-card *ngIf="analysisResult.explanatoryReasoning" styleClass="reasoning-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Explanatory Reasoning</h3>
+        </div>
+      </ng-template>
+      <p class="reasoning-text">{{ analysisResult.explanatoryReasoning }}</p>
+    </p-card>
+
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!analysisResult && !loading && !error" class="empty-state">
+    <i class="pi pi-chart-line empty-state-icon"></i>
+    <p class="empty-state-text">No analysis results available</p>
+    <p class="empty-state-subtext">Click "Run Analysis" to analyze this deployment</p>
+  </div>
+</div>

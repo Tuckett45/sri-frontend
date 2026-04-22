@@ -1,0 +1,144 @@
+.time-entry-dialog {
+  min-width: 450px;
+  max-width: 600px;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #212121;
+
+  .header-icon {
+    color: #1976d2;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .close-btn {
+    margin-left: auto;
+
+    mat-icon {
+      color: #757575;
+    }
+  }
+}
+
+mat-dialog-content {
+  padding-top: 16px;
+}
+
+.entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  mat-form-field {
+    flex: 1;
+  }
+
+  .time-arrow {
+    color: #9e9e9e;
+    flex-shrink: 0;
+    margin-bottom: 22px;
+  }
+}
+
+.job-option {
+  strong {
+    color: #1976d2;
+    margin-right: 4px;
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px 0 0;
+  gap: 8px;
+
+  button {
+    mat-icon {
+      margin-right: 6px;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Force light theme for form fields
+::ng-deep {
+  .mat-mdc-input-element {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-form-field {
+    .mat-mdc-floating-label,
+    .mdc-floating-label {
+      color: rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .mat-mdc-select-value-text {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-form-field-icon-prefix mat-icon {
+      color: rgba(0, 0, 0, 0.54) !important;
+    }
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .time-entry-dialog {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+  }
+
+  .dialog-header {
+    font-size: 1.125rem;
+
+    .header-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .time-row {
+    flex-direction: column;
+    gap: 4px;
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .time-arrow {
+      display: none;
+    }
+  }
+
+  mat-dialog-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+
+    button {
+      width: 100%;
+    }
+  }
+}
