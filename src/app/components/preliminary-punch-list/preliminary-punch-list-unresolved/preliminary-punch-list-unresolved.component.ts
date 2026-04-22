@@ -395,8 +395,10 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.updateUnresolvedCount();
   }
 
-  openGallery(imageType: 'issueImages' | 'resolutionImages', images: string[]): void {
-    this.galleryImages = images.map(img => ({ itemImageSrc: img }));
+  openGallery(imageType: 'issueImages' | 'resolutionImages', images: any[]): void {
+    this.galleryImages = images.map(img => ({
+      itemImageSrc: typeof img === 'string' ? img : (img?.imageData ?? img)
+    }));
     if (imageType === 'issueImages') {
       this.isIssueGalleryVisible = true;
     } else {

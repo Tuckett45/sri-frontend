@@ -1,6 +1,6 @@
 import { Injectable, effect } from '@angular/core';
 import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
-import { catchError, map, shareReplay, tap } from 'rxjs/operators';
+import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
 import { environment, local_environment } from '../../environments/environments';
@@ -477,6 +477,26 @@ export class PreliminaryPunchListService {
     }
 
     this.clearCaches();
+
+    const issueImages = punchList.issueImages;
+    const resolutionImages = punchList.resolutionImages;
+    const hasNewImages = (issueImages && issueImages.length > 0) ||
+                         (resolutionImages && resolutionImages.length > 0);
+
+    if (hasNewImages) {
+      // Two-step: create the punch list without images first so the parent row
+      // exists, then update with images to satisfy the FK constraint on PunchListImages.
+      const withoutImages = { ...punchList, issueImages: [], resolutionImages: [] };
+      return this.http.post(`${environment.apiUrl}/PunchList`, withoutImages, this.httpOptions)
+        .pipe(
+          switchMap(() => {
+            const withImages = { ...punchList, issueImages, resolutionImages };
+            return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions);
+          }),
+          catchError(this.handleError)
+        );
+    }
+
     return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions)
       .pipe(catchError(this.handleError));
   }
