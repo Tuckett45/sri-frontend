@@ -392,31 +392,17 @@ mat-paginator {
     margin-bottom: 16px;
   }
 
-  // Hide table on mobile, show cards instead
-  .desktop-only {
-    display: none !important;
-  }
+  // Old table hidden — using card view for all screen sizes
 }
 
-// Show table on desktop, hide cards
-.mobile-only {
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .mobile-only {
-    display: block;
-  }
-}
-
-// Mobile Job Cards
-.mobile-job-cards {
+// Job Cards (unified view for all screen sizes)
+.job-cards {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.mobile-job-card {
+.job-card {
   background: white;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
@@ -429,7 +415,7 @@ mat-paginator {
     outline: none;
   }
 
-  .mobile-card-header {
+  .job-card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -437,7 +423,7 @@ mat-paginator {
     gap: 8px;
   }
 
-  .mobile-card-title {
+  .job-card-title {
     font-weight: 600;
     font-size: 0.9rem;
     color: #1976d2;
@@ -451,13 +437,13 @@ mat-paginator {
     }
   }
 
-  .mobile-card-body {
+  .job-card-body {
     display: flex;
     flex-direction: column;
     gap: 6px;
   }
 
-  .mobile-card-row {
+  .job-card-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -465,14 +451,14 @@ mat-paginator {
     font-size: 0.8125rem;
   }
 
-  .mobile-card-label {
+  .job-card-label {
     color: #757575;
     font-weight: 500;
     flex-shrink: 0;
     min-width: 70px;
   }
 
-  .mobile-card-value {
+  .job-card-value {
     color: #212121;
     text-align: right;
     overflow: hidden;
@@ -480,7 +466,7 @@ mat-paginator {
     white-space: nowrap;
   }
 
-  .mobile-card-actions {
+  .job-card-actions {
     display: flex;
     justify-content: flex-end;
     gap: 4px;

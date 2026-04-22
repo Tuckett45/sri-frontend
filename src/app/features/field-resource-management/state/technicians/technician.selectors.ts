@@ -513,7 +513,7 @@ export const selectAvailableTechniciansCount = createSelector(
 // ============================================================================
 
 import { selectAllCrews } from '../crews/crew.selectors';
-import { selectJobEntities } from '../jobs/job.selectors';
+import { selectJobEntities, selectAllJobs } from '../jobs/job.selectors';
 
 /**
  * Select a map of technician ID → current job name.
@@ -523,9 +523,18 @@ import { selectJobEntities } from '../jobs/job.selectors';
 export const selectTechnicianCurrentJobMap = createSelector(
   selectAllCrews,
   selectJobEntities,
-  (crews, jobEntities): Record<string, string> => {
+  selectAllJobs,
+  (crews, jobEntities, allJobs): Record<string, string> => {
     const map: Record<string, string> = {};
 
+    // 1. Direct assignment: job.technicianId → technician
+    for (const job of allJobs) {
+      if (job.technicianId && !map[job.technicianId]) {
+        map[job.technicianId] = `${job.client} – ${job.siteName}`;
+      }
+    }
+
+    // 2. Through crews: crew.activeJobId → crew members
     for (const crew of crews) {
       if (!crew.activeJobId) continue;
       const job = jobEntities[crew.activeJobId];

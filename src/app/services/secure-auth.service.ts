@@ -277,7 +277,8 @@ export class SecureAuthService extends AuthService implements OnDestroy {
 
         return new HttpHeaders({
           'Authorization': `Bearer ${token}`,
-          'X-Session-ID': state.sessionId || ''
+          'X-Session-ID': state.sessionId || '',
+          'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
         });
       })
     );

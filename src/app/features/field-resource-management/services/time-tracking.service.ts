@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { TimeEntry, GeoLocation } from '../models/time-entry.model';
-import { local_environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Time Tracking Service

@@ -196,207 +196,48 @@
     </mat-card>
   </div>
 
-  <!-- Job Table (desktop/tablet) -->
-  <div class="table-container desktop-only" #tableContainer *ngIf="!(loading$ | async) && !(error$ | async)">
-    <table mat-table [dataSource]="displayedJobs" class="job-table">
-      <!-- Checkbox Column -->
-      <ng-container matColumnDef="select" sticky>
-        <th mat-header-cell *matHeaderCellDef>
-          <mat-checkbox
-            (change)="$event ? toggleAllRows() : null"
-            [checked]="isAllSelected()"
-            [indeterminate]="isIndeterminate()"
-            [aria-label]="'Select all jobs'"
-          >
-          </mat-checkbox>
-        </th>
-        <td mat-cell *matCellDef="let job">
-          <mat-checkbox
-            (click)="$event.stopPropagation()"
-            (change)="$event ? selection.toggle(job) : null"
-            [checked]="selection.isSelected(job)"
-            [aria-label]="'Select job ' + job.jobId"
-          >
-          </mat-checkbox>
-        </td>
-      </ng-container>
-
-      <!-- Job ID Column -->
-      <ng-container matColumnDef="jobId" sticky>
-        <th mat-header-cell *matHeaderCellDef>Job ID</th>
-        <td mat-cell *matCellDef="let job">
-          <a [routerLink]="['/field-resource-management/jobs', job.id]" class="job-id-link">
-            <span [innerHTML]="job.jobId | highlight: searchTerm"></span>
-          </a>
-        </td>
-      </ng-container>
-
-      <!-- Client Column -->
-      <ng-container matColumnDef="client">
-        <th mat-header-cell *matHeaderCellDef>Client</th>
-        <td mat-cell *matCellDef="let job">
-          <span [innerHTML]="job.client | highlight: searchTerm"></span>
-        </td>
-      </ng-container>
-
-      <!-- Site Name Column -->
-      <ng-container matColumnDef="siteName">
-        <th mat-header-cell *matHeaderCellDef>Site Name</th>
-        <td mat-cell *matCellDef="let job">
-          <div class="site-info">
-            <div class="site-name">
-              <span [innerHTML]="job.siteName | highlight: searchTerm"></span>
-            </div>
-            <div class="site-address">
-              <span [innerHTML]="(job.siteAddress.city + ', ' + job.siteAddress.state) | highlight: searchTerm"></span>
-            </div>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Status Column -->
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let job">
-          <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
-        </td>
-      </ng-container>
-
-      <!-- Job Type Column -->
-      <ng-container matColumnDef="jobType">
-        <th mat-header-cell *matHeaderCellDef>Job Type</th>
-        <td mat-cell *matCellDef="let job">
-          {{ job.jobType }}
-        </td>
-      </ng-container>
-
-      <!-- Priority Column -->
-      <ng-container matColumnDef="priority">
-        <th mat-header-cell *matHeaderCellDef>Priority</th>
-        <td mat-cell *matCellDef="let job">
-          <span class="priority-badge" [ngClass]="getPriorityClass(job.priority)">
-            {{ getPriorityText(job.priority) }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Scheduled Date Column -->
-      <ng-container matColumnDef="scheduledDate">
-        <th mat-header-cell *matHeaderCellDef>Scheduled Date</th>
-        <td mat-cell *matCellDef="let job">
-          {{ formatDate(job.scheduledStartDate) }}
-        </td>
-      </ng-container>
-
-      <!-- Assigned To Column -->
-      <ng-container matColumnDef="assignedTechnicians">
-        <th mat-header-cell *matHeaderCellDef>Assigned To</th>
-        <td mat-cell *matCellDef="let job">
-          {{ getAssignedTechnicians(job) }}
-        </td>
-      </ng-container>
-
-      <!-- Market Column (Admin only) -->
-      <ng-container matColumnDef="market">
-        <th mat-header-cell *matHeaderCellDef>Market</th>
-        <td mat-cell *matCellDef="let job">
-          {{ job.market || 'N/A' }}
-        </td>
-      </ng-container>
-
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let job">
-          <button
-            mat-icon-button
-            [matMenuTriggerFor]="actionMenu"
-            aria-label="Job actions"
-            (click)="$event.stopPropagation()"
-          >
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #actionMenu="matMenu">
-            <button mat-menu-item (click)="viewJob(job)">
-              <mat-icon>visibility</mat-icon>
-              <span>View</span>
-            </button>
-            <button mat-menu-item (click)="editJob(job)">
-              <mat-icon>edit</mat-icon>
-              <span>Edit</span>
-            </button>
-            <button mat-menu-item (click)="assignJob(job)">
-              <mat-icon>person_add</mat-icon>
-              <span>Assign</span>
-            </button>
-            <mat-divider></mat-divider>
-            <button mat-menu-item (click)="deleteJob(job)" class="delete-action">
-              <mat-icon color="warn">delete</mat-icon>
-              <span>Delete</span>
-            </button>
-          </mat-menu>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-      <tr
-        mat-row
-        *matRowDef="let row; columns: displayedColumns"
-        class="job-row"
-        (click)="viewJob(row)"
-      ></tr>
-    </table>
-
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="displayedJobs.length === 0">
-      <mat-icon>work_off</mat-icon>
-      <h3>No jobs found</h3>
-      <p>Try adjusting your search or filters</p>
-    </div>
-  </div>
-
-  <!-- Mobile Card View -->
-  <div class="mobile-job-cards mobile-only" *ngIf="!(loading$ | async) && !(error$ | async)">
+  <!-- Job Cards -->
+  <div class="job-cards" *ngIf="!(loading$ | async) && !(error$ | async)">
     <div
-      class="mobile-job-card"
+      class="job-card"
       *ngFor="let job of displayedJobs"
       (click)="viewJob(job)"
       role="button"
       tabindex="0"
       (keydown.enter)="viewJob(job)">
-      <div class="mobile-card-header">
-        <a [routerLink]="['/field-resource-management/jobs', job.id]" class="mobile-card-title" (click)="$event.stopPropagation()">
+      <div class="job-card-header">
+        <a [routerLink]="['/field-resource-management/jobs', job.id]" class="job-card-title" (click)="$event.stopPropagation()">
           {{ job.jobId }}
         </a>
         <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
       </div>
-      <div class="mobile-card-body">
-        <div class="mobile-card-row">
-          <span class="mobile-card-label">Client</span>
-          <span class="mobile-card-value">{{ job.client }}</span>
+      <div class="job-card-body">
+        <div class="job-card-row">
+          <span class="job-card-label">Client</span>
+          <span class="job-card-value">{{ job.client }}</span>
         </div>
-        <div class="mobile-card-row">
-          <span class="mobile-card-label">Site</span>
-          <span class="mobile-card-value">{{ job.siteName }} · {{ job.siteAddress.city }}, {{ job.siteAddress.state }}</span>
+        <div class="job-card-row">
+          <span class="job-card-label">Site</span>
+          <span class="job-card-value">{{ job.siteName }} · {{ job.siteAddress.city }}, {{ job.siteAddress.state }}</span>
         </div>
-        <div class="mobile-card-row">
-          <span class="mobile-card-label">Type</span>
-          <span class="mobile-card-value">{{ job.jobType }}</span>
+        <div class="job-card-row">
+          <span class="job-card-label">Type</span>
+          <span class="job-card-value">{{ job.jobType }}</span>
         </div>
-        <div class="mobile-card-row">
-          <span class="mobile-card-label">Priority</span>
+        <div class="job-card-row">
+          <span class="job-card-label">Priority</span>
           <span class="priority-badge" [ngClass]="getPriorityClass(job.priority)">{{ job.priority }}</span>
         </div>
-        <div class="mobile-card-row">
-          <span class="mobile-card-label">Scheduled</span>
-          <span class="mobile-card-value">{{ formatDate(job.scheduledStartDate) }}</span>
+        <div class="job-card-row">
+          <span class="job-card-label">Scheduled</span>
+          <span class="job-card-value">{{ formatDate(job.scheduledStartDate) }}</span>
         </div>
-        <div class="mobile-card-row">
-          <span class="mobile-card-label">Assigned</span>
-          <span class="mobile-card-value">{{ getAssignedTechnicians(job) }}</span>
+        <div class="job-card-row">
+          <span class="job-card-label">Assigned</span>
+          <span class="job-card-value">{{ getAssignedTechnicians(job) }}</span>
         </div>
       </div>
-      <div class="mobile-card-actions">
+      <div class="job-card-actions">
         <button mat-icon-button (click)="editJob(job); $event.stopPropagation()" aria-label="Edit job">
           <mat-icon>edit</mat-icon>
         </button>

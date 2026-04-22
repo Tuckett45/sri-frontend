@@ -15,6 +15,7 @@ import { AppComponent } from './app.component';
 import { ConfigurationInterceptor } from './interceptors/configuration.interceptor';
 import { AuthorizationInterceptor } from './interceptors/authorization.interceptor';
 import { MarketFilterInterceptor } from './interceptors/market-filter.interceptor';
+import { AtlasAuthInterceptor } from './features/atlas/interceptors/atlas-auth.interceptor';
 import { ConfigurationStatusComponent } from './components/configuration-status/configuration-status.component';
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -269,6 +270,11 @@ export const customCurrencyMaskConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: MarketFilterInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AtlasAuthInterceptor,
       multi: true
     }
   ],

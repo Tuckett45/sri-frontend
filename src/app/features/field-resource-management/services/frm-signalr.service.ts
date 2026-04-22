@@ -12,7 +12,7 @@ import * as TechnicianActions from '../state/technicians/technician.actions';
 import * as CrewActions from '../state/crews/crew.actions';
 import * as NotificationActions from '../state/notifications/notification.actions';
 import * as UIActions from '../state/ui/ui.actions';
-import { local_environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Location update event
@@ -207,7 +207,7 @@ export class FrmSignalRService {
 
     try {
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(`${local_environment.apiUrl}/hubs/field-resource-management`, {
+        .withUrl(`${environment.atlasApiUrl}/hubs/field-resource-management`, {
           skipNegotiation: false,
           transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents
         })

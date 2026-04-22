@@ -145,200 +145,48 @@
     </mat-card>
   </div>
 
-  <!-- Technicians Table -->
+  <!-- Card View -->
   <ng-container *ngIf="technicians$ | async as technicians">
-    <div class="table-container desktop-only" *ngIf="!(loading$ | async) && !(error$ | async)">
-      <div class="table-scroll-area">
-        <table mat-table [dataSource]="technicians" class="technicians-table">
-        
-        <!-- Name Column -->
-        <ng-container matColumnDef="name" sticky>
-          <th mat-header-cell *matHeaderCellDef>Name</th>
-          <td mat-cell *matCellDef="let technician">
-            <div class="technician-name">
-              <strong>
-                <span [innerHTML]="getFullName(technician) | highlight: (searchControl.value || '')"></span>
-              </strong>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Role Column -->
-        <ng-container matColumnDef="role">
-          <th mat-header-cell *matHeaderCellDef>Role</th>
-          <td mat-cell *matCellDef="let technician">
-            <span class="role-badge">{{ technician.role }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Region Column -->
-        <ng-container matColumnDef="region">
-          <th mat-header-cell *matHeaderCellDef>Region</th>
-          <td mat-cell *matCellDef="let technician">
-            {{ technician.region }}
-          </td>
-        </ng-container>
-
-        <!-- Crew Column -->
-        <ng-container matColumnDef="crew">
-          <th mat-header-cell *matHeaderCellDef>Crew</th>
-          <td mat-cell *matCellDef="let technician">
-            <span *ngIf="technicianCrewMap[technician.id] as crewName; else noCrew" class="crew-name">
-              {{ crewName }}
-            </span>
-            <ng-template #noCrew>
-              <span class="no-crew">—</span>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        <!-- Skills Column -->
-        <ng-container matColumnDef="skills">
-          <th mat-header-cell *matHeaderCellDef>Skills</th>
-          <td mat-cell *matCellDef="let technician">
-            <div class="skills-container">
-              <span 
-                *ngFor="let skillName of getSkillNames(technician)" 
-                class="skill-chip"
-                [title]="skillName">
-                {{ skillName }}
-              </span>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Travel Status Column -->
-        <ng-container matColumnDef="travelStatus">
-          <th mat-header-cell *matHeaderCellDef>Travel</th>
-          <td mat-cell *matCellDef="let technician">
-            <ng-container *ngIf="getTravelStatus(technician) as travelStatus; else noTravelData">
-              <span class="travel-status-badge" [class.willing]="travelStatus.willing" [class.not-willing]="!travelStatus.willing">
-                <mat-icon>{{ travelStatus.willing ? 'flight_takeoff' : 'flight_land' }}</mat-icon>
-                {{ travelStatus.label }}
-              </span>
-            </ng-container>
-            <ng-template #noTravelData>
-              <span class="travel-status-badge unknown">
-                <mat-icon>help_outline</mat-icon>
-                N/A
-              </span>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let technician">
-            <span class="status-badge" [class.active]="technician.isActive" [class.inactive]="!technician.isActive">
-              {{ getCurrentStatus(technician) }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Current Job Column -->
-        <ng-container matColumnDef="currentJob">
-          <th mat-header-cell *matHeaderCellDef>Current Job</th>
-          <td mat-cell *matCellDef="let technician">
-            <span *ngIf="technicianJobMap[technician.id] as jobName; else noJob" class="current-job">
-              {{ jobName }}
-            </span>
-            <ng-template #noJob>
-              <span class="no-job">—</span>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let technician">
-            <div class="actions-row">
-              <button mat-icon-button 
-                      [routerLink]="['./', technician.id]"
-                      matTooltip="View Details"
-                      (click)="viewTechnician(technician)">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              <button mat-icon-button 
-                      [routerLink]="['./', technician.id, 'edit']"
-                      matTooltip="Edit"
-                      (click)="editTechnician(technician)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button 
-                      matTooltip="Delete"
-                      (click)="toggleTechnicianStatus(technician)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-
-      <!-- Empty State -->
-      <div class="empty-state" *ngIf="technicians.length === 0">
-        <mat-icon>person_off</mat-icon>
-        <h3>No technicians found</h3>
-        <p>Try adjusting your search or filters</p>
-      </div>
-      </div>
-
-      <!-- Paginator -->
-      <mat-paginator 
-        [length]="technicians.length"
-        [pageSize]="pageSize"
-        [pageSizeOptions]="pageSizeOptions"
-        [pageIndex]="pageIndex"
-        (page)="onPageChange($event)"
-        showFirstLastButtons>
-      </mat-paginator>
-    </div>
-
-    <!-- Mobile Card View -->
-    <div class="mobile-cards mobile-only" *ngIf="!(loading$ | async) && !(error$ | async)">
+    <div class="technician-cards" *ngIf="!(loading$ | async) && !(error$ | async)">
       <div
-        class="mobile-card"
+        class="technician-card"
         *ngFor="let technician of technicians"
         [routerLink]="['./', technician.id]"
         role="button"
         tabindex="0">
-        <div class="mobile-card-header">
-          <span class="mobile-card-title">{{ getFullName(technician) }}</span>
+        <div class="technician-card-header">
+          <span class="technician-card-title">{{ getFullName(technician) }}</span>
           <span class="status-badge" [class.active]="technician.isActive" [class.inactive]="!technician.isActive">
             {{ getCurrentStatus(technician) }}
           </span>
         </div>
-        <div class="mobile-card-body">
-          <div class="mobile-card-row">
-            <span class="mobile-card-label">Role</span>
-            <span class="mobile-card-value role-badge">{{ technician.role }}</span>
+        <div class="technician-card-body">
+          <div class="technician-card-row">
+            <span class="technician-card-label">Role</span>
+            <span class="technician-card-value role-badge">{{ technician.role }}</span>
           </div>
-          <div class="mobile-card-row">
-            <span class="mobile-card-label">Region</span>
-            <span class="mobile-card-value">{{ technician.region || 'N/A' }}</span>
+          <div class="technician-card-row">
+            <span class="technician-card-label">Region</span>
+            <span class="technician-card-value">{{ technician.region || 'N/A' }}</span>
           </div>
-          <div class="mobile-card-row">
-            <span class="mobile-card-label">Crew</span>
-            <span class="mobile-card-value">{{ technicianCrewMap[technician.id] || '—' }}</span>
+          <div class="technician-card-row">
+            <span class="technician-card-label">Crew</span>
+            <span class="technician-card-value">{{ technicianCrewMap[technician.id] || '—' }}</span>
           </div>
-          <div class="mobile-card-row">
-            <span class="mobile-card-label">Current Job</span>
-            <span class="mobile-card-value">{{ technicianJobMap[technician.id] || '—' }}</span>
+          <div class="technician-card-row">
+            <span class="technician-card-label">Current Job</span>
+            <span class="technician-card-value">{{ technicianJobMap[technician.id] || '—' }}</span>
           </div>
-          <div class="mobile-card-row" *ngIf="technician.email">
-            <span class="mobile-card-label">Email</span>
-            <span class="mobile-card-value">{{ technician.email }}</span>
+          <div class="technician-card-row" *ngIf="technician.email">
+            <span class="technician-card-label">Email</span>
+            <span class="technician-card-value">{{ technician.email }}</span>
           </div>
-          <div class="mobile-card-row" *ngIf="technician.phone">
-            <span class="mobile-card-label">Phone</span>
-            <span class="mobile-card-value">{{ technician.phone }}</span>
+          <div class="technician-card-row" *ngIf="technician.phone">
+            <span class="technician-card-label">Phone</span>
+            <span class="technician-card-value">{{ technician.phone }}</span>
           </div>
         </div>
-        <div class="mobile-card-actions">
+        <div class="technician-card-actions">
           <button mat-icon-button [routerLink]="['./', technician.id]" (click)="$event.stopPropagation()" aria-label="View">
             <mat-icon>visibility</mat-icon>
           </button>

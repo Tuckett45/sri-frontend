@@ -1792,9 +1792,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   private createJobMarkerSvg(color: string): string {
     return `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-        <path fill="${color}" stroke="#ffffff" stroke-width="1.5" 
-          d="M12 2L4 10h6v10h4V10h6z"/>
-        <circle cx="12" cy="8" r="2" fill="#ffffff"/>
+        <rect x="4" y="4" width="16" height="16" rx="2" fill="${color}" stroke="#ffffff" stroke-width="1.5" 
+          transform="rotate(45 12 12)"/>
+        <circle cx="12" cy="12" r="3" fill="#ffffff"/>
       </svg>
     `;
   }
