@@ -196,8 +196,8 @@
     </mat-card>
   </div>
 
-  <!-- Job Table -->
-  <div class="table-container" #tableContainer *ngIf="!(loading$ | async) && !(error$ | async)">
+  <!-- Job Table (desktop/tablet) -->
+  <div class="table-container desktop-only" #tableContainer *ngIf="!(loading$ | async) && !(error$ | async)">
     <table mat-table [dataSource]="displayedJobs" class="job-table">
       <!-- Checkbox Column -->
       <ng-container matColumnDef="select" sticky>
@@ -348,6 +348,67 @@
     </table>
 
     <!-- Empty State -->
+    <div class="empty-state" *ngIf="displayedJobs.length === 0">
+      <mat-icon>work_off</mat-icon>
+      <h3>No jobs found</h3>
+      <p>Try adjusting your search or filters</p>
+    </div>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="mobile-job-cards mobile-only" *ngIf="!(loading$ | async) && !(error$ | async)">
+    <div
+      class="mobile-job-card"
+      *ngFor="let job of displayedJobs"
+      (click)="viewJob(job)"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="viewJob(job)">
+      <div class="mobile-card-header">
+        <a [routerLink]="['/field-resource-management/jobs', job.id]" class="mobile-card-title" (click)="$event.stopPropagation()">
+          {{ job.jobId }}
+        </a>
+        <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+      </div>
+      <div class="mobile-card-body">
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Client</span>
+          <span class="mobile-card-value">{{ job.client }}</span>
+        </div>
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Site</span>
+          <span class="mobile-card-value">{{ job.siteName }} · {{ job.siteAddress.city }}, {{ job.siteAddress.state }}</span>
+        </div>
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Type</span>
+          <span class="mobile-card-value">{{ job.jobType }}</span>
+        </div>
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Priority</span>
+          <span class="priority-badge" [ngClass]="getPriorityClass(job.priority)">{{ job.priority }}</span>
+        </div>
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Scheduled</span>
+          <span class="mobile-card-value">{{ formatDate(job.scheduledStartDate) }}</span>
+        </div>
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Assigned</span>
+          <span class="mobile-card-value">{{ getAssignedTechnicians(job) }}</span>
+        </div>
+      </div>
+      <div class="mobile-card-actions">
+        <button mat-icon-button (click)="editJob(job); $event.stopPropagation()" aria-label="Edit job">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="assignJob(job); $event.stopPropagation()" aria-label="Assign job">
+          <mat-icon>person_add</mat-icon>
+        </button>
+        <button mat-icon-button (click)="deleteJob(job); $event.stopPropagation()" aria-label="Delete job" class="delete-action">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+
     <div class="empty-state" *ngIf="displayedJobs.length === 0">
       <mat-icon>work_off</mat-icon>
       <h3>No jobs found</h3>

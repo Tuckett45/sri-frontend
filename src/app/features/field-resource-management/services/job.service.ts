@@ -359,12 +359,7 @@ export class JobService {
       title: raw.title || raw.Title,
       client: raw.client || raw.Client || '',
       siteName: raw.siteName || raw.SiteName || '',
-      siteAddress: raw.siteAddress || raw.SiteAddress || {
-        street: raw.siteStreet || raw.SiteStreet || '',
-        city: raw.siteCity || raw.SiteCity || '',
-        state: raw.siteState || raw.SiteState || '',
-        zipCode: raw.siteZipCode || raw.SiteZipCode || ''
-      },
+      siteAddress: this.mapSiteAddress(raw),
       jobType: raw.jobType || raw.JobType || 'Install',
       priority: raw.priority || raw.Priority || 'Normal',
       status: this.normalizeJobStatus(raw.status || raw.Status) || JobStatus.NotStarted,
@@ -463,6 +458,32 @@ export class JobService {
       author: raw.author || raw.Author || '',
       createdAt: raw.createdAt || raw.CreatedAt || new Date(),
       updatedAt: raw.updatedAt || raw.UpdatedAt
+    };
+  }
+
+  /**
+   * Maps site address from API response, handling:
+   * - Nested object (siteAddress / SiteAddress) with PascalCase or camelCase keys
+   * - Flat fields (siteStreet, SiteStreet, siteLatitude, SiteLatitude, etc.)
+   * Ensures latitude/longitude are preserved when the API provides them.
+   */
+  private mapSiteAddress(raw: any): any {
+    const nested = raw.siteAddress || raw.SiteAddress;
+
+    const street = nested?.street || nested?.Street || raw.siteStreet || raw.SiteStreet || '';
+    const city = nested?.city || nested?.City || raw.siteCity || raw.SiteCity || '';
+    const state = nested?.state || nested?.State || raw.siteState || raw.SiteState || '';
+    const zipCode = nested?.zipCode || nested?.ZipCode || nested?.postalCode || nested?.PostalCode || raw.siteZipCode || raw.SiteZipCode || '';
+
+    const lat = nested?.latitude ?? nested?.Latitude ?? raw.siteLatitude ?? raw.SiteLatitude ?? raw.latitude ?? raw.Latitude;
+    const lng = nested?.longitude ?? nested?.Longitude ?? raw.siteLongitude ?? raw.SiteLongitude ?? raw.longitude ?? raw.Longitude;
+
+    return {
+      street,
+      city,
+      state,
+      zipCode,
+      ...(lat != null && lng != null ? { latitude: lat, longitude: lng } : {})
     };
   }
 

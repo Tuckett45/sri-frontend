@@ -186,6 +186,12 @@ export class FrmSignalRService {
    * @returns Promise that resolves when connection is established
    */
   async connect(): Promise<void> {
+    // Skip connection if SignalR is disabled in the environment config
+    if (!local_environment.enableSignalR) {
+      console.log('SignalR disabled in environment config — skipping connection');
+      return;
+    }
+
     if (this.hubConnection && this.connectionStatusSubject.value === ConnectionStatus.Connected) {
       console.log('SignalR already connected');
       return;
@@ -1065,6 +1071,10 @@ export class FrmSignalRService {
    * - Attempt 6+: 30s (capped)
    */
   private attemptReconnect(): void {
+    if (!local_environment.enableSignalR) {
+      return;
+    }
+
     if (this.manualDisconnect) {
       console.log('Manual disconnect - skipping reconnect attempt');
       return;

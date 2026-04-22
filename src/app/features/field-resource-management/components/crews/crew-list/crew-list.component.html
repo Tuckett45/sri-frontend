@@ -140,7 +140,7 @@
   </div>
 
   <!-- Crews Table with Virtual Scrolling -->
-  <div class="table-container" *ngIf="!(loading$ | async) && !(error$ | async)">
+  <div class="table-container desktop-only" *ngIf="!(loading$ | async) && !(error$ | async)">
     <cdk-virtual-scroll-viewport itemSize="72" class="crew-viewport">
       <table mat-table [dataSource]="dataSource" matSort class="crews-table">
         
@@ -243,6 +243,66 @@
 
     <!-- Paginator -->
     <mat-paginator 
+      [length]="(crews$ | async)?.length || 0"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageIndex]="pageIndex"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="mobile-cards mobile-only" *ngIf="!(loading$ | async) && !(error$ | async)">
+    <div
+      class="mobile-card"
+      *ngFor="let crew of dataSource.data"
+      (click)="viewCrew(crew)"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="viewCrew(crew)">
+      <div class="mobile-card-header">
+        <span class="mobile-card-title">{{ crew.name }}</span>
+        <span class="status-badge" [ngClass]="getStatusBadgeClass(crew.status)">{{ crew.status }}</span>
+      </div>
+      <div class="mobile-card-body">
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Lead</span>
+          <span class="mobile-card-value">{{ getTechnicianName(crew.leadTechnicianId) }}</span>
+        </div>
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Members</span>
+          <span class="mobile-card-value">{{ getMemberCount(crew) }}</span>
+        </div>
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Market</span>
+          <span class="mobile-card-value">{{ crew.market }}</span>
+        </div>
+        <div class="mobile-card-row">
+          <span class="mobile-card-label">Company</span>
+          <span class="mobile-card-value">{{ crew.company }}</span>
+        </div>
+      </div>
+      <div class="mobile-card-actions">
+        <button mat-icon-button [routerLink]="['./', crew.id]" (click)="$event.stopPropagation()" aria-label="View">
+          <mat-icon>visibility</mat-icon>
+        </button>
+        <button mat-icon-button (click)="openCrewDialog(crew.id); $event.stopPropagation()" aria-label="Edit">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="deleteCrew(crew); $event.stopPropagation()" aria-label="Delete" class="delete-action">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="dataSource.data.length === 0">
+      <mat-icon>groups_off</mat-icon>
+      <h3>No crews found</h3>
+      <p>Try adjusting your search or filters</p>
+    </div>
+
+    <mat-paginator
       [length]="(crews$ | async)?.length || 0"
       [pageSize]="pageSize"
       [pageSizeOptions]="pageSizeOptions"

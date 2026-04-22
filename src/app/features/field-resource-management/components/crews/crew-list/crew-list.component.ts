@@ -213,7 +213,7 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.dataSource.sortingDataAccessor = (crew: Crew, property: string) => {
         switch (property) {
           case 'memberCount':
-            return crew.memberIds.length;
+            return crew.memberIds?.length || 0;
           case 'name':
             return crew.name.toLowerCase();
           case 'status':
@@ -395,7 +395,7 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
   
   getMemberCount(crew: Crew): number {
-    return crew.memberIds.length;
+    return crew.memberIds?.length || 0;
   }
   
   getStatusBadgeClass(status: CrewStatus): string {

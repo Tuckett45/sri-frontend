@@ -48,7 +48,7 @@ export class MapFiltersComponent {
     technicianStatuses: ['available', 'on-job', 'unavailable', 'off-duty'],
     crewStatuses: ['AVAILABLE', 'ON_JOB', 'UNAVAILABLE'],
     jobStatuses: ['NotStarted', 'EnRoute', 'OnSite', 'Completed', 'Issue', 'Cancelled'],
-    jobPriorities: ['P1', 'P2', 'P3', 'P4']
+    jobPriorities: ['P1', 'P2', 'Normal']
   };
 
   /**
@@ -196,7 +196,7 @@ export class MapFiltersComponent {
       technicianStatuses: ['available', 'on-job', 'unavailable', 'off-duty'],
       crewStatuses: ['AVAILABLE', 'ON_JOB', 'UNAVAILABLE'],
       jobStatuses: ['NotStarted', 'EnRoute', 'OnSite', 'Completed', 'Issue', 'Cancelled'],
-      jobPriorities: ['P1', 'P2', 'P3', 'P4']
+      jobPriorities: ['P1', 'P2', 'Normal']
     };
     this.emitFilters();
   }

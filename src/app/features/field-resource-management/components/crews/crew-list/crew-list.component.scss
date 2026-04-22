@@ -521,3 +521,140 @@
 ::ng-deep .mat-mdc-row:hover .mat-column-name {
   background-color: #f5f5f5 !important;
 }
+
+// Mobile card view — hide table, show cards
+.desktop-only {
+  @media (max-width: 767px) {
+    display: none !important;
+  }
+}
+
+.mobile-only {
+  display: none;
+
+  @media (max-width: 767px) {
+    display: block;
+  }
+}
+
+.mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-card {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 14px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover, &:focus {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    outline: none;
+  }
+
+  .mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .mobile-card-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1976d2;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mobile-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+  }
+
+  .mobile-card-label {
+    color: #757575;
+    font-weight: 500;
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+
+  .mobile-card-value {
+    color: #212121;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+
+    button {
+      color: #616161;
+
+      &.delete-action {
+        color: #d32f2f;
+      }
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .crew-list-container {
+    padding: 12px;
+  }
+}
+
+// Paginator — white background, black text and icons
+::ng-deep mat-paginator {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+
+  .mat-mdc-paginator-container {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-paginator-range-label,
+  .mat-mdc-paginator-page-size-label {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-select-value-text {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-select-arrow svg {
+    fill: #000000 !important;
+  }
+
+  .mat-mdc-paginator-navigation-previous,
+  .mat-mdc-paginator-navigation-next,
+  .mat-mdc-paginator-navigation-first,
+  .mat-mdc-paginator-navigation-last {
+    color: #000000 !important;
+
+    .mat-mdc-paginator-icon {
+      fill: #000000 !important;
+    }
+  }
+}

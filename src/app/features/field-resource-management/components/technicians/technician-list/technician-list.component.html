@@ -147,7 +147,7 @@
 
   <!-- Technicians Table -->
   <ng-container *ngIf="technicians$ | async as technicians">
-    <div class="table-container" *ngIf="!(loading$ | async) && !(error$ | async)">
+    <div class="table-container desktop-only" *ngIf="!(loading$ | async) && !(error$ | async)">
       <div class="table-scroll-area">
         <table mat-table [dataSource]="technicians" class="technicians-table">
         
@@ -289,6 +289,75 @@
 
       <!-- Paginator -->
       <mat-paginator 
+        [length]="technicians.length"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        [pageIndex]="pageIndex"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="mobile-cards mobile-only" *ngIf="!(loading$ | async) && !(error$ | async)">
+      <div
+        class="mobile-card"
+        *ngFor="let technician of technicians"
+        [routerLink]="['./', technician.id]"
+        role="button"
+        tabindex="0">
+        <div class="mobile-card-header">
+          <span class="mobile-card-title">{{ getFullName(technician) }}</span>
+          <span class="status-badge" [class.active]="technician.isActive" [class.inactive]="!technician.isActive">
+            {{ getCurrentStatus(technician) }}
+          </span>
+        </div>
+        <div class="mobile-card-body">
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Role</span>
+            <span class="mobile-card-value role-badge">{{ technician.role }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Region</span>
+            <span class="mobile-card-value">{{ technician.region || 'N/A' }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Crew</span>
+            <span class="mobile-card-value">{{ technicianCrewMap[technician.id] || '—' }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Current Job</span>
+            <span class="mobile-card-value">{{ technicianJobMap[technician.id] || '—' }}</span>
+          </div>
+          <div class="mobile-card-row" *ngIf="technician.email">
+            <span class="mobile-card-label">Email</span>
+            <span class="mobile-card-value">{{ technician.email }}</span>
+          </div>
+          <div class="mobile-card-row" *ngIf="technician.phone">
+            <span class="mobile-card-label">Phone</span>
+            <span class="mobile-card-value">{{ technician.phone }}</span>
+          </div>
+        </div>
+        <div class="mobile-card-actions">
+          <button mat-icon-button [routerLink]="['./', technician.id]" (click)="$event.stopPropagation()" aria-label="View">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button [routerLink]="['./', technician.id, 'edit']" (click)="$event.stopPropagation()" aria-label="Edit">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="toggleTechnicianStatus(technician); $event.stopPropagation()" aria-label="Delete" class="delete-action">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="technicians.length === 0">
+        <mat-icon>person_off</mat-icon>
+        <h3>No technicians found</h3>
+        <p>Try adjusting your search or filters</p>
+      </div>
+
+      <mat-paginator
         [length]="technicians.length"
         [pageSize]="pageSize"
         [pageSizeOptions]="pageSizeOptions"
