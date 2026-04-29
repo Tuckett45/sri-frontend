@@ -1,0 +1,373 @@
+.pipeline-dashboard-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #144f80;
+      }
+    }
+  }
+
+  mat-card-content {
+    .widget-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .widget-error {
+      text-align: center;
+      padding: 1.5rem;
+      color: #d32f2f;
+
+      p {
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pipeline Categories
+// ---------------------------------------------------------------------------
+
+.pipeline-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pipeline-category {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: #bdbdbd;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Category Header
+// ---------------------------------------------------------------------------
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f5f7fa;
+  }
+
+  &:focus {
+    outline: 2px solid #144f80;
+    outline-offset: -2px;
+  }
+}
+
+.category-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.category-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.category-count-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.category-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &:focus {
+    outline: 2px solid #144f80;
+    outline-offset: 2px;
+  }
+}
+
+.expand-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #666;
+}
+
+// ---------------------------------------------------------------------------
+// Category Color Themes
+// ---------------------------------------------------------------------------
+
+.category-rfps {
+  .category-icon { color: #1565c0; }
+  .category-count {
+    background-color: #e3f2fd;
+    color: #1565c0;
+  }
+}
+
+.category-boms-not-ready {
+  .category-icon { color: #e65100; }
+  .category-count {
+    background-color: #fff3e0;
+    color: #e65100;
+  }
+}
+
+.category-boms-ready {
+  .category-icon { color: #2e7d32; }
+  .category-count {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+}
+
+.category-quotes-ready {
+  .category-icon { color: #6a1b9a; }
+  .category-count {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+  }
+}
+
+.category-delivered {
+  .category-icon { color: #00838f; }
+  .category-count {
+    background-color: #e0f7fa;
+    color: #00838f;
+  }
+}
+
+.category-converted {
+  .category-icon { color: #558b2f; }
+  .category-count {
+    background-color: #f1f8e9;
+    color: #558b2f;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Quote List (expanded)
+// ---------------------------------------------------------------------------
+
+.category-quotes {
+  border-top: 1px solid #e0e0e0;
+  padding: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.quote-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f5f7fa;
+    transform: translateX(2px);
+  }
+
+  &:focus {
+    outline: 2px solid #144f80;
+    outline-offset: 2px;
+  }
+
+  & + .quote-item {
+    margin-top: 2px;
+  }
+}
+
+.quote-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.quote-project {
+  font-size: 13px;
+  font-weight: 600;
+  color: #144f80;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quote-client {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ---------------------------------------------------------------------------
+// Quote Indicators (PO Number, SRI Job Number)
+// ---------------------------------------------------------------------------
+
+.quote-indicators {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.po-indicator {
+  background-color: #e8eef4;
+  color: #144f80;
+}
+
+.job-indicator {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+// ---------------------------------------------------------------------------
+// Status Badges
+// ---------------------------------------------------------------------------
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+
+  &.status-Draft {
+    background-color: #e3f2fd;
+    color: #1565c0;
+  }
+
+  &.status-Job_Summary_In_Progress {
+    background-color: #e3f2fd;
+    color: #1565c0;
+  }
+
+  &.status-BOM_In_Progress {
+    background-color: #fff3e0;
+    color: #e65100;
+  }
+
+  &.status-Pending_Validation {
+    background-color: #fff8e1;
+    color: #f57f17;
+  }
+
+  &.status-Validation_Approved {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.status-Validation_Rejected {
+    background-color: #fce4ec;
+    color: #c62828;
+  }
+
+  &.status-Quote_Assembled {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+  }
+
+  &.status-Quote_Delivered {
+    background-color: #e0f7fa;
+    color: #00838f;
+  }
+
+  &.status-Quote_Converted {
+    background-color: #f1f8e9;
+    color: #558b2f;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Empty State
+// ---------------------------------------------------------------------------
+
+.empty-category {
+  text-align: center;
+  padding: 1rem;
+  color: #999;
+  font-size: 13px;
+  font-style: italic;
+}
+
+// ---------------------------------------------------------------------------
+// Responsive
+// ---------------------------------------------------------------------------
+
+@media (max-width: 768px) {
+  .quote-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .quote-indicators {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+}

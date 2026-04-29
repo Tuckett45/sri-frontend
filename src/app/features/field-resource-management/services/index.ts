@@ -14,3 +14,5 @@ export * from './geolocation.service';
 export * from './export.service';
 export * from './frm-permission.service';
 export * from './dashboard-data.service';
+export * from './deployment-checklist.service';
+export * from './bom-calculation.service';

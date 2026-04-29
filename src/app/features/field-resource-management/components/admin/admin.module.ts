@@ -15,6 +15,8 @@ import { RegionManagerComponent } from './region-manager/region-manager.componen
 import { AuditLogViewerComponent } from './audit-log-viewer/audit-log-viewer.component';
 import { SystemConfigurationComponent } from './system-configuration/system-configuration.component';
 import { UserManagementComponent } from './user-management/user-management.component';
+import { ClientConfigListComponent } from './client-config/client-config-list.component';
+import { ClientConfigFormComponent } from './client-config/client-config-form.component';
 
 const routes: Routes = [
   {
@@ -61,6 +63,14 @@ const routes: Routes = [
       title: 'User Management',
       breadcrumb: 'Users'
     }
+  },
+  {
+    path: 'client-configurations',
+    component: ClientConfigListComponent,
+    data: {
+      title: 'Client Configurations',
+      breadcrumb: 'Client Configurations'
+    }
   }
 ];
 
@@ -76,7 +86,9 @@ const routes: Routes = [
     JobTemplateManagerComponent,
     RegionManagerComponent,
     AuditLogViewerComponent,
-    SystemConfigurationComponent
+    SystemConfigurationComponent,
+    ClientConfigListComponent,
+    ClientConfigFormComponent
   ],
   imports: [
     CommonModule,
@@ -92,7 +104,9 @@ const routes: Routes = [
     RegionManagerComponent,
     AuditLogViewerComponent,
     SystemConfigurationComponent,
-    UserManagementComponent
+    UserManagementComponent,
+    ClientConfigListComponent,
+    ClientConfigFormComponent
   ]
 })
 export class AdminModule { }

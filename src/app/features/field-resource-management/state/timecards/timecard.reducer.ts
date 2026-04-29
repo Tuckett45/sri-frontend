@@ -331,7 +331,14 @@ export const timecardReducer = createReducer(
         timeEntries: [timeEntry],
         expenses: [],
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        driveTimeHours: 0,
+        onSiteHours: 0,
+        holidayHours: 0,
+        ptoHours: 0,
+        totalBillableAmount: 0,
+        totalLaborCost: 0,
+        isAutoSubmitted: false
       }
     };
   }),

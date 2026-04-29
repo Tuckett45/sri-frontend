@@ -61,7 +61,7 @@ export class ConfirmDialogComponent {
    * Handle Enter key press to confirm
    */
   @HostListener('document:keydown.enter', ['$event'])
-  onEnterKey(event: KeyboardEvent): void {
+  onEnterKey(event: Event): void {
     event.preventDefault();
     this.onConfirm();
   }
@@ -70,7 +70,7 @@ export class ConfirmDialogComponent {
    * Handle Escape key press to cancel
    */
   @HostListener('document:keydown.escape', ['$event'])
-  onEscapeKey(event: KeyboardEvent): void {
+  onEscapeKey(event: Event): void {
     event.preventDefault();
     this.onCancel();
   }

@@ -26,6 +26,17 @@ export enum JobStatus {
   Cancelled = 'Cancelled'
 }
 
+export enum JobReadiness {
+  Not_Ready = 'Not_Ready',
+  Partially_Ready = 'Partially_Ready',
+  Ready = 'Ready'
+}
+
+export enum CustomerReady {
+  Not_Ready = 'Not_Ready',
+  Ready = 'Ready'
+}
+
 export interface Address {
   street: string;
   city: string;
@@ -104,6 +115,13 @@ export interface Job {
   requestedHours?: number;
   overtimeRequired?: boolean;
   estimatedOvertimeHours?: number;
+
+  // Job Readiness
+  jobReadiness?: JobReadiness;
+  customerReady?: CustomerReady;
+
+  // Quote Workflow Reference
+  quoteWorkflowId?: string;
 
   createdBy: string;
   createdAt: Date;

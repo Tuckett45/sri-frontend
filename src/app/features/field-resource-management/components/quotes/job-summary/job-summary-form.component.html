@@ -1,0 +1,267 @@
+<!-- Page Header -->
+<div class="page-header">
+  <h2>Job Summary — Labor Estimation</h2>
+</div>
+
+<!-- Draft Restored Banner -->
+<div class="draft-banner" *ngIf="draftRestored">
+  <mat-icon>restore</mat-icon>
+  <span>Unsaved changes have been restored.</span>
+  <button mat-button (click)="discardDraft()" aria-label="Discard draft and reload saved state">
+    Discard
+  </button>
+  <button mat-button (click)="dismissDraftBanner()" aria-label="Dismiss draft notification">
+    Dismiss
+  </button>
+</div>
+
+<!-- Form -->
+<form [formGroup]="jobSummaryForm" class="job-summary-form">
+
+  <!-- RFP Pre-populated Section (Read-Only) -->
+  <mat-card class="form-section">
+    <mat-card-header>
+      <mat-card-title>Project Information (from RFP)</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Project Name</mat-label>
+          <input matInput formControlName="projectName" readonly />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Site Name</mat-label>
+          <input matInput formControlName="siteName" readonly />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Scope of Work</mat-label>
+          <textarea
+            matInput
+            formControlName="scopeOfWork"
+            rows="4"
+            readonly
+          ></textarea>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Total Estimated Hours -->
+  <mat-card class="form-section">
+    <mat-card-header>
+      <mat-card-title>Total Estimated Labor Hours</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Total Estimated Hours</mat-label>
+          <input
+            matInput
+            formControlName="totalEstimatedHours"
+            type="number"
+            step="0.01"
+            min="0.01"
+            placeholder="Enter total estimated hours"
+          />
+          <mat-hint>Positive number with up to 2 decimal places</mat-hint>
+          <mat-error *ngIf="hasError('totalEstimatedHours', 'required')">
+            This field is required
+          </mat-error>
+          <mat-error *ngIf="hasError('totalEstimatedHours', 'min')">
+            {{ getErrorMessage('totalEstimatedHours') }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Labor Line Items -->
+  <mat-card class="form-section">
+    <mat-card-header>
+      <mat-card-title>Labor Line Items</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+
+      <!-- Empty State -->
+      <div class="empty-line-items" *ngIf="laborLineItems.length === 0">
+        <mat-icon>assignment</mat-icon>
+        <p>No labor line items added yet. Click "Add Line Item" to begin.</p>
+      </div>
+
+      <!-- Line Items -->
+      <div
+        formArrayName="laborLineItems"
+        class="line-items-container"
+        *ngIf="laborLineItems.length > 0"
+      >
+        <div
+          *ngFor="let item of laborLineItems.controls; let i = index"
+          [formGroupName]="i"
+          class="line-item-card"
+        >
+          <div class="line-item-header">
+            <span class="line-item-number">Line Item {{ i + 1 }}</span>
+            <button
+              mat-icon-button
+              color="warn"
+              type="button"
+              (click)="removeLaborLineItem(i)"
+              [disabled]="!canEdit"
+              aria-label="Remove line item"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Task Description</mat-label>
+              <textarea
+                matInput
+                formControlName="taskDescription"
+                rows="2"
+                placeholder="Describe the task"
+                maxlength="500"
+              ></textarea>
+              <mat-hint align="end">
+                {{ item.get('taskDescription')?.value?.length || 0 }}/500
+              </mat-hint>
+              <mat-error *ngIf="hasLineItemError(i, 'taskDescription', 'required')">
+                This field is required
+              </mat-error>
+              <mat-error *ngIf="hasLineItemError(i, 'taskDescription', 'maxlength')">
+                {{ getLineItemErrorMessage(i, 'taskDescription') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row two-columns">
+            <mat-form-field appearance="outline">
+              <mat-label>Labor Category</mat-label>
+              <input
+                matInput
+                formControlName="laborCategory"
+                placeholder="e.g., Electrician, Technician"
+                maxlength="100"
+              />
+              <mat-hint align="end">
+                {{ item.get('laborCategory')?.value?.length || 0 }}/100
+              </mat-hint>
+              <mat-error *ngIf="hasLineItemError(i, 'laborCategory', 'required')">
+                This field is required
+              </mat-error>
+              <mat-error *ngIf="hasLineItemError(i, 'laborCategory', 'maxlength')">
+                {{ getLineItemErrorMessage(i, 'laborCategory') }}
+              </mat-error>
+            </mat-form-field>
+
+            <div class="numeric-fields">
+              <mat-form-field appearance="outline">
+                <mat-label>Estimated Hours</mat-label>
+                <input
+                  matInput
+                  formControlName="estimatedHours"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                />
+                <mat-error *ngIf="hasLineItemError(i, 'estimatedHours', 'required')">
+                  This field is required
+                </mat-error>
+                <mat-error *ngIf="hasLineItemError(i, 'estimatedHours', 'min')">
+                  Minimum value is 0.01
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Hourly Rate ($)</mat-label>
+                <input
+                  matInput
+                  formControlName="hourlyRate"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                />
+                <mat-error *ngIf="hasLineItemError(i, 'hourlyRate', 'required')">
+                  This field is required
+                </mat-error>
+                <mat-error *ngIf="hasLineItemError(i, 'hourlyRate', 'min')">
+                  Minimum value is 0.01
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Line Item Button -->
+      <div class="add-line-item-row">
+        <button
+          mat-stroked-button
+          color="primary"
+          type="button"
+          (click)="addLaborLineItem()"
+          [disabled]="!canEdit"
+        >
+          <mat-icon>add</mat-icon>
+          Add Line Item
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Running Totals -->
+  <mat-card class="form-section totals-section">
+    <mat-card-header>
+      <mat-card-title>Running Totals</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="totals-grid">
+        <div class="total-item">
+          <label>Total Estimated Hours</label>
+          <span class="total-value">{{ laborTotals.totalHours | number:'1.2-2' }}</span>
+        </div>
+        <div class="total-item">
+          <label>Total Estimated Labor Cost</label>
+          <span class="total-value cost">{{ laborTotals.totalCost | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Form Actions -->
+  <div class="form-actions" *ngIf="canEdit">
+    <button
+      mat-button
+      type="button"
+      (click)="onSave()"
+      [disabled]="isSaving || isCompleting"
+      class="save-btn"
+    >
+      <mat-spinner *ngIf="isSaving" diameter="20" class="button-spinner"></mat-spinner>
+      <span *ngIf="!isSaving">Save</span>
+      <span *ngIf="isSaving">Saving...</span>
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      type="button"
+      (click)="onMarkComplete()"
+      [disabled]="isSaving || isCompleting"
+      class="complete-btn"
+    >
+      <mat-spinner *ngIf="isCompleting" diameter="20" class="button-spinner"></mat-spinner>
+      <span *ngIf="!isCompleting">Mark Complete</span>
+      <span *ngIf="isCompleting">Completing...</span>
+    </button>
+  </div>
+
+</form>

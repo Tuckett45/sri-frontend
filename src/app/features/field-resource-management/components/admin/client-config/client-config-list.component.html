@@ -1,0 +1,110 @@
+<div class="client-config-container">
+  <!-- List View -->
+  <ng-container *ngIf="!showForm">
+    <div class="header">
+      <h2>Client Configurations</h2>
+      <button mat-raised-button class="btn-orange" (click)="onCreateConfig()">
+        <mat-icon>add</mat-icon>
+        New Configuration
+      </button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="loading" class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading configurations...</p>
+    </div>
+
+    <!-- Table -->
+    <mat-card *ngIf="!loading">
+      <mat-card-content>
+        <table mat-table [dataSource]="dataSource" class="config-table">
+          <!-- Client Name Column -->
+          <ng-container matColumnDef="clientName">
+            <th mat-header-cell *matHeaderCellDef>Client Name</th>
+            <td mat-cell *matCellDef="let config">
+              <div class="client-name">
+                <mat-icon>business</mat-icon>
+                <span>{{ config.clientName }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Tax/Freight Visible Column -->
+          <ng-container matColumnDef="taxFreightVisible">
+            <th mat-header-cell *matHeaderCellDef>Tax/Freight Visible</th>
+            <td mat-cell *matCellDef="let config">
+              <mat-chip-set>
+                <mat-chip [class.chip-visible]="config.taxFreightVisible"
+                          [class.chip-hidden]="!config.taxFreightVisible">
+                  {{ config.taxFreightVisible ? 'Visible' : 'Hidden' }}
+                </mat-chip>
+              </mat-chip-set>
+            </td>
+          </ng-container>
+
+          <!-- Default Markup Column -->
+          <ng-container matColumnDef="defaultMarkupPercentage">
+            <th mat-header-cell *matHeaderCellDef>Default Markup</th>
+            <td mat-cell *matCellDef="let config">
+              {{ config.defaultMarkupPercentage }}%
+            </td>
+          </ng-container>
+
+          <!-- Updated At Column -->
+          <ng-container matColumnDef="updatedAt">
+            <th mat-header-cell *matHeaderCellDef>Last Updated</th>
+            <td mat-cell *matCellDef="let config">
+              {{ config.updatedAt | date:'medium' }}
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let config">
+              <button mat-icon-button [matMenuTriggerFor]="actionMenu" aria-label="Actions">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #actionMenu="matMenu">
+                <button mat-menu-item (click)="onEditConfig(config)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Edit</span>
+                </button>
+                <button mat-menu-item (click)="onDeleteConfig(config)">
+                  <mat-icon color="warn">delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+          <!-- No data row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+              <div class="empty-state">
+                <mat-icon>settings</mat-icon>
+                <p>No client configurations found</p>
+                <button mat-raised-button class="btn-orange" (click)="onCreateConfig()">
+                  Create First Configuration
+                </button>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+
+  <!-- Form View -->
+  <ng-container *ngIf="showForm">
+    <app-client-config-form
+      [config]="selectedConfig"
+      (saved)="onFormSaved()"
+      (cancelled)="onFormCancelled()">
+    </app-client-config-form>
+  </ng-container>
+</div>

@@ -38,6 +38,10 @@
 
   <!-- Content -->
   <div class="job-detail-content" *ngIf="!(loading$ | async)">
+    <mat-tab-group #jobTabGroup [(selectedIndex)]="selectedTabIndex" class="job-detail-tabs" animationDuration="200ms">
+      <!-- Details Tab -->
+      <mat-tab label="Details">
+        <ng-template matTabContent>
     <!-- Section 1: Job Info -->
     <mat-card class="detail-section">
       <mat-card-header>
@@ -75,6 +79,81 @@
             <label>Site Address</label>
             <span>{{ getFullAddress() }}</span>
           </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section: Job Readiness -->
+    <mat-card class="detail-section readiness-section">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>checklist</mat-icon>
+          Job Readiness
+        </mat-card-title>
+        <span *ngIf="isFullyReady" class="readiness-badge ready" aria-label="Fully ready for deployment">
+          <mat-icon>check_circle</mat-icon>
+          Ready for Deployment
+        </span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="readiness-grid">
+          <!-- Job Readiness -->
+          <div class="readiness-item">
+            <label id="job-readiness-label">Job Readiness</label>
+            <mat-form-field appearance="outline" *ngIf="canEditJob; else jobReadinessReadOnly">
+              <mat-select
+                [value]="job.jobReadiness || JobReadiness.Not_Ready"
+                (selectionChange)="onJobReadinessChange($event.value)"
+                aria-labelledby="job-readiness-label">
+                <mat-option *ngFor="let option of jobReadinessOptions" [value]="option">
+                  {{ formatReadiness(option) }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <ng-template #jobReadinessReadOnly>
+              <span class="readiness-value" [ngClass]="'readiness-' + (job.jobReadiness || 'Not_Ready').toLowerCase().replace('_', '-')">
+                {{ formatReadiness(job.jobReadiness) }}
+              </span>
+            </ng-template>
+          </div>
+
+          <!-- Customer Ready -->
+          <div class="readiness-item">
+            <label id="customer-ready-label">Customer Ready</label>
+            <mat-form-field appearance="outline" *ngIf="canEditJob; else customerReadyReadOnly">
+              <mat-select
+                [value]="job.customerReady || CustomerReady.Not_Ready"
+                (selectionChange)="onCustomerReadyChange($event.value)"
+                aria-labelledby="customer-ready-label">
+                <mat-option *ngFor="let option of customerReadyOptions" [value]="option">
+                  {{ formatReadiness(option) }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <ng-template #customerReadyReadOnly>
+              <span class="readiness-value" [ngClass]="'readiness-' + (job.customerReady || 'Not_Ready').toLowerCase().replace('_', '-')">
+                {{ formatReadiness(job.customerReady) }}
+              </span>
+            </ng-template>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section: Originating Quote -->
+    <mat-card class="detail-section" *ngIf="job.quoteWorkflowId">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>description</mat-icon>
+          Originating Quote
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="quote-link-container">
+          <button mat-stroked-button color="primary" (click)="viewOriginatingQuote()">
+            <mat-icon>open_in_new</mat-icon>
+            View Quote Workflow
+          </button>
         </div>
       </mat-card-content>
     </mat-card>
@@ -648,6 +727,29 @@
         </div>
       </mat-card-content>
     </mat-card>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Deployment Checklist Tab (permission-gated) -->
+      <mat-tab *ngIf="canViewChecklist">
+        <ng-template mat-tab-label>
+          Deployment Checklist
+          <span
+            *ngIf="checklistStatus$ | async as status"
+            class="checklist-status-badge"
+            [ngClass]="getChecklistStatusClass(status)">
+            {{ getChecklistStatusLabel(status) }}
+          </span>
+        </ng-template>
+        <ng-template matTabContent>
+          <app-deployment-checklist
+            [jobId]="job.id"
+            [job]="job"
+            [initialPhaseIndex]="getChecklistPhaseIndex()">
+          </app-deployment-checklist>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
   </div>
 </div>
 

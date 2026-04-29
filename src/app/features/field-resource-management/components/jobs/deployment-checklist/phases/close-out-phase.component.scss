@@ -1,0 +1,193 @@
+// ---------------------------------------------------------------------------
+// Draft Restored Banner
+// ---------------------------------------------------------------------------
+
+.draft-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+  color: #1565c0;
+  font-size: 14px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #1976d2;
+  }
+
+  span {
+    flex: 1;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Form Layout
+// ---------------------------------------------------------------------------
+
+.close-out-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-section {
+  margin-bottom: 16px;
+}
+
+.section-heading {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.sub-heading {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.category-heading {
+  margin: 16px 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 4px;
+}
+
+// ---------------------------------------------------------------------------
+// Participant Fields (Equipment Hand-off)
+// ---------------------------------------------------------------------------
+
+.participant-group {
+  margin-bottom: 16px;
+}
+
+.participant-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+// ---------------------------------------------------------------------------
+// Checklist Item
+// ---------------------------------------------------------------------------
+
+.checklist-item {
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.checklist-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.item-number {
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  min-width: 24px;
+}
+
+.item-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+  flex: 1;
+}
+
+// ---------------------------------------------------------------------------
+// Response Radio Group
+// ---------------------------------------------------------------------------
+
+.response-radio-group {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.response-option {
+  font-size: 14px;
+}
+
+// ---------------------------------------------------------------------------
+// Notes Field
+// ---------------------------------------------------------------------------
+
+.notes-field {
+  width: 100%;
+}
+
+// ---------------------------------------------------------------------------
+// Site Acceptance Fields
+// ---------------------------------------------------------------------------
+
+.site-acceptance-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+// ---------------------------------------------------------------------------
+// Form Actions
+// ---------------------------------------------------------------------------
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+// ---------------------------------------------------------------------------
+// Responsive
+// ---------------------------------------------------------------------------
+
+@media (max-width: 600px) {
+  .participant-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .site-acceptance-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .response-radio-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .checklist-item {
+    padding: 12px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Print Styles
+// ---------------------------------------------------------------------------
+
+@media print {
+  .draft-banner,
+  .form-actions {
+    display: none !important;
+  }
+}

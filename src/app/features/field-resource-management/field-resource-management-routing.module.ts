@@ -11,6 +11,7 @@ import { ManagerGuard } from './guards/manager.guard';
 import { HrGuard } from './guards/hr.guard';
 import { PayrollGuard } from './guards/payroll.guard';
 import { EnhancedRoleGuard } from '../../guards/enhanced-role.guard';
+import { QuoteViewGuard } from './guards/quote-view.guard';
 import { UserRole } from '../../models/role.enum';
 
 // Components - Home Dashboard
@@ -137,6 +138,13 @@ const routes: Routes = [
         path: 'crews',
         loadChildren: () => import('./components/crews/crews.module').then(m => m.CrewsModule),
         canActivate: [DispatcherGuard]
+      },
+
+      // Quote/RFP Workflow Routes - Lazy Loaded
+      {
+        path: 'quotes',
+        loadChildren: () => import('./components/quotes/quotes.module').then(m => m.QuotesModule),
+        canActivate: [QuoteViewGuard]
       },
 
       // Scheduling Routes - Lazy Loaded

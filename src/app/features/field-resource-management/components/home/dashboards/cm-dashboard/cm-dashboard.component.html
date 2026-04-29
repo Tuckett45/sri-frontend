@@ -1,5 +1,8 @@
 <div class="cm-dashboard">
-  <app-quick-actions-widget [actions]="quickActions"></app-quick-actions-widget>
+  <app-quick-actions-widget
+    [actions]="quickActions"
+    (actionClicked)="onQuickAction($event)">
+  </app-quick-actions-widget>
 
   <div class="dashboard-grid">
     <app-active-jobs-widget

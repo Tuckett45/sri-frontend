@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
@@ -6,14 +6,16 @@ import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
 import { takeUntil, filter, map, catchError, take, distinctUntilChanged } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTabGroup } from '@angular/material/tabs';
 
-import { Job, JobStatus, Attachment, JobNote } from '../../../models/job.model';
+import { Job, JobStatus, Attachment, JobNote, JobReadiness, CustomerReady } from '../../../models/job.model';
 import { JobBudget, BudgetStatus } from '../../../models/budget.model';
 import { TimeEntry } from '../../../models/time-entry.model';
 import { Assignment } from '../../../models/assignment.model';
 import { Crew } from '../../../models/crew.model';
 import { Technician } from '../../../models/technician.model';
 import { JobCostBreakdown, BudgetComparison } from '../../../models/reporting.model';
+import { ChecklistStatus } from '../../../models/deployment-checklist.model';
 import * as JobActions from '../../../state/jobs/job.actions';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
 import * as BudgetActions from '../../../state/budgets/budget.actions';
@@ -22,6 +24,7 @@ import * as TechnicianActions from '../../../state/technicians/technician.action
 import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
 import { selectCrewById } from '../../../state/crews/crew.selectors';
 import { loadCrews } from '../../../state/crews/crew.actions';
+import { selectChecklistStatus } from '../../../state/deployment-checklist/checklist.selectors';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { AssignmentDialogComponent } from '../../scheduling/assignment-dialog/assignment-dialog.component';
 import { JobFormComponent } from '../job-form/job-form.component';
@@ -60,6 +63,8 @@ import { FrmPermissionService } from '../../../services/frm-permission.service';
 export class JobDetailComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
+  @ViewChild('jobTabGroup') jobTabGroup!: MatTabGroup;
+
   job$: Observable<Job | null | undefined>;
   job: Job | null = null;
   loading$: Observable<boolean>;
@@ -118,6 +123,25 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   // Status transition error
   statusTransitionError: string | null = null;
 
+  // Deployment Checklist
+  checklistStatus$!: Observable<ChecklistStatus>;
+  canViewChecklist = false;
+
+  // Job Readiness
+  canEditJob = false;
+  JobReadiness = JobReadiness;
+  CustomerReady = CustomerReady;
+  jobReadinessOptions = Object.values(JobReadiness);
+  customerReadyOptions = Object.values(CustomerReady);
+
+  // Tab management for deep-linking
+  selectedTabIndex = 0;
+  /** Phase name to deep-link into when the checklist tab activates */
+  pendingChecklistPhase: string | null = null;
+
+  // Checklist status enum reference for template
+  ChecklistStatus = ChecklistStatus;
+
   // Valid status transitions map
   private readonly validTransitions: Record<JobStatus, JobStatus[]> = {
     [JobStatus.NotStarted]: [JobStatus.EnRoute, JobStatus.Issue, JobStatus.Cancelled],
@@ -151,6 +175,12 @@ export class JobDetailComponent implements OnInit, OnDestroy {
     this.canViewBudget = this.frmPermissionService.hasPermission(
       this.authService.getUserRole(), 'canViewBudget'
     );
+    this.canViewChecklist = this.frmPermissionService.hasPermission(
+      this.authService.getUserRole(), 'canViewDeploymentChecklist'
+    );
+    this.canEditJob = this.frmPermissionService.hasPermission(
+      this.authService.getUserRole(), 'canEditJob'
+    );
   }
 
   ngOnInit(): void {
@@ -163,6 +193,23 @@ export class JobDetailComponent implements OnInit, OnDestroy {
       technicians.forEach(t => {
         this.technicianNameMap.set(t.id, `${t.firstName} ${t.lastName}`);
       });
+    });
+
+    // Select checklist status from the store
+    this.checklistStatus$ = this.store.select(selectChecklistStatus);
+
+    // Handle deep-link query params for tab and phase selection
+    this.route.queryParams.pipe(
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(params => {
+      if (params['tab'] === 'deployment-checklist' && this.canViewChecklist) {
+        // The checklist tab is at index 1 (after the "Details" tab)
+        this.selectedTabIndex = 1;
+        if (params['phase']) {
+          this.pendingChecklistPhase = params['phase'];
+        }
+      }
     });
 
     // Get job ID from route
@@ -362,6 +409,55 @@ export class JobDetailComponent implements OnInit, OnDestroy {
       status: newStatus,
       reason
     }));
+  }
+
+  /**
+   * Check if the job is fully ready for deployment
+   * (both jobReadiness and customerReady are Ready)
+   */
+  get isFullyReady(): boolean {
+    return this.job?.jobReadiness === JobReadiness.Ready && this.job?.customerReady === CustomerReady.Ready;
+  }
+
+  /**
+   * Update the jobReadiness field
+   */
+  onJobReadinessChange(value: JobReadiness): void {
+    if (!this.job) return;
+    this.store.dispatch(JobActions.updateJob({
+      id: this.job.id,
+      job: { jobReadiness: value }
+    }));
+    this.snackBar.open('Job readiness updated', 'Close', { duration: 3000 });
+  }
+
+  /**
+   * Update the customerReady field
+   */
+  onCustomerReadyChange(value: CustomerReady): void {
+    if (!this.job) return;
+    this.store.dispatch(JobActions.updateJob({
+      id: this.job.id,
+      job: { customerReady: value }
+    }));
+    this.snackBar.open('Customer readiness updated', 'Close', { duration: 3000 });
+  }
+
+  /**
+   * Format readiness enum values for display
+   */
+  formatReadiness(value: string | undefined): string {
+    if (!value) return 'Not Set';
+    return value.replace(/_/g, ' ');
+  }
+
+  /**
+   * Navigate to the originating quote workflow
+   */
+  viewOriginatingQuote(): void {
+    if (this.job?.quoteWorkflowId) {
+      this.router.navigate(['/field-resource-management/quotes', this.job.quoteWorkflowId]);
+    }
   }
 
   /**
@@ -822,5 +918,54 @@ export class JobDetailComponent implements OnInit, OnDestroy {
       style: 'currency',
       currency: 'USD'
     }).format(value);
+  }
+
+  /**
+   * Get CSS class for checklist status badge
+   */
+  getChecklistStatusClass(status: ChecklistStatus | null): string {
+    if (!status) return 'checklist-not-started';
+    switch (status) {
+      case ChecklistStatus.Completed:
+        return 'checklist-completed';
+      case ChecklistStatus.InProgress:
+        return 'checklist-in-progress';
+      case ChecklistStatus.NotStarted:
+      default:
+        return 'checklist-not-started';
+    }
+  }
+
+  /**
+   * Get display text for checklist status badge
+   */
+  getChecklistStatusLabel(status: ChecklistStatus | null): string {
+    if (!status) return 'Not Started';
+    switch (status) {
+      case ChecklistStatus.Completed:
+        return 'Completed';
+      case ChecklistStatus.InProgress:
+        return 'In Progress';
+      case ChecklistStatus.NotStarted:
+      default:
+        return 'Not Started';
+    }
+  }
+
+  /**
+   * Resolves the pending checklist phase name to a tab index
+   * and passes it to the DeploymentChecklistComponent.
+   */
+  getChecklistPhaseIndex(): number {
+    const phaseMap: Record<string, number> = {
+      jobDetails: 0,
+      preInstallation: 1,
+      eodReports: 2,
+      closeOut: 3
+    };
+    if (this.pendingChecklistPhase && phaseMap[this.pendingChecklistPhase] !== undefined) {
+      return phaseMap[this.pendingChecklistPhase];
+    }
+    return 0;
   }
 }

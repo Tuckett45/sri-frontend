@@ -207,7 +207,7 @@ export class ResourceAllocationService {
         }
 
         // Check qualifications (required skills)
-        const technicianSkillIds = technician.skills.map(s => s.id);
+        const technicianSkillIds = (technician.skills ?? []).map(s => s.id);
         const missingSkills = job.requiredSkills.filter(
           reqSkill => !technicianSkillIds.includes(reqSkill.id)
         );

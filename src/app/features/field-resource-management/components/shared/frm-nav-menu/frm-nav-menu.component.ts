@@ -31,6 +31,7 @@ export class FrmNavMenuComponent implements OnInit, OnDestroy {
     { label: 'Dashboard', route: '/field-resource-management/dashboard', icon: 'dashboard', permission: null },
     { label: 'My Schedule', route: '/field-resource-management/mobile/daily', icon: 'today', permission: 'canViewOwnSchedule' },
     { label: 'Jobs', route: '/field-resource-management/jobs', icon: 'work', permission: 'canStartJob' },
+    { label: 'Quotes', route: '/field-resource-management/quotes', icon: 'request_quote', permission: 'canViewQuote' },
     { label: 'Mobile', route: '/field-resource-management/mobile', icon: 'phone_android', permission: 'canTrackTime' },
     { label: 'Timecards', route: '/field-resource-management/timecard', icon: 'schedule', permission: 'canSubmitTimecard' },
     { label: 'Technicians', route: '/field-resource-management/technicians', icon: 'people', permission: 'canViewAllSchedules' },
@@ -56,6 +57,7 @@ export class FrmNavMenuComponent implements OnInit, OnDestroy {
         { label: 'Job Templates', route: '/field-resource-management/admin/templates', icon: 'content_copy', permission: 'canAccessAdminPanel' },
         { label: 'Regions', route: '/field-resource-management/admin/regions', icon: 'map', permission: 'canAccessAdminPanel' },
         { label: 'Audit Log', route: '/field-resource-management/admin/audit-log', icon: 'history', permission: 'canAccessAdminPanel' },
+        { label: 'Client Configurations', route: '/field-resource-management/admin/client-configurations', icon: 'business', permission: 'canAccessAdminPanel' },
       ]
     },
   ];

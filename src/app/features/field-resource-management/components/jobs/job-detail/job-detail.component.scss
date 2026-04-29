@@ -1083,3 +1083,154 @@
     }
   }
 }
+
+// Job Detail Tabs
+.job-detail-tabs {
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    padding-top: 16px;
+  }
+}
+
+// Deployment Checklist Status Badge (in tab label)
+.checklist-status-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+
+  &.checklist-not-started {
+    background-color: #e0e0e0;
+    color: #616161;
+  }
+
+  &.checklist-in-progress {
+    background-color: #fff3e0;
+    color: #e65100;
+  }
+
+  &.checklist-completed {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+}
+
+// Job Readiness Section
+.readiness-section {
+  border-left: 4px solid #1976d2;
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+        color: #1976d2;
+      }
+    }
+  }
+}
+
+.readiness-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.ready {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+
+    mat-icon {
+      color: #2e7d32;
+    }
+  }
+}
+
+.readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+
+  .readiness-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #616161;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .readiness-value {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+
+      &.readiness-not-ready {
+        background-color: #ffebee;
+        color: #c62828;
+      }
+
+      &.readiness-partially-ready {
+        background-color: #fff3e0;
+        color: #e65100;
+      }
+
+      &.readiness-ready {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+      }
+    }
+  }
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.quote-link-container {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+
+  button {
+    mat-icon {
+      margin-right: 6px;
+    }
+  }
+}

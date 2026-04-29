@@ -1,0 +1,177 @@
+<!-- Page Header -->
+<div class="page-header">
+  <h2>BOM Validation Review</h2>
+</div>
+
+<!-- Status Banner -->
+<div class="status-banner approved" *ngIf="isApproved">
+  <mat-icon>check_circle</mat-icon>
+  <span>This BOM has been approved.</span>
+</div>
+
+<div class="status-banner rejected" *ngIf="isRejected">
+  <mat-icon>cancel</mat-icon>
+  <span>This BOM has been rejected. The quoter can revise and resubmit.</span>
+  <button mat-stroked-button (click)="navigateToBomBuilder()" class="revise-btn">
+    <mat-icon>edit</mat-icon>
+    Revise BOM
+  </button>
+</div>
+
+<div class="bom-validation-container">
+
+  <!-- BOM Line Items (Read-Only) -->
+  <mat-card class="form-section">
+    <mat-card-header>
+      <mat-card-title>BOM Line Items</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+
+      <!-- Empty State -->
+      <div class="empty-line-items" *ngIf="lineItems.length === 0">
+        <mat-icon>inventory_2</mat-icon>
+        <p>No BOM line items found.</p>
+      </div>
+
+      <!-- Line Items Table -->
+      <table class="bom-table" *ngIf="lineItems.length > 0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Material Description</th>
+            <th>Qty</th>
+            <th>UoM</th>
+            <th class="text-right">Unit Cost</th>
+            <th>Supplier</th>
+            <th class="text-right">Extended Cost</th>
+            <th class="text-right">Marked-Up Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of lineItems; let i = index">
+            <td class="line-number">{{ i + 1 }}</td>
+            <td>{{ item.materialDescription }}</td>
+            <td class="text-right">{{ item.quantity }}</td>
+            <td>{{ item.unitOfMeasure }}</td>
+            <td class="text-right">{{ item.unitCost | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td>{{ item.supplierName }}</td>
+            <td class="text-right">{{ getExtendedCost(i) | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td class="text-right markup-value">{{ getMarkedUpCost(i) | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Markup Info -->
+  <mat-card class="form-section">
+    <mat-card-header>
+      <mat-card-title>Markup Configuration</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Markup Percentage</label>
+          <span class="info-value">{{ markupPercentage }}%</span>
+        </div>
+        <div class="info-item">
+          <label>Tax/Freight Visible to Customer</label>
+          <span class="info-value">{{ taxFreightVisible ? 'Yes' : 'No' }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Totals -->
+  <mat-card class="form-section totals-section">
+    <mat-card-header>
+      <mat-card-title>BOM Totals</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="totals-grid">
+        <div class="total-item">
+          <label>Subtotal (Marked-Up)</label>
+          <span class="total-value">{{ bomTotals.subtotal | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+        <div class="total-item">
+          <label>Tax</label>
+          <span class="total-value">{{ bomTotals.tax | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+        <div class="total-item">
+          <label>Freight</label>
+          <span class="total-value">{{ bomTotals.freight | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+        <div class="total-item grand-total">
+          <label>Grand Total</label>
+          <span class="total-value cost">{{ bomTotals.grandTotal | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Validation Timeline -->
+  <mat-card class="form-section timeline-section">
+    <mat-card-header>
+      <mat-card-title>Validation Timeline</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="timeline-empty" *ngIf="validationSteps.length === 0">
+        <mat-icon>timeline</mat-icon>
+        <p>No validation steps recorded yet.</p>
+      </div>
+
+      <div class="validation-timeline" *ngIf="validationSteps.length > 0">
+        <div
+          *ngFor="let entry of validationSteps; let last = last"
+          class="timeline-item"
+          [ngClass]="getStepClass(entry.step)"
+        >
+          <div class="timeline-marker">
+            <mat-icon>{{ getStepIcon(entry.step) }}</mat-icon>
+          </div>
+          <div class="timeline-connector" *ngIf="!last"></div>
+          <div class="timeline-content">
+            <div class="timeline-step-name">{{ entry.step }}</div>
+            <div class="timeline-meta">
+              <span class="timeline-actor">{{ entry.actorName }}</span>
+              <span class="timeline-date">{{ formatDate(entry.timestamp) }}</span>
+            </div>
+            <div class="timeline-comments" *ngIf="entry.comments">
+              <mat-icon>comment</mat-icon>
+              <span>{{ entry.comments }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Validation Actions -->
+  <div class="validation-actions" *ngIf="canValidate && isPendingValidation">
+    <button
+      mat-raised-button
+      color="warn"
+      (click)="onReject()"
+      [disabled]="isApproving || isRejecting"
+      class="reject-btn"
+    >
+      <mat-spinner *ngIf="isRejecting" diameter="20" class="button-spinner"></mat-spinner>
+      <mat-icon *ngIf="!isRejecting">cancel</mat-icon>
+      <span *ngIf="!isRejecting">Reject</span>
+      <span *ngIf="isRejecting">Rejecting...</span>
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="onApprove()"
+      [disabled]="isApproving || isRejecting"
+      class="approve-btn"
+    >
+      <mat-spinner *ngIf="isApproving" diameter="20" class="button-spinner"></mat-spinner>
+      <mat-icon *ngIf="!isApproving">check_circle</mat-icon>
+      <span *ngIf="!isApproving">Approve</span>
+      <span *ngIf="isApproving">Approving...</span>
+    </button>
+  </div>
+
+</div>

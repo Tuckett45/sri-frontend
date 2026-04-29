@@ -77,6 +77,20 @@ export { materialsReducer, initialState as materialsInitialState } from './mater
 export * from './materials/materials.selectors';
 export * from './materials/materials.effects';
 
+// Deployment Checklist State
+export * from './deployment-checklist/checklist.state';
+export * from './deployment-checklist/checklist.actions';
+export { checklistReducer } from './deployment-checklist/checklist.reducer';
+export * from './deployment-checklist/checklist.selectors';
+export * from './deployment-checklist/checklist.effects';
+
+// Quote State
+export * from './quotes/quote.state';
+export * from './quotes/quote.actions';
+export { quoteReducer } from './quotes/quote.reducer';
+export * from './quotes/quote.selectors';
+export * from './quotes/quote.effects';
+
 /**
  * Root State Interface
  * Combines all feature state slices
@@ -92,6 +106,8 @@ import { TimecardState } from './timecards/timecard.reducer';
 import { BudgetState } from './budgets/budget.state';
 import { InventoryState } from './inventory/inventory.state';
 import { MaterialsState } from './materials/materials.state';
+import { ChecklistState } from './deployment-checklist/checklist.state';
+import { QuoteState } from './quotes/quote.state';
 
 export interface FieldResourceManagementState {
   technicians: TechnicianState;
@@ -105,4 +121,6 @@ export interface FieldResourceManagementState {
   budgets: BudgetState;
   inventory: InventoryState;
   materials: MaterialsState;
+  deploymentChecklist: ChecklistState;
+  quotes: QuoteState;
 }

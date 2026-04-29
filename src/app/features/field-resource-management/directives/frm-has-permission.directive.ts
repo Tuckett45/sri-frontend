@@ -13,6 +13,8 @@ const ALL_PERMISSION_KEYS: ReadonlySet<string> = new Set<FrmPermissionKey>([
   'canManageIncidentReports', 'canManageDirectDeposit', 'canManageW4',
   'canManageContactInfo', 'canSignPRC', 'canViewPayStubs', 'canViewW2',
   'canAccessAdminPanel', 'canViewReadOnly', 'canManageOnboarding',
+  'canViewDeploymentChecklist', 'canEditDeploymentChecklist', 'canSubmitEODReport',
+  'canCreateQuote', 'canEditQuote', 'canValidateBOM', 'canViewQuote',
 ]);
 
 @Directive({ selector: '[frmHasPermission]' })

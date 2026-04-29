@@ -24,6 +24,8 @@ import { budgetReducer } from './state/budgets/budget.reducer';
 import { travelReducer } from './state/travel/travel.reducer';
 import { inventoryReducer } from './state/inventory/inventory.reducer';
 import { materialsReducer } from './state/materials/materials.reducer';
+import { checklistReducer } from './state/deployment-checklist/checklist.reducer';
+import { quoteReducer } from './state/quotes/quote.reducer';
 
 // State Management - Effects
 import { TechnicianEffects } from './state/technicians/technician.effects';
@@ -38,6 +40,8 @@ import { BudgetEffects } from './state/budgets/budget.effects';
 import { TravelEffects } from './state/travel/travel.effects';
 import { InventoryEffects } from './state/inventory/inventory.effects';
 import { MaterialsEffects } from './state/materials/materials.effects';
+import { ChecklistEffects } from './state/deployment-checklist/checklist.effects';
+import { QuoteEffects } from './state/quotes/quote.effects';
 
 // Meta-Reducers
 import { storageSyncMetaReducer } from './state/meta-reducers/storage-sync.meta-reducer';
@@ -82,6 +86,15 @@ import { NotificationPanelComponent } from './components/notifications/notificat
 
 // Directives
 import { FrmHasPermissionDirective } from './directives/frm-has-permission.directive';
+
+// Quote Pipeline Dashboard Widget (declared here for use on eagerly-loaded home dashboard)
+import { QuotePipelineDashboardComponent } from './components/quotes/pipeline-dashboard/quote-pipeline-dashboard.component';
+
+// Create Job from Quote Dialog (declared here for use on eagerly-loaded admin dashboard)
+import { CreateJobFromQuoteDialogComponent } from './components/quotes/create-job-from-quote-dialog/create-job-from-quote-dialog.component';
+
+// RFP Intake Form shared module (imported for dialog use from eagerly-loaded dashboards)
+import { RfpIntakeFormModule } from './components/quotes/rfp-intake/rfp-intake-form.module';
 
 // Services
 import { FrmRealtimeIntegratorService } from './services/frm-realtime-integrator.service';
@@ -162,7 +175,13 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     NotificationPanelComponent,
 
     // Directives
-    FrmHasPermissionDirective
+    FrmHasPermissionDirective,
+
+    // Quote Pipeline Dashboard Widget (eagerly loaded for home dashboard)
+    QuotePipelineDashboardComponent,
+
+    // Create Job from Quote Dialog (eagerly loaded for admin dashboard)
+    CreateJobFromQuoteDialogComponent
     
     // Note: All feature components (technicians, jobs, crews, scheduling, mobile, admin, mapping)
     // and analytics dashboard are now in their respective lazy-loaded feature modules
@@ -181,6 +200,9 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     
     // Shared Components Module
     SharedComponentsModule,
+
+    // RFP Intake Form (shared module for dialog use from dashboards)
+    RfpIntakeFormModule,
     
     // NgRx State Management
     StoreModule.forFeature('technicians', technicianReducer),
@@ -198,6 +220,8 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     StoreModule.forFeature('travel', travelReducer),
     StoreModule.forFeature('inventory', inventoryReducer),
     StoreModule.forFeature('materials', materialsReducer),
+    StoreModule.forFeature('deploymentChecklist', checklistReducer),
+    StoreModule.forFeature('quotes', quoteReducer),
     
     // NgRx Effects
     EffectsModule.forFeature([
@@ -212,7 +236,9 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
       BudgetEffects,
       TravelEffects,
       InventoryEffects,
-      MaterialsEffects
+      MaterialsEffects,
+      ChecklistEffects,
+      QuoteEffects
     ])
   ],
   providers: [

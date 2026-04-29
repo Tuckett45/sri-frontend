@@ -2,6 +2,8 @@
  * Time entry and geolocation models for Field Resource Management
  */
 
+import { TimeCategory, PayType, SyncStatus } from '../../../models/time-payroll.enum';
+
 export interface GeoLocation {
   latitude: number;
   longitude: number;
@@ -30,6 +32,14 @@ export interface TimeEntry {
   lockedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+
+  // Time & Payroll fields
+  timeCategory: TimeCategory;
+  payType: PayType;
+  syncStatus: SyncStatus;
+  lastSyncAttempt?: Date;
+  syncRetryCount?: number;
+  syncConflictDetails?: string;
 }
 
 export enum TimecardStatus {
@@ -99,6 +109,18 @@ export interface TimecardPeriod {
   lockedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+
+  // Time & Payroll summary fields
+  driveTimeHours: number;
+  onSiteHours: number;
+  holidayHours: number;
+  ptoHours: number;
+  totalBillableAmount: number;
+  totalLaborCost: number;
+
+  // Auto-submit tracking
+  isAutoSubmitted: boolean;
+  autoSubmittedAt?: Date;
 }
 
 export interface TimecardLockConfig {

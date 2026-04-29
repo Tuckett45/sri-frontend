@@ -7,7 +7,9 @@ import {
   JobStatus, 
   JobNote, 
   Attachment,
-  ContactInfo 
+  ContactInfo,
+  JobReadiness,
+  CustomerReady
 } from '../models/job.model';
 import { Skill } from '../models/technician.model';
 import {
@@ -77,6 +79,12 @@ export class JobService {
       }
       if (filters.company) {
         params = params.set('company', filters.company);
+      }
+      if (filters.jobReadiness) {
+        params = params.set('jobReadiness', filters.jobReadiness);
+      }
+      if (filters.customerReady) {
+        params = params.set('customerReady', filters.customerReady);
       }
       if (filters.dateRange) {
         params = params.set('startDate', filters.dateRange.startDate.toISOString());
@@ -395,6 +403,11 @@ export class JobService {
       requestedHours: raw.requestedHours ?? raw.RequestedHours,
       overtimeRequired: raw.overtimeRequired ?? raw.OvertimeRequired,
       estimatedOvertimeHours: raw.estimatedOvertimeHours ?? raw.EstimatedOvertimeHours,
+      // Job Readiness
+      jobReadiness: this.normalizeJobReadiness(raw.jobReadiness || raw.JobReadiness),
+      customerReady: this.normalizeCustomerReady(raw.customerReady || raw.CustomerReady),
+      // Quote Workflow Reference
+      quoteWorkflowId: raw.quoteWorkflowId || raw.QuoteWorkflowId,
       createdBy: raw.createdBy || raw.CreatedBy || '',
       createdAt: raw.createdAt || raw.CreatedAt,
       updatedAt: raw.updatedAt || raw.UpdatedAt
@@ -444,6 +457,50 @@ export class JobService {
     // No match — return null so the caller falls back to default
     console.warn(`JobService: unrecognised job status "${value}", defaulting to NotStarted`);
     return null;
+  }
+
+  /**
+   * Normalizes a job readiness string from the API to a valid JobReadiness enum value.
+   */
+  private normalizeJobReadiness(value: string | undefined | null): JobReadiness | undefined {
+    if (!value) return undefined;
+
+    const readinessMap: Record<string, JobReadiness> = {};
+    for (const r of Object.values(JobReadiness)) {
+      readinessMap[r.toLowerCase()] = r;
+    }
+
+    const lower = value.toLowerCase();
+    if (readinessMap[lower]) return readinessMap[lower];
+
+    const stripped = lower.replace(/[_\- ]/g, '');
+    for (const [key, val] of Object.entries(readinessMap)) {
+      if (key.replace(/[_\- ]/g, '') === stripped) return val;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Normalizes a customer ready string from the API to a valid CustomerReady enum value.
+   */
+  private normalizeCustomerReady(value: string | undefined | null): CustomerReady | undefined {
+    if (!value) return undefined;
+
+    const readyMap: Record<string, CustomerReady> = {};
+    for (const r of Object.values(CustomerReady)) {
+      readyMap[r.toLowerCase()] = r;
+    }
+
+    const lower = value.toLowerCase();
+    if (readyMap[lower]) return readyMap[lower];
+
+    const stripped = lower.replace(/[_\- ]/g, '');
+    for (const [key, val] of Object.entries(readyMap)) {
+      if (key.replace(/[_\- ]/g, '') === stripped) return val;
+    }
+
+    return undefined;
   }
 
   /**

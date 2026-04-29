@@ -8,16 +8,30 @@
   <mat-card-content>
     <div class="links-grid">
       <ng-container *ngFor="let action of actions">
+        <!-- Route-based action -->
         <a
-          *ngIf="action.visible"
+          *ngIf="action.visible && action.route"
           mat-raised-button
           [color]="getButtonColor(action)"
           [routerLink]="action.route"
           [class.btn-orange]="isOrange(action)"
+          [class.btn-green]="isGreen(action)"
         >
           <mat-icon>{{ action.icon }}</mat-icon>
           {{ action.label }}
         </a>
+        <!-- Click-based action (no route) -->
+        <button
+          *ngIf="action.visible && !action.route && action.action"
+          mat-raised-button
+          [color]="getButtonColor(action)"
+          [class.btn-orange]="isOrange(action)"
+          [class.btn-green]="isGreen(action)"
+          (click)="onActionClick(action)"
+        >
+          <mat-icon>{{ action.icon }}</mat-icon>
+          {{ action.label }}
+        </button>
       </ng-container>
     </div>
   </mat-card-content>

@@ -168,6 +168,70 @@ export const SUPPLIER_ENDPOINTS = {
 } as const;
 
 /**
+ * Timecard API Endpoints
+ * Requirements: 2.3, 3.1, 6.1, 7.1, 8.1
+ */
+export const TIMECARD_ENDPOINTS = {
+  // Holiday management
+
+  /** GET /api/holidays - Get configured holidays */
+  getHolidays: () => `${API_BASE_URL}/holidays`,
+
+  /** POST /api/holidays - Save/update holidays */
+  saveHolidays: () => `${API_BASE_URL}/holidays`,
+
+  // Auto-submit configuration
+
+  /** GET /api/auto-submit/config/:region - Get auto-submit config for a region */
+  getAutoSubmitConfig: (region: string) => `${API_BASE_URL}/auto-submit/config/${region}`,
+
+  /** PUT /api/auto-submit/config/:region - Update auto-submit config for a region */
+  updateAutoSubmitConfig: (region: string) => `${API_BASE_URL}/auto-submit/config/${region}`,
+
+  /** POST /api/auto-submit/execute - Execute auto-submit for all eligible timecards */
+  executeAutoSubmit: () => `${API_BASE_URL}/auto-submit/execute`,
+
+  // Pay rates
+
+  /** GET /api/pay-rates/:technicianId - Get pay rate for a technician */
+  getPayRate: (technicianId: string) => `${API_BASE_URL}/pay-rates/${technicianId}`,
+
+  /** PUT /api/pay-rates/:technicianId - Set pay rate for a technician */
+  setPayRate: (technicianId: string) => `${API_BASE_URL}/pay-rates/${technicianId}`,
+
+  /** GET /api/pay-rates/:technicianId/history - Get pay rate change history */
+  getPayRateHistory: (technicianId: string) => `${API_BASE_URL}/pay-rates/${technicianId}/history`,
+
+  /** GET /api/pay-rates/defaults - Get default pay rates by role level */
+  getDefaultRates: () => `${API_BASE_URL}/pay-rates/defaults`,
+
+  /** PUT /api/pay-rates/defaults - Set default pay rate for a role level */
+  setDefaultRate: () => `${API_BASE_URL}/pay-rates/defaults`,
+
+  // Contract management
+
+  /** GET /api/contracts/:contractId - Get a contract by ID */
+  getContract: (contractId: string) => `${API_BASE_URL}/contracts/${contractId}`,
+
+  /** GET /api/contracts/by-job/:jobId - Get contract associated with a job */
+  getContractForJob: (jobId: string) => `${API_BASE_URL}/contracts/by-job/${jobId}`,
+
+  /** GET /api/contracts/expiring - Get contracts approaching expiration */
+  getExpiringContracts: () => `${API_BASE_URL}/contracts/expiring`,
+
+  // ATLAS sync
+
+  /** POST /api/time-entries/:entryId/sync - Sync a time entry to ATLAS */
+  syncTimeEntry: (entryId: string) => `${API_BASE_URL}/time-entries/${entryId}/sync`,
+
+  /** GET /api/time-entries/sync/pending - Get pending sync operations */
+  getPendingSyncs: () => `${API_BASE_URL}/time-entries/sync/pending`,
+
+  /** GET /api/time-entries/:entryId/sync-status - Get sync status for a time entry */
+  getSyncStatus: (entryId: string) => `${API_BASE_URL}/time-entries/${entryId}/sync-status`,
+} as const;
+
+/**
  * Reporting API Endpoints
  * Requirements: 12.1-12.10
  */

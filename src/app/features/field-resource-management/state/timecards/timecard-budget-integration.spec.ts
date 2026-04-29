@@ -78,6 +78,13 @@ describe('Timecard-Budget Integration', () => {
       totalExpenses: 0,
       timeEntries: entries,
       expenses: [],
+      driveTimeHours: 0,
+      onSiteHours: 0,
+      holidayHours: 0,
+      ptoHours: 0,
+      totalBillableAmount: 0,
+      totalLaborCost: 0,
+      isAutoSubmitted: false,
       createdAt: new Date(),
       updatedAt: new Date()
     };

@@ -30,6 +30,15 @@ import { PricingBillingStepComponent } from './job-setup/steps/pricing-billing-s
 import { SriInternalStepComponent } from './job-setup/steps/sri-internal-step.component';
 import { ReviewStepComponent } from './job-setup/steps/review-step.component';
 
+// Deployment Checklist Components
+import { DeploymentChecklistComponent } from './deployment-checklist/deployment-checklist.component';
+import { ChecklistPrintComponent } from './deployment-checklist/checklist-print.component';
+import { JobDetailsPhaseComponent } from './deployment-checklist/phases/job-details-phase.component';
+import { PreInstallationPhaseComponent } from './deployment-checklist/phases/pre-installation-phase.component';
+import { EodReportPhaseComponent } from './deployment-checklist/phases/eod-report-phase.component';
+import { EodEntryFormComponent } from './deployment-checklist/phases/eod-entry-form.component';
+import { CloseOutPhaseComponent } from './deployment-checklist/phases/close-out-phase.component';
+
 // Guards
 import { CreateJobGuard } from '../../guards/create-job.guard';
 
@@ -88,7 +97,14 @@ const routes: Routes = [
     CustomerInfoStepComponent,
     PricingBillingStepComponent,
     SriInternalStepComponent,
-    ReviewStepComponent
+    ReviewStepComponent,
+    JobDetailsPhaseComponent,
+    PreInstallationPhaseComponent,
+    EodReportPhaseComponent,
+    EodEntryFormComponent,
+    CloseOutPhaseComponent,
+    DeploymentChecklistComponent,
+    ChecklistPrintComponent
   ],
   imports: [
     CommonModule,

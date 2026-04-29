@@ -2,7 +2,7 @@
  * Data Transfer Objects for Job API requests
  */
 
-import { JobType, Priority, JobStatus, Address, ContactInfo } from '../job.model';
+import { JobType, Priority, JobStatus, JobReadiness, CustomerReady, Address, ContactInfo } from '../job.model';
 import { Skill } from '../technician.model';
 
 export interface CreateJobDto {
@@ -78,4 +78,8 @@ export interface UpdateJobDto {
   requestedHours?: number;
   overtimeRequired?: boolean;
   estimatedOvertimeHours?: number;
+
+  // Job Readiness fields
+  jobReadiness?: JobReadiness;
+  customerReady?: CustomerReady;
 }

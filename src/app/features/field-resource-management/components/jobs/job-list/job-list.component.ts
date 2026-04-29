@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageEvent } from '@angular/material/paginator';
 
-import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
+import { Job, JobStatus, JobType, Priority, JobReadiness, CustomerReady } from '../../../models/job.model';
 import { JobFilters } from '../../../models/dtos/filters.dto';
 import * as JobActions from '../../../state/jobs/job.actions';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
@@ -97,6 +97,8 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedJobType: JobType | null = null;
   selectedClient: string | null = null;
   selectedMarket: string | null = null;
+  selectedJobReadiness: JobReadiness | null = null;
+  selectedCustomerReady: CustomerReady | null = null;
   dateRange: { start: Date | null; end: Date | null } = { start: null, end: null };
 
   // Dynamic dropdown options
@@ -108,11 +110,15 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
   JobType = JobType;
   Priority = Priority;
   UserRole = UserRole;
+  JobReadiness = JobReadiness;
+  CustomerReady = CustomerReady;
 
   // Enum arrays for dropdowns
   statusOptions = Object.values(JobStatus);
   priorityOptions = Object.values(Priority);
   jobTypeOptions = Object.values(JobType);
+  jobReadinessOptions = Object.values(JobReadiness);
+  customerReadyOptions = Object.values(CustomerReady);
 
   // Filtered and paginated jobs
   displayedJobs: Job[] = [];
@@ -305,6 +311,8 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
       jobType: this.selectedJobType || undefined,
       client: this.selectedClient || undefined,
       region: this.selectedMarket || undefined,
+      jobReadiness: this.selectedJobReadiness || undefined,
+      customerReady: this.selectedCustomerReady || undefined,
       dateRange: (this.dateRange.start && this.dateRange.end) ? {
         startDate: this.dateRange.start,
         endDate: this.dateRange.end
@@ -319,6 +327,7 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
     const hasActiveFilters = this.searchTerm || this.selectedStatus || 
                             this.selectedPriority || this.selectedJobType ||
                             this.selectedClient || this.selectedMarket ||
+                            this.selectedJobReadiness || this.selectedCustomerReady ||
                             (this.dateRange.start && this.dateRange.end);
     if (hasActiveFilters && this.pageIndex !== 0) {
       this.pageIndex = 0;
@@ -390,6 +399,12 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.selectedMarket) {
       filters.push({ label: 'Market', value: this.selectedMarket, key: 'market' });
     }
+    if (this.selectedJobReadiness) {
+      filters.push({ label: 'Job Readiness', value: this.selectedJobReadiness.replace(/_/g, ' '), key: 'jobReadiness' });
+    }
+    if (this.selectedCustomerReady) {
+      filters.push({ label: 'Customer Ready', value: this.selectedCustomerReady.replace(/_/g, ' '), key: 'customerReady' });
+    }
     if (this.dateRange.start && this.dateRange.end) {
       const dateStr = `${this.formatDate(this.dateRange.start)} - ${this.formatDate(this.dateRange.end)}`;
       filters.push({ label: 'Date Range', value: dateStr, key: 'dateRange' });
@@ -421,6 +436,12 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
       case 'market':
         this.selectedMarket = null;
         break;
+      case 'jobReadiness':
+        this.selectedJobReadiness = null;
+        break;
+      case 'customerReady':
+        this.selectedCustomerReady = null;
+        break;
       case 'dateRange':
         this.dateRange = { start: null, end: null };
         break;
@@ -438,6 +459,8 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.selectedJobType = null;
     this.selectedClient = null;
     this.selectedMarket = null;
+    this.selectedJobReadiness = null;
+    this.selectedCustomerReady = null;
     this.dateRange = { start: null, end: null };
     this.store.dispatch(JobActions.clearJobFilters());
     this.pageIndex = 0;
@@ -775,6 +798,14 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
       [Priority.Normal]: 'priority-normal'
     };
     return classMap[priority] || '';
+  }
+
+  /**
+   * Format readiness enum values for display
+   */
+  formatReadiness(value: string | undefined): string {
+    if (!value) return 'Not Set';
+    return value.replace(/_/g, ' ');
   }
 
   /**
