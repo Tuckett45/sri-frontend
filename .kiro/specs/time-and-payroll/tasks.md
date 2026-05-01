@@ -8,19 +8,15 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
 
 - [x] 1. Define enums, interfaces, and data models
   - [x] 1.1 Create `TimeCategory`, `PayType`, and `SyncStatus` enums
-    - Create a new file for the enums (e.g., `models/time-payroll.enums.ts`)
-    - Define `TimeCategory` with values `DriveTime` and `OnSite`
-    - Define `PayType` with values `Regular`, `Overtime`, `Holiday`, `PTO`
-    - Define `SyncStatus` with values `Synced`, `Pending`, `Failed`, `Conflict`
+    - Create `src/app/models/time-payroll.enum.ts` with `TimeCategory` (DriveTime, OnSite), `PayType` (Regular, Overtime, Holiday, PTO), and `SyncStatus` (Synced, Pending, Failed, Conflict)
     - _Requirements: 1.1, 1.2, 2.1, 8.5_
 
   - [x] 1.2 Create new model interfaces
-    - Create interfaces for `Holiday`, `AutoSubmitConfig`, `AutoSubmitResult`, `UserPayRate`, `RoleLevelPayRate`, `PayRateChange`, `Contract`, `BillableAmount`, `JobBillableSummary`, `LaborCostSummary`, `CategoryHoursSummary`, `PayTypeHoursSummary`, `AtlasTimeEntryPayload`, `AtlasSyncResult`, `SyncConflict`, `PendingSyncEntry`, `ContractValidationResult`, `TimecardBadgeCounts`
-    - Place in appropriate model files following existing project conventions
+    - Create `src/app/models/time-payroll.model.ts` with interfaces: `Holiday`, `AutoSubmitConfig`, `AutoSubmitResult`, `UserPayRate`, `RoleLevelPayRate`, `PayRateChange`, `Contract`, `BillableAmount`, `JobBillableSummary`, `LaborCostSummary`, `CategoryHoursSummary`, `PayTypeHoursSummary`, `AtlasTimeEntryPayload`, `AtlasSyncResult`, `SyncConflict`, `PendingSyncEntry`, `ContractValidationResult`, `TimecardBadgeCounts`
     - _Requirements: 2.3, 3.1, 5.1, 6.1, 6.2, 7.1, 8.1_
 
   - [x] 1.3 Extend existing `TimeEntry` model
-    - Add `timeCategory: TimeCategory`, `payType: PayType`, `syncStatus: SyncStatus` fields
+    - Add `timeCategory: TimeCategory`, `payType: PayType`, `syncStatus: SyncStatus` fields to `src/app/features/field-resource-management/models/time-entry.model.ts`
     - Add optional fields: `lastSyncAttempt`, `syncRetryCount`, `syncConflictDetails`
     - _Requirements: 1.2, 2.1, 8.5_
 
@@ -30,7 +26,7 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
     - _Requirements: 1.7, 2.4, 3.3, 5.5_
 
   - [x] 1.5 Define new API endpoint constants
-    - Add holiday, auto-submit, pay rate, contract, and ATLAS sync endpoint definitions to the API constants file
+    - Add holiday, auto-submit, pay rate, contract, and ATLAS sync endpoint definitions
     - _Requirements: 2.3, 3.1, 6.1, 7.1, 8.1_
 
 - [x] 2. Implement pure validation utility functions (`PayrollValidators`)
@@ -41,25 +37,25 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
     - Implement `validateNoPtoConflict(date: Date, existingEntries: TimeEntry[]): ValidationResult`
     - _Requirements: 5.3, 7.2, 7.3, 2.5_
 
-  - [x] 2.2 Write property test: bill rate validation (Property 15)
+  - [x]* 2.2 Write property test: bill rate validation (Property 15)
     - **Property 15: Bill rate validation**
     - Use `fast-check` to generate random numbers (positive, negative, zero, many decimals)
     - Verify `validateBillRate` returns valid iff number is strictly positive and has at most 2 decimal places
     - **Validates: Requirements 5.3**
 
-  - [x] 2.3 Write property test: contract date validation (Property 19)
+  - [x]* 2.3 Write property test: contract date validation (Property 19)
     - **Property 19: Contract date validation**
     - Use `fast-check` to generate random date pairs
     - Verify `validateContractDates` returns valid iff endDate is strictly after startDate
     - **Validates: Requirements 7.2**
 
-  - [x] 2.4 Write property test: job within contract period (Property 20)
+  - [x]* 2.4 Write property test: job within contract period (Property 20)
     - **Property 20: Job dates within contract period**
     - Use `fast-check` to generate random job and contract date ranges
     - Verify `validateJobWithinContract` returns valid iff jobStart >= contractStart AND jobEnd <= contractEnd
     - **Validates: Requirements 7.3**
 
-  - [x] 2.5 Write property test: PTO mutual exclusion (Property 8)
+  - [x]* 2.5 Write property test: PTO mutual exclusion (Property 8)
     - **Property 8: PTO and regular entry mutual exclusion**
     - Use `fast-check` to generate random dates, existing PTO entries, and attempted regular entries
     - Verify `validateNoPtoConflict` returns invalid when a full-day PTO entry exists for the same technician on the same date
@@ -75,25 +71,25 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
     - Implement `resolveApplicableRate(entryCreatedAt, rateHistory): UserPayRate`
     - _Requirements: 1.7, 2.4, 5.4, 5.5, 5.6, 6.5, 6.7_
 
-  - [ ] 3.2 Write property test: category hours summation (Property 4)
+  - [ ]* 3.2 Write property test: category hours summation (Property 4)
     - **Property 4: Category hours summation is correct**
     - Use `fast-check` to generate random entry lists with DriveTime/OnSite and positive hours
     - Verify `calculateHoursByCategory` returns correct sums and driveTimeHours + onSiteHours === totalHours
     - **Validates: Requirements 1.7**
 
-  - [ ] 3.3 Write property test: pay type hours summation (Property 7)
+  - [ ]* 3.3 Write property test: pay type hours summation (Property 7)
     - **Property 7: Pay type hours summation is correct**
     - Use `fast-check` to generate random entry lists with all PayTypes and positive hours
     - Verify `calculateHoursByPayType` returns correct sums and all pay types sum to totalHours
     - **Validates: Requirements 2.4**
 
-  - [ ] 3.4 Write property test: period billable amounts by job (Property 16)
+  - [ ]* 3.4 Write property test: period billable amounts by job (Property 16)
     - **Property 16: Period billable amounts by job**
     - Use `fast-check` to generate random entries across jobs with/without rates
     - Verify `calculatePeriodBillablesByJob` computes correct standard/overtime amounts and flags rateNotSet
     - **Validates: Requirements 5.4, 5.5, 5.6**
 
-  - [ ] 3.5 Write property test: labor cost with rate history (Property 17)
+  - [ ]* 3.5 Write property test: labor cost with rate history (Property 17)
     - **Property 17: Labor cost calculation with rate history**
     - Use `fast-check` to generate random entries and rate histories with effective dates
     - Verify `calculateLaborCost` applies the correct rate based on effective dates
@@ -107,29 +103,29 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
     - Implement `detectMismatch(local: TimeEntry, remote: AtlasTimeEntryPayload): string[]`
     - _Requirements: 8.1, 8.2, 8.7_
 
-  - [x] 4.2 Write property test: ATLAS round-trip serialization (Property 22)
+  - [x]* 4.2 Write property test: ATLAS round-trip serialization (Property 22)
     - **Property 22: ATLAS payload serialization round-trip**
     - Use `fast-check` to generate random valid TimeEntry objects
     - Verify serialize then deserialize produces matching field values, and validateAtlasPayload returns valid
     - **Validates: Requirements 8.1, 8.2**
 
-  - [x] 4.3 Write property test: exponential backoff calculation (Property 23)
+  - [x]* 4.3 Write property test: exponential backoff calculation (Property 23)
     - **Property 23: Exponential backoff calculation**
     - Use `fast-check` to generate random attempt numbers (0-5)
     - Verify backoff delay equals 2^(n+1) seconds for n < 3, and no retry for n >= 3
     - **Validates: Requirements 8.4**
 
-  - [x] 4.4 Write property test: payload mismatch detection (Property 24)
+  - [x]* 4.4 Write property test: payload mismatch detection (Property 24)
     - **Property 24: Payload mismatch detection**
     - Use `fast-check` to generate random entry/payload pairs with matching and differing fields
     - Verify `detectMismatch` returns non-empty list iff at least one field differs, and returns exactly the differing field names
     - **Validates: Requirements 8.7**
 
-- [ ] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Implement PayClassificationService
-  - [ ] 6.1 Create `PayClassificationService` with holiday and PTO classification logic
+- [x] 6. Implement PayClassificationService
+  - [x] 6.1 Create `PayClassificationService` with holiday and PTO classification logic
     - Implement `classifyPayType(date, technicianId, holidays): PayType`
     - Implement `isHoliday(date, holidays): boolean`
     - Implement `validatePtoEntry(date, technicianId, existingEntries): ValidationResult`
@@ -139,32 +135,32 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
     - Wire to `AuditLoggingService` for pay type change auditing
     - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6, 2.7_
 
-  - [ ] 6.2 Write property test: holiday date classification (Property 5)
+  - [ ]* 6.2 Write property test: holiday date classification (Property 5)
     - **Property 5: Holiday date classification**
     - Use `fast-check` to generate random dates and holiday lists
     - Verify `classifyPayType` returns `PayType.Holiday` iff the date matches a holiday
     - **Validates: Requirements 2.1**
 
-  - [ ] 6.3 Write property test: PTO entry creation (Property 6)
+  - [ ]* 6.3 Write property test: PTO entry creation (Property 6)
     - **Property 6: PTO entry creation**
     - Use `fast-check` to generate random technician IDs, dates, and workday hours
     - Verify PTO entry has `payType === PTO` and `totalHours` equals provided hours
     - **Validates: Requirements 2.2**
 
-  - [ ] 6.4 Write property test: holiday flag detection (Property 9)
+  - [ ]* 6.4 Write property test: holiday flag detection (Property 9)
     - **Property 9: Holiday date change flags correct entries**
     - Use `fast-check` to generate random entry sets and old/new holiday dates
     - Verify `flagAffectedEntries` returns exactly entries matching the old date
     - **Validates: Requirements 2.7**
 
-- [ ] 7. Implement BillRateService and PayRateService
-  - [ ] 7.1 Create `BillRateService`
+- [x] 7. Implement BillRateService and PayRateService
+  - [x] 7.1 Create `BillRateService`
     - Implement `calculateBillableAmount(entry, job): BillableAmount`
     - Implement `calculatePeriodBillables(entries, jobs): JobBillableSummary[]`
     - Implement `validateBillRate(rate): ValidationResult` (delegates to PayrollValidators)
     - _Requirements: 5.3, 5.4, 5.5, 5.6_
 
-  - [ ] 7.2 Create `PayRateService`
+  - [x] 7.2 Create `PayRateService`
     - Implement `getPayRate(technicianId): Observable<UserPayRate>`
     - Implement `setPayRate(technicianId, rate, effectiveDate): Observable<UserPayRate>`
     - Implement `getDefaultRates(): Observable<RoleLevelPayRate[]>`
@@ -174,29 +170,29 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
     - Wire to `AuditLoggingService` for pay rate change auditing
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
 
-  - [ ] 7.3 Write property test: pay rate change audit completeness (Property 18)
+  - [ ]* 7.3 Write property test: pay rate change audit completeness (Property 18)
     - **Property 18: Pay rate change audit completeness**
     - Use `fast-check` to generate random rate changes with all fields
     - Verify audit entry contains all required fields matching the change parameters
     - **Validates: Requirements 6.6**
 
-- [ ] 8. Implement ContractDateService
-  - [ ] 8.1 Create `ContractDateService`
+- [x] 8. Implement ContractDateService
+  - [x] 8.1 Create `ContractDateService`
     - Implement `validateJobDatesWithinContract(job, contract): ValidationResult`
     - Implement `isContractExpired(contract, referenceDate?): boolean`
     - Implement `isContractApproachingExpiration(contract, referenceDate?): boolean`
     - Implement `validateTimeEntryForContract(entry, job, contract): ContractValidationResult`
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-  - [ ] 8.2 Write property test: contract expiration status classification (Property 21)
+  - [ ]* 8.2 Write property test: contract expiration status classification (Property 21)
     - **Property 21: Contract expiration status classification**
     - Use `fast-check` to generate random contracts and reference dates
     - Verify `isContractExpired` returns true iff referenceDate > endDate
     - Verify `isContractApproachingExpiration` returns true iff within 30 days and not expired
     - **Validates: Requirements 7.4, 7.5**
 
-- [ ] 9. Implement AutoSubmitService
-  - [ ] 9.1 Create `AutoSubmitService`
+- [x] 9. Implement AutoSubmitService
+  - [x] 9.1 Create `AutoSubmitService`
     - Implement `getConfig(region): Observable<AutoSubmitConfig>`
     - Implement `updateConfig(region, config): Observable<AutoSubmitConfig>`
     - Implement `executeAutoSubmit(): Observable<AutoSubmitResult[]>` — targets only Draft timecards past deadline
@@ -204,23 +200,23 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
     - Wire to `AuditLoggingService` for auto-submit auditing
     - _Requirements: 3.1, 3.2, 3.3, 3.5, 3.6_
 
-  - [ ] 9.2 Write property test: auto-submit targets only draft timecards past deadline (Property 10)
+  - [ ]* 9.2 Write property test: auto-submit targets only draft timecards past deadline (Property 10)
     - **Property 10: Auto-submit targets only draft timecards past deadline**
     - Use `fast-check` to generate random period sets with mixed statuses and deadlines
     - Verify auto-submit changes status to Submitted for exactly Draft periods past deadline
     - **Validates: Requirements 3.2**
 
-  - [ ] 9.3 Write property test: auto-submit audit entries are distinguishable (Property 11)
+  - [ ]* 9.3 Write property test: auto-submit audit entries are distinguishable (Property 11)
     - **Property 11: Auto-submit audit entries are distinguishable**
     - Use `fast-check` to generate random period IDs and timestamps
     - Verify audit entry contains `submissionType` of `"Auto-Submitted"` distinct from `"Manual"`
     - **Validates: Requirements 3.3**
 
-- [ ] 10. Checkpoint - Ensure all tests pass
+- [x] 10. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Implement AtlasSyncService and NgRx atlas-sync state slice
-  - [ ] 11.1 Create `AtlasSyncService`
+- [x] 11. Implement AtlasSyncService and NgRx atlas-sync state slice
+  - [x] 11.1 Create `AtlasSyncService`
     - Implement `serializeToAtlasPayload(entry): AtlasTimeEntryPayload` (delegates to AtlasPayloadSerializer)
     - Implement `validateAtlasPayload(payload): ValidationResult` (delegates to AtlasPayloadSerializer)
     - Implement `syncTimeEntry(entry): Observable<AtlasSyncResult>` with HTTP call and error handling
@@ -229,74 +225,74 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
     - Implement `detectPayloadMismatch(local, atlasResponse): SyncConflict | null`
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7_
 
-  - [ ] 11.2 Create NgRx `atlas-sync` state slice
+  - [x] 11.2 Create NgRx `atlas-sync` state slice
     - Define `AtlasSyncState` interface with pending sync queue and sync status map
     - Create actions: `syncToAtlas`, `syncToAtlasSuccess`, `syncToAtlasFailure`, `syncConflictDetected`
     - Create reducer handling sync queue operations (add, remove, update retry count)
     - Create selectors for pending syncs, sync status by entry ID, failed syncs
     - _Requirements: 8.4, 8.5_
 
-  - [ ] 11.3 Create NgRx effects for atlas-sync
+  - [x] 11.3 Create NgRx effects for atlas-sync
     - Implement effect for `syncToAtlas` — calls `AtlasSyncService.syncTimeEntry`, dispatches success/failure
     - Implement effect for `syncToAtlasFailure` — queues retry with exponential backoff (2s, 4s, 8s), max 3 attempts
     - Implement effect for `syncConflictDetected` — triggers notification via `FrmNotificationAdapterService`
     - _Requirements: 8.3, 8.4, 8.7_
 
-- [ ] 12. Extend NgRx time-entries and timecards state slices
-  - [ ] 12.1 Add new NgRx actions for time category and pay type
+- [x] 12. Extend NgRx time-entries and timecards state slices
+  - [x] 12.1 Add new NgRx actions for time category and pay type
     - Create `setTimeCategory` action with entryId, category, previousCategory
     - Create `classifyPayType` action with entryId, payType
     - Create `requestPto` action with technicianId, date, hours
     - _Requirements: 1.1, 1.4, 2.1, 2.2_
 
-  - [ ] 12.2 Add new NgRx actions for auto-submit and notifications
+  - [x] 12.2 Add new NgRx actions for auto-submit and notifications
     - Create `triggerAutoSubmit`, `autoSubmitSuccess`, `autoSubmitFailure` actions
     - Create `loadTimecardBadgeCounts`, `updateTimecardBadgeCounts` actions
     - _Requirements: 3.2, 4.7_
 
-  - [ ] 12.3 Update time-entries reducer to handle new fields
+  - [x] 12.3 Update time-entries reducer to handle new fields
     - Handle `setTimeCategory` — update entry's timeCategory field
     - Handle `classifyPayType` — update entry's payType field
     - Handle sync status updates from atlas-sync actions
     - _Requirements: 1.2, 2.1, 8.5_
 
-  - [ ] 12.4 Update timecards reducer and selectors
+  - [x] 12.4 Update timecards reducer and selectors
     - Handle `autoSubmitSuccess` — update period status and isAutoSubmitted flag
     - Handle `updateTimecardBadgeCounts` — store badge counts
     - Create selectors for category/pay-type hour breakdowns, billable totals, badge counts
     - _Requirements: 1.7, 2.4, 3.2, 4.7, 5.5_
 
-  - [ ] 12.5 Write property test: time category required for saving (Property 1)
+  - [ ]* 12.5 Write property test: time category required for saving (Property 1)
     - **Property 1: Time category is required for saving**
     - Use `fast-check` to generate random TimeEntry objects with/without timeCategory
     - Verify validation rejects entries with missing/null/invalid timeCategory
     - **Validates: Requirements 1.2**
 
-  - [ ] 12.6 Write property test: category change audit entry (Property 2)
+  - [ ]* 12.6 Write property test: category change audit entry (Property 2)
     - **Property 2: Category change produces correct audit entry**
     - Use `fast-check` to generate random entries, categories, and user IDs
     - Verify audit entry has correct previousValue, newValue, and user fields
     - **Validates: Requirements 1.4**
 
-  - [ ] 12.7 Write property test: locked period prevents category modification (Property 3)
+  - [ ]* 12.7 Write property test: locked period prevents category modification (Property 3)
     - **Property 3: Submitted/Approved periods prevent category modification**
     - Use `fast-check` to generate random periods (Submitted/Approved/Draft) and entries
     - Verify category change is rejected for Submitted/Approved periods
     - **Validates: Requirements 1.5**
 
-- [ ] 13. Extend existing services
-  - [ ] 13.1 Extend `TimeTrackingService`
+- [x] 13. Extend existing services
+  - [x] 13.1 Extend `TimeTrackingService`
     - Update `clockIn()` to accept optional `timeCategory` parameter, default to `'OnSite'`
     - Update `updateTimeEntry()` to include `timeCategory` in the update payload
-    - Update `mapResponse()` to map `timeCategory`, `payType`, and `syncStatus` from API response
+    - Ensure `mapResponse()` maps `timeCategory`, `payType`, and `syncStatus` from API response (already partially done — verify and complete)
     - _Requirements: 1.1, 1.3, 8.1_
 
-  - [ ] 13.2 Extend `TimecardService`
+  - [x] 13.2 Extend `TimecardService`
     - Update `calculateHours()` to return breakdowns by `TimeCategory` and `PayType` using `TimecardCalculations`
     - Update `createWeeklySummary()` to include category/pay-type subtotals and billable amounts
     - _Requirements: 1.7, 2.4, 5.5_
 
-  - [ ] 13.3 Extend `FrmNotificationAdapterService` with new notification methods
+  - [x] 13.3 Extend `FrmNotificationAdapterService` with new notification methods
     - Implement `sendTimecardNotSubmittedReminder()` — 24-hour deadline reminder
     - Implement `sendTimecardLockedNotification()` — period locked notification
     - Implement `sendTimecardNotStartedReminder()` — no entries in first 24 hours
@@ -307,58 +303,58 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
     - Implement `sendSyncConflictNotification()` — ATLAS sync conflict alert
     - _Requirements: 3.4, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 7.4, 8.7_
 
-  - [ ] 13.4 Write property test: deadline proximity notification targeting (Property 12)
+  - [ ]* 13.4 Write property test: deadline proximity notification targeting (Property 12)
     - **Property 12: Deadline proximity notification targeting**
     - Use `fast-check` to generate random periods with various deadlines and statuses
     - Verify notification check identifies exactly Draft periods within 24 hours of lock deadline
     - **Validates: Requirements 4.1**
 
-  - [ ] 13.5 Write property test: period inactivity notification targeting (Property 13)
+  - [ ]* 13.5 Write property test: period inactivity notification targeting (Property 13)
     - **Property 13: Period inactivity notification targeting**
     - Use `fast-check` to generate random period starts and entry timestamps
     - Verify inactivity check flags technician iff no entries within 24 hours of period start
     - **Validates: Requirements 4.3**
 
-  - [ ] 13.6 Write property test: timecard badge count calculation (Property 14)
+  - [ ]* 13.6 Write property test: timecard badge count calculation (Property 14)
     - **Property 14: Timecard badge count calculation**
     - Use `fast-check` to generate random period sets with mixed statuses and deadlines
     - Verify badge count equals Draft + Rejected + approaching deadline count with no double-counting
     - **Validates: Requirements 4.7**
 
-- [ ] 14. Checkpoint - Ensure all tests pass
+- [x] 14. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Create NgRx effects for notifications and auto-submit
-  - [ ] 15.1 Create effects for timecard notification triggers
+- [x] 15. Create NgRx effects for notifications and auto-submit
+  - [x] 15.1 Create effects for timecard notification triggers
     - Implement effect to check deadline proximity and dispatch notification actions
     - Implement effect to check period inactivity and dispatch notification actions
     - Implement effect for period status changes (rejected, approved, locked) to trigger notifications
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 15.2 Create effects for auto-submit workflow
+  - [x] 15.2 Create effects for auto-submit workflow
     - Implement effect for `triggerAutoSubmit` — calls `AutoSubmitService.executeAutoSubmit`
     - Implement effect for `autoSubmitFailure` — calls `AutoSubmitService.retryAutoSubmit` with retry logic
     - Implement effect for `autoSubmitSuccess` — triggers `sendTimecardAutoSubmittedNotification` for each result
     - _Requirements: 3.2, 3.4, 3.6_
 
-  - [ ] 15.3 Create effects for contract expiration checks
+  - [x] 15.3 Create effects for contract expiration checks
     - Implement effect to periodically check for contracts approaching expiration (within 30 days)
     - Dispatch `sendContractExpiringNotification` for expiring contracts
     - _Requirements: 7.4_
 
-- [ ] 16. Wire ATLAS sync into time entry create/update flow
-  - [ ] 16.1 Integrate ATLAS sync with time entry operations
+- [x] 16. Wire ATLAS sync into time entry create/update flow
+  - [x] 16.1 Integrate ATLAS sync with time entry operations
     - Update time entry create/update effects to dispatch `syncToAtlas` after successful save
     - Display `syncStatus` indicator on time entries (Synced, Pending, Failed, Conflict)
     - Display error messages with HTTP status code and error detail on sync failure
     - _Requirements: 8.1, 8.3, 8.5, 8.6_
 
-  - [ ] 16.2 Wire sync conflict handling
+  - [x] 16.2 Wire sync conflict handling
     - On `syncConflictDetected`, update entry's `syncStatus` to `Conflict` and store conflict details
     - Trigger `sendSyncConflictNotification` to Dispatcher with mismatched field details
     - _Requirements: 8.7_
 
-- [ ] 17. Final checkpoint - Ensure all tests pass
+- [x] 17. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
@@ -370,3 +366,4 @@ This plan implements the Time & Payroll feature for the FRM module in incrementa
 - Unit tests validate specific examples and edge cases
 - Pure utility functions (tasks 2–4) are implemented first to enable early property-based testing
 - All services and state management build on the foundational types from task 1
+- The `TimeTrackingService` already has enhanced error logging (`console.error` with response body details) and `mapResponse()` already maps `timeCategory`, `payType`, and `syncStatus` — task 13.1 should verify and complete this work

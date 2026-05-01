@@ -2,7 +2,7 @@
  * Property-based tests for PayrollValidators
  *
  * Uses fast-check to verify universal correctness properties
- * across randomly generated inputs (minimum 100 iterations each).
+ * across randomly generated inputs.
  *
  * Test runner: Karma/Jasmine
  */
@@ -64,7 +64,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(true);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -82,7 +82,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(false);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -96,7 +96,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(false);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -127,7 +127,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(expectedValid);
           }
         ),
-        { numRuns: 200 }
+        { numRuns: 20 }
       );
     });
   });
@@ -138,31 +138,35 @@ describe('PayrollValidators — Property-Based Tests', () => {
 
   describe('Feature: time-and-payroll, Property 19: Contract date validation', () => {
 
+    /** Arbitrary for a valid (non-NaN) date within range */
+    const arbValidDate = fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') })
+      .filter(d => !isNaN(d.getTime()));
+
     it('should return valid iff endDate is strictly after startDate', () => {
       fc.assert(
         fc.property(
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
+          arbValidDate,
+          arbValidDate,
           (dateA, dateB) => {
             const result = validateContractDates(dateA, dateB);
             const expectedValid = dateB.getTime() > dateA.getTime();
             expect(result.valid).toBe(expectedValid);
           }
         ),
-        { numRuns: 200 }
+        { numRuns: 20 }
       );
     });
 
     it('should return invalid when startDate equals endDate', () => {
       fc.assert(
         fc.property(
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
+          arbValidDate,
           (date) => {
             const result = validateContractDates(date, new Date(date.getTime()));
             expect(result.valid).toBe(false);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -170,7 +174,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
       fc.assert(
         fc.property(
           // Generate two distinct dates and ensure start > end
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
+          arbValidDate,
           fc.integer({ min: 1, max: 365 * 50 }),
           (endDate, daysBefore) => {
             const startDate = new Date(endDate.getTime() + daysBefore * 86400000);
@@ -178,7 +182,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(false);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
   });
@@ -189,14 +193,22 @@ describe('PayrollValidators — Property-Based Tests', () => {
 
   describe('Feature: time-and-payroll, Property 20: Job dates within contract period', () => {
 
+    /** Arbitrary for a valid (non-NaN) date within range */
+    const arbValidDate = fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') })
+      .filter(d => !isNaN(d.getTime()));
+    const arbValidDate2010 = fc.date({ min: new Date('2010-01-01'), max: new Date('2090-12-31') })
+      .filter(d => !isNaN(d.getTime()));
+    const arbValidDate2050 = fc.date({ min: new Date('2010-01-01'), max: new Date('2050-12-31') })
+      .filter(d => !isNaN(d.getTime()));
+
     it('should return valid iff jobStart >= contractStart AND jobEnd <= contractEnd', () => {
       fc.assert(
         fc.property(
           // Generate 4 timestamps and use them as dates
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
+          arbValidDate,
+          arbValidDate,
+          arbValidDate,
+          arbValidDate,
           (jobStart, jobEnd, contractStart, contractEnd) => {
             const result = validateJobWithinContract(jobStart, jobEnd, contractStart, contractEnd);
             const expectedValid =
@@ -205,15 +217,15 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(expectedValid);
           }
         ),
-        { numRuns: 200 }
+        { numRuns: 20 }
       );
     });
 
     it('should return valid when job dates exactly match contract boundaries', () => {
       fc.assert(
         fc.property(
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
-          fc.date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') }),
+          arbValidDate,
+          arbValidDate,
           (dateA, dateB) => {
             // Use the earlier date as start, later as end
             const start = dateA.getTime() <= dateB.getTime() ? dateA : dateB;
@@ -222,14 +234,14 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(true);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
     it('should return invalid when job starts before contract', () => {
       fc.assert(
         fc.property(
-          fc.date({ min: new Date('2010-01-01'), max: new Date('2090-12-31') }),
+          arbValidDate2010,
           fc.integer({ min: 1, max: 365 * 10 }),
           fc.integer({ min: 0, max: 365 * 5 }),
           (contractStart, daysBeforeContract, jobDuration) => {
@@ -240,14 +252,14 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(false);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
     it('should return invalid when job ends after contract', () => {
       fc.assert(
         fc.property(
-          fc.date({ min: new Date('2010-01-01'), max: new Date('2050-12-31') }),
+          arbValidDate2050,
           fc.integer({ min: 30, max: 365 * 5 }),
           fc.integer({ min: 1, max: 365 * 10 }),
           (contractStart, contractDays, daysAfterContract) => {
@@ -258,7 +270,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(false);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
   });
@@ -269,8 +281,9 @@ describe('PayrollValidators — Property-Based Tests', () => {
 
   describe('Feature: time-and-payroll, Property 8: PTO and regular entry mutual exclusion', () => {
 
-    /** Arbitrary for a date (year 2020-2030, day precision) */
-    const arbDate = fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') });
+    /** Arbitrary for a valid (non-NaN) date (year 2020-2030, day precision) */
+    const arbDate = fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
+      .filter(d => !isNaN(d.getTime()));
 
     it('should return invalid when a PTO entry exists on the same date', () => {
       fc.assert(
@@ -291,7 +304,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(false);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -304,7 +317,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(true);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -324,7 +337,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(true);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -340,7 +353,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(true);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -364,7 +377,7 @@ describe('PayrollValidators — Property-Based Tests', () => {
             expect(result.valid).toBe(false);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
   });

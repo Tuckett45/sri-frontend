@@ -1,5 +1,6 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { TimecardState } from './timecard.reducer';
+import { CategoryHoursSummary, PayTypeHoursSummary } from '../../../../models/time-payroll.model';
 
 export const selectTimecardState = createFeatureSelector<TimecardState>('timecards');
 
@@ -98,5 +99,49 @@ export const selectCanEditCurrentPeriod = createSelector(
     if (!period || !config) return true;
     if (!config.enabled) return true;
     return !period.isLocked;
+  }
+);
+
+
+// Badge counts selector
+export const selectTimecardBadgeCounts = createSelector(
+  selectTimecardState,
+  (state) => state.badgeCounts
+);
+
+// Category hours breakdown for the current period
+export const selectCurrentPeriodCategoryHours = createSelector(
+  selectCurrentPeriod,
+  (period): CategoryHoursSummary | null => {
+    if (!period) return null;
+    return {
+      driveTimeHours: period.driveTimeHours,
+      onSiteHours: period.onSiteHours,
+      totalHours: period.driveTimeHours + period.onSiteHours
+    };
+  }
+);
+
+// Pay type hours breakdown for the current period
+export const selectCurrentPeriodPayTypeHours = createSelector(
+  selectCurrentPeriod,
+  (period): PayTypeHoursSummary | null => {
+    if (!period) return null;
+    return {
+      regularHours: period.regularHours,
+      overtimeHours: period.overtimeHours,
+      holidayHours: period.holidayHours,
+      ptoHours: period.ptoHours,
+      totalHours: period.regularHours + period.overtimeHours + period.holidayHours + period.ptoHours
+    };
+  }
+);
+
+// Billable total for the current period
+export const selectCurrentPeriodBillableTotal = createSelector(
+  selectCurrentPeriod,
+  (period): number | null => {
+    if (!period) return null;
+    return period.totalBillableAmount;
   }
 );

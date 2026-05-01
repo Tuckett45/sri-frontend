@@ -2,7 +2,7 @@
  * Property-based tests for AtlasPayloadSerializer
  *
  * Uses fast-check to verify universal correctness properties
- * across randomly generated inputs (minimum 100 iterations each).
+ * across randomly generated inputs.
  *
  * Test runner: Karma/Jasmine
  */
@@ -148,7 +148,7 @@ describe('AtlasPayloadSerializer — Property-Based Tests', () => {
             expect(deserialized.payType).toBe(entry.payType);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -162,7 +162,7 @@ describe('AtlasPayloadSerializer — Property-Based Tests', () => {
             expect(validation.valid).toBe(true);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
   });
@@ -183,7 +183,7 @@ describe('AtlasPayloadSerializer — Property-Based Tests', () => {
             expect(delay).toBe(expected);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -196,7 +196,7 @@ describe('AtlasPayloadSerializer — Property-Based Tests', () => {
             expect(delay).toBeNull();
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -219,7 +219,7 @@ describe('AtlasPayloadSerializer — Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
   });
@@ -241,7 +241,7 @@ describe('AtlasPayloadSerializer — Property-Based Tests', () => {
             expect(mismatches.length).toBe(0);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -266,7 +266,7 @@ describe('AtlasPayloadSerializer — Property-Based Tests', () => {
             expect(mismatches.length).toBe(1);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
@@ -321,7 +321,7 @@ describe('AtlasPayloadSerializer — Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 

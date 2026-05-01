@@ -34,9 +34,8 @@
     "src/app/features/field-resource-management/state/technicians/technician.reducer.spec.ts",
     "src/app/features/field-resource-management/state/time-entries/time-entry.reducer.spec.ts",
     "src/app/features/field-resource-management/state/timecards/timecard-budget-integration.spec.ts",
-    "src/app/features/field-resource-management/services/timecard.service.spec.ts",
     "src/app/features/field-resource-management/state/jobs/job.actions.spec.ts",
-    "src/app/features/field-resource-management/services/time-tracking.service.spec.ts",
+
     "src/app/features/field-resource-management/components/technicians/technician-list/technician-list.component.spec.ts",
     "src/app/features/field-resource-management/services/job.service.spec.ts",
     "src/app/features/field-resource-management/components/shared/skill-selector/skill-selector.component.spec.ts",

@@ -42,6 +42,7 @@ import { InventoryEffects } from './state/inventory/inventory.effects';
 import { MaterialsEffects } from './state/materials/materials.effects';
 import { ChecklistEffects } from './state/deployment-checklist/checklist.effects';
 import { QuoteEffects } from './state/quotes/quote.effects';
+import { TimecardNotificationEffects } from './state/timecards/timecard-notification.effects';
 
 // Meta-Reducers
 import { storageSyncMetaReducer } from './state/meta-reducers/storage-sync.meta-reducer';
@@ -238,7 +239,8 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
       InventoryEffects,
       MaterialsEffects,
       ChecklistEffects,
-      QuoteEffects
+      QuoteEffects,
+      TimecardNotificationEffects
     ])
   ],
   providers: [

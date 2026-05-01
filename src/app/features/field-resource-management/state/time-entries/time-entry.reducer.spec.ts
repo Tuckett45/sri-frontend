@@ -1,12 +1,14 @@
 /**
  * Time Entry Reducer Tests
  * Unit tests for time entry state reducer
- * Validates: Requirements 13.1–13.5 (NgRx state consistency)
+ * Validates: Requirements 1.2, 2.1, 8.5, 13.1–13.5 (NgRx state consistency)
  */
 
 import { timeEntryReducer, initialState, timeEntryAdapter } from './time-entry.reducer';
 import * as TimeEntryActions from './time-entry.actions';
+import * as AtlasSyncActions from '../atlas-sync/atlas-sync.actions';
 import { TimeEntry, GeoLocation } from '../../models/time-entry.model';
+import { TimeCategory, PayType, SyncStatus } from '../../../../models/time-payroll.enum';
 
 describe('TimeEntryReducer', () => {
   const mockLocation: GeoLocation = {
@@ -24,7 +26,10 @@ describe('TimeEntryReducer', () => {
     isManuallyAdjusted: false,
     isLocked: false,
     createdAt: new Date('2024-02-01T08:00:00'),
-    updatedAt: new Date('2024-02-01T08:00:00')
+    updatedAt: new Date('2024-02-01T08:00:00'),
+    timeCategory: TimeCategory.OnSite,
+    payType: PayType.Regular,
+    syncStatus: SyncStatus.Pending
   };
 
   const mockCompletedEntry: TimeEntry = {
@@ -355,6 +360,289 @@ describe('TimeEntryReducer', () => {
       expect(state.ids[0]).toBe('2');
       expect(state.ids[1]).toBe('3');
       expect(state.ids[2]).toBe('1');
+    });
+  });
+
+  describe('Set Time Category', () => {
+    let stateWithEntry: any;
+
+    beforeEach(() => {
+      stateWithEntry = timeEntryAdapter.addOne(mockTimeEntry, initialState);
+    });
+
+    it('should update timeCategory on setTimeCategory', () => {
+      const action = TimeEntryActions.setTimeCategory({
+        entryId: 'te-1',
+        category: TimeCategory.DriveTime,
+        previousCategory: TimeCategory.OnSite
+      });
+      const state = timeEntryReducer(stateWithEntry, action);
+
+      expect(state.entities['te-1']?.timeCategory).toBe(TimeCategory.DriveTime);
+    });
+
+    it('should not modify state if entry does not exist', () => {
+      const action = TimeEntryActions.setTimeCategory({
+        entryId: 'non-existent',
+        category: TimeCategory.DriveTime,
+        previousCategory: TimeCategory.OnSite
+      });
+      const state = timeEntryReducer(stateWithEntry, action);
+
+      expect(state).toBe(stateWithEntry);
+    });
+
+    it('should preserve other entry fields when updating timeCategory', () => {
+      const action = TimeEntryActions.setTimeCategory({
+        entryId: 'te-1',
+        category: TimeCategory.DriveTime,
+        previousCategory: TimeCategory.OnSite
+      });
+      const state = timeEntryReducer(stateWithEntry, action);
+
+      const entry = state.entities['te-1']!;
+      expect(entry.jobId).toBe('job-1');
+      expect(entry.technicianId).toBe('tech-1');
+      expect(entry.payType).toBe(PayType.Regular);
+      expect(entry.syncStatus).toBe(SyncStatus.Pending);
+    });
+  });
+
+  describe('Classify Pay Type', () => {
+    let stateWithEntry: any;
+
+    beforeEach(() => {
+      stateWithEntry = timeEntryAdapter.addOne(mockTimeEntry, initialState);
+    });
+
+    it('should update payType on classifyPayType', () => {
+      const action = TimeEntryActions.classifyPayType({
+        entryId: 'te-1',
+        payType: PayType.Holiday
+      });
+      const state = timeEntryReducer(stateWithEntry, action);
+
+      expect(state.entities['te-1']?.payType).toBe(PayType.Holiday);
+    });
+
+    it('should handle all PayType values', () => {
+      for (const pt of [PayType.Regular, PayType.Overtime, PayType.Holiday, PayType.PTO]) {
+        const action = TimeEntryActions.classifyPayType({
+          entryId: 'te-1',
+          payType: pt
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+        expect(state.entities['te-1']?.payType).toBe(pt);
+      }
+    });
+
+    it('should not modify state if entry does not exist', () => {
+      const action = TimeEntryActions.classifyPayType({
+        entryId: 'non-existent',
+        payType: PayType.Overtime
+      });
+      const state = timeEntryReducer(stateWithEntry, action);
+
+      expect(state).toBe(stateWithEntry);
+    });
+
+    it('should preserve other entry fields when updating payType', () => {
+      const action = TimeEntryActions.classifyPayType({
+        entryId: 'te-1',
+        payType: PayType.PTO
+      });
+      const state = timeEntryReducer(stateWithEntry, action);
+
+      const entry = state.entities['te-1']!;
+      expect(entry.timeCategory).toBe(TimeCategory.OnSite);
+      expect(entry.syncStatus).toBe(SyncStatus.Pending);
+    });
+  });
+
+  describe('Atlas Sync Status Updates', () => {
+    let stateWithEntry: any;
+
+    beforeEach(() => {
+      stateWithEntry = timeEntryAdapter.addOne(
+        { ...mockTimeEntry, syncStatus: SyncStatus.Pending },
+        initialState
+      );
+    });
+
+    describe('syncToAtlasSuccess', () => {
+      it('should set syncStatus to Synced on success', () => {
+        const action = AtlasSyncActions.syncToAtlasSuccess({
+          result: {
+            entryId: 'te-1',
+            success: true,
+            payloadHash: 'abc123',
+            timestamp: new Date('2024-02-01T10:00:00')
+          }
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state.entities['te-1']?.syncStatus).toBe(SyncStatus.Synced);
+      });
+
+      it('should update lastSyncAttempt timestamp on success', () => {
+        const timestamp = new Date('2024-02-01T10:00:00');
+        const action = AtlasSyncActions.syncToAtlasSuccess({
+          result: {
+            entryId: 'te-1',
+            success: true,
+            payloadHash: 'abc123',
+            timestamp
+          }
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state.entities['te-1']?.lastSyncAttempt).toEqual(timestamp);
+      });
+
+      it('should reset syncRetryCount to 0 on success', () => {
+        const stateWithRetries = timeEntryAdapter.updateOne(
+          { id: 'te-1', changes: { syncRetryCount: 2 } },
+          stateWithEntry
+        );
+        const action = AtlasSyncActions.syncToAtlasSuccess({
+          result: {
+            entryId: 'te-1',
+            success: true,
+            payloadHash: 'abc123',
+            timestamp: new Date()
+          }
+        });
+        const state = timeEntryReducer(stateWithRetries, action);
+
+        expect(state.entities['te-1']?.syncRetryCount).toBe(0);
+      });
+
+      it('should not modify state if entry does not exist', () => {
+        const action = AtlasSyncActions.syncToAtlasSuccess({
+          result: {
+            entryId: 'non-existent',
+            success: true,
+            payloadHash: 'abc123',
+            timestamp: new Date()
+          }
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state).toBe(stateWithEntry);
+      });
+    });
+
+    describe('syncToAtlasFailure', () => {
+      it('should set syncStatus to Pending when attempt < 3', () => {
+        const action = AtlasSyncActions.syncToAtlasFailure({
+          entryId: 'te-1',
+          error: 'Network error',
+          attempt: 1
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state.entities['te-1']?.syncStatus).toBe(SyncStatus.Pending);
+      });
+
+      it('should set syncStatus to Pending when attempt is 2', () => {
+        const action = AtlasSyncActions.syncToAtlasFailure({
+          entryId: 'te-1',
+          error: 'Network error',
+          attempt: 2
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state.entities['te-1']?.syncStatus).toBe(SyncStatus.Pending);
+      });
+
+      it('should set syncStatus to Failed when attempt >= 3', () => {
+        const action = AtlasSyncActions.syncToAtlasFailure({
+          entryId: 'te-1',
+          error: 'Network error',
+          attempt: 3
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state.entities['te-1']?.syncStatus).toBe(SyncStatus.Failed);
+      });
+
+      it('should set syncStatus to Failed when attempt > 3', () => {
+        const action = AtlasSyncActions.syncToAtlasFailure({
+          entryId: 'te-1',
+          error: 'Network error',
+          attempt: 5
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state.entities['te-1']?.syncStatus).toBe(SyncStatus.Failed);
+      });
+
+      it('should update syncRetryCount to the attempt number', () => {
+        const action = AtlasSyncActions.syncToAtlasFailure({
+          entryId: 'te-1',
+          error: 'Network error',
+          attempt: 2
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state.entities['te-1']?.syncRetryCount).toBe(2);
+      });
+
+      it('should not modify state if entry does not exist', () => {
+        const action = AtlasSyncActions.syncToAtlasFailure({
+          entryId: 'non-existent',
+          error: 'Network error',
+          attempt: 1
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state).toBe(stateWithEntry);
+      });
+    });
+
+    describe('syncConflictDetected', () => {
+      it('should set syncStatus to Conflict', () => {
+        const action = AtlasSyncActions.syncConflictDetected({
+          conflict: {
+            entryId: 'te-1',
+            mismatchedFields: ['clockOutTime'],
+            localValues: { clockOutTime: '2024-02-01T17:00:00' },
+            remoteValues: { clockOutTime: '2024-02-01T16:30:00' }
+          }
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state.entities['te-1']?.syncStatus).toBe(SyncStatus.Conflict);
+      });
+
+      it('should store conflict details as JSON string', () => {
+        const mismatchedFields = ['clockOutTime', 'totalHours'];
+        const action = AtlasSyncActions.syncConflictDetected({
+          conflict: {
+            entryId: 'te-1',
+            mismatchedFields,
+            localValues: { clockOutTime: '2024-02-01T17:00:00', totalHours: 9 },
+            remoteValues: { clockOutTime: '2024-02-01T16:30:00', totalHours: 8.5 }
+          }
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state.entities['te-1']?.syncConflictDetails).toBe(JSON.stringify(mismatchedFields));
+      });
+
+      it('should not modify state if entry does not exist', () => {
+        const action = AtlasSyncActions.syncConflictDetected({
+          conflict: {
+            entryId: 'non-existent',
+            mismatchedFields: ['clockOutTime'],
+            localValues: {},
+            remoteValues: {}
+          }
+        });
+        const state = timeEntryReducer(stateWithEntry, action);
+
+        expect(state).toBe(stateWithEntry);
+      });
     });
   });
 });

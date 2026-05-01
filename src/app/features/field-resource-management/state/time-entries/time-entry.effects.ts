@@ -1,6 +1,9 @@
 /**
  * Time Entry Effects
  * Handles side effects for time entry actions (API calls)
+ * and ATLAS sync integration after successful create/update operations.
+ *
+ * Requirements: 8.1, 8.3, 8.5, 8.6
  */
 
 import { Injectable } from '@angular/core';
@@ -9,6 +12,7 @@ import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
 import { map, catchError, switchMap, take } from 'rxjs/operators';
 import * as TimeEntryActions from './time-entry.actions';
+import * as AtlasSyncActions from '../atlas-sync/atlas-sync.actions';
 import { selectTimeEntryById, selectActiveTimeEntry } from './time-entry.selectors';
 import { GeolocationService } from '../../services/geolocation.service';
 import { TimeTrackingService } from '../../services/time-tracking.service';
@@ -132,6 +136,51 @@ export class TimeEntryEffects {
           )
         )
       )
+    )
+  );
+
+  /**
+   * Effect: Sync to ATLAS after successful clock-in
+   *
+   * Dispatches syncToAtlas with the newly created time entry so that
+   * the entry is synchronized with the ATLAS backend immediately.
+   *
+   * Requirements: 8.1, 8.3
+   */
+  syncAfterClockIn$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimeEntryActions.clockInSuccess),
+      map(({ timeEntry }) => AtlasSyncActions.syncToAtlas({ entry: timeEntry }))
+    )
+  );
+
+  /**
+   * Effect: Sync to ATLAS after successful clock-out
+   *
+   * Dispatches syncToAtlas with the updated time entry so that
+   * the clock-out data is synchronized with the ATLAS backend.
+   *
+   * Requirements: 8.1, 8.3
+   */
+  syncAfterClockOut$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimeEntryActions.clockOutSuccess),
+      map(({ timeEntry }) => AtlasSyncActions.syncToAtlas({ entry: timeEntry }))
+    )
+  );
+
+  /**
+   * Effect: Sync to ATLAS after successful time entry update
+   *
+   * Dispatches syncToAtlas with the updated time entry so that
+   * any modifications are synchronized with the ATLAS backend.
+   *
+   * Requirements: 8.1, 8.3
+   */
+  syncAfterUpdate$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimeEntryActions.updateTimeEntrySuccess),
+      map(({ timeEntry }) => AtlasSyncActions.syncToAtlas({ entry: timeEntry }))
     )
   );
 

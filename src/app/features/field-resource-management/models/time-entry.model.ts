@@ -168,4 +168,12 @@ export interface WeeklyTimeSummary {
   dailySummaries: DailyTimeSummary[];
   isLocked: boolean;
   locksIn?: Date;
+
+  // Time & Payroll category/pay-type subtotals (Requirements 1.7, 2.4, 5.5)
+  driveTimeHours: number;
+  onSiteHours: number;
+  holidayHours: number;
+  ptoHours: number;
+  totalBillableAmount: number;
+  jobBillableSummaries: import('../../../models/time-payroll.model').JobBillableSummary[];
 }

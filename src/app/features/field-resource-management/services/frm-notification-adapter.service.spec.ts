@@ -11,6 +11,7 @@ import {
   ArkNotificationStatus,
   ArkNotificationPreferences
 } from '../../../models/ark/notification.model';
+import { SyncConflict } from '../../../models/time-payroll.model';
 
 describe('FrmNotificationAdapterService', () => {
   let service: FrmNotificationAdapterService;
@@ -356,7 +357,15 @@ describe('FrmNotificationAdapterService', () => {
           [ArkNotificationType.WorkflowUpdate]: true,
           [ArkNotificationType.UserManagement]: true,
           [ArkNotificationType.ResourceAllocation]: true,
-          [ArkNotificationType.Reporting]: true
+          [ArkNotificationType.Reporting]: true,
+          [ArkNotificationType.TimecardNotSubmitted]: true,
+          [ArkNotificationType.TimecardLocked]: true,
+          [ArkNotificationType.TimecardNotStarted]: true,
+          [ArkNotificationType.TimecardRejected]: true,
+          [ArkNotificationType.TimecardApproved]: true,
+          [ArkNotificationType.TimecardAutoSubmitted]: true,
+          [ArkNotificationType.ContractExpiring]: true,
+          [ArkNotificationType.SyncConflict]: true
         }
       };
 
@@ -412,7 +421,15 @@ describe('FrmNotificationAdapterService', () => {
           [ArkNotificationType.WorkflowUpdate]: true,
           [ArkNotificationType.UserManagement]: true,
           [ArkNotificationType.ResourceAllocation]: true,
-          [ArkNotificationType.Reporting]: true
+          [ArkNotificationType.Reporting]: true,
+          [ArkNotificationType.TimecardNotSubmitted]: true,
+          [ArkNotificationType.TimecardLocked]: true,
+          [ArkNotificationType.TimecardNotStarted]: true,
+          [ArkNotificationType.TimecardRejected]: true,
+          [ArkNotificationType.TimecardApproved]: true,
+          [ArkNotificationType.TimecardAutoSubmitted]: true,
+          [ArkNotificationType.ContractExpiring]: true,
+          [ArkNotificationType.SyncConflict]: true
         }
       };
 
@@ -431,6 +448,340 @@ describe('FrmNotificationAdapterService', () => {
               [ArkNotificationType.JobAssigned]: true,
               [ArkNotificationType.JobReassigned]: false
             })
+          })
+        );
+        done();
+      });
+    });
+  });
+
+  describe('sendTimecardNotSubmittedReminder', () => {
+    it('should send a 24-hour deadline reminder with high priority', (done) => {
+      const technicianId = 'tech-123';
+      const periodId = 'period-456';
+      const deadlineDate = new Date(Date.now() + 12 * 60 * 60 * 1000);
+      const mockNotification: ArkNotification = {
+        id: 'notif-tc-1',
+        userId: technicianId,
+        market: 'market-1',
+        title: 'Timecard Not Submitted',
+        message: `Your timecard is due within 24 hours.`,
+        type: ArkNotificationType.TimecardNotSubmitted,
+        priority: ArkNotificationPriority.High,
+        channels: [ArkNotificationChannel.InApp],
+        status: ArkNotificationStatus.Pending,
+        createdAt: new Date()
+      };
+
+      arkNotificationService.sendNotification.and.returnValue(of(mockNotification));
+
+      service.sendTimecardNotSubmittedReminder(technicianId, periodId, deadlineDate).subscribe(notification => {
+        expect(notification.type).toBe(ArkNotificationType.TimecardNotSubmitted);
+        expect(notification.priority).toBe(ArkNotificationPriority.High);
+        expect(arkNotificationService.sendNotification).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            userId: technicianId,
+            type: ArkNotificationType.TimecardNotSubmitted,
+            priority: ArkNotificationPriority.High,
+            channels: [ArkNotificationChannel.InApp],
+            relatedEntityId: periodId,
+            relatedEntityType: 'timecard-period'
+          })
+        );
+        done();
+      });
+    });
+  });
+
+  describe('sendTimecardLockedNotification', () => {
+    it('should send a period locked notification with normal priority', (done) => {
+      const technicianId = 'tech-123';
+      const periodId = 'period-456';
+      const mockNotification: ArkNotification = {
+        id: 'notif-tc-2',
+        userId: technicianId,
+        market: 'market-1',
+        title: 'Timecard Locked',
+        message: 'Your timecard period has been locked.',
+        type: ArkNotificationType.TimecardLocked,
+        priority: ArkNotificationPriority.Normal,
+        channels: [ArkNotificationChannel.InApp],
+        status: ArkNotificationStatus.Pending,
+        createdAt: new Date()
+      };
+
+      arkNotificationService.sendNotification.and.returnValue(of(mockNotification));
+
+      service.sendTimecardLockedNotification(technicianId, periodId).subscribe(notification => {
+        expect(notification.type).toBe(ArkNotificationType.TimecardLocked);
+        expect(notification.priority).toBe(ArkNotificationPriority.Normal);
+        expect(arkNotificationService.sendNotification).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            userId: technicianId,
+            type: ArkNotificationType.TimecardLocked,
+            channels: [ArkNotificationChannel.InApp],
+            relatedEntityId: periodId,
+            relatedEntityType: 'timecard-period'
+          })
+        );
+        done();
+      });
+    });
+  });
+
+  describe('sendTimecardNotStartedReminder', () => {
+    it('should send a not-started reminder when no entries in first 24 hours', (done) => {
+      const technicianId = 'tech-123';
+      const periodId = 'period-456';
+      const periodStartDate = new Date('2024-01-15');
+      const mockNotification: ArkNotification = {
+        id: 'notif-tc-3',
+        userId: technicianId,
+        market: 'market-1',
+        title: 'Timecard Not Started',
+        message: `A new pay period started and you have not logged any time entries yet.`,
+        type: ArkNotificationType.TimecardNotStarted,
+        priority: ArkNotificationPriority.Normal,
+        channels: [ArkNotificationChannel.InApp],
+        status: ArkNotificationStatus.Pending,
+        createdAt: new Date()
+      };
+
+      arkNotificationService.sendNotification.and.returnValue(of(mockNotification));
+
+      service.sendTimecardNotStartedReminder(technicianId, periodId, periodStartDate).subscribe(notification => {
+        expect(notification.type).toBe(ArkNotificationType.TimecardNotStarted);
+        expect(notification.priority).toBe(ArkNotificationPriority.Normal);
+        expect(arkNotificationService.sendNotification).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            userId: technicianId,
+            type: ArkNotificationType.TimecardNotStarted,
+            channels: [ArkNotificationChannel.InApp],
+            relatedEntityId: periodId,
+            relatedEntityType: 'timecard-period'
+          })
+        );
+        done();
+      });
+    });
+  });
+
+  describe('sendTimecardRejectedNotification', () => {
+    it('should send a rejection notification with the reason and high priority', (done) => {
+      const technicianId = 'tech-123';
+      const periodId = 'period-456';
+      const reason = 'Missing time entries for Wednesday';
+      const mockNotification: ArkNotification = {
+        id: 'notif-tc-4',
+        userId: technicianId,
+        market: 'market-1',
+        title: 'Timecard Rejected',
+        message: `Your timecard has been rejected. Reason: ${reason}`,
+        type: ArkNotificationType.TimecardRejected,
+        priority: ArkNotificationPriority.High,
+        channels: [ArkNotificationChannel.InApp],
+        status: ArkNotificationStatus.Pending,
+        createdAt: new Date()
+      };
+
+      arkNotificationService.sendNotification.and.returnValue(of(mockNotification));
+
+      service.sendTimecardRejectedNotification(technicianId, periodId, reason).subscribe(notification => {
+        expect(notification.type).toBe(ArkNotificationType.TimecardRejected);
+        expect(notification.priority).toBe(ArkNotificationPriority.High);
+        expect(notification.message).toContain(reason);
+        expect(arkNotificationService.sendNotification).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            userId: technicianId,
+            type: ArkNotificationType.TimecardRejected,
+            priority: ArkNotificationPriority.High,
+            channels: [ArkNotificationChannel.InApp],
+            relatedEntityId: periodId,
+            relatedEntityType: 'timecard-period'
+          })
+        );
+        done();
+      });
+    });
+  });
+
+  describe('sendTimecardApprovedNotification', () => {
+    it('should send an approval confirmation with normal priority', (done) => {
+      const technicianId = 'tech-123';
+      const periodId = 'period-456';
+      const mockNotification: ArkNotification = {
+        id: 'notif-tc-5',
+        userId: technicianId,
+        market: 'market-1',
+        title: 'Timecard Approved',
+        message: 'Your timecard has been approved.',
+        type: ArkNotificationType.TimecardApproved,
+        priority: ArkNotificationPriority.Normal,
+        channels: [ArkNotificationChannel.InApp],
+        status: ArkNotificationStatus.Pending,
+        createdAt: new Date()
+      };
+
+      arkNotificationService.sendNotification.and.returnValue(of(mockNotification));
+
+      service.sendTimecardApprovedNotification(technicianId, periodId).subscribe(notification => {
+        expect(notification.type).toBe(ArkNotificationType.TimecardApproved);
+        expect(notification.priority).toBe(ArkNotificationPriority.Normal);
+        expect(arkNotificationService.sendNotification).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            userId: technicianId,
+            type: ArkNotificationType.TimecardApproved,
+            channels: [ArkNotificationChannel.InApp],
+            relatedEntityId: periodId,
+            relatedEntityType: 'timecard-period'
+          })
+        );
+        done();
+      });
+    });
+  });
+
+  describe('sendTimecardAutoSubmittedNotification', () => {
+    it('should send an auto-submit notification with normal priority', (done) => {
+      const technicianId = 'tech-123';
+      const periodId = 'period-456';
+      const mockNotification: ArkNotification = {
+        id: 'notif-tc-6',
+        userId: technicianId,
+        market: 'market-1',
+        title: 'Timecard Auto-Submitted',
+        message: 'Your timecard was automatically submitted.',
+        type: ArkNotificationType.TimecardAutoSubmitted,
+        priority: ArkNotificationPriority.Normal,
+        channels: [ArkNotificationChannel.InApp],
+        status: ArkNotificationStatus.Pending,
+        createdAt: new Date()
+      };
+
+      arkNotificationService.sendNotification.and.returnValue(of(mockNotification));
+
+      service.sendTimecardAutoSubmittedNotification(technicianId, periodId).subscribe(notification => {
+        expect(notification.type).toBe(ArkNotificationType.TimecardAutoSubmitted);
+        expect(notification.priority).toBe(ArkNotificationPriority.Normal);
+        expect(arkNotificationService.sendNotification).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            userId: technicianId,
+            type: ArkNotificationType.TimecardAutoSubmitted,
+            channels: [ArkNotificationChannel.InApp],
+            relatedEntityId: periodId,
+            relatedEntityType: 'timecard-period'
+          })
+        );
+        done();
+      });
+    });
+  });
+
+  describe('sendContractExpiringNotification', () => {
+    it('should send a contract expiring notification with normal priority for distant expiry', (done) => {
+      const managerId = 'manager-123';
+      const contractId = 'contract-456';
+      const contractName = 'ACME Corp Service Agreement';
+      const endDate = new Date(Date.now() + 25 * 24 * 60 * 60 * 1000); // 25 days from now
+      const mockNotification: ArkNotification = {
+        id: 'notif-tc-7',
+        userId: managerId,
+        market: 'market-1',
+        title: 'Contract Expiring Soon',
+        message: `Contract "${contractName}" will expire in 25 days.`,
+        type: ArkNotificationType.ContractExpiring,
+        priority: ArkNotificationPriority.Normal,
+        channels: [ArkNotificationChannel.InApp],
+        status: ArkNotificationStatus.Pending,
+        createdAt: new Date()
+      };
+
+      arkNotificationService.sendNotification.and.returnValue(of(mockNotification));
+
+      service.sendContractExpiringNotification(managerId, contractId, contractName, endDate).subscribe(notification => {
+        expect(notification.type).toBe(ArkNotificationType.ContractExpiring);
+        expect(notification.priority).toBe(ArkNotificationPriority.Normal);
+        expect(arkNotificationService.sendNotification).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            userId: managerId,
+            type: ArkNotificationType.ContractExpiring,
+            channels: [ArkNotificationChannel.InApp],
+            relatedEntityId: contractId,
+            relatedEntityType: 'contract'
+          })
+        );
+        done();
+      });
+    });
+
+    it('should send a contract expiring notification with high priority for imminent expiry', (done) => {
+      const managerId = 'manager-123';
+      const contractId = 'contract-456';
+      const contractName = 'ACME Corp Service Agreement';
+      const endDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days from now
+      const mockNotification: ArkNotification = {
+        id: 'notif-tc-8',
+        userId: managerId,
+        market: 'market-1',
+        title: 'Contract Expiring Soon',
+        message: `Contract "${contractName}" will expire in 5 days.`,
+        type: ArkNotificationType.ContractExpiring,
+        priority: ArkNotificationPriority.High,
+        channels: [ArkNotificationChannel.InApp],
+        status: ArkNotificationStatus.Pending,
+        createdAt: new Date()
+      };
+
+      arkNotificationService.sendNotification.and.returnValue(of(mockNotification));
+
+      service.sendContractExpiringNotification(managerId, contractId, contractName, endDate).subscribe(() => {
+        expect(arkNotificationService.sendNotification).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            priority: ArkNotificationPriority.High
+          })
+        );
+        done();
+      });
+    });
+  });
+
+  describe('sendSyncConflictNotification', () => {
+    it('should send a sync conflict notification with high priority and mismatched field details', (done) => {
+      const dispatcherId = 'dispatcher-123';
+      const conflict: SyncConflict = {
+        entryId: 'entry-789',
+        mismatchedFields: ['clockInTime', 'mileage'],
+        localValues: { clockInTime: '2024-01-15T08:00:00Z', mileage: 25 },
+        remoteValues: { clockInTime: '2024-01-15T09:00:00Z', mileage: 30 }
+      };
+      const mockNotification: ArkNotification = {
+        id: 'notif-tc-9',
+        userId: dispatcherId,
+        market: 'market-1',
+        title: 'ATLAS Sync Conflict',
+        message: `A sync conflict was detected for time entry ${conflict.entryId}. Mismatched fields: clockInTime, mileage.`,
+        type: ArkNotificationType.SyncConflict,
+        priority: ArkNotificationPriority.High,
+        channels: [ArkNotificationChannel.InApp],
+        status: ArkNotificationStatus.Pending,
+        createdAt: new Date()
+      };
+
+      arkNotificationService.sendNotification.and.returnValue(of(mockNotification));
+
+      service.sendSyncConflictNotification(dispatcherId, conflict).subscribe(notification => {
+        expect(notification.type).toBe(ArkNotificationType.SyncConflict);
+        expect(notification.priority).toBe(ArkNotificationPriority.High);
+        expect(notification.message).toContain('clockInTime');
+        expect(notification.message).toContain('mileage');
+        expect(arkNotificationService.sendNotification).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            userId: dispatcherId,
+            type: ArkNotificationType.SyncConflict,
+            priority: ArkNotificationPriority.High,
+            channels: [ArkNotificationChannel.InApp],
+            relatedEntityId: conflict.entryId,
+            relatedEntityType: 'time-entry'
           })
         );
         done();

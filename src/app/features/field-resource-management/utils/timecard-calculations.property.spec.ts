@@ -376,6 +376,7 @@ describe('TimecardCalculations — Property-Based Tests', () => {
     /**
      * Arbitrary for a PayRateChange with an effective date within a range.
      * Uses integer cents to avoid floating-point issues.
+     * Filters out Invalid Date values that fast-check v4 can generate.
      */
     const arbRateChange = (minDate: Date, maxDate: Date) =>
       fc.record({
@@ -385,15 +386,15 @@ describe('TimecardCalculations — Property-Based Tests', () => {
         previousOvertimeRate: fc.integer({ min: 100, max: 15000 }).map(n => n / 100),
         newStandardRate: fc.integer({ min: 100, max: 10000 }).map(n => n / 100),
         newOvertimeRate: fc.integer({ min: 100, max: 15000 }).map(n => n / 100),
-        effectiveDate: fc.date({ min: minDate, max: maxDate }),
+        effectiveDate: fc.date({ min: minDate, max: maxDate }).filter(d => !isNaN(d.getTime())),
         changedBy: fc.constant('manager1'),
-        changedAt: fc.date({ min: minDate, max: maxDate })
+        changedAt: fc.date({ min: minDate, max: maxDate }).filter(d => !isNaN(d.getTime()))
       });
 
     /** Arbitrary for a time entry with a createdAt date and hours */
     const arbLaborEntry = (minDate: Date, maxDate: Date) =>
       fc.record({
-        createdAt: fc.date({ min: minDate, max: maxDate }),
+        createdAt: fc.date({ min: minDate, max: maxDate }).filter(d => !isNaN(d.getTime())),
         regularHours: fc.integer({ min: 0, max: 2000 }).map(n => n / 100),
         overtimeHours: fc.integer({ min: 0, max: 1000 }).map(n => n / 100)
       });

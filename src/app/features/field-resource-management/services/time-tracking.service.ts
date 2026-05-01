@@ -38,12 +38,14 @@ export class TimeTrackingService {
   clockIn(
     jobId: string,
     technicianId: string,
-    location?: GeoLocation
+    location?: GeoLocation,
+    timeCategory: TimeCategory = TimeCategory.OnSite
   ): Observable<TimeEntry> {
     const payload: any = {
       jobId,
       technicianId,
-      clockInTime: new Date().toISOString()
+      clockInTime: new Date().toISOString(),
+      timeCategory
     };
 
     if (location) {
@@ -153,6 +155,7 @@ export class TimeTrackingService {
     isManuallyAdjusted: boolean;
     adjustmentReason: string;
     adjustedBy: string;
+    timeCategory: TimeCategory;
   }>): Observable<TimeEntry> {
     const payload: any = {};
 
@@ -168,6 +171,7 @@ export class TimeTrackingService {
     }
     if (changes.mileage != null && changes.mileage > 0) payload.mileage = changes.mileage;
     if (changes.adjustmentReason) payload.adjustmentReason = changes.adjustmentReason;
+    if (changes.timeCategory) payload.timeCategory = changes.timeCategory;
     // isManuallyAdjusted is set by the backend controller automatically on PUT
 
     return this.http.put<any>(`${this.apiUrl}/${id}`, payload).pipe(
@@ -219,6 +223,10 @@ export class TimeTrackingService {
     if (error.error instanceof ErrorEvent) {
       message = error.error.message;
     } else if (error.status) {
+      // Log the full response body so we can see backend exception details
+      console.error('TimeTrackingService — response body:', JSON.stringify(error.error, null, 2));
+      console.error('TimeTrackingService — status:', error.status, 'url:', error.url);
+
       switch (error.status) {
         case 400: message = 'Invalid time entry data'; break;
         case 404: message = 'Time entry not found'; break;

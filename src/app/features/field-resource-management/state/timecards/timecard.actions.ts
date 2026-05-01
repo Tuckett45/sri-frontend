@@ -5,6 +5,7 @@ import {
   Expense,
   UnlockRequest 
 } from '../../models/time-entry.model';
+import { AutoSubmitResult, TimecardBadgeCounts } from '../../../../models/time-payroll.model';
 
 // Load Timecard Period
 export const loadTimecardPeriod = createAction(
@@ -218,4 +219,29 @@ export const approveTimecardSuccess = createAction(
 export const approveTimecardFailure = createAction(
   '[Timecard] Approve Timecard Failure',
   props<{ error: string }>()
+);
+
+// Auto-Submit Actions
+export const triggerAutoSubmit = createAction(
+  '[Timecard] Trigger Auto Submit'
+);
+
+export const autoSubmitSuccess = createAction(
+  '[Timecard] Auto Submit Success',
+  props<{ results: AutoSubmitResult[] }>()
+);
+
+export const autoSubmitFailure = createAction(
+  '[Timecard] Auto Submit Failure',
+  props<{ periodId: string; error: string; attempt: number }>()
+);
+
+// Timecard Badge Count Actions
+export const loadTimecardBadgeCounts = createAction(
+  '[Timecard] Load Badge Counts'
+);
+
+export const updateTimecardBadgeCounts = createAction(
+  '[Timecard] Update Badge Counts',
+  props<{ counts: TimecardBadgeCounts }>()
 );

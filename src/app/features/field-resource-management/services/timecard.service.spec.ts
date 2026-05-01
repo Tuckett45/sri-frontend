@@ -1,5 +1,6 @@
 import { TimecardService } from './timecard.service';
 import { TimeEntry, Expense, ExpenseType, TimecardLockConfig } from '../models/time-entry.model';
+import { TimeCategory, PayType, SyncStatus } from '../../../models/time-payroll.enum';
 
 describe('TimecardService', () => {
   let service: TimecardService;
@@ -17,6 +18,9 @@ describe('TimecardService', () => {
     isLocked: false,
     createdAt: new Date(),
     updatedAt: new Date(),
+    timeCategory: TimeCategory.OnSite,
+    payType: PayType.Regular,
+    syncStatus: SyncStatus.Synced,
     ...overrides
   });
 
@@ -212,6 +216,137 @@ describe('TimecardService', () => {
 
       const summaries = service.createDailySummaries(entries, [], defaultConfig);
       expect(summaries[0].jobCount).toBe(2);
+    });
+  });
+
+  // --- calculateHours: category and pay-type breakdowns ---
+  describe('calculateHours - category/pay-type breakdowns', () => {
+    it('should return category breakdown with driveTime and onSite hours', () => {
+      const entries = [
+        createEntry({ id: 'e1', totalHours: 2, timeCategory: TimeCategory.DriveTime }),
+        createEntry({ id: 'e2', totalHours: 6, timeCategory: TimeCategory.OnSite }),
+        createEntry({ id: 'e3', totalHours: 3, timeCategory: TimeCategory.DriveTime })
+      ];
+
+      const result = service.calculateHours(entries);
+      expect(result.categoryBreakdown.driveTimeHours).toBe(5);
+      expect(result.categoryBreakdown.onSiteHours).toBe(6);
+      expect(result.categoryBreakdown.totalHours).toBe(11);
+    });
+
+    it('should return pay-type breakdown with all pay types', () => {
+      const entries = [
+        createEntry({ id: 'e1', totalHours: 8, payType: PayType.Regular }),
+        createEntry({ id: 'e2', totalHours: 4, payType: PayType.Overtime }),
+        createEntry({ id: 'e3', totalHours: 8, payType: PayType.Holiday }),
+        createEntry({ id: 'e4', totalHours: 8, payType: PayType.PTO })
+      ];
+
+      const result = service.calculateHours(entries);
+      expect(result.payTypeBreakdown.regularHours).toBe(8);
+      expect(result.payTypeBreakdown.overtimeHours).toBe(4);
+      expect(result.payTypeBreakdown.holidayHours).toBe(8);
+      expect(result.payTypeBreakdown.ptoHours).toBe(8);
+      expect(result.payTypeBreakdown.totalHours).toBe(28);
+    });
+
+    it('should return empty breakdowns for empty entries', () => {
+      const result = service.calculateHours([]);
+      expect(result.categoryBreakdown.driveTimeHours).toBe(0);
+      expect(result.categoryBreakdown.onSiteHours).toBe(0);
+      expect(result.categoryBreakdown.totalHours).toBe(0);
+      expect(result.payTypeBreakdown.regularHours).toBe(0);
+      expect(result.payTypeBreakdown.overtimeHours).toBe(0);
+      expect(result.payTypeBreakdown.holidayHours).toBe(0);
+      expect(result.payTypeBreakdown.ptoHours).toBe(0);
+      expect(result.payTypeBreakdown.totalHours).toBe(0);
+    });
+
+    it('should still return correct regular/overtime/total alongside breakdowns', () => {
+      const entries = Array.from({ length: 6 }, (_, i) =>
+        createEntry({
+          id: `e${i}`,
+          clockInTime: new Date(`2024-01-${15 + i}T08:00:00`),
+          clockOutTime: new Date(`2024-01-${15 + i}T16:00:00`),
+          totalHours: 8,
+          timeCategory: i % 2 === 0 ? TimeCategory.DriveTime : TimeCategory.OnSite,
+          payType: PayType.Regular
+        })
+      );
+
+      const result = service.calculateHours(entries);
+      expect(result.total).toBe(48);
+      expect(result.regular).toBe(40);
+      expect(result.overtime).toBe(8);
+      expect(result.categoryBreakdown.driveTimeHours).toBe(24);
+      expect(result.categoryBreakdown.onSiteHours).toBe(24);
+    });
+  });
+
+  // --- createWeeklySummary: category/pay-type subtotals and billable amounts ---
+  describe('createWeeklySummary - category/pay-type subtotals', () => {
+    const weekStart = new Date('2024-01-15T00:00:00');
+    const weekEnd = new Date('2024-01-21T23:59:59');
+
+    it('should include driveTimeHours and onSiteHours in summary', () => {
+      const entries = [
+        createEntry({ id: 'e1', totalHours: 3, timeCategory: TimeCategory.DriveTime, clockInTime: new Date('2024-01-15T08:00:00'), clockOutTime: new Date('2024-01-15T11:00:00') }),
+        createEntry({ id: 'e2', totalHours: 5, timeCategory: TimeCategory.OnSite, clockInTime: new Date('2024-01-15T12:00:00'), clockOutTime: new Date('2024-01-15T17:00:00') })
+      ];
+
+      const summary = service.createWeeklySummary(weekStart, weekEnd, entries, [], defaultConfig);
+      expect(summary.driveTimeHours).toBe(3);
+      expect(summary.onSiteHours).toBe(5);
+    });
+
+    it('should include holidayHours and ptoHours in summary', () => {
+      const entries = [
+        createEntry({ id: 'e1', totalHours: 8, payType: PayType.Holiday, clockInTime: new Date('2024-01-15T08:00:00'), clockOutTime: new Date('2024-01-15T16:00:00') }),
+        createEntry({ id: 'e2', totalHours: 8, payType: PayType.PTO, clockInTime: new Date('2024-01-16T08:00:00'), clockOutTime: new Date('2024-01-16T16:00:00') }),
+        createEntry({ id: 'e3', totalHours: 8, payType: PayType.Regular, clockInTime: new Date('2024-01-17T08:00:00'), clockOutTime: new Date('2024-01-17T16:00:00') })
+      ];
+
+      const summary = service.createWeeklySummary(weekStart, weekEnd, entries, [], defaultConfig);
+      expect(summary.holidayHours).toBe(8);
+      expect(summary.ptoHours).toBe(8);
+    });
+
+    it('should calculate totalBillableAmount when jobs map is provided', () => {
+      const entries = [
+        createEntry({ id: 'e1', jobId: 'j1', totalHours: 8, regularHours: 8, overtimeHours: 0, payType: PayType.Regular, clockInTime: new Date('2024-01-15T08:00:00'), clockOutTime: new Date('2024-01-15T16:00:00') }),
+        createEntry({ id: 'e2', jobId: 'j1', totalHours: 4, regularHours: 4, overtimeHours: 0, payType: PayType.Overtime, clockInTime: new Date('2024-01-16T08:00:00'), clockOutTime: new Date('2024-01-16T12:00:00') })
+      ];
+
+      const jobs = new Map<string, { standardBillRate?: number; overtimeBillRate?: number }>();
+      jobs.set('j1', { standardBillRate: 50, overtimeBillRate: 75 });
+
+      const summary = service.createWeeklySummary(weekStart, weekEnd, entries, [], defaultConfig, jobs);
+      expect(summary.totalBillableAmount).toBe(12 * 50 + 0 * 75); // 12 regular hours * $50
+      expect(summary.jobBillableSummaries.length).toBe(1);
+      expect(summary.jobBillableSummaries[0].jobId).toBe('j1');
+    });
+
+    it('should default billable fields to zero/empty when no jobs map provided', () => {
+      const entries = [
+        createEntry({ id: 'e1', totalHours: 8, clockInTime: new Date('2024-01-15T08:00:00'), clockOutTime: new Date('2024-01-15T16:00:00') })
+      ];
+
+      const summary = service.createWeeklySummary(weekStart, weekEnd, entries, [], defaultConfig);
+      expect(summary.totalBillableAmount).toBe(0);
+      expect(summary.jobBillableSummaries).toEqual([]);
+    });
+
+    it('should flag rateNotSet when job has no bill rates', () => {
+      const entries = [
+        createEntry({ id: 'e1', jobId: 'j1', totalHours: 8, regularHours: 8, overtimeHours: 0, clockInTime: new Date('2024-01-15T08:00:00'), clockOutTime: new Date('2024-01-15T16:00:00') })
+      ];
+
+      const jobs = new Map<string, { standardBillRate?: number; overtimeBillRate?: number }>();
+      jobs.set('j1', { standardBillRate: undefined, overtimeBillRate: undefined });
+
+      const summary = service.createWeeklySummary(weekStart, weekEnd, entries, [], defaultConfig, jobs);
+      expect(summary.jobBillableSummaries[0].rateNotSet).toBe(true);
+      expect(summary.totalBillableAmount).toBe(0);
     });
   });
 });

@@ -7,7 +7,9 @@ import { createReducer, on } from '@ngrx/store';
 import { EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 import { TimeEntry } from '../../models/time-entry.model';
 import { TimeEntryState } from './time-entry.state';
+import { SyncStatus } from '../../../../models/time-payroll.enum';
 import * as TimeEntryActions from './time-entry.actions';
+import * as AtlasSyncActions from '../atlas-sync/atlas-sync.actions';
 
 // Entity adapter for normalized state management
 export const timeEntryAdapter: EntityAdapter<TimeEntry> = createEntityAdapter<TimeEntry>({
@@ -144,5 +146,69 @@ export const timeEntryReducer = createReducer(
   on(TimeEntryActions.clearActiveEntry, (state) => ({
     ...state,
     activeEntry: null
-  }))
+  })),
+
+  // Set Time Category (Requirements: 1.2)
+  on(TimeEntryActions.setTimeCategory, (state, { entryId, category }) => {
+    const entry = state.entities[entryId];
+    if (!entry) {
+      return state;
+    }
+    return timeEntryAdapter.updateOne(
+      { id: entryId, changes: { timeCategory: category } },
+      state
+    );
+  }),
+
+  // Classify Pay Type (Requirements: 2.1)
+  on(TimeEntryActions.classifyPayType, (state, { entryId, payType }) => {
+    const entry = state.entities[entryId];
+    if (!entry) {
+      return state;
+    }
+    return timeEntryAdapter.updateOne(
+      { id: entryId, changes: { payType } },
+      state
+    );
+  }),
+
+  // Sync to ATLAS Success — set syncStatus to Synced (Requirements: 8.5)
+  on(AtlasSyncActions.syncToAtlasSuccess, (state, { result }) => {
+    const entry = state.entities[result.entryId];
+    if (!entry) {
+      return state;
+    }
+    return timeEntryAdapter.updateOne(
+      { id: result.entryId, changes: { syncStatus: SyncStatus.Synced, lastSyncAttempt: result.timestamp, syncRetryCount: 0 } },
+      state
+    );
+  }),
+
+  // Sync to ATLAS Failure — set syncStatus to Pending or Failed (Requirements: 8.5)
+  on(AtlasSyncActions.syncToAtlasFailure, (state, { entryId, error, attempt }) => {
+    const entry = state.entities[entryId];
+    if (!entry) {
+      return state;
+    }
+    const syncStatus = attempt >= 3 ? SyncStatus.Failed : SyncStatus.Pending;
+    return timeEntryAdapter.updateOne(
+      { id: entryId, changes: { syncStatus, syncRetryCount: attempt, lastSyncAttempt: new Date() } },
+      state
+    );
+  }),
+
+  // Sync Conflict Detected — set syncStatus to Conflict (Requirements: 8.5)
+  on(AtlasSyncActions.syncConflictDetected, (state, { conflict }) => {
+    const entry = state.entities[conflict.entryId];
+    if (!entry) {
+      return state;
+    }
+    return timeEntryAdapter.updateOne(
+      { id: conflict.entryId, changes: {
+        syncStatus: SyncStatus.Conflict,
+        syncConflictDetails: JSON.stringify(conflict.mismatchedFields)
+      }},
+      state
+    );
+  })
 );
