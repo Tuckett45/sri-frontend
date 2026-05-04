@@ -19,7 +19,7 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class AtlasAiAnalysisService {
-  private readonly baseUrl = `${environment.atlasApiUrl}/v1/ai-analysis`;
+  private readonly baseUrl = `${environment.atlasApiUrl}/ai-analysis`;
 
   constructor(private http: HttpClient) {}
 

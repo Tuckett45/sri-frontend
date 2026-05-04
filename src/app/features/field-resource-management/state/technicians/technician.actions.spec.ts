@@ -24,8 +24,9 @@ describe('Technician Actions', () => {
     certifications: [],
     availability: [],
     isActive: true,
+    canTravel: true,
     createdAt: new Date(),
-    company: 'TEST_COMPANY',    updatedAt: new Date()
+    updatedAt: new Date()
   };
 
   const mockFilters: TechnicianFilters = {
@@ -35,7 +36,6 @@ describe('Technician Actions', () => {
   };
 
   const mockCreateDto: CreateTechnicianDto = {
-    technicianId: 'T-002',
     firstName: 'Jane',
     lastName: 'Smith',
     email: 'jane.smith@example.com',

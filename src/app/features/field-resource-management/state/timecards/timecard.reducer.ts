@@ -2,10 +2,12 @@ import { createReducer, on } from '@ngrx/store';
 import { 
   TimecardPeriod, 
   TimecardLockConfig, 
+  TimecardStatus,
   Expense,
   UnlockRequest,
   TimeEntry
 } from '../../models/time-entry.model';
+import { TimecardBadgeCounts } from '../../../../models/time-payroll.model';
 import * as TimecardActions from './timecard.actions';
 import * as TimeEntryActions from '../time-entries/time-entry.actions';
 
@@ -17,6 +19,7 @@ export interface TimecardState {
   unlockRequests: UnlockRequest[];
   viewMode: 'daily' | 'weekly' | 'biweekly' | 'monthly';
   selectedDate: Date;
+  badgeCounts: TimecardBadgeCounts | null;
   loading: boolean;
   error: string | null;
 }
@@ -29,6 +32,7 @@ export const initialState: TimecardState = {
   unlockRequests: [],
   viewMode: 'weekly',
   selectedDate: new Date(),
+  badgeCounts: null,
   loading: false,
   error: null
 };
@@ -280,6 +284,42 @@ export const timecardReducer = createReducer(
     error
   })),
 
+  // Auto-Submit Success
+  on(TimecardActions.autoSubmitSuccess, (state, { results }) => {
+    const successResults = results.filter(r => r.success);
+    if (successResults.length === 0) return state;
+
+    const successPeriodIds = new Set(successResults.map(r => r.periodId));
+
+    // Build a lookup of periodId -> timestamp from the results
+    const timestampByPeriodId = new Map<string, Date>();
+    successResults.forEach(r => {
+      timestampByPeriodId.set(r.periodId, r.timestamp);
+    });
+
+    const updatePeriod = (period: TimecardPeriod): TimecardPeriod => {
+      if (!successPeriodIds.has(period.id)) return period;
+      return {
+        ...period,
+        status: TimecardStatus.Submitted,
+        isAutoSubmitted: true,
+        autoSubmittedAt: timestampByPeriodId.get(period.id)
+      };
+    };
+
+    return {
+      ...state,
+      currentPeriod: state.currentPeriod ? updatePeriod(state.currentPeriod) : null,
+      periods: state.periods.map(updatePeriod)
+    };
+  }),
+
+  // Update Timecard Badge Counts
+  on(TimecardActions.updateTimecardBadgeCounts, (state, { counts }) => ({
+    ...state,
+    badgeCounts: counts
+  })),
+
   // Budget Deduction Triggered (confirmation)
   on(TimecardActions.budgetDeductionTriggered, (state) => ({
     ...state
@@ -331,7 +371,14 @@ export const timecardReducer = createReducer(
         timeEntries: [timeEntry],
         expenses: [],
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        driveTimeHours: 0,
+        onSiteHours: 0,
+        holidayHours: 0,
+        ptoHours: 0,
+        totalBillableAmount: 0,
+        totalLaborCost: 0,
+        isAutoSubmitted: false
       }
     };
   }),

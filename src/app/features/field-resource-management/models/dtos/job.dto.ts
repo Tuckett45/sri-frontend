@@ -2,13 +2,15 @@
  * Data Transfer Objects for Job API requests
  */
 
-import { JobType, Priority, JobStatus, Address, ContactInfo } from '../job.model';
+import { JobType, Priority, JobStatus, JobReadiness, CustomerReady, Address, ContactInfo } from '../job.model';
 import { Skill } from '../technician.model';
 
 export interface CreateJobDto {
   client: string;
   siteName: string;
   siteAddress: Address;
+  region: string;
+  market: string;
   jobType: JobType;
   priority: Priority;
   scopeDescription: string;
@@ -18,6 +20,8 @@ export interface CreateJobDto {
   scheduledStartDate: Date;
   scheduledEndDate: Date;
   customerPOC?: ContactInfo;
+  technicianId?: string;
+  crewId?: string;
 
   // Pricing/Billing fields (Job Setup Workflow)
   authorizationStatus: 'authorized' | 'pending';
@@ -41,6 +45,8 @@ export interface UpdateJobDto {
   client?: string;
   siteName?: string;
   siteAddress?: Address;
+  region?: string;
+  market?: string;
   jobType?: JobType;
   priority?: Priority;
   status?: JobStatus;
@@ -53,6 +59,8 @@ export interface UpdateJobDto {
   actualStartDate?: Date;
   actualEndDate?: Date;
   customerPOC?: ContactInfo;
+  crewId?: string;
+  technicianId?: string;
 
   // Pricing/Billing fields (Job Setup Workflow)
   authorizationStatus?: 'authorized' | 'pending';
@@ -70,4 +78,8 @@ export interface UpdateJobDto {
   requestedHours?: number;
   overtimeRequired?: boolean;
   estimatedOvertimeHours?: number;
+
+  // Job Readiness fields
+  jobReadiness?: JobReadiness;
+  customerReady?: CustomerReady;
 }

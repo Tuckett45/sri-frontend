@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { JobCompletionFormComponent, DelayReason } from './job-completion-form.component';
 import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
@@ -28,8 +30,8 @@ describe('JobCompletionFormComponent', () => {
     requiredSkills: [],
     requiredCrewSize: 1,
     estimatedLaborHours: 4,
-    scheduledStartDate: new Date('2024-01-01T08:00:00'),
-    scheduledEndDate: new Date('2024-01-01T12:00:00'),
+    scheduledStartDate: new Date('2040-01-01T08:00:00'),
+    scheduledEndDate: new Date('2040-01-01T12:00:00'),
     attachments: [],
     notes: [],
     createdBy: 'test-user',
@@ -42,7 +44,8 @@ describe('JobCompletionFormComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [JobCompletionFormComponent],
-      imports: [ReactiveFormsModule],
+      imports: [ReactiveFormsModule, NoopAnimationsModule],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({})
       ]
@@ -51,7 +54,7 @@ describe('JobCompletionFormComponent', () => {
     store = TestBed.inject(MockStore);
     fixture = TestBed.createComponent(JobCompletionFormComponent);
     component = fixture.componentInstance;
-    component.job = mockJob;
+    component.job = { ...mockJob };
   });
 
   it('should create', () => {
@@ -88,9 +91,11 @@ describe('JobCompletionFormComponent', () => {
   });
 
   it('should require delay reason when job is delayed', () => {
-    component.isDelayed = true;
+    const pastDate = new Date();
+    pastDate.setHours(pastDate.getHours() - 2);
+    component.job = { ...mockJob, scheduledEndDate: pastDate };
     component.ngOnInit();
-    
+
     const delayReasonControl = component.completionForm.get('delayReason');
     expect(delayReasonControl?.hasError('required')).toBe(true);
   });
@@ -153,7 +158,9 @@ describe('JobCompletionFormComponent', () => {
   });
 
   it('should include delay information in completion notes', async () => {
-    component.isDelayed = true;
+    const pastDate = new Date();
+    pastDate.setHours(pastDate.getHours() - 2);
+    component.job = { ...mockJob, scheduledEndDate: pastDate };
     component.ngOnInit();
     const dispatchSpy = spyOn(store, 'dispatch');
     

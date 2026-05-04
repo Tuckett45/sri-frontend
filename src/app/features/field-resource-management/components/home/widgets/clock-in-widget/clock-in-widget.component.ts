@@ -19,6 +19,7 @@ import { Assignment, AssignmentStatus } from '../../../../models/assignment.mode
 import { Job } from '../../../../models/job.model';
 import { TimeEntry, GeoLocation } from '../../../../models/time-entry.model';
 import { GeolocationService } from '../../../../services/geolocation.service';
+import { AuthService } from '../../../../../../services/auth.service';
 
 export type ProximityStatus = 'On Site' | 'En Route' | 'Unknown';
 export type ClockOutReason = 'end_of_day' | 'break' | 'lunch' | 'other';
@@ -42,14 +43,17 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
   showClockOutOptions = false;
 
   private readonly MILE_IN_METERS = 1609.34;
-  private readonly MOCK_TECHNICIAN_ID = 'current-technician-id';
+  private currentTechnicianId = '';
   private destroy$ = new Subject<void>();
   private timerInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private store: Store,
-    private geolocationService: GeolocationService
-  ) {}
+    private geolocationService: GeolocationService,
+    private authService: AuthService
+  ) {
+    this.currentTechnicianId = this.authService.getUser()?.id || '';
+  }
 
   ngOnInit(): void {
     this.loading$ = this.store.select(selectTimeEntriesLoading);
@@ -102,7 +106,7 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
           this.updateProximity(location, job);
           this.store.dispatch(TimeEntryActions.clockIn({
             jobId: job.id,
-            technicianId: this.MOCK_TECHNICIAN_ID,
+            technicianId: this.currentTechnicianId,
             location
           }));
         },
@@ -112,7 +116,7 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
           this.proximityStatus = 'Unknown';
           this.store.dispatch(TimeEntryActions.clockIn({
             jobId: job.id,
-            technicianId: this.MOCK_TECHNICIAN_ID
+            technicianId: this.currentTechnicianId
           }));
         }
       });

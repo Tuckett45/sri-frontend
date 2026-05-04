@@ -27,6 +27,12 @@ export * from './dashboard.models';
 // Job Setup models
 export * from './job-setup.models';
 
+// Deployment Checklist models
+export * from './deployment-checklist.model';
+
+// Quote/RFP Workflow models
+export * from './quote-workflow.model';
+
 // DTOs
 export * from './dtos/technician.dto';
 export * from './dtos/job.dto';

@@ -1,5 +1,3 @@
-@import '../../../styles/frm-styles';
-
 .crew-list-container {
   padding: 24px;
   height: 100%;
@@ -157,201 +155,87 @@
   padding: 48px;
 }
 
-.error-card {
-  background-color: #ffebee;
-  margin-bottom: 24px;
+.error-state {
+  .error-card {
+    background-color: #ffffff !important;
+    border: 1px solid #f44336;
+    border-radius: 8px;
+    margin-bottom: 24px;
 
-  mat-card-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #c62828;
-  }
-}
-
-.table-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: white;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-  .crew-viewport {
-    height: 800px;
-    overflow: auto;
-  }
-
-  .crews-table {
-    width: 100%;
-
-    th {
-      background-color: #f5f5f5;
-      font-weight: 600;
-      color: #616161;
-      padding: 16px;
-    }
-
-    td {
-      padding: 16px;
-      border-bottom: 1px solid #e0e0e0;
-      color: #616161;
-    }
-
-    .crew-row {
-      cursor: pointer;
-      transition: background-color 0.2s;
-
-      &:hover {
-        background-color: #f5f5f5;
-      }
-    }
-
-    .crew-name {
+    mat-card-content {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      align-items: flex-start;
+      padding: 24px;
+      gap: 8px;
 
-      strong {
-        font-size: 14px;
+      h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
         color: #424242;
-      }
-
-      .crew-id {
-        font-size: 12px;
-        color: #9e9e9e;
-      }
-    }
-
-    .lead-tech-id {
-      font-size: 13px;
-      color: #616161;
-      font-family: 'Courier New', monospace;
-    }
-
-    .member-count {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 500;
-
-      .member-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        color: #757575;
-      }
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-
-      &.status-available {
-        background-color: #e8f5e9;
-        color: #2e7d32;
-      }
-
-      &.status-on-job {
-        background-color: #fff3e0;
-        color: #ef6c00;
-      }
-
-      &.status-unavailable {
-        background-color: #ffebee;
-        color: #c62828;
-      }
-    }
-
-    .market-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      background-color: #e3f2fd;
-      color: #1565c0;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .company-name {
-      font-size: 13px;
-      color: #616161;
-    }
-
-    .no-data {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px;
-      color: #9e9e9e;
-
-      mat-icon {
-        font-size: 64px;
-        width: 64px;
-        height: 64px;
-        margin-bottom: 16px;
       }
 
       p {
         margin: 0;
-        font-size: 16px;
+        color: #757575;
       }
     }
-
-    // Action buttons styling
-    .mat-column-actions {
-      button[mat-icon-button] {
-        transition: all 0.2s ease;
-
-        mat-icon {
-          color: #757575;
-          transition: color 0.2s ease;
-        }
-
-        &:hover {
-          mat-icon {
-            color: #1976d2;
-          }
-        }
-
-        // View icon
-        &:first-child {
-          mat-icon {
-            color: #2196f3;
-          }
-
-          &:hover mat-icon {
-            color: #1565c0;
-          }
-        }
-
-        // Edit icon
-        &:nth-child(2) {
-          mat-icon {
-            color: #ff9800;
-          }
-
-          &:hover mat-icon {
-            color: #f57c00;
-          }
-        }
-      }
-    }
-  }
-
-  mat-paginator {
-    border-top: 1px solid #e0e0e0;
-    background-color: #ffffff;
   }
 }
 
-// Responsive design
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+
+  &.status-available {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.status-on-job {
+    background-color: #fff3e0;
+    color: #ef6c00;
+  }
+
+  &.status-unavailable {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: rgba(0, 0, 0, 0.26);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #616161;
+  }
+
+  p {
+    margin: 0;
+    color: #9e9e9e;
+  }
+}
 @media (max-width: 768px) {
   .crew-list-container {
     padding: 16px;
@@ -379,65 +263,127 @@
       width: 100%;
     }
   }
+}
 
-  .table-container {
-    .crews-table {
-      font-size: 12px;
 
-      th, td {
-        padding: 12px 8px;
+.crew-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crew-card {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 14px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover, &:focus {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    outline: none;
+  }
+
+  .crew-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .crew-card-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1976d2;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .crew-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .crew-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+  }
+
+  .crew-card-label {
+    color: #757575;
+    font-weight: 500;
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+
+  .crew-card-value {
+    color: #212121;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .crew-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+
+    button {
+      color: #616161;
+
+      &.delete-action {
+        color: #d32f2f;
       }
     }
   }
 }
 
-
-// Force light theme override
-::ng-deep {
-  .crews-table {
-    background-color: #ffffff !important;
-    
-    .mat-mdc-table {
-      background-color: #ffffff !important;
-    }
-    
-    .mat-mdc-header-row {
-      background-color: #fafafa !important;
-    }
-    
-    .mat-mdc-row {
-      background-color: #ffffff !important;
-      color: #616161 !important;
-      
-      &:hover {
-        background-color: #f5f5f5 !important;
-      }
-    }
-    
-    .mat-mdc-cell, .mat-mdc-header-cell {
-      color: #616161 !important;
-    }
+@media (max-width: 767px) {
+  .crew-list-container {
+    padding: 12px;
   }
 }
 
-// Sticky first column (name) on mobile side scroll
-::ng-deep .mat-column-name {
-  position: sticky;
-  left: 0;
-  z-index: 5;
-  background-color: inherit;
-  border-right: 1px solid #e0e0e0;
-
-  &.mat-mdc-header-cell {
-    z-index: 11;
-    background-color: #fafafa !important;
-  }
-}
-
-::ng-deep .mat-mdc-row .mat-column-name {
+// Paginator — white background, black text and icons
+::ng-deep mat-paginator {
   background-color: #ffffff !important;
-}
+  color: #000000 !important;
 
-::ng-deep .mat-mdc-row:hover .mat-column-name {
-  background-color: #f5f5f5 !important;
+  .mat-mdc-paginator-container {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-paginator-range-label,
+  .mat-mdc-paginator-page-size-label {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-select-value-text {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-select-arrow svg {
+    fill: #000000 !important;
+  }
+
+  .mat-mdc-paginator-navigation-previous,
+  .mat-mdc-paginator-navigation-next,
+  .mat-mdc-paginator-navigation-first,
+  .mat-mdc-paginator-navigation-last {
+    color: #000000 !important;
+
+    .mat-mdc-paginator-icon {
+      fill: #000000 !important;
+    }
+  }
 }

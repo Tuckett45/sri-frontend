@@ -12,6 +12,11 @@ import * as TechnicianActions from '../state/technicians/technician.actions';
 import * as CrewActions from '../state/crews/crew.actions';
 import * as NotificationActions from '../state/notifications/notification.actions';
 import * as UIActions from '../state/ui/ui.actions';
+import * as ChecklistActions from '../state/deployment-checklist/checklist.actions';
+import * as QuoteActions from '../state/quotes/quote.actions';
+import { DeploymentChecklist } from '../models/deployment-checklist.model';
+import { QuoteWorkflow } from '../models/quote-workflow.model';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Location update event
@@ -78,6 +83,7 @@ export class FrmSignalRService {
   private reconnectTimeoutId: any = null;
   private lastEventTimestamp: Date | null = null;
   private missedEventsRecoveryEnabled = true;
+  private activeQuoteId: string | null = null;
 
   // Event subjects for hub method subscriptions
   private locationUpdateSubject = new BehaviorSubject<LocationUpdate | null>(null);
@@ -86,6 +92,8 @@ export class FrmSignalRService {
   private jobStatusChangedSubject = new BehaviorSubject<JobStatusUpdate | null>(null);
   private jobReassignedSubject = new BehaviorSubject<Reassignment | null>(null);
   private notificationSubject = new BehaviorSubject<Notification | null>(null);
+  private checklistUpdatedSubject = new BehaviorSubject<{ jobId: string; checklist: DeploymentChecklist } | null>(null);
+  private quoteUpdatedSubject = new BehaviorSubject<{ quoteId: string; quote: QuoteWorkflow } | null>(null);
 
   /**
    * Observable for monitoring connection status changes
@@ -121,6 +129,16 @@ export class FrmSignalRService {
    * Observable stream of notification events
    */
   public notification$: Observable<Notification | null> = this.notificationSubject.asObservable();
+
+  /**
+   * Observable stream of checklist updated events
+   */
+  public checklistUpdated$: Observable<{ jobId: string; checklist: DeploymentChecklist } | null> = this.checklistUpdatedSubject.asObservable();
+
+  /**
+   * Observable stream of quote updated events
+   */
+  public quoteUpdated$: Observable<{ quoteId: string; quote: QuoteWorkflow } | null> = this.quoteUpdatedSubject.asObservable();
 
   constructor(private store: Store) {}
 
@@ -177,6 +195,14 @@ export class FrmSignalRService {
     this.store.dispatch(AssignmentActions.loadAssignments({ filters: {} }));
     this.store.dispatch(CrewActions.loadCrews({ filters: {} }));
     
+    // Reload quotes list to resynchronize quote pipeline state
+    this.store.dispatch(QuoteActions.loadQuotes({}));
+
+    // Reload individual quote if one is currently being viewed
+    if (this.activeQuoteId) {
+      this.store.dispatch(QuoteActions.loadQuote({ quoteId: this.activeQuoteId }));
+    }
+    
     console.log('State sync initiated - all entities will be reloaded');
   }
 
@@ -185,6 +211,12 @@ export class FrmSignalRService {
    * @returns Promise that resolves when connection is established
    */
   async connect(): Promise<void> {
+    // Skip connection if SignalR is disabled in the environment config
+    if (!local_environment.enableSignalR) {
+      console.log('SignalR disabled in environment config — skipping connection');
+      return;
+    }
+
     if (this.hubConnection && this.connectionStatusSubject.value === ConnectionStatus.Connected) {
       console.log('SignalR already connected');
       return;
@@ -200,7 +232,7 @@ export class FrmSignalRService {
 
     try {
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl('/hubs/field-resource-management', {
+        .withUrl(`${environment.atlasApiUrl}/hubs/field-resource-management`, {
           skipNegotiation: false,
           transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents
         })
@@ -331,6 +363,8 @@ export class FrmSignalRService {
         this.jobStatusChangedSubject.next(null);
         this.jobReassignedSubject.next(null);
         this.notificationSubject.next(null);
+        this.checklistUpdatedSubject.next(null);
+        this.quoteUpdatedSubject.next(null);
         
         console.log('SignalR disconnected');
       } catch (error) {
@@ -642,6 +676,29 @@ export class FrmSignalRService {
   }
 
   /**
+   * Sets the active quote ID for reconnection resynchronization.
+   * When a quote is being viewed, the service will dispatch loadQuote
+   * on reconnection to ensure the displayed data is current.
+   * @param quoteId The quote ID currently being viewed, or null to clear
+   */
+  setActiveQuoteId(quoteId: string | null): void {
+    this.activeQuoteId = quoteId;
+    if (quoteId) {
+      console.log(`Active quote set: ${quoteId}`);
+    } else {
+      console.log('Active quote cleared');
+    }
+  }
+
+  /**
+   * Gets the currently active quote ID
+   * @returns The active quote ID or null
+   */
+  getActiveQuoteId(): string | null {
+    return this.activeQuoteId;
+  }
+
+  /**
    * Gets the timestamp of the last received event
    * @returns Last event timestamp or null if no events received
    */
@@ -948,6 +1005,38 @@ export class FrmSignalRService {
 
       console.log(`Processed ${response.events.length} missed events`);
     });
+
+    // Checklist updated event
+    this.hubConnection.on('ChecklistUpdated', (update: { jobId: string; checklist: DeploymentChecklist }) => {
+      console.log('Checklist updated event received', update);
+
+      if (!update || !update.jobId || !update.checklist) {
+        console.error('Invalid checklist update received', update);
+        return;
+      }
+
+      this.updateLastEventTimestamp(new Date());
+      this.checklistUpdatedSubject.next(update);
+      this.store.dispatch(ChecklistActions.checklistUpdatedRemotely({ checklist: update.checklist }));
+
+      console.log(`Checklist updated for job ${update.jobId}`);
+    });
+
+    // Quote updated event
+    this.hubConnection.on('QuoteUpdated', (update: { quoteId: string; quote: QuoteWorkflow }) => {
+      console.log('Quote updated event received', update);
+
+      if (!update || !update.quoteId || !update.quote) {
+        console.error('Invalid quote update received', update);
+        return;
+      }
+
+      this.updateLastEventTimestamp(new Date());
+      this.quoteUpdatedSubject.next(update);
+      this.store.dispatch(QuoteActions.quoteUpdatedRemotely({ quote: update.quote }));
+
+      console.log(`Quote updated: ${update.quoteId}`);
+    });
   }
 
   /**
@@ -1029,6 +1118,24 @@ export class FrmSignalRService {
         }
         break;
 
+      case 'ChecklistUpdated':
+        if (event.data && event.data.jobId && event.data.checklist) {
+          this.updateLastEventTimestamp(event.timestamp);
+          this.store.dispatch(ChecklistActions.checklistUpdatedRemotely({
+            checklist: event.data.checklist
+          }));
+        }
+        break;
+
+      case 'QuoteUpdated':
+        if (event.data && event.data.quoteId && event.data.quote) {
+          this.updateLastEventTimestamp(event.timestamp);
+          this.store.dispatch(QuoteActions.quoteUpdatedRemotely({
+            quote: event.data.quote
+          }));
+        }
+        break;
+
       default:
         console.warn(`Unknown missed event type: ${event.type}`);
     }
@@ -1064,6 +1171,10 @@ export class FrmSignalRService {
    * - Attempt 6+: 30s (capped)
    */
   private attemptReconnect(): void {
+    if (!local_environment.enableSignalR) {
+      return;
+    }
+
     if (this.manualDisconnect) {
       console.log('Manual disconnect - skipping reconnect attempt');
       return;
@@ -1114,6 +1225,46 @@ export class FrmSignalRService {
         // The connect() method will trigger attemptReconnect() again if needed
       }
     }, delay);
+  }
+
+  /**
+   * Broadcasts a checklist update to other users via SignalR
+   * @param jobId Job ID
+   * @param checklist Updated checklist data
+   * @returns Promise that resolves when the broadcast is sent
+   */
+  async broadcastChecklistUpdate(jobId: string, checklist: DeploymentChecklist): Promise<void> {
+    if (this.hubConnection && this.isConnected()) {
+      try {
+        await this.hubConnection.invoke('BroadcastChecklistUpdate', jobId, checklist);
+        console.log(`Checklist update broadcast for job ${jobId}`);
+      } catch (error) {
+        console.error(`Error broadcasting checklist update for job ${jobId}`, error);
+        throw error;
+      }
+    } else {
+      throw new Error('Cannot broadcast checklist update: SignalR not connected');
+    }
+  }
+
+  /**
+   * Broadcasts a quote update to other users via SignalR
+   * @param quoteId Quote ID
+   * @param quote Updated quote data
+   * @returns Promise that resolves when the broadcast is sent
+   */
+  async broadcastQuoteUpdate(quoteId: string, quote: QuoteWorkflow): Promise<void> {
+    if (this.hubConnection && this.isConnected()) {
+      try {
+        await this.hubConnection.invoke('BroadcastQuoteUpdate', quoteId, quote);
+        console.log(`Quote update broadcast for quote ${quoteId}`);
+      } catch (error) {
+        console.error(`Error broadcasting quote update for quote ${quoteId}`, error);
+        throw error;
+      }
+    } else {
+      throw new Error('Cannot broadcast quote update: SignalR not connected');
+    }
   }
 
   /**

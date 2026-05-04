@@ -78,19 +78,25 @@ export const selectTimeEntriesByTechnician = (technicianId: string) => createSel
   (timeEntries) => timeEntries.filter(entry => entry.technicianId === technicianId)
 );
 
-// Select total hours by job
+// Select total hours by job (calculated from clock in/out times)
 export const selectTotalHoursByJob = (jobId: string) => createSelector(
   selectTimeEntriesByJob(jobId),
   (timeEntries) => timeEntries.reduce((total, entry) => {
-    return total + (entry.totalHours || 0);
+    if (!entry.clockInTime) return total;
+    const clockIn = new Date(entry.clockInTime).getTime();
+    const clockOut = entry.clockOutTime ? new Date(entry.clockOutTime).getTime() : Date.now();
+    return total + (clockOut - clockIn) / 3600000;
   }, 0)
 );
 
-// Select total hours by technician
+// Select total hours by technician (calculated from clock in/out times)
 export const selectTotalHoursByTechnician = (technicianId: string) => createSelector(
   selectTimeEntriesByTechnician(technicianId),
   (timeEntries) => timeEntries.reduce((total, entry) => {
-    return total + (entry.totalHours || 0);
+    if (!entry.clockInTime) return total;
+    const clockIn = new Date(entry.clockInTime).getTime();
+    const clockOut = entry.clockOutTime ? new Date(entry.clockOutTime).getTime() : Date.now();
+    return total + (clockOut - clockIn) / 3600000;
   }, 0)
 );
 

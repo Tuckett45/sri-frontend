@@ -1,0 +1,118 @@
+// ---------------------------------------------------------------------------
+// Draft Restored Banner
+// ---------------------------------------------------------------------------
+
+.draft-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+  color: #1565c0;
+  font-size: 14px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #1976d2;
+  }
+
+  span {
+    flex: 1;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Form Layout
+// ---------------------------------------------------------------------------
+
+.job-details-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-section {
+  margin-bottom: 16px;
+}
+
+.section-heading {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.required-indicator {
+  color: #f44336;
+  font-weight: 400;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+
+  &.two-columns > * {
+    flex: 1;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dynamic Array Rows
+// ---------------------------------------------------------------------------
+
+.dynamic-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.flex-field {
+  flex: 1;
+}
+
+// ---------------------------------------------------------------------------
+// Form Actions
+// ---------------------------------------------------------------------------
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+// ---------------------------------------------------------------------------
+// Responsive
+// ---------------------------------------------------------------------------
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Print Styles
+// ---------------------------------------------------------------------------
+
+@media print {
+  .draft-banner,
+  .form-actions {
+    display: none !important;
+  }
+
+  .dynamic-row button {
+    display: none !important;
+  }
+}

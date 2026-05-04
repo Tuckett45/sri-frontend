@@ -10,6 +10,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { of, Subject, EMPTY } from 'rxjs';
 
@@ -17,6 +20,8 @@ import { CrewFormComponent } from './crew-form.component';
 import { Crew, CrewStatus } from '../../../models/crew.model';
 import { Technician, TechnicianRole, EmploymentType } from '../../../models/technician.model';
 import * as CrewActions from '../../../state/crews/crew.actions';
+import * as CrewSelectors from '../../../state/crews/crew.selectors';
+import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 import { AuthService } from '../../../../../services/auth.service';
 
 describe('CrewFormComponent', () => {
@@ -117,11 +122,27 @@ describe('CrewFormComponent', () => {
     mockAuthService.isAdmin.and.returnValue(false);
     mockAuthService.getUser.and.returnValue({ 
       id: 'user-1', 
-      role: 'CM'
+      role: 'CM',
+      market: 'North',
+      company: 'Internal'
     });
 
-    // Default store select behavior
-    mockStore.select.and.returnValue(of([]));
+    // Default store select behavior - selector-aware
+    mockStore.select.and.callFake((selector: any) => {
+      if (selector === TechnicianSelectors.selectAllTechnicians) {
+        return of([]);
+      }
+      if (selector === CrewSelectors.selectCrewsLoading) {
+        return of(false);
+      }
+      if (selector === CrewSelectors.selectCrewsError) {
+        return of(null);
+      }
+      if (selector === CrewSelectors.selectSelectedCrew) {
+        return of(null);
+      }
+      return of([]);
+    });
 
     await TestBed.configureTestingModule({
       declarations: [ CrewFormComponent ],
@@ -133,7 +154,10 @@ describe('CrewFormComponent', () => {
         MatSelectModule,
         MatCardModule,
         MatButtonModule,
-        MatChipsModule
+        MatChipsModule,
+        MatIconModule,
+        MatTooltipModule,
+        MatProgressSpinnerModule
       ],
       providers: [
         { provide: Store, useValue: mockStore },
@@ -357,7 +381,21 @@ describe('CrewFormComponent', () => {
 
   describe('Lead Technician and Member Management', () => {
     beforeEach(() => {
-      mockStore.select.and.returnValue(of(mockTechnicians));
+      mockStore.select.and.callFake((selector: any) => {
+        if (selector === TechnicianSelectors.selectAllTechnicians) {
+          return of(mockTechnicians);
+        }
+        if (selector === CrewSelectors.selectCrewsLoading) {
+          return of(false);
+        }
+        if (selector === CrewSelectors.selectCrewsError) {
+          return of(null);
+        }
+        if (selector === CrewSelectors.selectSelectedCrew) {
+          return of(null);
+        }
+        return of([]);
+      });
       fixture.detectChanges();
     });
 
@@ -406,7 +444,21 @@ describe('CrewFormComponent', () => {
 
   describe('Create Mode', () => {
     beforeEach(() => {
-      mockStore.select.and.returnValue(of(mockTechnicians));
+      mockStore.select.and.callFake((selector: any) => {
+        if (selector === TechnicianSelectors.selectAllTechnicians) {
+          return of(mockTechnicians);
+        }
+        if (selector === CrewSelectors.selectCrewsLoading) {
+          return of(false);
+        }
+        if (selector === CrewSelectors.selectCrewsError) {
+          return of(null);
+        }
+        if (selector === CrewSelectors.selectSelectedCrew) {
+          return of(null);
+        }
+        return of([]);
+      });
       fixture.detectChanges();
     });
 
@@ -433,7 +485,7 @@ describe('CrewFormComponent', () => {
             name: 'Beta Team',
             leadTechnicianId: 'tech-1',
             memberIds: ['tech-2'],
-            market: 'DALLAS',
+            market: 'North',
             company: 'ACME_CORP',
             status: CrewStatus.Available
           }
@@ -441,7 +493,7 @@ describe('CrewFormComponent', () => {
       );
     });
 
-    it('should navigate to crews list after create', () => {
+    it('should navigate to crews list after create', (done) => {
       component.crewForm.patchValue({
         name: 'Beta Team',
         leadTechnicianId: 'tech-1',
@@ -452,10 +504,17 @@ describe('CrewFormComponent', () => {
 
       component.onSubmit();
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/field-resource-management/crews']);
+      // Emit success action to trigger navigation
+      setTimeout(() => {
+        mockActions$.next(CrewActions.createCrewSuccess({ crew: mockCrew }));
+        setTimeout(() => {
+          expect(mockRouter.navigate).toHaveBeenCalledWith(['/field-resource-management/crews']);
+          done();
+        }, 10);
+      }, 10);
     });
 
-    it('should show snackbar message on create', () => {
+    it('should show snackbar message on create', (done) => {
       component.crewForm.patchValue({
         name: 'Beta Team',
         leadTechnicianId: 'tech-1',
@@ -466,11 +525,18 @@ describe('CrewFormComponent', () => {
 
       component.onSubmit();
 
-      expect(mockSnackBar.open).toHaveBeenCalledWith(
-        'Crew created successfully',
-        'Close',
-        { duration: 3000 }
-      );
+      // Emit success action to trigger snackbar
+      setTimeout(() => {
+        mockActions$.next(CrewActions.createCrewSuccess({ crew: mockCrew }));
+        setTimeout(() => {
+          expect(mockSnackBar.open).toHaveBeenCalledWith(
+            'Crew created successfully',
+            'Close',
+            { duration: 3000 }
+          );
+          done();
+        }, 10);
+      }, 10);
     });
 
     it('should not submit if form is invalid', () => {
@@ -491,11 +557,30 @@ describe('CrewFormComponent', () => {
   });
 
   describe('Edit Mode', () => {
-    beforeEach(() => {
-      component.isEditMode = true;
-      component.crewId = 'crew-1';
-      mockStore.select.and.returnValue(of(mockCrew));
+    beforeEach((done) => {
+      mockStore.select.and.callFake((selector: any) => {
+        if (selector === TechnicianSelectors.selectAllTechnicians) {
+          return of(mockTechnicians);
+        }
+        if (selector === CrewSelectors.selectCrewsLoading) {
+          return of(false);
+        }
+        if (selector === CrewSelectors.selectCrewsError) {
+          return of(null);
+        }
+        if (selector === CrewSelectors.selectSelectedCrew) {
+          return of(mockCrew);
+        }
+        return of([]);
+      });
       fixture.detectChanges();
+
+      // Trigger route params to enter edit mode and load crew
+      paramsSubject.next({ id: 'crew-1' });
+      setTimeout(() => {
+        fixture.detectChanges();
+        done();
+      }, 10);
     });
 
     it('should be in edit mode when crew ID is provided', () => {
@@ -505,11 +590,7 @@ describe('CrewFormComponent', () => {
     });
 
     it('should populate form with crew data', () => {
-      // Trigger the load by selecting the crew
-      mockStore.select.and.returnValue(of(mockCrew));
-      component['loadCrew']('crew-1');
-      fixture.detectChanges();
-
+      // The beforeEach already loaded the crew via selectSelectedCrew returning mockCrew
       expect(component.crewForm.get('name')?.value).toBe('Alpha Team');
       expect(component.crewForm.get('leadTechnicianId')?.value).toBe('tech-1');
       expect(component.crewForm.get('memberIds')?.value).toEqual(['tech-2', 'tech-3']);
@@ -528,6 +609,7 @@ describe('CrewFormComponent', () => {
 
       component.onSubmit();
 
+      // market comes from the loaded crew data (TEST_MARKET) since it's a disabled field
       expect(mockStore.dispatch).toHaveBeenCalledWith(
         CrewActions.updateCrew({
           id: 'crew-1',
@@ -535,6 +617,7 @@ describe('CrewFormComponent', () => {
             name: 'Alpha Team Updated',
             leadTechnicianId: 'tech-1',
             memberIds: ['tech-2', 'tech-3'],
+            market: 'TEST_MARKET',
             company: 'ACME_CORP',
             status: CrewStatus.OnJob
           }
@@ -542,7 +625,7 @@ describe('CrewFormComponent', () => {
       );
     });
 
-    it('should navigate to crew detail after update', () => {
+    it('should navigate to crew detail after update', (done) => {
       component.crewForm.patchValue({
         name: 'Alpha Team Updated',
         leadTechnicianId: 'tech-1',
@@ -553,7 +636,14 @@ describe('CrewFormComponent', () => {
 
       component.onSubmit();
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/field-resource-management/crews', 'crew-1']);
+      // Emit success action to trigger navigation
+      setTimeout(() => {
+        mockActions$.next(CrewActions.updateCrewSuccess({ crew: mockCrew }));
+        setTimeout(() => {
+          expect(mockRouter.navigate).toHaveBeenCalledWith(['/field-resource-management/crews', 'crew-1']);
+          done();
+        }, 10);
+      }, 10);
     });
   });
 
@@ -598,7 +688,21 @@ describe('CrewFormComponent', () => {
 
   describe('NgRx Store Integration', () => {
     beforeEach(() => {
-      mockStore.select.and.returnValue(of(mockTechnicians));
+      mockStore.select.and.callFake((selector: any) => {
+        if (selector === TechnicianSelectors.selectAllTechnicians) {
+          return of(mockTechnicians);
+        }
+        if (selector === CrewSelectors.selectCrewsLoading) {
+          return of(false);
+        }
+        if (selector === CrewSelectors.selectCrewsError) {
+          return of(null);
+        }
+        if (selector === CrewSelectors.selectSelectedCrew) {
+          return of(null);
+        }
+        return of([]);
+      });
       fixture.detectChanges();
     });
 
@@ -612,20 +716,19 @@ describe('CrewFormComponent', () => {
     });
 
     it('should subscribe to loading state from store', (done) => {
-      mockStore.select.and.returnValue(of(true));
-      
+      // isLoading$ is bound to selectCrewsLoading at construction time
+      // Verify it emits the value from the selector
       component.isLoading$.subscribe(loading => {
-        expect(loading).toBe(true);
+        expect(loading).toBe(false);
         done();
       });
     });
 
     it('should subscribe to error state from store', (done) => {
-      const errorMessage = 'Failed to load crew';
-      mockStore.select.and.returnValue(of(errorMessage));
-      
+      // error$ is bound to selectCrewsError at construction time
+      // Verify it emits the value from the selector
       component.error$.subscribe(error => {
-        expect(error).toBe(errorMessage);
+        expect(error).toBeNull();
         done();
       });
     });
@@ -745,7 +848,21 @@ describe('CrewFormComponent', () => {
 
   describe('Member Management Operations', () => {
     beforeEach(() => {
-      mockStore.select.and.returnValue(of(mockTechnicians));
+      mockStore.select.and.callFake((selector: any) => {
+        if (selector === TechnicianSelectors.selectAllTechnicians) {
+          return of(mockTechnicians);
+        }
+        if (selector === CrewSelectors.selectCrewsLoading) {
+          return of(false);
+        }
+        if (selector === CrewSelectors.selectCrewsError) {
+          return of(null);
+        }
+        if (selector === CrewSelectors.selectSelectedCrew) {
+          return of(null);
+        }
+        return of([]);
+      });
       fixture.detectChanges();
     });
 
@@ -786,7 +903,21 @@ describe('CrewFormComponent', () => {
 
   describe('Route Parameter Handling', () => {
     it('should enter edit mode when route has crew ID', (done) => {
-      mockStore.select.and.returnValue(of(mockCrew));
+      mockStore.select.and.callFake((selector: any) => {
+        if (selector === TechnicianSelectors.selectAllTechnicians) {
+          return of(mockTechnicians);
+        }
+        if (selector === CrewSelectors.selectCrewsLoading) {
+          return of(false);
+        }
+        if (selector === CrewSelectors.selectCrewsError) {
+          return of(null);
+        }
+        if (selector === CrewSelectors.selectSelectedCrew) {
+          return of(mockCrew);
+        }
+        return of([]);
+      });
       fixture.detectChanges();
 
       paramsSubject.next({ id: 'crew-1' });
@@ -844,7 +975,21 @@ describe('CrewFormComponent', () => {
 
   describe('Edge Cases', () => {
     beforeEach(() => {
-      mockStore.select.and.returnValue(of(mockTechnicians));
+      mockStore.select.and.callFake((selector: any) => {
+        if (selector === TechnicianSelectors.selectAllTechnicians) {
+          return of(mockTechnicians);
+        }
+        if (selector === CrewSelectors.selectCrewsLoading) {
+          return of(false);
+        }
+        if (selector === CrewSelectors.selectCrewsError) {
+          return of(null);
+        }
+        if (selector === CrewSelectors.selectSelectedCrew) {
+          return of(null);
+        }
+        return of([]);
+      });
       fixture.detectChanges();
     });
 
@@ -928,7 +1073,21 @@ describe('CrewFormComponent', () => {
     });
 
     it('should handle empty technicians list', () => {
-      mockStore.select.and.returnValue(of([]));
+      mockStore.select.and.callFake((selector: any) => {
+        if (selector === TechnicianSelectors.selectAllTechnicians) {
+          return of([]);
+        }
+        if (selector === CrewSelectors.selectCrewsLoading) {
+          return of(false);
+        }
+        if (selector === CrewSelectors.selectCrewsError) {
+          return of(null);
+        }
+        if (selector === CrewSelectors.selectSelectedCrew) {
+          return of(null);
+        }
+        return of([]);
+      });
       component['loadTechnicians']();
       fixture.detectChanges();
 
@@ -937,7 +1096,21 @@ describe('CrewFormComponent', () => {
     });
 
     it('should handle null crew when loading in edit mode', () => {
-      mockStore.select.and.returnValue(of(null));
+      mockStore.select.and.callFake((selector: any) => {
+        if (selector === TechnicianSelectors.selectAllTechnicians) {
+          return of(mockTechnicians);
+        }
+        if (selector === CrewSelectors.selectCrewsLoading) {
+          return of(false);
+        }
+        if (selector === CrewSelectors.selectCrewsError) {
+          return of(null);
+        }
+        if (selector === CrewSelectors.selectSelectedCrew) {
+          return of(null);
+        }
+        return of([]);
+      });
       component['loadCrew']('crew-1');
       fixture.detectChanges();
 

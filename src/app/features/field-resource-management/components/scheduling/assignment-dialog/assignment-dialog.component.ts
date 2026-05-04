@@ -11,6 +11,7 @@ import { TechnicianMatch, Conflict } from '../../../models/assignment.model';
 import { TechnicianDistance, PerDiemConfig } from '../../../models/travel.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 import * as TravelActions from '../../../state/travel/travel.actions';
+import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import { selectQualifiedTechnicians, selectAssignmentConflicts } from '../../../state/assignments/assignment.selectors';
 import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
 import { 
@@ -88,6 +89,9 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Ensure technicians are loaded in the store
+    this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
+    
     // Load qualified technicians for this job
     this.store.dispatch(AssignmentActions.loadQualifiedTechnicians({ jobId: this.job.id }));
     

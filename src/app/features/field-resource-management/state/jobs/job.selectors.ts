@@ -149,6 +149,16 @@ export const selectFilteredJobs = createSelector(
       // in the selector context (e.g., via a combined selector)
     }
 
+    // Filter by job readiness
+    if (filters.jobReadiness) {
+      filtered = filtered.filter(job => job.jobReadiness === filters.jobReadiness);
+    }
+
+    // Filter by customer ready
+    if (filters.customerReady) {
+      filtered = filtered.filter(job => job.customerReady === filters.customerReady);
+    }
+
     return filtered;
   }
 );
@@ -782,6 +792,16 @@ export const selectFilteredScopedJobs = (user: User, dataScopes: DataScope[]) =>
       // Note: This requires assignment data to properly filter
       // For now, this filter is not applied
       // Proper implementation would join with assignment state
+    }
+
+    // Filter by job readiness
+    if (filters.jobReadiness) {
+      filtered = filtered.filter(job => job.jobReadiness === filters.jobReadiness);
+    }
+
+    // Filter by customer ready
+    if (filters.customerReady) {
+      filtered = filtered.filter(job => job.customerReady === filters.customerReady);
     }
 
     return filtered;

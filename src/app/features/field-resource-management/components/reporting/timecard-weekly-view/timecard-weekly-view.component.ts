@@ -16,11 +16,14 @@ import { Job } from '../../../models/job.model';
 import { TimecardService } from '../../../services/timecard.service';
 import { AccessibilityService } from '../../../services/accessibility.service';
 import { TimeEntryDialogComponent, TimeEntryDialogData } from '../time-entry-dialog/time-entry-dialog.component';
+import { AuthService } from '../../../../../services/auth.service';
 
 import * as TimeEntrySelectors from '../../../state/time-entries/time-entry.selectors';
+import * as TimeEntryActions from '../../../state/time-entries/time-entry.actions';
 import * as TimecardSelectors from '../../../state/timecards/timecard.selectors';
 import * as TimecardActions from '../../../state/timecards/timecard.actions';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
+import { loadJobs } from '../../../state/jobs/job.actions';
 
 /**
  * Timecard Weekly View Component
@@ -42,8 +45,8 @@ import * as JobSelectors from '../../../state/jobs/job.selectors';
 export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
-  // Current user (mock - would come from auth service)
-  currentTechnicianId = 'current-technician-id';
+  // Current user
+  currentTechnicianId = '';
   
   // Observable data
   weeklyTimeEntries$: Observable<TimeEntry[]>;
@@ -72,14 +75,21 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
 
   // Selected day index for the detail entries section (-1 = show all)
   selectedDayIndex: number = -1;
+
+  // Job lookup map (id → Job) for displaying job info in time entries
+  jobMap: Map<string, Job> = new Map();
   
   constructor(
     private store: Store,
     public timecardService: TimecardService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private accessibilityService: AccessibilityService
+    private accessibilityService: AccessibilityService,
+    private authService: AuthService
   ) {
+    // Set current technician ID from auth
+    this.currentTechnicianId = this.authService.getUser()?.id || '';
+
     // Initialize week dates
     this.currentWeekStart = this.timecardService.getWeekStart();
     this.currentWeekEnd = this.timecardService.getWeekEnd();
@@ -128,6 +138,14 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load lock configuration
     this.store.dispatch(TimecardActions.loadLockConfig());
+
+    // Ensure jobs are loaded for name lookups
+    this.store.dispatch(loadJobs({}));
+
+    // Load time entries from the API
+    this.store.dispatch(TimeEntryActions.loadTimeEntries({
+      technicianId: this.currentTechnicianId
+    }));
     
     // Load timecard period
     this.loadCurrentPeriod();
@@ -147,6 +165,12 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
       if (error) {
         this.accessibilityService.announceError(error);
       }
+    });
+
+    // Build job lookup map
+    this.jobs$.pipe(takeUntil(this.destroy$)).subscribe(jobs => {
+      this.jobMap.clear();
+      jobs.forEach(j => this.jobMap.set(j.id, j));
     });
   }
   
@@ -203,6 +227,10 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
     this.currentWeekStart.setDate(this.currentWeekStart.getDate() - 7);
     this.currentWeekEnd.setDate(this.currentWeekEnd.getDate() - 7);
     this.loadCurrentPeriod();
+    this.store.dispatch(TimeEntryActions.loadTimeEntries({
+      technicianId: this.currentTechnicianId,
+      dateRange: { startDate: new Date(this.currentWeekStart), endDate: new Date(this.currentWeekEnd) }
+    }));
     this.accessibilityService.announce('Navigated to previous week');
   }
   
@@ -213,6 +241,10 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
     this.currentWeekStart.setDate(this.currentWeekStart.getDate() + 7);
     this.currentWeekEnd.setDate(this.currentWeekEnd.getDate() + 7);
     this.loadCurrentPeriod();
+    this.store.dispatch(TimeEntryActions.loadTimeEntries({
+      technicianId: this.currentTechnicianId,
+      dateRange: { startDate: new Date(this.currentWeekStart), endDate: new Date(this.currentWeekEnd) }
+    }));
     this.accessibilityService.announce('Navigated to next week');
   }
   
@@ -223,6 +255,9 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
     this.currentWeekStart = this.timecardService.getWeekStart();
     this.currentWeekEnd = this.timecardService.getWeekEnd();
     this.loadCurrentPeriod();
+    this.store.dispatch(TimeEntryActions.loadTimeEntries({
+      technicianId: this.currentTechnicianId
+    }));
     this.accessibilityService.announce('Navigated to current week');
   }
   
@@ -304,6 +339,11 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
       if (result) {
+        // Dispatch clock-in to create the entry via the API
+        this.store.dispatch(TimeEntryActions.clockIn({
+          jobId: result.jobId,
+          technicianId: result.technicianId || this.currentTechnicianId
+        }));
         this.snackBar.open('Time entry added', 'Close', { duration: 3000 });
         this.refresh();
       }
@@ -336,7 +376,18 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
-      if (result) {
+      if (result && result.id) {
+        // Dispatch the update to the API
+        this.store.dispatch(TimeEntryActions.updateTimeEntry({
+          id: result.id,
+          timeEntry: {
+            clockInTime: result.clockInTime,
+            clockOutTime: result.clockOutTime,
+            mileage: result.mileage,
+            adjustmentReason: result.adjustmentReason,
+            isManuallyAdjusted: true
+          }
+        }));
         this.snackBar.open('Time entry updated', 'Close', { duration: 3000 });
         this.refresh();
       }
@@ -408,6 +459,10 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
    */
   refresh(): void {
     this.loadCurrentPeriod();
+    // Also reload time entries from the API
+    this.store.dispatch(TimeEntryActions.loadTimeEntries({
+      technicianId: this.currentTechnicianId
+    }));
     this.accessibilityService.announce('Timecard data refreshed');
   }
 
@@ -424,5 +479,24 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
   isToday(date: Date): boolean {
     const today = new Date();
     return date.toDateString() === today.toDateString();
+  }
+
+  /**
+   * Get job display name for a time entry.
+   */
+  getJobDisplayName(jobId: string): string {
+    const job = this.jobMap.get(jobId);
+    if (!job) return jobId;
+    return job.jobId || `${job.client} - ${job.siteName}`;
+  }
+
+  /**
+   * Get job site info for a time entry.
+   */
+  getJobSiteInfo(jobId: string): string {
+    const job = this.jobMap.get(jobId);
+    if (!job) return '';
+    const addr = job.siteAddress;
+    return addr ? `${job.siteName} · ${addr.city}, ${addr.state}` : job.siteName || '';
   }
 }

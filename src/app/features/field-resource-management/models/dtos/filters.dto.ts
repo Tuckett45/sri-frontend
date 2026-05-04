@@ -3,7 +3,7 @@
  */
 
 import { TechnicianRole } from '../technician.model';
-import { JobType, Priority, JobStatus } from '../job.model';
+import { JobType, Priority, JobStatus, JobReadiness, CustomerReady } from '../job.model';
 import { DateRange } from '../assignment.model';
 import { CrewStatus } from '../crew.model';
 
@@ -31,6 +31,8 @@ export interface JobFilters {
   region?: string;
   market?: string;
   company?: string;
+  jobReadiness?: JobReadiness;
+  customerReady?: CustomerReady;
   page?: number;
   pageSize?: number;
 }

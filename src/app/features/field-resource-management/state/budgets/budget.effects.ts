@@ -281,12 +281,11 @@ export class BudgetEffects {
     { dispatch: false }
   );
 
-  // Error Notifications
+  // Error Notifications (suppress "not found" for budgets — expected for new jobs)
   budgetFailure$ = createEffect(
     () =>
       this.actions$.pipe(
         ofType(
-          BudgetActions.loadBudgetFailure,
           BudgetActions.loadBudgetsFailure,
           BudgetActions.createBudgetFailure,
           BudgetActions.adjustBudgetFailure,
@@ -294,6 +293,24 @@ export class BudgetEffects {
           BudgetActions.loadAdjustmentHistoryFailure,
           BudgetActions.loadDeductionHistoryFailure
         ),
+        tap(({ error }) => {
+          this.snackBar.open(`Error: ${error}`, 'Close', {
+            duration: 5000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar']
+          });
+        })
+      ),
+    { dispatch: false }
+  );
+
+  // Silently handle single-budget load failures (404 = no budget yet)
+  loadBudgetFailureSilent$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(BudgetActions.loadBudgetFailure),
+        filter(({ error }) => !error.includes('not found')),
         tap(({ error }) => {
           this.snackBar.open(`Error: ${error}`, 'Close', {
             duration: 5000,

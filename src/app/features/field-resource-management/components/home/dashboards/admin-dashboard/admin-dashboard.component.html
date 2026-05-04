@@ -5,7 +5,10 @@
   </app-kpi-summary-card>
   <br>
 
-  <app-quick-actions-widget [actions]="quickActions"></app-quick-actions-widget>
+  <app-quick-actions-widget
+    [actions]="quickActions"
+    (actionClicked)="onQuickAction($event)">
+  </app-quick-actions-widget>
 
   <div class="dashboard-widgets">
     <div class="widgets-left">
@@ -15,9 +18,37 @@
     </div>
 
     <div class="widgets-right">
-      <app-available-technicians-widget
-        (technicianSelected)="onTechnicianSelected($event)">
-      </app-available-technicians-widget>
+      @defer (on viewport) {
+        <app-available-technicians-widget
+          (technicianSelected)="onTechnicianSelected($event)">
+        </app-available-technicians-widget>
+      } @placeholder {
+        <mat-card class="available-techs-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>engineering</mat-icon>
+              Available Technicians
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="widget-loading">
+              <mat-spinner diameter="40"></mat-spinner>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      } @error {
+        <mat-card class="available-techs-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>engineering</mat-icon>
+              Available Technicians
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Unable to load technicians widget.</p>
+          </mat-card-content>
+        </mat-card>
+      }
 
       <app-recent-jobs-widget
         [limit]="3"

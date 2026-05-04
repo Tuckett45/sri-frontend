@@ -66,8 +66,29 @@
     </div>
   </div>
 
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading schedule...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load schedule</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" class="retry-button" (click)="onRetry()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
   <!-- Calendar Grid -->
-  <div class="calendar-grid-container" *ngIf="scheduleRows.length > 0" cdkDropListGroup>
+  <div class="calendar-grid-container" *ngIf="scheduleRows.length > 0 && !loading && !error" cdkDropListGroup>
     <div class="calendar-grid" [style.grid-template-columns]="'220px repeat(' + timeSlots.length + ', minmax(140px, 1fr))'">
       <!-- Header Row -->
       <div class="grid-header-cell row-header">{{ getRowHeaderLabel() }}</div>
@@ -146,7 +167,7 @@
   </div>
 
   <!-- Empty State -->
-  <div class="empty-state" *ngIf="scheduleRows.length === 0">
+  <div class="empty-state" *ngIf="scheduleRows.length === 0 && !loading && !error">
     <mat-icon>event_busy</mat-icon>
     <h3>No Data</h3>
     <p>{{ getEmptyMessage() }}</p>

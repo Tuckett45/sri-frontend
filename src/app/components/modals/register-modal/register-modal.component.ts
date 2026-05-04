@@ -70,6 +70,11 @@ export class RegisterModalComponent {
       : { mismatch: true };
   }
 
+  get isTechnicianRole(): boolean {
+    const role = this.registerForm.get('role')?.value;
+    return role === 'Technician' || role === 'SRI Tech';
+  }
+
   onRoleChange(): void {
     const role = this.registerForm.get('role')?.value;
     if (role !== 'PM') {
@@ -82,9 +87,8 @@ export class RegisterModalComponent {
 
     if (formValues.role == 'CM' || formValues.role == 'OSP Coordinator' || formValues.role == 'Controller' || formValues.role == 'HR' || formValues.role == 'Engineering Field Support' || formValues.role == 'Materials Manager' || formValues.role == 'Admin' || formValues.role == 'SRITech' || formValues.role == 'Payroll' || formValues.role == 'DCOps' || formValues.role == 'Technician' || formValues.role == 'DeploymentEngineer'){
       formValues.company = 'SRI';
-    }else if(formValues.role == 'Client'){
-      formValues.company = 'Google'; 
-      //Change values of companies in the future based on role
+    } else if (formValues.role === 'Client') {
+      formValues.company = 'Google';
     }
 
     const newUser: User = new User(

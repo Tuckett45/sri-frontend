@@ -9,11 +9,12 @@ import { Crew, CrewStatus } from '../models/crew.model';
 import { CreateCrewDto, UpdateCrewDto } from '../models/dtos/crew.dto';
 import { CrewFilters } from '../models/dtos/filters.dto';
 import { GeoLocation } from '../models/time-entry.model';
+import { environment } from '../../../../environments/environments';
 
 describe('CrewService', () => {
   let service: CrewService;
   let httpMock: HttpTestingController;
-  const apiUrl = '/api/crews';
+  const apiUrl = `${environment.apiUrl}/crews`;
 
   const mockCrew: Crew = {
     id: 'crew-123',

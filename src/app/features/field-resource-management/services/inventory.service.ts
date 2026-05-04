@@ -13,6 +13,7 @@ import {
   AssignInventoryDto 
 } from '../models/dtos/inventory.dto';
 import { CacheService } from './cache.service';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /** 2 minutes in milliseconds — inventory availability changes frequently */
 const INVENTORY_AVAILABILITY_CACHE_TTL = 2 * 60 * 1000;
@@ -25,7 +26,7 @@ const INVENTORY_AVAILABILITY_CACHE_TTL = 2 * 60 * 1000;
   providedIn: 'root'
 })
 export class InventoryService {
-  private readonly apiUrl = '/api/inventory';
+  private readonly apiUrl = `${local_environment.apiUrl}/inventory`;
   
   constructor(
     private http: HttpClient,

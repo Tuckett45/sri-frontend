@@ -85,6 +85,12 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       action: 'read'
     },
     {
+      label: 'Quotes',
+      icon: 'request_quote',
+      route: '/field-resource-management/quotes',
+      frmPermission: 'canViewQuote'
+    },
+    {
       label: 'Scheduling',
       icon: 'calendar_today',
       route: '/field-resource-management/schedule',

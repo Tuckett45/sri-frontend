@@ -11,6 +11,7 @@ import {
   ArkNotificationStatus,
   ArkNotificationPreferences
 } from '../../../models/ark/notification.model';
+import { SyncConflict, Contract } from '../../../models/time-payroll.model';
 
 /**
  * FRM notification preferences interface
@@ -260,6 +261,310 @@ export class FrmNotificationAdapterService {
   }
 
   /**
+   * Send timecard not submitted reminder — 24-hour deadline reminder
+   * Notifies a technician that their timecard period lock deadline is within 24 hours
+   * and the timecard is still in Draft status.
+   * @param technicianId Technician identifier
+   * @param periodId Timecard period identifier
+   * @param deadlineDate The lock deadline date
+   * @returns Observable of created notification
+   */
+  sendTimecardNotSubmittedReminder(
+    technicianId: string,
+    periodId: string,
+    deadlineDate: Date
+  ): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+
+    const notification: Partial<ArkNotification> = {
+      userId: technicianId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Timecard Not Submitted',
+      message: `Your timecard is due within 24 hours. Please submit before ${deadlineDate.toLocaleDateString()} ${deadlineDate.toLocaleTimeString()}.`,
+      type: ArkNotificationType.TimecardNotSubmitted,
+      priority: ArkNotificationPriority.High,
+      channels: [ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: periodId,
+      relatedEntityType: 'timecard-period',
+      metadata: {
+        technicianId,
+        periodId,
+        deadlineDate: deadlineDate.toISOString()
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  /**
+   * Send timecard locked notification — period locked notification
+   * Notifies a technician that their timecard period has been locked.
+   * @param technicianId Technician identifier
+   * @param periodId Timecard period identifier
+   * @returns Observable of created notification
+   */
+  sendTimecardLockedNotification(
+    technicianId: string,
+    periodId: string
+  ): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+
+    const notification: Partial<ArkNotification> = {
+      userId: technicianId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Timecard Locked',
+      message: 'Your timecard period has been locked. No further changes can be made.',
+      type: ArkNotificationType.TimecardLocked,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: periodId,
+      relatedEntityType: 'timecard-period',
+      metadata: {
+        technicianId,
+        periodId,
+        lockedAt: new Date().toISOString()
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  /**
+   * Send timecard not started reminder — no entries in first 24 hours
+   * Notifies a technician that a new pay period has started and they have not
+   * created any time entries within the first 24 hours.
+   * @param technicianId Technician identifier
+   * @param periodId Timecard period identifier
+   * @param periodStartDate The start date of the pay period
+   * @returns Observable of created notification
+   */
+  sendTimecardNotStartedReminder(
+    technicianId: string,
+    periodId: string,
+    periodStartDate: Date
+  ): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+
+    const notification: Partial<ArkNotification> = {
+      userId: technicianId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Timecard Not Started',
+      message: `A new pay period started on ${periodStartDate.toLocaleDateString()} and you have not logged any time entries yet.`,
+      type: ArkNotificationType.TimecardNotStarted,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: periodId,
+      relatedEntityType: 'timecard-period',
+      metadata: {
+        technicianId,
+        periodId,
+        periodStartDate: periodStartDate.toISOString()
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  /**
+   * Send timecard rejected notification — includes rejection reason
+   * Notifies a technician that their timecard has been rejected with the reason.
+   * @param technicianId Technician identifier
+   * @param periodId Timecard period identifier
+   * @param reason Rejection reason
+   * @returns Observable of created notification
+   */
+  sendTimecardRejectedNotification(
+    technicianId: string,
+    periodId: string,
+    reason: string
+  ): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+
+    const notification: Partial<ArkNotification> = {
+      userId: technicianId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Timecard Rejected',
+      message: `Your timecard has been rejected. Reason: ${reason}`,
+      type: ArkNotificationType.TimecardRejected,
+      priority: ArkNotificationPriority.High,
+      channels: [ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: periodId,
+      relatedEntityType: 'timecard-period',
+      metadata: {
+        technicianId,
+        periodId,
+        reason,
+        rejectedBy: user.id,
+        rejectedAt: new Date().toISOString()
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  /**
+   * Send timecard approved notification — approval confirmation
+   * Notifies a technician that their timecard has been approved.
+   * @param technicianId Technician identifier
+   * @param periodId Timecard period identifier
+   * @returns Observable of created notification
+   */
+  sendTimecardApprovedNotification(
+    technicianId: string,
+    periodId: string
+  ): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+
+    const notification: Partial<ArkNotification> = {
+      userId: technicianId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Timecard Approved',
+      message: 'Your timecard has been approved.',
+      type: ArkNotificationType.TimecardApproved,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: periodId,
+      relatedEntityType: 'timecard-period',
+      metadata: {
+        technicianId,
+        periodId,
+        approvedBy: user.id,
+        approvedAt: new Date().toISOString()
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  /**
+   * Send timecard auto-submitted notification — auto-submit notification
+   * Notifies a technician that their timecard was automatically submitted
+   * because the deadline was reached while the timecard was still in Draft status.
+   * @param technicianId Technician identifier
+   * @param periodId Timecard period identifier
+   * @returns Observable of created notification
+   */
+  sendTimecardAutoSubmittedNotification(
+    technicianId: string,
+    periodId: string
+  ): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+
+    const notification: Partial<ArkNotification> = {
+      userId: technicianId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Timecard Auto-Submitted',
+      message: 'Your timecard was automatically submitted because the submission deadline was reached.',
+      type: ArkNotificationType.TimecardAutoSubmitted,
+      priority: ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: periodId,
+      relatedEntityType: 'timecard-period',
+      metadata: {
+        technicianId,
+        periodId,
+        autoSubmittedAt: new Date().toISOString()
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  /**
+   * Send contract expiring notification — 30-day contract expiration warning
+   * Notifies a manager that a contract is approaching its expiration date (within 30 days).
+   * @param managerId Manager identifier to notify
+   * @param contractId Contract identifier
+   * @param contractName Contract name
+   * @param endDate Contract end date
+   * @returns Observable of created notification
+   */
+  sendContractExpiringNotification(
+    managerId: string,
+    contractId: string,
+    contractName: string,
+    endDate: Date
+  ): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+    const daysUntilExpiry = Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+    const notification: Partial<ArkNotification> = {
+      userId: managerId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'Contract Expiring Soon',
+      message: `Contract "${contractName}" will expire in ${daysUntilExpiry} days on ${endDate.toLocaleDateString()}.`,
+      type: ArkNotificationType.ContractExpiring,
+      priority: daysUntilExpiry <= 7 ? ArkNotificationPriority.High : ArkNotificationPriority.Normal,
+      channels: [ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: contractId,
+      relatedEntityType: 'contract',
+      metadata: {
+        managerId,
+        contractId,
+        contractName,
+        endDate: endDate.toISOString(),
+        daysUntilExpiry
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  /**
+   * Send sync conflict notification — ATLAS sync conflict alert
+   * Notifies a dispatcher that a payload mismatch was detected between
+   * the local time entry and the ATLAS API response.
+   * @param dispatcherId Dispatcher identifier to notify
+   * @param conflict SyncConflict details including mismatched fields
+   * @returns Observable of created notification
+   */
+  sendSyncConflictNotification(
+    dispatcherId: string,
+    conflict: SyncConflict
+  ): Observable<ArkNotification> {
+    const user = this.authService.getUser();
+    const fieldList = conflict.mismatchedFields.join(', ');
+
+    const notification: Partial<ArkNotification> = {
+      userId: dispatcherId,
+      market: this.authService.isCM() ? user.market : undefined,
+      title: 'ATLAS Sync Conflict',
+      message: `A sync conflict was detected for time entry ${conflict.entryId}. Mismatched fields: ${fieldList}.`,
+      type: ArkNotificationType.SyncConflict,
+      priority: ArkNotificationPriority.High,
+      channels: [ArkNotificationChannel.InApp],
+      status: ArkNotificationStatus.Pending,
+      createdAt: new Date(),
+      relatedEntityId: conflict.entryId,
+      relatedEntityType: 'time-entry',
+      metadata: {
+        dispatcherId,
+        entryId: conflict.entryId,
+        mismatchedFields: conflict.mismatchedFields,
+        localValues: conflict.localValues,
+        remoteValues: conflict.remoteValues,
+        detectedAt: new Date().toISOString()
+      }
+    };
+
+    return this.arkNotificationService.sendNotification(notification);
+  }
+
+  /**
    * Get FRM notification preferences for a user
    * Maps ARK notification preferences to FRM-specific preferences
    * @param userId User identifier
@@ -333,7 +638,15 @@ export class FrmNotificationAdapterService {
         [ArkNotificationType.JobStatusChanged]: frmPreferences.jobStatusChangedEnabled,
         [ArkNotificationType.JobCancelled]: frmPreferences.jobCancelledEnabled,
         [ArkNotificationType.CertificationExpiring]: frmPreferences.certificationExpiringEnabled,
-        [ArkNotificationType.ConflictDetected]: frmPreferences.conflictDetectedEnabled
+        [ArkNotificationType.ConflictDetected]: frmPreferences.conflictDetectedEnabled,
+        [ArkNotificationType.TimecardNotSubmitted]: true,
+        [ArkNotificationType.TimecardLocked]: true,
+        [ArkNotificationType.TimecardNotStarted]: true,
+        [ArkNotificationType.TimecardRejected]: true,
+        [ArkNotificationType.TimecardApproved]: true,
+        [ArkNotificationType.TimecardAutoSubmitted]: true,
+        [ArkNotificationType.ContractExpiring]: true,
+        [ArkNotificationType.SyncConflict]: true
       }
     };
   }

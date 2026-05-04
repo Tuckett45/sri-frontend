@@ -14,6 +14,7 @@ import {
 } from '../../../state/travel/travel.selectors';
 import { updatePerDiemConfig, updateTravelFlag } from '../../../state/travel/travel.actions';
 import { TravelProfileDialogComponent } from '../travel-profile-dialog/travel-profile-dialog.component';
+import { CreateTravelProfileDialogComponent } from '../create-travel-profile-dialog/create-travel-profile-dialog.component';
 
 interface TravelProfileRow {
   technicianId: string;
@@ -185,6 +186,14 @@ export class TravelOverviewComponent implements OnInit {
       data: { technicianId: row.technicianId },
       width: '600px',
       autoFocus: false
+    });
+  }
+
+  openCreateDialog(): void {
+    this.dialog.open(CreateTravelProfileDialogComponent, {
+      width: '640px',
+      autoFocus: false,
+      disableClose: true
     });
   }
 }

@@ -293,6 +293,9 @@ export class ErrorInterceptor implements HttpInterceptor {
    */
   private handleError(error: HttpErrorResponse): void {
     switch (error.status) {
+      case 400:
+        this.handleBadRequest();
+        break;
       case 401:
         this.handleUnauthorized();
         break;
@@ -318,6 +321,14 @@ export class ErrorInterceptor implements HttpInterceptor {
         this.handleGenericError(error);
         break;
     }
+  }
+
+  private handleBadRequest(): void {
+    this.snackBar.open(
+      'Invalid request. Please check your input and try again.',
+      'Dismiss',
+      { duration: 5000, horizontalPosition: 'center', verticalPosition: 'bottom', panelClass: ['error-snackbar'] }
+    );
   }
 
   private handleUnauthorized(): void {

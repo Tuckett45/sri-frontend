@@ -9,6 +9,17 @@ import {
   WeeklyTimeSummary,
   TimecardStatus
 } from '../models/time-entry.model';
+import {
+  CategoryHoursSummary,
+  PayTypeHoursSummary,
+  JobBillableSummary
+} from '../../../models/time-payroll.model';
+import {
+  calculateHoursByCategory,
+  calculateHoursByPayType,
+  calculatePeriodBillablesByJob
+} from '../utils/timecard-calculations';
+import { Job } from '../models/job.model';
 
 /**
  * Timecard Service
@@ -132,9 +143,20 @@ export class TimecardService {
   }
 
   /**
-   * Calculate regular and overtime hours
+   * Calculate regular and overtime hours, with breakdowns by TimeCategory and PayType.
+   *
+   * Returns the original regular/overtime/total split plus category and pay-type
+   * summaries computed by the pure utility functions.
+   *
+   * Requirements: 1.7, 2.4
    */
-  calculateHours(timeEntries: TimeEntry[]): { regular: number; overtime: number; total: number } {
+  calculateHours(timeEntries: TimeEntry[]): {
+    regular: number;
+    overtime: number;
+    total: number;
+    categoryBreakdown: CategoryHoursSummary;
+    payTypeBreakdown: PayTypeHoursSummary;
+  } {
     const totalHours = timeEntries.reduce((sum, entry) => {
       return sum + this.calculateEntryHours(entry);
     }, 0);
@@ -142,10 +164,15 @@ export class TimecardService {
     const regularHours = Math.min(totalHours, 40);
     const overtimeHours = Math.max(0, totalHours - 40);
 
+    const categoryBreakdown = calculateHoursByCategory(timeEntries);
+    const payTypeBreakdown = calculateHoursByPayType(timeEntries);
+
     return {
       regular: regularHours,
       overtime: overtimeHours,
-      total: totalHours
+      total: totalHours,
+      categoryBreakdown,
+      payTypeBreakdown
     };
   }
 
@@ -240,14 +267,20 @@ export class TimecardService {
   }
 
   /**
-   * Create weekly summary
+   * Create weekly summary with category/pay-type subtotals and billable amounts.
+   *
+   * The optional `jobs` map enables billable amount calculation per job.
+   * When omitted, billable fields default to zero / empty.
+   *
+   * Requirements: 1.7, 2.4, 5.5
    */
   createWeeklySummary(
     weekStart: Date,
     weekEnd: Date,
     entries: TimeEntry[],
     expenses: Expense[],
-    config: TimecardLockConfig
+    config: TimecardLockConfig,
+    jobs?: Map<string, Pick<Job, 'standardBillRate' | 'overtimeBillRate'>>
   ): WeeklyTimeSummary {
     const dailySummaries = this.createDailySummaries(entries, expenses, config);
     
@@ -263,6 +296,18 @@ export class TimecardService {
     const isLocked = new Date() >= lockTime;
     const locksIn = isLocked ? undefined : lockTime;
 
+    // Category and pay-type breakdowns (Requirements 1.7, 2.4)
+    const categoryBreakdown = calculateHoursByCategory(entries);
+    const payTypeBreakdown = calculateHoursByPayType(entries);
+
+    // Billable amounts by job (Requirement 5.5)
+    const jobBillableSummaries: JobBillableSummary[] = jobs
+      ? calculatePeriodBillablesByJob(entries, jobs)
+      : [];
+    const totalBillableAmount = jobBillableSummaries.reduce(
+      (sum, s) => sum + s.totalAmount, 0
+    );
+
     return {
       weekStart,
       weekEnd,
@@ -273,7 +318,13 @@ export class TimecardService {
       totalExpenses,
       dailySummaries,
       isLocked,
-      locksIn
+      locksIn,
+      driveTimeHours: categoryBreakdown.driveTimeHours,
+      onSiteHours: categoryBreakdown.onSiteHours,
+      holidayHours: payTypeBreakdown.holidayHours,
+      ptoHours: payTypeBreakdown.ptoHours,
+      totalBillableAmount,
+      jobBillableSummaries
     };
   }
 

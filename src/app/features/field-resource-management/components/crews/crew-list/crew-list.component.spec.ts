@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks, flush } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -19,10 +19,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSortModule } from '@angular/material/sort';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { CrewListComponent } from './crew-list.component';
+import { HighlightPipe } from '../../../pipes/highlight.pipe';
+import { RoleBasedShowDirective } from '../../../../../directives/role-based-show.directive';
 import { Crew, CrewStatus } from '../../../models/crew.model';
 import * as CrewSelectors from '../../../state/crews/crew.selectors';
 import * as CrewActions from '../../../state/crews/crew.actions';
@@ -158,7 +161,7 @@ describe('CrewListComponent', () => {
     permissionServiceSpy.checkPermission.and.returnValue(true);
 
     await TestBed.configureTestingModule({
-      declarations: [CrewListComponent],
+      declarations: [CrewListComponent, HighlightPipe, RoleBasedShowDirective],
       imports: [
         ReactiveFormsModule,
         RouterTestingModule,
@@ -178,7 +181,8 @@ describe('CrewListComponent', () => {
         MatTooltipModule,
         MatSortModule,
         MatProgressSpinnerModule,
-        ScrollingModule
+        ScrollingModule,
+        HttpClientTestingModule
       ],
       providers: [
         provideMockStore({ initialState }),
@@ -458,6 +462,21 @@ describe('CrewListComponent', () => {
       expect(errorCard).toBeTruthy();
       expect(errorCard.textContent).toContain('Failed to load crews');
     });
+
+    it('should dispatch loadCrews on retry', () => {
+      store.overrideSelector(CrewSelectors.selectCrewsError, 'Failed to load crews');
+      store.refreshState();
+      fixture.detectChanges();
+
+      spyOn(store, 'dispatch');
+      const retryButton = fixture.nativeElement.querySelector('.retry-button');
+      expect(retryButton).toBeTruthy();
+      retryButton.click();
+
+      expect(store.dispatch).toHaveBeenCalledWith(
+        CrewActions.loadCrews({ filters: {} })
+      );
+    });
   });
 
   describe('Cleanup', () => {
@@ -584,7 +603,7 @@ describe('CrewListComponent', () => {
       
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
-        declarations: [CrewListComponent],
+        declarations: [CrewListComponent, HighlightPipe, RoleBasedShowDirective],
         imports: [
           ReactiveFormsModule,
           RouterTestingModule,
@@ -604,7 +623,8 @@ describe('CrewListComponent', () => {
           MatTooltipModule,
           MatSortModule,
           MatProgressSpinnerModule,
-          ScrollingModule
+          ScrollingModule,
+        HttpClientTestingModule
         ],
         providers: [
           provideMockStore({ initialState }),
@@ -697,7 +717,7 @@ describe('CrewListComponent', () => {
 
   describe('Data Source Integration', () => {
     it('should update data source when crews change', fakeAsync(() => {
-      const newCrews = [...mockCrews, {
+      const newCrew: Crew = {
         id: 'crew-4',
         name: 'Delta Crew',
         leadTechnicianId: 'tech-10',
@@ -705,13 +725,26 @@ describe('CrewListComponent', () => {
         market: 'Austin',
         company: 'Delta Corp',
         status: CrewStatus.Available,
-        createdAt: new Date('2024-01-04'),        updatedAt: new Date('2024-01-04')
-      }];
-      
-      store.overrideSelector(CrewSelectors.selectFilteredCrews, newCrews);
+        createdAt: new Date('2024-01-04'),
+        updatedAt: new Date('2024-01-04')
+      } as Crew;
+      const newCrews: Crew[] = [...mockCrews, newCrew];
+
+      // Update the underlying store state so the scoped selector picks up the change
+      store.setState({
+        crews: {
+          ids: newCrews.map(c => c.id),
+          entities: newCrews.reduce((acc, crew) => ({ ...acc, [crew.id]: crew }), {}),
+          selectedId: null,
+          loading: false,
+          error: null,
+          filters: {}
+        }
+      });
       store.refreshState();
+      fixture.detectChanges();
       tick();
-      
+
       expect(component.dataSource.data.length).toBe(4);
     }));
   });
@@ -722,10 +755,10 @@ describe('CrewListComponent', () => {
       
       component.searchControl.setValue('Alpha');
       component.statusControl.setValue(CrewStatus.Available);
-      tick();
+      tick(350); // Flush debounce timer (300ms)
       
       component.exportToCSV();
-      tick();
+      flush(); // Drain all remaining timers (snackbar duration, etc.)
       
       const csvCall = exportService.generateCSV.calls.mostRecent();
       const headers = csvCall.args[0].headers;
@@ -740,10 +773,10 @@ describe('CrewListComponent', () => {
       exportService.generatePDF.and.returnValue(Promise.resolve());
       
       component.marketControl.setValue('Dallas');
-      tick();
+      tick(350); // Flush any debounce timers
       
       component.exportToPDF();
-      tick();
+      flush(); // Drain all remaining timers (snackbar duration, etc.)
       
       const pdfCall = exportService.generatePDF.calls.mostRecent();
       const title = pdfCall.args[0].title;
@@ -771,14 +804,22 @@ describe('CrewListComponent', () => {
 
   describe('Edge Cases', () => {
     it('should handle empty crew list', fakeAsync(() => {
-      store.overrideSelector(CrewSelectors.selectFilteredCrews, []);
+      // Update the underlying store state to have no crews
+      store.setState({
+        crews: {
+          ids: [],
+          entities: {},
+          selectedId: null,
+          loading: false,
+          error: null,
+          filters: {}
+        }
+      });
       store.refreshState();
+      fixture.detectChanges();
       tick();
       
-      component.crews$.subscribe(crews => {
-        expect(crews.length).toBe(0);
-      });
-      
+      expect(component.dataSource.data.length).toBe(0);
       expect(component.availableMarkets.length).toBe(0);
       expect(component.availableCompanies.length).toBe(0);
     }));

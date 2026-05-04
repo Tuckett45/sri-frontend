@@ -1,0 +1,263 @@
+<!-- Page Header -->
+<div class="page-header">
+  <h2>Quote Delivery</h2>
+</div>
+
+<!-- Delivered Status Banner (Requirement 7.6) -->
+<div class="status-banner delivered" *ngIf="isDelivered && deliveryRecord">
+  <mat-icon>check_circle</mat-icon>
+  <span>
+    This quote was delivered to <strong>{{ deliveryRecord.recipientEmail }}</strong>
+    on {{ formatDate(deliveryRecord.deliveredAt) }}.
+  </span>
+</div>
+
+<!-- Not Ready Banner -->
+<div class="status-banner not-ready" *ngIf="!isAssembled && !isDelivered">
+  <mat-icon>info</mat-icon>
+  <span>Quote delivery is available only after the quote has been finalized.</span>
+</div>
+
+<div class="quote-delivery-container" *ngIf="isAssembled || isDelivered">
+
+  <!-- Delivery Actions -->
+  <div class="delivery-actions" *ngIf="canEdit">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="onExportPdf()"
+      [disabled]="isExporting"
+      class="action-btn export-btn"
+    >
+      <mat-spinner *ngIf="isExporting" diameter="20" class="button-spinner"></mat-spinner>
+      <mat-icon *ngIf="!isExporting">picture_as_pdf</mat-icon>
+      <span *ngIf="!isExporting">Export PDF</span>
+      <span *ngIf="isExporting">Exporting...</span>
+    </button>
+
+    <button
+      mat-raised-button
+      color="accent"
+      (click)="toggleEmailForm()"
+      [disabled]="isSending"
+      class="action-btn send-btn"
+      *ngIf="isAssembled"
+    >
+      <mat-icon>email</mat-icon>
+      Send to Customer
+    </button>
+
+    <button
+      mat-stroked-button
+      (click)="onPrint()"
+      class="action-btn print-btn"
+    >
+      <mat-icon>print</mat-icon>
+      Print
+    </button>
+  </div>
+
+  <!-- Email Composition Form (Requirement 7.3) -->
+  <mat-card class="form-section email-form-card" *ngIf="showEmailForm">
+    <mat-card-header>
+      <mat-card-title>Send Quote to Customer</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="emailForm" (ngSubmit)="onSendToCustomer()" class="email-form">
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Recipient Email</mat-label>
+          <input matInput formControlName="recipientEmail" type="email" placeholder="customer@example.com">
+          <mat-error *ngIf="emailForm.get('recipientEmail')?.hasError('required')">
+            Recipient email is required.
+          </mat-error>
+          <mat-error *ngIf="emailForm.get('recipientEmail')?.hasError('email')">
+            Please enter a valid email address.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Recipient Name</mat-label>
+          <input matInput formControlName="recipientName" placeholder="Customer name">
+          <mat-error *ngIf="emailForm.get('recipientName')?.hasError('required')">
+            Recipient name is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Subject</mat-label>
+          <input matInput formControlName="subject" placeholder="Email subject">
+          <mat-error *ngIf="emailForm.get('subject')?.hasError('required')">
+            Subject is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Message Body</mat-label>
+          <textarea
+            matInput
+            formControlName="body"
+            rows="6"
+            placeholder="Enter your message..."
+          ></textarea>
+          <mat-error *ngIf="emailForm.get('body')?.hasError('required')">
+            Message body is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-checkbox formControlName="attachPdf" color="primary">
+          Attach Quote PDF
+        </mat-checkbox>
+
+        <div class="email-form-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="toggleEmailForm()"
+          >
+            Cancel
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="isSending || emailForm.invalid"
+            class="send-submit-btn"
+          >
+            <mat-spinner *ngIf="isSending" diameter="20" class="button-spinner"></mat-spinner>
+            <mat-icon *ngIf="!isSending">send</mat-icon>
+            <span *ngIf="!isSending">Send</span>
+            <span *ngIf="isSending">Sending...</span>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Delivery History (Requirement 7.6) -->
+  <mat-card class="form-section" *ngIf="isDelivered && deliveryRecord">
+    <mat-card-header>
+      <mat-card-title>Delivery History</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="delivery-history">
+        <div class="history-item">
+          <div class="history-icon">
+            <mat-icon>send</mat-icon>
+          </div>
+          <div class="history-details">
+            <div class="history-method">
+              {{ deliveryRecord.method === 'email' ? 'Sent via Email' : 'Manual Delivery' }}
+            </div>
+            <div class="history-meta">
+              <span class="history-recipient">
+                <mat-icon class="inline-icon">person</mat-icon>
+                {{ deliveryRecord.recipientName }} ({{ deliveryRecord.recipientEmail }})
+              </span>
+              <span class="history-date">
+                <mat-icon class="inline-icon">schedule</mat-icon>
+                {{ formatDate(deliveryRecord.deliveredAt) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Quote Document Preview (Print-Friendly) -->
+  <div class="preview-document print-area">
+    <div class="preview-header">
+      <h3>Quote Document</h3>
+      <p class="preview-subtitle" *ngIf="rfpRecord">
+        {{ rfpRecord.projectName }} — {{ rfpRecord.clientName }}
+      </p>
+      <p class="preview-date">
+        {{ formatDate(quoteDocument?.finalizedAt) }}
+      </p>
+    </div>
+
+    <!-- Preview: Price Summary -->
+    <div class="preview-section">
+      <h4>Price Summary</h4>
+      <table class="preview-summary-table">
+        <tbody>
+          <tr>
+            <td>Total Labor Cost</td>
+            <td class="text-right">{{ priceSummary.totalLaborCost | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+          <tr>
+            <td>Total Material Cost</td>
+            <td class="text-right">{{ priceSummary.totalMaterialCost | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+          <tr *ngIf="priceSummary.taxFreightVisible">
+            <td>Tax</td>
+            <td class="text-right">{{ priceSummary.tax | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+          <tr *ngIf="priceSummary.taxFreightVisible">
+            <td>Freight</td>
+            <td class="text-right">{{ priceSummary.freight | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>Combined Project Total</strong></td>
+            <td class="text-right"><strong>{{ priceSummary.combinedProjectTotal | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Preview: Statement of Work -->
+    <div class="preview-section">
+      <h4>Statement of Work</h4>
+      <div class="preview-sow-text">{{ quoteDocument?.statementOfWork || rfpRecord?.scopeOfWork }}</div>
+    </div>
+
+    <!-- Preview: BOM -->
+    <div class="preview-section">
+      <h4>Bill of Materials</h4>
+      <table class="bom-table" *ngIf="lineItems.length > 0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Material Description</th>
+            <th>Qty</th>
+            <th>UoM</th>
+            <th class="text-right">Marked-Up Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of lineItems; let i = index">
+            <td class="line-number">{{ i + 1 }}</td>
+            <td>{{ item.materialDescription }}</td>
+            <td class="text-right">{{ item.quantity }}</td>
+            <td>{{ item.unitOfMeasure }}</td>
+            <td class="text-right markup-value">{{ getMarkedUpCost(i) | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Preview BOM Totals -->
+      <table class="preview-summary-table" *ngIf="lineItems.length > 0">
+        <tbody>
+          <tr>
+            <td>Subtotal (Marked-Up)</td>
+            <td class="text-right">{{ bomTotals.subtotal | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+          <tr *ngIf="taxFreightVisible">
+            <td>Tax</td>
+            <td class="text-right">{{ bomTotals.tax | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+          <tr *ngIf="taxFreightVisible">
+            <td>Freight</td>
+            <td class="text-right">{{ bomTotals.freight | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>Grand Total</strong></td>
+            <td class="text-right"><strong>{{ bomTotals.grandTotal | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

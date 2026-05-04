@@ -148,8 +148,9 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
     this.crewMembers$ = this.store.select(TechnicianSelectors.selectAllTechnicians).pipe(
       map(technicians => {
         // Filter members and exclude lead technician
+        const memberIds = crew.memberIds || [];
         const members = technicians.filter(t => 
-          crew.memberIds.includes(t.id) && t.id !== crew.leadTechnicianId
+          memberIds.includes(t.id) && t.id !== crew.leadTechnicianId
         );
         // Sort by name for consistent display
         return members.sort((a, b) => 
@@ -233,7 +234,7 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
    */
   getMemberCount(crew: Crew): number {
     // Count members excluding lead technician to avoid duplication
-    return crew.memberIds.filter(id => id !== crew.leadTechnicianId).length;
+    return (crew.memberIds || []).filter(id => id !== crew.leadTechnicianId).length;
   }
   
   /**
@@ -340,7 +341,7 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
       take(1)
     ).subscribe(crew => {
       if (crew) {
-        const existingIds = new Set([crew.leadTechnicianId, ...crew.memberIds]);
+        const existingIds = new Set([crew.leadTechnicianId, ...(crew.memberIds || [])]);
         this.availableTechnicians$ = this.store.select(TechnicianSelectors.selectAllTechnicians).pipe(
           map(technicians => technicians
             .filter(t => !existingIds.has(t.id) && t.isActive)

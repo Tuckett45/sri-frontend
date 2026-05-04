@@ -14,6 +14,7 @@
 
   &__name {
     font-weight: 500;
+    color: #212121;
   }
 
   &__category {
@@ -34,6 +35,7 @@
 
   &__name {
     font-weight: 500;
+    color: #212121;
   }
 
   &__level {
@@ -133,8 +135,21 @@
 
 // Accessibility improvements
 .skill-selector {
-  // Ensure focus indicators are visible
+  // Ensure chip text and icons are black
   ::ng-deep {
+    .mat-mdc-chip {
+      color: #212121;
+
+      .mat-mdc-chip-action-label {
+        color: #212121;
+      }
+
+      .mat-mdc-chip-remove {
+        color: #212121;
+        opacity: 0.7;
+      }
+    }
+
     .mat-mdc-chip-focus-overlay {
       background-color: rgba(0, 0, 0, 0.12);
     }

@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth.service';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 import {
   Candidate,
   CandidateFilters,
@@ -15,7 +15,7 @@ import { AuditMetadata } from '../models/payroll.models';
 
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
-  private readonly baseUrl = `${environment.apiUrl}/onboarding`;
+  private readonly baseUrl = `${local_environment.apiUrl}/onboarding`;
 
   constructor(
     private http: HttpClient,

@@ -21,7 +21,7 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class AtlasApprovalsService {
-  private readonly baseUrl = `${environment.atlasApiUrl}/v1/approvals`;
+  private readonly baseUrl = `${environment.atlasApiUrl}/approvals`;
 
   constructor(private http: HttpClient) {}
 

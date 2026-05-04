@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA, ChangeDetectorRef } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -47,7 +48,8 @@ describe('JobStatusTimelineComponent', () => {
       imports: [
         NoopAnimationsModule,
         MatIconModule
-      ]
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(JobStatusTimelineComponent);
@@ -148,12 +150,14 @@ describe('JobStatusTimelineComponent', () => {
   });
 
   it('should display empty state when no history', () => {
-    component.statusHistory = [];
+    fixture.detectChanges(); // triggers ngOnInit (fills mock data)
+    component.statusHistory = []; // clear after init so *ngIf evaluates to true
+    fixture.debugElement.injector.get(ChangeDetectorRef).markForCheck();
     fixture.detectChanges();
-    
+
     const compiled = fixture.nativeElement;
     const emptyState = compiled.querySelector('.empty-state');
-    
+
     expect(emptyState).toBeTruthy();
   });
 

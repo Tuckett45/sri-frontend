@@ -153,6 +153,39 @@ mat-error{
   }
 }
 
+/* White background for certification datepicker calendar popup */
+.mat-datepicker-content {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+
+  .mat-calendar {
+    background-color: #ffffff !important;
+  }
+
+  .mat-calendar-body-cell-content {
+    color: #000000 !important;
+  }
+
+  .mat-calendar-body-label,
+  .mat-calendar-period-button,
+  .mat-calendar-table-header th {
+    color: rgba(0, 0, 0, 0.87) !important;
+  }
+
+  .mat-calendar-arrow {
+    fill: rgba(0, 0, 0, 0.87) !important;
+  }
+
+  .mat-calendar-previous-button,
+  .mat-calendar-next-button {
+    color: rgba(0, 0, 0, 0.87) !important;
+  }
+
+  .mat-calendar-body-today:not(.mat-calendar-body-selected) {
+    border-color: rgba(0, 0, 0, 0.38) !important;
+  }
+}
+
 /* Blue calendar icons in technician form certifications */
 .technician-form-container .certification-item .mat-datepicker-toggle {
   color: #1976d2 !important;

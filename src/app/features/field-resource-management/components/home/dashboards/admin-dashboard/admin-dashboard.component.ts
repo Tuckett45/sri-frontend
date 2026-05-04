@@ -1,12 +1,19 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { MatDialog } from '@angular/material/dialog';
 import { Observable, Subject, combineLatest } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { QuickAction, KpiItem } from '../../../../models/dashboard.models';
 import { selectActiveJobsCount } from '../../../../state/jobs/job.selectors';
 import { selectActiveTechnicians } from '../../../../state/technicians/technician.selectors';
 import { selectActiveAssignments } from '../../../../state/assignments/assignment.selectors';
+import { loadTechnicians } from '../../../../state/technicians/technician.actions';
+import { loadAssignments } from '../../../../state/assignments/assignment.actions';
+import { loadJobs } from '../../../../state/jobs/job.actions';
+import { loadCrews } from '../../../../state/crews/crew.actions';
+import { CreateJobFromQuoteDialogComponent } from '../../../quotes/create-job-from-quote-dialog/create-job-from-quote-dialog.component';
+import { RfpIntakeFormComponent } from '../../../quotes/rfp-intake/rfp-intake-form.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -15,7 +22,8 @@ import { selectActiveAssignments } from '../../../../state/assignments/assignmen
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   quickActions: QuickAction[] = [
-    { label: 'Create Job', icon: 'add', route: '/field-resource-management/jobs/new', color: 'orange', visible: true },
+    { label: 'Create Job', icon: 'work', action: 'createJob', color: 'orange', visible: true },
+    { label: 'Create Quote', icon: 'request_quote', action: 'createQuote', color: 'green', visible: true },
     { label: 'View All Jobs', icon: 'work', route: '/field-resource-management/jobs', color: 'primary', visible: true },
     { label: 'Manage Technicians', icon: 'engineering', route: '/field-resource-management/technicians', color: 'primary', visible: true },
     { label: 'Open Schedule', icon: 'calendar_today', route: '/field-resource-management/schedule', color: 'primary', visible: true },
@@ -29,10 +37,18 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private store: Store,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
+    // Dispatch load actions so dashboard data is fetched independently
+    // of navigating to the individual feature pages
+    this.store.dispatch(loadTechnicians({}));
+    this.store.dispatch(loadAssignments({}));
+    this.store.dispatch(loadJobs({}));
+    this.store.dispatch(loadCrews({}));
+
     this.kpis$ = combineLatest([
       this.store.select(selectActiveJobsCount),
       this.store.select(selectActiveTechnicians),
@@ -66,5 +82,23 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   onTechnicianSelected(technicianId: string): void {
     this.router.navigate(['/field-resource-management/technicians', technicianId]);
+  }
+
+  onQuickAction(actionName: string): void {
+    if (actionName === 'createJob') {
+      this.dialog.open(CreateJobFromQuoteDialogComponent, {
+        width: '520px',
+        maxHeight: '80vh'
+      });
+    } else if (actionName === 'createQuote') {
+      this.dialog.open(RfpIntakeFormComponent, {
+        width: '900px',
+        maxWidth: '95vw',
+        maxHeight: '90vh',
+        disableClose: false,
+        autoFocus: false,
+        panelClass: 'rfp-intake-dialog'
+      });
+    }
   }
 }

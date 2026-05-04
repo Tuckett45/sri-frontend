@@ -72,23 +72,24 @@
             </mat-select>
           </mat-form-field>
 
-          <!-- Skills Filter -->
+          <!-- Region Filter -->
           <mat-form-field appearance="outline">
-            <mat-label>Skills</mat-label>
-            <mat-select [formControl]="skillsControl" multiple>
-              <mat-option *ngFor="let skill of availableSkills" [value]="skill">
-                {{ skill }}
+            <mat-label>Region</mat-label>
+            <mat-select [formControl]="regionControl">
+              <mat-option value="">All Regions</mat-option>
+              <mat-option *ngFor="let region of availableRegions" [value]="region">
+                {{ region }}
               </mat-option>
             </mat-select>
           </mat-form-field>
 
-          <!-- Travel Willingness Filter -->
+          <!-- Active Status Filter -->
           <mat-form-field appearance="outline">
-            <mat-label>Travel Willingness</mat-label>
-            <mat-select [formControl]="travelWillingnessControl">
+            <mat-label>Active Status</mat-label>
+            <mat-select [formControl]="activeStatusControl">
               <mat-option value="">All</mat-option>
-              <mat-option value="willing">Willing to Travel</mat-option>
-              <mat-option value="not-willing">Not Willing to Travel</mat-option>
+              <mat-option value="active">Active</mat-option>
+              <mat-option value="inactive">Inactive</mat-option>
             </mat-select>
           </mat-form-field>
 
@@ -129,131 +130,89 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <!-- Error Message -->
-  <mat-card *ngIf="error$ | async as error" class="error-card">
-    <mat-card-content>
-      <mat-icon color="warn">error</mat-icon>
-      <span>{{ error }}</span>
-    </mat-card-content>
-  </mat-card>
+  <!-- Error State -->
+  <div class="error-state" *ngIf="(error$ | async) as error">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load technicians</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" class="retry-button" (click)="retryLoad()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
 
-  <!-- Technicians Table -->
-  <div class="table-container" *ngIf="!(loading$ | async)">
-    <table mat-table [dataSource]="(technicians$ | async) || []" class="technicians-table">
-      
-      <!-- Name Column -->
-      <ng-container matColumnDef="name" sticky>
-        <th mat-header-cell *matHeaderCellDef>Name</th>
-        <td mat-cell *matCellDef="let technician">
-          <div class="technician-name">
-            <strong>
-              <span [innerHTML]="getFullName(technician) | highlight: (searchControl.value || '')"></span>
-            </strong>
-            <span class="technician-id">
-              <span [innerHTML]="technician.technicianId | highlight: (searchControl.value || '')"></span>
-            </span>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Role Column -->
-      <ng-container matColumnDef="role">
-        <th mat-header-cell *matHeaderCellDef>Role</th>
-        <td mat-cell *matCellDef="let technician">
-          <span class="role-badge">{{ technician.role }}</span>
-        </td>
-      </ng-container>
-
-      <!-- Skills Column -->
-      <ng-container matColumnDef="skills">
-        <th mat-header-cell *matHeaderCellDef>Skills</th>
-        <td mat-cell *matCellDef="let technician">
-          <div class="skills-container">
-            <span 
-              *ngFor="let skillName of getSkillNames(technician)" 
-              class="skill-chip"
-              [title]="skillName">
-              {{ skillName }}
-            </span>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Travel Status Column -->
-      <ng-container matColumnDef="travelStatus">
-        <th mat-header-cell *matHeaderCellDef>Travel</th>
-        <td mat-cell *matCellDef="let technician">
-          <ng-container *ngIf="getTravelStatus(technician) as travelStatus; else noTravelData">
-            <span class="travel-status-badge" [class.willing]="travelStatus.willing" [class.not-willing]="!travelStatus.willing">
-              <mat-icon>{{ travelStatus.willing ? 'flight_takeoff' : 'flight_land' }}</mat-icon>
-              {{ travelStatus.label }}
-            </span>
-          </ng-container>
-          <ng-template #noTravelData>
-            <span class="travel-status-badge unknown">
-              <mat-icon>help_outline</mat-icon>
-              N/A
-            </span>
-          </ng-template>
-        </td>
-      </ng-container>
-
-      <!-- Status Column -->
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let technician">
+  <!-- Card View -->
+  <ng-container *ngIf="technicians$ | async as technicians">
+    <div class="technician-cards" *ngIf="!(loading$ | async) && !(error$ | async)">
+      <div
+        class="technician-card"
+        *ngFor="let technician of technicians"
+        [routerLink]="['./', technician.id]"
+        role="button"
+        tabindex="0">
+        <div class="technician-card-header">
+          <span class="technician-card-title">{{ getFullName(technician) }}</span>
           <span class="status-badge" [class.active]="technician.isActive" [class.inactive]="!technician.isActive">
             {{ getCurrentStatus(technician) }}
           </span>
-        </td>
-      </ng-container>
-
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let technician">
-          <button mat-icon-button 
-                  [routerLink]="['./', technician.id]"
-                  matTooltip="View Details"
-                  (click)="viewTechnician(technician)">
+        </div>
+        <div class="technician-card-body">
+          <div class="technician-card-row">
+            <span class="technician-card-label">Role</span>
+            <span class="technician-card-value role-badge">{{ technician.role }}</span>
+          </div>
+          <div class="technician-card-row">
+            <span class="technician-card-label">Region</span>
+            <span class="technician-card-value">{{ technician.region || 'N/A' }}</span>
+          </div>
+          <div class="technician-card-row">
+            <span class="technician-card-label">Crew</span>
+            <span class="technician-card-value">{{ technicianCrewMap[technician.id] || '—' }}</span>
+          </div>
+          <div class="technician-card-row">
+            <span class="technician-card-label">Current Job</span>
+            <span class="technician-card-value">{{ technicianJobMap[technician.id] || '—' }}</span>
+          </div>
+          <div class="technician-card-row" *ngIf="technician.email">
+            <span class="technician-card-label">Email</span>
+            <span class="technician-card-value">{{ technician.email }}</span>
+          </div>
+          <div class="technician-card-row" *ngIf="technician.phone">
+            <span class="technician-card-label">Phone</span>
+            <span class="technician-card-value">{{ technician.phone }}</span>
+          </div>
+        </div>
+        <div class="technician-card-actions">
+          <button mat-icon-button [routerLink]="['./', technician.id]" (click)="$event.stopPropagation()" aria-label="View">
             <mat-icon>visibility</mat-icon>
           </button>
-          <button mat-icon-button 
-                  [routerLink]="['./', technician.id, 'edit']"
-                  matTooltip="Edit"
-                  (click)="editTechnician(technician)">
+          <button mat-icon-button [routerLink]="['./', technician.id, 'edit']" (click)="$event.stopPropagation()" aria-label="Edit">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button 
-                  [matTooltip]="technician.isActive ? 'Deactivate' : 'Activate'"
-                  (click)="toggleTechnicianStatus(technician)">
-            <mat-icon>{{ technician.isActive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+          <button mat-icon-button (click)="toggleTechnicianStatus(technician); $event.stopPropagation()" aria-label="Delete" class="delete-action">
+            <mat-icon>delete</mat-icon>
           </button>
-        </td>
-      </ng-container>
+        </div>
+      </div>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      <div class="empty-state" *ngIf="technicians.length === 0">
+        <mat-icon>person_off</mat-icon>
+        <h3>No technicians found</h3>
+        <p>Try adjusting your search or filters</p>
+      </div>
 
-      <!-- No Data Row -->
-      <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-          <div class="no-data">
-            <mat-icon>person_off</mat-icon>
-            <p>No technicians found</p>
-          </div>
-        </td>
-      </tr>
-    </table>
-
-    <!-- Paginator -->
-    <mat-paginator 
-      [length]="(technicians$ | async)?.length || 0"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="pageSizeOptions"
-      [pageIndex]="pageIndex"
-      (page)="onPageChange($event)"
-      showFirstLastButtons>
-    </mat-paginator>
-  </div>
+      <mat-paginator
+        [length]="technicians.length"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        [pageIndex]="pageIndex"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </ng-container>
 </div>

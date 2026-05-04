@@ -1,0 +1,232 @@
+<!-- Loading State -->
+<div class="loading-container" *ngIf="loading$ | async">
+  <mat-spinner></mat-spinner>
+  <p>Loading quote...</p>
+</div>
+
+<!-- Error State -->
+<div class="error-container" *ngIf="(error$ | async) as error">
+  <mat-icon>error_outline</mat-icon>
+  <h3>Unable to load quote</h3>
+  <p>{{ error }}</p>
+  <div class="error-actions">
+    <button mat-stroked-button color="primary" (click)="retryLoad()">
+      <mat-icon>refresh</mat-icon>
+      Retry
+    </button>
+    <button mat-stroked-button (click)="goToQuoteList()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Quotes
+    </button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<ng-container *ngIf="!(loading$ | async) && !(error$ | async)">
+  <ng-container *ngIf="quote$ | async as quote">
+    <div class="quote-workflow-container">
+
+      <!-- Header -->
+      <div class="quote-workflow-header">
+        <div class="header-left">
+          <button mat-icon-button (click)="goToQuoteList()" aria-label="Back to quote list">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <div class="header-info">
+            <h2>{{ quote.rfpRecord.projectName }}</h2>
+            <span class="client-name">{{ quote.rfpRecord.clientName }}</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <span class="status-badge" [ngClass]="'status-' + quote.workflowStatus">
+            {{ quote.workflowStatus | titlecase }}
+          </span>
+          <button
+            mat-stroked-button
+            *ngIf="quote.convertedJobId"
+            (click)="goToJob(quote.convertedJobId)">
+            <mat-icon>work</mat-icon>
+            View Job
+          </button>
+        </div>
+      </div>
+
+      <!-- Connection Status Warning Banner -->
+      <div
+        class="connection-warning-banner"
+        *ngIf="(connectionStatus$ | async) as connStatus"
+        [class.disconnected]="connStatus === ConnectionStatus.Disconnected"
+        [class.reconnecting]="connStatus === ConnectionStatus.Reconnecting"
+        [hidden]="connStatus === ConnectionStatus.Connected"
+        role="alert"
+        aria-live="polite">
+        <mat-icon *ngIf="connStatus === ConnectionStatus.Disconnected">cloud_off</mat-icon>
+        <mat-icon *ngIf="connStatus === ConnectionStatus.Reconnecting">sync</mat-icon>
+        <span *ngIf="connStatus === ConnectionStatus.Disconnected">
+          Real-time connection lost. Changes by other users may not appear until reconnected.
+        </span>
+        <span *ngIf="connStatus === ConnectionStatus.Reconnecting">
+          Reconnecting to real-time updates...
+        </span>
+      </div>
+
+      <!-- Progress Indicator -->
+      <div class="progress-indicator" role="navigation" aria-label="Workflow progress">
+        <div
+          *ngFor="let step of workflowSteps; let i = index; let last = last"
+          class="progress-step"
+          [ngClass]="getStepClass(step.status, quote.workflowStatus)"
+          [attr.aria-current]="isStepActive(step.status, quote.workflowStatus) ? 'step' : null">
+          <div class="step-marker">
+            <mat-icon *ngIf="isStepCompleted(step.status, quote.workflowStatus)">check_circle</mat-icon>
+            <mat-icon *ngIf="isStepActive(step.status, quote.workflowStatus) && step.status !== workflowSteps[5].status">radio_button_checked</mat-icon>
+            <mat-icon *ngIf="isStepActive(step.status, quote.workflowStatus) && step.status === workflowSteps[5].status">cancel</mat-icon>
+            <mat-icon *ngIf="!isStepCompleted(step.status, quote.workflowStatus) && !isStepActive(step.status, quote.workflowStatus)">radio_button_unchecked</mat-icon>
+          </div>
+          <span class="step-label">{{ step.label }}</span>
+          <div class="step-connector" *ngIf="!last"></div>
+        </div>
+      </div>
+
+      <!-- Saving Indicator -->
+      <div class="saving-indicator" *ngIf="saving$ | async">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <span>Saving...</span>
+      </div>
+
+      <!-- Active Step Content -->
+      <div class="step-content">
+        <ng-container [ngSwitch]="getActiveStep(quote.workflowStatus)">
+
+          <!-- RFP Intake -->
+          <app-rfp-intake-form
+            *ngSwitchCase="'rfp'"
+            [canEdit]="(canEdit$ | async) ?? false"
+            [quoteId]="quoteId">
+          </app-rfp-intake-form>
+
+          <!-- Job Summary -->
+          <app-job-summary-form
+            *ngSwitchCase="'jobSummary'"
+            [canEdit]="(canEdit$ | async) ?? false"
+            [quoteId]="quoteId"
+            [quote]="quote">
+          </app-job-summary-form>
+
+          <!-- BOM Builder -->
+          <app-bom-builder
+            *ngSwitchCase="'bom'"
+            [canEdit]="(canEdit$ | async) ?? false"
+            [quoteId]="quoteId"
+            [quote]="quote">
+          </app-bom-builder>
+
+          <!-- BOM Validation -->
+          <app-bom-validation
+            *ngSwitchCase="'validation'"
+            [canValidate]="(canValidate$ | async) ?? false"
+            [quoteId]="quoteId"
+            [quote]="quote">
+          </app-bom-validation>
+
+          <!-- Quote Assembly -->
+          <app-quote-assembly
+            *ngSwitchCase="'assembly'"
+            [canEdit]="(canEdit$ | async) ?? false"
+            [quoteId]="quoteId"
+            [quote]="quote">
+          </app-quote-assembly>
+
+          <!-- Quote Delivery -->
+          <app-quote-delivery
+            *ngSwitchCase="'delivery'"
+            [canEdit]="(canEdit$ | async) ?? false"
+            [quoteId]="quoteId"
+            [quote]="quote">
+          </app-quote-delivery>
+
+          <!-- Converted to Job -->
+          <app-convert-to-job
+            *ngSwitchCase="'converted'"
+            [canEdit]="(canEdit$ | async) ?? false"
+            [quoteId]="quoteId"
+            [quote]="quote">
+          </app-convert-to-job>
+
+        </ng-container>
+      </div>
+
+      <!-- PO / SRI Job Number Info -->
+      <mat-card class="detail-section" *ngIf="quote.poNumber || quote.sriJobNumber">
+        <mat-card-header>
+          <mat-card-title>Reference Numbers</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-grid">
+            <div class="info-item" *ngIf="quote.poNumber">
+              <label>PO Number</label>
+              <span>{{ quote.poNumber }}</span>
+            </div>
+            <div class="info-item" *ngIf="quote.sriJobNumber">
+              <label>SRI Job Number</label>
+              <span>{{ quote.sriJobNumber }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Job Link (when converted) -->
+      <mat-card class="detail-section job-link-card" *ngIf="quote.convertedJobId">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>work</mat-icon>
+            Associated Job
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>This quote has been converted to a job.</p>
+          <button mat-raised-button color="primary" (click)="goToJob(quote.convertedJobId)">
+            <mat-icon>open_in_new</mat-icon>
+            View Job
+          </button>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Status Transition History -->
+      <mat-card class="detail-section history-section">
+        <mat-card-header>
+          <mat-card-title>Status History</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="status-history" *ngIf="(statusHistory$ | async) as history">
+            <div class="history-empty" *ngIf="history.length === 0">
+              <mat-icon>history</mat-icon>
+              <p>No status transitions recorded yet.</p>
+            </div>
+            <div class="history-timeline" *ngIf="history.length > 0">
+              <div class="timeline-item" *ngFor="let transition of history">
+                <div class="timeline-marker">
+                  <mat-icon>fiber_manual_record</mat-icon>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-status">
+                    <span class="from-status" *ngIf="transition.fromStatus">
+                      {{ transition.fromStatus }}
+                    </span>
+                    <mat-icon *ngIf="transition.fromStatus">arrow_forward</mat-icon>
+                    <span class="to-status">{{ transition.toStatus }}</span>
+                  </div>
+                  <div class="timeline-meta">
+                    <span class="timeline-user">{{ transition.userName }}</span>
+                    <span class="timeline-date">{{ formatDate(transition.timestamp) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+  </ng-container>
+</ng-container>

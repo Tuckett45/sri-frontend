@@ -779,22 +779,26 @@ button.delete-action {
   :host ::ng-deep mat-paginator {
     .mat-mdc-paginator-range-label,
     .mat-mdc-paginator-page-size-label {
-      color: #000000;
+      color: #ffffff;
     }
 
     .mat-mdc-paginator-navigation-previous,
     .mat-mdc-paginator-navigation-next,
     .mat-mdc-paginator-navigation-first,
     .mat-mdc-paginator-navigation-last {
-      color: #000000;
+      color: #ffffff;
 
       .mat-mdc-paginator-icon {
-        fill: #000000;
+        fill: #ffffff;
       }
     }
 
     .mat-mdc-select-value-text {
-      color: #000000;
+      color: #ffffff;
+    }
+
+    .mat-mdc-select-arrow {
+      color: #ffffff;
     }
   }
 }

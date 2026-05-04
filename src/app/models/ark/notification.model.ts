@@ -38,7 +38,16 @@ export enum ArkNotificationType {
   JobStatusChanged = 'job_status_changed',
   JobCancelled = 'job_cancelled',
   CertificationExpiring = 'certification_expiring',
-  ConflictDetected = 'conflict_detected'
+  ConflictDetected = 'conflict_detected',
+  // Timecard notification types
+  TimecardNotSubmitted = 'timecard_not_submitted',
+  TimecardLocked = 'timecard_locked',
+  TimecardNotStarted = 'timecard_not_started',
+  TimecardRejected = 'timecard_rejected',
+  TimecardApproved = 'timecard_approved',
+  TimecardAutoSubmitted = 'timecard_auto_submitted',
+  ContractExpiring = 'contract_expiring',
+  SyncConflict = 'sync_conflict'
 }
 
 export interface ArkNotification {

@@ -21,6 +21,37 @@
   height: 100vh;
   flex-shrink: 0;
   position: relative;
+  overflow: hidden;
+
+  // Make the nav menu scrollable at ALL screen sizes
+  app-frm-nav-menu {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0; // Allow flex child to shrink below content size
+    -webkit-overflow-scrolling: touch;
+
+    // Subtle scrollbar that blends with the dark sidebar
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.35);
+      }
+    }
+  }
 
   @media (max-width: 768px) {
     position: fixed;
@@ -29,16 +60,9 @@
     height: 100vh;
     z-index: 1000;
     transform: translateX(-100%);
-    overflow: hidden;
 
     &.open {
       transform: translateX(0);
-    }
-
-    app-frm-nav-menu {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
     }
   }
 }
@@ -150,6 +174,20 @@
 
   @media (max-width: 768px) {
     padding: 16px;
+
+    // Show scrollbar on mobile so users know content is scrollable
+    scrollbar-width: thin;
+    -ms-overflow-style: auto;
+
+    &::-webkit-scrollbar {
+      display: block;
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
   }
 }
 

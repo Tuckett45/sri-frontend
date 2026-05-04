@@ -12,20 +12,39 @@ import {
   ElementRef,
   ChangeDetectionStrategy
 } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Store } from '@ngrx/store';
-import { combineLatest, Subject } from 'rxjs';
-import { takeUntil, filter, debounceTime, throttleTime } from 'rxjs/operators';
+import { Subject, of, Observable } from 'rxjs';
+import { takeUntil, debounceTime, throttleTime, filter, catchError, map } from 'rxjs/operators';
 import * as L from 'leaflet';
 import 'leaflet.markercluster';
-import { Technician } from '../../../models/technician.model';
+import { Technician, Skill, Availability } from '../../../models/technician.model';
 import { Crew } from '../../../models/crew.model';
-import { Job, JobStatus, Priority } from '../../../models/job.model';
-import { selectScopedTechnicians } from '../../../state/technicians/technician.selectors';
-import { selectScopedCrewsForMap } from '../../../state/crews/crew.selectors';
-import { selectScopedJobsForMap } from '../../../state/jobs/job.selectors';
-import { PermissionService } from '../../../../../services/permission.service';
+import { Job, JobStatus, Priority, Address } from '../../../models/job.model';
+import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
+import { selectCrewsForMap, selectAllCrews } from '../../../state/crews/crew.selectors';
+import { selectAllJobs } from '../../../state/jobs/job.selectors';
 import { GeoLocation } from '../../../models/time-entry.model';
 import { FrmSignalRService, LocationUpdate, CrewLocationUpdate } from '../../../services/frm-signalr.service';
+import { TechnicianService } from '../../../services/technician.service';
+import { GeocodingService } from '../../../../../services/geocoding.service';
+
+/**
+ * Job data prepared for map display
+ */
+export interface JobMapData {
+  id: string;
+  jobId: string;
+  siteName: string;
+  location: { latitude: number; longitude: number };
+  status: JobStatus;
+  priority: Priority;
+  scheduledStartDate: Date;
+  technicianId?: string;
+  crewId?: string;
+  assignedTechnicianName?: string;
+  assignedCrewName?: string;
+}
 
 /**
  * Map configuration interface
@@ -101,7 +120,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     technicianStatuses: ['available', 'on-job', 'unavailable', 'off-duty'],
     crewStatuses: ['AVAILABLE', 'ON_JOB', 'UNAVAILABLE'],
     jobStatuses: ['NotStarted', 'EnRoute', 'OnSite', 'Completed', 'Issue', 'Cancelled'],
-    jobPriorities: ['P1', 'P2', 'P3', 'P4']
+    jobPriorities: ['P1', 'P2', 'Normal']
   };
 
   /**
@@ -229,23 +248,45 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   /**
    * Cached job data for filter updates
    */
-  private cachedJobs: Array<{
-    id: string;
-    jobId: string;
-    siteName: string;
-    location: {
-      latitude: number;
-      longitude: number;
-    };
-    status: JobStatus;
-    priority: Priority;
-    scheduledStartDate: Date;
-  }> = [];
+  private cachedJobs: JobMapData[] = [];
+
+  /**
+   * All crews from the store (for name lookups in job popups)
+   */
+  private allCrews: Crew[] = [];
+
+  /**
+   * Cache for technician skills keyed by technician ID
+   */
+  private technicianSkillsCache: Map<string, Skill[]> = new Map();
+
+  /**
+   * Cache for technician availability keyed by technician ID
+   */
+  private technicianAvailabilityCache: Map<string, Availability[]> = new Map();
+
+  /**
+   * Set of technician IDs currently being fetched to avoid duplicate requests
+   */
+  private pendingDetailFetches: Set<string> = new Set();
+
+  /**
+   * Cache for geocoded addresses to avoid repeated Nominatim API calls.
+   * Key is the address string, value is { latitude, longitude }.
+   */
+  private geocodeCache: Map<string, { latitude: number; longitude: number }> = new Map();
+
+  /**
+   * Set of address keys currently being geocoded to avoid duplicate requests.
+   */
+  private pendingGeocodes: Set<string> = new Set();
 
   constructor(
     private store: Store,
-    private permissionService: PermissionService,
-    private signalRService: FrmSignalRService
+    private http: HttpClient,
+    private signalRService: FrmSignalRService,
+    private technicianService: TechnicianService,
+    private geocodingService: GeocodingService
   ) {}
 
   ngOnInit(): void {
@@ -263,6 +304,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     
     // Subscribe to SignalR real-time location updates
     this.setupSignalRLocationSubscriptions();
+
+    // Subscribe to all crews for name lookups in job popups
+    this.store.select(selectAllCrews)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(crews => { this.allCrews = crews; });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -324,8 +370,28 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
 
       // Emit map ready event
       this.mapReady.emit(this.map);
+
+      // Render any cached data that arrived before the map was ready
+      this.renderCachedMarkers();
     } catch (error) {
       console.error('Error initializing map:', error);
+    }
+  }
+
+  /**
+   * Render markers from cached data that may have arrived before the map was initialized.
+   * This resolves the race condition where store subscriptions fire in ngOnInit
+   * before the map is created in ngAfterViewInit.
+   */
+  private renderCachedMarkers(): void {
+    if (this.cachedTechnicians.length > 0) {
+      this.updateTechnicianMarkers(this.cachedTechnicians);
+    }
+    if (this.cachedCrews.length > 0) {
+      this.updateCrewMarkers(this.cachedCrews);
+    }
+    if (this.cachedJobs.length > 0) {
+      this.updateJobMarkers(this.cachedJobs);
     }
   }
 
@@ -491,6 +557,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     // Clear caches
     this.iconCache.clear();
     this.svgCache.clear();
+    this.pendingGeocodes.clear();
 
     // Clean up cluster groups
     if (this.technicianClusterGroup && this.map) {
@@ -568,28 +635,20 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   }
 
   /**
-   * Setup subscription to technician data with scope filtering
-   * Debounced to reduce excessive marker updates during rapid data changes
+   * Setup subscription to technician data from the store.
+   * Uses direct selectors (same pattern as admin dashboard) instead of scoped selectors.
+   * Debounced to reduce excessive marker updates during rapid data changes.
    */
   private setupTechnicianSubscription(): void {
-    combineLatest([
-      this.permissionService.getCurrentUser(),
-      this.permissionService.getCurrentUserDataScopes()
-    ]).pipe(
-      takeUntil(this.destroy$),
-      filter(([user, dataScopes]) => !!user && !!dataScopes && dataScopes.length > 0)
-    ).subscribe(([user, dataScopes]) => {
-      // Subscribe to scoped technicians with debouncing for performance
-      this.store.select(selectScopedTechnicians(user, dataScopes))
-        .pipe(
-          takeUntil(this.destroy$),
-          debounceTime(150) // Debounce rapid updates
-        )
-        .subscribe(technicians => {
-          this.cachedTechnicians = technicians;
-          this.updateTechnicianMarkers(technicians);
-        });
-    });
+    this.store.select(selectAllTechnicians)
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(150)
+      )
+      .subscribe(technicians => {
+        this.cachedTechnicians = technicians;
+        this.updateTechnicianMarkers(technicians);
+      });
   }
 
   /**
@@ -610,7 +669,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
 
     // Filter technicians with valid locations and matching status filter
     const techniciansWithLocation = technicians.filter(tech => {
-      if (!tech.currentLocation || !this.isValidCoordinate(tech.currentLocation)) {
+      if (tech.lastKnownLatitude == null || tech.lastKnownLongitude == null) {
+        return false;
+      }
+      
+      if (!this.isValidCoordinate({ latitude: tech.lastKnownLatitude, longitude: tech.lastKnownLongitude, accuracy: 0 })) {
         return false;
       }
       
@@ -655,14 +718,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
    * @param technician - Technician to display
    */
   private addOrUpdateMarker(technician: Technician): void {
-    if (!this.map || !technician.currentLocation || !this.technicianClusterGroup) {
+    if (!this.map || technician.lastKnownLatitude == null || technician.lastKnownLongitude == null || !this.technicianClusterGroup) {
       return;
     }
 
     const existingMarker = this.technicianMarkers.get(technician.id);
     const latlng: L.LatLngExpression = [
-      technician.currentLocation.latitude,
-      technician.currentLocation.longitude
+      technician.lastKnownLatitude,
+      technician.lastKnownLongitude
     ];
 
     if (existingMarker) {
@@ -765,16 +828,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       return 'off-duty';
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const todayAvailability = technician.availability.find(avail => {
-      const availDate = new Date(avail.date);
-      availDate.setHours(0, 0, 0, 0);
-      return availDate.getTime() === today.getTime();
-    });
-
-    if (todayAvailability && !todayAvailability.isAvailable) {
+    if (!technician.isAvailable) {
       return 'unavailable';
     }
 
@@ -894,14 +948,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     const statusColor = this.getStatusColor(status);
     const statusLabel = status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-    // Limit skills display to first 3 for performance
-    const displaySkills = technician.skills.slice(0, 3);
-    const skills = displaySkills.map(s => s.name).join(', ') || 'No skills listed';
-    const moreSkills = technician.skills.length > 3 ? ` (+${technician.skills.length - 3} more)` : '';
+    const skills = 'No skills data';
+    const moreSkills = '';
 
     // Format location timestamp
-    const locationTimestamp = this.formatLocationTimestamp(technician.currentLocation?.timestamp);
-    const isStale = this.isLocationStale(technician.currentLocation?.timestamp);
+    const locationTimestamp = this.formatLocationTimestamp(technician.locationUpdatedAt);
+    const isStale = this.isLocationStale(technician.locationUpdatedAt);
     const timestampColor = isStale ? '#ef4444' : '#6b7280'; // Red if stale, gray if fresh
 
     return `
@@ -931,7 +983,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
             </div>
           </div>
           <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-            ID: ${technician.technicianId}
+            ID: ${technician.id}
           </div>
         </div>
       </div>
@@ -939,28 +991,20 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   }
 
   /**
-   * Setup subscription to crew data with scope filtering
-   * Debounced to reduce excessive marker updates during rapid data changes
+   * Setup subscription to crew data from the store.
+   * Uses direct selectors (same pattern as admin dashboard) instead of scoped selectors.
+   * Debounced to reduce excessive marker updates during rapid data changes.
    */
   private setupCrewSubscription(): void {
-    combineLatest([
-      this.permissionService.getCurrentUser(),
-      this.permissionService.getCurrentUserDataScopes()
-    ]).pipe(
-      takeUntil(this.destroy$),
-      filter(([user, dataScopes]) => !!user && !!dataScopes && dataScopes.length > 0)
-    ).subscribe(([user, dataScopes]) => {
-      // Subscribe to scoped crews for map display with debouncing
-      this.store.select(selectScopedCrewsForMap(user, dataScopes))
-        .pipe(
-          takeUntil(this.destroy$),
-          debounceTime(150) // Debounce rapid updates
-        )
-        .subscribe(crews => {
-          this.cachedCrews = crews;
-          this.updateCrewMarkers(crews);
-        });
-    });
+    this.store.select(selectCrewsForMap)
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(150)
+      )
+      .subscribe(crews => {
+        this.cachedCrews = crews;
+        this.updateCrewMarkers(crews);
+      });
   }
 
   /**
@@ -1212,27 +1256,155 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   }
 
   /**
-   * Setup subscription to job data with scope filtering
-   * Debounced to reduce excessive marker updates during rapid data changes
+   * Setup subscription to job data from the store.
+   * Subscribes to all jobs and geocodes addresses that lack coordinates.
+   * Debounced to reduce excessive marker updates during rapid data changes.
    */
   private setupJobSubscription(): void {
-    combineLatest([
-      this.permissionService.getCurrentUser(),
-      this.permissionService.getCurrentUserDataScopes()
-    ]).pipe(
-      takeUntil(this.destroy$),
-      filter(([user, dataScopes]) => !!user && !!dataScopes && dataScopes.length > 0)
-    ).subscribe(([user, dataScopes]) => {
-      // Subscribe to scoped jobs for map display with debouncing
-      this.store.select(selectScopedJobsForMap(user, dataScopes))
-        .pipe(
-          takeUntil(this.destroy$),
-          debounceTime(150) // Debounce rapid updates
-        )
-        .subscribe(jobs => {
-          this.cachedJobs = jobs;
-          this.updateJobMarkers(jobs);
-        });
+    this.store.select(selectAllJobs)
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(300)
+      )
+      .subscribe(jobs => {
+        this.processJobsForMap(jobs);
+      });
+  }
+
+  /**
+   * Process jobs for map display.
+   * Jobs with coordinates are displayed immediately.
+   * Jobs with addresses but no coordinates are geocoded via Nominatim.
+   */
+  private processJobsForMap(jobs: Job[]): void {
+    const readyJobs: JobMapData[] = [];
+
+    const jobsToGeocode: Job[] = [];
+
+    for (const job of jobs) {
+      if (!job.siteAddress) {
+        continue;
+      }
+
+      // Job already has coordinates from the API
+      if (job.siteAddress.latitude && job.siteAddress.longitude) {
+        readyJobs.push(this.buildJobMapData(job, { latitude: job.siteAddress.latitude, longitude: job.siteAddress.longitude }));
+        continue;
+      }
+
+      // Check geocode cache
+      const cacheKey = this.buildAddressCacheKey(job.siteAddress);
+      const cached = this.geocodeCache.get(cacheKey);
+      if (cached) {
+        readyJobs.push(this.buildJobMapData(job, cached));
+        continue;
+      }
+
+      // Needs geocoding — only if not already pending and has address data
+      if (!this.pendingGeocodes.has(cacheKey) && (job.siteAddress.city || job.siteAddress.zipCode)) {
+        jobsToGeocode.push(job);
+      }
+    }
+
+    // Update markers with jobs that already have coordinates
+    this.cachedJobs = readyJobs;
+    this.updateJobMarkers(readyJobs);
+
+    // Geocode remaining jobs (only if we have new ones to geocode)
+    if (jobsToGeocode.length > 0) {
+      this.geocodeJobsSequentially(jobsToGeocode, 0);
+    }
+  }
+
+  /**
+   * Build a JobMapData object from a Job, resolving technician/crew names from cached store data.
+   */
+  private buildJobMapData(job: Job, location: { latitude: number; longitude: number }): JobMapData {
+    let assignedTechnicianName: string | undefined;
+    let assignedCrewName: string | undefined;
+
+    if (job.technicianId) {
+      const tech = this.cachedTechnicians.find(t => t.id === job.technicianId);
+      assignedTechnicianName = tech ? `${tech.firstName} ${tech.lastName}` : job.technicianId;
+    }
+
+    if (job.crewId) {
+      const crew = this.allCrews.find(c => c.id === job.crewId);
+      assignedCrewName = crew ? crew.name : job.crewId;
+    }
+
+    return {
+      id: job.id,
+      jobId: job.jobId,
+      siteName: job.siteName,
+      location,
+      status: job.status,
+      priority: job.priority,
+      scheduledStartDate: job.scheduledStartDate,
+      technicianId: job.technicianId,
+      crewId: job.crewId,
+      assignedTechnicianName,
+      assignedCrewName
+    };
+  }
+
+  /**
+   * Build a cache key from an address for geocode lookup.
+   */
+  private buildAddressCacheKey(address: Address): string {
+    return `${address.street || ''}|${address.city || ''}|${address.state || ''}|${address.zipCode || ''}`.toLowerCase();
+  }
+
+  /**
+   * Geocode jobs using Google Maps Geocoding API via the existing GeocodingService.
+   * Google handles abbreviations, partial addresses, and fuzzy matching natively.
+   * No rate limiting concerns — processes all jobs in parallel.
+   */
+  private geocodeJobsSequentially(jobs: Job[], index: number): void {
+    if (index >= jobs.length) {
+      return;
+    }
+
+    const job = jobs[index];
+    const addr = job.siteAddress;
+    const cacheKey = this.buildAddressCacheKey(addr);
+
+    // Skip if already geocoded or in progress
+    if (this.geocodeCache.has(cacheKey) || this.pendingGeocodes.has(cacheKey)) {
+      this.geocodeJobsSequentially(jobs, index + 1);
+      return;
+    }
+
+    this.pendingGeocodes.add(cacheKey);
+
+    // Build full address string for Google Geocoding API
+    const query = [addr.street, addr.city, addr.state, addr.zipCode].filter(Boolean).join(', ');
+
+    if (!query) {
+      this.pendingGeocodes.delete(cacheKey);
+      this.geocodeJobsSequentially(jobs, index + 1);
+      return;
+    }
+
+    console.log(`Geocoding job "${job.siteName}": "${query}"`);
+
+    this.geocodingService.geocodeAddress(query).subscribe((response: any) => {
+      this.pendingGeocodes.delete(cacheKey);
+
+      if (response.status === 'OK' && response.results && response.results.length > 0) {
+        const location = response.results[0].geometry.location;
+        const coords = { latitude: location.lat, longitude: location.lng };
+
+        this.geocodeCache.set(cacheKey, coords);
+
+        this.cachedJobs = [...this.cachedJobs, this.buildJobMapData(job, coords)];
+        this.updateJobMarkers(this.cachedJobs);
+      } else {
+        console.warn(`Geocoding: no results for job "${job.siteName}" (${query})`);
+      }
+
+      // Process next job
+      this.geocodeJobsSequentially(jobs, index + 1);
     });
   }
 
@@ -1438,18 +1610,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
    * Update job markers on the map
    * @param jobs - Array of jobs to display (already filtered with location)
    */
-  private updateJobMarkers(jobs: Array<{
-    id: string;
-    jobId: string;
-    siteName: string;
-    location: {
-      latitude: number;
-      longitude: number;
-    };
-    status: JobStatus;
-    priority: Priority;
-    scheduledStartDate: Date;
-  }>): void {
+  private updateJobMarkers(jobs: JobMapData[]): void {
     if (!this.map || !this.jobClusterGroup) {
       return;
     }
@@ -1488,18 +1649,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
    * Add or update a marker for a job
    * @param job - Job to display
    */
-  private addOrUpdateJobMarker(job: {
-    id: string;
-    jobId: string;
-    siteName: string;
-    location: {
-      latitude: number;
-      longitude: number;
-    };
-    status: JobStatus;
-    priority: Priority;
-    scheduledStartDate: Date;
-  }): void {
+  private addOrUpdateJobMarker(job: JobMapData): void {
     if (!this.map || !this.jobClusterGroup) {
       return;
     }
@@ -1642,9 +1792,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   private createJobMarkerSvg(color: string): string {
     return `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-        <path fill="${color}" stroke="#ffffff" stroke-width="1.5" 
-          d="M12 2L4 10h6v10h4V10h6z"/>
-        <circle cx="12" cy="8" r="2" fill="#ffffff"/>
+        <rect x="4" y="4" width="16" height="16" rx="2" fill="${color}" stroke="#ffffff" stroke-width="1.5" 
+          transform="rotate(45 12 12)"/>
+        <circle cx="12" cy="12" r="3" fill="#ffffff"/>
       </svg>
     `;
   }
@@ -1654,18 +1804,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
    * @param job - Job to create popup for
    * @returns HTML string for popup
    */
-  private createJobPopupContent(job: {
-    id: string;
-    jobId: string;
-    siteName: string;
-    location: {
-      latitude: number;
-      longitude: number;
-    };
-    status: JobStatus;
-    priority: Priority;
-    scheduledStartDate: Date;
-  }): string {
+  private createJobPopupContent(job: JobMapData): string {
     const statusColor = this.getJobStatusColor(job.status, job.priority);
     const statusLabel = job.status.replace(/([A-Z])/g, ' $1').trim();
     const priorityLabel = job.priority;
@@ -1679,8 +1818,35 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       minute: '2-digit'
     });
 
+    // Build assignment section
+    let assignmentHtml = '';
+    if (job.assignedTechnicianName || job.assignedCrewName) {
+      assignmentHtml = `
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">`;
+      if (job.assignedTechnicianName) {
+        assignmentHtml += `
+          <div style="margin-bottom: 4px;">
+            <strong>👷 Technician:</strong> ${job.assignedTechnicianName}
+          </div>`;
+      }
+      if (job.assignedCrewName) {
+        assignmentHtml += `
+          <div style="margin-bottom: 4px;">
+            <strong>👥 Crew:</strong> ${job.assignedCrewName}
+          </div>`;
+      }
+      assignmentHtml += `</div>`;
+    } else {
+      assignmentHtml = `
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+          <div style="color: #f59e0b; font-size: 12px; font-style: italic;">
+            ⚠️ Unassigned
+          </div>
+        </div>`;
+    }
+
     return `
-      <div style="min-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="min-width: 220px; font-family: system-ui, -apple-system, sans-serif;">
         <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
           ${job.siteName}
         </h3>
@@ -1702,6 +1868,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
           <div style="margin-bottom: 4px;">
             <strong>Scheduled:</strong> ${formattedDate}
           </div>
+          ${assignmentHtml}
           <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
             ID: ${job.id}
           </div>

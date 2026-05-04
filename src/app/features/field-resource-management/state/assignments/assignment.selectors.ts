@@ -242,34 +242,14 @@ export const selectConflictsForAssignment = (jobId: string, technicianId: string
       }
     }
     
-    // 2. Check skill requirements
-    if (newJob.requiredSkills && newJob.requiredSkills.length > 0) {
-      for (const requiredSkill of newJob.requiredSkills) {
-        const hasSkill = technician.skills.some(techSkill =>
-          techSkill.name === requiredSkill.name
-        );
-        
-        if (!hasSkill) {
-          conflicts.push({
-            jobId: newJob.id,
-            technicianId: technician.id,
-            conflictingJobId: '',
-            conflictingJobTitle: `Missing skill: ${requiredSkill.name}`,
-            timeRange: {
-              startDate: newJob.scheduledStartDate,
-              endDate: newJob.scheduledEndDate
-            },
-            severity: ConflictSeverity.Warning
-          });
-        }
-      }
-    }
+    // 2. Check skill requirements (skills removed from Technician model - skip for now)
+    // TODO: Re-implement skill checking when skills are available via a separate service
     
     // 3. Check location distance
-    if (technician.currentLocation && newJob.siteAddress?.latitude && newJob.siteAddress?.longitude) {
+    if (technician.lastKnownLatitude != null && technician.lastKnownLongitude != null && newJob.siteAddress?.latitude && newJob.siteAddress?.longitude) {
       const distance = calculateDistance(
-        technician.currentLocation.latitude,
-        technician.currentLocation.longitude,
+        technician.lastKnownLatitude,
+        technician.lastKnownLongitude,
         newJob.siteAddress.latitude,
         newJob.siteAddress.longitude
       );
@@ -971,34 +951,14 @@ export const selectScopedConflictsForAssignment = (jobId: string, technicianId: 
       }
     }
     
-    // 2. Check skill requirements
-    if (newJob.requiredSkills && newJob.requiredSkills.length > 0) {
-      for (const requiredSkill of newJob.requiredSkills) {
-        const hasSkill = technician.skills.some(techSkill =>
-          techSkill.name === requiredSkill.name
-        );
-        
-        if (!hasSkill) {
-          conflicts.push({
-            jobId: newJob.id,
-            technicianId: technician.id,
-            conflictingJobId: '',
-            conflictingJobTitle: `Missing skill: ${requiredSkill.name}`,
-            timeRange: {
-              startDate: newJob.scheduledStartDate,
-              endDate: newJob.scheduledEndDate
-            },
-            severity: ConflictSeverity.Warning
-          });
-        }
-      }
-    }
+    // 2. Check skill requirements (skills removed from Technician model - skip for now)
+    // TODO: Re-implement skill checking when skills are available via a separate service
     
     // 3. Check location distance
-    if (technician.currentLocation && newJob.siteAddress?.latitude && newJob.siteAddress?.longitude) {
+    if (technician.lastKnownLatitude != null && technician.lastKnownLongitude != null && newJob.siteAddress?.latitude && newJob.siteAddress?.longitude) {
       const distance = calculateDistance(
-        technician.currentLocation.latitude,
-        technician.currentLocation.longitude,
+        technician.lastKnownLatitude,
+        technician.lastKnownLongitude,
         newJob.siteAddress.latitude,
         newJob.siteAddress.longitude
       );

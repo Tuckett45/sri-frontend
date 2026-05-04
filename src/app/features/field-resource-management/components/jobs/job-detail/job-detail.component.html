@@ -38,6 +38,10 @@
 
   <!-- Content -->
   <div class="job-detail-content" *ngIf="!(loading$ | async)">
+    <mat-tab-group #jobTabGroup [(selectedIndex)]="selectedTabIndex" class="job-detail-tabs" animationDuration="200ms">
+      <!-- Details Tab -->
+      <mat-tab label="Details">
+        <ng-template matTabContent>
     <!-- Section 1: Job Info -->
     <mat-card class="detail-section">
       <mat-card-header>
@@ -75,6 +79,81 @@
             <label>Site Address</label>
             <span>{{ getFullAddress() }}</span>
           </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section: Job Readiness -->
+    <mat-card class="detail-section readiness-section">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>checklist</mat-icon>
+          Job Readiness
+        </mat-card-title>
+        <span *ngIf="isFullyReady" class="readiness-badge ready" aria-label="Fully ready for deployment">
+          <mat-icon>check_circle</mat-icon>
+          Ready for Deployment
+        </span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="readiness-grid">
+          <!-- Job Readiness -->
+          <div class="readiness-item">
+            <label id="job-readiness-label">Job Readiness</label>
+            <mat-form-field appearance="outline" *ngIf="canEditJob; else jobReadinessReadOnly">
+              <mat-select
+                [value]="job.jobReadiness || JobReadiness.Not_Ready"
+                (selectionChange)="onJobReadinessChange($event.value)"
+                aria-labelledby="job-readiness-label">
+                <mat-option *ngFor="let option of jobReadinessOptions" [value]="option">
+                  {{ formatReadiness(option) }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <ng-template #jobReadinessReadOnly>
+              <span class="readiness-value" [ngClass]="'readiness-' + (job.jobReadiness || 'Not_Ready').toLowerCase().replace('_', '-')">
+                {{ formatReadiness(job.jobReadiness) }}
+              </span>
+            </ng-template>
+          </div>
+
+          <!-- Customer Ready -->
+          <div class="readiness-item">
+            <label id="customer-ready-label">Customer Ready</label>
+            <mat-form-field appearance="outline" *ngIf="canEditJob; else customerReadyReadOnly">
+              <mat-select
+                [value]="job.customerReady || CustomerReady.Not_Ready"
+                (selectionChange)="onCustomerReadyChange($event.value)"
+                aria-labelledby="customer-ready-label">
+                <mat-option *ngFor="let option of customerReadyOptions" [value]="option">
+                  {{ formatReadiness(option) }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <ng-template #customerReadyReadOnly>
+              <span class="readiness-value" [ngClass]="'readiness-' + (job.customerReady || 'Not_Ready').toLowerCase().replace('_', '-')">
+                {{ formatReadiness(job.customerReady) }}
+              </span>
+            </ng-template>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section: Originating Quote -->
+    <mat-card class="detail-section" *ngIf="job.quoteWorkflowId">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>description</mat-icon>
+          Originating Quote
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="quote-link-container">
+          <button mat-stroked-button color="primary" (click)="viewOriginatingQuote()">
+            <mat-icon>open_in_new</mat-icon>
+            View Quote Workflow
+          </button>
         </div>
       </mat-card-content>
     </mat-card>
@@ -298,37 +377,107 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Section 4: Assigned Technicians -->
+    <!-- Section 4: Assigned -->
     <mat-card class="detail-section">
       <mat-card-header>
-        <mat-card-title>Assigned Technicians</mat-card-title>
+        <mat-card-title>Assigned</mat-card-title>
+        <button mat-icon-button (click)="reassignJob()" aria-label="Edit assignments">
+          <mat-icon>edit</mat-icon>
+        </button>
       </mat-card-header>
       <mat-card-content>
-        <div class="technician-list" *ngIf="assignments.length > 0">
-          <div class="technician-item" *ngFor="let assignment of assignments">
-            <div class="technician-info">
-              <mat-icon>person</mat-icon>
-              <div>
-                <div class="technician-name">Technician Name</div>
-                <div class="technician-contact">
-                  <a href="tel:555-0100">
-                    <mat-icon>phone</mat-icon>
-                    (555) 010-0100
-                  </a>
-                  <a href="mailto:tech&#64;example.com">
-                    <mat-icon>email</mat-icon>
-                    tech&#64;example.com
-                  </a>
+        <!-- Lead Technician -->
+        <div class="assigned-subsection">
+          <div class="assigned-subsection-header">
+            <mat-icon>person</mat-icon>
+            <span class="assigned-subsection-title">Lead Technician</span>
+          </div>
+          <div class="technician-list" *ngIf="assignments.length > 0">
+            <div class="technician-item" *ngFor="let assignment of assignments">
+              <div class="technician-info">
+                <mat-icon>person</mat-icon>
+                <div>
+                  <div class="technician-name">
+                    {{ getTechnicianName(assignment) }}
+                  </div>
+                  <div class="technician-status">
+                    <span class="status-badge" [ngClass]="assignment.status?.toLowerCase()">
+                      {{ assignment.status }}
+                    </span>
+                  </div>
+                  <div class="technician-contact" *ngIf="assignment.technician">
+                    <a *ngIf="assignment.technician.phone" [href]="'tel:' + assignment.technician.phone">
+                      <mat-icon>phone</mat-icon>
+                      {{ assignment.technician.phone }}
+                    </a>
+                    <a *ngIf="assignment.technician.email" [href]="'mailto:' + assignment.technician.email">
+                      <mat-icon>email</mat-icon>
+                      {{ assignment.technician.email }}
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          <div class="assigned-empty" *ngIf="assignments.length === 0">
+            <span class="assigned-empty-text">No lead technician assigned</span>
+          </div>
         </div>
-        <div class="empty-message" *ngIf="assignments.length === 0">
-          <mat-icon>person_off</mat-icon>
-          <p>No technicians assigned yet</p>
+
+        <mat-divider></mat-divider>
+
+        <!-- Crew -->
+        <div class="assigned-subsection">
+          <div class="assigned-subsection-header">
+            <mat-icon>groups</mat-icon>
+            <span class="assigned-subsection-title">Crew</span>
+          </div>
+          <ng-container *ngIf="assignedCrew; else noCrew">
+            <div class="crew-header">
+              <div class="crew-name">{{ assignedCrew.name }}</div>
+              <span class="crew-status-badge" [ngClass]="assignedCrew.status?.toLowerCase()">
+                {{ assignedCrew.status }}
+              </span>
+            </div>
+            <div class="crew-meta">
+              <span *ngIf="assignedCrew.market"><strong>Market:</strong> {{ assignedCrew.market }}</span>
+              <span *ngIf="assignedCrew.company"><strong>Company:</strong> {{ assignedCrew.company }}</span>
+            </div>
+            <div class="crew-members-label">Crew Members ({{ crewMembers.length }})</div>
+            <div class="crew-members-list" *ngIf="crewMembers.length > 0">
+              <div class="crew-member-item" *ngFor="let member of crewMembers">
+                <mat-icon>person</mat-icon>
+                <div class="crew-member-info">
+                  <span class="crew-member-name">{{ member.firstName }} {{ member.lastName }}</span>
+                  <span class="crew-member-role">{{ member.role }}</span>
+                  <span class="crew-member-lead" *ngIf="member.id === assignedCrew.leadTechnicianId">Lead</span>
+                </div>
+                <div class="crew-member-contact">
+                  <a *ngIf="member.phone" [href]="'tel:' + member.phone" class="contact-link">
+                    <mat-icon>phone</mat-icon>
+                  </a>
+                  <a *ngIf="member.email" [href]="'mailto:' + member.email" class="contact-link">
+                    <mat-icon>email</mat-icon>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="assigned-empty" *ngIf="crewMembers.length === 0">
+              <span class="assigned-empty-text">No crew members found</span>
+            </div>
+          </ng-container>
+          <ng-template #noCrew>
+            <div class="assigned-empty">
+              <span class="assigned-empty-text">No crew assigned</span>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Assign button when nothing is assigned -->
+        <div class="assigned-action" *ngIf="assignments.length === 0 && !assignedCrew">
           <button mat-stroked-button class="btn-orange" (click)="reassignJob()">
-            Assign Technician
+            <mat-icon>person_add</mat-icon>
+            Assign Technician or Crew
           </button>
         </div>
       </mat-card-content>
@@ -420,19 +569,23 @@
       <mat-card-content>
         <div class="attachment-list" *ngIf="job.attachments.length > 0">
           <div class="attachment-item" *ngFor="let attachment of job.attachments">
-            <div class="attachment-icon">
-              <mat-icon *ngIf="isImage(attachment)">image</mat-icon>
-              <mat-icon *ngIf="!isImage(attachment)">description</mat-icon>
-            </div>
-            <div class="attachment-info">
-              <div class="attachment-name">{{ attachment.fileName }}</div>
-              <div class="attachment-meta">
-                {{ formatFileSize(attachment.fileSize) }} • 
-                Uploaded by {{ attachment.uploadedBy }} • 
-                {{ formatDate(attachment.uploadedAt) }}
+            <div class="attachment-clickable" (click)="previewAttachment(attachment)" role="button" tabindex="0"
+                 (keydown.enter)="previewAttachment(attachment)"
+                 [attr.aria-label]="'Preview ' + attachment.fileName">
+              <div class="attachment-icon">
+                <mat-icon *ngIf="isImage(attachment)">image</mat-icon>
+                <mat-icon *ngIf="!isImage(attachment)">description</mat-icon>
+              </div>
+              <div class="attachment-info">
+                <div class="attachment-name">{{ attachment.fileName }}</div>
+                <div class="attachment-meta">
+                  {{ formatFileSize(attachment.fileSize) }} • 
+                  Uploaded by {{ attachment.uploadedBy }} • 
+                  {{ formatDate(attachment.uploadedAt) }}
+                </div>
               </div>
             </div>
-            <button mat-icon-button (click)="downloadAttachment(attachment)">
+            <button mat-icon-button (click)="downloadAttachment(attachment)" aria-label="Download attachment">
               <mat-icon>download</mat-icon>
             </button>
           </div>
@@ -574,6 +727,29 @@
         </div>
       </mat-card-content>
     </mat-card>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Deployment Checklist Tab (permission-gated) -->
+      <mat-tab *ngIf="canViewChecklist">
+        <ng-template mat-tab-label>
+          Deployment Checklist
+          <span
+            *ngIf="checklistStatus$ | async as status"
+            class="checklist-status-badge"
+            [ngClass]="getChecklistStatusClass(status)">
+            {{ getChecklistStatusLabel(status) }}
+          </span>
+        </ng-template>
+        <ng-template matTabContent>
+          <app-deployment-checklist
+            [jobId]="job.id"
+            [job]="job"
+            [initialPhaseIndex]="getChecklistPhaseIndex()">
+          </app-deployment-checklist>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
   </div>
 </div>
 

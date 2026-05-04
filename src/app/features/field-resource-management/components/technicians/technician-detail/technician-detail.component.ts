@@ -1,11 +1,13 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil, filter, switchMap } from 'rxjs/operators';
+import { Observable, Subject, forkJoin, of } from 'rxjs';
+import { takeUntil, filter, switchMap, take, catchError } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
-import { Technician, CertificationStatus } from '../../../models/technician.model';
+import { MatCalendar } from '@angular/material/datepicker';
+import { Technician, CertificationStatus, Skill, Certification, Availability } from '../../../models/technician.model';
 import { TravelProfile } from '../../../models/travel.model';
+import { TechnicianService } from '../../../services/technician.service';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 import { selectTravelProfile } from '../../../state/travel/travel.selectors';
@@ -24,6 +26,8 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
   
   technicianId: string | null = null;
   
+  @ViewChild(MatCalendar) calendar!: MatCalendar<Date>;
+  
   // Tab management
   selectedTabIndex = 0;
   
@@ -31,7 +35,10 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
   selectedDate: Date = new Date();
   unavailableDates: Date[] = [];
   
-  // Mock data for assignment history and performance (will be replaced with real data)
+  // Fetched detail data
+  technicianSkills: Skill[] = [];
+  technicianCertifications: Certification[] = [];
+
   assignmentHistory: any[] = [];
   performanceMetrics = {
     utilizationRate: 0,
@@ -44,7 +51,9 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private store: Store,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private technicianService: TechnicianService,
+    private cdr: ChangeDetectorRef
   ) {
     this.technician$ = this.store.select(TechnicianSelectors.selectSelectedTechnician);
     this.loading$ = this.store.select(TechnicianSelectors.selectTechniciansLoading);
@@ -65,7 +74,7 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
         this.travelProfile$ = this.store.select(selectTravelProfile(this.technicianId!));
       });
     
-    // Load technician data and populate unavailable dates
+    // Load technician data and populate details
     this.technician$
       .pipe(
         takeUntil(this.destroy$),
@@ -73,14 +82,33 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
       )
       .subscribe(technician => {
         if (technician) {
-          this.unavailableDates = technician.availability
-            .filter(avail => !avail.isAvailable)
-            .map(avail => new Date(avail.date));
-          
-          // TODO: Load assignment history and performance metrics
-          // This would typically come from additional API calls or state
+          // Use embedded data from the store entity if available
+          if (technician.skills && technician.skills.length > 0) {
+            this.technicianSkills = technician.skills;
+          }
+          if (technician.certifications && technician.certifications.length > 0) {
+            this.technicianCertifications = technician.certifications.map(cert => ({
+              ...cert,
+              issueDate: new Date(cert.issueDate),
+              expirationDate: new Date(cert.expirationDate)
+            }));
+          }
+          if (technician.availability && technician.availability.length > 0) {
+            this.unavailableDates = this.expandAvailabilityToDates(
+              technician.availability.filter(a => !a.isAvailable)
+            );
+          }
+
+          // Always fetch full details from API since list endpoint doesn't include skills/certs/availability
+          this.loadTechnicianDetails(technician.id);
+
           this.loadAssignmentHistory(technician.id);
           this.loadPerformanceMetrics(technician.id);
+          this.cdr.markForCheck();
+          // Force calendar to re-evaluate dateClass
+          if (this.calendar) {
+            this.calendar.updateTodaysDate();
+          }
         }
       });
   }
@@ -90,34 +118,105 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
   
-  loadAssignmentHistory(technicianId: string): void {
-    // TODO: Dispatch action to load assignment history
-    // For now, using mock data
-    this.assignmentHistory = [
-      {
-        jobId: 'JOB001',
-        client: 'Acme Corp',
-        siteName: 'Main Office',
-        date: new Date('2024-01-15'),
-        status: 'Completed'
-      },
-      {
-        jobId: 'JOB002',
-        client: 'Tech Solutions',
-        siteName: 'Data Center',
-        date: new Date('2024-01-20'),
-        status: 'Completed'
+  private detailsLoadedForId: string | null = null;
+
+  loadTechnicianDetails(technicianId: string): void {
+    // Avoid re-fetching if already loaded for this technician
+    if (this.detailsLoadedForId === technicianId) return;
+    this.detailsLoadedForId = technicianId;
+
+    const now = new Date();
+    const dateRange = {
+      startDate: new Date(now.getFullYear(), now.getMonth(), 1),
+      endDate: new Date(now.getFullYear(), now.getMonth() + 6, 0)
+    };
+
+    // Only fetch what we don't already have from the store
+    const skills$ = this.technicianSkills.length > 0
+      ? of(this.technicianSkills)
+      : this.technicianService.getTechnicianSkills(technicianId).pipe(
+          catchError(err => { console.error('Failed to load skills:', err); return of([] as Skill[]); })
+        );
+
+    const certs$ = this.technicianCertifications.length > 0
+      ? of(this.technicianCertifications)
+      : this.technicianService.getTechnicianCertifications(technicianId).pipe(
+          catchError(err => { console.error('Failed to load certifications:', err); return of([] as Certification[]); })
+        );
+
+    const availability$ = this.unavailableDates.length > 0
+      ? of([] as Availability[])
+      : this.technicianService.getTechnicianAvailability(technicianId, dateRange).pipe(
+          catchError(err => { console.error('Failed to load availability:', err); return of([] as Availability[]); })
+        );
+
+    forkJoin({
+      skills: skills$,
+      certifications: certs$,
+      availability: availability$
+    }).pipe(
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: ({ skills, certifications, availability }) => {
+        if (skills.length > 0 && this.technicianSkills.length === 0) {
+          this.technicianSkills = skills;
+        }
+        if (certifications.length > 0 && this.technicianCertifications.length === 0) {
+          this.technicianCertifications = certifications.map(cert => ({
+            ...cert,
+            issueDate: new Date(cert.issueDate),
+            expirationDate: new Date(cert.expirationDate)
+          }));
+        }
+        if (availability.length > 0 && this.unavailableDates.length === 0) {
+          this.unavailableDates = this.expandAvailabilityToDates(
+            availability.filter(a => !a.isAvailable)
+          );
+        }
+
+        this.cdr.markForCheck();
+        // Force calendar to re-evaluate dateClass with new availability data
+        if (this.calendar) {
+          this.calendar.updateTodaysDate();
+        }
       }
-    ];
+    });
+  }
+
+  loadAssignmentHistory(technicianId: string): void {
+    // TODO: Dispatch action to load assignment history from API
+    this.assignmentHistory = [];
   }
   
   loadPerformanceMetrics(technicianId: string): void {
-    // TODO: Dispatch action to load performance metrics
-    // For now, using mock data
+    // TODO: Dispatch action to load performance metrics from API
     this.performanceMetrics = {
-      utilizationRate: 85,
-      jobsCompleted: 42
+      utilizationRate: 0,
+      jobsCompleted: 0
     };
+  }
+
+  /**
+   * Expand availability records into individual dates.
+   * Handles both single-date (date field) and date-range (startDate/endDate) formats.
+   */
+  private expandAvailabilityToDates(records: Availability[]): Date[] {
+    const dates: Date[] = [];
+    for (const record of records) {
+      if (record.startDate && record.endDate) {
+        const start = new Date(record.startDate);
+        const end = new Date(record.endDate);
+        const current = new Date(start);
+        while (current <= end) {
+          dates.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+      } else if (record.date) {
+        dates.push(new Date(record.date));
+      }
+    }
+    return dates;
   }
   
   getFullName(technician: Technician): string {
@@ -146,7 +245,31 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
   }
   
   dateClass = (date: Date): string => {
-    return this.isDateUnavailable(date) ? 'unavailable-date' : '';
+    if (this.isDateUnavailable(date)) return 'unavailable-date';
+    const day = date.getDay();
+    if (day > 0 && day < 6) return 'available-work-date';
+    return '';
+  }
+
+  onDateSelected(date: Date | null): void {
+    if (!date) return;
+    const dateIndex = this.unavailableDates.findIndex(d =>
+      d.getFullYear() === date.getFullYear() &&
+      d.getMonth() === date.getMonth() &&
+      d.getDate() === date.getDate()
+    );
+
+    if (dateIndex >= 0) {
+      this.unavailableDates.splice(dateIndex, 1);
+    } else {
+      this.unavailableDates.push(date);
+    }
+
+    this.unavailableDates = [...this.unavailableDates];
+    this.cdr.markForCheck();
+    if (this.calendar) {
+      this.calendar.updateTodaysDate();
+    }
   }
   
   editTechnician(): void {

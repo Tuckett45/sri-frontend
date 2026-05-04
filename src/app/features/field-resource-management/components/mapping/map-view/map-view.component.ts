@@ -1,7 +1,14 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MapFilters } from '../map-filters/map-filters.component';
+import { selectActiveTechnicians } from '../../../state/technicians/technician.selectors';
+import { selectAllCrews } from '../../../state/crews/crew.selectors';
+import { selectAllJobs } from '../../../state/jobs/job.selectors';
+import * as TechnicianActions from '../../../state/technicians/technician.actions';
+import * as CrewActions from '../../../state/crews/crew.actions';
+import * as JobActions from '../../../state/jobs/job.actions';
 
 /**
  * Map View Component
@@ -13,6 +20,7 @@ import { MapFilters } from '../map-filters/map-filters.component';
  * - Statistics summary
  * 
  * This component orchestrates the map, filters, and legend components.
+ * Uses the same direct store selectors as the admin dashboard for stats.
  */
 @Component({
   selector: 'frm-map-view',
@@ -31,7 +39,7 @@ export class MapViewComponent implements OnInit, OnDestroy {
     technicianStatuses: ['available', 'on-job', 'unavailable', 'off-duty'],
     crewStatuses: ['AVAILABLE', 'ON_JOB', 'UNAVAILABLE'],
     jobStatuses: ['NotStarted', 'EnRoute', 'OnSite', 'Completed', 'Issue', 'Cancelled'],
-    jobPriorities: ['P1', 'P2', 'P3', 'P4']
+    jobPriorities: ['P1', 'P2', 'Normal']
   };
 
   /**
@@ -64,12 +72,43 @@ export class MapViewComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private store: Store
   ) {}
 
   ngOnInit(): void {
-    // Component initialization
-    // Stats will be updated by child components
+    // Fetch data from the API — same pattern as admin dashboard
+    this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
+    this.store.dispatch(JobActions.loadJobs({ filters: {} }));
+    this.store.dispatch(CrewActions.loadCrews({}));
+
+    // Subscribe to store for stats using the same direct selectors as the dashboard
+    this.store.select(selectActiveTechnicians)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(technicians => {
+        this.stats.technicians = technicians.length;
+        this.stats.visible.technicians = technicians.length;
+        this.cdr.markForCheck();
+      });
+
+    this.store.select(selectAllCrews)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(crews => {
+        this.stats.crews = crews.length;
+        this.stats.visible.crews = crews.length;
+        this.cdr.markForCheck();
+      });
+
+    this.store.select(selectAllJobs)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(jobs => {
+        const activeJobs = jobs.filter(j =>
+          j.status !== 'Completed' && j.status !== 'Cancelled'
+        );
+        this.stats.jobs = activeJobs.length;
+        this.stats.visible.jobs = activeJobs.length;
+        this.cdr.markForCheck();
+      });
   }
 
   ngOnDestroy(): void {
@@ -123,13 +162,5 @@ export class MapViewComponent implements OnInit, OnDestroy {
   onJobSelected(jobId: string): void {
     console.log('Job selected:', jobId);
     // TODO: Navigate to job detail or show modal
-  }
-
-  /**
-   * Update statistics
-   */
-  updateStats(stats: { technicians: number; crews: number; jobs: number }): void {
-    this.stats.visible = stats;
-    this.cdr.markForCheck();
   }
 }

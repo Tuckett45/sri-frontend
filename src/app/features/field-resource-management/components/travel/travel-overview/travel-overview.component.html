@@ -74,6 +74,10 @@
               <button mat-stroked-button class="clear-filters-btn" [disabled]="!hasActiveFilters" (click)="clearFilters()">
                 <mat-icon>filter_list_off</mat-icon> Clear Filters
               </button>
+              <span class="filter-spacer"></span>
+              <button mat-raised-button color="primary" class="create-profile-btn" (click)="openCreateDialog()">
+                <mat-icon>person_add</mat-icon> Create Profile
+              </button>
             </div>
           </div>
           <div class="table-section">

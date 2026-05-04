@@ -21,7 +21,7 @@
           <span>Export to PDF</span>
         </button>
       </mat-menu>
-      <button mat-raised-button class="btn-orange" routerLink="./new">
+      <button mat-raised-button class="btn-orange" (click)="openCrewDialog()">
         <mat-icon>add</mat-icon>
         Add Crew
       </button>
@@ -124,116 +124,72 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <!-- Error Message -->
-  <mat-card *ngIf="error$ | async as error" class="error-card">
-    <mat-card-content>
-      <mat-icon color="warn">error</mat-icon>
-      <span>{{ error }}</span>
-    </mat-card-content>
-  </mat-card>
+  <!-- Error State -->
+  <div class="error-state" *ngIf="(error$ | async) as error">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load crews</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" class="retry-button" (click)="retryLoad()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
 
-  <!-- Crews Table with Virtual Scrolling -->
-  <div class="table-container" *ngIf="!(loading$ | async)">
-    <cdk-virtual-scroll-viewport itemSize="72" class="crew-viewport">
-      <table mat-table [dataSource]="dataSource" matSort class="crews-table">
-        
-        <!-- Name Column -->
-        <ng-container matColumnDef="name" sticky>
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Crew Name</th>
-          <td mat-cell *matCellDef="let crew">
-            <div class="crew-name">
-              <strong>
-                <span [innerHTML]="crew.name | highlight: (searchControl.value || '')"></span>
-              </strong>
-              <span class="crew-id">
-                <span [innerHTML]="crew.id | highlight: (searchControl.value || '')"></span>
-              </span>
-            </div>
-          </td>
-        </ng-container>
+  <!-- Card View -->
+  <div class="crew-cards" *ngIf="!(loading$ | async) && !(error$ | async)">
+    <div
+      class="crew-card"
+      *ngFor="let crew of dataSource.data"
+      (click)="viewCrew(crew)"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="viewCrew(crew)">
+      <div class="crew-card-header">
+        <span class="crew-card-title">{{ crew.name }}</span>
+        <span class="status-badge" [ngClass]="getStatusBadgeClass(crew.status)">{{ crew.status }}</span>
+      </div>
+      <div class="crew-card-body">
+        <div class="crew-card-row">
+          <span class="crew-card-label">Lead</span>
+          <span class="crew-card-value">{{ getTechnicianName(crew.leadTechnicianId) }}</span>
+        </div>
+        <div class="crew-card-row">
+          <span class="crew-card-label">Members</span>
+          <span class="crew-card-value">{{ getMemberCount(crew) }}</span>
+        </div>
+        <div class="crew-card-row">
+          <span class="crew-card-label">Market</span>
+          <span class="crew-card-value">{{ crew.market }}</span>
+        </div>
+        <div class="crew-card-row">
+          <span class="crew-card-label">Company</span>
+          <span class="crew-card-value">{{ crew.company }}</span>
+        </div>
+      </div>
+      <div class="crew-card-actions">
+        <button mat-icon-button [routerLink]="['./', crew.id]" (click)="$event.stopPropagation()" aria-label="View">
+          <mat-icon>visibility</mat-icon>
+        </button>
+        <button mat-icon-button (click)="openCrewDialog(crew.id); $event.stopPropagation()" aria-label="Edit">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="deleteCrew(crew); $event.stopPropagation()" aria-label="Delete" class="delete-action">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
 
-        <!-- Lead Technician Column -->
-        <ng-container matColumnDef="leadTechnician">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Lead Technician</th>
-          <td mat-cell *matCellDef="let crew">
-            <span class="lead-tech-id">{{ crew.leadTechnicianId }}</span>
-          </td>
-        </ng-container>
+    <div class="empty-state" *ngIf="dataSource.data.length === 0">
+      <mat-icon>groups_off</mat-icon>
+      <h3>No crews found</h3>
+      <p>Try adjusting your search or filters</p>
+    </div>
 
-        <!-- Member Count Column -->
-        <ng-container matColumnDef="memberCount">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Members</th>
-          <td mat-cell *matCellDef="let crew">
-            <span class="member-count">
-              <mat-icon class="member-icon">group</mat-icon>
-              {{ getMemberCount(crew) }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-          <td mat-cell *matCellDef="let crew">
-            <span class="status-badge" [ngClass]="getStatusBadgeClass(crew.status)">
-              {{ crew.status }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Market Column -->
-        <ng-container matColumnDef="market">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Market</th>
-          <td mat-cell *matCellDef="let crew">
-            <span class="market-badge">{{ crew.market }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Company Column -->
-        <ng-container matColumnDef="company">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Company</th>
-          <td mat-cell *matCellDef="let crew">
-            <span class="company-name">{{ crew.company }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let crew">
-            <button mat-icon-button 
-                    [routerLink]="['./', crew.id]"
-                    matTooltip="View Details"
-                    (click)="viewCrew(crew)">
-              <mat-icon>visibility</mat-icon>
-            </button>
-            <button mat-icon-button 
-                    [routerLink]="['./', crew.id, 'edit']"
-                    matTooltip="Edit"
-                    (click)="editCrew(crew)"
-                    *roleBasedShow="[UserRole.Admin, UserRole.CM]">
-              <mat-icon>edit</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="crew-row"></tr>
-
-        <!-- No Data Row -->
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-            <div class="no-data">
-              <mat-icon>groups_off</mat-icon>
-              <p>No crews found</p>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </cdk-virtual-scroll-viewport>
-
-    <!-- Paginator -->
-    <mat-paginator 
+    <mat-paginator
       [length]="(crews$ | async)?.length || 0"
       [pageSize]="pageSize"
       [pageSizeOptions]="pageSizeOptions"

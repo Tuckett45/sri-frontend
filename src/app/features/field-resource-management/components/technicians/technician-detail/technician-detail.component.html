@@ -25,16 +25,12 @@
     <mat-card-content>
       <div class="info-grid">
         <div class="info-item">
-          <label>Technician ID</label>
-          <span>{{ technician.technicianId }}</span>
+          <label>ID</label>
+          <span>{{ technician.id }}</span>
         </div>
         <div class="info-item">
           <label>Role</label>
           <span class="role-badge">{{ technician.role }}</span>
-        </div>
-        <div class="info-item">
-          <label>Employment Type</label>
-          <span>{{ technician.employmentType }}</span>
         </div>
         <div class="info-item">
           <label>Email</label>
@@ -43,10 +39,6 @@
         <div class="info-item">
           <label>Phone</label>
           <a [href]="'tel:' + technician.phone">{{ technician.phone }}</a>
-        </div>
-        <div class="info-item">
-          <label>Home Base</label>
-          <span>{{ technician.homeBase }}</span>
         </div>
         <div class="info-item">
           <label>Region</label>
@@ -59,9 +51,9 @@
           </span>
         </div>
         <div class="info-item">
-          <label>Can Travel?</label>
-          <span class="status-badge" [class.active]="technician.canTravel" [class.inactive]="!technician.canTravel">
-            {{ technician.canTravel ? 'Yes' : 'No' }}
+          <label>Available</label>
+          <span class="status-badge" [class.active]="technician.isAvailable" [class.inactive]="!technician.isAvailable">
+            {{ technician.isAvailable ? 'Yes' : 'No' }}
           </span>
         </div>
       </div>
@@ -79,9 +71,9 @@
             <mat-card-title>Skills</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <div *ngIf="technician.skills.length > 0; else noSkills">
+            <div *ngIf="technicianSkills.length > 0; else noSkills">
               <mat-chip-set>
-                <mat-chip *ngFor="let skill of technician.skills" [title]="skill.category">
+                <mat-chip *ngFor="let skill of technicianSkills" [title]="skill.category">
                   <strong>{{ skill.name }}</strong>
                   <span class="skill-category"> - {{ skill.category }}</span>
                 </mat-chip>
@@ -99,8 +91,8 @@
             <mat-card-title>Certifications</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <div *ngIf="technician.certifications.length > 0; else noCertifications">
-              <table mat-table [dataSource]="technician.certifications" class="certifications-table">
+            <div *ngIf="technicianCertifications.length > 0; else noCertifications">
+              <table mat-table [dataSource]="technicianCertifications" class="certifications-table">
                 <ng-container matColumnDef="name">
                   <th mat-header-cell *matHeaderCellDef>Certification</th>
                   <td mat-cell *matCellDef="let cert">{{ cert.name }}</td>
@@ -113,16 +105,8 @@
                   <th mat-header-cell *matHeaderCellDef>Expiration Date</th>
                   <td mat-cell *matCellDef="let cert">{{ cert.expirationDate | date:'shortDate' }}</td>
                 </ng-container>
-                <ng-container matColumnDef="status">
-                  <th mat-header-cell *matHeaderCellDef>Status</th>
-                  <td mat-cell *matCellDef="let cert">
-                    <span class="cert-status-badge" [ngClass]="getCertificationStatusClass(cert.status)">
-                      {{ cert.status }}
-                    </span>
-                  </td>
-                </ng-container>
-                <tr mat-header-row *matHeaderRowDef="['name', 'issueDate', 'expirationDate', 'status']"></tr>
-                <tr mat-row *matRowDef="let row; columns: ['name', 'issueDate', 'expirationDate', 'status'];"></tr>
+                <tr mat-header-row *matHeaderRowDef="['name', 'issueDate', 'expirationDate']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['name', 'issueDate', 'expirationDate'];"></tr>
               </table>
             </div>
             <ng-template #noCertifications>
@@ -163,7 +147,7 @@
           </mat-card-header>
           <mat-card-content>
             <mat-calendar 
-              [(selected)]="selectedDate"
+              [selected]="selectedDate"
               [dateClass]="dateClass">
             </mat-calendar>
             <div class="calendar-legend">

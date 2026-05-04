@@ -15,6 +15,7 @@ import {
   AssignmentFilters 
 } from '../models/dtos';
 import { Skill } from '../models/technician.model';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Schedule item representing a technician's scheduled work
@@ -47,7 +48,7 @@ export interface AssignmentResult {
   providedIn: 'root'
 })
 export class SchedulingService {
-  private readonly apiUrl = '/api/scheduling';
+  private readonly apiUrl = `${local_environment.apiUrl}/scheduling`;
   private readonly retryCount = 2;
 
   constructor(private http: HttpClient) {}

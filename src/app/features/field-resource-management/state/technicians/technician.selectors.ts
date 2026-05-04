@@ -11,7 +11,7 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { TechnicianState } from './technician.state';
 import { technicianAdapter } from './technician.reducer';
-import { Technician, Skill, TechnicianRole, EmploymentType } from '../../models/technician.model';
+import { Technician } from '../../models/technician.model';
 import { User } from '../../../../models/user.model';
 import { DataScope } from '../../services/data-scope.service';
 import { determineScopeType } from '../shared/selector-helpers';
@@ -95,7 +95,7 @@ export const selectFilteredTechnicians = createSelector(
       filtered = filtered.filter(tech =>
         tech.firstName.toLowerCase().includes(searchLower) ||
         tech.lastName.toLowerCase().includes(searchLower) ||
-        tech.technicianId.toLowerCase().includes(searchLower) ||
+        tech.id.toLowerCase().includes(searchLower) ||
         tech.email.toLowerCase().includes(searchLower)
       );
     }
@@ -103,15 +103,6 @@ export const selectFilteredTechnicians = createSelector(
     // Filter by role
     if (filters.role) {
       filtered = filtered.filter(tech => tech.role === filters.role);
-    }
-
-    // Filter by skills
-    if (filters.skills && filters.skills.length > 0) {
-      filtered = filtered.filter(tech =>
-        filters.skills!.some(skillName =>
-          tech.skills.some(techSkill => techSkill.name === skillName)
-        )
-      );
     }
 
     // Filter by region
@@ -140,60 +131,18 @@ export const selectTechniciansByRole = (role: string) => createSelector(
   (technicians) => technicians.filter(tech => tech.role === role)
 );
 
-// Select technicians by skill
-export const selectTechniciansBySkill = (skillName: string) => createSelector(
-  selectAllTechnicians,
-  (technicians) => technicians.filter(tech =>
-    tech.skills.some(skill => skill.name === skillName)
-  )
-);
-
-// Memoized date thresholds selector - reused by multiple certification selectors
-// Optimized: Calculate once and share across selectors
-const selectCertificationDateThresholds = createSelector(
-  () => true, // Dummy input to trigger memoization
-  () => {
-    const now = new Date();
-    const nowTime = now.getTime();
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    const thirtyDaysTime = thirtyDaysFromNow.getTime();
-    
-    return { nowTime, thirtyDaysTime };
-  }
-);
-
-// Select technicians with expiring certifications
-// Optimized: Reuses memoized date thresholds
-export const selectTechniciansWithExpiringCertifications = createSelector(
-  selectAllTechnicians,
-  selectCertificationDateThresholds,
-  (technicians, { nowTime, thirtyDaysTime }) => {
-    return technicians.filter(tech =>
-      tech.certifications.some(cert => {
-        const expirationTime = new Date(cert.expirationDate).getTime();
-        return expirationTime <= thirtyDaysTime && expirationTime > nowTime;
-      })
-    );
-  }
-);
-
 // Select technicians by region
 export const selectTechniciansByRegion = (region: string) => createSelector(
   selectAllTechnicians,
   (technicians) => technicians.filter(tech => tech.region === region)
 );
 
-// Select technicians by employment type
-export const selectTechniciansByEmploymentType = (employmentType: string) => createSelector(
-  selectAllTechnicians,
-  (technicians) => technicians.filter(tech => tech.employmentType === employmentType)
-);
-
 // Select technicians with location
 export const selectTechniciansWithLocation = createSelector(
   selectAllTechnicians,
-  (technicians) => technicians.filter(tech => tech.currentLocation !== undefined && tech.currentLocation !== null)
+  (technicians) => technicians.filter(tech =>
+    tech.lastKnownLatitude != null && tech.lastKnownLongitude != null
+  )
 );
 
 // Select technicians count by role
@@ -220,68 +169,10 @@ export const selectTechniciansCountByRegion = createSelector(
   }
 );
 
-// Memoized today timestamp selector - reused by multiple selectors
-// Optimized: Calculate once and share across selectors
-const selectTodayTimestamp = createSelector(
-  () => true, // Dummy input to trigger memoization
-  () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.getTime();
-  }
-);
-
-// Select available technicians (active and not on PTO/sick)
-// Optimized: Reuses memoized today timestamp
+// Select available technicians (active and isAvailable)
 export const selectAvailableTechnicians = createSelector(
   selectAllTechnicians,
-  selectTodayTimestamp,
-  (technicians, todayTime) => {
-    return technicians.filter(tech => {
-      if (!tech.isActive) return false;
-      
-      // Check if technician has availability record for today
-      const todayAvailability = tech.availability.find(avail => {
-        const availDate = new Date(avail.date);
-        availDate.setHours(0, 0, 0, 0);
-        return availDate.getTime() === todayTime;
-      });
-      
-      // If no availability record, assume available
-      // If availability record exists, check isAvailable flag
-      return !todayAvailability || todayAvailability.isAvailable;
-    });
-  }
-);
-
-// Select technicians with multiple skills
-export const selectTechniciansWithMultipleSkills = createSelector(
-  selectAllTechnicians,
-  (technicians) => technicians.filter(tech => tech.skills.length > 1)
-);
-
-// Select technicians by skill category
-export const selectTechniciansBySkillCategory = (category: string) => createSelector(
-  selectAllTechnicians,
-  (technicians) => technicians.filter(tech =>
-    tech.skills.some(skill => skill.category === category)
-  )
-);
-
-// Select all unique skills across all technicians
-export const selectAllUniqueSkills = createSelector(
-  selectAllTechnicians,
-  (technicians) => {
-    const skillsMap = new Map<string, Skill>();
-    technicians.forEach(tech => {
-      tech.skills.forEach(skill => {
-        if (!skillsMap.has(skill.id)) {
-          skillsMap.set(skill.id, skill);
-        }
-      });
-    });
-    return Array.from(skillsMap.values());
-  }
+  (technicians) => technicians.filter(tech => tech.isActive && tech.isAvailable)
 );
 
 // Select all unique regions
@@ -294,75 +185,21 @@ export const selectAllUniqueRegions = createSelector(
   }
 );
 
-// Select technicians needing certification renewal (within 30 days)
-// Optimized: Reuses memoized date thresholds
-export const selectTechniciansNeedingCertificationRenewal = createSelector(
-  selectAllTechnicians,
-  selectCertificationDateThresholds,
-  (technicians, { nowTime, thirtyDaysTime }) => {
-    return technicians
-      .map(tech => ({
-        technician: tech,
-        expiringCerts: tech.certifications.filter(cert => {
-          const expirationTime = new Date(cert.expirationDate).getTime();
-          return expirationTime > nowTime && expirationTime <= thirtyDaysTime;
-        })
-      }))
-      .filter(item => item.expiringCerts.length > 0);
-  }
-);
-
-// Memoized current timestamp selector - reused by multiple selectors
-// Optimized: Calculate once and share across selectors
-const selectCurrentTimestamp = createSelector(
-  () => true, // Dummy input to trigger memoization
-  () => new Date().getTime()
-);
-
-// Select technicians with expired certifications
-// Optimized: Reuses memoized current timestamp
-export const selectTechniciansWithExpiredCertifications = createSelector(
-  selectAllTechnicians,
-  selectCurrentTimestamp,
-  (technicians, nowTime) => {
-    return technicians.filter(tech =>
-      tech.certifications.some(cert => {
-        const expirationTime = new Date(cert.expirationDate).getTime();
-        return expirationTime < nowTime;
-      })
-    );
-  }
-);
-
-// Select technicians by status (based on availability)
+// Select technicians by status
 export const selectTechniciansByStatus = (status: 'available' | 'on-job' | 'unavailable' | 'off-duty') => createSelector(
   selectAllTechnicians,
   (technicians) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     return technicians.filter(tech => {
-      if (status === 'off-duty') {
-        return !tech.isActive;
-      }
-
-      if (!tech.isActive) {
-        return false;
-      }
-
-      const todayAvailability = tech.availability.find(avail => {
-        const availDate = new Date(avail.date);
-        availDate.setHours(0, 0, 0, 0);
-        return availDate.getTime() === today.getTime();
-      });
+      if (status === 'off-duty') return !tech.isActive;
+      if (!tech.isActive) return false;
 
       switch (status) {
         case 'available':
-          return !todayAvailability || todayAvailability.isAvailable;
+          return tech.isAvailable;
         case 'unavailable':
-          return todayAvailability && !todayAvailability.isAvailable;
+          return !tech.isAvailable;
         case 'on-job':
-          // This would need assignment data - placeholder for now
+          // Would need assignment data - placeholder
           return false;
         default:
           return false;
@@ -378,21 +215,19 @@ export const selectTechniciansByMarket = (market: string) => createSelector(
 );
 
 // Select technicians by company (for scope filtering)
-export const selectTechniciansByCompany = (company: string) => createSelector(
+export const selectTechniciansByCompany = (_company: string) => createSelector(
   selectAllTechnicians,
   (technicians) => {
     // Note: Technician model doesn't have company field yet
-    // This selector is prepared for when company field is added
     return technicians;
   }
 );
 
 // Select technicians by market and company (for PM/Vendor scope)
-export const selectTechniciansByMarketAndCompany = (market: string, company: string) => createSelector(
+export const selectTechniciansByMarketAndCompany = (market: string, _company: string) => createSelector(
   selectAllTechnicians,
   (technicians) => {
     // Note: Technician model doesn't have company field yet
-    // This selector is prepared for when company field is added
     return technicians.filter(tech => tech.region === market);
   }
 );
@@ -401,18 +236,6 @@ export const selectTechniciansByMarketAndCompany = (market: string, company: str
 export const selectTechnicianIds = createSelector(
   selectTechnicianState,
   selectIds
-);
-
-// Select technicians with specific skill level
-export const selectTechniciansBySkillLevel = (skillName: string, minLevel: number) => createSelector(
-  selectAllTechnicians,
-  (technicians) => technicians.filter(tech =>
-    tech.skills.some(skill => 
-      skill.name === skillName && 
-      // Assuming skill has a level property that will be added
-      true
-    )
-  )
 );
 
 // Select technicians grouped by role
@@ -451,62 +274,31 @@ export const selectTechniciansForMap = createSelector(
   (technicians) => technicians.map(tech => ({
     id: tech.id,
     name: `${tech.firstName} ${tech.lastName}`,
-    location: tech.currentLocation!,
+    latitude: tech.lastKnownLatitude!,
+    longitude: tech.lastKnownLongitude!,
     role: tech.role,
     isActive: tech.isActive
   }))
 );
 
 // Select technician summary statistics
-// Optimized: Single pass through technicians array, reuses memoized timestamp
 export const selectTechnicianStatistics = createSelector(
   selectAllTechnicians,
-  selectCurrentTimestamp,
-  (technicians, nowTime) => {
+  (technicians) => {
     const total = technicians.length;
-    
     let active = 0;
-    let withExpiredCerts = 0;
     const byRole: Record<string, number> = {};
-    const byEmploymentType: Record<string, number> = {};
-    
-    // Single pass through technicians
+
     for (const tech of technicians) {
       if (tech.isActive) active++;
-      
       byRole[tech.role] = (byRole[tech.role] || 0) + 1;
-      byEmploymentType[tech.employmentType] = (byEmploymentType[tech.employmentType] || 0) + 1;
-      
-      if (tech.certifications.some(cert => new Date(cert.expirationDate).getTime() < nowTime)) {
-        withExpiredCerts++;
-      }
     }
 
     return {
       total,
       active,
       inactive: total - active,
-      byRole,
-      byEmploymentType,
-      withExpiredCertifications: withExpiredCerts
-    };
-  }
-);
-
-// Select technicians needing attention (expired certs or expiring soon)
-export const selectTechniciansNeedingAttention = createSelector(
-  selectTechniciansWithExpiredCertifications,
-  selectTechniciansWithExpiringCertifications,
-  (expired, expiring) => {
-    const expiredIds = new Set(expired.map(t => t.id));
-    const expiringIds = new Set(expiring.map(t => t.id));
-    const allIds = new Set([...expiredIds, ...expiringIds]);
-    
-    return {
-      count: allIds.size,
-      expiredCount: expiredIds.size,
-      expiringCount: expiringIds.size,
-      technicians: [...expired, ...expiring.filter(t => !expiredIds.has(t.id))]
+      byRole
     };
   }
 );
@@ -540,31 +332,13 @@ export const selectTechniciansViewModel = createSelector(
   })
 );
 
+
 // ============================================================================
 // SCOPE-FILTERED SELECTORS
-// ============================================================================
-// These selectors apply role-based data scope filtering according to the
-// filterDataByScope algorithm from the design document.
-//
-// Usage: Components should inject DataScopeService and pass user + dataScopes
-// to these selector factories.
 // ============================================================================
 
 /**
  * Select technicians filtered by user's data scope
- * 
- * Applies role-based filtering:
- * - Admin: sees all technicians
- * - CM: sees technicians in their market (or all if RG market)
- * - PM/Vendor: sees technicians in their company AND market
- * - Technician: sees only themselves
- * 
- * @param user - Current user with role, market, company
- * @param dataScopes - Data scopes for the user's role
- * @returns Selector that returns scope-filtered technicians
- * 
- * Note: Technician model uses 'region' field which maps to 'market' in scope filtering
- * Note: Technician model doesn't have 'company' field yet - will be added in future
  */
 export const selectScopedTechnicians = (user: User, dataScopes: DataScope[]) => createSelector(
   selectAllTechnicians,
@@ -574,33 +348,18 @@ export const selectScopedTechnicians = (user: User, dataScopes: DataScope[]) => 
       return [];
     }
 
-    // Determine scope type
     const scopeType = determineScopeType(dataScopes);
 
-    // Apply scope filtering
     switch (scopeType) {
       case 'all':
-        // Admin: see all technicians
         return technicians;
-
       case 'market':
-        // CM: see technicians in their market (or all if RG market)
-        if (user.market === 'RG') {
-          return technicians;
-        }
-        // Filter by market (using region field as market)
+        if (user.market === 'RG') return technicians;
         return technicians.filter(tech => tech.region === user.market);
-
       case 'company':
-        // PM/Vendor: see technicians in their company AND market
-        // Note: Technician model doesn't have company field yet
-        // For now, just filter by market
         return technicians.filter(tech => tech.region === user.market);
-
       case 'self':
-        // Technician: see only themselves
         return technicians.filter(tech => tech.id === user.id);
-
       default:
         console.warn(`selectScopedTechnicians: unknown scope type '${scopeType}'`);
         return [];
@@ -610,12 +369,6 @@ export const selectScopedTechnicians = (user: User, dataScopes: DataScope[]) => 
 
 /**
  * Select filtered technicians with scope filtering applied
- * 
- * Combines UI filters (search, role, skills, etc.) with role-based scope filtering
- * 
- * @param user - Current user with role, market, company
- * @param dataScopes - Data scopes for the user's role
- * @returns Selector that returns filtered and scoped technicians
  */
 export const selectFilteredScopedTechnicians = (user: User, dataScopes: DataScope[]) => createSelector(
   selectScopedTechnicians(user, dataScopes),
@@ -623,27 +376,18 @@ export const selectFilteredScopedTechnicians = (user: User, dataScopes: DataScop
   (scopedTechnicians, filters) => {
     let filtered = scopedTechnicians;
 
-    // Apply UI filters on top of scope filtering
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase();
       filtered = filtered.filter(tech =>
         tech.firstName.toLowerCase().includes(searchLower) ||
         tech.lastName.toLowerCase().includes(searchLower) ||
-        tech.technicianId.toLowerCase().includes(searchLower) ||
+        tech.id.toLowerCase().includes(searchLower) ||
         tech.email.toLowerCase().includes(searchLower)
       );
     }
 
     if (filters.role) {
       filtered = filtered.filter(tech => tech.role === filters.role);
-    }
-
-    if (filters.skills && filters.skills.length > 0) {
-      filtered = filtered.filter(tech =>
-        filters.skills!.some(skillName =>
-          tech.skills.some(techSkill => techSkill.name === skillName)
-        )
-      );
     }
 
     if (filters.region) {
@@ -660,10 +404,6 @@ export const selectFilteredScopedTechnicians = (user: User, dataScopes: DataScop
 
 /**
  * Select active technicians with scope filtering
- * 
- * @param user - Current user with role, market, company
- * @param dataScopes - Data scopes for the user's role
- * @returns Selector that returns active technicians within user's scope
  */
 export const selectScopedActiveTechnicians = (user: User, dataScopes: DataScope[]) => createSelector(
   selectScopedTechnicians(user, dataScopes),
@@ -672,46 +412,24 @@ export const selectScopedActiveTechnicians = (user: User, dataScopes: DataScope[
 
 /**
  * Select available technicians with scope filtering
- * 
- * @param user - Current user with role, market, company
- * @param dataScopes - Data scopes for the user's role
- * @returns Selector that returns available technicians within user's scope
  */
 export const selectScopedAvailableTechnicians = (user: User, dataScopes: DataScope[]) => createSelector(
   selectScopedTechnicians(user, dataScopes),
-  (technicians) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    return technicians.filter(tech => {
-      if (!tech.isActive) return false;
-      
-      const todayAvailability = tech.availability.find(avail => {
-        const availDate = new Date(avail.date);
-        availDate.setHours(0, 0, 0, 0);
-        return availDate.getTime() === today.getTime();
-      });
-      
-      return !todayAvailability || todayAvailability.isAvailable;
-    });
-  }
+  (technicians) => technicians.filter(tech => tech.isActive && tech.isAvailable)
 );
 
 /**
  * Select technicians with location for map display, with scope filtering
- * 
- * @param user - Current user with role, market, company
- * @param dataScopes - Data scopes for the user's role
- * @returns Selector that returns technicians with location within user's scope
  */
 export const selectScopedTechniciansForMap = (user: User, dataScopes: DataScope[]) => createSelector(
   selectScopedTechnicians(user, dataScopes),
   (technicians) => technicians
-    .filter(tech => tech.currentLocation !== undefined && tech.currentLocation !== null)
+    .filter(tech => tech.lastKnownLatitude != null && tech.lastKnownLongitude != null)
     .map(tech => ({
       id: tech.id,
       name: `${tech.firstName} ${tech.lastName}`,
-      location: tech.currentLocation!,
+      latitude: tech.lastKnownLatitude!,
+      longitude: tech.lastKnownLongitude!,
       role: tech.role,
       isActive: tech.isActive
     }))
@@ -719,53 +437,29 @@ export const selectScopedTechniciansForMap = (user: User, dataScopes: DataScope[
 
 /**
  * Select technician statistics with scope filtering
- * 
- * @param user - Current user with role, market, company
- * @param dataScopes - Data scopes for the user's role
- * @returns Selector that returns statistics for technicians within user's scope
  */
 export const selectScopedTechnicianStatistics = (user: User, dataScopes: DataScope[]) => createSelector(
   selectScopedTechnicians(user, dataScopes),
   (technicians) => {
     const total = technicians.length;
     const active = technicians.filter(t => t.isActive).length;
-    const inactive = total - active;
-    
+
     const byRole = technicians.reduce((acc, tech) => {
       acc[tech.role] = (acc[tech.role] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    const byEmploymentType = technicians.reduce((acc, tech) => {
-      acc[tech.employmentType] = (acc[tech.employmentType] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const withExpiredCerts = technicians.filter(tech => {
-      const now = new Date();
-      return tech.certifications.some(cert => {
-        const expirationDate = new Date(cert.expirationDate);
-        return expirationDate < now;
-      });
-    }).length;
-
     return {
       total,
       active,
-      inactive,
-      byRole,
-      byEmploymentType,
-      withExpiredCertifications: withExpiredCerts
+      inactive: total - active,
+      byRole
     };
   }
 );
 
 /**
  * Select technicians view model with scope filtering
- * 
- * @param user - Current user with role, market, company
- * @param dataScopes - Data scopes for the user's role
- * @returns Selector that returns view model with scoped technicians
  */
 export const selectScopedTechniciansViewModel = (user: User, dataScopes: DataScope[]) => createSelector(
   selectFilteredScopedTechnicians(user, dataScopes),
@@ -785,53 +479,99 @@ export const selectScopedTechniciansViewModel = (user: User, dataScopes: DataSco
 
 /**
  * Check if user can access a specific technician
- * 
- * @param technicianId - ID of technician to check
- * @param user - Current user with role, market, company
- * @param dataScopes - Data scopes for the user's role
- * @returns Selector that returns boolean indicating if user can access technician
  */
 export const selectCanAccessTechnician = (technicianId: string, user: User, dataScopes: DataScope[]) => createSelector(
   selectTechnicianById(technicianId),
   (technician) => {
-    if (!technician || !user || !dataScopes || dataScopes.length === 0) {
-      return false;
-    }
+    if (!technician || !user || !dataScopes || dataScopes.length === 0) return false;
 
     const scopeType = determineScopeType(dataScopes);
 
     switch (scopeType) {
       case 'all':
         return true;
-
       case 'market':
-        if (user.market === 'RG') {
-          return true;
-        }
-        return technician.region === user.market;
-
+        return user.market === 'RG' || technician.region === user.market;
       case 'company':
-        // Note: Technician model doesn't have company field yet
         return technician.region === user.market;
-
       case 'self':
         return technician.id === user.id;
-
       default:
         return false;
     }
   }
 );
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-// Note: determineScopeType helper function has been moved to shared/selector-helpers.ts
-// to avoid code duplication across selector files.
-
-
 // Select available technicians count (active technicians)
 export const selectAvailableTechniciansCount = createSelector(
   selectAllTechnicians,
   (technicians) => technicians.filter(tech => tech.isActive).length
+);
+
+// ============================================================================
+// CROSS-REFERENCE SELECTORS (Technician → Crew → Job)
+// ============================================================================
+
+import { selectAllCrews } from '../crews/crew.selectors';
+import { selectJobEntities, selectAllJobs } from '../jobs/job.selectors';
+
+/**
+ * Select a map of technician ID → current job name.
+ * Joins through crews: technician is in crew.memberIds or crew.leadTechnicianId,
+ * crew has activeJobId, job has client + siteName.
+ */
+export const selectTechnicianCurrentJobMap = createSelector(
+  selectAllCrews,
+  selectJobEntities,
+  selectAllJobs,
+  (crews, jobEntities, allJobs): Record<string, string> => {
+    const map: Record<string, string> = {};
+
+    // 1. Direct assignment: job.technicianId → technician
+    for (const job of allJobs) {
+      if (job.technicianId && !map[job.technicianId]) {
+        map[job.technicianId] = `${job.client} – ${job.siteName}`;
+      }
+    }
+
+    // 2. Through crews: crew.activeJobId → crew members
+    for (const crew of crews) {
+      if (!crew.activeJobId) continue;
+      const job = jobEntities[crew.activeJobId];
+      if (!job) continue;
+
+      const jobLabel = `${job.client} – ${job.siteName}`;
+      const techIds = [crew.leadTechnicianId, ...crew.memberIds];
+
+      for (const techId of techIds) {
+        if (!map[techId]) {
+          map[techId] = jobLabel;
+        }
+      }
+    }
+
+    return map;
+  }
+);
+
+/**
+ * Select a map of technician ID → crew name.
+ * A technician belongs to a crew if they are the leadTechnicianId or in memberIds.
+ */
+export const selectTechnicianCrewMap = createSelector(
+  selectAllCrews,
+  (crews): Record<string, string> => {
+    const map: Record<string, string> = {};
+
+    for (const crew of crews) {
+      const techIds = [crew.leadTechnicianId, ...crew.memberIds];
+      for (const techId of techIds) {
+        if (!map[techId]) {
+          map[techId] = crew.name;
+        }
+      }
+    }
+
+    return map;
+  }
 );

@@ -114,7 +114,15 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
 
   private normalizeDate(value: any): Date | null {
     if (value == null) return null;
-    const d = value instanceof Date ? value : new Date(value);
+    if (value instanceof Date) {
+      return isNaN(value.getTime()) ? null : new Date(value.getTime());
+    }
+    // API returns UTC dates — ensure the string is parsed as UTC
+    let str = String(value).trim();
+    if (str && !str.endsWith('Z') && !(/[+-]\d{2}:\d{2}$/).test(str)) {
+      str += 'Z';
+    }
+    const d = new Date(str);
     return isNaN(d.getTime()) ? null : new Date(d.getTime());
   }
 
@@ -238,9 +246,9 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
             const dr = this.normalizeDate(pl.dateReported as any); if (dr) pl.dateReported = dr;
             const rd = this.normalizeDate(pl.resolvedDate as any); if (rd) pl.resolvedDate = rd;
             (pl as any).dateReportedDisplay =
-              pl.dateReported ? this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '' : '';
+              pl.dateReported ? this.datePipe.transform(pl.dateReported as Date, 'MM/dd/yy hh:mm a') ?? '' : '';
             (pl as any).resolvedDateDisplay =
-              pl.resolvedDate ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a', 'America/Denver') ?? '' : '';
+              pl.resolvedDate ? this.datePipe.transform(pl.resolvedDate as Date, 'MM/dd/yy hh:mm a') ?? '' : '';
           }
 
           this.unresolvedPreliminaryPunchLists = results;
@@ -387,8 +395,10 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     this.updateUnresolvedCount();
   }
 
-  openGallery(imageType: 'issueImages' | 'resolutionImages', images: string[]): void {
-    this.galleryImages = images.map(img => ({ itemImageSrc: img }));
+  openGallery(imageType: 'issueImages' | 'resolutionImages', images: any[]): void {
+    this.galleryImages = images.map(img => ({
+      itemImageSrc: typeof img === 'string' ? img : (img?.imageData ?? img)
+    }));
     if (imageType === 'issueImages') {
       this.isIssueGalleryVisible = true;
     } else {

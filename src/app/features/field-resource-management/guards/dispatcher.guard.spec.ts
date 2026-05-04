@@ -9,6 +9,21 @@ describe('DispatcherGuard', () => {
   let authService: jasmine.SpyObj<AuthService>;
   let router: jasmine.SpyObj<Router>;
 
+  // The full set of roles the DispatcherGuard allows
+  const expectedAllowedRoles = [
+    UserRole.User,
+    UserRole.Technician,
+    UserRole.CM,
+    UserRole.Admin,
+    UserRole.HR,
+    UserRole.Payroll,
+    UserRole.OSPCoordinator,
+    UserRole.Controller,
+    UserRole.EngineeringFieldSupport,
+    UserRole.MaterialsManager,
+    UserRole.PM
+  ];
+
   beforeEach(() => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['isUserInRole']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
@@ -36,12 +51,7 @@ describe('DispatcherGuard', () => {
     const result = guard.canActivate({} as any, { url: '/schedule' } as any);
 
     expect(result).toBe(true);
-    expect(authService.isUserInRole).toHaveBeenCalledWith([
-      UserRole.Admin,
-      UserRole.PM,
-      UserRole.CM,
-      UserRole.OSPCoordinator
-    ]);
+    expect(authService.isUserInRole).toHaveBeenCalledWith(expectedAllowedRoles);
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
@@ -52,17 +62,6 @@ describe('DispatcherGuard', () => {
 
     expect(result).toBe(true);
     expect(router.navigate).not.toHaveBeenCalled();
-  });
-
-  it('should deny access for Technician role', () => {
-    authService.isUserInRole.and.returnValue(false);
-
-    const result = guard.canActivate({} as any, { url: '/schedule' } as any);
-
-    expect(result).toBe(false);
-    expect(router.navigate).toHaveBeenCalledWith(['/unauthorized'], {
-      queryParams: { returnUrl: '/schedule' }
-    });
   });
 
   it('should allow access for CM role', () => {
@@ -83,15 +82,47 @@ describe('DispatcherGuard', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('should redirect with correct return URL for different routes', () => {
+  it('should allow access for Technician role', () => {
+    authService.isUserInRole.and.returnValue(true);
+
+    const result = guard.canActivate({} as any, { url: '/technicians' } as any);
+
+    expect(result).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should deny access for unauthorized role and redirect to dashboard', () => {
+    authService.isUserInRole.and.returnValue(false);
+
+    const result = guard.canActivate({} as any, { url: '/schedule' } as any);
+
+    expect(result).toBe(false);
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/field-resource-management/dashboard'],
+      {
+        queryParams: {
+          error: 'insufficient_permissions',
+          message: 'Dispatcher or Admin access required'
+        }
+      }
+    );
+  });
+
+  it('should redirect with correct query params for different routes', () => {
     authService.isUserInRole.and.returnValue(false);
     const testUrl = '/dispatcher/jobs';
 
     guard.canActivate({} as any, { url: testUrl } as any);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/unauthorized'], {
-      queryParams: { returnUrl: testUrl }
-    });
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/field-resource-management/dashboard'],
+      {
+        queryParams: {
+          error: 'insufficient_permissions',
+          message: 'Dispatcher or Admin access required'
+        }
+      }
+    );
   });
 
   it('should handle multiple consecutive calls consistently', () => {

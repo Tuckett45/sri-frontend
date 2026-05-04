@@ -14,13 +14,9 @@
   "exclude": [
     "src/app/features/atlas/tests/**/*.spec.ts",
     "src/app/features/field-resource-management/state/technicians/technician.selectors.spec.ts",
-    "src/app/features/field-resource-management/state/technicians/technician.actions.spec.ts",
     "src/app/features/field-resource-management/state/technicians/technician.effects.spec.ts",
-    "src/app/features/field-resource-management/state/technicians/technician.reducer.spec.ts",
     "src/app/features/field-resource-management/state/jobs/job.selectors.spec.ts",
-    "src/app/features/field-resource-management/state/jobs/job.actions.spec.ts",
     "src/app/features/field-resource-management/state/jobs/job.effects.spec.ts",
-    "src/app/features/field-resource-management/state/jobs/job.reducer.spec.ts",
     "src/app/features/field-resource-management/state/crews/crew.effects.spec.ts",
     "src/app/features/field-resource-management/state/crews/crew.selectors.spec.ts",
     "src/app/features/field-resource-management/state/reporting/reporting.effects.spec.ts",
@@ -34,6 +30,16 @@
     "src/app/features/field-resource-management/services/technician.service.spec.ts",
     "src/app/features/field-resource-management/services/travel.service.spec.ts",
     "src/app/features/field-resource-management/services/state-persistence.service.spec.ts",
+    "src/app/features/field-resource-management/state/technicians/technician.actions.spec.ts",
+    "src/app/features/field-resource-management/state/technicians/technician.reducer.spec.ts",
+    "src/app/features/field-resource-management/state/time-entries/time-entry.reducer.spec.ts",
+    "src/app/features/field-resource-management/state/timecards/timecard-budget-integration.spec.ts",
+    "src/app/features/field-resource-management/state/jobs/job.actions.spec.ts",
+
+    "src/app/features/field-resource-management/components/technicians/technician-list/technician-list.component.spec.ts",
+    "src/app/features/field-resource-management/services/job.service.spec.ts",
+    "src/app/features/field-resource-management/components/shared/skill-selector/skill-selector.component.spec.ts",
+    "src/app/features/field-resource-management/components/**/*.spec.ts",
     "src/app/features/field-resource-management/integration-tests/**/*.spec.ts"
   ]
 }

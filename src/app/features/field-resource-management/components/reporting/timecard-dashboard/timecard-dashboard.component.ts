@@ -8,9 +8,11 @@ import { Job } from '../../../models/job.model';
 import * as TimeEntryActions from '../../../state/time-entries/time-entry.actions';
 import * as TimeEntrySelectors from '../../../state/time-entries/time-entry.selectors';
 import * as JobSelectors from '../../../state/jobs/job.selectors';
+import { loadJobs } from '../../../state/jobs/job.actions';
 import { AccessibilityService } from '../../../services/accessibility.service';
 import { GeolocationService } from '../../../services/geolocation.service';
 import { GeocodingService } from '../../../../../services/geocoding.service';
+import { AuthService } from '../../../../../services/auth.service';
 
 /**
  * Timecard Dashboard Component
@@ -28,7 +30,7 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
   // Current user (mock - would come from auth service)
-  currentTechnicianId = 'current-technician-id';
+  currentTechnicianId = '';
   
   // Tab management
   selectedTabIndex = 0;
@@ -59,13 +61,20 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
   
   // Cache for reverse geocoded addresses
   private addressCache: Map<string, string> = new Map();
+
+  // Job lookup map (id → Job) for displaying job info in time entries
+  jobMap: Map<string, Job> = new Map();
   
   constructor(
     private store: Store,
     private accessibilityService: AccessibilityService,
     private geolocationService: GeolocationService,
-    private geocodingService: GeocodingService
+    private geocodingService: GeocodingService,
+    private authService: AuthService
   ) {
+    // Set current technician ID from auth
+    this.currentTechnicianId = this.authService.getUser()?.id || '';
+
     // Initialize observables
     this.activeTimeEntry$ = this.store.select(TimeEntrySelectors.selectActiveTimeEntry);
     this.todayTimeEntries$ = this.store.select(TimeEntrySelectors.selectTodayTimeEntries);
@@ -77,6 +86,16 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load time entries for current user
     this.loadTimeEntries();
+
+    // Load active entry from the API (in case user refreshed while clocked in)
+    if (this.currentTechnicianId) {
+      this.store.dispatch(TimeEntryActions.loadActiveEntry({
+        technicianId: this.currentTechnicianId
+      }));
+    }
+
+    // Ensure jobs are loaded for name lookups
+    this.store.dispatch(loadJobs({}));
     
     // Subscribe to active time entry to get active job
     this.activeTimeEntry$.pipe(takeUntil(this.destroy$)).subscribe(entry => {
@@ -94,6 +113,9 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
       if (jobs.length === 1 && !this.selectedJobId) {
         this.selectedJobId = jobs[0].id;
       }
+      // Build job lookup map
+      this.jobMap.clear();
+      jobs.forEach(j => this.jobMap.set(j.id, j));
     });
 
     // Subscribe to today's entries for calculations
@@ -224,6 +246,23 @@ export class TimecardDashboardComponent implements OnInit, OnDestroy {
     });
   }
   
+  /**
+   * Get job display info for a time entry.
+   * Returns the job title, client, and site address instead of the raw UUID.
+   */
+  getJobDisplayName(jobId: string): string {
+    const job = this.jobMap.get(jobId);
+    if (!job) return jobId; // fallback to ID if not found
+    return job.jobId || `${job.client} - ${job.siteName}`;
+  }
+
+  getJobSiteInfo(jobId: string): string {
+    const job = this.jobMap.get(jobId);
+    if (!job) return '';
+    const addr = job.siteAddress;
+    return addr ? `${job.siteName} · ${addr.city}, ${addr.state}` : job.siteName || '';
+  }
+
   /**
    * Refresh data
    */

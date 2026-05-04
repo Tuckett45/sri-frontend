@@ -7,6 +7,7 @@ import { TimeEntry } from '../../../models/time-entry.model';
 import { updateJobStatus } from '../../../state/jobs/job.actions';
 import { clockIn, clockOut } from '../../../state/time-entries/time-entry.actions';
 import { selectActiveTimeEntry } from '../../../state/time-entries/time-entry.selectors';
+import { AuthService } from '../../../../../services/auth.service';
 
 /**
  * Job Card Component
@@ -47,7 +48,10 @@ export class JobCardComponent implements OnInit, OnDestroy {
   // Expose enum for template
   JobStatus = JobStatus;
 
-  constructor(private store: Store) {}
+  constructor(
+    private store: Store,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.subscribeToActiveTimeEntry();
@@ -125,8 +129,7 @@ export class JobCardComponent implements OnInit, OnDestroy {
    * Handle clock in
    */
   onClockIn(): void {
-    // Get current technician ID from auth (mock for now)
-    const technicianId = 'current-technician-id';
+    const technicianId = this.authService.getUser()?.id || '';
     
     this.store.dispatch(clockIn({
       jobId: this.job.id,

@@ -61,6 +61,22 @@
   }
 }
 
+// Hero Create Button
+.hero-create-btn {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  color: #1976d2 !important;
+  font-weight: 600;
+  white-space: nowrap;
+
+  mat-icon {
+    margin-right: 4px;
+  }
+
+  &:hover {
+    background-color: #ffffff !important;
+  }
+}
+
 // Error card
 .error-card {
   display: flex;
@@ -203,6 +219,15 @@
       border-color: #e0e0e0 !important;
       mat-icon { color: #9e9e9e !important; }
     }
+  }
+
+  .filter-spacer {
+    flex: 1;
+  }
+
+  .create-profile-btn {
+    white-space: nowrap;
+    mat-icon { margin-right: 4px; }
   }
 
   @media (max-width: 768px) {

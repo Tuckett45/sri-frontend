@@ -3,34 +3,37 @@
  */
 
 import * as JobActions from './job.actions';
-import { Job, JobStatus, Priority, JobNote, Attachment } from '../../models/job.model';
+import { Job, JobStatus, JobType, Priority, JobNote, Attachment } from '../../models/job.model';
 import { JobFilters } from '../../models/dtos/filters.dto';
 import { CreateJobDto, UpdateJobDto } from '../../models/dtos/job.dto';
 
 describe('Job Actions', () => {
   const mockJob: Job = {
-    id: 'job-123',    siteName: 'Fiber Installation',
+    id: 'job-123',
+    jobId: 'JOB-001',
+    client: 'Test Client',
+    siteName: 'Fiber Installation',
+    siteAddress: {
+      street: '123 Main St',
+      city: 'Dallas',
+      state: 'TX',
+      zipCode: '75001'
+    },
+    jobType: JobType.Install,
     scopeDescription: 'Install fiber optic cables',
     status: JobStatus.EnRoute,
     priority: Priority.P1,
-    region: 'TX',
-    company: 'Company A',
-    location: {
-      address: '123 Main St',
-      city: 'Dallas',
-      state: 'TX',
-      zipCode: '75001',
-      coordinates: { latitude: 32.7767, longitude: -96.7970, accuracy: 10 }
-    },
-    scheduledStartDate: new Date('2024-02-01T08:00:00'),
-    scheduledEnd: new Date('2024-02-01T17:00:00'),
     requiredSkills: [],
-    assignedTechnicians: [],
-    estimatedHours: 8,
+    requiredCrewSize: 2,
+    estimatedLaborHours: 8,
+    scheduledStartDate: new Date('2024-02-01T08:00:00'),
+    scheduledEndDate: new Date('2024-02-01T17:00:00'),
     notes: [],
     attachments: [],
-    createdAt: new Date(),
     market: 'DALLAS',
+    company: 'Company A',
+    createdBy: 'user-1',
+    createdAt: new Date(),
     updatedAt: new Date()
   };
 
@@ -40,23 +43,34 @@ describe('Job Actions', () => {
     priority: Priority.P1
   };
 
-  const mockCreateDto: CreateJobDto = {    siteName: 'Cable Repair',
-    scopeDescription: 'Repair damaged cables',
-    status: JobStatus.NotStarted,
-    priority: Priority.P2,
-    region: 'TX',
-    company: 'Company A',
-    location: {
-      address: '456 Oak Ave',
+  const mockCreateDto: CreateJobDto = {
+    client: 'Test Client',
+    siteName: 'Cable Repair',
+    siteAddress: {
+      street: '456 Oak Ave',
       city: 'Austin',
       state: 'TX',
-      zipCode: '78701',
-      coordinates: { latitude: 30.2672, longitude: -97.7431, accuracy: 10 }
+      zipCode: '78701'
     },
-    scheduledStartDate: new Date('2024-02-02T08:00:00'),
-    scheduledEnd: new Date('2024-02-02T17:00:00'),
+    jobType: JobType.Install,
+    scopeDescription: 'Repair damaged cables',
+    priority: Priority.P2,
     requiredSkills: [],
-    estimatedHours: 6
+    requiredCrewSize: 2,
+    estimatedLaborHours: 6,
+    scheduledStartDate: new Date('2024-02-02T08:00:00'),
+    scheduledEndDate: new Date('2024-02-02T17:00:00'),
+    authorizationStatus: 'authorized',
+    hasPurchaseOrders: false,
+    standardBillRate: 100,
+    overtimeBillRate: 150,
+    perDiem: 50,
+    invoicingProcess: 'weekly',
+    projectDirector: 'Director A',
+    targetResources: 2,
+    bizDevContact: 'BizDev A',
+    requestedHours: 6,
+    overtimeRequired: false
   };
 
   const mockUpdateDto: UpdateJobDto = {
@@ -65,14 +79,19 @@ describe('Job Actions', () => {
   };
 
   const mockNote: JobNote = {
-    id: 'note-1',    text: 'Test note',
+    id: 'note-1',
+    jobId: 'job-123',
+    text: 'Test note',
+    author: 'user-1',
     createdAt: new Date()
   };
 
   const mockAttachment: Attachment = {
-    id: 'attach-1',    fileName: 'document.pdf',
+    id: 'attach-1',
+    fileName: 'document.pdf',
     fileSize: 1024,
-    mimeType: 'application/pdf',
+    fileType: 'application/pdf',
+    blobUrl: 'https://storage.example.com/document.pdf',
     uploadedBy: 'user-1',
     uploadedAt: new Date()
   };

@@ -1,11 +1,12 @@
-import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import * as L from 'leaflet';
-import { Job } from '../../../models/job.model';
+import { Job, JobStatus } from '../../../models/job.model';
 import { TimeEntry, GeoLocation } from '../../../models/time-entry.model';
 import { clockIn, clockOut, updateTimeEntry } from '../../../state/time-entries/time-entry.actions';
+import { updateJobStatus } from '../../../state/jobs/job.actions';
 import { selectActiveTimeEntry, selectLastCompletedTimeEntry } from '../../../state/time-entries/time-entry.selectors';
 import { GeolocationService, GeolocationError, GeolocationErrorType } from '../../../services/geolocation.service';
 import { AuthService } from '../../../../../services/auth.service';
@@ -87,7 +88,8 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
     private store: Store,
     private geolocationService: GeolocationService,
     private authService: AuthService,
-    private frmPermissionService: FrmPermissionService
+    private frmPermissionService: FrmPermissionService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -129,6 +131,7 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
     ).subscribe(() => {
       if (this.isClockedIn && this.activeTimeEntry) {
         this.updateElapsedTime();
+        this.cdr.markForCheck();
       }
     });
   }
@@ -168,29 +171,38 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
     this.locationError = null;
 
     try {
-      // Attempt to get current location
+      // Capture the user's current GPS location
       const location = await this.captureLocation();
       this.currentLocation = location;
       this.locationStatus = LocationStatus.Success;
 
-      // Get current technician ID from auth (mock for now)
-      const technicianId = 'current-technician-id';
+      // Get current technician ID from auth
+      const technicianId = this.authService.getUser()?.id || '';
 
-      // Dispatch clock in action with location (mileage will be calculated on clock out)
+      // Dispatch clock in action with location
       this.store.dispatch(clockIn({
         jobId: this.job.id,
         technicianId,
         location
       }));
 
+      // Determine job status based on distance to job site
+      this.updateJobStatusByProximity(location);
+
     } catch (error) {
       this.handleLocationError(error as GeolocationError);
       
-      // Still allow clock in without location
-      const technicianId = 'current-technician-id';
+      // Still allow clock in without location — default to EnRoute
+      const technicianId = this.authService.getUser()?.id || '';
       this.store.dispatch(clockIn({
         jobId: this.job.id,
         technicianId
+      }));
+
+      // Without location, assume not on site
+      this.store.dispatch(updateJobStatus({
+        id: this.job.id,
+        status: JobStatus.EnRoute
       }));
     }
   }
@@ -497,6 +509,66 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Determine and dispatch the correct job status based on proximity to the job site.
+   * ≤ 1 mile → OnSite, > 1 mile → EnRoute
+   */
+  private updateJobStatusByProximity(userLocation: GeoLocation): void {
+    const distance = this.getDistanceToJobSite(userLocation);
+
+    if (distance !== null && distance <= 1) {
+      this.store.dispatch(updateJobStatus({
+        id: this.job.id,
+        status: JobStatus.OnSite
+      }));
+    } else {
+      this.store.dispatch(updateJobStatus({
+        id: this.job.id,
+        status: JobStatus.EnRoute
+      }));
+    }
+  }
+
+  /**
+   * Calculate the distance in miles between a location and the job site.
+   * Returns null if the job site has no coordinates.
+   */
+  private getDistanceToJobSite(userLocation: GeoLocation): number | null {
+    const jobLat = this.job.siteAddress?.latitude;
+    const jobLng = this.job.siteAddress?.longitude;
+
+    if (jobLat == null || jobLng == null) {
+      return null;
+    }
+
+    return this.haversineDistanceMiles(
+      userLocation.latitude, userLocation.longitude,
+      jobLat, jobLng
+    );
+  }
+
+  /**
+   * Haversine formula — returns distance between two lat/lng points in miles.
+   */
+  private haversineDistanceMiles(
+    lat1: number, lon1: number,
+    lat2: number, lon2: number
+  ): number {
+    const R = 3958.8; // Earth radius in miles
+    const dLat = this.toRad(lat2 - lat1);
+    const dLon = this.toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  private toRad(deg: number): number {
+    return deg * (Math.PI / 180);
+  }
+
+  /**
    * Get location status icon
    */
   get locationStatusIcon(): string {
@@ -555,20 +627,21 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get formatted location
+   * Get formatted location — shows the user's captured coordinates and
+   * the distance to the job site when available.
    */
   get formattedLocation(): string {
-    // Show job site address instead of coordinates for better readability
-    if (this.job && this.job.siteAddress) {
-      const addr = this.job.siteAddress;
-      return `${addr.street}, ${addr.city}, ${addr.state} ${addr.zipCode}`;
-    }
-    
     if (!this.currentLocation) {
       return 'N/A';
     }
-    
-    // Fallback to coordinates if no address available
-    return this.geolocationService.formatLocation(this.currentLocation);
+
+    const coords = this.geolocationService.formatLocation(this.currentLocation);
+    const distance = this.getDistanceToJobSite(this.currentLocation);
+
+    if (distance !== null) {
+      return `${coords} (${distance.toFixed(1)} mi from site)`;
+    }
+
+    return coords;
   }
 }

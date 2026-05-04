@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,6 +9,11 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AssignmentDialogComponent } from './assignment-dialog.component';
@@ -101,6 +106,7 @@ describe('AssignmentDialogComponent', () => {
       imports: [
         BrowserAnimationsModule,
         ReactiveFormsModule,
+        FormsModule,
         MatDialogModule,
         MatCheckboxModule,
         MatFormFieldModule,
@@ -108,8 +114,13 @@ describe('AssignmentDialogComponent', () => {
         MatChipsModule,
         MatIconModule,
         MatButtonModule,
-        MatDividerModule
+        MatDividerModule,
+        MatTooltipModule,
+        MatProgressBarModule,
+        MatProgressSpinnerModule,
+        MatSelectModule
       ],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({ initialState }),
         { provide: MAT_DIALOG_DATA, useValue: { job: mockJob } },

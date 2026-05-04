@@ -57,6 +57,11 @@ export class AuthorizationInterceptor implements HttpInterceptor {
    * @returns Observable of the HTTP event
    */
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Skip external API requests that don't need our auth headers
+    if (this.isExternalRequest(req.url)) {
+      return next.handle(req);
+    }
+
     // Add authorization headers with role information
     const modifiedReq = this.addAuthorizationHeaders(req);
 
@@ -259,5 +264,18 @@ export class AuthorizationInterceptor implements HttpInterceptor {
     ];
 
     return criticalEndpoints.some(endpoint => url.includes(endpoint));
+  }
+
+  /**
+   * Check if the request is to an external API that should not receive our auth headers
+   */
+  private isExternalRequest(url: string): boolean {
+    const externalDomains = [
+      'nominatim.openstreetmap.org',
+      'maps.googleapis.com',
+      'googleapis.com',
+      'blob.core.windows.net'
+    ];
+    return externalDomains.some(domain => url.includes(domain));
   }
 }

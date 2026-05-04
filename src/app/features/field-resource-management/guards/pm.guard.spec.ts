@@ -50,27 +50,39 @@ describe('PMGuard', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('should deny access for non-PM/Vendor role', () => {
+  it('should deny access for non-PM/Vendor role and redirect to dashboard', () => {
     authService.isUserInRole.and.returnValue(false);
 
     const result = guard.canActivate({} as any, { url: '/pm/jobs' } as any);
 
     expect(result).toBe(false);
     expect(authService.isUserInRole).toHaveBeenCalledWith([UserRole.PM, UserRole.VendorRep]);
-    expect(router.navigate).toHaveBeenCalledWith(['/unauthorized'], {
-      queryParams: { returnUrl: '/pm/jobs' }
-    });
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/field-resource-management/dashboard'],
+      {
+        queryParams: {
+          error: 'insufficient_permissions',
+          message: 'PM or Vendor access required'
+        }
+      }
+    );
   });
 
-  it('should redirect to unauthorized page with correct return URL', () => {
+  it('should redirect to dashboard with correct query params on denial', () => {
     authService.isUserInRole.and.returnValue(false);
     const testUrl = '/pm/dashboard';
 
     guard.canActivate({} as any, { url: testUrl } as any);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/unauthorized'], {
-      queryParams: { returnUrl: testUrl }
-    });
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/field-resource-management/dashboard'],
+      {
+        queryParams: {
+          error: 'insufficient_permissions',
+          message: 'PM or Vendor access required'
+        }
+      }
+    );
   });
 
   it('should deny access for Technician role', () => {
@@ -91,7 +103,7 @@ describe('PMGuard', () => {
     expect(router.navigate).toHaveBeenCalled();
   });
 
-  it('should deny access for Admin role', () => {
+  it('should deny access for Admin role (not in PM/Vendor group)', () => {
     authService.isUserInRole.and.returnValue(false);
 
     const result = guard.canActivate({} as any, { url: '/pm/jobs' } as any);

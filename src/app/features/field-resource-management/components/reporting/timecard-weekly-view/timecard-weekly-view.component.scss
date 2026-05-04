@@ -1,5 +1,3 @@
-@import '../../../styles/frm-styles.scss';
-
 .timecard-weekly-view {
   padding: 24px;
   max-width: 1400px;
@@ -351,6 +349,24 @@
           .entry-job {
             font-weight: 500;
             color: #212121;
+
+            .job-info-block {
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+            }
+
+            .job-name {
+              font-weight: 600;
+              color: #1976d2;
+              font-size: 0.875rem;
+            }
+
+            .job-site-info {
+              font-size: 0.75rem;
+              color: #757575;
+              font-weight: 400;
+            }
           }
 
           .entry-time {
@@ -615,7 +631,7 @@
 
     .accordion-entry-job {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 6px;
       font-weight: 500;
       color: #212121;
@@ -626,6 +642,25 @@
         width: 18px;
         height: 18px;
         color: #616161;
+        margin-top: 2px;
+      }
+
+      .job-info-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .job-name {
+        font-weight: 600;
+        color: #1976d2;
+        font-size: 0.875rem;
+      }
+
+      .job-site-info {
+        font-size: 0.75rem;
+        color: #757575;
+        font-weight: 400;
       }
     }
 
@@ -715,6 +750,52 @@
             }
           }
         }
+      }
+    }
+  }
+}
+
+// Medium screens — make the 7-day grid scrollable and tighten spacing
+@media (min-width: 769px) and (max-width: 1024px) {
+  .timecard-weekly-view {
+    padding: 1rem;
+
+    .week-grid-card {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+
+      .week-grid {
+        .grid-header,
+        .grid-data {
+          min-width: 700px;
+        }
+
+        .grid-data .day-cell {
+          min-height: 100px;
+          padding: 10px;
+
+          .cell-hours {
+            font-size: 14px;
+          }
+        }
+      }
+    }
+
+    .status-bar .status-grid {
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .day-detail-section {
+      .entry-row {
+        grid-template-columns: 1.5fr 2fr 1fr auto;
+        gap: 10px;
+        font-size: 0.8125rem;
+      }
+
+      .expense-row {
+        grid-template-columns: 1fr 2fr auto;
+        gap: 10px;
+        font-size: 0.8125rem;
       }
     }
   }

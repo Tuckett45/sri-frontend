@@ -562,7 +562,7 @@ export class DeploymentSignalRService {
    * (the hub is not behind the /api route).
    */
   private getHubUrl(): string {
-    const apiRoot = environment.production ? environment.apiUrl : local_environment.apiUrl;
+    const apiRoot = environment.production ? environment.apiUrl : environment.atlasApiUrl;
     const base = apiRoot.replace(/\/api\/?$/, '');
     return `${base}/hubs/deployments`;
   }

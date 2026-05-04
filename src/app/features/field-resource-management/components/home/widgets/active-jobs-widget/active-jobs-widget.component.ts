@@ -12,7 +12,17 @@ import { Store } from '@ngrx/store';
 import { Observable, BehaviorSubject, combineLatest, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { selectAllJobs, selectJobsLoading, selectJobsError } from '../../../../state/jobs/job.selectors';
+import { selectActiveAssignments } from '../../../../state/assignments/assignment.selectors';
+import { selectTechnicianEntities } from '../../../../state/technicians/technician.selectors';
+import { selectCrewEntities } from '../../../../state/crews/crew.selectors';
 import { Job, JobStatus } from '../../../../models/job.model';
+import { Technician } from '../../../../models/technician.model';
+import { Crew } from '../../../../models/crew.model';
+
+export interface JobWithTechnicians extends Job {
+  assignedTechnicians: Technician[];
+  crew: Crew | null;
+}
 
 const ACTIVE_STATUSES: JobStatus[] = [
   JobStatus.EnRoute,
@@ -29,8 +39,8 @@ export class ActiveJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
   @Input() marketFilter: string | null = null;
   @Output() jobSelected = new EventEmitter<string>();
 
-  activeJobs$!: Observable<Job[]>;
-  pagedJobs$!: Observable<Job[]>;
+  activeJobs$!: Observable<JobWithTechnicians[]>;
+  pagedJobs$!: Observable<JobWithTechnicians[]>;
   totalJobs$!: Observable<number>;
   loading$!: Observable<boolean>;
   error: string | null = null;
@@ -59,14 +69,24 @@ export class ActiveJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
 
     this.activeJobs$ = combineLatest([
       this.store.select(selectAllJobs),
+      this.store.select(selectActiveAssignments),
+      this.store.select(selectTechnicianEntities),
+      this.store.select(selectCrewEntities),
       this.marketFilter$
     ]).pipe(
-      map(([jobs, market]) => {
+      map(([jobs, activeAssignments, techEntities, crewEntities, market]) => {
         let filtered = jobs.filter(job => ACTIVE_STATUSES.includes(job.status));
         if (market != null && market !== '') {
           filtered = filtered.filter(job => job.market === market);
         }
-        return filtered;
+        return filtered.map(job => {
+          const jobAssignments = activeAssignments.filter(a => a.jobId === job.id);
+          const assignedTechnicians = jobAssignments
+            .map(a => techEntities[a.technicianId])
+            .filter((t): t is Technician => t != null);
+          const crew = job.crewId ? (crewEntities[job.crewId] ?? null) : null;
+          return { ...job, assignedTechnicians, crew };
+        });
       })
     );
 

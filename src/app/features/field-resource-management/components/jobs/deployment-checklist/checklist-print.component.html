@@ -1,0 +1,399 @@
+<!-- Print-friendly layout — hidden on screen, visible when printing -->
+<div class="checklist-print-container" *ngIf="checklist">
+
+  <!-- Header -->
+  <div class="print-header">
+    <h1 class="print-title">Deployment Checklist</h1>
+    <div class="print-meta">
+      <div class="meta-row">
+        <span class="meta-label">Job ID:</span>
+        <span class="meta-value">{{ jobId }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Status:</span>
+        <span class="meta-value status-badge" [ngClass]="{
+          'status-not-started': checklistStatus === 'NotStarted',
+          'status-in-progress': checklistStatus === 'InProgress',
+          'status-completed': checklistStatus === 'Completed'
+        }">{{ formatStatus(checklistStatus) }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Generated:</span>
+        <span class="meta-value">{{ generatedAt }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- Phase 1: Job Details -->
+  <!-- ================================================================== -->
+  <section class="print-section" *ngIf="checklist.jobDetails as jd">
+    <h2 class="section-title">Phase 1: Job Details</h2>
+
+    <!-- Site Information -->
+    <h3 class="subsection-title">Site Information</h3>
+    <table class="print-table">
+      <tbody>
+        <tr>
+          <td class="field-label">Site Name</td>
+          <td>{{ jd.siteName || '—' }}</td>
+          <td class="field-label">Suite Number</td>
+          <td>{{ jd.suiteNumber || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Street</td>
+          <td>{{ jd.street || '—' }}</td>
+          <td class="field-label">City/State</td>
+          <td>{{ jd.cityState || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Zip Code</td>
+          <td>{{ jd.zipCode || '—' }}</td>
+          <td class="field-label">Proposed Validation</td>
+          <td>{{ formatDateTime(jd.proposedValidationDateTime) }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Dates -->
+    <h3 class="subsection-title">Dates</h3>
+    <table class="print-table">
+      <tbody>
+        <tr>
+          <td class="field-label">Job Start Date</td>
+          <td>{{ formatDate(jd.jobStartDate) }}</td>
+          <td class="field-label">Job Complete Date</td>
+          <td>{{ formatDate(jd.jobCompleteDate) }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Job Numbers -->
+    <h3 class="subsection-title">Job Numbers &amp; Tickets</h3>
+    <table class="print-table">
+      <tbody>
+        <tr>
+          <td class="field-label">SRI Job Numbers</td>
+          <td colspan="3">{{ jd.sriJobNumbers?.join(', ') || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Customer Job Numbers</td>
+          <td colspan="3">{{ jd.customerJobNumbers?.join(', ') || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Change Tickets</td>
+          <td colspan="3">{{ jd.changeTickets?.join(', ') || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Site Access Tickets</td>
+          <td colspan="3">{{ jd.siteAccessTickets?.join(', ') || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Contacts -->
+    <h3 class="subsection-title">Contacts</h3>
+    <table class="print-table contacts-table">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field-label">Technical Lead</td>
+          <td>{{ jd.technicalLead?.name || '—' }}</td>
+          <td>{{ jd.technicalLead?.phone || '—' }}</td>
+          <td>{{ jd.technicalLead?.email || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Technician 1</td>
+          <td>{{ jd.technician1?.name || '—' }}</td>
+          <td>{{ jd.technician1?.phone || '—' }}</td>
+          <td>{{ jd.technician1?.email || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Technician 2</td>
+          <td>{{ jd.technician2?.name || '—' }}</td>
+          <td>{{ jd.technician2?.phone || '—' }}</td>
+          <td>{{ jd.technician2?.email || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">SRI Project Lead</td>
+          <td>{{ jd.sriProjectLead?.name || '—' }}</td>
+          <td>{{ jd.sriProjectLead?.phone || '—' }}</td>
+          <td>{{ jd.sriProjectLead?.email || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Primary Customer Contact</td>
+          <td>{{ jd.primaryCustomerContact?.name || '—' }}</td>
+          <td>{{ jd.primaryCustomerContact?.phone || '—' }}</td>
+          <td>{{ jd.primaryCustomerContact?.email || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Secondary Customer Contact</td>
+          <td>{{ jd.secondaryCustomerContact?.name || '—' }}</td>
+          <td>{{ jd.secondaryCustomerContact?.phone || '—' }}</td>
+          <td>{{ jd.secondaryCustomerContact?.email || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Statement of Work -->
+    <div class="sow-section" *ngIf="jd.statementOfWork">
+      <h3 class="subsection-title">Statement of Work</h3>
+      <p class="sow-text">{{ jd.statementOfWork }}</p>
+    </div>
+  </section>
+
+  <!-- ================================================================== -->
+  <!-- Phase 2: Pre-Installation -->
+  <!-- ================================================================== -->
+  <section class="print-section" *ngIf="checklist.preInstallation as pi">
+    <h2 class="section-title">Phase 2: Pre-Installation</h2>
+
+    <table class="print-table checklist-items-table">
+      <thead>
+        <tr>
+          <th class="col-item">Item</th>
+          <th class="col-ref">Playbook Ref</th>
+          <th class="col-response">Response</th>
+          <th class="col-notes">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of pi.items"
+            [class.response-no]="item.response === 'No'">
+          <td>{{ item.label }}</td>
+          <td>{{ item.playbookReference || '—' }}</td>
+          <td>
+            <span class="response-badge"
+                  [ngClass]="{
+                    'response-yes': item.response === 'Yes',
+                    'response-no-badge': item.response === 'No',
+                    'response-na': item.response === 'NotApplicable'
+                  }">
+              {{ formatResponse(item.response) }}
+            </span>
+          </td>
+          <td>{{ item.notes || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="phase-complete-indicator">
+      Phase Marked Complete: <strong>{{ pi.markedComplete ? 'Yes' : 'No' }}</strong>
+    </p>
+  </section>
+
+  <!-- ================================================================== -->
+  <!-- Phase 3: End of Day Reports -->
+  <!-- ================================================================== -->
+  <section class="print-section">
+    <h2 class="section-title">Phase 3: End of Day Reports</h2>
+
+    <p *ngIf="!checklist.eodEntries?.length" class="empty-message">
+      No end of day reports submitted.
+    </p>
+
+    <div class="eod-entry" *ngFor="let entry of getSortedEodEntries(); let i = index">
+      <h3 class="eod-entry-title">
+        EOD Report {{ i + 1 }} — {{ formatDate(entry.date) }}
+      </h3>
+
+      <table class="print-table eod-details-table">
+        <tbody>
+          <tr>
+            <td class="field-label">Personnel On-site</td>
+            <td>{{ entry.personnelOnSite || '—' }}</td>
+            <td class="field-label">Technical Lead</td>
+            <td>{{ entry.technicalLeadName || '—' }}</td>
+          </tr>
+          <tr>
+            <td class="field-label">Technicians</td>
+            <td>{{ entry.technicianNames || '—' }}</td>
+            <td class="field-label">Time In / Out</td>
+            <td>{{ formatTime(entry.timeIn) }} – {{ formatTime(entry.timeOut) }}</td>
+          </tr>
+          <tr>
+            <td class="field-label">Customer Notification</td>
+            <td colspan="3">
+              {{ entry.customerNotificationName || '—' }}
+              ({{ entry.customerNotificationMethod || '—' }})
+            </td>
+          </tr>
+          <tr>
+            <td class="field-label">Daily Pictures Provided</td>
+            <td>{{ entry.dailyPicturesProvided ? 'Yes' : 'No' }}</td>
+            <td class="field-label">EDP Redline Required</td>
+            <td>{{ entry.edpRedlineRequired ? 'Yes' : 'No' }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Daily Progress -->
+      <div class="daily-progress" *ngIf="entry.dailyProgress as dp">
+        <h4 class="progress-title">Daily Progress</h4>
+        <table class="print-table progress-table">
+          <thead>
+            <tr>
+              <th>Devices Racked</th>
+              <th>Devices Powered</th>
+              <th>Cabling Installed</th>
+              <th>Cables Tested</th>
+              <th>Labels Installed</th>
+              <th>Customer Validation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{ dp.devicesRacked ?? 0 }}%</td>
+              <td>{{ dp.devicesPowered ?? 0 }}%</td>
+              <td>{{ dp.cablingInstalledDressed ?? 0 }}%</td>
+              <td>{{ dp.cablesTested ?? 0 }}%</td>
+              <td>{{ dp.labelsInstalled ?? 0 }}%</td>
+              <td>{{ dp.customerValidation ?? 0 }}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Narratives -->
+      <div class="narratives">
+        <div class="narrative-block" *ngIf="entry.workCompletedToday">
+          <h4 class="narrative-label">Work Completed Today</h4>
+          <p class="narrative-text">{{ entry.workCompletedToday }}</p>
+        </div>
+        <div class="narrative-block" *ngIf="entry.issuesRoadblocks">
+          <h4 class="narrative-label">Issues / Roadblocks</h4>
+          <p class="narrative-text">{{ entry.issuesRoadblocks }}</p>
+        </div>
+        <div class="narrative-block" *ngIf="entry.planForTomorrow">
+          <h4 class="narrative-label">Plan for Tomorrow</h4>
+          <p class="narrative-text">{{ entry.planForTomorrow }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================== -->
+  <!-- Phase 4: Close-Out -->
+  <!-- ================================================================== -->
+  <section class="print-section" *ngIf="checklist.closeOut as co">
+    <h2 class="section-title">Phase 4: Close-Out</h2>
+
+    <!-- Equipment Hand-off -->
+    <h3 class="subsection-title">Equipment Hand-off</h3>
+    <table class="print-table contacts-table">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field-label">SRI Lead</td>
+          <td>{{ co.sriLead?.name || '—' }}</td>
+          <td>{{ co.sriLead?.company || '—' }}</td>
+          <td>{{ formatDate(co.sriLead?.date) }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Customer Lead</td>
+          <td>{{ co.customerLead?.name || '—' }}</td>
+          <td>{{ co.customerLead?.company || '—' }}</td>
+          <td>{{ formatDate(co.customerLead?.date) }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="other-participants" *ngIf="co.otherParticipants">
+      <strong>Other Participants:</strong> {{ co.otherParticipants }}
+    </p>
+
+    <!-- Required Pictures -->
+    <h3 class="subsection-title">Required Pictures</h3>
+    <div *ngFor="let category of getPictureCategories()" class="picture-category">
+      <h4 class="category-title">{{ category }}</h4>
+      <table class="print-table checklist-items-table">
+        <thead>
+          <tr>
+            <th class="col-item">Item</th>
+            <th class="col-response">Response</th>
+            <th class="col-notes">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of getPictureItemsByCategory(category)"
+              [class.response-no]="item.response === 'No'">
+            <td>{{ item.label }}</td>
+            <td>
+              <span class="response-badge"
+                    [ngClass]="{
+                      'response-yes': item.response === 'Yes',
+                      'response-no-badge': item.response === 'No',
+                      'response-na': item.response === 'NotApplicable'
+                    }">
+                {{ formatResponse(item.response) }}
+              </span>
+            </td>
+            <td>{{ item.notes || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Final Inspection -->
+    <h3 class="subsection-title">Documentation &amp; Final Inspection</h3>
+    <table class="print-table checklist-items-table" *ngIf="co.finalInspectionItems?.length">
+      <thead>
+        <tr>
+          <th class="col-item">Item</th>
+          <th class="col-response">Response</th>
+          <th class="col-notes">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of co.finalInspectionItems"
+            [class.response-no]="item.response === 'No'">
+          <td>{{ item.label }}</td>
+          <td>
+            <span class="response-badge"
+                  [ngClass]="{
+                    'response-yes': item.response === 'Yes',
+                    'response-no-badge': item.response === 'No',
+                    'response-na': item.response === 'NotApplicable'
+                  }">
+              {{ formatResponse(item.response) }}
+            </span>
+          </td>
+          <td>{{ item.notes || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Site Acceptance -->
+    <h3 class="subsection-title">Site Acceptance</h3>
+    <table class="print-table" *ngIf="co.siteAcceptance as sa">
+      <tbody>
+        <tr>
+          <td class="field-label">Customer Name</td>
+          <td>{{ sa.customerName || '—' }}</td>
+          <td class="field-label">Customer Email</td>
+          <td>{{ sa.customerEmail || '—' }}</td>
+        </tr>
+        <tr>
+          <td class="field-label">Customer Phone</td>
+          <td>{{ sa.customerPhone || '—' }}</td>
+          <td class="field-label">Date/Time Accepted</td>
+          <td>{{ formatDateTime(sa.dateTimeSiteAccepted) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>

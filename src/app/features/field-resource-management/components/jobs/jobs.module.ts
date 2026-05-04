@@ -21,6 +21,7 @@ import { JobDetailComponent } from './job-detail/job-detail.component';
 import { JobFormComponent } from './job-form/job-form.component';
 import { JobNotesComponent } from './job-notes/job-notes.component';
 import { JobStatusTimelineComponent } from './job-status-timeline/job-status-timeline.component';
+import { AttachmentPreviewDialogComponent } from './attachment-preview-dialog/attachment-preview-dialog.component';
 
 // Job Setup Workflow Components
 import { JobSetupComponent } from './job-setup/job-setup.component';
@@ -28,6 +29,15 @@ import { CustomerInfoStepComponent } from './job-setup/steps/customer-info-step.
 import { PricingBillingStepComponent } from './job-setup/steps/pricing-billing-step.component';
 import { SriInternalStepComponent } from './job-setup/steps/sri-internal-step.component';
 import { ReviewStepComponent } from './job-setup/steps/review-step.component';
+
+// Deployment Checklist Components
+import { DeploymentChecklistComponent } from './deployment-checklist/deployment-checklist.component';
+import { ChecklistPrintComponent } from './deployment-checklist/checklist-print.component';
+import { JobDetailsPhaseComponent } from './deployment-checklist/phases/job-details-phase.component';
+import { PreInstallationPhaseComponent } from './deployment-checklist/phases/pre-installation-phase.component';
+import { EodReportPhaseComponent } from './deployment-checklist/phases/eod-report-phase.component';
+import { EodEntryFormComponent } from './deployment-checklist/phases/eod-entry-form.component';
+import { CloseOutPhaseComponent } from './deployment-checklist/phases/close-out-phase.component';
 
 // Guards
 import { CreateJobGuard } from '../../guards/create-job.guard';
@@ -82,11 +92,19 @@ const routes: Routes = [
     JobFormComponent,
     JobNotesComponent,
     JobStatusTimelineComponent,
+    AttachmentPreviewDialogComponent,
     JobSetupComponent,
     CustomerInfoStepComponent,
     PricingBillingStepComponent,
     SriInternalStepComponent,
-    ReviewStepComponent
+    ReviewStepComponent,
+    JobDetailsPhaseComponent,
+    PreInstallationPhaseComponent,
+    EodReportPhaseComponent,
+    EodEntryFormComponent,
+    CloseOutPhaseComponent,
+    DeploymentChecklistComponent,
+    ChecklistPrintComponent
   ],
   imports: [
     CommonModule,

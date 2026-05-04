@@ -1,16 +1,21 @@
 /**
  * Time Entry Effects
  * Handles side effects for time entry actions (API calls)
+ * and ATLAS sync integration after successful create/update operations.
+ *
+ * Requirements: 8.1, 8.3, 8.5, 8.6
  */
 
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, withLatestFrom } from 'rxjs/operators';
+import { map, catchError, switchMap, take } from 'rxjs/operators';
 import * as TimeEntryActions from './time-entry.actions';
+import * as AtlasSyncActions from '../atlas-sync/atlas-sync.actions';
 import { selectTimeEntryById, selectActiveTimeEntry } from './time-entry.selectors';
 import { GeolocationService } from '../../services/geolocation.service';
+import { TimeTrackingService } from '../../services/time-tracking.service';
 
 @Injectable()
 export class TimeEntryEffects {
@@ -18,21 +23,8 @@ export class TimeEntryEffects {
   clockIn$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimeEntryActions.clockIn),
-      switchMap(({ jobId, technicianId, location, mileage }) =>
-        // TODO: Replace with actual TimeTrackingService call when service is implemented
-        // this.timeTrackingService.clockIn(jobId, technicianId, location, mileage).pipe(
-        of({
-          id: `time-entry-${Date.now()}`,
-          jobId,
-          technicianId,
-          clockInTime: new Date(),
-          clockInLocation: location,
-          mileage: mileage || 0,
-          isManuallyAdjusted: false,
-          isLocked: false,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        } as any).pipe( // Placeholder
+      switchMap(({ jobId, technicianId, location }) =>
+        this.timeTrackingService.clockIn(jobId, technicianId, location).pipe(
           map((timeEntry) =>
             TimeEntryActions.clockInSuccess({ timeEntry })
           ),
@@ -50,58 +42,52 @@ export class TimeEntryEffects {
   clockOut$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimeEntryActions.clockOut),
-      withLatestFrom(
-        this.actions$.pipe(
-          ofType(TimeEntryActions.clockOut),
-          switchMap(action => this.store.select(selectTimeEntryById(action.timeEntryId)))
-        )
-      ),
-      switchMap(([action, existingEntry]) => {
+      switchMap((action) => {
         const { timeEntryId, location, reason } = action;
-        
-        // Calculate mileage if not manually entered and both locations are available
-        let calculatedMileage: number | undefined;
-        
-        if (existingEntry && !existingEntry.mileage && existingEntry.clockInLocation && location) {
-          const distanceMeters = this.geolocationService.calculateDistance(
-            existingEntry.clockInLocation,
-            location
-          );
-          calculatedMileage = distanceMeters * 0.000621371; // Convert meters to miles
-        }
-        
-        // TODO: Replace with actual TimeTrackingService call when service is implemented
-        // this.timeTrackingService.clockOut(timeEntryId, location, calculatedMileage).pipe(
-        return of({
-          id: timeEntryId,
-          clockOutTime: new Date(),
-          clockOutLocation: location,
-          clockOutReason: reason,
-          totalHours: 8, // Placeholder calculation
-          mileage: calculatedMileage || existingEntry?.mileage || 0
-        } as any).pipe( // Placeholder
-          map((timeEntry) =>
-            TimeEntryActions.clockOutSuccess({ timeEntry })
-          ),
-          catchError((error) =>
-            of(TimeEntryActions.clockOutFailure({ 
-              error: error.message || 'Failed to clock out' 
-            }))
-          )
+
+        // Look up the existing entry from the store for mileage calculation
+        return this.store.select(selectTimeEntryById(timeEntryId)).pipe(
+          take(1),
+          switchMap((existingEntry) => {
+            // Calculate mileage if both locations are available
+            let calculatedMileage: number | undefined;
+            if (existingEntry && !existingEntry.mileage && existingEntry.clockInLocation && location) {
+              const distanceMeters = this.geolocationService.calculateDistance(
+                existingEntry.clockInLocation,
+                location
+              );
+              calculatedMileage = distanceMeters * 0.000621371; // meters to miles
+            }
+
+            return this.timeTrackingService.clockOut(
+              timeEntryId, location, calculatedMileage, reason
+            ).pipe(
+              map((timeEntry) =>
+                TimeEntryActions.clockOutSuccess({ timeEntry })
+              ),
+              catchError((error) =>
+                of(TimeEntryActions.clockOutFailure({
+                  error: error.message || 'Failed to clock out'
+                }))
+              )
+            );
+          })
         );
       })
     )
   );
 
   // Load Time Entries Effect
-  // Uses upsertMany in the reducer so existing entries are preserved, not replaced.
-  // TODO: Replace with actual API call when backend is ready.
   loadTimeEntries$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimeEntryActions.loadTimeEntries),
-      switchMap(() =>
-        // TODO: Replace with actual TimeTrackingService call
-        of([]).pipe(
+      switchMap(({ technicianId, jobId, dateRange }) =>
+        this.timeTrackingService.getTimeEntries({
+          technicianId,
+          jobId,
+          startDate: dateRange?.startDate,
+          endDate: dateRange?.endDate
+        }).pipe(
           map((timeEntries) =>
             TimeEntryActions.loadTimeEntriesSuccess({ timeEntries })
           ),
@@ -120,9 +106,7 @@ export class TimeEntryEffects {
     this.actions$.pipe(
       ofType(TimeEntryActions.updateTimeEntry),
       switchMap(({ id, timeEntry }) =>
-        // TODO: Replace with actual TimeTrackingService call when service is implemented
-        // this.timeTrackingService.updateTimeEntry(id, timeEntry).pipe(
-        of({ id, ...timeEntry } as any).pipe( // Placeholder
+        this.timeTrackingService.updateTimeEntry(id, timeEntry).pipe(
           map((updatedTimeEntry) =>
             TimeEntryActions.updateTimeEntrySuccess({ timeEntry: updatedTimeEntry })
           ),
@@ -137,15 +121,11 @@ export class TimeEntryEffects {
   );
 
   // Load Active Entry Effect
-  // Returns existing active entry from store until a real API is wired up.
   loadActiveEntry$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimeEntryActions.loadActiveEntry),
-      withLatestFrom(this.store.select(selectActiveTimeEntry)),
-      switchMap(([_action, existingActive]) =>
-        // TODO: Replace with actual TimeTrackingService call when service is implemented
-        // this.timeTrackingService.getActiveTimeEntry(technicianId).pipe(
-        of(existingActive).pipe(
+      switchMap(({ technicianId }) =>
+        this.timeTrackingService.getActiveTimeEntry(technicianId).pipe(
           map((timeEntry) =>
             TimeEntryActions.loadActiveEntrySuccess({ timeEntry })
           ),
@@ -159,11 +139,55 @@ export class TimeEntryEffects {
     )
   );
 
+  /**
+   * Effect: Sync to ATLAS after successful clock-in
+   *
+   * Dispatches syncToAtlas with the newly created time entry so that
+   * the entry is synchronized with the ATLAS backend immediately.
+   *
+   * Requirements: 8.1, 8.3
+   */
+  syncAfterClockIn$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimeEntryActions.clockInSuccess),
+      map(({ timeEntry }) => AtlasSyncActions.syncToAtlas({ entry: timeEntry }))
+    )
+  );
+
+  /**
+   * Effect: Sync to ATLAS after successful clock-out
+   *
+   * Dispatches syncToAtlas with the updated time entry so that
+   * the clock-out data is synchronized with the ATLAS backend.
+   *
+   * Requirements: 8.1, 8.3
+   */
+  syncAfterClockOut$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimeEntryActions.clockOutSuccess),
+      map(({ timeEntry }) => AtlasSyncActions.syncToAtlas({ entry: timeEntry }))
+    )
+  );
+
+  /**
+   * Effect: Sync to ATLAS after successful time entry update
+   *
+   * Dispatches syncToAtlas with the updated time entry so that
+   * any modifications are synchronized with the ATLAS backend.
+   *
+   * Requirements: 8.1, 8.3
+   */
+  syncAfterUpdate$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimeEntryActions.updateTimeEntrySuccess),
+      map(({ timeEntry }) => AtlasSyncActions.syncToAtlas({ entry: timeEntry }))
+    )
+  );
+
   constructor(
     private actions$: Actions,
     private store: Store,
-    private geolocationService: GeolocationService
-    // TODO: Inject TimeTrackingService when implemented
-    // private timeTrackingService: TimeTrackingService
+    private geolocationService: GeolocationService,
+    private timeTrackingService: TimeTrackingService
   ) {}
 }

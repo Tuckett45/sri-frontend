@@ -9,11 +9,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { CalendarViewComponent } from './calendar-view.component';
 import { CalendarViewType, ScheduleViewMode } from '../../../state/ui/ui.state';
 import { JobStatus } from '../../../models/job.model';
 import * as UIActions from '../../../state/ui/ui.actions';
+import * as AssignmentActions from '../../../state/assignments/assignment.actions';
+import * as JobActions from '../../../state/jobs/job.actions';
+import * as TechnicianActions from '../../../state/technicians/technician.actions';
+import * as CrewActions from '../../../state/crews/crew.actions';
 
 describe('CalendarViewComponent', () => {
   let component: CalendarViewComponent;
@@ -49,12 +56,15 @@ describe('CalendarViewComponent', () => {
       imports: [
         RouterTestingModule,
         DragDropModule,
+        NoopAnimationsModule,
         MatButtonToggleModule,
         MatIconModule,
         MatButtonModule,
         MatMenuModule,
-        MatDividerModule
+        MatDividerModule,
+        MatTooltipModule
       ],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({ initialState }),
         { provide: MatSnackBar, useValue: snackBarSpy },
@@ -156,5 +166,39 @@ describe('CalendarViewComponent', () => {
     component.ngOnDestroy();
     expect(destroySpy).toHaveBeenCalled();
     expect(completeSpy).toHaveBeenCalled();
+  });
+
+  it('should display loading indicator when loading is true', () => {
+    store.setState({
+      ...initialState,
+      assignments: { ...initialState.assignments, loading: true }
+    });
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.loading-container')).toBeTruthy();
+    expect(compiled.querySelector('mat-spinner')).toBeTruthy();
+  });
+
+  it('should display error message when error is set', () => {
+    store.setState({
+      ...initialState,
+      assignments: { ...initialState.assignments, error: 'Failed to load schedule' }
+    });
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.error-card')).toBeTruthy();
+    expect(compiled.textContent).toContain('Failed to load schedule');
+  });
+
+  it('should dispatch load actions on retry', () => {
+    const dispatchSpy = spyOn(store, 'dispatch');
+    component.onRetry();
+
+    expect(dispatchSpy).toHaveBeenCalledWith(TechnicianActions.loadTechnicians({ filters: {} }));
+    expect(dispatchSpy).toHaveBeenCalledWith(JobActions.loadJobs({ filters: {} }));
+    expect(dispatchSpy).toHaveBeenCalledWith(AssignmentActions.loadAssignments({}));
+    expect(dispatchSpy).toHaveBeenCalledWith(CrewActions.loadCrews({}));
   });
 });

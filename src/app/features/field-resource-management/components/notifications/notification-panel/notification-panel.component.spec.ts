@@ -4,6 +4,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { NotificationPanelComponent } from './notification-panel.component';
@@ -46,6 +48,8 @@ describe('NotificationPanelComponent', () => {
         MatBadgeModule,
         MatButtonModule,
         MatDividerModule,
+        MatTooltipModule,
+        NoopAnimationsModule,
         RouterTestingModule
       ],
       providers: [

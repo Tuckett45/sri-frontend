@@ -6,6 +6,7 @@
 import { createAction, props } from '@ngrx/store';
 import { TimeEntry, GeoLocation } from '../../models/time-entry.model';
 import { UpdateTimeEntryDto } from '../../models/dtos/time-entry.dto';
+import { TimeCategory, PayType } from '../../../../models/time-payroll.enum';
 
 // Clock In
 export const clockIn = createAction(
@@ -90,4 +91,22 @@ export const loadActiveEntryFailure = createAction(
 // Clear Active Entry
 export const clearActiveEntry = createAction(
   '[Time Entry] Clear Active Entry'
+);
+
+// Time Category
+export const setTimeCategory = createAction(
+  '[Time Entry] Set Time Category',
+  props<{ entryId: string; category: TimeCategory; previousCategory: TimeCategory }>()
+);
+
+// Pay Type Classification
+export const classifyPayType = createAction(
+  '[Time Entry] Classify Pay Type',
+  props<{ entryId: string; payType: PayType }>()
+);
+
+// PTO Request
+export const requestPto = createAction(
+  '[Time Entry] Request PTO',
+  props<{ technicianId: string; date: Date; hours: number }>()
 );

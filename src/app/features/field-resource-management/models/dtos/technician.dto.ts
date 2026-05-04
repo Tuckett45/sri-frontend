@@ -2,24 +2,19 @@
  * Data Transfer Objects for Technician API requests
  */
 
-import { TechnicianRole, EmploymentType, Skill, Certification, Availability } from '../technician.model';
-import { GeoLocation } from '../time-entry.model';
+import { TechnicianRole, Skill, Certification, Availability } from '../technician.model';
 
 export interface CreateTechnicianDto {
-  technicianId: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   role: TechnicianRole;
-  employmentType: EmploymentType;
-  homeBase: string;
   region: string;
+  isAvailable?: boolean;
   skills?: Skill[];
-  certifications?: Certification[];
-  availability?: Availability[];
-  hourlyCostRate?: number;
-  canTravel?: boolean;
+  certifications?: Omit<Certification, 'id' | 'status'>[];
+  availability?: Omit<Availability, 'id'>[];
 }
 
 export interface UpdateTechnicianDto {
@@ -28,14 +23,12 @@ export interface UpdateTechnicianDto {
   email?: string;
   phone?: string;
   role?: TechnicianRole;
-  employmentType?: EmploymentType;
-  homeBase?: string;
   region?: string;
-  skills?: Skill[];
-  certifications?: Certification[];
-  availability?: Availability[];
-  hourlyCostRate?: number;
+  isAvailable?: boolean;
   isActive?: boolean;
-  canTravel?: boolean;
-  currentLocation?: GeoLocation;
+  lastKnownLatitude?: number;
+  lastKnownLongitude?: number;
+  skills?: Skill[];
+  certifications?: Omit<Certification, 'id' | 'status'>[];
+  availability?: Omit<Availability, 'id'>[];
 }

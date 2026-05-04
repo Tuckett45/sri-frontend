@@ -29,7 +29,14 @@ export type FrmPermissionKey =
   | 'canViewW2'
   | 'canAccessAdminPanel'
   | 'canViewReadOnly'
-  | 'canManageOnboarding';
+  | 'canManageOnboarding'
+  | 'canViewDeploymentChecklist'
+  | 'canEditDeploymentChecklist'
+  | 'canSubmitEODReport'
+  | 'canCreateQuote'
+  | 'canEditQuote'
+  | 'canValidateBOM'
+  | 'canViewQuote';
 
 export type FrmPermissionSet = Record<FrmPermissionKey, boolean>;
 
@@ -62,6 +69,13 @@ const ALL_FALSE: FrmPermissionSet = {
   canAccessAdminPanel: false,
   canViewReadOnly: false,
   canManageOnboarding: false,
+  canViewDeploymentChecklist: false,
+  canEditDeploymentChecklist: false,
+  canSubmitEODReport: false,
+  canCreateQuote: false,
+  canEditQuote: false,
+  canValidateBOM: false,
+  canViewQuote: false,
 };
 
 const FIELD_GROUP_PERMISSIONS: FrmPermissionSet = {
@@ -71,10 +85,13 @@ const FIELD_GROUP_PERMISSIONS: FrmPermissionSet = {
   canViewOwnSchedule: true,
   canTrackTime: true,
   canSubmitTimecard: true,
+  canViewDeploymentChecklist: true,
+  canSubmitEODReport: true,
 };
 
 const MANAGER_GROUP_PERMISSIONS: FrmPermissionSet = {
   ...FIELD_GROUP_PERMISSIONS,
+  canCreateJob: true,
   canViewAllSchedules: true,
   canEditSchedule: true,
   canAssignCrew: true,
@@ -85,6 +102,10 @@ const MANAGER_GROUP_PERMISSIONS: FrmPermissionSet = {
   canEditMileage: true,
   canViewReports: true,
   canViewManagementReports: true,
+  canEditDeploymentChecklist: true,
+  canCreateQuote: true,
+  canEditQuote: true,
+  canViewQuote: true,
 };
 
 const HR_GROUP_PERMISSIONS: FrmPermissionSet = {
@@ -141,6 +162,13 @@ const ADMIN_PERMISSIONS: FrmPermissionSet = {
   canAccessAdminPanel: true,
   canViewReadOnly: true,
   canManageOnboarding: true,
+  canViewDeploymentChecklist: true,
+  canEditDeploymentChecklist: true,
+  canSubmitEODReport: true,
+  canCreateQuote: true,
+  canEditQuote: true,
+  canValidateBOM: true,
+  canViewQuote: true,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -148,7 +176,10 @@ export class FrmPermissionService {
   private readonly permissionMap: Record<string, FrmPermissionSet> = {
     // Field_Group
     [UserRole.Technician]: FIELD_GROUP_PERMISSIONS,
-    [UserRole.DeploymentEngineer]: FIELD_GROUP_PERMISSIONS,
+    [UserRole.DeploymentEngineer]: {
+      ...FIELD_GROUP_PERMISSIONS,
+      canEditDeploymentChecklist: true,
+    },
     [UserRole.CM]: FIELD_GROUP_PERMISSIONS,
     [UserRole.SRITech]: FIELD_GROUP_PERMISSIONS,
 
@@ -158,7 +189,14 @@ export class FrmPermissionService {
     [UserRole.DCOps]: MANAGER_GROUP_PERMISSIONS,
     [UserRole.OSPCoordinator]: MANAGER_GROUP_PERMISSIONS,
     [UserRole.EngineeringFieldSupport]: MANAGER_GROUP_PERMISSIONS,
-    [UserRole.MaterialsManager]: MANAGER_GROUP_PERMISSIONS,
+    [UserRole.MaterialsManager]: {
+      ...MANAGER_GROUP_PERMISSIONS,
+      canViewDeploymentChecklist: false,
+      canEditDeploymentChecklist: false,
+      canSubmitEODReport: false,
+      canCreateQuote: false,
+      canValidateBOM: true,
+    },
     [UserRole.Manager]: MANAGER_GROUP_PERMISSIONS,
 
     // HR_Group

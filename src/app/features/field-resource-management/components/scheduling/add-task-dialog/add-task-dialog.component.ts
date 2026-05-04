@@ -104,6 +104,8 @@ export class AddTaskDialogComponent implements OnInit, OnDestroy {
         state: v.siteState,
         zipCode: v.siteZip
       },
+      market: '',
+      region: '',
       jobType: v.jobType,
       priority: v.priority,
       scopeDescription: v.scopeDescription || '',

@@ -20,7 +20,7 @@ import * as TechnicianActions from '../../../state/technicians/technician.action
 import * as CrewActions from '../../../state/crews/crew.actions';
 
 import { selectCalendarView, selectSelectedDate, selectScheduleViewMode } from '../../../state/ui/ui.selectors';
-import { selectAllAssignments, selectAssignmentConflicts } from '../../../state/assignments/assignment.selectors';
+import { selectAllAssignments, selectAssignmentConflicts, selectAssignmentsLoading, selectAssignmentsError } from '../../../state/assignments/assignment.selectors';
 import { selectAllJobs } from '../../../state/jobs/job.selectors';
 import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
 import { selectAllCrews } from '../../../state/crews/crew.selectors';
@@ -68,6 +68,8 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   // Grid data
   timeSlots: Date[] = [];
   scheduleRows: ScheduleRow[] = [];
+  loading: boolean = false;
+  error: string | null = null;
 
   // Enums for template
   CalendarViewType = CalendarViewType;
@@ -126,6 +128,20 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
         this.buildTimeSlots();
         this.buildScheduleRows();
       });
+
+    // Subscribe to loading state
+    this.store.select(selectAssignmentsLoading)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(loading => {
+        this.loading = loading;
+      });
+
+    // Subscribe to error state
+    this.store.select(selectAssignmentsError)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(error => {
+        this.error = error;
+      });
   }
 
   ngOnDestroy(): void {
@@ -157,6 +173,13 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
   onToday(): void {
     this.store.dispatch(UIActions.setSelectedDate({ date: new Date() }));
+  }
+
+  onRetry(): void {
+    this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
+    this.store.dispatch(JobActions.loadJobs({ filters: {} }));
+    this.store.dispatch(AssignmentActions.loadAssignments({}));
+    this.store.dispatch(CrewActions.loadCrews({}));
   }
 
   // ── Time slots ─────────────────────────────────────────────────────

@@ -1,0 +1,211 @@
+<!-- Draft Restored Banner -->
+<div class="draft-banner" *ngIf="showDraftBanner" role="alert">
+  <mat-icon>info</mat-icon>
+  <span>Unsaved changes have been restored.</span>
+  <button mat-button color="warn" (click)="discardDraft()" type="button">Discard</button>
+  <button mat-icon-button (click)="dismissDraftBanner()" aria-label="Dismiss notification" type="button">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="onSave()" class="close-out-form">
+
+  <!-- ===================================================================== -->
+  <!-- Equipment Hand-off and Validation -->
+  <!-- ===================================================================== -->
+  <section class="form-section">
+    <h4 class="section-heading">Equipment Hand-off and Validation</h4>
+
+    <!-- SRI Lead -->
+    <div class="participant-group" formGroupName="sriLead">
+      <h5 class="sub-heading">SRI Lead</h5>
+      <div class="participant-fields">
+        <mat-form-field appearance="outline">
+          <mat-label>Company</mat-label>
+          <input matInput formControlName="company" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="sriLeadDatePicker" formControlName="date" />
+          <mat-datepicker-toggle matSuffix [for]="sriLeadDatePicker"></mat-datepicker-toggle>
+          <mat-datepicker #sriLeadDatePicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Customer Lead -->
+    <div class="participant-group" formGroupName="customerLead">
+      <h5 class="sub-heading">Customer Lead</h5>
+      <div class="participant-fields">
+        <mat-form-field appearance="outline">
+          <mat-label>Company</mat-label>
+          <input matInput formControlName="company" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="customerLeadDatePicker" formControlName="date" />
+          <mat-datepicker-toggle matSuffix [for]="customerLeadDatePicker"></mat-datepicker-toggle>
+          <mat-datepicker #customerLeadDatePicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Other Participants -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Other Participants</mat-label>
+      <textarea matInput
+                formControlName="otherParticipants"
+                rows="3"
+                placeholder="List any other participants in the hand-off"></textarea>
+    </mat-form-field>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Required Pictures -->
+  <!-- ===================================================================== -->
+  <section class="form-section">
+    <h4 class="section-heading">Required Pictures</h4>
+
+    <div formArrayName="requiredPictures">
+      <ng-container *ngFor="let category of getPictureCategories()">
+        <h5 class="category-heading">{{ category }}</h5>
+
+        <div *ngFor="let idx of getPictureItemsByCategory(category)"
+             [formGroupName]="idx"
+             class="checklist-item">
+
+          <!-- Item Header Row -->
+          <div class="checklist-item-header">
+            <span class="item-label">{{ requiredPicturesItems[idx].label }}</span>
+          </div>
+
+          <!-- Response Radio Group -->
+          <mat-radio-group formControlName="response"
+                           class="response-radio-group"
+                           [attr.aria-label]="requiredPicturesItems[idx].label + ' response'">
+            <mat-radio-button value="Yes" class="response-option">Yes</mat-radio-button>
+            <mat-radio-button value="No" class="response-option">No</mat-radio-button>
+            <mat-radio-button value="NotApplicable" class="response-option">N/A</mat-radio-button>
+          </mat-radio-group>
+
+          <!-- Optional Notes -->
+          <mat-form-field appearance="outline" class="notes-field">
+            <mat-label>Notes</mat-label>
+            <textarea matInput
+                      formControlName="notes"
+                      rows="2"
+                      maxlength="1000"
+                      placeholder="Optional notes for this item"></textarea>
+            <mat-hint align="end">{{ getPictureItemGroup(idx).get('notes')?.value?.length || 0 }} / 1000</mat-hint>
+            <mat-error *ngIf="getPictureItemGroup(idx).get('notes')?.hasError('maxlength')">
+              Maximum 1000 characters
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </ng-container>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Documentation and Final Inspection -->
+  <!-- ===================================================================== -->
+  <section class="form-section">
+    <h4 class="section-heading">Documentation and Final Inspection</h4>
+
+    <div formArrayName="finalInspectionItems">
+      <div *ngFor="let item of finalInspection.controls; let i = index"
+           [formGroupName]="i"
+           class="checklist-item">
+
+        <!-- Item Header Row -->
+        <div class="checklist-item-header">
+          <span class="item-number">{{ i + 1 }}.</span>
+          <span class="item-label">{{ finalInspectionItems[i] }}</span>
+        </div>
+
+        <!-- Response Radio Group -->
+        <mat-radio-group formControlName="response"
+                         class="response-radio-group"
+                         [attr.aria-label]="finalInspectionItems[i] + ' response'">
+          <mat-radio-button value="Yes" class="response-option">Yes</mat-radio-button>
+          <mat-radio-button value="No" class="response-option">No</mat-radio-button>
+          <mat-radio-button value="NotApplicable" class="response-option">N/A</mat-radio-button>
+        </mat-radio-group>
+
+        <!-- Optional Notes -->
+        <mat-form-field appearance="outline" class="notes-field">
+          <mat-label>Notes</mat-label>
+          <textarea matInput
+                    formControlName="notes"
+                    rows="2"
+                    maxlength="1000"
+                    placeholder="Optional notes for this item"></textarea>
+          <mat-hint align="end">{{ getInspectionItemGroup(i).get('notes')?.value?.length || 0 }} / 1000</mat-hint>
+          <mat-error *ngIf="getInspectionItemGroup(i).get('notes')?.hasError('maxlength')">
+            Maximum 1000 characters
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Site Acceptance -->
+  <!-- ===================================================================== -->
+  <section class="form-section" formGroupName="siteAcceptance">
+    <h4 class="section-heading">Site Acceptance</h4>
+
+    <div class="site-acceptance-fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Customer Name</mat-label>
+        <input matInput formControlName="customerName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Customer Email</mat-label>
+        <input matInput formControlName="customerEmail" type="email" />
+        <mat-error *ngIf="siteAcceptance.get('customerEmail')?.hasError('email')">
+          Enter a valid email address
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Customer Phone</mat-label>
+        <input matInput formControlName="customerPhone" type="tel" />
+        <mat-error *ngIf="siteAcceptance.get('customerPhone')?.hasError('phoneNumber')">
+          Enter a valid 10-digit US phone number
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Date/Time Site Accepted</mat-label>
+        <input matInput [matDatepicker]="siteAcceptedDatePicker" formControlName="dateTimeSiteAccepted" />
+        <mat-datepicker-toggle matSuffix [for]="siteAcceptedDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #siteAcceptedDatePicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Save Button -->
+  <!-- ===================================================================== -->
+  <div class="form-actions" *ngIf="canEdit">
+    <button mat-raised-button color="primary" type="submit">
+      <mat-icon>save</mat-icon>
+      Save Close-Out
+    </button>
+  </div>
+
+</form>

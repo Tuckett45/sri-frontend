@@ -3,6 +3,7 @@ import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/c
 import { Observable, from, switchMap } from 'rxjs';
 import { AtlasAuthService } from '../services/atlas-auth.service';
 import { AtlasConfigService } from '../services/atlas-config.service';
+import { ApiHeadersService } from '../../../services/api-headers.service';
 
 /**
  * AtlasAuthInterceptor
@@ -22,6 +23,7 @@ import { AtlasConfigService } from '../services/atlas-config.service';
 export class AtlasAuthInterceptor implements HttpInterceptor {
   private readonly authService = inject(AtlasAuthService);
   private readonly configService = inject(AtlasConfigService);
+  private readonly apiHeadersService = inject(ApiHeadersService);
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Only intercept ATLAS API requests
@@ -48,6 +50,10 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
 
         // Add ATLAS-specific headers (Requirement 1.3)
         const atlasHeaders: { [key: string]: string } = {};
+
+        // Add Azure API Management subscription key
+        const subscriptionKey = this.apiHeadersService.getApiSubscriptionKey() || 'ffd675634ab645d7845640bb88d672d8';
+        atlasHeaders['Ocp-Apim-Subscription-Key'] = subscriptionKey;
 
         // Add API version header
         const apiVersion = this.configService.getApiVersion();

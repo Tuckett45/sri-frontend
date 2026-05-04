@@ -95,6 +95,13 @@ export class MockDataService {
         totalExpenses: 0,
         timeEntries: completedEntries,
         expenses: [],
+        driveTimeHours: 0,
+        onSiteHours: 0,
+        holidayHours: 0,
+        ptoHours: 0,
+        totalBillableAmount: 0,
+        totalLaborCost: 0,
+        isAutoSubmitted: false,
         createdAt: weekStart,
         updatedAt: now
       }
@@ -191,8 +198,7 @@ export class MockDataService {
       }
 
       const skills: Skill[] = skillTemplates.slice(0, 2 + (i % 4)).map(s => ({
-        ...s,
-        verifiedDate: new Date('2023-01-01')
+        ...s
       }));
 
       const certifications: Certification[] = certificationTemplates.slice(0, 1 + (i % 3));

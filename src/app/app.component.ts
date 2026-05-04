@@ -10,7 +10,7 @@ import * as TechnicianActions from './features/field-resource-management/state/t
 import * as CrewActions from './features/field-resource-management/state/crews/crew.actions';
 import * as JobActions from './features/field-resource-management/state/jobs/job.actions';
 import * as AssignmentActions from './features/field-resource-management/state/assignments/assignment.actions';
-import { Technician, TechnicianRole, EmploymentType, SkillLevel } from './features/field-resource-management/models/technician.model';
+import { Technician, TechnicianRole, SkillLevel } from './features/field-resource-management/models/technician.model';
 import { Crew, CrewStatus } from './features/field-resource-management/models/crew.model';
 import { Job, JobType, Priority, JobStatus } from './features/field-resource-management/models/job.model';
 import { Assignment, AssignmentStatus } from './features/field-resource-management/models/assignment.model';
@@ -124,127 +124,90 @@ export class AppComponent {
   }
 
   private getMockTechnicians(): Technician[] {
-    return [
-      {
-        id: 'tech-001',
-        technicianId: 'T-001',
-        firstName: 'John',
-        lastName: 'Smith',
-        email: 'john.smith@example.com',
-        phone: '555-0101',
-        role: TechnicianRole.Lead,
-        employmentType: EmploymentType.W2,
-        homeBase: 'Atlanta, GA',
-        region: 'Southeast',
-        skills: [
-          { id: 's1', name: 'Fiber Splicing', category: 'Installation', level: SkillLevel.Expert, verifiedDate: new Date('2023-01-15') },
-          { id: 's2', name: 'OTDR Testing', category: 'Testing', level: SkillLevel.Advanced }
-        ],
-        certifications: [],
-        availability: [],
-        hourlyCostRate: 75,
-        isActive: true,
-        canTravel: true,
-        currentLocation: { latitude: 33.7490, longitude: -84.3880, accuracy: 10, timestamp: new Date() },
-        createdAt: new Date('2023-01-15'),
-        updatedAt: new Date()
-      },
-      {
-        id: 'tech-002',
-        technicianId: 'T-002',
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        email: 'sarah.johnson@example.com',
-        phone: '555-0102',
-        role: TechnicianRole.Level3,
-        employmentType: EmploymentType.W2,
-        homeBase: 'Atlanta, GA',
-        region: 'Southeast',
-        skills: [
-          { id: 's3', name: 'Cable Installation', category: 'Installation', level: SkillLevel.Advanced },
-          { id: 's4', name: 'Network Testing', category: 'Testing', level: SkillLevel.Intermediate }
-        ],
-        certifications: [],
-        availability: [],
-        hourlyCostRate: 65,
-        isActive: true,
-        canTravel: true,
-        currentLocation: { latitude: 33.7550, longitude: -84.3900, accuracy: 15, timestamp: new Date() },
-        createdAt: new Date('2023-02-01'),
-        updatedAt: new Date()
-      },
-      {
-        id: 'tech-003',
-        technicianId: 'T-003',
-        firstName: 'Michael',
-        lastName: 'Davis',
-        email: 'michael.davis@example.com',
-        phone: '555-0103',
-        role: TechnicianRole.Level2,
-        employmentType: EmploymentType.Contractor1099,
-        homeBase: 'Atlanta, GA',
-        region: 'Southeast',
-        skills: [
-          { id: 's5', name: 'Fiber Splicing', category: 'Installation', level: SkillLevel.Intermediate },
-          { id: 's6', name: 'Equipment Installation', category: 'Installation', level: SkillLevel.Advanced }
-        ],
-        certifications: [],
-        availability: [],
-        isActive: true,
-        canTravel: false,
-        currentLocation: { latitude: 33.7600, longitude: -84.3950, accuracy: 12, timestamp: new Date() },
-        createdAt: new Date('2023-03-10'),
-        updatedAt: new Date()
-      },
-      {
-        id: 'tech-004',
-        technicianId: 'T-004',
-        firstName: 'Emily',
-        lastName: 'Wilson',
-        email: 'emily.wilson@example.com',
-        phone: '555-0104',
-        role: TechnicianRole.Level3,
-        employmentType: EmploymentType.W2,
-        homeBase: 'Dallas, TX',
-        region: 'Southwest',
-        skills: [
-          { id: 's7', name: 'Site Survey', category: 'Planning', level: SkillLevel.Expert },
-          { id: 's8', name: 'Documentation', category: 'Administrative', level: SkillLevel.Advanced }
-        ],
-        certifications: [],
-        availability: [],
-        hourlyCostRate: 70,
-        isActive: true,
-        canTravel: true,
-        currentLocation: { latitude: 32.7767, longitude: -96.7970, accuracy: 8, timestamp: new Date() },
-        createdAt: new Date('2023-01-20'),
-        updatedAt: new Date()
-      },
-      {
-        id: 'tech-005',
-        technicianId: 'T-005',
-        firstName: 'Robert',
-        lastName: 'Brown',
-        email: 'robert.brown@example.com',
-        phone: '555-0105',
-        role: TechnicianRole.Installer,
-        employmentType: EmploymentType.Contractor1099,
-        homeBase: 'Dallas, TX',
-        region: 'Southwest',
-        skills: [
-          { id: 's9', name: 'Cable Installation', category: 'Installation', level: SkillLevel.Beginner },
-          { id: 's10', name: 'Basic Testing', category: 'Testing', level: SkillLevel.Beginner }
-        ],
-        certifications: [],
-        availability: [],
-        isActive: true,
-        canTravel: false,
-        currentLocation: { latitude: 32.7800, longitude: -96.8000, accuracy: 20, timestamp: new Date() },
-        createdAt: new Date('2024-01-05'),
-        updatedAt: new Date()
-      }
-    ];
-  }
+      return [
+        {
+          id: 'tech-001',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john.smith@example.com',
+          phone: '555-0101',
+          role: TechnicianRole.Lead,
+          region: 'Southeast',
+          isAvailable: true,
+          isActive: true,
+          lastKnownLatitude: 33.7490,
+          lastKnownLongitude: -84.3880,
+          locationUpdatedAt: new Date(),
+          createdAt: new Date('2023-01-15'),
+          updatedAt: new Date()
+        },
+        {
+          id: 'tech-002',
+          firstName: 'Sarah',
+          lastName: 'Johnson',
+          email: 'sarah.johnson@example.com',
+          phone: '555-0102',
+          role: TechnicianRole.Level3,
+          region: 'Southeast',
+          isAvailable: true,
+          isActive: true,
+          lastKnownLatitude: 33.7550,
+          lastKnownLongitude: -84.3900,
+          locationUpdatedAt: new Date(),
+          createdAt: new Date('2023-02-01'),
+          updatedAt: new Date()
+        },
+        {
+          id: 'tech-003',
+          firstName: 'Michael',
+          lastName: 'Davis',
+          email: 'michael.davis@example.com',
+          phone: '555-0103',
+          role: TechnicianRole.Level2,
+          region: 'Southeast',
+          isAvailable: true,
+          isActive: true,
+          lastKnownLatitude: 33.7600,
+          lastKnownLongitude: -84.3950,
+          locationUpdatedAt: new Date(),
+          createdAt: new Date('2023-03-10'),
+          updatedAt: new Date()
+        },
+        {
+          id: 'tech-004',
+          firstName: 'Emily',
+          lastName: 'Wilson',
+          email: 'emily.wilson@example.com',
+          phone: '555-0104',
+          role: TechnicianRole.Level3,
+          region: 'Southwest',
+          isAvailable: true,
+          isActive: true,
+          lastKnownLatitude: 32.7767,
+          lastKnownLongitude: -96.7970,
+          locationUpdatedAt: new Date(),
+          createdAt: new Date('2023-01-20'),
+          updatedAt: new Date()
+        },
+        {
+          id: 'tech-005',
+          firstName: 'Robert',
+          lastName: 'Brown',
+          email: 'robert.brown@example.com',
+          phone: '555-0105',
+          role: TechnicianRole.Installer,
+          region: 'Southwest',
+          isAvailable: true,
+          isActive: true,
+          lastKnownLatitude: 32.7800,
+          lastKnownLongitude: -96.8000,
+          locationUpdatedAt: new Date(),
+          createdAt: new Date('2024-01-05'),
+          updatedAt: new Date()
+        }
+      ];
+    }
+
 
   private getMockCrews(): Crew[] {
     return [

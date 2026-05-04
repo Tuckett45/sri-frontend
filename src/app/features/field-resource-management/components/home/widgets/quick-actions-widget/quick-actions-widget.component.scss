@@ -21,7 +21,7 @@
       gap: 1rem;
       flex-wrap: wrap;
 
-      a {
+      a, button {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -41,7 +41,8 @@
         }
 
         // Primary buttons (blue)
-        &.mat-raised-button.mat-primary {
+        &.mat-raised-button.mat-primary,
+        &.mat-mdc-raised-button.mat-primary {
           background-color: #144f80 !important;
           color: #ffffff !important;
 
@@ -57,6 +58,7 @@
 
         // Accent / orange buttons
         &.mat-raised-button.mat-accent,
+        &.mat-mdc-raised-button.mat-accent,
         &.btn-orange {
           background-color: #e18a25 !important;
           color: #ffffff !important;
@@ -70,6 +72,21 @@
             box-shadow: 0 4px 12px rgba(225, 138, 37, 0.3);
           }
         }
+
+        // Green buttons
+        &.btn-green {
+          background-color: #2e7d32 !important;
+          color: #ffffff !important;
+
+          mat-icon {
+            color: #ffffff !important;
+          }
+
+          &:hover:not([disabled]) {
+            background-color: #1b5e20 !important;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+          }
+        }
       }
     }
   }
@@ -81,7 +98,7 @@
     flex-direction: column;
     gap: 0.5rem;
 
-    a {
+    a, button {
       width: 100%;
       padding: 0.625rem 1rem;
       font-size: 14px;

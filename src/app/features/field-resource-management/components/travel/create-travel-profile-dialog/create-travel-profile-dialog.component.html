@@ -1,0 +1,104 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon class="dialog-title-icon">person_add</mat-icon>
+  Create Travel Profile
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="profileForm" class="create-form">
+    <!-- Technician Selection -->
+    <div class="form-section">
+      <h3 class="section-label">Technician</h3>
+      <ng-container *ngIf="!preselectedTechnicianId; else preselectedTech">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Select Technician</mat-label>
+          <mat-select formControlName="technicianId">
+            <mat-option *ngFor="let tech of availableTechnicians$ | async" [value]="tech.id">
+              {{ tech.name }} <span class="tech-region">({{ tech.region }})</span>
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="profileForm.get('technicianId')?.hasError('required')">
+            Please select a technician
+          </mat-error>
+          <mat-hint>Only technicians without an existing travel profile are shown</mat-hint>
+        </mat-form-field>
+      </ng-container>
+      <ng-template #preselectedTech>
+        <div class="preselected-tech">
+          <mat-icon>person</mat-icon>
+          <span class="preselected-tech-name">{{ preselectedTechnicianName || 'Loading...' }}</span>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Travel Willingness -->
+    <div class="form-section toggle-section">
+      <h3 class="section-label">Travel Willingness</h3>
+      <div class="toggle-row">
+        <mat-slide-toggle formControlName="willingToTravel" color="primary">
+          {{ profileForm.get('willingToTravel')?.value ? 'Willing to Travel' : 'Not Willing to Travel' }}
+        </mat-slide-toggle>
+      </div>
+    </div>
+
+    <!-- Home Address -->
+    <div class="form-section">
+      <h3 class="section-label">Home Address</h3>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Street Address</mat-label>
+        <input matInput formControlName="street">
+        <mat-error>{{ getFieldError('street') }}</mat-error>
+      </mat-form-field>
+      <div class="address-row">
+        <mat-form-field appearance="outline" class="city-field">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city">
+          <mat-error>{{ getFieldError('city') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="state-field">
+          <mat-label>State</mat-label>
+          <input matInput formControlName="state" maxlength="2">
+          <mat-error>{{ getFieldError('state') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="postal-field">
+          <mat-label>Zip</mat-label>
+          <input matInput formControlName="postalCode">
+          <mat-error>{{ getFieldError('postalCode') }}</mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Travel Preferences (optional) -->
+    <div class="form-section">
+      <h3 class="section-label">Preferences <span class="optional-tag">Optional</span></h3>
+      <div class="preferences-row">
+        <mat-form-field appearance="outline" class="radius-field">
+          <mat-label>Max Radius (miles)</mat-label>
+          <input matInput type="number" formControlName="maxTravelRadiusMiles">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="transport-field">
+          <mat-label>Transportation</mat-label>
+          <mat-select formControlName="preferredTransportation">
+            <mat-option [value]="TransportationMode.Any">Any</mat-option>
+            <mat-option [value]="TransportationMode.PersonalVehicle">Personal Vehicle</mat-option>
+            <mat-option [value]="TransportationMode.CompanyVehicle">Company Vehicle</mat-option>
+            <mat-option [value]="TransportationMode.Flight">Flight</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Notes / Restrictions</mat-label>
+        <textarea matInput formControlName="notes" rows="2"></textarea>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button color="warn" (click)="onCancel()">Cancel</button>
+  <button mat-raised-button class="create-btn"
+    [disabled]="profileForm.invalid || (loading$ | async)"
+    (click)="onSubmit()">
+    <mat-icon>add</mat-icon>
+    {{ (loading$ | async) ? 'Creating...' : 'Create Profile' }}
+  </button>
+</mat-dialog-actions>

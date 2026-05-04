@@ -90,6 +90,6 @@ export class BatchTechnicianDialogComponent implements OnInit, OnDestroy {
   }
 
   getTechnicianSkills(technician: Technician): string {
-    return technician.skills.map(s => s.name).join(', ') || 'No skills listed';
+    return 'No skills data';
   }
 }

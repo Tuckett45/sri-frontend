@@ -90,6 +90,8 @@ export class JobSetupService {
         state: customerInfo.state,
         zipCode: customerInfo.zipCode,
       },
+      market: user?.market || '',
+      region: user?.market || '',
       customerPOC: {
         name: customerInfo.pocName,
         phone: customerInfo.pocPhone,

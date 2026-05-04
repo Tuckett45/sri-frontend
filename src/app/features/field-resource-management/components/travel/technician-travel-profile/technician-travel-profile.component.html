@@ -5,8 +5,8 @@
     <p>Loading travel profile...</p>
   </div>
 
-  <!-- Error State -->
-  <div *ngIf="error$ | async as error" class="travel-error">
+  <!-- Error State (only show for non-404 errors) -->
+  <div *ngIf="(error$ | async) as error" class="travel-error" [class.hidden]="isProfileNotFound">
     <mat-icon>error_outline</mat-icon>
     <p>{{ error }}</p>
   </div>
@@ -47,71 +47,48 @@
           {{ getGeocodingStatusLabel(profile.geocodingStatus) }}
         </span>
       </mat-card-header>
-
       <mat-card-content>
-        <!-- Address Form -->
         <form [formGroup]="addressForm" (ngSubmit)="updateHomeAddress()" class="address-form">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Street Address</mat-label>
             <input matInput formControlName="street" placeholder="123 Main St">
-            <mat-error *ngIf="addressForm.get('street')?.invalid">
-              {{ getFieldError('street') }}
-            </mat-error>
+            <mat-error *ngIf="addressForm.get('street')?.invalid">{{ getFieldError('street') }}</mat-error>
           </mat-form-field>
-
           <div class="address-row">
             <mat-form-field appearance="outline" class="city-field">
               <mat-label>City</mat-label>
               <input matInput formControlName="city" placeholder="Springfield">
-              <mat-error *ngIf="addressForm.get('city')?.invalid">
-                {{ getFieldError('city') }}
-              </mat-error>
+              <mat-error *ngIf="addressForm.get('city')?.invalid">{{ getFieldError('city') }}</mat-error>
             </mat-form-field>
-
             <mat-form-field appearance="outline" class="state-field">
               <mat-label>State</mat-label>
               <input matInput formControlName="state" placeholder="CA" maxlength="2">
-              <mat-error *ngIf="addressForm.get('state')?.invalid">
-                {{ getFieldError('state') }}
-              </mat-error>
+              <mat-error *ngIf="addressForm.get('state')?.invalid">{{ getFieldError('state') }}</mat-error>
             </mat-form-field>
-
             <mat-form-field appearance="outline" class="postal-field">
               <mat-label>Postal Code</mat-label>
               <input matInput formControlName="postalCode" placeholder="12345">
-              <mat-error *ngIf="addressForm.get('postalCode')?.invalid">
-                {{ getFieldError('postalCode') }}
-              </mat-error>
+              <mat-error *ngIf="addressForm.get('postalCode')?.invalid">{{ getFieldError('postalCode') }}</mat-error>
             </mat-form-field>
           </div>
-
           <div class="address-actions" *ngIf="canEdit">
-            <button
-              mat-raised-button
-              color="primary"
-              type="submit"
+            <button mat-raised-button color="primary" type="submit"
               [disabled]="addressForm.invalid || addressForm.pristine || (geocodingInProgress$ | async)">
-              <mat-icon>save</mat-icon>
-              Save Address
+              <mat-icon>save</mat-icon> Save Address
             </button>
           </div>
         </form>
 
         <!-- Geocoding Status Details -->
         <div class="geocoding-details" *ngIf="profile.geocodingStatus !== GeocodingStatus.NotGeocoded">
-          <!-- Geocoding In Progress -->
           <div *ngIf="geocodingInProgress$ | async" class="geocoding-progress">
             <mat-spinner diameter="20"></mat-spinner>
             <span>Geocoding address...</span>
           </div>
-
-          <!-- Geocoding Error -->
           <div *ngIf="profile.geocodingStatus === GeocodingStatus.Failed" class="geocoding-error">
             <mat-icon>warning</mat-icon>
             <span>{{ profile.geocodingError || 'Failed to geocode address' }}</span>
           </div>
-
-          <!-- Coordinates Display -->
           <div *ngIf="profile.geocodingStatus === GeocodingStatus.Success && profile.homeCoordinates" class="coordinates-display">
             <div class="coord-item">
               <mat-icon>place</mat-icon>
@@ -131,11 +108,142 @@
         </div>
       </mat-card-content>
     </mat-card>
+
+    <!-- Travel Preferences Section -->
+    <mat-card class="preferences-card">
+      <mat-card-header>
+        <mat-card-title>Travel Preferences</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="preferencesForm" (ngSubmit)="updatePreferences()" class="preferences-form">
+          <div class="preferences-row">
+            <mat-form-field appearance="outline" class="radius-field">
+              <mat-label>Max Travel Radius (miles)</mat-label>
+              <input matInput type="number" formControlName="maxTravelRadiusMiles" placeholder="No limit">
+              <mat-icon matSuffix>straighten</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="transport-field">
+              <mat-label>Preferred Transportation</mat-label>
+              <mat-select formControlName="preferredTransportation">
+                <mat-option [value]="TransportationMode.Any">Any</mat-option>
+                <mat-option [value]="TransportationMode.PersonalVehicle">Personal Vehicle</mat-option>
+                <mat-option [value]="TransportationMode.CompanyVehicle">Company Vehicle</mat-option>
+                <mat-option [value]="TransportationMode.Flight">Flight</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notes / Restrictions</mat-label>
+            <textarea matInput formControlName="notes" rows="2" placeholder="Any travel restrictions or notes..."></textarea>
+          </mat-form-field>
+          <div class="preferences-actions" *ngIf="canEdit">
+            <button mat-raised-button color="primary" type="submit"
+              [disabled]="preferencesForm.invalid || preferencesForm.pristine">
+              <mat-icon>save</mat-icon> Save Preferences
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Per Diem Summary -->
+    <mat-card class="per-diem-card" *ngIf="profile.travelHistory && profile.travelHistory.length > 0">
+      <mat-card-header>
+        <mat-card-title>Per Diem Summary</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <mat-icon class="stat-icon trips">luggage</mat-icon>
+            <div class="stat-info">
+              <span class="stat-value">{{ getTotalTrips(profile) }}</span>
+              <span class="stat-label">Total Trips</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <mat-icon class="stat-icon distance">route</mat-icon>
+            <div class="stat-info">
+              <span class="stat-value">{{ getTotalMiles(profile) | number:'1.0-0' }}</span>
+              <span class="stat-label">Total Miles</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <mat-icon class="stat-icon eligible">verified</mat-icon>
+            <div class="stat-info">
+              <span class="stat-value">{{ getPerDiemEligibleCount(profile) }}</span>
+              <span class="stat-label">Per Diem Eligible</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <mat-icon class="stat-icon amount">payments</mat-icon>
+            <div class="stat-info">
+              <span class="stat-value">{{ getTotalPerDiem(profile) | currency }}</span>
+              <span class="stat-label">Total Per Diem</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Travel History Section -->
+    <mat-card class="history-card">
+      <mat-card-header>
+        <mat-card-title>Travel History</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="profile.travelHistory && profile.travelHistory.length > 0; else noHistory">
+          <table mat-table [dataSource]="profile.travelHistory" class="travel-history-table">
+            <ng-container matColumnDef="travelDate">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let entry">{{ entry.travelDate | date:'shortDate' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="clientName">
+              <th mat-header-cell *matHeaderCellDef>Client</th>
+              <td mat-cell *matCellDef="let entry">{{ entry.clientName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="destination">
+              <th mat-header-cell *matHeaderCellDef>Destination</th>
+              <td mat-cell *matCellDef="let entry">{{ entry.destination }}</td>
+            </ng-container>
+            <ng-container matColumnDef="distanceMiles">
+              <th mat-header-cell *matHeaderCellDef>Distance</th>
+              <td mat-cell *matCellDef="let entry">{{ entry.distanceMiles | number:'1.0-1' }} mi</td>
+            </ng-container>
+            <ng-container matColumnDef="drivingTimeMinutes">
+              <th mat-header-cell *matHeaderCellDef>Drive Time</th>
+              <td mat-cell *matCellDef="let entry">{{ formatDriveTime(entry.drivingTimeMinutes) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="perDiem">
+              <th mat-header-cell *matHeaderCellDef>Per Diem</th>
+              <td mat-cell *matCellDef="let entry">
+                <span *ngIf="entry.perDiemEligible" class="per-diem-eligible">
+                  {{ entry.perDiemAmount | currency }}
+                </span>
+                <span *ngIf="!entry.perDiemEligible" class="per-diem-ineligible">—</span>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: historyColumns;"></tr>
+          </table>
+        </div>
+        <ng-template #noHistory>
+          <div class="no-history">
+            <mat-icon>history</mat-icon>
+            <p>No travel history yet</p>
+          </div>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
   </ng-container>
 
-  <!-- No Profile State -->
-  <div *ngIf="!(travelProfile$ | async) && !(loading$ | async) && !(error$ | async)" class="no-profile">
-    <mat-icon>person_off</mat-icon>
-    <p>No travel profile found for this technician</p>
+  <!-- No Profile State — Create CTA -->
+  <div *ngIf="!(travelProfile$ | async) && !(loading$ | async) && isProfileNotFound" class="no-profile">
+    <mat-icon>flight</mat-icon>
+    <h3>No Travel Profile</h3>
+    <p>This technician doesn't have a travel profile yet. Create one to track travel willingness, home address, and trip history.</p>
+    <button mat-raised-button color="primary" (click)="createProfile()">
+      <mat-icon>add</mat-icon>
+      Create Travel Profile
+    </button>
   </div>
 </div>

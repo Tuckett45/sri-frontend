@@ -4,8 +4,9 @@ import { UserRole } from '../../../models/role.enum';
 export interface QuickAction {
   label: string;
   icon: string;
-  route: string;
-  color: 'primary' | 'accent' | 'orange';
+  route?: string;
+  action?: string;
+  color: 'primary' | 'accent' | 'orange' | 'green';
   visible: boolean;
 }
 

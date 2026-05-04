@@ -10,7 +10,7 @@ import { Technician } from '../../../models/technician.model';
 import { Assignment, DateRange } from '../../../models/assignment.model';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 import * as JobActions from '../../../state/jobs/job.actions';
-import { selectAssignmentsByTechnician } from '../../../state/assignments/assignment.selectors';
+import { selectAssignmentsByTechnician, selectAssignmentsLoading, selectAssignmentsError } from '../../../state/assignments/assignment.selectors';
 import { selectAllJobs } from '../../../state/jobs/job.selectors';
 
 /**
@@ -46,6 +46,8 @@ export class TechnicianScheduleComponent implements OnInit, OnDestroy {
 
   dateRangeForm: FormGroup;
   totalHours: number = 0;
+  loading: boolean = false;
+  error: string | null = null;
 
   // Enums for template
   JobStatus = JobStatus;
@@ -111,6 +113,20 @@ export class TechnicianScheduleComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.filterJobs();
+      });
+
+    // Subscribe to loading state
+    this.store.select(selectAssignmentsLoading)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(loading => {
+        this.loading = loading;
+      });
+
+    // Subscribe to error state
+    this.store.select(selectAssignmentsError)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(error => {
+        this.error = error;
       });
   }
 
@@ -301,5 +317,13 @@ export class TechnicianScheduleComponent implements OnInit, OnDestroy {
    */
   onJobClick(job: Job): void {
     this.router.navigate(['/field-resource-management/jobs', job.id]);
+  }
+
+  /**
+   * Retry loading data
+   */
+  onRetry(): void {
+    this.store.dispatch(AssignmentActions.loadAssignments({}));
+    this.store.dispatch(JobActions.loadJobs({ filters: {} }));
   }
 }
