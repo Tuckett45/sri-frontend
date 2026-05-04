@@ -1,0 +1,15 @@
+# ATLAS Services Directory
+
+This directory contains all ATLAS-related service classes for API communication.
+
+Services to be implemented:
+- deployment.service.ts - Deployment CRUD and lifecycle operations
+- ai-analysis.service.ts - AI analysis, risk assessment, recommendations
+- approval.service.ts - Approval workflows and authority validation
+- exception.service.ts - Exception request management
+- agent.service.ts - Agent execution and monitoring
+- query-builder.service.ts - Dynamic query building and execution
+- atlas-api-client.service.ts - Base API client with common functionality
+- atlas-signalr.service.ts - Real-time SignalR communication
+- atlas-config.service.ts - Configuration management
+- atlas-error-handler.service.ts - Error handling and resilience patterns

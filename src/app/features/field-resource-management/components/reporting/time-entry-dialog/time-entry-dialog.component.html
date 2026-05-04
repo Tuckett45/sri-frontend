@@ -1,0 +1,91 @@
+<div class="time-entry-dialog">
+  <!-- Header -->
+  <div mat-dialog-title class="dialog-header">
+    <mat-icon class="header-icon">{{ isEditMode ? 'edit' : 'add_circle' }}</mat-icon>
+    <span>{{ dialogTitle }}</span>
+    <button mat-icon-button class="close-btn" (click)="onCancel()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entry-form">
+      <!-- Job Selection -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Job</mat-label>
+        <mat-select formControlName="jobId">
+          <mat-option *ngFor="let job of jobs$ | async" [value]="job.id">
+            <span class="job-option">
+              <strong>{{ job.jobId }}</strong> — {{ job.client }}, {{ job.siteName }}
+            </span>
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>work</mat-icon>
+        <mat-error *ngIf="form.get('jobId')?.hasError('required')">Job is required</mat-error>
+      </mat-form-field>
+
+      <!-- Date -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Date</mat-label>
+        <input matInput [matDatepicker]="datePicker" formControlName="date">
+        <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+        <mat-datepicker #datePicker></mat-datepicker>
+        <mat-icon matPrefix>calendar_today</mat-icon>
+        <mat-error *ngIf="form.get('date')?.hasError('required')">Date is required</mat-error>
+      </mat-form-field>
+
+      <!-- Time Row -->
+      <div class="time-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Clock In</mat-label>
+          <input matInput type="time" formControlName="clockInTime">
+          <mat-icon matPrefix>login</mat-icon>
+          <mat-error *ngIf="form.get('clockInTime')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+        <mat-icon class="time-arrow">arrow_forward</mat-icon>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Clock Out{{ isEditMode ? '*' : '' }}</mat-label>
+          <input matInput type="time" formControlName="clockOutTime">
+          <mat-icon matPrefix>logout</mat-icon>
+          <mat-error *ngIf="form.get('clockOutTime')?.hasError('required')">Clock out time is required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Break -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Break (minutes)</mat-label>
+        <input matInput type="number" formControlName="breakMinutes" min="0" max="480">
+        <mat-icon matPrefix>free_breakfast</mat-icon>
+      </mat-form-field>
+
+      <!-- Mileage -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Mileage (miles)</mat-label>
+        <input matInput type="number" formControlName="mileage" min="0" max="9999" step="0.1">
+        <mat-icon matPrefix>directions_car</mat-icon>
+        <mat-hint>Leave blank to keep auto-calculated value</mat-hint>
+      </mat-form-field>
+
+      <!-- Notes / Adjustment Reason -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>{{ isEditMode ? 'Adjustment Reason*' : 'Notes' }}</mat-label>
+        <textarea matInput formControlName="notes" rows="3"
+                  [placeholder]="isEditMode ? 'Reason for adjustment...' : 'Optional notes...'"></textarea>
+        <mat-icon matPrefix>notes</mat-icon>
+        <mat-error *ngIf="form.get('notes')?.hasError('required')">Adjustment reason is required</mat-error>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="form.invalid">
+      <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+      {{ isEditMode ? 'Save Changes' : 'Add Entry' }}
+    </button>
+  </mat-dialog-actions>
+</div>

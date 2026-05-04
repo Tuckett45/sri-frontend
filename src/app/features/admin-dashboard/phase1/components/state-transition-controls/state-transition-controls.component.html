@@ -1,0 +1,104 @@
+<div class="state-transition-controls">
+  <form [formGroup]="transitionForm" (ngSubmit)="submitTransition()" class="transition-controls-form">
+    
+    <!-- Transition Selection -->
+    <div class="transition-selection">
+      <label class="section-label">Select Transition</label>
+      <div class="transition-buttons">
+        <button
+          *ngFor="let transition of availableTransitions"
+          type="button"
+          [class]="getTransitionButtonClass(transition)"
+          [disabled]="isTransitionDisabled(transition)"
+          (click)="onTransitionSelect(transition)"
+          [attr.data-requires-approval]="transition.requiresApproval"
+        >
+          <span class="transition-name">{{ transition.name }}</span>
+          <span class="transition-target">→ {{ transition.toState }}</span>
+          <span *ngIf="transition.requiresApproval" class="approval-badge">
+            Requires Approval
+          </span>
+        </button>
+      </div>
+      <div *ngIf="availableTransitions.length === 0" class="no-transitions">
+        No transitions available from current state
+      </div>
+    </div>
+
+    <!-- Transition Details -->
+    <div *ngIf="selectedTransition" class="transition-details">
+      
+      <!-- Approval Warning -->
+      <div *ngIf="showApprovalWarning" class="approval-warning">
+        <div class="warning-icon">⚠</div>
+        <div class="warning-content">
+          <strong>Approval Required</strong>
+          <p>This transition requires approval before it can be executed. An approval request will be created.</p>
+        </div>
+      </div>
+
+      <!-- Reason Field -->
+      <div *ngIf="showReasonField" class="form-group">
+        <label for="transition-reason">
+          Reason
+          <span class="required-indicator">*</span>
+        </label>
+        <textarea
+          id="transition-reason"
+          formControlName="reason"
+          rows="3"
+          placeholder="Provide a reason for this transition..."
+          class="form-control"
+          [class.invalid]="transitionForm.get('reason')?.invalid && transitionForm.get('reason')?.touched"
+        ></textarea>
+        <div 
+          *ngIf="transitionForm.get('reason')?.invalid && transitionForm.get('reason')?.touched" 
+          class="error-message"
+        >
+          <span *ngIf="transitionForm.get('reason')?.errors?.['required']">
+            Reason is required for this transition
+          </span>
+        </div>
+      </div>
+
+      <!-- Transition Info -->
+      <div class="transition-info">
+        <div class="info-item">
+          <span class="info-label">From:</span>
+          <span class="info-value">{{ selectedTransition.fromState }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">To:</span>
+          <span class="info-value">{{ selectedTransition.toState }}</span>
+        </div>
+        <div *ngIf="selectedTransition.requiredRole" class="info-item">
+          <span class="info-label">Required Role:</span>
+          <span class="info-value role-badge">{{ selectedTransition.requiredRole }}</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="!transitionForm.valid"
+        >
+          {{ showApprovalWarning ? 'Request Approval' : 'Execute Transition' }}
+        </button>
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="resetForm()"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- No Selection State -->
+    <div *ngIf="!selectedTransition && availableTransitions.length > 0" class="no-selection">
+      <p>Select a transition to continue</p>
+    </div>
+  </form>
+</div>

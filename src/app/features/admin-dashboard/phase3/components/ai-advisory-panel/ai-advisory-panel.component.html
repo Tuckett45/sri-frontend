@@ -1,0 +1,189 @@
+<div class="ai-advisory-panel">
+  <!-- Header -->
+  <div class="panel-header">
+    <h2>AI Recommendations</h2>
+    <div class="header-controls">
+      <button 
+        class="btn-refresh" 
+        (click)="refreshRecommendations()" 
+        [disabled]="loading$ | async">
+        <span class="icon-refresh"></span>
+        Refresh
+      </button>
+      <span *ngIf="autoRefresh" class="auto-refresh-indicator">
+        <span class="icon-auto"></span>
+        Auto-refresh enabled
+      </span>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <app-loading-indicator 
+    *ngIf="loading$ | async" 
+    [overlay]="false"
+    [mode]="'spinner'"
+    [size]="'medium'"
+    [message]="'Loading recommendations...'">
+  </app-loading-indicator>
+
+  <!-- Recommendations List -->
+  <div class="recommendations-list" *ngIf="recommendations$ | async as recommendations">
+    <div *ngIf="recommendations.length === 0 && !(loading$ | async)" class="no-recommendations">
+      <span class="icon-info"></span>
+      <p>No recommendations available at this time.</p>
+    </div>
+
+    <div 
+      *ngFor="let recommendation of recommendations" 
+      class="recommendation-card"
+      [class.expanded]="isExpanded(recommendation.id)"
+      [class.expired]="isExpired(recommendation)"
+      [ngClass]="getPriorityClass(recommendation.priority)">
+      
+      <!-- Card Header -->
+      <div class="card-header" (click)="toggleRecommendation(recommendation.id)">
+        <div class="header-left">
+          <span class="priority-badge" [ngClass]="getPriorityClass(recommendation.priority)">
+            {{ recommendation.priority | uppercase }}
+          </span>
+          <h3>{{ recommendation.title }}</h3>
+          <span *ngIf="recommendation.status !== 'pending'" 
+                class="status-badge" 
+                [ngClass]="getStatusClass(recommendation.status)">
+            {{ recommendation.status | uppercase }}
+          </span>
+        </div>
+        <div class="header-right">
+          <span class="expand-icon" [class.expanded]="isExpanded(recommendation.id)">▼</span>
+        </div>
+      </div>
+
+      <!-- Card Content -->
+      <div class="card-content" *ngIf="isExpanded(recommendation.id)">
+        <!-- Description -->
+        <div class="description">
+          <p>{{ recommendation.description }}</p>
+        </div>
+
+        <!-- Confidence Score -->
+        <div class="confidence-section">
+          <div class="confidence-header">
+            <label>Confidence Score:</label>
+            <span class="confidence-value">
+              {{ (recommendation.confidence * 100).toFixed(0) }}% 
+              ({{ getConfidenceLevel(recommendation.confidence) }})
+            </span>
+          </div>
+          <div class="confidence-bar">
+            <div 
+              class="confidence-fill" 
+              [ngClass]="getConfidenceClass(recommendation.confidence)"
+              [style.width.%]="getConfidenceWidth(recommendation.confidence)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Rationale -->
+        <div class="rationale-section">
+          <h4>Rationale</h4>
+          <p>{{ recommendation.rationale }}</p>
+        </div>
+
+        <!-- Recommended Actions -->
+        <div class="actions-section" *ngIf="recommendation.actions && recommendation.actions.length > 0">
+          <h4>Recommended Actions</h4>
+          <ul class="actions-list">
+            <li *ngFor="let action of recommendation.actions">
+              <div class="action-item">
+                <strong>{{ action.description }}</strong>
+                <div class="action-impact" *ngIf="action.estimatedImpact">
+                  <span class="impact-label">Expected Impact:</span>
+                  <span class="impact-value">
+                    {{ action.estimatedImpact.metric }}: 
+                    {{ action.estimatedImpact.currentValue }} → 
+                    {{ action.estimatedImpact.projectedValue }}
+                    ({{ action.estimatedImpact.improvement > 0 ? '+' : '' }}{{ action.estimatedImpact.improvement }}{{ action.estimatedImpact.unit }})
+                  </span>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Metadata -->
+        <div class="metadata-section">
+          <div class="metadata-item">
+            <label>Type:</label>
+            <span>{{ recommendation.type }}</span>
+          </div>
+          <div class="metadata-item">
+            <label>Created:</label>
+            <span>{{ formatTimestamp(recommendation.createdAt) }}</span>
+          </div>
+          <div class="metadata-item" *ngIf="recommendation.expiresAt">
+            <label>Expires:</label>
+            <span [class.expired-text]="isExpired(recommendation)">
+              {{ formatTimestamp(recommendation.expiresAt) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card-actions" *ngIf="recommendation.status === 'pending' && !isExpired(recommendation)">
+          <button 
+            class="btn-accept" 
+            (click)="acceptRecommendation(recommendation)"
+            [disabled]="(isAccepting(recommendation.id) | async) || (isRejecting(recommendation.id) | async)">
+            <span *ngIf="!(isAccepting(recommendation.id) | async)" class="icon-check"></span>
+            <span *ngIf="isAccepting(recommendation.id) | async" class="spinner-small"></span>
+            Accept
+          </button>
+          <button 
+            class="btn-reject" 
+            (click)="showRejectDialogFor(recommendation)"
+            [disabled]="(isAccepting(recommendation.id) | async) || (isRejecting(recommendation.id) | async)">
+            <span *ngIf="!(isRejecting(recommendation.id) | async)" class="icon-close"></span>
+            <span *ngIf="isRejecting(recommendation.id) | async" class="spinner-small"></span>
+            Reject
+          </button>
+        </div>
+
+        <!-- Expired Notice -->
+        <div class="expired-notice" *ngIf="isExpired(recommendation)">
+          <span class="icon-warning"></span>
+          This recommendation has expired and can no longer be acted upon.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject Dialog -->
+  <div class="modal-overlay" *ngIf="showRejectDialog" (click)="cancelReject()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Reject Recommendation</h3>
+        <button class="btn-close" (click)="cancelReject()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>Please provide a reason for rejecting this recommendation:</p>
+        <textarea 
+          class="reject-reason-input"
+          [(ngModel)]="rejectReason"
+          placeholder="Enter rejection reason..."
+          rows="4"
+          maxlength="500">
+        </textarea>
+        <p class="char-count">{{ rejectReason.length }}/500</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cancelReject()">Cancel</button>
+        <button 
+          class="btn-confirm" 
+          (click)="confirmReject()"
+          [disabled]="!rejectReason.trim()">
+          Confirm Rejection
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

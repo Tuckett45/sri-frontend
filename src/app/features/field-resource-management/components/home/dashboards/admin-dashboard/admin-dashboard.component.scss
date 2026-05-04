@@ -1,0 +1,47 @@
+.admin-dashboard {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-widgets {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  align-items: stretch;
+
+  .widgets-left {
+    flex: 1 1 50%;
+    min-width: 0;
+    display: flex;
+
+    app-active-jobs-widget {
+      display: block;
+      width: 100%;
+    }
+  }
+
+  .widgets-right {
+    flex: 1 1 50%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    app-available-technicians-widget,
+    app-recent-jobs-widget {
+      display: block;
+      width: 100%;
+    }
+
+    app-recent-jobs-widget {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+  }
+
+  @media (max-width: 992px) {
+    flex-direction: column;
+  }
+}

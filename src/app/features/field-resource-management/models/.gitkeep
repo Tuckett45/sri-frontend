@@ -1,0 +1,12 @@
+# Models Directory
+
+This directory contains TypeScript interfaces and models for the Field Resource Management feature.
+
+## Planned Models
+
+- `technician.model.ts` - Technician, Skill, Certification, Availability interfaces
+- `job.model.ts` - Job, Address, ContactInfo, Attachment, JobNote interfaces
+- `assignment.model.ts` - Assignment, TechnicianMatch, Conflict interfaces
+- `time-entry.model.ts` - TimeEntry, GeoLocation interfaces
+- `reporting.model.ts` - DashboardMetrics, UtilizationReport, PerformanceReport, KPI interfaces
+- `dtos/` - Data Transfer Objects for API requests

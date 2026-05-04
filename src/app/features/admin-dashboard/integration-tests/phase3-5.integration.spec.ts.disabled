@@ -1,0 +1,634 @@
+/**
+ * Integration Tests: Phase 3-5 Interaction
+ * 
+ * Tests the integration between:
+ * - Phase 3: AI recommendations and insights
+ * - Phase 5: Predictive forecasting and trend analysis
+ * 
+ * Validates Requirements: 8.1-8.7, 9.1-9.7, 13.1-13.7, 14.1-14.7
+ */
+
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { provideMockStore, MockStore } from '@ngrx/store/testing';
+import { of, throwError } from 'rxjs';
+
+// Phase 3 imports
+import { AIAdvisoryPanelComponent } from '../phase3/components/ai-advisory-panel/ai-advisory-panel.component';
+import { InsightsDisplayComponent } from '../phase3/components/insights-display/insights-display.component';
+import { RecommendationEngineService } from '../phase3/services/recommendation-engine.service';
+
+// Phase 5 imports
+import { PredictiveDashboardComponent } from '../phase5/components/predictive-dashboard/predictive-dashboard.component';
+import { TrendAnalysisComponent } from '../phase5/components/trend-analysis/trend-analysis.component';
+import { ForecastService } from '../phase5/services/forecast.service';
+import { TrendAnalysisService } from '../phase5/services/trend-analysis.service';
+
+// Models
+import { Recommendation, Insight, InsightMetric } from '../phase3/models/recommendation.models';
+import { Forecast, Trend, Prediction, ForecastDataPoint } from '../phase5/models/forecast.models';
+
+describe('Phase 3-5 Integration: AI Recommendations with Predictive Forecasts', () => {
+  let aiComponent: AIAdvisoryPanelComponent;
+  let predictiveComponent: PredictiveDashboardComponent;
+  let aiFixture: ComponentFixture<AIAdvisoryPanelComponent>;
+  let predictiveFixture: ComponentFixture<PredictiveDashboardComponent>;
+  let store: MockStore;
+  let recommendationService: jasmine.SpyObj<RecommendationEngineService>;
+  let forecastService: jasmine.SpyObj<ForecastService>;
+
+  const mockForecasts: Forecast[] = [
+    {
+      id: 'forecast-1',
+      metric: 'job-volume',
+      timeHorizon: 'month',
+      dataPoints: [
+        {
+          timestamp: new Date('2024-02-01'),
+          value: 150,
+          lowerBound: 140,
+          upperBound: 160,
+          confidence: 0.85
+        },
+        {
+          timestamp: new Date('2024-02-15'),
+          value: 175,
+          lowerBound: 165,
+          upperBound: 185,
+          confidence: 0.82
+        }
+      ],
+      confidence: { level: 0.85, lowerBound: 140, upperBound: 185 },
+      methodology: 'ARIMA',
+      modelId: 'model-123',
+      generatedAt: new Date(),
+      expiresAt: new Date('2024-03-01')
+    }
+  ];
+
+  const mockRecommendations: Recommendation[] = [
+    {
+      id: 'rec-1',
+      type: 'resource-allocation',
+      title: 'Increase Technician Capacity',
+      description: 'Forecast shows 17% increase in job volume next month',
+      confidence: 0.88,
+      priority: 'high',
+      rationale: 'Based on predictive forecast showing sustained growth trend',
+      supportingData: {
+        forecastId: 'forecast-1',
+        projectedIncrease: 0.17,
+        currentCapacity: 150,
+        recommendedCapacity: 175
+      },
+      actions: [
+        {
+          id: 'action-1',
+          type: 'hire-technicians',
+          description: 'Hire 3 additional technicians',
+          parameters: { count: 3, skillLevel: 'intermediate' },
+          estimatedImpact: {
+            metric: 'capacity',
+            currentValue: 150,
+            projectedValue: 175,
+            improvement: 16.7,
+            unit: 'jobs/month'
+          }
+        }
+      ],
+      createdAt: new Date(),
+      status: 'pending'
+    }
+  ];
+
+  beforeEach(async () => {
+    const recommendationSpy = jasmine.createSpyObj('RecommendationEngineService', [
+      'getRecommendations',
+      'acceptRecommendation',
+      'getInsights'
+    ]);
+    const forecastSpy = jasmine.createSpyObj('ForecastService', [
+      'getForecasts',
+      'getForecastById',
+      'getPredictions'
+    ]);
+
+    await TestBed.configureTestingModule({
+      declarations: [
+        AIAdvisoryPanelComponent,
+        PredictiveDashboardComponent
+      ],
+      providers: [
+        provideMockStore({
+          initialState: {
+            aiRecommendations: {
+              recommendations: mockRecommendations,
+              loading: false
+            },
+            forecasts: {
+              forecasts: mockForecasts,
+              loading: false
+            }
+          }
+        }),
+        { provide: RecommendationEngineService, useValue: recommendationSpy },
+        { provide: ForecastService, useValue: forecastSpy }
+      ]
+    }).compileComponents();
+
+    aiFixture = TestBed.createComponent(AIAdvisoryPanelComponent);
+    aiComponent = aiFixture.componentInstance;
+    
+    predictiveFixture = TestBed.createComponent(PredictiveDashboardComponent);
+    predictiveComponent = predictiveFixture.componentInstance;
+    
+    store = TestBed.inject(MockStore);
+    recommendationService = TestBed.inject(RecommendationEngineService) as jasmine.SpyObj<RecommendationEngineService>;
+    forecastService = TestBed.inject(ForecastService) as jasmine.SpyObj<ForecastService>;
+
+    aiComponent.context = 'resource-allocation';
+    predictiveComponent.dashboardType = 'resource';
+    predictiveComponent.selectedTimeHorizon = 'month';
+  });
+
+  it('should generate recommendations based on forecast data', fakeAsync(() => {
+    forecastService.getForecasts.and.returnValue(of(mockForecasts));
+    recommendationService.getRecommendations.and.returnValue(of(mockRecommendations));
+
+    predictiveFixture.detectChanges();
+    aiFixture.detectChanges();
+    tick();
+
+    // Forecast should inform recommendations
+    aiComponent.recommendations$.subscribe(recs => {
+      expect(recs).toBeDefined();
+      expect(recs.length).toBe(1);
+      expect(recs[0].supportingData.forecastId).toBe('forecast-1');
+      expect(recs[0].supportingData.projectedIncrease).toBe(0.17);
+    });
+  }));
+
+  it('should display forecast-based recommendations with confidence intervals', fakeAsync(() => {
+    recommendationService.getRecommendations.and.returnValue(of(mockRecommendations));
+
+    aiFixture.detectChanges();
+    tick();
+
+    aiComponent.recommendations$.subscribe(recs => {
+      const forecastBasedRec = recs.find(r => r.supportingData.forecastId);
+      expect(forecastBasedRec).toBeDefined();
+      expect(forecastBasedRec?.confidence).toBe(0.88);
+    });
+  }));
+
+  it('should link recommendations to specific forecast data points', fakeAsync(() => {
+    forecastService.getForecastById.and.returnValue(of(mockForecasts[0]));
+    recommendationService.getRecommendations.and.returnValue(of(mockRecommendations));
+
+    aiFixture.detectChanges();
+    tick();
+
+    const recommendation = mockRecommendations[0];
+    const forecastId = recommendation.supportingData.forecastId;
+
+    forecastService.getForecastById(forecastId).subscribe(forecast => {
+      expect(forecast).toBeDefined();
+      expect(forecast.id).toBe('forecast-1');
+      expect(forecast.dataPoints.length).toBe(2);
+    });
+  }));
+
+  it('should update recommendations when forecast data changes', fakeAsync(() => {
+    const updatedForecasts: Forecast[] = [
+      {
+        ...mockForecasts[0],
+        dataPoints: [
+          {
+            timestamp: new Date('2024-02-01'),
+            value: 180, // Increased projection
+            lowerBound: 170,
+            upperBound: 190,
+            confidence: 0.87
+          }
+        ]
+      }
+    ];
+
+    forecastService.getForecasts.and.returnValue(of(updatedForecasts));
+    recommendationService.getRecommendations.and.returnValue(of([
+      {
+        ...mockRecommendations[0],
+        supportingData: {
+          ...mockRecommendations[0].supportingData,
+          projectedIncrease: 0.20 // Updated based on new forecast
+        }
+      }
+    ]));
+
+    predictiveFixture.detectChanges();
+    aiFixture.detectChanges();
+    tick();
+
+    aiComponent.recommendations$.subscribe(recs => {
+      expect(recs[0].supportingData.projectedIncrease).toBe(0.20);
+    });
+  }));
+});
+
+describe('Phase 3-5 Integration: Insights Display with Trend Analysis', () => {
+  let insightsComponent: InsightsDisplayComponent;
+  let trendComponent: TrendAnalysisComponent;
+  let insightsFixture: ComponentFixture<InsightsDisplayComponent>;
+  let trendFixture: ComponentFixture<TrendAnalysisComponent>;
+  let store: MockStore;
+  let recommendationService: jasmine.SpyObj<RecommendationEngineService>;
+  let trendService: jasmine.SpyObj<TrendAnalysisService>;
+
+  const mockTrends: Trend[] = [
+    {
+      id: 'trend-1',
+      metric: 'job-completion-rate',
+      direction: 'upward',
+      strength: 0.75,
+      dataPoints: [
+        {
+          timestamp: new Date('2024-01-01'),
+          value: 0.85,
+          smoothedValue: 0.84,
+          isAnomaly: false
+        },
+        {
+          timestamp: new Date('2024-01-15'),
+          value: 0.88,
+          smoothedValue: 0.87,
+          isAnomaly: false
+        },
+        {
+          timestamp: new Date('2024-02-01'),
+          value: 0.92,
+          smoothedValue: 0.91,
+          isAnomaly: false
+        }
+      ],
+      statistics: {
+        mean: 0.88,
+        median: 0.88,
+        standardDeviation: 0.035,
+        variance: 0.001225,
+        min: 0.85,
+        max: 0.92,
+        slope: 0.035,
+        rSquared: 0.95
+      },
+      anomalies: []
+    }
+  ];
+
+  const mockInsights: Insight[] = [
+    {
+      id: 'insight-1',
+      category: 'performance',
+      title: 'Improving Completion Rate Trend',
+      description: 'Job completion rate has improved by 8% over the past month',
+      severity: 'info',
+      metrics: [
+        {
+          name: 'completion-rate',
+          value: 0.92,
+          unit: 'percentage',
+          trend: 'up',
+          changePercentage: 8.2
+        }
+      ],
+      visualizations: [
+        {
+          type: 'chart',
+          data: mockTrends[0].dataPoints,
+          config: { chartType: 'line' }
+        }
+      ],
+      recommendations: [],
+      createdAt: new Date()
+    }
+  ];
+
+  beforeEach(async () => {
+    const recommendationSpy = jasmine.createSpyObj('RecommendationEngineService', [
+      'getInsights'
+    ]);
+    const trendSpy = jasmine.createSpyObj('TrendAnalysisService', [
+      'calculateTrendStatistics',
+      'detectAnomalies'
+    ]);
+
+    await TestBed.configureTestingModule({
+      declarations: [
+        InsightsDisplayComponent,
+        TrendAnalysisComponent
+      ],
+      providers: [
+        provideMockStore({
+          initialState: {
+            insights: {
+              insights: mockInsights,
+              loading: false
+            },
+            trends: {
+              trends: mockTrends,
+              loading: false
+            }
+          }
+        }),
+        { provide: RecommendationEngineService, useValue: recommendationSpy },
+        { provide: TrendAnalysisService, useValue: trendSpy }
+      ]
+    }).compileComponents();
+
+    insightsFixture = TestBed.createComponent(InsightsDisplayComponent);
+    insightsComponent = insightsFixture.componentInstance;
+    
+    trendFixture = TestBed.createComponent(TrendAnalysisComponent);
+    trendComponent = trendFixture.componentInstance;
+    
+    store = TestBed.inject(MockStore);
+    recommendationService = TestBed.inject(RecommendationEngineService) as jasmine.SpyObj<RecommendationEngineService>;
+    trendService = TestBed.inject(TrendAnalysisService) as jasmine.SpyObj<TrendAnalysisService>;
+
+    insightsComponent.insights = mockInsights;
+    trendComponent.metric = 'job-completion-rate';
+    trendComponent.timeRange = { start: new Date('2024-01-01'), end: new Date('2024-02-01') };
+  });
+
+  it('should display insights with embedded trend visualizations', fakeAsync(() => {
+    recommendationService.getInsights.and.returnValue(of(mockInsights));
+
+    insightsFixture.detectChanges();
+    tick();
+
+    expect(insightsComponent.insights).toBeDefined();
+    expect(insightsComponent.insights.length).toBe(1);
+    expect(insightsComponent.insights[0].visualizations.length).toBe(1);
+    expect(insightsComponent.insights[0].visualizations[0].type).toBe('chart');
+  }));
+
+  it('should calculate trend statistics for insight metrics', fakeAsync(() => {
+    trendService.calculateTrendStatistics.and.returnValue(mockTrends[0].statistics);
+
+    trendFixture.detectChanges();
+    tick();
+
+    const stats = trendService.calculateTrendStatistics(mockTrends[0].dataPoints);
+    
+    expect(stats.mean).toBe(0.88);
+    expect(stats.slope).toBe(0.035);
+    expect(stats.rSquared).toBe(0.95);
+  }));
+
+  it('should show trend direction in insight metrics', fakeAsync(() => {
+    recommendationService.getInsights.and.returnValue(of(mockInsights));
+
+    insightsFixture.detectChanges();
+    tick();
+
+    const insight = insightsComponent.insights[0];
+    const metric = insight.metrics[0];
+    
+    expect(metric.trend).toBe('up');
+    expect(metric.changePercentage).toBe(8.2);
+  }));
+
+  it('should detect and highlight anomalies in trend data', fakeAsync(() => {
+    const trendsWithAnomalies: Trend[] = [
+      {
+        ...mockTrends[0],
+        anomalies: [
+          {
+            timestamp: new Date('2024-01-20'),
+            value: 0.65,
+            expectedValue: 0.87,
+            deviation: 0.22,
+            severity: 'high',
+            type: 'drop',
+            explanation: 'Unexpected drop in completion rate'
+          }
+        ]
+      }
+    ];
+
+    trendService.detectAnomalies.and.returnValue(trendsWithAnomalies[0].anomalies);
+
+    trendFixture.detectChanges();
+    tick();
+
+    // Verify anomalies are detected
+    const anomalies = trendService.detectAnomalies(trendsWithAnomalies[0].dataPoints, { threshold: 2.0, includeExplanations: true });
+    expect(anomalies).toBeDefined();
+    expect(anomalies.length).toBe(1);
+    expect(anomalies[0].severity).toBe('high');
+  }));
+
+  it('should integrate trend analysis into insight generation', fakeAsync(() => {
+    recommendationService.getInsights.and.returnValue(of(mockInsights));
+
+    insightsFixture.detectChanges();
+    trendFixture.detectChanges();
+    tick();
+
+    // Insights should be enriched with trend data
+    const insight = insightsComponent.insights[0];
+    expect(insight.metrics[0].trend).toBe('up');
+    expect(insight.visualizations.length).toBeGreaterThan(0);
+  }));
+});
+
+describe('Phase 3-5 Integration: Forecast-Based Recommendations', () => {
+  let aiComponent: AIAdvisoryPanelComponent;
+  let predictiveComponent: PredictiveDashboardComponent;
+  let aiFixture: ComponentFixture<AIAdvisoryPanelComponent>;
+  let predictiveFixture: ComponentFixture<PredictiveDashboardComponent>;
+  let store: MockStore;
+  let recommendationService: jasmine.SpyObj<RecommendationEngineService>;
+  let forecastService: jasmine.SpyObj<ForecastService>;
+
+  const mockPredictions: Prediction[] = [
+    {
+      id: 'pred-1',
+      type: 'capacity',
+      description: 'Capacity shortfall predicted in 2 weeks',
+      probability: 0.78,
+      impact: 'high',
+      timeframe: { start: new Date('2024-02-15'), end: new Date('2024-02-28') },
+      indicators: [
+        {
+          name: 'job-volume-growth',
+          currentValue: 150,
+          threshold: 175,
+          trend: 'increasing',
+          significance: 0.85
+        }
+      ],
+      mitigationActions: [
+        'Hire additional technicians',
+        'Increase overtime capacity',
+        'Outsource non-critical jobs'
+      ],
+      createdAt: new Date()
+    }
+  ];
+
+  beforeEach(async () => {
+    const recommendationSpy = jasmine.createSpyObj('RecommendationEngineService', [
+      'getRecommendations',
+      'acceptRecommendation'
+    ]);
+    const forecastSpy = jasmine.createSpyObj('ForecastService', [
+      'getForecasts',
+      'getPredictions'
+    ]);
+
+    await TestBed.configureTestingModule({
+      declarations: [
+        AIAdvisoryPanelComponent,
+        PredictiveDashboardComponent
+      ],
+      providers: [
+        provideMockStore({
+          initialState: {
+            aiRecommendations: {
+              recommendations: [],
+              loading: false
+            },
+            predictions: {
+              predictions: mockPredictions,
+              loading: false
+            }
+          }
+        }),
+        { provide: RecommendationEngineService, useValue: recommendationSpy },
+        { provide: ForecastService, useValue: forecastSpy }
+      ]
+    }).compileComponents();
+
+    aiFixture = TestBed.createComponent(AIAdvisoryPanelComponent);
+    aiComponent = aiFixture.componentInstance;
+    
+    predictiveFixture = TestBed.createComponent(PredictiveDashboardComponent);
+    predictiveComponent = predictiveFixture.componentInstance;
+    
+    store = TestBed.inject(MockStore);
+    recommendationService = TestBed.inject(RecommendationEngineService) as jasmine.SpyObj<RecommendationEngineService>;
+    forecastService = TestBed.inject(ForecastService) as jasmine.SpyObj<ForecastService>;
+
+    aiComponent.context = 'forecasting';
+    predictiveComponent.dashboardType = 'resource';
+  });
+
+  it('should generate recommendations from predictive analytics', fakeAsync(() => {
+    forecastService.getPredictions.and.returnValue(of(mockPredictions));
+    
+    const forecastBasedRecommendations: Recommendation[] = [
+      {
+        id: 'rec-forecast-1',
+        type: 'resource-allocation',
+        title: 'Address Predicted Capacity Shortfall',
+        description: 'Take action to prevent capacity issues in 2 weeks',
+        confidence: 0.78,
+        priority: 'critical',
+        rationale: 'Prediction shows 78% probability of capacity shortfall',
+        supportingData: {
+          predictionId: 'pred-1',
+          probability: 0.78,
+          impact: 'high'
+        },
+        actions: mockPredictions[0].mitigationActions.map((action, idx) => ({
+          id: `action-${idx}`,
+          type: 'mitigation',
+          description: action,
+          parameters: {},
+          estimatedImpact: {
+            metric: 'capacity',
+            currentValue: 150,
+            projectedValue: 175,
+            improvement: 16.7,
+            unit: 'jobs'
+          }
+        })),
+        createdAt: new Date(),
+        status: 'pending'
+      }
+    ];
+
+    recommendationService.getRecommendations.and.returnValue(of(forecastBasedRecommendations));
+
+    predictiveFixture.detectChanges();
+    aiFixture.detectChanges();
+    tick();
+
+    aiComponent.recommendations$.subscribe(recs => {
+      expect(recs).toBeDefined();
+      expect(recs.length).toBe(1);
+      expect(recs[0].supportingData.predictionId).toBe('pred-1');
+      expect(recs[0].priority).toBe('critical');
+    });
+  }));
+
+  it('should display prediction confidence in recommendations', fakeAsync(() => {
+    const forecastBasedRecommendations: Recommendation[] = [
+      {
+        id: 'rec-1',
+        type: 'resource-allocation',
+        title: 'Test Recommendation',
+        description: 'Test',
+        confidence: 0.78,
+        priority: 'high',
+        rationale: 'Based on prediction',
+        supportingData: { predictionId: 'pred-1', probability: 0.78 },
+        actions: [],
+        createdAt: new Date(),
+        status: 'pending'
+      }
+    ];
+
+    recommendationService.getRecommendations.and.returnValue(of(forecastBasedRecommendations));
+
+    aiFixture.detectChanges();
+    tick();
+
+    aiComponent.recommendations$.subscribe(recs => {
+      expect(recs[0].confidence).toBe(0.78);
+      expect(recs[0].supportingData.probability).toBe(0.78);
+    });
+  }));
+
+  it('should link mitigation actions to recommendations', fakeAsync(() => {
+    forecastService.getPredictions.and.returnValue(of(mockPredictions));
+
+    predictiveFixture.detectChanges();
+    tick();
+
+    predictiveComponent.predictions$.subscribe(predictions => {
+      const prediction = predictions[0];
+      expect(prediction.mitigationActions).toBeDefined();
+      expect(prediction.mitigationActions.length).toBe(3);
+    });
+  }));
+
+  it('should update recommendations when predictions change', fakeAsync(() => {
+    const updatedPredictions: Prediction[] = [
+      {
+        ...mockPredictions[0],
+        probability: 0.85, // Increased probability
+        impact: 'critical'
+      }
+    ];
+
+    forecastService.getPredictions.and.returnValue(of(updatedPredictions));
+
+    predictiveFixture.detectChanges();
+    tick();
+
+    predictiveComponent.predictions$.subscribe(predictions => {
+      expect(predictions[0].probability).toBe(0.85);
+      expect(predictions[0].impact).toBe('critical');
+    });
+  }));
+});

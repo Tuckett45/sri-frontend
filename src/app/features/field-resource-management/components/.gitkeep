@@ -1,0 +1,12 @@
+# Components Directory
+
+This directory contains all Angular components for the Field Resource Management feature.
+
+## Structure
+
+- `technicians/` - Technician management components
+- `jobs/` - Job management components
+- `scheduling/` - Scheduling and calendar components
+- `mobile/` - Mobile-optimized components for field technicians
+- `reporting/` - Reporting and analytics components
+- `shared/` - Shared/reusable components

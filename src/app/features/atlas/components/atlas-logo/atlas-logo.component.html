@@ -1,0 +1,17 @@
+<ng-container *ngIf="routerLink; else noLink">
+  <a [routerLink]="routerLink" [attr.aria-label]="'Go to ATLAS home'">
+    <img 
+      [src]="logoSrc"
+      [alt]="altText"
+      [class]="logoClasses"
+      role="img">
+  </a>
+</ng-container>
+
+<ng-template #noLink>
+  <img 
+    [src]="logoSrc"
+    [alt]="altText"
+    [class]="logoClasses"
+    role="img">
+</ng-template>

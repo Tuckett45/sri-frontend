@@ -1,0 +1,112 @@
+<div class="job-notes-container">
+  <!-- Add Note Button -->
+  <div class="notes-header" *ngIf="!isAddingNote && notes.length > 0">
+    <button mat-raised-button class="btn-orange" (click)="showAddNoteForm()">
+      <mat-icon>add</mat-icon>
+      Add Note
+    </button>
+  </div>
+
+  <!-- Add Note Form -->
+  <div class="note-form" *ngIf="isAddingNote">
+    <mat-form-field appearance="outline" class="note-textarea">
+      <mat-label>Add a note</mat-label>
+      <textarea
+        matInput
+        [(ngModel)]="newNoteText"
+        rows="4"
+        maxlength="2000"
+        placeholder="Enter your note here..."
+        (keydown.escape)="cancelAddNote()"
+      ></textarea>
+      <mat-hint align="end">{{ newNoteCharCount }}/2000</mat-hint>
+    </mat-form-field>
+    <div class="note-actions">
+      <button mat-button color="warn" (click)="cancelAddNote()">
+        Cancel
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="addNote()"
+        [disabled]="isAddNoteDisabled"
+      >
+        Add Note
+      </button>
+    </div>
+  </div>
+
+  <!-- Notes List -->
+  <div class="notes-list" *ngIf="notes.length > 0">
+    <div class="note-item" *ngFor="let note of notes">
+      <div class="note-header">
+        <div class="note-author">
+          <mat-icon>person</mat-icon>
+          <span class="author-name">{{ note.author }}</span>
+        </div>
+        <div class="note-meta">
+          <span class="note-time" [title]="formatDateTime(note.createdAt)">
+            {{ getRelativeTime(note.createdAt) }}
+          </span>
+          <button
+            mat-icon-button
+            *ngIf="canEditNote(note) && editingNoteId !== note.id"
+            (click)="startEditNote(note)"
+            [matTooltip]="'Edit note (available for 1 hour after creation)'"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- View Mode -->
+      <div class="note-content" *ngIf="editingNoteId !== note.id">
+        <p class="note-text">{{ note.text }}</p>
+        <div class="note-footer" *ngIf="note.updatedAt && note.updatedAt !== note.createdAt">
+          <span class="edited-label">
+            <mat-icon>edit</mat-icon>
+            Edited {{ getRelativeTime(note.updatedAt) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Edit Mode -->
+      <div class="note-edit" *ngIf="editingNoteId === note.id">
+        <mat-form-field appearance="outline" class="note-textarea">
+          <textarea
+            matInput
+            [(ngModel)]="editingNoteText"
+            rows="4"
+            maxlength="2000"
+            (keydown.escape)="cancelEditNote()"
+          ></textarea>
+          <mat-hint align="end">{{ editNoteCharCount }}/2000</mat-hint>
+        </mat-form-field>
+        <div class="note-actions">
+          <button mat-button color="warn" (click)="cancelEditNote()">
+            Cancel
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="saveEditNote(note)"
+            [disabled]="isSaveEditDisabled"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="notes.length === 0 && !isAddingNote">
+    <mat-icon>note</mat-icon>
+    <h3>No notes yet</h3>
+    <p>Add a note to document important information about this job</p>
+    <button mat-raised-button class="btn-orange" (click)="showAddNoteForm()">
+      <mat-icon>add</mat-icon>
+      Add First Note
+    </button>
+  </div>
+</div>

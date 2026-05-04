@@ -1,0 +1,286 @@
+// Page Header
+.page-header {
+  padding: 16px 24px;
+  background-color: #144f80;
+  color: white;
+  margin-bottom: 24px;
+  border-radius: 4px;
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+    color: white;
+  }
+}
+
+// Status Banners
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 14px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  span {
+    flex: 1;
+  }
+
+  &.converted {
+    background-color: #e8f5e9;
+    border: 1px solid #66bb6a;
+    color: #2e7d32;
+
+    mat-icon {
+      color: #2e7d32;
+    }
+  }
+
+  &.not-ready {
+    background-color: #fff3e0;
+    border: 1px solid #ffb74d;
+    color: #e65100;
+
+    mat-icon {
+      color: #e65100;
+    }
+  }
+}
+
+.view-job-btn {
+  color: #2e7d32 !important;
+  border-color: #2e7d32 !important;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #2e7d32;
+  }
+
+  &:hover {
+    background-color: rgba(46, 125, 50, 0.04) !important;
+  }
+}
+
+// Container
+.convert-to-job-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 24px 24px;
+  max-width: 900px;
+}
+
+// Form Sections
+.form-section {
+  margin-bottom: 0;
+  background-color: white;
+
+  mat-card-header {
+    margin-bottom: 16px;
+    background-color: #f8f9fa;
+    padding: 12px 16px;
+    border-radius: 4px;
+
+    mat-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #144f80;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  mat-card-content {
+    padding: 16px;
+  }
+}
+
+// Summary Grid (read-only job fields)
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.54);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  span {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.5;
+  }
+}
+
+.scope-text {
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  padding: 12px;
+  background-color: #fafafa;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+// Conversion Form
+.conversion-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .form-field {
+    width: 100%;
+    max-width: 400px;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.create-job-btn {
+  background-color: #144f80 !important;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px !important;
+  border-radius: 5px !important;
+  font-weight: 500 !important;
+
+  &:hover:not(:disabled) {
+    background-color: #0d3a5e !important;
+    transform: scale(1.02);
+  }
+
+  &:disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+  }
+}
+
+// Job Link Card
+.job-link-card {
+  mat-card-header {
+    background-color: #e8f5e9;
+
+    mat-card-title {
+      color: #2e7d32;
+
+      mat-icon {
+        color: #2e7d32;
+      }
+    }
+  }
+
+  mat-card-content {
+    p {
+      margin: 0 0 12px;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+}
+
+// Button Spinner
+.button-spinner {
+  display: inline-block;
+
+  ::ng-deep circle {
+    stroke: white;
+  }
+}
+
+// Card styling
+mat-card {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+}
+
+mat-card-content {
+  overflow: visible;
+}
+
+// Mobile-specific optimizations
+@media (max-width: 767px) {
+  .page-header {
+    padding: 12px 16px;
+
+    h2 {
+      font-size: 20px;
+    }
+  }
+
+  .convert-to-job-container {
+    padding: 0 16px 16px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-section {
+    mat-card-content {
+      padding: 12px;
+    }
+  }
+
+  .conversion-form {
+    .form-field {
+      max-width: 100%;
+    }
+  }
+
+  .status-banner {
+    flex-wrap: wrap;
+
+    .view-job-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

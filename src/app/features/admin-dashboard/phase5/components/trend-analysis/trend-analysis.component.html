@@ -1,0 +1,217 @@
+<!-- 
+  Trend Analysis Component Template
+  
+  Displays trend visualization with anomaly highlighting and statistics.
+  
+  **Validates: Requirements 14.1, 14.2, 14.6, 14.7**
+-->
+
+<div class="trend-analysis-container">
+  <!-- Loading Indicator -->
+  <app-loading-indicator 
+    *ngIf="loading" 
+    [overlay]="false"
+    [mode]="'spinner'"
+    [size]="'medium'"
+    [message]="'Analyzing trends...'">
+  </app-loading-indicator>
+
+  <!-- Header with controls -->
+  <div class="trend-header">
+    <div class="trend-title">
+      <h3>{{ metric }} Trend Analysis</h3>
+      <span class="time-range" *ngIf="timeRange">
+        {{ timeRange.start | date:'short' }} - {{ timeRange.end | date:'short' }}
+      </span>
+    </div>
+
+    <div class="trend-controls">
+      <!-- Chart type selector -->
+      <div class="control-group">
+        <label>Chart Type:</label>
+        <select [(ngModel)]="selectedChartType" (change)="changeChartType(selectedChartType)" class="form-select">
+          <option value="line">Line</option>
+          <option value="area">Area</option>
+          <option value="bar">Bar</option>
+          <option value="scatter">Scatter</option>
+        </select>
+      </div>
+
+      <!-- Smoothing algorithm selector -->
+      <div class="control-group">
+        <label>Smoothing:</label>
+        <select [(ngModel)]="smoothingAlgorithm" (change)="applySmoothingAlgorithm()" class="form-select">
+          <option value="none">None</option>
+          <option value="moving-average">Moving Average</option>
+          <option value="exponential">Exponential</option>
+        </select>
+      </div>
+
+      <!-- Smoothing parameters -->
+      <div class="control-group" *ngIf="smoothingAlgorithm === 'moving-average'">
+        <label>Window Size:</label>
+        <input 
+          type="number" 
+          [(ngModel)]="smoothingWindowSize" 
+          (change)="applySmoothingAlgorithm()"
+          min="2" 
+          max="10" 
+          class="form-input"
+        />
+      </div>
+
+      <div class="control-group" *ngIf="smoothingAlgorithm === 'exponential'">
+        <label>Alpha:</label>
+        <input 
+          type="number" 
+          [(ngModel)]="smoothingAlpha" 
+          (change)="applySmoothingAlgorithm()"
+          min="0" 
+          max="1" 
+          step="0.1" 
+          class="form-input"
+        />
+      </div>
+
+      <!-- Anomaly threshold -->
+      <div class="control-group" *ngIf="showAnomalies">
+        <label>Anomaly Threshold:</label>
+        <input 
+          type="number" 
+          [(ngModel)]="anomalyThreshold" 
+          (change)="updateAnomalyThreshold(anomalyThreshold)"
+          min="1" 
+          max="5" 
+          step="0.5" 
+          class="form-input"
+        />
+      </div>
+
+      <!-- Toggle anomaly highlighting -->
+      <div class="control-group" *ngIf="showAnomalies">
+        <label class="checkbox-label">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="highlightAnomalies" 
+            (change)="toggleAnomalyHighlighting()"
+          />
+          Highlight Anomalies
+        </label>
+      </div>
+
+      <!-- Export button -->
+      <div class="control-group">
+        <button (click)="exportTrendData('csv')" class="btn btn-secondary" title="Export as CSV">
+          <i class="icon-download"></i> CSV
+        </button>
+        <button (click)="exportTrendData('json')" class="btn btn-secondary" title="Export as JSON">
+          <i class="icon-download"></i> JSON
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content area -->
+  <div class="trend-content">
+    <!-- Chart visualization -->
+    <div class="chart-section">
+      <div class="chart-container" #chartContainer>
+        <canvas 
+          *ngIf="chartData" 
+          baseChart
+          [data]="chartData"
+          [options]="chartOptions"
+          [type]="selectedChartType === 'area' ? 'line' : selectedChartType"
+        ></canvas>
+        <div *ngIf="!chartData" class="no-data-message">
+          <p>No trend data available</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics panel -->
+    <div class="statistics-section" *ngIf="showStatistics && statistics">
+      <h4>Trend Statistics</h4>
+      <div class="statistics-grid">
+        <div class="stat-item">
+          <span class="stat-label">Mean:</span>
+          <span class="stat-value">{{ statistics.mean | number:'1.2-2' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Median:</span>
+          <span class="stat-value">{{ statistics.median | number:'1.2-2' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Std Dev:</span>
+          <span class="stat-value">{{ statistics.standardDeviation | number:'1.2-2' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Variance:</span>
+          <span class="stat-value">{{ statistics.variance | number:'1.2-2' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Min:</span>
+          <span class="stat-value">{{ statistics.min | number:'1.2-2' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Max:</span>
+          <span class="stat-value">{{ statistics.max | number:'1.2-2' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Slope:</span>
+          <span class="stat-value">{{ statistics.slope | number:'1.4-4' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">R²:</span>
+          <span class="stat-value">{{ statistics.rSquared | number:'1.3-3' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Anomalies list -->
+    <div class="anomalies-section" *ngIf="showAnomalies && anomalies.length > 0">
+      <h4>Detected Anomalies ({{ anomalies.length }})</h4>
+      <div class="anomalies-list">
+        <div 
+          *ngFor="let anomaly of anomalies" 
+          class="anomaly-item"
+          (click)="onAnomalyClick(anomaly)"
+        >
+          <div class="anomaly-header">
+            <span class="anomaly-type">
+              <i [class]="'icon-' + getAnomalyTypeIcon(anomaly.type)"></i>
+              {{ anomaly.type | titlecase }}
+            </span>
+            <span [class]="'badge ' + getSeverityClass(anomaly.severity)">
+              {{ anomaly.severity | uppercase }}
+            </span>
+          </div>
+          <div class="anomaly-details">
+            <div class="anomaly-timestamp">
+              {{ anomaly.timestamp | date:'medium' }}
+            </div>
+            <div class="anomaly-values">
+              <span class="value-item">
+                <strong>Value:</strong> {{ anomaly.value | number:'1.2-2' }}
+              </span>
+              <span class="value-item">
+                <strong>Expected:</strong> {{ anomaly.expectedValue | number:'1.2-2' }}
+              </span>
+              <span class="value-item">
+                <strong>Deviation:</strong> {{ anomaly.deviation | number:'1.2-2' }}
+              </span>
+            </div>
+            <div class="anomaly-explanation" *ngIf="anomaly.explanation">
+              {{ anomaly.explanation }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No anomalies message -->
+    <div class="no-anomalies-message" *ngIf="showAnomalies && anomalies.length === 0 && dataPoints.length > 0">
+      <p>No anomalies detected with current threshold ({{ anomalyThreshold }} standard deviations)</p>
+    </div>
+  </div>
+</div>

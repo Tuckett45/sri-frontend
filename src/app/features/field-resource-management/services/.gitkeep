@@ -1,0 +1,15 @@
+# Services Directory
+
+This directory contains Angular services for API communication and business logic.
+
+## Planned Services
+
+- `technician.service.ts` - Technician API service
+- `job.service.ts` - Job API service
+- `scheduling.service.ts` - Scheduling and assignment service
+- `time-tracking.service.ts` - Time tracking service
+- `reporting.service.ts` - Reporting service
+- `frm-signalr.service.ts` - SignalR real-time updates service
+- `notification.service.ts` - Notification service
+- `geolocation.service.ts` - Geolocation service
+- `export.service.ts` - Data export service

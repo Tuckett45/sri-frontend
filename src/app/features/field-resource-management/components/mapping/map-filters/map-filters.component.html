@@ -1,0 +1,129 @@
+<div class="map-filters">
+  <div class="filters-header">
+    <h3>Map Filters</h3>
+    <button 
+      class="reset-btn" 
+      (click)="resetFilters()"
+      aria-label="Reset all filters">
+      Reset
+    </button>
+  </div>
+
+  <div class="filters-content">
+    <!-- Entity Type Toggles -->
+    <div class="filter-section">
+      <h4>Show on Map</h4>
+      <div class="toggle-group">
+        <label class="toggle-item">
+          <input 
+            type="checkbox" 
+            [checked]="filters.showTechnicians"
+            (change)="toggleEntityType('technicians')"
+            aria-label="Show technicians on map">
+          <span class="toggle-label">
+            <span class="marker-icon technician-marker"></span>
+            Technicians
+          </span>
+        </label>
+        <label class="toggle-item">
+          <input 
+            type="checkbox" 
+            [checked]="filters.showCrews"
+            (change)="toggleEntityType('crews')"
+            aria-label="Show crews on map">
+          <span class="toggle-label">
+            <span class="marker-icon crew-marker"></span>
+            Crews
+          </span>
+        </label>
+        <label class="toggle-item">
+          <input 
+            type="checkbox" 
+            [checked]="filters.showJobs"
+            (change)="toggleEntityType('jobs')"
+            aria-label="Show jobs on map">
+          <span class="toggle-label">
+            <span class="marker-icon job-marker"></span>
+            Jobs
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Technician Status Filters -->
+    <div class="filter-section" *ngIf="filters.showTechnicians">
+      <h4>Technician Status</h4>
+      <div class="status-group">
+        <label 
+          *ngFor="let status of technicianStatusOptions" 
+          class="status-item"
+          [class.selected]="isStatusSelected('technician', status.value)">
+          <input 
+            type="checkbox" 
+            [checked]="isStatusSelected('technician', status.value)"
+            (change)="toggleTechnicianStatus(status.value)"
+            [attr.aria-label]="'Filter technicians by ' + status.label">
+          <span class="status-indicator" [style.background-color]="status.color"></span>
+          <span class="status-label">{{ status.label }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Crew Status Filters -->
+    <div class="filter-section" *ngIf="filters.showCrews">
+      <h4>Crew Status</h4>
+      <div class="status-group">
+        <label 
+          *ngFor="let status of crewStatusOptions" 
+          class="status-item"
+          [class.selected]="isStatusSelected('crew', status.value)">
+          <input 
+            type="checkbox" 
+            [checked]="isStatusSelected('crew', status.value)"
+            (change)="toggleCrewStatus(status.value)"
+            [attr.aria-label]="'Filter crews by ' + status.label">
+          <span class="status-indicator" [style.background-color]="status.color"></span>
+          <span class="status-label">{{ status.label }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Job Status Filters -->
+    <div class="filter-section" *ngIf="filters.showJobs">
+      <h4>Job Status</h4>
+      <div class="status-group">
+        <label 
+          *ngFor="let status of jobStatusOptions" 
+          class="status-item"
+          [class.selected]="isStatusSelected('job', status.value)">
+          <input 
+            type="checkbox" 
+            [checked]="isStatusSelected('job', status.value)"
+            (change)="toggleJobStatus(status.value)"
+            [attr.aria-label]="'Filter jobs by ' + status.label">
+          <span class="status-indicator" [style.background-color]="status.color"></span>
+          <span class="status-label">{{ status.label }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Job Priority Filters -->
+    <div class="filter-section" *ngIf="filters.showJobs">
+      <h4>Job Priority</h4>
+      <div class="status-group">
+        <label 
+          *ngFor="let priority of jobPriorityOptions" 
+          class="status-item"
+          [class.selected]="isPrioritySelected(priority.value)">
+          <input 
+            type="checkbox" 
+            [checked]="isPrioritySelected(priority.value)"
+            (change)="toggleJobPriority(priority.value)"
+            [attr.aria-label]="'Filter jobs by ' + priority.label">
+          <span class="status-indicator" [style.background-color]="priority.color"></span>
+          <span class="status-label">{{ priority.label }}</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>

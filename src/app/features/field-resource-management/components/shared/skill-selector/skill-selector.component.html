@@ -1,0 +1,86 @@
+<div class="skill-selector">
+  <mat-form-field appearance="outline" class="skill-selector__field">
+    <mat-label>{{ label }}</mat-label>
+    <mat-chip-grid #chipGrid aria-label="Skill selection">
+      <mat-chip-row
+        *ngFor="let skill of selectedSkills"
+        (removed)="removeSkill(skill)"
+        [disabled]="disabled"
+        class="skill-chip">
+        <span class="skill-chip__content">
+          <span class="skill-chip__name">{{ skill.name }}</span>
+          <span 
+            *ngIf="showLevelSelector"
+            class="skill-chip__level"
+            [ngClass]="getSkillLevelClass(skill.level)"
+            [attr.aria-label]="'Proficiency level: ' + getSkillLevelLabel(skill.level)">
+            {{ getSkillLevelLabel(skill.level) }}
+          </span>
+        </span>
+        <button 
+          matChipRemove 
+          [attr.aria-label]="'Remove ' + skill.name"
+          [disabled]="disabled">
+          <mat-icon>cancel</mat-icon>
+        </button>
+      </mat-chip-row>
+    </mat-chip-grid>
+    <input
+      [placeholder]="placeholder"
+      #skillInput
+      [formControl]="skillControl"
+      [matChipInputFor]="chipGrid"
+      [matAutocomplete]="auto"
+      [disabled]="disabled"
+      (blur)="onTouched()"
+      aria-label="Search and select skills" />
+    <mat-autocomplete
+      #auto="matAutocomplete"
+      (optionSelected)="onOptionSelected($event.option.value)"
+      [displayWith]="displayFn">
+      <mat-option *ngFor="let skill of filteredSkills$ | async" [value]="skill">
+        <span class="skill-option">
+          <span class="skill-option__name">{{ skill.name }}</span>
+          <span class="skill-option__category">{{ skill.category }}</span>
+        </span>
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <!-- Proficiency Level Selector for Selected Skills -->
+  <div 
+    *ngIf="showLevelSelector && selectedSkills.length > 0" 
+    class="skill-levels"
+    role="region"
+    aria-label="Skill proficiency levels">
+    <h4 class="skill-levels__title">Proficiency Levels</h4>
+    <div class="skill-levels__list">
+      <div 
+        *ngFor="let skill of selectedSkills" 
+        class="skill-level-item">
+        <label 
+          [for]="'skill-level-' + skill.id"
+          class="skill-level-item__label">
+          {{ skill.name }}
+        </label>
+        <mat-form-field 
+          appearance="outline" 
+          class="skill-level-item__select">
+          <mat-label>Level</mat-label>
+          <mat-select
+            [id]="'skill-level-' + skill.id"
+            [value]="skill.level"
+            (selectionChange)="updateSkillLevel(skill, $event.value)"
+            [disabled]="disabled"
+            [attr.aria-label]="'Select proficiency level for ' + skill.name">
+            <mat-option 
+              *ngFor="let level of skillLevels" 
+              [value]="level">
+              {{ getSkillLevelLabel(level) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+</div>

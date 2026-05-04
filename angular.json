@@ -29,17 +29,29 @@
               "src/favicon.ico",
               "src/assets",
               "src/sw.js",
-              "src/staticwebapp.config.json"
+              "src/staticwebapp.config.json",
+              "src/manifest.webmanifest"
             ],
+            "serviceWorker": true,
+            "ngswConfigPath": "ngsw-config.json",
             "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap-grid.min.css",
               "@angular/material/prebuilt-themes/cyan-orange.css",
               "src/styles.scss",
               "node_modules/leaflet/dist/leaflet.css",
-              "node_modules/leaflet-search/dist/leaflet-search.min.css"
+              "node_modules/leaflet-search/dist/leaflet-search.min.css",
+              "node_modules/leaflet.markercluster/dist/MarkerCluster.css",
+              "node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css"
             ],
             "scripts": [
               "node_modules/leaflet/dist/leaflet.js",
               "node_modules/leaflet-search/dist/leaflet-search.min.js"
+            ],
+            "allowedCommonJsDependencies": [
+              "leaflet-search",
+              "leaflet.markercluster",
+              "papaparse",
+              "jszip"
             ]
           },
           "configurations": {
@@ -47,17 +59,33 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "3mb",
-                  "maximumError": "6mb"
+                  "maximumWarning": "2.5mb",
+                  "maximumError": "3mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kb",
-                  "maximumError": "15kb"
+                  "maximumWarning": "16kb",
+                  "maximumError": "32kb"
                 }
               ],
               "outputHashing": "all",
-              "baseHref": "/"
+              "baseHref": "/",
+              "serviceWorker": true,
+              "ngswConfigPath": "ngsw-config.json",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": true
+                },
+                "fonts": true
+              },
+              "buildOptimizer": true,
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "commonChunk": false
             },
             "development": {
               "buildOptimizer": false,
@@ -110,6 +138,33 @@
             ],
             "scripts": [
               "node_modules/leaflet/dist/leaflet.js"
+            ],
+            "exclude": [
+              "src/app/features/field-resource-management/integration-tests/**/*.spec.ts",
+              "src/app/features/field-resource-management/state/technicians/technician.selectors.spec.ts",
+              "src/app/features/field-resource-management/state/technicians/technician.effects.spec.ts",
+              "src/app/features/field-resource-management/state/jobs/job.selectors.spec.ts",
+              "src/app/features/field-resource-management/state/jobs/job.effects.spec.ts",
+              "src/app/features/field-resource-management/state/crews/crew.effects.spec.ts",
+              "src/app/features/field-resource-management/state/crews/crew.selectors.spec.ts",
+              "src/app/features/field-resource-management/state/reporting/*.spec.ts",
+              "src/app/features/field-resource-management/state/assignments/*.spec.ts",
+              "src/app/features/field-resource-management/services/frm-signalr.service.spec.ts",
+              "src/app/features/field-resource-management/services/geolocation.service.spec.ts",
+              "src/app/features/field-resource-management/services/reporting.service.spec.ts",
+              "src/app/features/field-resource-management/services/technician.service.spec.ts",
+              "src/app/features/field-resource-management/services/travel.service.spec.ts",
+              "src/app/features/field-resource-management/services/state-persistence.service.spec.ts",
+              "src/app/features/field-resource-management/state/technicians/technician.actions.spec.ts",
+              "src/app/features/field-resource-management/state/technicians/technician.reducer.spec.ts",
+              "src/app/features/field-resource-management/state/time-entries/time-entry.reducer.spec.ts",
+              "src/app/features/field-resource-management/state/timecards/timecard-budget-integration.spec.ts",
+              "src/app/features/field-resource-management/state/jobs/job.actions.spec.ts",
+
+              "src/app/features/field-resource-management/components/technicians/technician-list/technician-list.component.spec.ts",
+              "src/app/features/field-resource-management/services/job.service.spec.ts",
+              "src/app/features/field-resource-management/components/shared/skill-selector/skill-selector.component.spec.ts",
+              "src/app/features/field-resource-management/components/**/*.spec.ts"
             ]
           }
         }

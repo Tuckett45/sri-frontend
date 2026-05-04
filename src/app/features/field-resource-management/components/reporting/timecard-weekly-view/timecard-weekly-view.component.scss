@@ -1,0 +1,858 @@
+.timecard-weekly-view {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .timecard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 500;
+        color: #212121;
+      }
+
+      .week-navigation {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .week-range {
+          font-size: 16px;
+          font-weight: 500;
+          color: #424242;
+          min-width: 200px;
+          text-align: center;
+        }
+
+        .today-button {
+          margin-left: 8px;
+        }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  // Status Bar
+  .status-bar {
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+
+    .mat-card-content {
+      padding: 16px;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+    }
+
+    .status-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      &.lock-status {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+
+        &.locked {
+          color: #ffeb3b;
+        }
+
+        .lock-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      .status-label {
+        font-size: 12px;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-value {
+        font-size: 20px;
+        font-weight: 600;
+
+        &.overtime {
+          color: #ffeb3b;
+        }
+
+        .status-chip {
+          &.draft {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+          }
+        }
+      }
+    }
+  }
+
+  // Week Grid
+  .week-grid-card {
+    margin-bottom: 24px;
+
+    .week-grid {
+      .grid-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        margin-bottom: 8px;
+
+        .day-header {
+          text-align: center;
+          padding: 12px 8px;
+          background-color: #f5f7fa;
+          border-radius: 8px;
+
+          .day-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #212121;
+            margin-bottom: 4px;
+          }
+
+          .day-date {
+            font-size: 12px;
+            color: #616161;
+          }
+        }
+      }
+
+      .grid-data {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+
+        .day-cell {
+          min-height: 150px;
+          padding: 12px;
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+          background-color: #fafafa;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          position: relative;
+
+          &.has-data {
+            background-color: white;
+            border-color: #1976d2;
+
+            &:hover {
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+              transform: translateY(-2px);
+            }
+
+            &:focus {
+              outline: 2px solid #1976d2;
+              outline-offset: 2px;
+            }
+          }
+
+          &.selected {
+            border-color: #1976d2;
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.2);
+            background-color: #e3f2fd;
+          }
+
+          &.overtime {
+            border-color: #ff9800;
+            background-color: #fff3e0;
+          }
+
+          &.locked {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            opacity: 0.7;
+
+            &:hover {
+              transform: none;
+              box-shadow: none;
+            }
+          }
+
+          .cell-hours {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #212121;
+
+            .cell-icon {
+              font-size: 16px;
+              width: 16px;
+              height: 16px;
+              color: #1976d2;
+              flex-shrink: 0;
+            }
+
+            .overtime-icon {
+              font-size: 14px;
+              width: 14px;
+              height: 14px;
+              color: #ff9800;
+              margin-left: auto;
+              flex-shrink: 0;
+            }
+          }
+
+          .cell-jobs,
+          .cell-expenses {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #616161;
+
+            .cell-icon {
+              font-size: 14px;
+              width: 14px;
+              height: 14px;
+              color: #757575;
+              flex-shrink: 0;
+            }
+          }
+
+          .cell-lock {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+
+            .lock-icon {
+              font-size: 14px;
+              width: 14px;
+              height: 14px;
+              color: #9e9e9e;
+            }
+          }
+
+          .empty-day {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 118px;
+
+            .empty-text {
+              color: #9e9e9e;
+              font-size: 14px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Quick Actions
+  .quick-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+
+    button {
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  // Detailed Entries
+  .entries-detail {
+    .entries-by-day {
+      margin-bottom: 24px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .day-header-detail {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background-color: #f5f7fa;
+        border-radius: 8px;
+        margin-bottom: 12px;
+
+        h3 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #212121;
+        }
+
+        .day-total {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1976d2;
+        }
+      }
+
+      .day-entries {
+        margin-bottom: 16px;
+
+        .entry-row {
+          display: grid;
+          grid-template-columns: 2fr 3fr 1fr auto;
+          gap: 16px;
+          align-items: center;
+          padding: 12px 16px;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          margin-bottom: 8px;
+          background-color: white;
+          transition: background-color 0.2s ease;
+
+          &:hover {
+            background-color: #f5f7fa;
+          }
+
+          .entry-job,
+          .entry-time,
+          .entry-hours {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            mat-icon {
+              font-size: 20px;
+              width: 20px;
+              height: 20px;
+              color: #616161;
+            }
+          }
+
+          .entry-job {
+            font-weight: 500;
+            color: #212121;
+
+            .job-info-block {
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+            }
+
+            .job-name {
+              font-weight: 600;
+              color: #1976d2;
+              font-size: 0.875rem;
+            }
+
+            .job-site-info {
+              font-size: 0.75rem;
+              color: #757575;
+              font-weight: 400;
+            }
+          }
+
+          .entry-time {
+            color: #616161;
+            font-size: 14px;
+          }
+
+          .entry-hours {
+            font-weight: 600;
+            color: #1976d2;
+            justify-content: flex-end;
+          }
+
+          .entry-actions {
+            display: flex;
+            gap: 4px;
+
+            button mat-icon {
+              color: #e18a25;
+            }
+          }
+        }
+      }
+
+      .day-expenses {
+        padding: 16px;
+        background-color: #f5f7fa;
+        border-radius: 8px;
+
+        h4 {
+          margin: 0 0 12px 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: #616161;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .expense-row {
+          display: grid;
+          grid-template-columns: 1fr 2fr auto;
+          gap: 16px;
+          align-items: center;
+          padding: 8px 12px;
+          background-color: white;
+          border-radius: 4px;
+          margin-bottom: 8px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .expense-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            color: #212121;
+            text-transform: capitalize;
+
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+              color: #616161;
+            }
+          }
+
+          .expense-description {
+            color: #616161;
+            font-size: 14px;
+          }
+
+          .expense-amount {
+            font-weight: 600;
+            color: #1976d2;
+            text-align: right;
+          }
+        }
+      }
+    }
+
+    .empty-day-entries {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 24px 16px;
+      color: #9e9e9e;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      text-align: center;
+
+      > mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: #9e9e9e;
+        margin-bottom: 16px;
+      }
+
+      p {
+        font-size: 16px;
+        color: #616161;
+        margin-bottom: 24px;
+      }
+
+      button mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: inherit;
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// Responsive Design
+// Desktop/Mobile visibility
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block !important;
+  }
+}
+
+// Mobile Accordion
+.week-accordion {
+  margin-bottom: 24px;
+
+  .accordion-day {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+
+    &.expanded {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-color: #1976d2;
+    }
+
+    &.is-today {
+      border-left: 4px solid #1976d2;
+    }
+
+    &.has-data:not(.expanded) {
+      border-left: 4px solid #43a047;
+    }
+  }
+
+  .accordion-day-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 14px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    gap: 12px;
+
+    &:focus-visible {
+      outline: 2px solid #1976d2;
+      outline-offset: -2px;
+    }
+  }
+
+  .accordion-day-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 80px;
+
+    .accordion-day-name {
+      font-weight: 600;
+      font-size: 0.9375rem;
+      color: #212121;
+    }
+
+    .accordion-day-date {
+      font-size: 0.8125rem;
+      color: #757575;
+    }
+  }
+
+  .accordion-day-summary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .accordion-hours {
+      font-weight: 600;
+      font-size: 0.9375rem;
+      color: #1976d2;
+    }
+
+    .accordion-jobs {
+      font-size: 0.8125rem;
+      color: #616161;
+    }
+
+    .accordion-empty {
+      font-size: 0.8125rem;
+      color: #9e9e9e;
+      font-style: italic;
+    }
+  }
+
+  .accordion-chevron {
+    color: #757575;
+    flex-shrink: 0;
+  }
+
+  .accordion-day-content {
+    padding: 0 16px 16px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .accordion-entries {
+    .accordion-entry {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f5f5f5;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .accordion-entry-job {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-weight: 500;
+      color: #212121;
+      min-width: 80px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: #616161;
+        margin-top: 2px;
+      }
+
+      .job-info-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .job-name {
+        font-weight: 600;
+        color: #1976d2;
+        font-size: 0.875rem;
+      }
+
+      .job-site-info {
+        font-size: 0.75rem;
+        color: #757575;
+        font-weight: 400;
+      }
+    }
+
+    .accordion-entry-time {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.875rem;
+      color: #616161;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        color: #9e9e9e;
+      }
+    }
+
+    .accordion-entry-hours {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #1976d2;
+      flex-shrink: 0;
+    }
+  }
+
+  .accordion-expenses {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+
+    .accordion-expense-header {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #616161;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .accordion-expense {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 0.875rem;
+
+      .expense-type {
+        color: #424242;
+        text-transform: capitalize;
+      }
+
+      .expense-amount {
+        font-weight: 600;
+        color: #1976d2;
+      }
+    }
+  }
+
+  .accordion-no-entries {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 0;
+    color: #9e9e9e;
+    font-size: 0.875rem;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .timecard-weekly-view {
+    .week-grid-card {
+      .week-grid {
+        .grid-data {
+          .day-cell {
+            min-height: 120px;
+            padding: 12px;
+
+            .cell-hours {
+              font-size: 16px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Medium screens — make the 7-day grid scrollable and tighten spacing
+@media (min-width: 769px) and (max-width: 1024px) {
+  .timecard-weekly-view {
+    padding: 1rem;
+
+    .week-grid-card {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+
+      .week-grid {
+        .grid-header,
+        .grid-data {
+          min-width: 700px;
+        }
+
+        .grid-data .day-cell {
+          min-height: 100px;
+          padding: 10px;
+
+          .cell-hours {
+            font-size: 14px;
+          }
+        }
+      }
+    }
+
+    .status-bar .status-grid {
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .day-detail-section {
+      .entry-row {
+        grid-template-columns: 1.5fr 2fr 1fr auto;
+        gap: 10px;
+        font-size: 0.8125rem;
+      }
+
+      .expense-row {
+        grid-template-columns: 1fr 2fr auto;
+        gap: 10px;
+        font-size: 0.8125rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .timecard-weekly-view {
+    padding: 16px;
+
+    .timecard-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+
+      .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+
+        .week-navigation {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
+    }
+
+    .status-bar {
+      .status-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .quick-actions {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+
+    .entries-detail {
+      .entries-by-day {
+        .day-entries {
+          .entry-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+          }
+        }
+
+        .day-expenses {
+          .expense-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+          }
+        }
+      }
+    }
+  }
+}

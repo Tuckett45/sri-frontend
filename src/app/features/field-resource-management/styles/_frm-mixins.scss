@@ -1,0 +1,396 @@
+/**
+ * FRM Design System Mixins
+ * Reusable SCSS mixins for consistent styling patterns
+ */
+
+@import './frm-variables';
+
+// ============================================================================
+// LAYOUT MIXINS
+// ============================================================================
+
+@mixin frm-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 $frm-spacing-md;
+}
+
+@mixin frm-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin frm-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin frm-flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// ============================================================================
+// CARD MIXINS
+// ============================================================================
+
+@mixin frm-card {
+  background: $frm-bg-primary;
+  border-radius: $frm-card-border-radius;
+  box-shadow: $frm-card-shadow;
+  padding: $frm-card-padding;
+  transition: box-shadow $frm-transition-base $frm-transition-ease;
+
+  &:hover {
+    box-shadow: $frm-shadow-md;
+  }
+}
+
+@mixin frm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: $frm-spacing-md;
+  margin-bottom: $frm-spacing-md;
+  border-bottom: $frm-border-width solid $frm-border-light;
+
+  h2, h3 {
+    margin: 0;
+    font-size: $frm-font-size-lg;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-primary;
+  }
+}
+
+// ============================================================================
+// BUTTON MIXINS
+// ============================================================================
+
+@mixin frm-button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: $frm-button-height;
+  padding: $frm-button-padding;
+  border: none;
+  border-radius: $frm-button-border-radius;
+  font-size: $frm-font-size-base;
+  font-weight: $frm-font-weight-medium;
+  font-family: $frm-font-family;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all $frm-transition-fast $frm-transition-ease;
+  user-select: none;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &:focus {
+    outline: 2px solid $frm-primary;
+    outline-offset: 2px;
+  }
+}
+
+@mixin frm-button-primary {
+  @include frm-button-base;
+  background-color: $frm-primary;
+  color: $frm-primary-contrast;
+
+  &:hover:not(:disabled) {
+    background-color: $frm-primary-dark;
+    box-shadow: $frm-shadow-sm;
+  }
+
+  &:active:not(:disabled) {
+    background-color: $frm-primary-dark;
+  }
+}
+
+@mixin frm-button-secondary {
+  @include frm-button-base;
+  background-color: transparent;
+  color: $frm-primary;
+  border: $frm-border-width solid $frm-primary;
+
+  &:hover:not(:disabled) {
+    background-color: rgba($frm-primary, 0.04);
+  }
+
+  &:active:not(:disabled) {
+    background-color: rgba($frm-primary, 0.08);
+  }
+}
+
+// ============================================================================
+// FORM MIXINS
+// ============================================================================
+
+@mixin frm-input {
+  width: 100%;
+  height: $frm-input-height;
+  padding: $frm-input-padding;
+  border: $frm-border-width solid $frm-border-medium;
+  border-radius: $frm-input-border-radius;
+  font-size: $frm-font-size-base;
+  font-family: $frm-font-family;
+  color: $frm-text-primary;
+  background-color: $frm-bg-primary;
+  transition: border-color $frm-transition-fast $frm-transition-ease;
+
+  &:hover:not(:disabled) {
+    border-color: $frm-border-dark;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $frm-primary;
+    box-shadow: 0 0 0 1px $frm-primary;
+  }
+
+  &:disabled {
+    background-color: $frm-gray-100;
+    color: $frm-text-disabled;
+    cursor: not-allowed;
+  }
+
+  &::placeholder {
+    color: $frm-text-hint;
+  }
+}
+
+@mixin frm-form-field {
+  margin-bottom: $frm-spacing-md;
+
+  label {
+    display: block;
+    margin-bottom: $frm-spacing-xs;
+    font-size: $frm-font-size-sm;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-secondary;
+  }
+
+  .error-message {
+    display: block;
+    margin-top: $frm-spacing-xs;
+    font-size: $frm-font-size-sm;
+    color: $frm-error;
+  }
+}
+
+// ============================================================================
+// TABLE MIXINS
+// ============================================================================
+
+@mixin frm-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: $frm-bg-primary;
+
+  thead {
+    background-color: $frm-gray-50;
+    border-bottom: $frm-border-width-thick solid $frm-border-light;
+
+    th {
+      height: $frm-table-header-height;
+      padding: $frm-table-cell-padding;
+      text-align: left;
+      font-size: $frm-font-size-sm;
+      font-weight: $frm-font-weight-medium;
+      color: $frm-text-secondary;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: $frm-border-width solid $frm-border-light;
+      transition: background-color $frm-transition-fast $frm-transition-ease;
+
+      &:hover {
+        background-color: $frm-bg-hover;
+      }
+
+      &.selected {
+        background-color: $frm-bg-selected;
+      }
+    }
+
+    td {
+      height: $frm-table-row-height;
+      padding: $frm-table-cell-padding;
+      font-size: $frm-font-size-base;
+      color: $frm-text-primary;
+    }
+  }
+}
+
+// ============================================================================
+// STATUS BADGE MIXINS
+// ============================================================================
+
+@mixin frm-badge($color) {
+  display: inline-flex;
+  align-items: center;
+  padding: $frm-spacing-xs $frm-spacing-sm;
+  border-radius: $frm-border-radius-lg;
+  font-size: $frm-font-size-xs;
+  font-weight: $frm-font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: rgba($color, 0.1);
+  color: darken($color, 10%);
+}
+
+@mixin frm-status-badge {
+  &.status-success,
+  &.status-active,
+  &.status-available,
+  &.status-completed {
+    @include frm-badge($frm-success);
+  }
+
+  &.status-warning,
+  &.status-pending,
+  &.status-in-progress {
+    @include frm-badge($frm-warning);
+  }
+
+  &.status-error,
+  &.status-failed,
+  &.status-unavailable {
+    @include frm-badge($frm-error);
+  }
+
+  &.status-info,
+  &.status-scheduled {
+    @include frm-badge($frm-info);
+  }
+}
+
+// ============================================================================
+// RESPONSIVE MIXINS
+// ============================================================================
+
+@mixin frm-responsive($breakpoint) {
+  @if $breakpoint == xs {
+    @media (max-width: #{$frm-breakpoint-sm - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == sm {
+    @media (min-width: $frm-breakpoint-sm) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: $frm-breakpoint-md) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: $frm-breakpoint-lg) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (min-width: $frm-breakpoint-xl) {
+      @content;
+    }
+  }
+}
+
+// ============================================================================
+// ACCESSIBILITY MIXINS
+// ============================================================================
+
+@mixin frm-focus-visible {
+  &:focus-visible {
+    outline: 2px solid $frm-primary;
+    outline-offset: 2px;
+  }
+}
+
+@mixin frm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// ============================================================================
+// ANIMATION MIXINS
+// ============================================================================
+
+@mixin frm-fade-in {
+  animation: frmFadeIn $frm-transition-base $frm-transition-ease;
+}
+
+@keyframes frmFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@mixin frm-slide-in-up {
+  animation: frmSlideInUp $frm-transition-base $frm-transition-ease;
+}
+
+@keyframes frmSlideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// ============================================================================
+// UTILITY MIXINS
+// ============================================================================
+
+@mixin frm-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin frm-line-clamp($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@mixin frm-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $frm-gray-100;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $frm-gray-400;
+    border-radius: $frm-border-radius-md;
+
+    &:hover {
+      background: $frm-gray-500;
+    }
+  }
+}

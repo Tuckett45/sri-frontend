@@ -1,0 +1,192 @@
+<form [formGroup]="form" (ngSubmit)="onSave()" class="eod-entry-form">
+
+  <!-- ===================================================================== -->
+  <!-- Date -->
+  <!-- ===================================================================== -->
+  <section class="form-section">
+    <h4 class="section-heading">Report Date</h4>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Date</mat-label>
+      <input matInput type="date" formControlName="date" />
+      <mat-error *ngIf="form.get('date')?.hasError('required')">
+        This field is required
+      </mat-error>
+    </mat-form-field>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Personnel Information -->
+  <!-- ===================================================================== -->
+  <section class="form-section">
+    <h4 class="section-heading">Personnel Information</h4>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Personnel On-site</mat-label>
+      <input matInput formControlName="personnelOnSite" />
+      <mat-error *ngIf="form.get('personnelOnSite')?.hasError('required')">
+        This field is required
+      </mat-error>
+    </mat-form-field>
+
+    <div class="form-row two-columns">
+      <mat-form-field appearance="outline">
+        <mat-label>Technical Lead Name</mat-label>
+        <input matInput formControlName="technicalLeadName" />
+        <mat-error *ngIf="form.get('technicalLeadName')?.hasError('required')">
+          This field is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Technician Names</mat-label>
+        <input matInput formControlName="technicianNames" />
+        <mat-error *ngIf="form.get('technicianNames')?.hasError('required')">
+          This field is required
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row two-columns">
+      <mat-form-field appearance="outline">
+        <mat-label>Time In</mat-label>
+        <input matInput type="time" formControlName="timeIn" />
+        <mat-error *ngIf="form.get('timeIn')?.hasError('required')">
+          This field is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Time Out</mat-label>
+        <input matInput type="time" formControlName="timeOut" />
+        <mat-error *ngIf="form.get('timeOut')?.hasError('required')">
+          This field is required
+        </mat-error>
+      </mat-form-field>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Customer Notification -->
+  <!-- ===================================================================== -->
+  <section class="form-section">
+    <h4 class="section-heading">Customer Notification</h4>
+
+    <div class="form-row two-columns">
+      <mat-form-field appearance="outline">
+        <mat-label>Contact Name</mat-label>
+        <input matInput formControlName="customerNotificationName" />
+        <mat-error *ngIf="form.get('customerNotificationName')?.hasError('required')">
+          This field is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Method of Notification</mat-label>
+        <input matInput formControlName="customerNotificationMethod" />
+        <mat-error *ngIf="form.get('customerNotificationMethod')?.hasError('required')">
+          This field is required
+        </mat-error>
+      </mat-form-field>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Daily Progress -->
+  <!-- ===================================================================== -->
+  <section class="form-section" formGroupName="dailyProgress">
+    <h4 class="section-heading">Daily Progress (% Complete)</h4>
+
+    <div class="progress-grid">
+      <div *ngFor="let field of progressFields" class="progress-field">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ field.label }}</mat-label>
+          <input matInput type="number" [formControlName]="field.key"
+                 min="0" max="100" step="1" />
+          <mat-hint align="end">0–100%</mat-hint>
+          <mat-error *ngIf="dailyProgressGroup.get(field.key)?.hasError('required')">
+            This field is required
+          </mat-error>
+          <mat-error *ngIf="dailyProgressGroup.get(field.key)?.hasError('min') || dailyProgressGroup.get(field.key)?.hasError('max')">
+            Value must be between 0 and 100
+          </mat-error>
+          <mat-error *ngIf="dailyProgressGroup.get(field.key)?.hasError('pattern')">
+            Must be a whole number
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Yes/No Toggles -->
+  <!-- ===================================================================== -->
+  <section class="form-section">
+    <h4 class="section-heading">Daily Checklist</h4>
+
+    <div class="toggle-row">
+      <mat-slide-toggle formControlName="dailyPicturesProvided" color="primary">
+        Daily Pictures Provided?
+      </mat-slide-toggle>
+    </div>
+
+    <div class="toggle-row">
+      <mat-slide-toggle formControlName="edpRedlineRequired" color="primary">
+        EDP Redline Required?
+      </mat-slide-toggle>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Narrative Fields -->
+  <!-- ===================================================================== -->
+  <section class="form-section">
+    <h4 class="section-heading">Work Summary</h4>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Work Completed Today</mat-label>
+      <textarea matInput formControlName="workCompletedToday"
+                rows="4"
+                maxlength="3000"></textarea>
+      <mat-hint align="end">{{ form.get('workCompletedToday')?.value?.length || 0 }} / 3000</mat-hint>
+      <mat-error *ngIf="form.get('workCompletedToday')?.hasError('maxlength')">
+        Maximum 3000 characters
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Issues / Roadblocks Discovered and/or Resolved</mat-label>
+      <textarea matInput formControlName="issuesRoadblocks"
+                rows="4"
+                maxlength="3000"></textarea>
+      <mat-hint align="end">{{ form.get('issuesRoadblocks')?.value?.length || 0 }} / 3000</mat-hint>
+      <mat-error *ngIf="form.get('issuesRoadblocks')?.hasError('maxlength')">
+        Maximum 3000 characters
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Plan for Tomorrow</mat-label>
+      <textarea matInput formControlName="planForTomorrow"
+                rows="4"
+                maxlength="3000"></textarea>
+      <mat-hint align="end">{{ form.get('planForTomorrow')?.value?.length || 0 }} / 3000</mat-hint>
+      <mat-error *ngIf="form.get('planForTomorrow')?.hasError('maxlength')">
+        Maximum 3000 characters
+      </mat-error>
+    </mat-form-field>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- Form Actions -->
+  <!-- ===================================================================== -->
+  <div class="form-actions">
+    <button mat-stroked-button type="button" (click)="onCancel()">
+      Cancel
+    </button>
+    <button mat-raised-button color="primary" type="submit">
+      <mat-icon>save</mat-icon>
+      Submit EOD Report
+    </button>
+  </div>
+
+</form>

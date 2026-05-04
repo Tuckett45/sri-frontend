@@ -1,0 +1,66 @@
+<nav class="frm-nav-menu" role="navigation" aria-label="Main navigation">
+  <ul class="menu-list" role="menu">
+    <li 
+      *ngFor="let item of menuItems" 
+      class="menu-item"
+      [class.has-children]="hasChildren(item)"
+      [class.expanded]="isExpanded(item.label)"
+      role="none">
+      
+      <!-- Menu item without children -->
+      <a 
+        *ngIf="!hasChildren(item) && item.route"
+        class="menu-link"
+        [class.active]="isActive(item.route)"
+        (click)="navigate(item.route)"
+        (keydown.enter)="navigate(item.route)"
+        role="menuitem"
+        tabindex="0"
+        [attr.aria-current]="isActive(item.route) ? 'page' : null">
+        <mat-icon class="menu-icon">{{ item.icon }}</mat-icon>
+        <span class="menu-label">{{ item.label }}</span>
+      </a>
+
+      <!-- Menu item with children (expandable) -->
+      <div 
+        *ngIf="hasChildren(item)"
+        class="menu-parent"
+        (click)="toggleExpanded(item.label)"
+        (keydown.enter)="toggleExpanded(item.label)"
+        role="menuitem"
+        tabindex="0"
+        [attr.aria-expanded]="isExpanded(item.label)">
+        <mat-icon class="menu-icon">{{ item.icon }}</mat-icon>
+        <span class="menu-label">{{ item.label }}</span>
+        <mat-icon class="expand-icon">
+          {{ isExpanded(item.label) ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
+      </div>
+
+      <!-- Submenu -->
+      <ul 
+        *ngIf="hasChildren(item) && isExpanded(item.label)"
+        class="submenu"
+        role="menu"
+        [attr.aria-label]="item.label + ' submenu'">
+        <li 
+          *ngFor="let child of item.children"
+          class="submenu-item"
+          role="none">
+          <a 
+            *ngIf="child.route"
+            class="submenu-link"
+            [class.active]="isActive(child.route)"
+            (click)="navigate(child.route)"
+            (keydown.enter)="navigate(child.route)"
+            role="menuitem"
+            tabindex="0"
+            [attr.aria-current]="isActive(child.route) ? 'page' : null">
+            <mat-icon class="submenu-icon">{{ child.icon }}</mat-icon>
+            <span class="submenu-label">{{ child.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>

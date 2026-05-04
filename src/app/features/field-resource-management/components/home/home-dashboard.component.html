@@ -1,0 +1,13 @@
+<div class="home-dashboard">
+  <ng-container [ngSwitch]="currentView">
+    <app-technician-dashboard *ngSwitchCase="'technician'"></app-technician-dashboard>
+    <app-admin-dashboard *ngSwitchCase="'admin'"></app-admin-dashboard>
+    <app-cm-dashboard *ngSwitchCase="'cm'"></app-cm-dashboard>
+    <app-hr-payroll-dashboard *ngSwitchCase="'hr-payroll'"></app-hr-payroll-dashboard>
+    <app-default-dashboard *ngSwitchDefault></app-default-dashboard>
+  </ng-container>
+
+  <app-quote-pipeline-dashboard
+    *frmHasPermission="'canViewQuote'">
+  </app-quote-pipeline-dashboard>
+</div>
