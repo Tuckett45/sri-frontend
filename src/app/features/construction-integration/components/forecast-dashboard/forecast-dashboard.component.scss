@@ -116,8 +116,8 @@
 
 .project-col {
   text-align: left !important;
-  min-width: 180px;
-  width: 200px;
+  min-width: 240px;
+  width: 260px;
 }
 
 .month-col { width: 60px; }
@@ -146,9 +146,10 @@
 
 .cell-input {
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid #1565c0;
   border-radius: 2px;
-  padding: 4px;
+  padding: 3px 2px;
   text-align: center;
   font-size: 13px;
   outline: none;

@@ -74,7 +74,6 @@ export class ForecastDashboardComponent implements OnInit {
   }
 
   startEdit(projectId: string, cell: GridCell): void {
-    if (!this.isAdmin) return;
     this.editingCell = { projectId, month: cell.month };
     this.editValue = cell.headcount > 0 ? String(cell.headcount) : '';
   }

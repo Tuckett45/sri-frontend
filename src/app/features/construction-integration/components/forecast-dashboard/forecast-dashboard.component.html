@@ -47,8 +47,7 @@
               </a>
               <span class="client-name">{{ row.project.clientName }}</span>
             </td>
-            <td *ngFor="let cell of row.months" class="month-cell"
-                [class.editable]="isAdmin"
+            <td *ngFor="let cell of row.months" class="month-cell editable"
                 [class.editing]="isEditing(row.project.id, cell.month)"
                 (click)="startEdit(row.project.id, cell)">
               <!-- Editing mode -->
