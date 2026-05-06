@@ -6,7 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 export class HrGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
   canActivate(): boolean {
-    const user = this.authService.getCurrentUser();
+    const user = this.authService.currentUser;
     const allowed = ['Admin', 'HR', 'Manager'];
     if (user && allowed.includes(user.role)) return true;
     this.router.navigate(['/field-resource-management/dashboard']);

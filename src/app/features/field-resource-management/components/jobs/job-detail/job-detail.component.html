@@ -282,10 +282,9 @@
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <frm-time-tracker 
-          [job]="job"
-          [isAdmin]="false">
-        </frm-time-tracker>
+        <app-time-tracker 
+          [jobId]="job?.id">
+        </app-time-tracker>
       </mat-card-content>
     </mat-card>
 

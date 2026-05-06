@@ -6,7 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 export class AdminGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
   canActivate(): boolean {
-    const user = this.authService.getCurrentUser();
+    const user = this.authService.currentUser;
     if (user?.role === 'Admin') return true;
     this.router.navigate(['/field-resource-management/dashboard']);
     return false;

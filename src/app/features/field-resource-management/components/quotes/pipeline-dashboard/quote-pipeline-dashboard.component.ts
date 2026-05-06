@@ -2,6 +2,7 @@ import {
   Component,
   OnInit,
   OnDestroy,
+  Input,
   ChangeDetectionStrategy,
   ChangeDetectorRef
 } from '@angular/core';
@@ -45,6 +46,7 @@ export interface PipelineCategory {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
+  @Input() compact = false;
   categories: PipelineCategory[] = [];
   loading$!: Observable<boolean>;
   error$!: Observable<string | null>;

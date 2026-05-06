@@ -54,7 +54,7 @@
       <div class="comment-section" *ngIf="approval.status === 'pending'">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Comment (optional)</mat-label>
-          <textarea matInput [formControl]="commentForm.get('comment')" rows="3"></textarea>
+          <textarea matInput [formControl]="$any(commentForm.get('comment'))" rows="3"></textarea>
         </mat-form-field>
       </div>
 

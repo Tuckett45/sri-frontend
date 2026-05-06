@@ -6,7 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 export class TechnicianGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
   canActivate(): boolean {
-    if (this.authService.isAuthenticated()) return true;
+    if (this.authService.isLoggedIn()) return true;
     this.router.navigate(['/login']);
     return false;
   }

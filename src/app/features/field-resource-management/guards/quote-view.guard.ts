@@ -6,7 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 export class QuoteViewGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
   canActivate(): boolean {
-    const user = this.authService.getCurrentUser();
+    const user = this.authService.currentUser;
     const allowed = ['Admin', 'PM', 'CM', 'Manager', 'Dispatcher'];
     if (user && allowed.includes(user.role)) return true;
     this.router.navigate(['/field-resource-management/dashboard']);

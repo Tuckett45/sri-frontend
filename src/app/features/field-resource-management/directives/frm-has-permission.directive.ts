@@ -13,7 +13,7 @@ export class FrmHasPermissionDirective implements OnInit {
 
   ngOnInit(): void {
     const permissions = Array.isArray(this.permission) ? this.permission : [this.permission];
-    const user = this.authService.getCurrentUser();
+    const user = this.authService.currentUser;
     if (user && permissions.includes(user.role)) {
       this.viewContainer.createEmbeddedView(this.templateRef);
     } else {
