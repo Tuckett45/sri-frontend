@@ -1,0 +1,22 @@
+<mat-sidenav-container class="onboarding-container">
+  <mat-sidenav mode="side" opened class="onboarding-sidenav">
+    <div class="nav-header">
+      <mat-icon>person_add</mat-icon>
+      <span>Onboarding</span>
+    </div>
+    <mat-nav-list>
+      <a mat-list-item
+        *ngFor="let link of navLinks"
+        [routerLink]="link.path"
+        routerLinkActive="active-link">
+        <mat-icon matListItemIcon>{{link.icon}}</mat-icon>
+        <span matListItemTitle>{{link.label}}</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

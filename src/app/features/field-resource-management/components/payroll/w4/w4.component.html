@@ -1,0 +1,42 @@
+<mat-card class="w4-card">
+  <mat-card-header>
+    <mat-card-title>W4 Withholding</mat-card-title>
+    <mat-card-subtitle>Update your federal tax withholding information</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="w4Form" (ngSubmit)="onSubmit()" class="w4-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Filing Status</mat-label>
+        <mat-select formControlName="filingStatus">
+          <mat-option *ngFor="let status of filingStatuses" [value]="status">{{ status }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="w4Form.get('filingStatus')?.hasError('required')">Filing status is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Dependents Amount ($)</mat-label>
+        <input matInput type="number" formControlName="dependentsAmount" min="0">
+        <span matPrefix>$&nbsp;</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Other Adjustments ($)</mat-label>
+        <input matInput type="number" formControlName="otherAdjustments" min="0">
+        <span matPrefix>$&nbsp;</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Extra Withholding per Pay Period ($)</mat-label>
+        <input matInput type="number" formControlName="extraWithholding" min="0">
+        <span matPrefix>$&nbsp;</span>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="w4Form.invalid || isSaving">
+          <mat-icon>save</mat-icon>
+          {{ isSaving ? 'Saving...' : 'Save W4' }}
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,54 @@
+.incident-reports-card {
+  margin: 16px;
+
+  mat-card-content {
+    padding-top: 16px;
+  }
+}
+
+.toolbar {
+  margin-bottom: 16px;
+}
+
+.incident-form-panel {
+  margin-bottom: 16px;
+}
+
+.incident-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.incidents-table {
+  width: 100%;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 16px;
+  color: rgba(0, 0, 0, 0.38);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+}
+
+.severity-minor { background-color: #e8f5e9; color: #2e7d32; }
+.severity-moderate { background-color: #fff3e0; color: #e65100; }
+.severity-major { background-color: #ffebee; color: #c62828; }

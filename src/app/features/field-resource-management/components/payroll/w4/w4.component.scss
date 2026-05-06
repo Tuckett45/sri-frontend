@@ -1,0 +1,30 @@
+.w4-card {
+  margin: 16px;
+  max-width: 600px;
+
+  mat-card-content {
+    padding-top: 16px;
+  }
+}
+
+.w4-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}

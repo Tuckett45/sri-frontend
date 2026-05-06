@@ -1,0 +1,26 @@
+.pay-stubs-card {
+  margin: 16px;
+
+  mat-card-content {
+    padding-top: 16px;
+  }
+}
+
+.pay-stubs-table {
+  width: 100%;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 16px;
+  color: rgba(0, 0, 0, 0.38);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+}

@@ -1,101 +1,66 @@
-<div class="region-manager-container">
-  <div class="header">
-    <h2>Region Manager</h2>
-    <button mat-raised-button class="btn-orange" (click)="onCreateRegion()">
-      <mat-icon>add</mat-icon>
-      Create Region
-    </button>
-  </div>
+<mat-card class="region-manager-card">
+  <mat-card-header>
+    <mat-card-title>Region Manager</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="toolbar">
+      <button mat-raised-button color="primary" (click)="openForm()">
+        <mat-icon>add</mat-icon> Add Region
+      </button>
+    </div>
 
-  <mat-card>
-    <mat-card-content>
-      <table mat-table [dataSource]="dataSource" class="regions-table">
-        <!-- Name Column -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Region Name</th>
-          <td mat-cell *matCellDef="let region">
-            <div class="region-name">
-              <mat-icon>place</mat-icon>
-              <span>{{ region.name }}</span>
-            </div>
-          </td>
-        </ng-container>
+    <mat-expansion-panel *ngIf="showForm" [expanded]="true" class="region-form-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title>{{ editingRegion ? 'Edit Region' : 'New Region' }}</mat-panel-title>
+      </mat-expansion-panel-header>
+      <form [formGroup]="regionForm" (ngSubmit)="onSubmit()" class="region-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Region Name</mat-label>
+          <input matInput formControlName="name">
+          <mat-error *ngIf="regionForm.get('name')?.hasError('required')">Name is required</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>States (comma-separated)</mat-label>
+          <input matInput formControlName="states" placeholder="e.g. GA, FL, AL">
+        </mat-form-field>
+        <mat-slide-toggle formControlName="active" color="primary">Active</mat-slide-toggle>
+        <div class="form-actions">
+          <button mat-button type="button" (click)="closeForm()">Cancel</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="regionForm.invalid">
+            <mat-icon>save</mat-icon> Save
+          </button>
+        </div>
+      </form>
+    </mat-expansion-panel>
 
-        <!-- Technician Count Column -->
-        <ng-container matColumnDef="technicianCount">
-          <th mat-header-cell *matHeaderCellDef>Technicians</th>
-          <td mat-cell *matCellDef="let region">
-            <button mat-button color="primary" (click)="onViewTechnicians(region)">
-              <mat-icon>people</mat-icon>
-              {{ region.technicianCount }}
-            </button>
-          </td>
-        </ng-container>
-
-        <!-- Job Count Column -->
-        <ng-container matColumnDef="jobCount">
-          <th mat-header-cell *matHeaderCellDef>Jobs</th>
-          <td mat-cell *matCellDef="let region">
-            <button mat-button color="primary" (click)="onViewJobs(region)">
-              <mat-icon>work</mat-icon>
-              {{ region.jobCount }}
-            </button>
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let region">
-            <button mat-icon-button [matMenuTriggerFor]="actionMenu" aria-label="Actions">
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #actionMenu="matMenu">
-              <button mat-menu-item (click)="onViewRegionDetails(region)">
-                <mat-icon>visibility</mat-icon>
-                <span>View Details</span>
-              </button>
-              <button mat-menu-item (click)="onEditRegion(region)" *roleBasedShow="[UserRole.Admin]">
-                <mat-icon>edit</mat-icon>
-                <span>Edit</span>
-              </button>
-              <button mat-menu-item (click)="onDeleteRegion(region)" *roleBasedShow="[UserRole.Admin]">
-                <mat-icon color="warn">delete</mat-icon>
-                <span>Delete</span>
-              </button>
-            </mat-menu>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-
-        <!-- No data row -->
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-            <div class="empty-state">
-              <mat-icon>map</mat-icon>
-              <p>No regions found</p>
-              <button mat-raised-button class="btn-orange" (click)="onCreateRegion()">
-                Create First Region
-              </button>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Optional: Map view section -->
-  <mat-card class="map-card">
-    <mat-card-header>
-      <mat-card-title>Region Map</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="map-placeholder">
-        <mat-icon>map</mat-icon>
-        <p>Map view integration (Leaflet or Google Maps) can be added here</p>
-      </div>
-    </mat-card-content>
-  </mat-card>
-</div>
+    <mat-table [dataSource]="regions" class="regions-table">
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Region</mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.name }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="states">
+        <mat-header-cell *matHeaderCellDef>States</mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <mat-chip-set>
+            <mat-chip *ngFor="let s of r.states">{{ s }}</mat-chip>
+          </mat-chip-set>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="active">
+        <mat-header-cell *matHeaderCellDef>Active</mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <mat-slide-toggle [(ngModel)]="r.active" color="primary"></mat-slide-toggle>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <button mat-icon-button color="primary" (click)="openForm(r)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="deleteRegion(r)"><mat-icon>delete</mat-icon></button>
+        </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </mat-card-content>
+</mat-card>
