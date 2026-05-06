@@ -1,44 +1,29 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { DashboardDataService } from '../../../../services/dashboard-data.service';
-import { ApprovalCounts } from '../../../../models/dashboard.models';
+import { Component, OnInit } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-approvals-widget',
   templateUrl: './approvals-widget.component.html',
   styleUrls: ['./approvals-widget.component.scss']
 })
-export class ApprovalsWidgetComponent implements OnInit, OnDestroy {
-  counts: ApprovalCounts | null = null;
-  loading = false;
-  error: string | null = null;
+export class ApprovalsWidgetComponent implements OnInit {
+  pendingCount = 0;
+  pendingItems: any[] = [];
+  approvalsRoute = '/field-resource-management/approvals';
 
-  private destroy$ = new Subject<void>();
-
-  constructor(private dashboardDataService: DashboardDataService) {}
+  constructor(private store: Store, private router: Router) {}
 
   ngOnInit(): void {
-    this.loadData();
+    this.store.select(state => (state as any)['approvals']?.pending || []).subscribe(
+      (items: any[]) => {
+        this.pendingItems = items;
+        this.pendingCount = items.length;
+      }
+    );
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  retry(): void {
-    this.loadData();
-  }
-
-  private loadData(): void {
-    this.loading = true;
-    this.error = null;
-    this.dashboardDataService.getApprovalCounts()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => { this.counts = data; this.loading = false; },
-        error: () => { this.error = 'Unable to load data. Please try again.'; this.loading = false; }
-      });
+  viewAll(): void {
+    this.router.navigate([this.approvalsRoute]);
   }
 }

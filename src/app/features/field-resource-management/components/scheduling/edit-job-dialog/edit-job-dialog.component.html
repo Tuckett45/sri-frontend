@@ -1,140 +1,36 @@
-<div class="edit-job-dialog">
-  <!-- Header -->
-  <div class="dialog-header">
-    <div class="header-left">
-      <h2 mat-dialog-title>Edit Job</h2>
-      <span class="job-id-badge">{{ job.jobId }}</span>
-    </div>
-    <div class="header-actions">
-      <button mat-button class="full-editor-link" (click)="onOpenFullEditor()">
-        <mat-icon>open_in_new</mat-icon>
-        Full Editor
-      </button>
-      <button mat-icon-button (click)="onCancel()" aria-label="Close dialog">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
+<h2 mat-dialog-title>Edit Assignment</h2>
+<mat-dialog-content>
+  <div class="assignment-info" *ngIf="data?.assignment">
+    <p><strong>Job:</strong> {{ data.assignment.jobName }}</p>
   </div>
-
-  <mat-dialog-content>
-    <form [formGroup]="editForm" class="edit-form">
-
-      <!-- Status row -->
-      <div class="status-row">
-        <mat-form-field appearance="outline" class="status-field">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status">
-            <mat-option *ngFor="let s of statuses" [value]="s">
-              <mat-icon class="status-option-icon">{{ getStatusIcon(s) }}</mat-icon>
-              {{ s }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="priority-field">
-          <mat-label>Priority</mat-label>
-          <mat-select formControlName="priority">
-            <mat-option *ngFor="let p of priorities" [value]="p">{{ p }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="type-field">
-          <mat-label>Job Type</mat-label>
-          <mat-select formControlName="jobType">
-            <mat-option *ngFor="let t of jobTypes" [value]="t">{{ t }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <!-- Client & Site -->
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Client</mat-label>
-          <input matInput formControlName="client">
-          <mat-error *ngIf="editForm.get('client')?.hasError('required')">Required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Site Name</mat-label>
-          <input matInput formControlName="siteName">
-          <mat-error *ngIf="editForm.get('siteName')?.hasError('required')">Required</mat-error>
-        </mat-form-field>
-      </div>
-
-      <!-- Schedule -->
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Start</mat-label>
-          <input matInput type="datetime-local" formControlName="scheduledStartDate">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>End</mat-label>
-          <input matInput type="datetime-local" formControlName="scheduledEndDate">
-        </mat-form-field>
-      </div>
-
-      <!-- Hours & Crew -->
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="third-width">
-          <mat-label>Est. Hours</mat-label>
-          <input matInput type="number" formControlName="estimatedLaborHours" min="0.5" step="0.5">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="third-width">
-          <mat-label>Crew Size</mat-label>
-          <input matInput type="number" formControlName="requiredCrewSize" min="1">
-        </mat-form-field>
-      </div>
-
-      <!-- Site Address -->
-      <mat-expansion-panel class="address-panel">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>location_on</mat-icon>
-            Site Address
-          </mat-panel-title>
-          <mat-panel-description>
-            {{ editForm.get('siteStreet')?.value || 'No address' }}
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Street</mat-label>
-            <input matInput formControlName="siteStreet">
-          </mat-form-field>
-        </div>
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="third-width">
-            <mat-label>City</mat-label>
-            <input matInput formControlName="siteCity">
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="third-width">
-            <mat-label>State</mat-label>
-            <input matInput formControlName="siteState">
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="third-width">
-            <mat-label>ZIP</mat-label>
-            <input matInput formControlName="siteZip">
-          </mat-form-field>
-        </div>
-      </mat-expansion-panel>
-
-      <!-- Description -->
-      <mat-form-field appearance="outline" class="full-width description-field">
-        <mat-label>Scope Description</mat-label>
-        <textarea matInput formControlName="scopeDescription" rows="3"></textarea>
+  <form [formGroup]="form" class="dialog-form">
+    <div class="date-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+        <mat-error *ngIf="form.get('startDate')?.hasError('required')">Required</mat-error>
       </mat-form-field>
 
-    </form>
-  </mat-dialog-content>
+      <mat-form-field appearance="outline">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+        <mat-error *ngIf="form.get('endDate')?.hasError('required')">Required</mat-error>
+      </mat-form-field>
+    </div>
 
-  <mat-dialog-actions>
-    <button mat-button (click)="onCancel()">Cancel</button>
-    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!editForm.valid">
-      <mat-icon>save</mat-icon>
-      Save Changes
-    </button>
-  </mat-dialog-actions>
-</div>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Technicians</mat-label>
+      <mat-select formControlName="technicianIds" multiple>
+        <mat-option *ngFor="let tech of technicians" [value]="tech.id">{{ tech.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="submit()" [disabled]="form.invalid">Save</button>
+</mat-dialog-actions>

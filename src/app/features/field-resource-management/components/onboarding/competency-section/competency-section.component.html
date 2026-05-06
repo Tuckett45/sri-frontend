@@ -1,0 +1,27 @@
+<mat-card class="competency-card">
+  <mat-card-header>
+    <mat-card-title>Competencies</mat-card-title>
+    <button mat-stroked-button color="primary" (click)="addCompetency()" style="margin-left:auto">
+      <mat-icon>add</mat-icon> Add Competency
+    </button>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="competency-grid">
+      <div *ngFor="let c of competencies" class="competency-row">
+        <div class="skill-info">
+          <span class="skill-name">{{c.skill}}</span>
+          <span class="skill-category">{{c.category}}</span>
+        </div>
+        <div class="star-rating">
+          <mat-icon
+            *ngFor="let star of starRange"
+            [class.filled]="star <= c.proficiency"
+            (click)="setProficiency(c, star)"
+            class="star-icon">
+            {{star <= c.proficiency ? 'star' : 'star_border'}}
+          </mat-icon>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

@@ -1,9 +1,9 @@
 <div class="default-dashboard">
-  <div class="welcome-card">
-    <mat-icon>dashboard</mat-icon>
-    <h2>Welcome to Field Resource Management</h2>
-    <p>Use the quick actions below to get started.</p>
+  <div class="dashboard-header"><h2>Dashboard</h2></div>
+  <div class="dashboard-grid">
+    <app-active-jobs-widget></app-active-jobs-widget>
+    <app-recent-jobs-widget></app-recent-jobs-widget>
+    <app-quick-actions-widget></app-quick-actions-widget>
+    <app-schedule-widget></app-schedule-widget>
   </div>
-
-  <app-quick-actions-widget [actions]="quickActions"></app-quick-actions-widget>
 </div>

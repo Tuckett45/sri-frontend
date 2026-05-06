@@ -1,258 +1,82 @@
-<div class="approval-queue-container">
-  <!-- Header with notification badge -->
-  <div class="queue-header">
-    <h2>
-      Approval Queue
-      <span class="pending-badge" *ngIf="pendingCount > 0">{{ pendingCount }}</span>
-    </h2>
-    <button class="btn-refresh" (click)="loadApprovalTasks()" [disabled]="loading">
-      <span class="icon">&#x21bb;</span> Refresh
-    </button>
+<div class="approval-queue">
+  <div class="header">
+    <h2>Approval Queue</h2>
   </div>
 
-  <!-- Filters -->
-  <div class="filters-section">
-    <div class="filter-group">
-      <label for="type-filter">Type:</label>
-      <select 
-        id="type-filter" 
-        [(ngModel)]="selectedType" 
-        (change)="applyFiltersAndSort()"
-        class="filter-select">
-        <option *ngFor="let type of taskTypes" [value]="type.value">
-          {{ type.label }}
-        </option>
-      </select>
-    </div>
-
-    <div class="filter-group" *ngIf="availableMarkets.length > 1">
-      <label for="market-filter">Market:</label>
-      <select 
-        id="market-filter" 
-        [(ngModel)]="selectedMarket" 
-        (change)="applyFiltersAndSort()"
-        class="filter-select">
-        <option value="all">All Markets</option>
-        <option *ngFor="let market of availableMarkets" [value]="market">
-          {{ market }}
-        </option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <label for="date-from">From:</label>
-      <input 
-        type="date" 
-        id="date-from" 
-        [(ngModel)]="dateFrom" 
-        (change)="applyFiltersAndSort()"
-        class="filter-input">
-    </div>
-
-    <div class="filter-group">
-      <label for="date-to">To:</label>
-      <input 
-        type="date" 
-        id="date-to" 
-        [(ngModel)]="dateTo" 
-        (change)="applyFiltersAndSort()"
-        class="filter-input">
-    </div>
-
-    <div class="filter-group">
-      <label for="sort-by">Sort By:</label>
-      <select 
-        id="sort-by" 
-        [(ngModel)]="sortBy" 
-        (change)="applyFiltersAndSort()"
-        class="filter-select">
-        <option value="date">Submission Date</option>
-        <option value="priority">Priority</option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <button 
-        class="btn-sort-direction" 
-        (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; applyFiltersAndSort()"
-        [title]="sortDirection === 'asc' ? 'Ascending' : 'Descending'">
-        <span class="icon">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Loading state -->
-  <div class="loading-container" *ngIf="loading">
-    <div class="spinner"></div>
-    <p>Loading approval tasks...</p>
-  </div>
-
-  <!-- Error state -->
-  <div class="error-container" *ngIf="error && !loading">
-    <p class="error-message">{{ error }}</p>
-    <button class="btn-retry" (click)="loadApprovalTasks()">Retry</button>
-  </div>
-
-  <!-- Task list -->
-  <div class="tasks-list" *ngIf="!loading && !error">
-    <div class="empty-state" *ngIf="filteredTasks.length === 0">
-      <p>No approval tasks found.</p>
-      <p class="empty-state-hint" *ngIf="selectedType !== 'all' || selectedMarket !== 'all' || dateFrom || dateTo">
-        Try adjusting your filters.
-      </p>
-    </div>
-
-    <div class="task-card" *ngFor="let task of filteredTasks" [class]="getStatusClass(task.status)">
-      <div class="task-header">
-        <div class="task-type">
-          <span class="type-badge">{{ getTaskTypeLabel(task.type) }}</span>
-          <span class="market-badge">{{ task.market }}</span>
-        </div>
-        <div class="task-status">
-          <span class="status-badge" [class]="getStatusClass(task.status)">
-            {{ task.status | titlecase }}
-          </span>
-        </div>
+  <mat-tab-group [(selectedIndex)]="selectedTab">
+    <!-- Timecards Tab -->
+    <mat-tab label="Timecards">
+      <div class="tab-content">
+        <mat-list *ngIf="timecards.length; else noItems">
+          <mat-list-item *ngFor="let tc of timecards" class="approval-item">
+            <mat-icon matListIcon>access_time</mat-icon>
+            <div matLine class="item-title">{{ tc.technician }} &mdash; {{ tc.period }}</div>
+            <div matLine class="item-sub">{{ tc.hours }} hours</div>
+            <div class="actions">
+              <mat-chip [color]="tc.status === 'pending' ? 'accent' : tc.status === 'approved' ? 'primary' : 'warn'" selected>
+                {{ tc.status }}
+              </mat-chip>
+              <button mat-icon-button color="primary" (click)="approve(tc)" *ngIf="tc.status === 'pending'" title="Approve">
+                <mat-icon>check_circle</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="reject(tc)" *ngIf="tc.status === 'pending'" title="Reject">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </div>
+          </mat-list-item>
+        </mat-list>
+        <ng-template #noItems><p class="empty">No pending timecards.</p></ng-template>
       </div>
+    </mat-tab>
 
-      <div class="task-body">
-        <div class="task-info">
-          <div class="info-row">
-            <span class="label">Submitted By:</span>
-            <span class="value">{{ task.submittedByName || task.submittedBy }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Submitted:</span>
-            <span class="value">{{ formatDate(task.submittedAt) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Approval Level:</span>
-            <span class="value">Level {{ task.approvalLevel }}</span>
-          </div>
-          <div class="info-row" *ngIf="task.comments.length > 0">
-            <span class="label">Comments:</span>
-            <span class="value">{{ task.comments.length }}</span>
-          </div>
-        </div>
+    <!-- Expenses Tab -->
+    <mat-tab label="Expenses">
+      <div class="tab-content">
+        <mat-list *ngIf="expenses.length; else noExpenses">
+          <mat-list-item *ngFor="let exp of expenses" class="approval-item">
+            <mat-icon matListIcon>receipt</mat-icon>
+            <div matLine class="item-title">{{ exp.technician }} &mdash; {{ exp.description }}</div>
+            <div matLine class="item-sub">{{ exp.amount | currency }} on {{ exp.period }}</div>
+            <div class="actions">
+              <mat-chip [color]="exp.status === 'pending' ? 'accent' : exp.status === 'approved' ? 'primary' : 'warn'" selected>
+                {{ exp.status }}
+              </mat-chip>
+              <button mat-icon-button color="primary" (click)="approve(exp)" *ngIf="exp.status === 'pending'">
+                <mat-icon>check_circle</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="reject(exp)" *ngIf="exp.status === 'pending'">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </div>
+          </mat-list-item>
+        </mat-list>
+        <ng-template #noExpenses><p class="empty">No pending expenses.</p></ng-template>
       </div>
+    </mat-tab>
 
-      <div class="task-actions" *ngIf="task.status === 'pending'">
-        <button 
-          class="btn-action btn-approve" 
-          (click)="openActionDialog(task, 'approve')"
-          title="Approve this task">
-          ✓ Approve
-        </button>
-        <button 
-          class="btn-action btn-reject" 
-          (click)="openActionDialog(task, 'reject')"
-          title="Reject this task">
-          ✗ Reject
-        </button>
-        <button 
-          class="btn-action btn-changes" 
-          (click)="openActionDialog(task, 'request_changes')"
-          title="Request changes">
-          ↻ Request Changes
-        </button>
-        <button 
-          class="btn-action btn-view" 
-          (click)="viewTaskDetails(task)"
-          title="View full details">
-          👁 View Details
-        </button>
+    <!-- Time Off Tab -->
+    <mat-tab label="Time Off">
+      <div class="tab-content">
+        <mat-list *ngIf="timeOffRequests.length; else noTimeOff">
+          <mat-list-item *ngFor="let req of timeOffRequests" class="approval-item">
+            <mat-icon matListIcon>event</mat-icon>
+            <div matLine class="item-title">{{ req.technician }} &mdash; {{ req.reason }}</div>
+            <div matLine class="item-sub">{{ req.startDate }} to {{ req.endDate }} ({{ req.days }} days)</div>
+            <div class="actions">
+              <mat-chip [color]="req.status === 'pending' ? 'accent' : req.status === 'approved' ? 'primary' : 'warn'" selected>
+                {{ req.status }}
+              </mat-chip>
+              <button mat-icon-button color="primary" (click)="approve(req)" *ngIf="req.status === 'pending'">
+                <mat-icon>check_circle</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="reject(req)" *ngIf="req.status === 'pending'">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </div>
+          </mat-list-item>
+        </mat-list>
+        <ng-template #noTimeOff><p class="empty">No pending time off requests.</p></ng-template>
       </div>
-
-      <div class="task-actions" *ngIf="task.status !== 'pending'">
-        <button 
-          class="btn-action btn-view" 
-          (click)="viewTaskDetails(task)"
-          title="View full details">
-          👁 View Details
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Action Dialog Modal -->
-<div class="modal-overlay" *ngIf="selectedTask && actionType" (click)="closeActionDialog()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>
-        <span *ngIf="actionType === 'approve'">Approve Task</span>
-        <span *ngIf="actionType === 'reject'">Reject Task</span>
-        <span *ngIf="actionType === 'request_changes'">Request Changes</span>
-      </h3>
-      <button class="btn-close" (click)="closeActionDialog()" aria-label="Close dialog">×</button>
-    </div>
-
-    <div class="modal-body">
-      <div class="task-summary">
-        <p><strong>Type:</strong> {{ getTaskTypeLabel(selectedTask.type) }}</p>
-        <p><strong>Market:</strong> {{ selectedTask.market }}</p>
-        <p><strong>Submitted By:</strong> {{ selectedTask.submittedByName || selectedTask.submittedBy }}</p>
-      </div>
-
-      <!-- Approve action -->
-      <div *ngIf="actionType === 'approve'">
-        <label for="approve-comment">Comment (optional):</label>
-        <textarea 
-          id="approve-comment"
-          [(ngModel)]="actionComment"
-          placeholder="Add a comment with your approval..."
-          rows="4"
-          class="action-textarea"></textarea>
-      </div>
-
-      <!-- Reject action -->
-      <div *ngIf="actionType === 'reject'">
-        <label for="reject-reason">Reason (required):</label>
-        <textarea 
-          id="reject-reason"
-          [(ngModel)]="actionReason"
-          placeholder="Please provide a reason for rejection..."
-          rows="4"
-          class="action-textarea"
-          required></textarea>
-        <p class="field-hint">A reason is required for rejection.</p>
-      </div>
-
-      <!-- Request changes action -->
-      <div *ngIf="actionType === 'request_changes'">
-        <label for="changes-description">Changes Requested (required):</label>
-        <textarea 
-          id="changes-description"
-          [(ngModel)]="actionComment"
-          placeholder="Describe the changes you are requesting..."
-          rows="4"
-          class="action-textarea"
-          required></textarea>
-        <p class="field-hint">Please describe what changes are needed.</p>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button 
-        class="btn-cancel" 
-        (click)="closeActionDialog()"
-        [disabled]="processingAction">
-        Cancel
-      </button>
-      <button 
-        class="btn-submit" 
-        (click)="executeAction()"
-        [disabled]="processingAction || (actionType === 'reject' && !actionReason.trim()) || (actionType === 'request_changes' && !actionComment.trim())"
-        [class.btn-approve]="actionType === 'approve'"
-        [class.btn-reject]="actionType === 'reject'"
-        [class.btn-changes]="actionType === 'request_changes'">
-        <span *ngIf="!processingAction">
-          <span *ngIf="actionType === 'approve'">Approve</span>
-          <span *ngIf="actionType === 'reject'">Reject</span>
-          <span *ngIf="actionType === 'request_changes'">Request Changes</span>
-        </span>
-        <span *ngIf="processingAction">Processing...</span>
-      </button>
-    </div>
-  </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>

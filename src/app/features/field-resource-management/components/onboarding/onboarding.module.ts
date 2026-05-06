@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 
 import { OnboardingRoutingModule } from './onboarding-routing.module';
 
+import { SharedMaterialModule } from '../../shared-material.module';
+
 import { OnboardingNavComponent } from './onboarding-nav/onboarding-nav.component';
 import { CandidateListComponent } from './candidate-list/candidate-list.component';
 import { CandidateFormComponent } from './candidate-form/candidate-form.component';
@@ -36,6 +38,7 @@ import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
+    SharedMaterialModule,
     OnboardingRoutingModule
   ]
 })

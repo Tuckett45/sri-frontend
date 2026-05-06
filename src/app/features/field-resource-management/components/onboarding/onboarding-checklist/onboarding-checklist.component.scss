@@ -1,0 +1,72 @@
+.checklist-page {
+  padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e0e0e0;
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .page-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: #1976d2;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 500;
+        color: #424242;
+      }
+    }
+  }
+}
+
+.task-item {
+  .done {
+    text-decoration: line-through;
+    color: #9e9e9e;
+  }
+}
+
+mat-panel-description {
+  display: flex;
+  align-items: center;
+}
+
+:host ::ng-deep {
+  .mat-expansion-panel {
+    margin-bottom: 8px;
+    border-radius: 8px !important;
+
+    .mat-expansion-panel-header {
+      font-size: 15px;
+      font-weight: 500;
+    }
+  }
+
+  .mat-mdc-checkbox.mat-primary {
+    --mdc-checkbox-selected-checkmark-color: white;
+    --mdc-checkbox-selected-focus-icon-color: #1976d2;
+    --mdc-checkbox-selected-hover-icon-color: #1976d2;
+    --mdc-checkbox-selected-icon-color: #1976d2;
+  }
+}
+
+@media (max-width: 768px) {
+  .checklist-page {
+    padding: 16px;
+  }
+}

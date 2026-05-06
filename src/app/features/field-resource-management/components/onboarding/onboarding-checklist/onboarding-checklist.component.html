@@ -1,0 +1,20 @@
+<div class="checklist-page">
+  <h2>Onboarding Checklist</h2>
+  <mat-accordion multi>
+    <mat-expansion-panel *ngFor="let phase of phases">
+      <mat-expansion-panel-header>
+        <mat-panel-title>{{phase.name}}</mat-panel-title>
+        <mat-panel-description>
+          <mat-progress-bar mode="determinate" [value]="phaseProgress(phase)" style="width:120px;margin-right:8px"></mat-progress-bar>
+          {{phaseProgress(phase)}}%
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      <mat-list>
+        <mat-list-item *ngFor="let task of phase.tasks" class="task-item">
+          <mat-checkbox [checked]="task.done" (change)="toggle(task)" matListItemIcon></mat-checkbox>
+          <span matListItemTitle [class.done]="task.done">{{task.label}}</span>
+        </mat-list-item>
+      </mat-list>
+    </mat-expansion-panel>
+  </mat-accordion>
+</div>

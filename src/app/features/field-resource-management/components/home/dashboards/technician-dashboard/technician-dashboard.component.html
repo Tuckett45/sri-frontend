@@ -1,22 +1,13 @@
 <div class="technician-dashboard">
-  <app-quick-actions-widget [actions]="quickActions"></app-quick-actions-widget>
-
+  <div class="dashboard-header">
+    <h2>My Dashboard</h2>
+  </div>
   <div class="dashboard-grid">
     <app-clock-in-widget></app-clock-in-widget>
-
     <app-current-job-status-widget></app-current-job-status-widget>
-
-    <app-assignments-widget
-      (assignmentSelected)="onAssignmentSelected($event)"
-      (viewAllClicked)="onViewAllAssignments()">
-    </app-assignments-widget>
-
-    <app-timecard-widget
-      (viewTimecardClicked)="onViewTimecard()">
-    </app-timecard-widget>
-
-    <app-schedule-widget
-      (viewScheduleClicked)="onViewSchedule()">
-    </app-schedule-widget>
+    <app-timecard-widget></app-timecard-widget>
+    <app-travel-break-pto-widget></app-travel-break-pto-widget>
+    <app-schedule-widget></app-schedule-widget>
+    <app-assignments-widget></app-assignments-widget>
   </div>
 </div>

@@ -1,53 +1,65 @@
-.default-dashboard {
-  padding: 0;
-  max-width: 1400px;
-  margin: 0 auto;
+:host {
+  display: block;
+  min-height: 100%;
 }
 
-.welcome-card {
-  text-align: center;
-  padding: 48px 24px;
-  margin-bottom: 24px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.default-dashboard {
+  padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 
-  mat-icon {
-    font-size: 64px;
-    width: 64px;
-    height: 64px;
-    color: #144f80;
-    margin-bottom: 16px;
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e0e0e0;
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #424242;
+    }
   }
 
-  h2 {
-    font-size: 24px;
-    font-weight: 500;
-    color: #144f80;
-    margin: 0 0 8px 0;
-  }
-
-  p {
-    font-size: 16px;
-    color: #666;
-    margin: 0;
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    flex: 1;
   }
 
   @media (max-width: 768px) {
-    padding: 32px 16px;
+    padding: 16px;
 
-    mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
+    .dashboard-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
     }
 
-    h2 {
-      font-size: 20px;
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
     }
+  }
+}
 
-    p {
-      font-size: 14px;
-    }
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-raised-button.mat-accent {
+    background-color: #FF6B00 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-card {
+    border-radius: 8px;
   }
 }

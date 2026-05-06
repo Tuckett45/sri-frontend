@@ -1,153 +1,79 @@
-<div class="config-container">
-  <div class="header">
-    <h2>System Configuration</h2>
-    <div class="actions">
-      <button mat-button (click)="onResetToDefaults()">
-        <mat-icon>restore</mat-icon>
-        Reset to Defaults
-      </button>
-      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!configForm.valid">
-        <mat-icon>save</mat-icon>
-        Save Configuration
-      </button>
-    </div>
-  </div>
-
-  <form [formGroup]="configForm">
-    <!-- Session Settings -->
-    <mat-card class="config-section">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>schedule</mat-icon>
-          Session Settings
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="config-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Session Timeout (minutes)</mat-label>
-            <input matInput type="number" formControlName="sessionTimeoutMinutes">
-            <mat-hint>Default: 30 minutes</mat-hint>
-            <mat-error>{{ getFieldError('sessionTimeoutMinutes') }}</mat-error>
-          </mat-form-field>
+<mat-card class="system-config-card">
+  <mat-card-header>
+    <mat-card-title>System Configuration</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-tab-group>
+      <!-- General Tab -->
+      <mat-tab label="General">
+        <div class="tab-content">
+          <form [formGroup]="generalForm" class="config-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Company Name</mat-label>
+              <input matInput formControlName="companyName">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Timezone</mat-label>
+              <mat-select formControlName="timezone">
+                <mat-option *ngFor="let tz of timezones" [value]="tz">{{ tz }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Date Format</mat-label>
+              <mat-select formControlName="dateFormat">
+                <mat-option *ngFor="let fmt of dateFormats" [value]="fmt">{{ fmt }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="tab-actions">
+              <button mat-raised-button color="primary" type="button" (click)="saveGeneral()">
+                <mat-icon>save</mat-icon> Save
+              </button>
+            </div>
+          </form>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </mat-tab>
 
-    <!-- Notification Settings -->
-    <mat-card class="config-section">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>notifications</mat-icon>
-          Notification Settings
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="config-grid">
-          <mat-slide-toggle formControlName="notificationsEnabled">
-            Enable Notifications
-          </mat-slide-toggle>
-          
-          <mat-slide-toggle formControlName="emailNotificationsEnabled">
-            Enable Email Notifications
-          </mat-slide-toggle>
-          
-          <mat-slide-toggle formControlName="inAppNotificationsEnabled">
-            Enable In-App Notifications
-          </mat-slide-toggle>
+      <!-- Notifications Tab -->
+      <mat-tab label="Notifications">
+        <div class="tab-content">
+          <form [formGroup]="notificationsForm" class="config-form">
+            <div class="toggle-row">
+              <span>Email Notifications</span>
+              <mat-slide-toggle formControlName="emailEnabled" color="primary"></mat-slide-toggle>
+            </div>
+            <div class="toggle-row">
+              <span>SMS Notifications</span>
+              <mat-slide-toggle formControlName="smsEnabled" color="primary"></mat-slide-toggle>
+            </div>
+            <div class="tab-actions">
+              <button mat-raised-button color="primary" type="button" (click)="saveNotifications()">
+                <mat-icon>save</mat-icon> Save
+              </button>
+            </div>
+          </form>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </mat-tab>
 
-    <!-- Backup Settings -->
-    <mat-card class="config-section">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>backup</mat-icon>
-          Backup Settings
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="config-grid">
-          <mat-slide-toggle formControlName="autoBackupEnabled">
-            Enable Automatic Backups
-          </mat-slide-toggle>
-          
-          <mat-form-field appearance="outline">
-            <mat-label>Backup Retention (days)</mat-label>
-            <input matInput type="number" formControlName="backupRetentionDays">
-            <mat-hint>Default: 30 days</mat-hint>
-            <mat-error>{{ getFieldError('backupRetentionDays') }}</mat-error>
-          </mat-form-field>
+      <!-- Integrations Tab -->
+      <mat-tab label="Integrations">
+        <div class="tab-content">
+          <form [formGroup]="integrationsForm" class="config-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>API URL</mat-label>
+              <input matInput formControlName="apiUrl" placeholder="https://api.example.com">
+            </mat-form-field>
+            <div class="toggle-row">
+              <span>SignalR Enabled</span>
+              <mat-slide-toggle formControlName="signalrEnabled" color="primary"></mat-slide-toggle>
+            </div>
+            <div class="tab-actions">
+              <button mat-raised-button color="primary" type="button" (click)="saveIntegrations()">
+                <mat-icon>save</mat-icon> Save
+              </button>
+            </div>
+          </form>
         </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- KPI Settings -->
-    <mat-card class="config-section">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>analytics</mat-icon>
-          KPI Target Values
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="config-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Target Utilization Rate (%)</mat-label>
-            <input matInput type="number" formControlName="targetUtilizationRate">
-            <mat-hint>Default: 75%</mat-hint>
-            <mat-error>{{ getFieldError('targetUtilizationRate') }}</mat-error>
-          </mat-form-field>
-          
-          <mat-form-field appearance="outline">
-            <mat-label>Target Schedule Adherence (%)</mat-label>
-            <input matInput type="number" formControlName="targetScheduleAdherence">
-            <mat-hint>Default: 95%</mat-hint>
-            <mat-error>{{ getFieldError('targetScheduleAdherence') }}</mat-error>
-          </mat-form-field>
-          
-          <mat-form-field appearance="outline">
-            <mat-label>Target Time Entry Completion (%)</mat-label>
-            <input matInput type="number" formControlName="targetTimeEntryCompletion">
-            <mat-hint>Default: 100%</mat-hint>
-            <mat-error>{{ getFieldError('targetTimeEntryCompletion') }}</mat-error>
-          </mat-form-field>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Job Status Settings -->
-    <mat-card class="config-section">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>settings</mat-icon>
-          Job Status Configuration
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="config-grid">
-          <div class="chip-list-field">
-            <label>Job Status Values</label>
-            <mat-chip-set>
-              <mat-chip *ngFor="let status of configForm.get('jobStatusValues')?.value">
-                {{ status }}
-              </mat-chip>
-            </mat-chip-set>
-            <mat-hint>These are the available job status values</mat-hint>
-          </div>
-          
-          <div class="chip-list-field">
-            <label>Delay Reason Codes</label>
-            <mat-chip-set>
-              <mat-chip *ngFor="let reason of configForm.get('delayReasonCodes')?.value">
-                {{ reason }}
-              </mat-chip>
-            </mat-chip-set>
-            <mat-hint>Reasons technicians can select when jobs are delayed</mat-hint>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </form>
-</div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card-content>
+</mat-card>

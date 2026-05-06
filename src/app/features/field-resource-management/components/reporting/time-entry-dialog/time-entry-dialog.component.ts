@@ -1,122 +1,60 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-
-import { TimeEntry } from '../../../models/time-entry.model';
-import { Job } from '../../../models/job.model';
-import * as JobSelectors from '../../../state/jobs/job.selectors';
-
-export interface TimeEntryDialogData {
-  mode: 'add' | 'edit';
-  entry?: TimeEntry;
-  date?: Date;
-  technicianId: string;
-}
+import { Subject } from 'rxjs';
 
 @Component({
-  selector: 'frm-time-entry-dialog',
+  selector: 'app-time-entry-dialog',
   templateUrl: './time-entry-dialog.component.html',
   styleUrls: ['./time-entry-dialog.component.scss']
 })
 export class TimeEntryDialogComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-
   form: FormGroup;
-  jobs$: Observable<Job[]>;
-  isEditMode: boolean;
-  dialogTitle: string;
+  jobs: any[] = [];
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private store: Store,
-    private dialogRef: MatDialogRef<TimeEntryDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: TimeEntryDialogData
+    public dialogRef: MatDialogRef<TimeEntryDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.isEditMode = data.mode === 'edit';
-    this.dialogTitle = this.isEditMode ? 'Edit Time Entry' : 'Add Time Entry';
-    this.jobs$ = this.store.select(JobSelectors.selectAllJobs);
-
     this.form = this.fb.group({
-      jobId: ['', Validators.required],
-      date: [data.date || new Date(), Validators.required],
-      clockInTime: ['', Validators.required],
-      clockOutTime: ['', this.isEditMode ? Validators.required : []],
-      breakMinutes: [0, [Validators.min(0), Validators.max(480)]],
-      mileage: [null, [Validators.min(0), Validators.max(9999)]],
-      notes: ['', this.isEditMode ? Validators.required : []]
+      date: [new Date(), Validators.required],
+      startTime: ['08:00', Validators.required],
+      endTime: ['17:00', Validators.required],
+      breakDuration: [30, [Validators.min(0)]],
+      jobId: [''],
+      notes: ['']
     });
   }
 
-  ngOnInit(): void {
-    if (this.isEditMode && this.data.entry) {
-      const entry = this.data.entry;
-      this.form.patchValue({
-        jobId: entry.jobId,
-        date: entry.clockInTime,
-        clockInTime: this.formatTimeValue(entry.clockInTime),
-        clockOutTime: entry.clockOutTime ? this.formatTimeValue(entry.clockOutTime) : '',
-        breakMinutes: entry.breakMinutes || 0,
-        mileage: entry.mileage ?? null,
-        notes: entry.adjustmentReason || ''
-      });
-    }
-  }
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  onSubmit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    const formValue = this.form.value;
-    const baseDate = new Date(formValue.date);
-
-    const clockIn = this.combineDateAndTime(baseDate, formValue.clockInTime);
-    const clockOut = formValue.clockOutTime
-      ? this.combineDateAndTime(baseDate, formValue.clockOutTime)
-      : undefined;
-
-    const result: Partial<TimeEntry> = {
-      jobId: formValue.jobId,
-      technicianId: this.data.technicianId,
-      clockInTime: clockIn,
-      clockOutTime: clockOut,
-      breakMinutes: formValue.breakMinutes,
-      mileage: formValue.mileage ?? undefined,
-      isManuallyAdjusted: this.isEditMode,
-      adjustmentReason: formValue.notes || undefined
-    };
-
-    if (this.isEditMode && this.data.entry) {
-      result.id = this.data.entry.id;
-    }
-
-    this.dialogRef.close(result);
+  get calculatedHours(): number {
+    const start = this.form.get('startTime')?.value as string;
+    const end = this.form.get('endTime')?.value as string;
+    const breakMin = this.form.get('breakDuration')?.value as number || 0;
+    if (!start || !end) return 0;
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    const totalMin = (eh * 60 + em) - (sh * 60 + sm) - breakMin;
+    return Math.max(0, Math.round(totalMin / 60 * 10) / 10);
   }
 
-  onCancel(): void {
+  submit(): void {
+    if (this.form.valid) {
+      this.dialogRef.close(this.form.value);
+    }
+  }
+
+  cancel(): void {
     this.dialogRef.close();
-  }
-
-  private formatTimeValue(date: Date): string {
-    const d = new Date(date);
-    const hours = d.getHours().toString().padStart(2, '0');
-    const minutes = d.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-  }
-
-  private combineDateAndTime(date: Date, time: string): Date {
-    const result = new Date(date);
-    const [hours, minutes] = time.split(':').map(Number);
-    result.setHours(hours, minutes, 0, 0);
-    return result;
   }
 }

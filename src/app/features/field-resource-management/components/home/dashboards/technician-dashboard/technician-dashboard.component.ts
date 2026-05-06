@@ -1,35 +1,22 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { QuickAction } from '../../../../models/dashboard.models';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-technician-dashboard',
   templateUrl: './technician-dashboard.component.html',
   styleUrls: ['./technician-dashboard.component.scss']
 })
-export class TechnicianDashboardComponent {
-  quickActions: QuickAction[] = [
-    { label: 'My Timecard', icon: 'schedule', route: '/field-resource-management/timecard', color: 'primary', visible: true },
-    { label: 'My Schedule', icon: 'calendar_today', route: '/field-resource-management/schedule', color: 'primary', visible: true },
-    { label: 'My Assignments', icon: 'assignment', route: '/field-resource-management/mobile/daily', color: 'primary', visible: true },
-    { label: 'Map View', icon: 'map', route: '/field-resource-management/map', color: 'primary', visible: true }
-  ];
+export class TechnicianDashboardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
-  constructor(private router: Router) {}
+  constructor(private store: Store) {}
 
-  onAssignmentSelected(assignmentId: string): void {
-    this.router.navigate(['/field-resource-management/assignments', assignmentId]);
-  }
+  ngOnInit(): void {}
 
-  onViewAllAssignments(): void {
-    this.router.navigate(['/field-resource-management/mobile/daily']);
-  }
-
-  onViewTimecard(): void {
-    this.router.navigate(['/field-resource-management/timecard']);
-  }
-
-  onViewSchedule(): void {
-    this.router.navigate(['/field-resource-management/schedule']);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

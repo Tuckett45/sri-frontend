@@ -1,38 +1,89 @@
-.template-manager-container {
+.job-template-container {
   padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.header {
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
 
-  h2 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 500;
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .page-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #424242;
+    }
   }
 
-  button {
-    mat-icon {
-      margin-right: 8px;
+  .header-actions {
+    display: flex;
+    gap: 12px;
+
+    button {
+      border-radius: 20px;
     }
   }
 }
 
+.job-template-card {
+  mat-card-content {
+    padding-top: 16px;
+  }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  .search-field {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+.template-form-panel {
+  margin-bottom: 16px;
+}
+
+.template-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .templates-table {
   width: 100%;
-
-  mat-chip-list {
-    margin: 0;
-  }
-
-  mat-chip {
-    font-size: 12px;
-    min-height: 24px;
-    padding: 4px 8px;
-  }
 }
 
 .empty-state {
@@ -40,41 +91,63 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
-  color: rgba(0, 0, 0, 0.54);
+  padding: 64px 24px;
+  text-align: center;
 
   mat-icon {
     font-size: 64px;
     width: 64px;
     height: 64px;
+    color: rgba(0, 0, 0, 0.26);
     margin-bottom: 16px;
   }
 
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #616161;
+  }
+
   p {
-    margin: 0 0 16px 0;
-    font-size: 16px;
+    margin: 0;
+    color: #9e9e9e;
   }
 }
 
-// Mobile responsive
-@media (max-width: 767px) {
-  .template-manager-container {
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-raised-button.btn-orange {
+    background-color: #FF6B00 !important;
+    color: white !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .job-template-container {
     padding: 16px;
   }
 
-  .header {
+  .page-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 12px;
 
-    button {
+    .header-actions {
       width: 100%;
+
+      button {
+        width: 100%;
+      }
     }
   }
 
-  .templates-table {
-    mat-chip-list {
-      flex-wrap: wrap;
-    }
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

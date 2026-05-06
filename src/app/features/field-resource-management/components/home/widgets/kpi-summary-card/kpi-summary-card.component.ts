@@ -1,39 +1,40 @@
-import { Component, Input } from '@angular/core';
-import { KpiItem } from '../../../../models/dashboard.models';
+import { Component, OnInit } from '@angular/core';
 
+interface KpiItem {
+  label: string;
+  value: string | number;
+  icon: string;
+  trend: 'up' | 'down' | 'stable';
+}
 
 @Component({
   selector: 'app-kpi-summary-card',
   templateUrl: './kpi-summary-card.component.html',
   styleUrls: ['./kpi-summary-card.component.scss']
 })
-export class KpiSummaryCardComponent {
-  @Input() kpis: KpiItem[] = [];
+export class KpiSummaryCardComponent implements OnInit {
+  kpis: KpiItem[] = [
+    { label: 'Open Jobs', value: 0, icon: 'work', trend: 'up' },
+    { label: 'Active Technicians', value: 0, icon: 'people', trend: 'stable' },
+    { label: 'Completion Rate', value: '0%', icon: 'check_circle', trend: 'up' },
+    { label: 'Avg Response Time', value: '0h', icon: 'timer', trend: 'down' }
+  ];
 
-  getTrendIcon(trend?: 'positive' | 'negative' | 'neutral'): string {
+  ngOnInit(): void {}
+
+  getTrendIcon(trend: string): string {
     switch (trend) {
-      case 'positive': return 'trending_up';
-      case 'negative': return 'trending_down';
-      case 'neutral': return 'trending_flat';
-      default: return '';
+      case 'up': return 'trending_up';
+      case 'down': return 'trending_down';
+      default: return 'trending_flat';
     }
   }
 
-  getTrendClass(trend?: 'positive' | 'negative' | 'neutral'): string {
+  getTrendClass(trend: string): string {
     switch (trend) {
-      case 'positive': return 'trend-positive';
-      case 'negative': return 'trend-negative';
-      case 'neutral': return 'trend-neutral';
-      default: return '';
-    }
-  }
-
-  getColorClass(color: 'primary' | 'success' | 'accent'): string {
-    switch (color) {
-      case 'primary': return 'kpi-primary';
-      case 'success': return 'kpi-success';
-      case 'accent': return 'kpi-accent';
-      default: return '';
+      case 'up': return 'trend-up';
+      case 'down': return 'trend-down';
+      default: return 'trend-stable';
     }
   }
 }

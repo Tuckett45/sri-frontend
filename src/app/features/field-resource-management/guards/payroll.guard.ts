@@ -1,36 +1,15 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { CanActivate, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { UserRole } from '../../../models/role.enum';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class PayrollGuard implements CanActivate {
-  private readonly allowedRoles = [
-    UserRole.Payroll,
-    UserRole.Admin
-  ];
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): boolean {
-    if (this.authService.isUserInRole(this.allowedRoles)) {
-      return true;
-    }
-
-    this.router.navigate(['/field-resource-management/dashboard'], {
-      queryParams: {
-        error: 'insufficient_permissions',
-        message: 'Payroll access required'
-      }
-    });
+  constructor(private authService: AuthService, private router: Router) {}
+  canActivate(): boolean {
+    const user = this.authService.currentUser;
+    const allowed = ['Admin', 'HR', 'Payroll'];
+    if (user && allowed.includes(user.role)) return true;
+    this.router.navigate(['/field-resource-management/dashboard']);
     return false;
   }
 }

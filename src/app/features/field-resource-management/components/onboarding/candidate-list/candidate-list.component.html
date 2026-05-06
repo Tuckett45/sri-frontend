@@ -1,0 +1,43 @@
+<div class="candidate-list">
+  <div class="list-header">
+    <h2>Candidates</h2>
+    <div class="actions">
+      <mat-form-field appearance="outline" class="search">
+        <mat-label>Search candidates</mat-label>
+        <input matInput [(ngModel)]="searchTerm" (input)="applyFilter()">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="addCandidate()">
+        <mat-icon>person_add</mat-icon> Add Candidate
+      </button>
+    </div>
+  </div>
+  <mat-card>
+    <mat-table [dataSource]="filteredCandidates">
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+        <mat-cell *matCellDef="let c"><strong>{{c.name}}</strong></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="email">
+        <mat-header-cell *matHeaderCellDef>Email</mat-header-cell>
+        <mat-cell *matCellDef="let c">{{c.email}}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let c"><mat-chip [color]="getStatusColor(c.status)" highlighted>{{c.status}}</mat-chip></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="startDate">
+        <mat-header-cell *matHeaderCellDef>Start Date</mat-header-cell>
+        <mat-cell *matCellDef="let c">{{c.startDate | date:'shortDate'}}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let c">
+          <button mat-icon-button (click)="viewCandidate(c.id)" matTooltip="View"><mat-icon>visibility</mat-icon></button>
+        </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="viewCandidate(row.id)" style="cursor:pointer"></mat-row>
+    </mat-table>
+  </mat-card>
+</div>

@@ -1,43 +1,28 @@
-import { Component, OnInit } from '@angular/core';
-import { AuthService } from '../../../../../services/auth.service';
-import { FrmPermissionService } from '../../../services/frm-permission.service';
-
-export interface PayrollNavLink {
-  label: string;
-  route: string;
-  visible: boolean;
-}
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-payroll-nav',
   templateUrl: './payroll-nav.component.html',
   styleUrls: ['./payroll-nav.component.scss']
 })
-export class PayrollNavComponent implements OnInit {
-  navLinks: PayrollNavLink[] = [];
-  readOnly = false;
+export class PayrollNavComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
-  constructor(
-    private authService: AuthService,
-    private permissionService: FrmPermissionService
-  ) {}
+  navLinks = [
+    { label: 'Pay Stubs', route: 'pay-stubs' },
+    { label: 'W2', route: 'w2' },
+    { label: 'Direct Deposit', route: 'direct-deposit' },
+    { label: 'W4', route: 'w4' },
+    { label: 'Contact Info', route: 'contact-info' },
+    { label: 'PRC', route: 'prc' },
+    { label: 'Incident Reports', route: 'incident-reports' }
+  ];
 
-  ngOnInit(): void {
-    const role = this.authService.getUserRole();
-    const canManage = this.permissionService.hasPermission(role, 'canManageIncidentReports');
+  ngOnInit(): void {}
 
-    // Payroll_Group and Admin have canManageIncidentReports = true → full access
-    // HR_Group does NOT have canManageIncidentReports → read-only, limited links
-    this.readOnly = !canManage;
-
-    this.navLinks = [
-      { label: 'Incident Reports', route: './incident-reports', visible: true },
-      { label: 'Direct Deposit', route: './direct-deposit', visible: canManage },
-      { label: 'W-4', route: './w4', visible: canManage },
-      { label: 'Contact Info', route: './contact-info', visible: canManage },
-      { label: 'PRC Signing', route: './prc', visible: canManage },
-      { label: 'Pay Stubs', route: './pay-stubs', visible: true },
-      { label: 'W-2', route: './w2', visible: true }
-    ];
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

@@ -1,47 +1,28 @@
-<mat-card class="timecard-review-card">
+<mat-card class="timecard-review-widget">
   <mat-card-header>
     <mat-card-title>
-      <mat-icon>receipt_long</mat-icon>
-      Timecards Pending Review
+      <mat-icon>rate_review</mat-icon>
+      Timecard Review
     </mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <!-- Loading state -->
-    <div *ngIf="loading" class="widget-loading">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
-
-    <!-- Error state -->
-    <div *ngIf="error" class="widget-error">
-      <p>{{ error }}</p>
-      <button mat-button color="primary" (click)="retry()">Retry</button>
-    </div>
-
-    <!-- Data state -->
-    <ng-container *ngIf="!loading && !error">
-      <div class="timecards-list">
-        <div
-          *ngFor="let tc of timecards"
-          class="timecard-item"
-          (click)="onTimecardClick(tc.id)"
-          role="button"
-          tabindex="0"
-          (keydown.enter)="onTimecardClick(tc.id)"
-          [attr.aria-label]="'Timecard for ' + tc.technicianName + ' - ' + tc.totalHours + ' hours'"
-        >
-          <div class="timecard-info">
-            <span class="technician-name">{{ tc.technicianName }}</span>
-            <span class="period-dates">{{ tc.periodStart | date:'shortDate' }} – {{ tc.periodEnd | date:'shortDate' }}</span>
-            <span class="submitted-date">Submitted {{ tc.submittedAt | date:'shortDate' }}</span>
-          </div>
-          <span class="total-hours">{{ tc.totalHours }}h</span>
+    <mat-list *ngIf="pendingTimecards.length; else noTimecards">
+      <mat-list-item *ngFor="let tc of pendingTimecards">
+        <mat-icon matListItemIcon>access_time</mat-icon>
+        <span matListItemTitle>{{ tc.employeeName }}</span>
+        <span matListItemLine>{{ tc.hours }}h &mdash; {{ tc.weekEnding | date:'shortDate' }}</span>
+        <div matListItemMeta class="action-buttons">
+          <button mat-icon-button color="primary" (click)="approve(tc)" title="Approve">
+            <mat-icon>check</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="reject(tc)" title="Reject">
+            <mat-icon>close</mat-icon>
+          </button>
         </div>
-
-        <div *ngIf="timecards.length === 0" class="empty-state">
-          <mat-icon>check_circle_outline</mat-icon>
-          <p>No timecards pending review</p>
-        </div>
-      </div>
-    </ng-container>
+      </mat-list-item>
+    </mat-list>
+    <ng-template #noTimecards>
+      <p class="empty-state">No timecards pending review.</p>
+    </ng-template>
   </mat-card-content>
 </mat-card>

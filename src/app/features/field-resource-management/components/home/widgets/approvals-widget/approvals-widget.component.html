@@ -1,42 +1,24 @@
-<mat-card class="approvals-card">
+<mat-card class="approvals-widget">
   <mat-card-header>
     <mat-card-title>
       <mat-icon>approval</mat-icon>
       Pending Approvals
+      <span class="pending-badge" *ngIf="pendingCount > 0">{{ pendingCount }}</span>
     </mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <!-- Loading state -->
-    <div *ngIf="loading" class="widget-loading">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
-
-    <!-- Error state -->
-    <div *ngIf="error" class="widget-error">
-      <p>{{ error }}</p>
-      <button mat-button color="primary" (click)="retry()">Retry</button>
-    </div>
-
-    <!-- Data state -->
-    <ng-container *ngIf="!loading && !error">
-      <div *ngIf="counts as c" class="approvals-grid">
-        <div class="approval-item">
-          <span class="approval-count">{{ c.pendingTimecards }}</span>
-          <span class="approval-label">Timecards</span>
-        </div>
-        <div class="approval-item">
-          <span class="approval-count">{{ c.pendingExpenses }}</span>
-          <span class="approval-label">Expenses</span>
-        </div>
-        <div class="approval-item">
-          <span class="approval-count">{{ c.pendingTravelRequests }}</span>
-          <span class="approval-label">Travel Requests</span>
-        </div>
-        <div class="approval-item">
-          <span class="approval-count">{{ c.pendingBreakRequests }}</span>
-          <span class="approval-label">Break Requests</span>
-        </div>
-      </div>
-    </ng-container>
+    <mat-list *ngIf="pendingItems.length; else noApprovals">
+      <mat-list-item *ngFor="let item of pendingItems">
+        <mat-icon matListItemIcon>pending</mat-icon>
+        <span matListItemTitle>{{ item.title || item.description }}</span>
+        <span matListItemLine>{{ item.type }} &mdash; {{ item.submittedAt | date:'short' }}</span>
+      </mat-list-item>
+    </mat-list>
+    <ng-template #noApprovals>
+      <p class="empty-state">No pending approvals.</p>
+    </ng-template>
   </mat-card-content>
+  <mat-card-actions>
+    <button mat-button color="primary" (click)="viewAll()">View All</button>
+  </mat-card-actions>
 </mat-card>

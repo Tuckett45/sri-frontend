@@ -1,0 +1,16 @@
+<mat-card class="prc-card">
+  <mat-card-header>
+    <mat-card-title>Personal Responsibility Checklist</mat-card-title>
+    <span class="progress-label">{{completedCount}}/{{items.length}} complete</span>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-progress-bar mode="determinate" [value]="progress" class="progress-bar"></mat-progress-bar>
+    <mat-list>
+      <mat-list-item *ngFor="let item of items" class="prc-item" [class.completed]="item.completed">
+        <mat-checkbox [checked]="item.completed" (change)="toggleItem(item)" matListItemIcon></mat-checkbox>
+        <span matListItemTitle [class.done-text]="item.completed">{{item.label}}</span>
+        <span *ngIf="item.dueDate" matListItemLine class="due-date">Due: {{item.dueDate | date:'shortDate'}}</span>
+      </mat-list-item>
+    </mat-list>
+  </mat-card-content>
+</mat-card>

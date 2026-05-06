@@ -1,135 +1,74 @@
 .audit-log-container {
   padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.header {
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
 
-  h2 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 500;
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .page-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #424242;
+    }
   }
 
-  button {
-    mat-icon {
-      margin-right: 8px;
+  .header-actions {
+    display: flex;
+    gap: 12px;
+
+    button {
+      border-radius: 20px;
     }
   }
 }
 
-.filter-card {
-  margin-bottom: 24px;
+.audit-log-card {
+  mat-card-content {
+    padding-top: 16px;
+  }
 }
 
-.filter-form {
+.filter-bar {
   display: flex;
-  gap: 16px;
-  align-items: center;
   flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
 
   mat-form-field {
+    min-width: 160px;
     flex: 1;
-    min-width: 200px;
-  }
-
-  button {
-    margin-top: 8px;
   }
 }
 
-.audit-log-table {
-  width: 100%;
-
-  .entity-id {
-    display: block;
-    font-size: 12px;
-    color: rgba(0, 0, 0, 0.54);
-  }
-
-  .details-preview {
-    font-family: monospace;
-    font-size: 12px;
-    color: rgba(0, 0, 0, 0.54);
-  }
-
-  mat-chip {
-    mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      margin-right: 4px;
-    }
-  }
-
-  .audit-row {
-    cursor: pointer;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.04);
-    }
-
-    &.expanded-row {
-      border-bottom: none;
-    }
-  }
-
-  .detail-row {
-    height: 0;
-  }
-}
-
-.expanded-detail {
-  overflow: hidden;
+.filter-actions {
   display: flex;
+  gap: 8px;
 }
 
-.detail-content {
-  padding: 16px;
+.audit-table {
   width: 100%;
-
-  h4 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    font-weight: 500;
-    color: rgba(0, 0, 0, 0.87);
-  }
-
-  pre {
-    background-color: rgba(0, 0, 0, 0.04);
-    padding: 12px;
-    border-radius: 4px;
-    overflow-x: auto;
-    font-size: 12px;
-    margin: 0 0 16px 0;
-  }
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  strong {
-    font-size: 12px;
-    color: rgba(0, 0, 0, 0.54);
-    text-transform: uppercase;
-  }
-
-  span {
-    font-size: 14px;
-    color: rgba(0, 0, 0, 0.87);
-    word-break: break-all;
-  }
 }
 
 .empty-state {
@@ -137,61 +76,63 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
-  color: rgba(0, 0, 0, 0.54);
+  padding: 64px 24px;
+  text-align: center;
 
   mat-icon {
     font-size: 64px;
     width: 64px;
     height: 64px;
+    color: rgba(0, 0, 0, 0.26);
     margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #616161;
   }
 
   p {
     margin: 0;
-    font-size: 16px;
+    color: #9e9e9e;
   }
 }
 
-// Animation for expandable rows
-@keyframes detailExpand {
-  from {
-    height: 0;
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
   }
-  to {
-    height: auto;
+
+  mat-paginator {
+    background-color: #ffffff !important;
+
+    .mat-mdc-paginator-range-label,
+    .mat-mdc-paginator-page-size-label {
+      color: #000000 !important;
+    }
   }
 }
 
-// Mobile responsive
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .audit-log-container {
     padding: 16px;
   }
 
-  .header {
+  .page-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
-
-    button {
-      width: 100%;
-    }
+    gap: 12px;
   }
 
-  .filter-form {
+  .filter-bar {
     flex-direction: column;
+    align-items: stretch;
 
     mat-form-field {
-      width: 100%;
+      min-width: 100%;
     }
-
-    button {
-      width: 100%;
-    }
-  }
-
-  .info-grid {
-    grid-template-columns: 1fr;
   }
 }

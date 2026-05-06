@@ -1,6 +1,23 @@
-<div 
-  #mapContainer 
-  class="map-container"
-  role="application"
-  aria-label="Interactive map showing technician locations, crew positions, and job sites">
+<div class="map-container" #mapContainer>
+  <div class="map-placeholder">
+    <mat-icon>map</mat-icon>
+    <p>Map View</p>
+    <p class="sub">{{ technicians.length }} technicians &bull; {{ jobs.length }} job sites</p>
+  </div>
+
+  <!-- Technician markers -->
+  <div class="marker-list" *ngIf="technicians.length > 0">
+    <div class="marker technician-marker" *ngFor="let tech of technicians"
+         [matTooltip]="tech.name">
+      <mat-icon>person_pin_circle</mat-icon>
+    </div>
+  </div>
+
+  <!-- Job site markers -->
+  <div class="marker-list" *ngIf="jobs.length > 0">
+    <div class="marker job-marker" *ngFor="let job of jobs"
+         [matTooltip]="job.name">
+      <mat-icon>place</mat-icon>
+    </div>
+  </div>
 </div>

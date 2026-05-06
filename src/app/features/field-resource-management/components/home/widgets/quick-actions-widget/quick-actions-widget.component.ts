@@ -1,36 +1,30 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { QuickAction } from '../../../../models/dashboard.models';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+
+interface QuickAction {
+  label: string;
+  icon: string;
+  route: string;
+}
 
 @Component({
   selector: 'app-quick-actions-widget',
   templateUrl: './quick-actions-widget.component.html',
   styleUrls: ['./quick-actions-widget.component.scss']
 })
-export class QuickActionsWidgetComponent {
-  @Input() actions: QuickAction[] = [];
-  @Output() actionClicked = new EventEmitter<string>();
+export class QuickActionsWidgetComponent implements OnInit {
+  quickActions: QuickAction[] = [
+    { label: 'New Job', icon: 'add_circle', route: '/field-resource-management/jobs/new' },
+    { label: 'Add Technician', icon: 'person_add', route: '/field-resource-management/technicians/new' },
+    { label: 'Schedule', icon: 'calendar_today', route: '/field-resource-management/schedule' },
+    { label: 'Reports', icon: 'bar_chart', route: '/field-resource-management/reports' }
+  ];
 
-  getButtonColor(action: QuickAction): string | undefined {
-    if (action.color === 'orange') {
-      return 'accent';
-    }
-    if (action.color === 'green') {
-      return undefined; // handled via CSS class
-    }
-    return action.color;
-  }
+  constructor(private router: Router) {}
 
-  isOrange(action: QuickAction): boolean {
-    return action.color === 'orange';
-  }
+  ngOnInit(): void {}
 
-  isGreen(action: QuickAction): boolean {
-    return action.color === 'green';
-  }
-
-  onActionClick(action: QuickAction): void {
-    if (action.action) {
-      this.actionClicked.emit(action.action);
-    }
+  navigate(route: string): void {
+    this.router.navigate([route]);
   }
 }

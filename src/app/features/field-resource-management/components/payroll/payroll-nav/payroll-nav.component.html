@@ -1,19 +1,15 @@
-<div class="payroll-nav-container">
-  <nav class="payroll-nav" aria-label="Payroll Services Navigation">
-    <ul class="payroll-nav-links">
-      <li *ngFor="let link of navLinks">
-        <a
-          *ngIf="link.visible"
-          [routerLink]="link.route"
-          routerLinkActive="active"
-          class="payroll-nav-link">
-          {{ link.label }}
-          <span *ngIf="readOnly" class="read-only-badge" aria-label="Read only">(View Only)</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
-  <div class="payroll-content">
+<mat-sidenav-container class="payroll-sidenav-container">
+  <mat-sidenav mode="side" opened class="payroll-sidenav">
+    <mat-nav-list>
+      <a mat-list-item
+         *ngFor="let link of navLinks"
+         [routerLink]="link.route"
+         routerLinkActive="active-link">
+        {{ link.label }}
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content class="payroll-content">
     <router-outlet></router-outlet>
-  </div>
-</div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

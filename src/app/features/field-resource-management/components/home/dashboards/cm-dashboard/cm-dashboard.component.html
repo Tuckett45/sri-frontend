@@ -1,18 +1,10 @@
 <div class="cm-dashboard">
-  <app-quick-actions-widget
-    [actions]="quickActions"
-    (actionClicked)="onQuickAction($event)">
-  </app-quick-actions-widget>
-
+  <div class="dashboard-header"><h2>CM Dashboard</h2></div>
   <div class="dashboard-grid">
-    <app-active-jobs-widget
-      [marketFilter]="marketFilter"
-      (jobSelected)="onJobSelected($event)">
-    </app-active-jobs-widget>
-
-    <app-recent-jobs-widget
-      [marketFilter]="marketFilter"
-      (jobSelected)="onJobSelected($event)">
-    </app-recent-jobs-widget>
+    <app-kpi-summary-card></app-kpi-summary-card>
+    <app-active-jobs-widget></app-active-jobs-widget>
+    <app-recent-jobs-widget></app-recent-jobs-widget>
+    <app-approvals-widget></app-approvals-widget>
+    <app-expenses-widget></app-expenses-widget>
   </div>
 </div>
