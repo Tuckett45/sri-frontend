@@ -101,6 +101,7 @@ interface OnboardingNavLink {
 export class OnboardingNavComponent {
   navLinks: OnboardingNavLink[] = [
     { label: 'Candidate List', route: './candidates' },
-    { label: 'Pipeline Dashboard', route: './pipeline' }
+    { label: 'Pipeline Dashboard', route: './pipeline' },
+    { label: 'Tech Credentials', route: './credentials' }
   ];
 }

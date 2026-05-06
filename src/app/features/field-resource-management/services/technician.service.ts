@@ -4,10 +4,12 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map, retry, switchMap } from 'rxjs/operators';
 import { 
   Technician, 
+  TechnicianRole,
   Skill, 
   Certification, 
   Availability 
 } from '../models/technician.model';
+import { RoleCredentialTemplate } from '../models/role-credential-template.model';
 import { 
   CreateTechnicianDto, 
   UpdateTechnicianDto, 
@@ -15,6 +17,9 @@ import {
 } from '../models/dtos';
 import { DateRange } from '../models/assignment.model';
 import { GeoLocation } from '../models/time-entry.model';
+import { EquipmentAssignment } from '../models/equipment.model';
+import { TechnicalCompetency } from '../models/competency.model';
+import { PRC, PRCGoal } from '../models/prc.model';
 import { RoleBasedDataService } from '../../../services/role-based-data.service';
 import { AuthService } from '../../../services/auth.service';
 import { environment, local_environment } from '../../../../environments/environments';
@@ -349,6 +354,234 @@ export class TechnicianService {
   getExpiringCertifications(daysThreshold: number = 30): Observable<Certification[]> {
     const params = new HttpParams().set('daysThreshold', daysThreshold.toString());
     return this.http.get<Certification[]>(`${this.apiUrl}/certifications/expiring`, { params })
+      .pipe(
+        retry(this.retryCount),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Adds a new certification to a technician
+   * @param technicianId Technician ID
+   * @param certification Certification data to add (without id)
+   * @returns Observable of created certification
+   */
+  addTechnicianCertification(technicianId: string, certification: Omit<Certification, 'id'>): Observable<Certification> {
+    return this.http.post<Certification>(`${this.apiUrl}/${technicianId}/certifications`, certification)
+      .pipe(
+        retry(1),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Updates an existing certification for a technician
+   * @param technicianId Technician ID
+   * @param certificationId Certification ID to update
+   * @param certification Partial certification data to update
+   * @returns Observable of updated certification
+   */
+  updateTechnicianCertification(technicianId: string, certificationId: string, certification: Partial<Certification>): Observable<Certification> {
+    return this.http.put<Certification>(`${this.apiUrl}/${technicianId}/certifications/${certificationId}`, certification)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Deletes a certification from a technician
+   * @param technicianId Technician ID
+   * @param certificationId Certification ID to delete
+   * @returns Observable of void
+   */
+  deleteTechnicianCertification(technicianId: string, certificationId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${technicianId}/certifications/${certificationId}`)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Retrieves equipment assignments for a specific technician
+   * @param technicianId Technician ID
+   * @returns Observable of equipment assignment array
+   */
+  getTechnicianEquipment(technicianId: string): Observable<EquipmentAssignment[]> {
+    return this.http.get<EquipmentAssignment[]>(`${this.apiUrl}/${technicianId}/equipment`)
+      .pipe(
+        retry(this.retryCount),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Assigns new equipment to a technician
+   * @param technicianId Technician ID
+   * @param equipment Equipment data to assign (without id)
+   * @returns Observable of created equipment assignment
+   */
+  assignEquipment(technicianId: string, equipment: Omit<EquipmentAssignment, 'id'>): Observable<EquipmentAssignment> {
+    return this.http.post<EquipmentAssignment>(`${this.apiUrl}/${technicianId}/equipment`, equipment)
+      .pipe(
+        retry(1),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Updates an existing equipment assignment for a technician
+   * @param technicianId Technician ID
+   * @param equipmentId Equipment assignment ID to update
+   * @param update Partial equipment data to update
+   * @returns Observable of updated equipment assignment
+   */
+  updateEquipmentAssignment(technicianId: string, equipmentId: string, update: Partial<EquipmentAssignment>): Observable<EquipmentAssignment> {
+    return this.http.put<EquipmentAssignment>(`${this.apiUrl}/${technicianId}/equipment/${equipmentId}`, update)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Validates that an asset identifier is unique across all technicians
+   * @param assetIdentifier The asset identifier to validate
+   * @param excludeTechnicianId Optional technician ID to exclude from the check
+   * @returns Observable of boolean - true if the asset identifier is unique
+   */
+  validateAssetUniqueness(assetIdentifier: string, excludeTechnicianId?: string): Observable<boolean> {
+    let params = new HttpParams();
+    if (excludeTechnicianId) {
+      params = params.set('excludeTechnicianId', excludeTechnicianId);
+    }
+    return this.http.get<boolean>(`${this.apiUrl}/equipment/validate/${assetIdentifier}`, { params })
+      .pipe(
+        retry(this.retryCount),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Retrieves technical competencies for a specific technician
+   * @param technicianId Technician ID
+   * @returns Observable of technical competency array
+   */
+  getTechnicianCompetencies(technicianId: string): Observable<TechnicalCompetency[]> {
+    return this.http.get<TechnicalCompetency[]>(`${this.apiUrl}/${technicianId}/competencies`)
+      .pipe(
+        retry(this.retryCount),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Adds a new technical competency to a technician
+   * @param technicianId Technician ID
+   * @param competency Competency data to add (without id)
+   * @returns Observable of created technical competency
+   */
+  addTechnicianCompetency(technicianId: string, competency: Omit<TechnicalCompetency, 'id'>): Observable<TechnicalCompetency> {
+    return this.http.post<TechnicalCompetency>(`${this.apiUrl}/${technicianId}/competencies`, competency)
+      .pipe(
+        retry(1),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Updates an existing technical competency for a technician
+   * @param technicianId Technician ID
+   * @param competencyId Competency ID to update
+   * @param update Partial competency data to update
+   * @returns Observable of updated technical competency
+   */
+  updateTechnicianCompetency(technicianId: string, competencyId: string, update: Partial<TechnicalCompetency>): Observable<TechnicalCompetency> {
+    return this.http.put<TechnicalCompetency>(`${this.apiUrl}/${technicianId}/competencies/${competencyId}`, update)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Retrieves the current PRC (Performance Review Cycle) for a technician
+   * @param technicianId Technician ID
+   * @returns Observable of PRC or null if none exists
+   */
+  getTechnicianPRC(technicianId: string): Observable<PRC | null> {
+    return this.http.get<PRC | null>(`${this.apiUrl}/${technicianId}/prc`)
+      .pipe(
+        retry(this.retryCount),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Creates a new PRC for a technician
+   * @param technicianId Technician ID
+   * @param prc PRC data to create (without id and goals)
+   * @returns Observable of created PRC
+   */
+  createPRC(technicianId: string, prc: Omit<PRC, 'id' | 'goals'>): Observable<PRC> {
+    return this.http.post<PRC>(`${this.apiUrl}/${technicianId}/prc`, prc)
+      .pipe(
+        retry(1),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Marks a PRC as complete and computes the next PRC due date
+   * @param technicianId Technician ID
+   * @param prcId PRC ID to complete
+   * @param completionDate Date the PRC was completed
+   * @returns Observable of updated PRC
+   */
+  completePRC(technicianId: string, prcId: string, completionDate: Date): Observable<PRC> {
+    return this.http.put<PRC>(`${this.apiUrl}/${technicianId}/prc/${prcId}/complete`, {
+      completionDate: completionDate.toISOString()
+    })
+      .pipe(
+        retry(1),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Adds a goal to an existing PRC
+   * @param technicianId Technician ID
+   * @param prcId PRC ID to add the goal to
+   * @param goal Goal data to add (without id)
+   * @returns Observable of created PRC goal
+   */
+  addPRCGoal(technicianId: string, prcId: string, goal: Omit<PRCGoal, 'id'>): Observable<PRCGoal> {
+    return this.http.post<PRCGoal>(`${this.apiUrl}/${technicianId}/prc/${prcId}/goals`, goal)
+      .pipe(
+        retry(1),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Updates an existing PRC goal
+   * @param technicianId Technician ID
+   * @param prcId PRC ID containing the goal
+   * @param goalId Goal ID to update
+   * @param update Partial goal data to update
+   * @returns Observable of updated PRC goal
+   */
+  updatePRCGoal(technicianId: string, prcId: string, goalId: string, update: Partial<PRCGoal>): Observable<PRCGoal> {
+    return this.http.put<PRCGoal>(`${this.apiUrl}/${technicianId}/prc/${prcId}/goals/${goalId}`, update)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Retrieves the role-based credential template defining required onboarding items for a role
+   * @param role Technician role to get the template for
+   * @returns Observable of RoleCredentialTemplate
+   */
+  getRoleCredentialTemplate(role: TechnicianRole): Observable<RoleCredentialTemplate> {
+    return this.http.get<RoleCredentialTemplate>(`${this.apiUrl}/role-templates/${role}`)
       .pipe(
         retry(this.retryCount),
         catchError(this.handleError)

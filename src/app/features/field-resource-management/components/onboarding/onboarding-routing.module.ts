@@ -5,6 +5,10 @@ import { OnboardingNavComponent } from './onboarding-nav/onboarding-nav.componen
 import { CandidateListComponent } from './candidate-list/candidate-list.component';
 import { CandidateFormComponent } from './candidate-form/candidate-form.component';
 import { PipelineDashboardComponent } from './pipeline-dashboard/pipeline-dashboard.component';
+import { CredentialsListComponent } from './credentials-list/credentials-list.component';
+import { CredentialDetailComponent } from './credential-detail/credential-detail.component';
+import { CredentialFormComponent } from './credential-form/credential-form.component';
+import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-checklist.component';
 import { UnsavedChangesGuard } from '../../guards/unsaved-changes.guard';
 
 const routes: Routes = [
@@ -38,6 +42,33 @@ const routes: Routes = [
         path: 'pipeline',
         component: PipelineDashboardComponent,
         data: { title: 'Pipeline Dashboard', breadcrumb: 'Pipeline' }
+      },
+      {
+        path: 'credentials',
+        component: CredentialsListComponent,
+        data: { title: 'Tech Credentials', breadcrumb: 'Credentials' }
+      },
+      {
+        path: 'credentials/:technicianId',
+        component: CredentialDetailComponent,
+        data: { title: 'Credential Detail', breadcrumb: 'Credential Detail' }
+      },
+      {
+        path: 'credentials/:technicianId/checklist',
+        component: OnboardingChecklistComponent,
+        data: { title: 'Onboarding Checklist', breadcrumb: 'Checklist' }
+      },
+      {
+        path: 'credentials/:technicianId/new',
+        component: CredentialFormComponent,
+        canDeactivate: [UnsavedChangesGuard],
+        data: { title: 'Add Credential', breadcrumb: 'New Credential' }
+      },
+      {
+        path: 'credentials/:technicianId/edit/:credentialId',
+        component: CredentialFormComponent,
+        canDeactivate: [UnsavedChangesGuard],
+        data: { title: 'Edit Credential', breadcrumb: 'Edit Credential' }
       }
     ]
   }
