@@ -1,22 +1,8 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-
-import { Job } from '../../../models/job.model';
-import { Technician } from '../../../models/technician.model';
-import { Crew } from '../../../models/crew.model';
-import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
-import { selectAllCrews } from '../../../state/crews/crew.selectors';
-
-export interface ReassignDialogData {
-  job: Job;
-  currentAssignType: 'technician' | 'crew';
-  currentTechnicianId?: string;
-  currentCrewId?: string;
-}
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-reassign-dialog',
@@ -24,35 +10,28 @@ export interface ReassignDialogData {
   styleUrls: ['./reassign-dialog.component.scss']
 })
 export class ReassignDialogComponent implements OnInit, OnDestroy {
+  form: FormGroup;
+  technicians: any[] = [];
+  filteredTechnicians: any[] = [];
+  searchTerm = '';
   private destroy$ = new Subject<void>();
 
-  job: Job;
-  reassignForm: FormGroup;
-  technicians$: Observable<Technician[]>;
-  crews$: Observable<Crew[]>;
-  technicians: Technician[] = [];
-  crews: Crew[] = [];
-
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: ReassignDialogData,
-    private dialogRef: MatDialogRef<ReassignDialogComponent>,
     private fb: FormBuilder,
-    private store: Store
+    private store: Store,
+    public dialogRef: MatDialogRef<ReassignDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { assignment: any; currentTechnicianId: string }
   ) {
-    this.job = data.job;
-    this.technicians$ = this.store.select(selectAllTechnicians);
-    this.crews$ = this.store.select(selectAllCrews);
-
-    this.reassignForm = this.fb.group({
-      assignTo: [data.currentAssignType, Validators.required],
-      technicianId: [data.currentTechnicianId || ''],
-      crewId: [data.currentCrewId || '']
+    this.form = this.fb.group({
+      newTechnicianId: ['', Validators.required],
+      notes: ['']
     });
   }
 
   ngOnInit(): void {
-    this.technicians$.pipe(takeUntil(this.destroy$)).subscribe(t => this.technicians = t);
-    this.crews$.pipe(takeUntil(this.destroy$)).subscribe(c => this.crews = c);
+    this.filteredTechnicians = this.technicians.filter(
+      t => t.id !== this.data?.currentTechnicianId
+    );
   }
 
   ngOnDestroy(): void {
@@ -60,20 +39,21 @@ export class ReassignDialogComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onReassign(): void {
-    const v = this.reassignForm.value;
-    if (v.assignTo === 'technician' && !v.technicianId) return;
-    if (v.assignTo === 'crew' && !v.crewId) return;
-
-    this.dialogRef.close({
-      reassigned: true,
-      assignTo: v.assignTo,
-      technicianId: v.technicianId,
-      crewId: v.crewId
-    });
+  filterTechnicians(): void {
+    const term = this.searchTerm.toLowerCase();
+    this.filteredTechnicians = this.technicians.filter(
+      t => t.id !== this.data?.currentTechnicianId &&
+        t.name.toLowerCase().includes(term)
+    );
   }
 
-  onCancel(): void {
-    this.dialogRef.close({ reassigned: false });
+  submit(): void {
+    if (this.form.valid) {
+      this.dialogRef.close(this.form.value);
+    }
+  }
+
+  cancel(): void {
+    this.dialogRef.close();
   }
 }
