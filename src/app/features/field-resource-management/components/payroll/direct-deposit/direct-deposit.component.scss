@@ -1,6 +1,41 @@
+.direct-deposit-container {
+  padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .page-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #424242;
+    }
+  }
+}
+
 .direct-deposit-card {
-  margin: 16px;
-  max-width: 600px;
+  max-width: 700px;
 
   mat-card-content {
     padding-top: 16px;
@@ -9,23 +44,38 @@
 
 .existing-setup {
   margin-bottom: 16px;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 4px;
-  padding: 8px;
+  background: rgba(25, 118, 210, 0.04);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(25, 118, 210, 0.12);
 }
 
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 16px;
-  color: rgba(0, 0, 0, 0.38);
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
 
   mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: rgba(0, 0, 0, 0.26);
     margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #616161;
+  }
+
+  p {
+    margin: 0;
+    color: #9e9e9e;
   }
 }
 
@@ -46,5 +96,33 @@
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 8px;
+  margin-top: 16px;
+  gap: 8px;
+}
+
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .direct-deposit-container {
+    padding: 16px;
+  }
+
+  .direct-deposit-card {
+    max-width: 100%;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
 }

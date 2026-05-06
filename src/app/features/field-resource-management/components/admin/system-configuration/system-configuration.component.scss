@@ -1,6 +1,40 @@
-.system-config-card {
-  margin: 16px;
+.system-config-container {
+  padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .page-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #424242;
+    }
+  }
+}
+
+.system-config-card {
   mat-card-content {
     padding-top: 0;
   }
@@ -14,7 +48,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 500px;
+  max-width: 600px;
 }
 
 .full-width {
@@ -25,16 +59,53 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #fafafa;
+  }
 
   span {
     font-size: 15px;
+    color: #424242;
   }
 }
 
 .tab-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 24px;
+  gap: 8px;
+}
+
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-tab-group {
+    .mat-mdc-tab-header {
+      border-bottom: 1px solid #e0e0e0;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .system-config-container {
+    padding: 16px;
+  }
+
+  .config-form {
+    max-width: 100%;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 }

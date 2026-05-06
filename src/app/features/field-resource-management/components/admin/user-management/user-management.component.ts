@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,6 +18,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatTableModule,
     MatButtonModule,
     MatIconModule,

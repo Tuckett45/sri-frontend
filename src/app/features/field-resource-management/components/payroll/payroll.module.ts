@@ -4,6 +4,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { PayrollRoutingModule } from './payroll-routing.module';
 
+import { SharedMaterialModule } from '../../shared-material.module';
+
 import { PayrollNavComponent } from './payroll-nav/payroll-nav.component';
 import { IncidentReportsComponent } from './incident-reports/incident-reports.component';
 import { DirectDepositComponent } from './direct-deposit/direct-deposit.component';
@@ -28,6 +30,7 @@ import { W2Component } from './w2/w2.component';
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
+    SharedMaterialModule,
     PayrollRoutingModule
   ]
 })

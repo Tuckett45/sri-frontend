@@ -11,13 +11,66 @@
 .payroll-sidenav {
   width: 240px;
   padding-top: 16px;
+  background: #fafafa;
+  border-right: 1px solid #e0e0e0;
+
+  .nav-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    font-weight: 600;
+    font-size: 16px;
+    color: #424242;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 8px;
+
+    mat-icon {
+      color: #1976d2;
+    }
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    text-decoration: none;
+    color: #616161;
+    font-size: 14px;
+    transition: background-color 0.2s, color 0.2s;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.04);
+    }
+  }
 }
 
 .payroll-content {
   padding: 24px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .active-link {
-  background-color: rgba(0, 0, 0, 0.08);
+  background-color: rgba(25, 118, 210, 0.08) !important;
+  color: #1976d2 !important;
   font-weight: 500;
+  border-left: 3px solid #1976d2;
+}
+
+@media (max-width: 768px) {
+  .payroll-sidenav {
+    width: 200px;
+  }
+
+  .payroll-content {
+    padding: 16px;
+  }
 }

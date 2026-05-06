@@ -1,11 +1,119 @@
+:host {
+  display: block;
+}
+
 .pipeline-dashboard {
-  .pipeline-stages { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-  .stage-card { flex: 1; min-width: 100px; }
-  .stage-header { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-left: 4px solid; border-radius: 4px 0 0 4px; background: #f9f9f9; }
-  .stage-name { font-size: 13px; font-weight: 500; }
-  .count-chip { color: #fff; font-weight: 700; min-width: 28px; text-align: center; }
-  .stage-bar { height: 4px; background: #eee; border-radius: 2px; margin-top: 4px; .bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; } }
-  .total-row { display: flex; justify-content: flex-end; gap: 12px; font-size: 14px; border-top: 1px solid #eee; padding-top: 8px; }
-  .view-all-btn { margin-left: auto; }
-  &.compact .pipeline-stages { gap: 8px; }
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+
+  .pipeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e0e0e0;
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: #424242;
+    }
+  }
+
+  .pipeline-stages {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .stage-card {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border-left: 4px solid;
+    border-radius: 4px 0 0 4px;
+    background: #f9f9f9;
+  }
+
+  .stage-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #424242;
+  }
+
+  .count-chip {
+    color: #fff;
+    font-weight: 700;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .stage-bar {
+    height: 4px;
+    background: #eee;
+    border-radius: 2px;
+    margin-top: 4px;
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    font-size: 14px;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+    color: #424242;
+  }
+
+  .view-all-btn {
+    margin-left: auto;
+  }
+
+  &.compact {
+    padding: 16px;
+
+    .pipeline-stages {
+      gap: 8px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .pipeline-stages {
+      flex-direction: column;
+    }
+
+    .stage-card {
+      min-width: unset;
+    }
+  }
+}
+
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-raised-button.mat-accent {
+    background-color: #FF6B00 !important;
+    color: white !important;
+  }
 }

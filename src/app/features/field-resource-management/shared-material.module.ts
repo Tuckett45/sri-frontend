@@ -30,6 +30,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
@@ -63,6 +65,8 @@ const MATERIAL_MODULES = [
   MatListModule,
   MatTabsModule,
   MatRadioModule,
+  MatSliderModule,
+  MatSidenavModule,
   DragDropModule,
   ScrollingModule
 ];

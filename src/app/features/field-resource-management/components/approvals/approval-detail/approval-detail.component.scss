@@ -1,13 +1,107 @@
-:host { display: block; }
-.approval-detail { padding: 24px; }
-.page-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-.page-header h2 { margin: 0; }
-.detail-card { max-width: 800px; }
-.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
-.info-item { display: flex; flex-direction: column; gap: 4px; }
-.label { font-size: 0.75rem; color: rgba(0,0,0,.54); text-transform: uppercase; }
-.value { font-weight: 500; }
-.detail-table { width: 100%; margin: 8px 0 16px; }
-.comment-section { margin-top: 16px; }
-.full-width { width: 100%; }
-.existing-comment { margin-top: 8px; padding: 12px; background: rgba(0,0,0,.04); border-radius: 4px; }
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.approval-detail {
+  padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e0e0e0;
+    gap: 8px;
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #424242;
+    }
+  }
+
+  .detail-card {
+    max-width: 800px;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 16px 0;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .label {
+    font-size: 0.75rem;
+    color: #9e9e9e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .value {
+    font-weight: 500;
+    color: #424242;
+  }
+
+  .detail-table {
+    width: 100%;
+    margin: 8px 0 16px;
+  }
+
+  .comment-section {
+    margin-top: 16px;
+  }
+
+  .full-width {
+    width: 100%;
+  }
+
+  .existing-comment {
+    margin-top: 8px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .info-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+}
+
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-raised-button.mat-accent {
+    background-color: #FF6B00 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-card {
+    border-radius: 8px;
+  }
+}

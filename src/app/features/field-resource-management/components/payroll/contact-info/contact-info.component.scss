@@ -1,5 +1,40 @@
+.contact-info-container {
+  padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .page-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #424242;
+    }
+  }
+}
+
 .contact-info-card {
-  margin: 16px;
   max-width: 700px;
 
   mat-card-content {
@@ -34,11 +69,40 @@
   font-size: 14px;
   font-weight: 500;
   margin: 0 0 8px;
-  color: rgba(0, 0, 0, 0.6);
+  color: #616161;
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 8px;
+  margin-top: 16px;
+  gap: 8px;
+}
+
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-info-container {
+    padding: 16px;
+  }
+
+  .contact-info-card {
+    max-width: 100%;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
