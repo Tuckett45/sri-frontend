@@ -1,38 +1,24 @@
-<mat-card class="travel-break-pto-card">
+<mat-card class="travel-break-pto-widget">
   <mat-card-header>
-    <mat-card-title>
-      <mat-icon>flight</mat-icon>
-      Travel, Break &amp; PTO
-    </mat-card-title>
+    <mat-card-title>Travel / Break / PTO</mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <!-- Loading state -->
-    <div *ngIf="loading" class="widget-loading">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
-
-    <!-- Error state -->
-    <div *ngIf="error" class="widget-error">
-      <p>{{ error }}</p>
-      <button mat-button color="primary" (click)="retry()">Retry</button>
-    </div>
-
-    <!-- Data state -->
-    <ng-container *ngIf="!loading && !error">
-      <div *ngIf="summary as s" class="summary-grid">
-        <div class="summary-item">
-          <span class="summary-count">{{ s.pendingTravelRequests }}</span>
-          <span class="summary-label">Travel Requests</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-count">{{ s.pendingBreakRequests }}</span>
-          <span class="summary-label">Break Requests</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-count">{{ s.pendingPtoRequests }}</span>
-          <span class="summary-label">PTO Requests</span>
-        </div>
+    <div class="status-row">
+      <div class="status-item">
+        <mat-icon>directions_car</mat-icon>
+        <div class="status-label">Travel</div>
+        <mat-chip [ngClass]="travelStatus === 'None' ? 'status-none' : 'status-active'">{{ travelStatus }}</mat-chip>
       </div>
-    </ng-container>
+      <div class="status-item">
+        <mat-icon>free_breakfast</mat-icon>
+        <div class="status-label">Break</div>
+        <mat-chip [ngClass]="breakStatus === 'None' ? 'status-none' : 'status-active'">{{ breakStatus }}</mat-chip>
+      </div>
+      <div class="status-item">
+        <mat-icon>beach_access</mat-icon>
+        <div class="status-label">PTO Balance</div>
+        <mat-chip class="pto-chip">{{ ptoBalance }}h</mat-chip>
+      </div>
+    </div>
   </mat-card-content>
 </mat-card>

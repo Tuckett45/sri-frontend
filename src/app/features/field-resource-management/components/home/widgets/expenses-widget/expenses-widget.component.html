@@ -1,47 +1,21 @@
-<mat-card class="expenses-card">
+<mat-card class="expenses-widget">
   <mat-card-header>
     <mat-card-title>
       <mat-icon>receipt</mat-icon>
-      Expenses Pending Review
+      Expenses
     </mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <!-- Loading state -->
-    <div *ngIf="loading" class="widget-loading">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
-
-    <!-- Error state -->
-    <div *ngIf="error" class="widget-error">
-      <p>{{ error }}</p>
-      <button mat-button color="primary" (click)="retry()">Retry</button>
-    </div>
-
-    <!-- Data state -->
-    <ng-container *ngIf="!loading && !error">
-      <div class="expenses-list">
-        <div
-          *ngFor="let expense of expenses"
-          class="expense-item"
-          (click)="onExpenseClick(expense.id)"
-          role="button"
-          tabindex="0"
-          (keydown.enter)="onExpenseClick(expense.id)"
-          [attr.aria-label]="'Expense by ' + expense.submittedBy + ' - ' + (expense.amount | currency)"
-        >
-          <div class="expense-info">
-            <span class="submitted-by">{{ expense.submittedBy }}</span>
-            <span class="expense-type">{{ expense.type }}</span>
-            <span class="expense-description">{{ expense.description }}</span>
-          </div>
-          <span class="expense-amount">{{ expense.amount | currency }}</span>
-        </div>
-
-        <div *ngIf="expenses.length === 0" class="empty-state">
-          <mat-icon>check_circle_outline</mat-icon>
-          <p>No expenses pending review</p>
-        </div>
+    <div class="expense-row">
+      <div class="expense-item">
+        <div class="expense-label">Total Expenses</div>
+        <div class="expense-value total">${{ totalExpenses | number:'1.2-2' }}</div>
       </div>
-    </ng-container>
+      <mat-divider vertical></mat-divider>
+      <div class="expense-item">
+        <div class="expense-label">Pending</div>
+        <div class="expense-value pending">${{ pendingExpenses | number:'1.2-2' }}</div>
+      </div>
+    </div>
   </mat-card-content>
 </mat-card>
