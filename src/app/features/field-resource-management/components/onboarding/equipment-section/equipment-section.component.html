@@ -1,0 +1,36 @@
+<mat-card class="equipment-card">
+  <mat-card-header>
+    <mat-card-title>Equipment</mat-card-title>
+    <button mat-stroked-button color="primary" (click)="addEquipment()" style="margin-left:auto">
+      <mat-icon>add</mat-icon> Assign Equipment
+    </button>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-table [dataSource]="equipment">
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Equipment</mat-header-cell>
+        <mat-cell *matCellDef="let e"><strong>{{e.name}}</strong></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="serialNumber">
+        <mat-header-cell *matHeaderCellDef>Serial #</mat-header-cell>
+        <mat-cell *matCellDef="let e">{{e.serialNumber}}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="assignedDate">
+        <mat-header-cell *matHeaderCellDef>Assigned</mat-header-cell>
+        <mat-cell *matCellDef="let e">{{e.assignedDate | date:'shortDate'}}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="condition">
+        <mat-header-cell *matHeaderCellDef>Condition</mat-header-cell>
+        <mat-cell *matCellDef="let e"><mat-chip [color]="getConditionColor(e.condition)" highlighted>{{e.condition}}</mat-chip></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let e">
+          <button mat-button color="warn" (click)="returnEquipment(e.id)">Return</button>
+        </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </mat-card-content>
+</mat-card>

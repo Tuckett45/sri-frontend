@@ -1,0 +1,5 @@
+.pipeline-page { padding: 24px; h2 { margin: 0 0 24px; } }
+.kanban-board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 16px; }
+.kanban-column { min-width: 180px; flex: 1; .column-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f5f5f5; border-top: 3px solid; border-radius: 4px 4px 0 0; .column-title { font-weight: 600; font-size: 13px; } } .column-body { background: #fafafa; border: 1px solid #e0e0e0; border-top: none; min-height: 200px; padding: 8px; border-radius: 0 0 4px 4px; } }
+.candidate-card { margin-bottom: 8px; cursor: pointer; &:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); } .candidate-name { font-weight: 500; font-size: 13px; } .candidate-position { font-size: 12px; color: #777; } }
+.more-badge { text-align: center; color: #999; font-size: 12px; padding: 4px; }

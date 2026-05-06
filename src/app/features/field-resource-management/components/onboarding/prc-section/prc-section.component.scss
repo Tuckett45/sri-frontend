@@ -1,0 +1,8 @@
+.prc-card {
+  mat-card-header { display: flex; align-items: center; justify-content: space-between; }
+  .progress-label { font-size: 13px; color: #666; margin-left: auto; }
+  .progress-bar { margin: 12px 0; }
+  .prc-item.completed { opacity: 0.7; }
+  .done-text { text-decoration: line-through; color: #aaa; }
+  .due-date { font-size: 11px; color: #ff9800; }
+}

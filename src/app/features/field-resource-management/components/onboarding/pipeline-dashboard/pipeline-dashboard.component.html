@@ -1,0 +1,22 @@
+<div class="pipeline-page">
+  <h2>Onboarding Pipeline</h2>
+  <div class="kanban-board">
+    <div *ngFor="let stage of stages" class="kanban-column">
+      <div class="column-header" [style.border-top-color]="stage.color">
+        <span class="column-title">{{stage.name}}</span>
+        <mat-chip [style.background-color]="stage.color" style="color:#fff">{{stage.count}}</mat-chip>
+      </div>
+      <div class="column-body">
+        <mat-card *ngFor="let c of stage.candidates" class="candidate-card" (click)="viewCandidates(stage.name)">
+          <mat-card-content>
+            <div class="candidate-name">{{c.name}}</div>
+            <div class="candidate-position">{{c.position}}</div>
+          </mat-card-content>
+        </mat-card>
+        <div *ngIf="stage.count > stage.candidates.length" class="more-badge">
+          +{{stage.count - stage.candidates.length}} more
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
