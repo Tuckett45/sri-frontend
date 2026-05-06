@@ -1,68 +1,22 @@
 <div class="map-view-container">
-  <!-- Header with controls -->
-  <div class="map-header">
-    <div class="header-left">
-      <h2>Field Resource Map</h2>
-      <div class="stats-summary">
-        <span class="stat-item" *ngIf="currentFilters.showTechnicians">
-          <span class="stat-icon technician"></span>
-          <span class="stat-value">{{ stats.visible.technicians }}</span>
-          <span class="stat-label">Technicians</span>
-        </span>
-        <span class="stat-item" *ngIf="currentFilters.showCrews">
-          <span class="stat-icon crew"></span>
-          <span class="stat-value">{{ stats.visible.crews }}</span>
-          <span class="stat-label">Crews</span>
-        </span>
-        <span class="stat-item" *ngIf="currentFilters.showJobs">
-          <span class="stat-icon job"></span>
-          <span class="stat-value">{{ stats.visible.jobs }}</span>
-          <span class="stat-label">Jobs</span>
-        </span>
-      </div>
-    </div>
-    <div class="header-right">
-      <button 
-        class="control-btn" 
-        (click)="toggleFilters()"
-        [class.active]="showFilters"
-        [attr.aria-label]="showFilters ? 'Hide filters' : 'Show filters'">
-        <span class="btn-icon">🔍</span>
-        Filters
-      </button>
-      <button 
-        class="control-btn" 
-        (click)="toggleLegend()"
-        [class.active]="showLegend"
-        [attr.aria-label]="showLegend ? 'Hide legend' : 'Show legend'">
-        <span class="btn-icon">📋</span>
-        Legend
-      </button>
-    </div>
+  <div class="map-sidebar" [class.closed]="!sidebarOpen">
+    <app-map-filters (filtersChanged)="onFiltersChanged($event)"></app-map-filters>
   </div>
 
-  <!-- Main content area -->
-  <div class="map-content">
-    <!-- Filter panel -->
-    <aside class="filter-panel" *ngIf="showFilters">
-      <frm-map-filters
-        (filtersChanged)="onFiltersChanged($event)">
-      </frm-map-filters>
-    </aside>
+  <div class="map-main">
+    <div class="map-toolbar">
+      <button mat-icon-button (click)="toggleSidebar()" matTooltip="Toggle Filters">
+        <mat-icon>{{ sidebarOpen ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+      </button>
+      <app-location-tracking-toggle></app-location-tracking-toggle>
+    </div>
 
-    <!-- Map container -->
-    <div class="map-main">
-      <frm-map
-        [filters]="currentFilters"
-        (technicianSelected)="onTechnicianSelected($event)"
-        (crewSelected)="onCrewSelected($event)"
-        (jobSelected)="onJobSelected($event)">
-      </frm-map>
+    <div class="map-area">
+      <app-map [technicians]="technicians" [jobs]="jobs"></app-map>
+    </div>
 
-      <!-- Legend overlay -->
-      <div class="legend-overlay" *ngIf="showLegend">
-        <frm-map-legend></frm-map-legend>
-      </div>
+    <div class="map-legend-overlay">
+      <app-map-legend></app-map-legend>
     </div>
   </div>
 </div>

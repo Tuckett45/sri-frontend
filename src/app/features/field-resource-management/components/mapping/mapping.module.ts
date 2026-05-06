@@ -1,36 +1,16 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatIconModule } from '@angular/material/icon';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { SharedMaterialModule } from '../../shared-material.module';
 import { MapComponent } from './map/map.component';
 import { MapViewComponent } from './map-view/map-view.component';
 import { MapFiltersComponent } from './map-filters/map-filters.component';
 import { MapLegendComponent } from './map-legend/map-legend.component';
 import { LocationTrackingToggleComponent } from './location-tracking-toggle/location-tracking-toggle.component';
 
-// Guards
-import { DispatcherGuard } from '../../guards/dispatcher.guard';
+const routes: Routes = [{ path: '', component: MapViewComponent }];
 
-const routes: Routes = [
-  {
-    path: '',
-    component: MapViewComponent,
-    data: { 
-      title: 'Map View',
-      breadcrumb: 'Map'
-    }
-  }
-];
-
-/**
- * Mapping Feature Module
- * 
- * Lazy-loaded module for geographic mapping functionality.
- * Provides components for displaying interactive maps with technician locations,
- * crew positions, and job sites with real-time updates.
- */
 @NgModule({
   declarations: [
     MapComponent,
@@ -42,16 +22,9 @@ const routes: Routes = [
   imports: [
     CommonModule,
     FormsModule,
-    MatSlideToggleModule,
-    MatIconModule,
+    ReactiveFormsModule,
+    SharedMaterialModule,
     RouterModule.forChild(routes)
-  ],
-  exports: [
-    MapComponent,
-    MapViewComponent,
-    MapFiltersComponent,
-    MapLegendComponent,
-    LocationTrackingToggleComponent
   ]
 })
-export class MappingModule { }
+export class MappingModule {}
