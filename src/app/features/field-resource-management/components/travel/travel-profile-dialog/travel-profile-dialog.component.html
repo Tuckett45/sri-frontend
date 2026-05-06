@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>Travel Profile</h2>
+<mat-dialog-content>
+  <mat-list *ngIf="data" class="profile-list">
+    <mat-list-item>
+      <mat-icon matListItemIcon>person</mat-icon>
+      <span matListItemTitle>Technician</span>
+      <span matListItemLine>{{ data.technicianName || 'N/A' }}</span>
+    </mat-list-item>
+    <mat-divider></mat-divider>
+    <mat-list-item>
+      <mat-icon matListItemIcon>flight</mat-icon>
+      <span matListItemTitle>Home Airport</span>
+      <span matListItemLine>{{ data.homeAirport || 'Not set' }}</span>
+    </mat-list-item>
+    <mat-divider></mat-divider>
+    <mat-list-item>
+      <mat-icon matListItemIcon>hotel</mat-icon>
+      <span matListItemTitle>Preferred Hotel Chain</span>
+      <span matListItemLine>{{ data.preferredHotelChain || 'No Preference' }}</span>
+    </mat-list-item>
+    <mat-divider></mat-divider>
+    <mat-list-item>
+      <mat-icon matListItemIcon>directions_car</mat-icon>
+      <span matListItemTitle>Vehicle</span>
+      <span matListItemLine>{{ data.vehicleType || 'Not set' }}{{ data.licensePlate ? ' - ' + data.licensePlate : '' }}</span>
+    </mat-list-item>
+    <mat-divider></mat-divider>
+    <mat-list-item>
+      <mat-icon matListItemIcon>social_distance</mat-icon>
+      <span matListItemTitle>Max Drive Distance</span>
+      <span matListItemLine>{{ data.maxDriveDistance ? data.maxDriveDistance + ' miles' : 'Not set' }}</span>
+    </mat-list-item>
+  </mat-list>
+
+  <div *ngIf="!data" class="no-profile">
+    <mat-icon>info</mat-icon>
+    <p>No travel profile available.</p>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-raised-button (click)="close()">Close</button>
+</mat-dialog-actions>
