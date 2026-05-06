@@ -1,0 +1,50 @@
+.direct-deposit-card {
+  margin: 16px;
+  max-width: 600px;
+
+  mat-card-content {
+    padding-top: 16px;
+  }
+}
+
+.existing-setup {
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px;
+  color: rgba(0, 0, 0, 0.38);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+}
+
+.toggle-btn {
+  margin-bottom: 16px;
+}
+
+.deposit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}

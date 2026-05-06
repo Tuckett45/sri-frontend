@@ -1,0 +1,33 @@
+<mat-card class="prc-card">
+  <mat-card-header>
+    <mat-card-title>Personal Responsibility Checklist</mat-card-title>
+    <mat-card-subtitle>Please review and acknowledge each item below</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-list class="checklist">
+      <mat-list-item *ngFor="let item of checklistItems" class="checklist-item">
+        <div class="item-content">
+          <div class="item-header">
+            <mat-checkbox [(ngModel)]="item.acknowledged" (change)="onCheck(item)" color="primary">
+              <span class="item-title">{{ item.title }}</span>
+            </mat-checkbox>
+          </div>
+          <p class="item-description">{{ item.description }}</p>
+          <p *ngIf="item.acknowledged && item.date" class="ack-date">
+            <mat-icon>check_circle</mat-icon>
+            Acknowledged on {{ item.date | date:'medium' }}
+          </p>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-list-item>
+    </mat-list>
+
+    <div class="submit-section">
+      <button mat-raised-button color="primary" [disabled]="!allAcknowledged" (click)="submitAcknowledgments()">
+        <mat-icon>done_all</mat-icon>
+        Submit All Acknowledgments
+      </button>
+      <p *ngIf="!allAcknowledged" class="hint-text">Please acknowledge all items before submitting.</p>
+    </div>
+  </mat-card-content>
+</mat-card>

@@ -1,24 +1,16 @@
-.region-manager-card {
+.w4-card {
   margin: 16px;
+  max-width: 600px;
 
   mat-card-content {
     padding-top: 16px;
   }
 }
 
-.toolbar {
-  margin-bottom: 16px;
-}
-
-.region-form-panel {
-  margin-bottom: 16px;
-}
-
-.region-form {
+.w4-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 8px;
 }
 
 .full-width {
@@ -28,9 +20,11 @@
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-}
+  margin-top: 16px;
 
-.regions-table {
-  width: 100%;
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 }

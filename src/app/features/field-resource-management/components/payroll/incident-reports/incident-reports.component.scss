@@ -1,4 +1,4 @@
-.job-template-card {
+.incident-reports-card {
   margin: 16px;
 
   mat-card-content {
@@ -7,21 +7,14 @@
 }
 
 .toolbar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-
-  .search-field {
-    flex: 1;
-  }
-}
-
-.template-form-panel {
   margin-bottom: 16px;
 }
 
-.template-form {
+.incident-form-panel {
+  margin-bottom: 16px;
+}
+
+.incident-form {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -35,10 +28,9 @@
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
 }
 
-.templates-table {
+.incidents-table {
   width: 100%;
 }
 
@@ -56,3 +48,7 @@
     margin-bottom: 16px;
   }
 }
+
+.severity-minor { background-color: #e8f5e9; color: #2e7d32; }
+.severity-moderate { background-color: #fff3e0; color: #e65100; }
+.severity-major { background-color: #ffebee; color: #c62828; }

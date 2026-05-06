@@ -1,0 +1,59 @@
+<mat-card class="contact-info-card">
+  <mat-card-header>
+    <mat-card-title>Contact Information</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="contactForm" (ngSubmit)="onSave()" class="contact-form">
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="firstName">
+          <mat-error *ngIf="contactForm.get('firstName')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Last Name</mat-label>
+          <input matInput formControlName="lastName">
+          <mat-error *ngIf="contactForm.get('lastName')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Phone</mat-label>
+        <input matInput formControlName="phone" type="tel">
+        <mat-icon matSuffix>phone</mat-icon>
+        <mat-error *ngIf="contactForm.get('phone')?.hasError('required')">Phone is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Personal Email</mat-label>
+        <input matInput formControlName="personalEmail" type="email">
+        <mat-icon matSuffix>email</mat-icon>
+        <mat-error *ngIf="contactForm.get('personalEmail')?.hasError('required')">Email is required</mat-error>
+        <mat-error *ngIf="contactForm.get('personalEmail')?.hasError('email')">Invalid email address</mat-error>
+      </mat-form-field>
+
+      <mat-divider class="section-divider"></mat-divider>
+      <h3 class="section-title">Emergency Contact</h3>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Emergency Contact Name</mat-label>
+        <input matInput formControlName="emergencyContactName">
+        <mat-error *ngIf="contactForm.get('emergencyContactName')?.hasError('required')">Required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Emergency Contact Phone</mat-label>
+        <input matInput formControlName="emergencyContactPhone" type="tel">
+        <mat-error *ngIf="contactForm.get('emergencyContactPhone')?.hasError('required')">Required</mat-error>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="contactForm.invalid || isSaving">
+          <mat-icon>save</mat-icon>
+          {{ isSaving ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,44 @@
+.contact-info-card {
+  margin: 16px;
+  max-width: 700px;
+
+  mat-card-content {
+    padding-top: 16px;
+  }
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.half-width {
+  flex: 1;
+}
+
+.section-divider {
+  margin: 16px 0 8px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 8px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}

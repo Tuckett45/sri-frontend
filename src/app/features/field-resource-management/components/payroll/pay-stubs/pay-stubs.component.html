@@ -1,0 +1,51 @@
+<mat-card class="pay-stubs-card">
+  <mat-card-header>
+    <mat-card-title>Pay Stubs</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <ng-container *ngIf="payStubs && payStubs.length > 0; else emptyState">
+      <mat-table [dataSource]="payStubs" class="pay-stubs-table">
+        <ng-container matColumnDef="period">
+          <mat-header-cell *matHeaderCellDef>Pay Period</mat-header-cell>
+          <mat-cell *matCellDef="let stub">{{ stub.period }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="grossPay">
+          <mat-header-cell *matHeaderCellDef>Gross Pay</mat-header-cell>
+          <mat-cell *matCellDef="let stub">{{ stub.grossPay | currency }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="deductions">
+          <mat-header-cell *matHeaderCellDef>Deductions</mat-header-cell>
+          <mat-cell *matCellDef="let stub">{{ stub.deductions | currency }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="netPay">
+          <mat-header-cell *matHeaderCellDef>Net Pay</mat-header-cell>
+          <mat-cell *matCellDef="let stub">{{ stub.netPay | currency }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+          <mat-cell *matCellDef="let stub">
+            <button mat-icon-button color="primary" matTooltip="Download">
+              <mat-icon>download</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
+
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+    </ng-container>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <mat-icon>receipt_long</mat-icon>
+        <p>No pay stubs available.</p>
+      </div>
+    </ng-template>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,56 @@
+<mat-card class="w2-card">
+  <mat-card-header>
+    <mat-card-title>W2 Tax Forms</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-form-field appearance="outline" class="year-selector">
+      <mat-label>Tax Year</mat-label>
+      <mat-select [(ngModel)]="selectedYear">
+        <mat-option *ngFor="let year of taxYears" [value]="year">{{ year }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <ng-container *ngIf="filteredForms.length > 0; else emptyState">
+      <mat-table [dataSource]="filteredForms" class="w2-table">
+        <ng-container matColumnDef="year">
+          <mat-header-cell *matHeaderCellDef>Year</mat-header-cell>
+          <mat-cell *matCellDef="let form">{{ form.year }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="employer">
+          <mat-header-cell *matHeaderCellDef>Employer</mat-header-cell>
+          <mat-cell *matCellDef="let form">{{ form.employer }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="grossWages">
+          <mat-header-cell *matHeaderCellDef>Gross Wages</mat-header-cell>
+          <mat-cell *matCellDef="let form">{{ form.grossWages | currency }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="federalWithheld">
+          <mat-header-cell *matHeaderCellDef>Federal Withheld</mat-header-cell>
+          <mat-cell *matCellDef="let form">{{ form.federalWithheld | currency }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+          <mat-cell *matCellDef="let form">
+            <button mat-icon-button color="primary" matTooltip="Download W2">
+              <mat-icon>download</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
+    </ng-container>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <mat-icon>description</mat-icon>
+        <p>No W2 forms available for {{ selectedYear }}.</p>
+      </div>
+    </ng-template>
+  </mat-card-content>
+</mat-card>

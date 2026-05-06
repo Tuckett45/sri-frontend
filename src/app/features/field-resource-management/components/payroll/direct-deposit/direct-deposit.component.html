@@ -1,0 +1,83 @@
+<mat-card class="direct-deposit-card">
+  <mat-card-header>
+    <mat-card-title>Direct Deposit</mat-card-title>
+    <mat-card-subtitle>Manage your bank account for direct deposit</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <ng-container *ngIf="existingSetup && !showForm">
+      <div class="existing-setup">
+        <mat-list>
+          <mat-list-item>
+            <mat-icon matListItemIcon>account_balance</mat-icon>
+            <span matListItemTitle>Bank</span>
+            <span matListItemLine>{{ existingSetup.bankName }}</span>
+          </mat-list-item>
+          <mat-list-item>
+            <mat-icon matListItemIcon>credit_card</mat-icon>
+            <span matListItemTitle>Account Type</span>
+            <span matListItemLine>{{ existingSetup.accountType }}</span>
+          </mat-list-item>
+          <mat-list-item>
+            <mat-icon matListItemIcon>lock</mat-icon>
+            <span matListItemTitle>Account Number</span>
+            <span matListItemLine>{{ existingSetup.maskedAccount }}</span>
+          </mat-list-item>
+        </mat-list>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!existingSetup && !showForm">
+      <div class="empty-state">
+        <mat-icon>account_balance</mat-icon>
+        <p>No direct deposit account set up.</p>
+      </div>
+    </ng-container>
+
+    <div class="toggle-btn">
+      <button mat-raised-button color="primary" (click)="toggleForm()">
+        <mat-icon>{{ showForm ? 'close' : (isEdit ? 'edit' : 'add') }}</mat-icon>
+        {{ showForm ? 'Cancel' : (isEdit ? 'Edit Account' : 'Setup Direct Deposit') }}
+      </button>
+    </div>
+
+    <form *ngIf="showForm" [formGroup]="directDepositForm" (ngSubmit)="onSubmit()" class="deposit-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Bank Name</mat-label>
+        <input matInput formControlName="bankName" placeholder="e.g. Chase Bank">
+        <mat-error *ngIf="directDepositForm.get('bankName')?.hasError('required')">Bank name is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Account Type</mat-label>
+        <mat-select formControlName="accountType">
+          <mat-option *ngFor="let type of accountTypes" [value]="type">{{ type }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Routing Number</mat-label>
+        <input matInput formControlName="routingNumber" maxlength="9">
+        <mat-error *ngIf="directDepositForm.get('routingNumber')?.hasError('required')">Routing number is required</mat-error>
+        <mat-error *ngIf="directDepositForm.get('routingNumber')?.hasError('pattern')">Must be 9 digits</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Account Number</mat-label>
+        <input matInput formControlName="accountNumber" type="password">
+        <mat-error *ngIf="directDepositForm.get('accountNumber')?.hasError('required')">Account number is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Confirm Account Number</mat-label>
+        <input matInput formControlName="confirmAccountNumber" type="password">
+        <mat-error *ngIf="directDepositForm.get('confirmAccountNumber')?.hasError('required')">Please confirm account number</mat-error>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="directDepositForm.invalid">
+          <mat-icon>save</mat-icon> Save
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

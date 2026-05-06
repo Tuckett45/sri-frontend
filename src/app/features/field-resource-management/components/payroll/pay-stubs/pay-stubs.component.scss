@@ -1,22 +1,12 @@
-.client-config-card {
+.pay-stubs-card {
   margin: 16px;
-
-  mat-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .header-actions {
-    margin-left: auto;
-  }
 
   mat-card-content {
     padding-top: 16px;
   }
 }
 
-.clients-table {
+.pay-stubs-table {
   width: 100%;
 }
 
