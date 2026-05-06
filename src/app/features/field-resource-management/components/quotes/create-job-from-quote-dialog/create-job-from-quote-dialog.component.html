@@ -1,0 +1,26 @@
+<h2 mat-dialog-title>Create Job from Quote</h2>
+<mat-dialog-content>
+  <p class="quote-ref">Creating job from: <strong>{{quote?.projectTitle}}</strong> ({{quote?.clientName}})</p>
+  <form [formGroup]="form" class="dialog-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Job Title *</mat-label>
+      <input matInput formControlName="title">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Priority *</mat-label>
+      <mat-select formControlName="priority">
+        <mat-option *ngFor="let p of priorities" [value]="p">{{p}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Scheduled Start *</mat-label>
+      <input matInput type="date" formControlName="scheduledStart">
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="confirm()" [disabled]="form.invalid">
+    <mat-icon>work</mat-icon> Create Job
+  </button>
+</mat-dialog-actions>
