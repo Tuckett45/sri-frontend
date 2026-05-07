@@ -477,6 +477,7 @@ export class StreetSheetModalComponent implements OnInit {
           equipment: !!formValue.equipment,
           date: !!formValue.date
         });
+        this.isSaving = false;
         this.toastr.error('Please fill in all required fields');
         return;
       }
@@ -552,12 +553,16 @@ export class StreetSheetModalComponent implements OnInit {
         }
       });
 
-      this.streetSheetService.saveStreetSheet(formData).subscribe(
+      const request$ = this.isEditMode
+        ? this.streetSheetService.updateStreetSheet(formData, formValue.segmentId)
+        : this.streetSheetService.saveStreetSheet(formData);
+
+      request$.subscribe(
         (response: StreetSheet) => {
           console.log('✅ Street sheet saved successfully:', response);
           this.isSaving = false;
           this.toastr.success('Street Sheet Saved');
-          this.dialogRef.close(response); 
+          this.dialogRef.close(response);
         },
         (error) => {
           this.isSaving = false;
