@@ -132,9 +132,12 @@ export class StreetSheetService {
     return this.http.post<any>(`${environment.apiUrl}/StreetSheet`, formData, { headers });
   }
 
-  updateStreetSheet(streetSheet: StreetSheet): Observable<any> {
+  updateStreetSheet(formData: FormData, segmentId: string): Observable<any> {
+    const headers = new HttpHeaders({
+      // Don't set Content-Type for FormData - browser will set it with boundary
+    });
     this.streetSheetsCache$ = null;
-    return this.http.put<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.segmentId}`, streetSheet, this.httpOptions);
+    return this.http.put<any>(`${environment.apiUrl}/StreetSheet/${segmentId}`, formData, { headers });
   }
 
   deleteStreetSheet(streetSheet: StreetSheet): Observable<any> {
