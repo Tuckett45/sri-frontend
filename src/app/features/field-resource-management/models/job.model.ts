@@ -97,6 +97,7 @@ export interface Job {
   company: string;
   technicianId?: string;
   crewId?: string;
+  managerId?: string;
   templateId?: string;
 
   // Pricing / Billing

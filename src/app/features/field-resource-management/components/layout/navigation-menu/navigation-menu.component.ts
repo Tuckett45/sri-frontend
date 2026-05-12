@@ -202,6 +202,22 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       frmPermission: 'canManageOnboarding'
     },
     {
+      label: 'PTO Requests',
+      icon: 'event_busy',
+      route: '/field-resource-management/pto',
+      resource: 'time_entries',
+      action: 'read'
+      // Available to all authenticated users
+    },
+    {
+      label: 'PTO Approvals',
+      icon: 'how_to_reg',
+      route: '/field-resource-management/pto/approvals/manager',
+      resource: 'time_entries',
+      action: 'execute',
+      roles: [UserRole.Admin, UserRole.Manager, UserRole.PM, UserRole.DCOps, UserRole.OSPCoordinator, UserRole.EngineeringFieldSupport, UserRole.MaterialsManager]
+    },
+    {
       label: 'Back Office',
       icon: 'business_center',
       route: '/field-resource-management/payroll',

@@ -104,6 +104,16 @@
         text-decoration: underline;
       }
     }
+
+    &.toggle-item {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+
+      label {
+        margin-bottom: 0;
+      }
+    }
   }
 }
 

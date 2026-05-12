@@ -258,6 +258,23 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
       return ok(technician);
     }
 
+    // --- PUT /technicians/:id ---
+    const putTechMatch = url.match(/\/technicians\/([^/]+)$/);
+    if (req.method === 'PUT' && putTechMatch) {
+      const techId = putTechMatch[1];
+      const idx = this.technicians.findIndex(t => t.id === techId);
+      if (idx === -1) {
+        return notFound(techId);
+      }
+      this.technicians[idx] = {
+        ...this.technicians[idx],
+        ...req.body,
+        id: techId,
+        updatedAt: new Date(),
+      };
+      return ok(this.technicians[idx]);
+    }
+
     // --- GET /technicians ---
     if (req.method === 'GET' && url.match(/\/technicians$/)) {
       return ok(this.technicians);
@@ -859,6 +876,8 @@ function buildMockTechnicians(): Technician[] {
       region: 'Dallas',
       isAvailable: true,
       isActive: true,
+      willingToTravel: true,
+      scissorLiftCertified: true,
       certifications: typedCredentials['tech-001'] as any as Certification[],
       createdAt: daysAgo(365),
       updatedAt: daysAgo(5),
@@ -874,6 +893,8 @@ function buildMockTechnicians(): Technician[] {
       region: 'Plano',
       isAvailable: true,
       isActive: true,
+      willingToTravel: false,
+      scissorLiftCertified: false,
       certifications: typedCredentials['tech-002'] as any as Certification[],
       createdAt: daysAgo(400),
       updatedAt: daysAgo(2),
@@ -889,6 +910,8 @@ function buildMockTechnicians(): Technician[] {
       region: 'Irving',
       isAvailable: false,
       isActive: true,
+      willingToTravel: true,
+      scissorLiftCertified: true,
       certifications: typedCredentials['tech-003'] as any as Certification[],
       createdAt: daysAgo(500),
       updatedAt: daysAgo(10),
@@ -904,6 +927,8 @@ function buildMockTechnicians(): Technician[] {
       region: 'Fort Worth',
       isAvailable: true,
       isActive: true,
+      willingToTravel: true,
+      scissorLiftCertified: false,
       certifications: typedCredentials['tech-004'] as any as Certification[],
       createdAt: daysAgo(600),
       updatedAt: daysAgo(3),
@@ -919,6 +944,8 @@ function buildMockTechnicians(): Technician[] {
       region: 'McKinney',
       isAvailable: true,
       isActive: true,
+      willingToTravel: false,
+      scissorLiftCertified: false,
       certifications: [],
       createdAt: daysAgo(30),
       updatedAt: daysAgo(1),
@@ -934,6 +961,8 @@ function buildMockTechnicians(): Technician[] {
       region: 'Richardson',
       isAvailable: true,
       isActive: true,
+      willingToTravel: false,
+      scissorLiftCertified: true,
       certifications: typedCredentials['tech-006'] as any as Certification[],
       createdAt: daysAgo(200),
       updatedAt: daysAgo(7),

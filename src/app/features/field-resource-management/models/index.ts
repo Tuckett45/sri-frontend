@@ -33,6 +33,9 @@ export * from './deployment-checklist.model';
 // Quote/RFP Workflow models
 export * from './quote-workflow.model';
 
+// PTO models
+export * from './pto.models';
+
 // DTOs
 export * from './dtos/technician.dto';
 export * from './dtos/job.dto';

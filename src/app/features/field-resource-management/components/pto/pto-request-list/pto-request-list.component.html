@@ -1,0 +1,109 @@
+<div class="pto-request-list">
+  <div class="list-header">
+    <h2>My PTO Requests</h2>
+    <a class="btn-new-request" routerLink="/field-resource-management/pto/new" aria-label="Submit a new PTO request">
+      + New Request
+    </a>
+  </div>
+
+  <!-- Status Filter Chips -->
+  <div class="filter-chips">
+    <button
+      *ngFor="let filter of filterOptions"
+      class="filter-chip"
+      [class.active]="activeFilter === filter"
+      (click)="setFilter(filter)"
+      [attr.aria-pressed]="activeFilter === filter"
+      type="button">
+      {{ filter }}
+    </button>
+  </div>
+
+  <!-- Request Table -->
+  <div class="request-table" *ngIf="filteredRequests$ | async as requests">
+    <table *ngIf="requests.length > 0; else emptyState">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Leave Type</th>
+          <th>Reason</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let request of requests; trackBy: trackByRequest"
+          class="request-row">
+          <td>
+            <span class="status-badge" [ngClass]="getStatusBadgeClass(request.status)">
+              {{ getStatusLabel(request.status) }}
+            </span>
+          </td>
+          <td>{{ request.startDate | date:'mediumDate' }}</td>
+          <td>{{ request.endDate | date:'mediumDate' }}</td>
+          <td>{{ request.requestType }}</td>
+          <td class="reason-cell">{{ request.reason || '—' }}</td>
+          <td class="actions-cell" (click)="$event.stopPropagation()">
+            <button
+              *ngIf="canCancel(request)"
+              class="btn-action btn-cancel"
+              (click)="onCancel(request)"
+              title="Cancel this request">
+              Cancel
+            </button>
+            <button
+              *ngIf="canApprove(request)"
+              class="btn-action btn-approve"
+              (click)="onApprove(request)"
+              title="Approve this request">
+              Approve
+            </button>
+            <button
+              *ngIf="canReject(request)"
+              class="btn-action btn-reject"
+              (click)="onReject(request)"
+              title="Reject this request">
+              Reject
+            </button>
+            <button
+              class="btn-action btn-view"
+              (click)="onRowClick(request)"
+              title="View details">
+              View
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <p>No PTO requests found for the selected filter.</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Reject Reason Modal -->
+  <div class="reject-overlay" *ngIf="showRejectModal">
+    <div class="reject-modal">
+      <h3>Reject PTO Request</h3>
+      <p>Please provide a reason for rejection:</p>
+      <textarea
+        [(ngModel)]="rejectReason"
+        placeholder="Enter rejection reason..."
+        rows="3"
+        class="reject-textarea"
+      ></textarea>
+      <div class="modal-actions">
+        <button class="btn-action btn-reject" (click)="confirmReject()" [disabled]="!rejectReason.trim()">
+          Confirm Reject
+        </button>
+        <button class="btn-action btn-cancel-modal" (click)="cancelReject()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -239,7 +239,7 @@ export class AuthService {
     } else if (!environment.production) {
       // In development mode, use a mock admin user if no user is logged in
       this.currentUser = {
-        id: 'dev-admin-123',
+        id: '00000000-0000-0000-0000-000000000001',
         name: 'Dev Admin',
         email: 'admin@dev.local',
         password: '',

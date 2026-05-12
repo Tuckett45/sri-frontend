@@ -65,6 +65,8 @@ export interface Technician {
   region: string;
   isAvailable: boolean;
   isActive: boolean;
+  willingToTravel?: boolean;
+  scissorLiftCertified?: boolean;
   lastKnownLatitude?: number;
   lastKnownLongitude?: number;
   locationUpdatedAt?: Date;

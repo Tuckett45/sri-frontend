@@ -9,6 +9,7 @@ import { CredentialsListComponent } from './credentials-list/credentials-list.co
 import { CredentialDetailComponent } from './credential-detail/credential-detail.component';
 import { CredentialFormComponent } from './credential-form/credential-form.component';
 import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-checklist.component';
+import { ReferralTrackerComponent } from './referral-tracker/referral-tracker.component';
 import { UnsavedChangesGuard } from '../../guards/unsaved-changes.guard';
 
 const routes: Routes = [
@@ -42,6 +43,11 @@ const routes: Routes = [
         path: 'pipeline',
         component: PipelineDashboardComponent,
         data: { title: 'Pipeline Dashboard', breadcrumb: 'Pipeline' }
+      },
+      {
+        path: 'referrals',
+        component: ReferralTrackerComponent,
+        data: { title: 'Referral Tracker', breadcrumb: 'Referrals' }
       },
       {
         path: 'credentials',

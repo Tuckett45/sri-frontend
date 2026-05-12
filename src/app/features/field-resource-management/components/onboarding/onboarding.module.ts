@@ -16,6 +16,7 @@ import { EquipmentSectionComponent } from './equipment-section/equipment-section
 import { CompetencySectionComponent } from './competency-section/competency-section.component';
 import { PRCSectionComponent } from './prc-section/prc-section.component';
 import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-checklist.component';
+import { ReferralTrackerComponent } from './referral-tracker/referral-tracker.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-
     EquipmentSectionComponent,
     CompetencySectionComponent,
     PRCSectionComponent,
-    OnboardingChecklistComponent
+    OnboardingChecklistComponent,
+    ReferralTrackerComponent
   ],
   imports: [
     CommonModule,
