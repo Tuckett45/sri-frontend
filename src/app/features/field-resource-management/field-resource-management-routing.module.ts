@@ -222,6 +222,12 @@ const routes: Routes = [
         path: 'onboarding',
         loadChildren: () => import('./components/onboarding/onboarding.module').then(m => m.OnboardingModule),
         canActivate: [HrGuard]
+      },
+
+      // PTO Routes - Lazy Loaded
+      {
+        path: 'pto',
+        loadChildren: () => import('./components/pto/pto.module').then(m => m.PtoModule)
       }
     ]
   }

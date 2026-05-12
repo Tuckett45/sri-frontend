@@ -28,10 +28,10 @@
           <span class="summary-count">{{ s.pendingBreakRequests }}</span>
           <span class="summary-label">Break Requests</span>
         </div>
-        <div class="summary-item">
+        <a class="summary-item summary-item--link" routerLink="/field-resource-management/pto" aria-label="View PTO Requests">
           <span class="summary-count">{{ s.pendingPtoRequests }}</span>
           <span class="summary-label">PTO Requests</span>
-        </div>
+        </a>
       </div>
     </ng-container>
   </mat-card-content>

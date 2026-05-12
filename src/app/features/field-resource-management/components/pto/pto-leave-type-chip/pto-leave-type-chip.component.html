@@ -1,0 +1,7 @@
+<span
+  class="leave-type-chip"
+  [class.leave-type-chip--predefined]="leaveType.isPredefined"
+  [class.leave-type-chip--custom]="!leaveType.isPredefined"
+>
+  {{ leaveType.name }}
+</span>

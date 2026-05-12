@@ -296,4 +296,18 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
     // TODO: Implement actual role check from auth service
     return true;
   }
+
+  toggleWillingToTravel(technician: Technician, checked: boolean): void {
+    this.store.dispatch(TechnicianActions.updateTechnician({
+      id: technician.id,
+      technician: { willingToTravel: checked }
+    }));
+  }
+
+  toggleScissorLiftCertified(technician: Technician, checked: boolean): void {
+    this.store.dispatch(TechnicianActions.updateTechnician({
+      id: technician.id,
+      technician: { scissorLiftCertified: checked }
+    }));
+  }
 }

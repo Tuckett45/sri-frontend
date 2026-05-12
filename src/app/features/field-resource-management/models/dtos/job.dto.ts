@@ -22,6 +22,7 @@ export interface CreateJobDto {
   customerPOC?: ContactInfo;
   technicianId?: string;
   crewId?: string;
+  managerId?: string;
 
   // Pricing/Billing fields (Job Setup Workflow)
   authorizationStatus: 'authorized' | 'pending';
@@ -61,6 +62,7 @@ export interface UpdateJobDto {
   customerPOC?: ContactInfo;
   crewId?: string;
   technicianId?: string;
+  managerId?: string;
 
   // Pricing/Billing fields (Job Setup Workflow)
   authorizationStatus?: 'authorized' | 'pending';

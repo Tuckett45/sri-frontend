@@ -1,0 +1,86 @@
+<div class="pto-request-form-container">
+  <h2>Request Time Off</h2>
+
+  <div *ngIf="submitted" class="success-message">
+    Your PTO request has been submitted successfully and is pending manager approval.
+  </div>
+
+  <form [formGroup]="ptoForm" (ngSubmit)="onSubmit()" class="pto-form">
+    <!-- Start Date -->
+    <div class="form-field">
+      <label for="startDate">Start Date <span class="required">*</span></label>
+      <input
+        id="startDate"
+        type="date"
+        formControlName="startDate"
+        [attr.aria-invalid]="shouldShowError('startDate')"
+        aria-describedby="startDate-error"
+      />
+      <div id="startDate-error" class="error-message" *ngIf="shouldShowError('startDate')">
+        <span *ngIf="ptoForm.get('startDate')?.errors?.['required']">Start date is required.</span>
+        <span *ngIf="ptoForm.get('startDate')?.errors?.['notInPast']">Start date cannot be in the past.</span>
+      </div>
+    </div>
+
+    <!-- End Date -->
+    <div class="form-field">
+      <label for="endDate">End Date <span class="required">*</span></label>
+      <input
+        id="endDate"
+        type="date"
+        formControlName="endDate"
+        [attr.aria-invalid]="shouldShowError('endDate')"
+        aria-describedby="endDate-error"
+      />
+      <div id="endDate-error" class="error-message" *ngIf="shouldShowError('endDate') || ptoForm.errors?.['endDateBeforeStart']">
+        <span *ngIf="ptoForm.get('endDate')?.errors?.['required']">End date is required.</span>
+        <span *ngIf="ptoForm.errors?.['endDateBeforeStart']">End date must be on or after start date.</span>
+      </div>
+    </div>
+
+    <!-- Leave Type -->
+    <div class="form-field">
+      <label for="requestType">Leave Type <span class="required">*</span></label>
+      <select
+        id="requestType"
+        formControlName="requestType"
+        [attr.aria-invalid]="shouldShowError('requestType')"
+        aria-describedby="requestType-error"
+      >
+        <option value="" disabled>Select a leave type</option>
+        <option *ngFor="let leaveType of leaveTypes$ | async" [value]="leaveType.name">
+          {{ leaveType.name }}
+        </option>
+      </select>
+      <div id="requestType-error" class="error-message" *ngIf="shouldShowError('requestType')">
+        <span *ngIf="ptoForm.get('requestType')?.errors?.['required']">Please select a leave type.</span>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-field">
+      <label for="notes">Notes (optional)</label>
+      <textarea
+        id="notes"
+        formControlName="notes"
+        rows="4"
+        maxlength="1000"
+        placeholder="Add any additional details about your request..."
+        aria-describedby="notes-info notes-error"
+      ></textarea>
+      <div id="notes-info" class="char-count" [class.char-count-warning]="notesLength > 900">
+        {{ notesLength }} / 1000
+      </div>
+      <div id="notes-error" class="error-message" *ngIf="shouldShowError('notes')">
+        <span *ngIf="ptoForm.get('notes')?.errors?.['maxlength']">Notes cannot exceed 1000 characters.</span>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-actions">
+      <button type="submit" [disabled]="ptoForm.invalid" class="submit-btn">
+        Submit Request
+      </button>
+    </div>
+  </form>
+</div>

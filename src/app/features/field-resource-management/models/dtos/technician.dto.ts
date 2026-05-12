@@ -26,6 +26,8 @@ export interface UpdateTechnicianDto {
   region?: string;
   isAvailable?: boolean;
   isActive?: boolean;
+  willingToTravel?: boolean;
+  scissorLiftCertified?: boolean;
   lastKnownLatitude?: number;
   lastKnownLongitude?: number;
   skills?: Skill[];
