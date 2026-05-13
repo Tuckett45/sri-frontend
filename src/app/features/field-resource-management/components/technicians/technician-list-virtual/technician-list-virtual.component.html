@@ -1,0 +1,117 @@
+<div class="technician-list-virtual-container">
+  <!-- Header -->
+  <div class="list-header">
+    <h2>Technicians (Virtual Scrolling)</h2>
+    <div class="header-info">
+      <mat-icon>info</mat-icon>
+      <span>Optimized for large datasets (100+ items)</span>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading technicians...</p>
+  </div>
+
+  <!-- Error Message -->
+  <mat-card *ngIf="error$ | async as error" class="error-card">
+    <mat-card-content>
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Virtual Scroll List -->
+  <div class="virtual-scroll-container" *ngIf="!(loading$ | async)">
+    <cdk-virtual-scroll-viewport
+      [itemSize]="itemSize"
+      [style.height.px]="viewportHeight"
+      class="technician-viewport">
+      
+      <div
+        *cdkVirtualFor="let technician of technicians$ | async; trackBy: trackByTechnicianId"
+        class="technician-item"
+        (click)="viewTechnician(technician)">
+        
+        <!-- Technician Card -->
+        <mat-card class="technician-card">
+          <mat-card-content>
+            <div class="technician-info">
+              <!-- Avatar -->
+              <div class="technician-avatar">
+                <mat-icon>person</mat-icon>
+              </div>
+
+              <!-- Details -->
+              <div class="technician-details">
+                <div class="technician-name">
+                  {{ getFullName(technician) }}
+                </div>
+                <div class="technician-id">
+                  ID: {{ technician.technicianId }}
+                </div>
+                <div class="technician-role">
+                  <mat-chip>{{ technician.role }}</mat-chip>
+                </div>
+              </div>
+
+              <!-- Skills -->
+              <div class="technician-skills">
+                <mat-chip-list>
+                  <mat-chip *ngFor="let skill of getSkillNames(technician).slice(0, 3)">
+                    {{ skill }}
+                  </mat-chip>
+                  <mat-chip *ngIf="technician.skills.length > 3">
+                    +{{ technician.skills.length - 3 }} more
+                  </mat-chip>
+                </mat-chip-list>
+              </div>
+
+              <!-- Status -->
+              <div class="technician-status">
+                <span 
+                  class="status-badge" 
+                  [class.active]="technician.isActive"
+                  [class.inactive]="!technician.isActive">
+                  {{ getStatus(technician) }}
+                </span>
+              </div>
+
+              <!-- Actions -->
+              <div class="technician-actions">
+                <button 
+                  mat-icon-button 
+                  (click)="viewTechnician(technician); $event.stopPropagation()"
+                  matTooltip="View Details">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
+                  (click)="editTechnician(technician); $event.stopPropagation()"
+                  matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="(technicians$ | async)?.length === 0" class="empty-state">
+        <mat-icon>person_off</mat-icon>
+        <h3>No technicians found</h3>
+        <p>Add technicians to get started</p>
+      </div>
+    </cdk-virtual-scroll-viewport>
+  </div>
+
+  <!-- Performance Info -->
+  <div class="performance-info">
+    <mat-icon>speed</mat-icon>
+    <span>
+      Virtual scrolling enabled - Only rendering visible items for optimal performance
+    </span>
+  </div>
+</div>

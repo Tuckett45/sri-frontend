@@ -1,0 +1,79 @@
+/**
+ * Real-time Notification Snackbar Styles
+ * Styles for toast notifications triggered by SignalR events
+ */
+
+// Success snackbar (job assigned)
+.success-snackbar {
+  background-color: #4caf50 !important;
+  color: white !important;
+  
+  .mat-simple-snack-bar-content {
+    color: white;
+  }
+  
+  .mat-simple-snackbar-action {
+    color: white;
+    font-weight: 500;
+  }
+}
+
+// Info snackbar (status changed)
+.info-snackbar {
+  background-color: #2196f3 !important;
+  color: white !important;
+  
+  .mat-simple-snack-bar-content {
+    color: white;
+  }
+  
+  .mat-simple-snackbar-action {
+    color: white;
+    font-weight: 500;
+  }
+}
+
+// Warning snackbar (job reassigned)
+.warning-snackbar {
+  background-color: #ff9800 !important;
+  color: white !important;
+  
+  .mat-simple-snack-bar-content {
+    color: white;
+  }
+  
+  .mat-simple-snackbar-action {
+    color: white;
+    font-weight: 500;
+  }
+}
+
+// Notification snackbar (general notifications)
+.notification-snackbar {
+  background-color: #673ab7 !important;
+  color: white !important;
+  
+  .mat-simple-snack-bar-content {
+    color: white;
+  }
+  
+  .mat-simple-snackbar-action {
+    color: white;
+    font-weight: 500;
+  }
+}
+
+// Error snackbar (for errors)
+.error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+  
+  .mat-simple-snack-bar-content {
+    color: white;
+  }
+  
+  .mat-simple-snackbar-action {
+    color: white;
+    font-weight: 500;
+  }
+}

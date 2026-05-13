@@ -1,0 +1,105 @@
+<div class="project-detail" *ngIf="{ project: project$ | async, loading: projectLoading$ | async, error: projectError$ | async, allocations: allocations$ | async, allocLoading: allocationsLoading$ | async, year: selectedYear$ | async, issues: issues$ | async, issuesLoading: issuesLoading$ | async } as vm">
+
+  <!-- Loading -->
+  <div *ngIf="vm.loading" class="loading-indicator">Loading project…</div>
+
+  <!-- Error -->
+  <div *ngIf="vm.error" class="error-banner" role="alert">{{ vm.error }}</div>
+
+  <!-- Project Content -->
+  <div *ngIf="!vm.loading && vm.project">
+    <!-- Header -->
+    <div class="detail-header">
+      <div class="header-left">
+        <a routerLink="../../forecast" class="back-link">
+          <i class="pi pi-arrow-left"></i> Back to Forecast
+        </a>
+        <h2>{{ vm.project.name }}</h2>
+      </div>
+      <div class="header-actions" *ngIf="isAdmin">
+        <a [routerLink]="['edit']" class="btn-edit">
+          <i class="pi pi-pencil"></i> Edit Project
+        </a>
+      </div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="metadata-section">
+      <div class="metadata-item">
+        <span class="metadata-label">Client</span>
+        <span class="metadata-value">{{ vm.project.clientName }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="metadata-label">Location</span>
+        <span class="metadata-value">{{ vm.project.location }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="metadata-label">Category</span>
+        <span class="metadata-value">{{ getCategoryLabel(vm.project.category) }}</span>
+      </div>
+    </div>
+
+    <!-- 12-Month Allocation Row -->
+    <div class="allocation-section">
+      <h3>Resource Allocations — {{ vm.year }}</h3>
+      <div *ngIf="vm.allocLoading" class="loading-indicator">Loading allocations…</div>
+      <table *ngIf="!vm.allocLoading && vm.allocations" class="allocation-table" role="grid" aria-label="Monthly resource allocations">
+        <thead>
+          <tr>
+            <th *ngFor="let m of MONTHS" class="month-col">{{ m }}</th>
+            <th class="total-col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" class="month-cell">
+              {{ getMonthHeadcount(vm.allocations, m) || '' }}
+            </td>
+            <td class="total-col total-value">{{ getAllocationTotal(vm.allocations) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Issues List -->
+    <div class="issues-section">
+      <div class="issues-header">
+        <h3>Issues</h3>
+        <a *ngIf="isAdmin" routerLink="../../issues/create" class="btn-add">
+          <i class="pi pi-plus"></i> Create Issue
+        </a>
+      </div>
+      <div *ngIf="vm.issuesLoading" class="loading-indicator">Loading issues…</div>
+      <div *ngIf="!vm.issuesLoading && vm.issues && vm.issues.length === 0" class="empty-state">
+        No issues found for this project.
+      </div>
+      <table *ngIf="!vm.issuesLoading && vm.issues && vm.issues.length > 0" class="issues-table" role="grid" aria-label="Project issues">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Severity</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let issue of vm.issues">
+            <td>
+              <a [routerLink]="['../../issues', issue.id]" class="issue-link">{{ issue.description }}</a>
+            </td>
+            <td>
+              <span class="severity-badge" [ngClass]="getSeverityClass(issue.severity)">{{ issue.severity }}</span>
+            </td>
+            <td>{{ issue.status }}</td>
+            <td>{{ issue.createdDate | date:'mediumDate' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Not Found -->
+  <div *ngIf="!vm.loading && !vm.project && !vm.error" class="empty-state">
+    Project not found.
+  </div>
+</div>

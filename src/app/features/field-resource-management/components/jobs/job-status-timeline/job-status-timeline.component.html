@@ -1,0 +1,54 @@
+<div class="status-timeline-container">
+  <!-- Timeline -->
+  <div class="timeline" *ngIf="statusHistory.length > 0">
+    <div
+      class="timeline-entry"
+      *ngFor="let entry of statusHistory; let i = index"
+      [ngClass]="{
+        'first-entry': isFirstEntry(i),
+        'last-entry': isLastEntry(i)
+      }"
+    >
+      <!-- Timeline Line -->
+      <div class="timeline-line" *ngIf="!isLastEntry(i)"></div>
+
+      <!-- Status Indicator -->
+      <div class="status-indicator" [ngClass]="getStatusColorClass(entry.status)">
+        <mat-icon>{{ getStatusIcon(entry.status) }}</mat-icon>
+      </div>
+
+      <!-- Entry Content -->
+      <div class="entry-content">
+        <div class="entry-header">
+          <span class="status-text" [ngClass]="getStatusColorClass(entry.status)">
+            {{ getStatusText(entry.status) }}
+          </span>
+          <span class="entry-time" [title]="formatDateTime(entry.changedAt)">
+            {{ getRelativeTime(entry.changedAt) }}
+          </span>
+        </div>
+
+        <div class="entry-details">
+          <div class="entry-user">
+            <mat-icon>person</mat-icon>
+            <span>{{ entry.changedBy }}</span>
+          </div>
+          <div class="entry-timestamp">
+            {{ formatDateTime(entry.changedAt) }}
+          </div>
+        </div>
+
+        <div class="entry-reason" *ngIf="entry.reason">
+          <mat-icon>info</mat-icon>
+          <span>{{ entry.reason }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="statusHistory.length === 0">
+    <mat-icon>timeline</mat-icon>
+    <p>No status history available</p>
+  </div>
+</div>

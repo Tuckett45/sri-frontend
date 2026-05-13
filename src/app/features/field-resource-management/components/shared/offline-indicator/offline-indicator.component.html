@@ -1,0 +1,14 @@
+<div class="offline-indicator" *ngIf="!isOnline">
+  <mat-toolbar color="warn" class="offline-toolbar">
+    <mat-icon>cloud_off</mat-icon>
+    <span class="offline-message">
+      You are offline. 
+      <span *ngIf="queuedActionsCount > 0">
+        {{ queuedActionsCount }} action(s) queued for sync.
+      </span>
+    </span>
+    <button mat-button (click)="syncNow()" *ngIf="queuedActionsCount > 0">
+      Retry Sync
+    </button>
+  </mat-toolbar>
+</div>

@@ -1,0 +1,155 @@
+<div class="template-metadata" [class.compact]="compact">
+  <!-- Header Section -->
+  <div class="metadata-header">
+    <!-- Template Name -->
+    <h3 class="template-name">{{ template.name }}</h3>
+    
+    <!-- Version Badge -->
+    <span class="version-badge">v{{ template.version }}</span>
+  </div>
+
+  <!-- Badges Row -->
+  <div class="badges-row" *ngIf="getBadges().length > 0">
+    <span 
+      *ngFor="let badge of getBadges()"
+      class="badge"
+      [class.badge-new]="badge === 'New'"
+      [class.badge-popular]="badge === 'Popular'"
+      [class.badge-rated]="badge === 'Top Rated'"
+      [class.badge-public]="badge === 'Public'"
+    >
+      {{ badge }}
+    </span>
+  </div>
+
+  <!-- Category -->
+  <div class="category-section">
+    <span 
+      class="category-badge"
+      [style.background-color]="getCategoryColor(template.category)"
+    >
+      {{ template.category }}
+    </span>
+    <span class="workflow-type">{{ template.workflowType }}</span>
+  </div>
+
+  <!-- Description -->
+  <p class="template-description" [class.compact]="compact">
+    {{ getTruncatedDescription(compact ? 100 : 200) }}
+  </p>
+
+  <!-- Metadata Grid -->
+  <div class="metadata-grid" [class.compact]="compact">
+    <!-- Author -->
+    <div class="metadata-item">
+      <span class="metadata-label">Author:</span>
+      <span class="metadata-value">{{ template.author }}</span>
+    </div>
+
+    <!-- Rating -->
+    <div class="metadata-item">
+      <span class="metadata-label">Rating:</span>
+      <div class="rating-display">
+        <div class="stars">
+          <span 
+            *ngFor="let star of getStarRating(); let i = index"
+            class="star"
+            [class.full]="star === 1"
+            [class.half]="star === 0.5"
+            [class.empty]="star === 0"
+          >
+            <span *ngIf="star === 1">★</span>
+            <span *ngIf="star === 0.5">⯨</span>
+            <span *ngIf="star === 0">☆</span>
+          </span>
+        </div>
+        <span 
+          class="rating-value"
+          [style.color]="getRatingColor(template.rating)"
+        >
+          {{ template.rating.toFixed(1) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Usage Count -->
+    <div class="metadata-item">
+      <span class="metadata-label">Used:</span>
+      <span class="metadata-value usage-count">
+        {{ formatUsageCount(template.usageCount) }} times
+      </span>
+    </div>
+
+    <!-- Created Date -->
+    <div class="metadata-item" *ngIf="!compact">
+      <span class="metadata-label">Created:</span>
+      <span class="metadata-value">{{ formatDate(template.createdAt) }}</span>
+    </div>
+
+    <!-- Updated Date -->
+    <div class="metadata-item">
+      <span class="metadata-label">Updated:</span>
+      <span class="metadata-value">{{ formatDate(template.updatedAt) }}</span>
+    </div>
+
+    <!-- Step Count -->
+    <div class="metadata-item" *ngIf="!compact">
+      <span class="metadata-label">Steps:</span>
+      <span class="metadata-value">{{ template.steps.length }}</span>
+    </div>
+
+    <!-- Customization -->
+    <div class="metadata-item" *ngIf="!compact">
+      <span class="metadata-label">Customizable:</span>
+      <span class="metadata-value">
+        <span 
+          class="customization-indicator"
+          [class.allowed]="template.configuration.allowCustomization"
+          [class.not-allowed]="!template.configuration.allowCustomization"
+        >
+          {{ template.configuration.allowCustomization ? 'Yes' : 'No' }}
+        </span>
+      </span>
+    </div>
+
+    <!-- Visibility -->
+    <div class="metadata-item" *ngIf="!compact">
+      <span class="metadata-label">Visibility:</span>
+      <span class="metadata-value">
+        {{ template.isPublic ? 'Public' : 'Private' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Additional Info (Non-Compact Only) -->
+  <div class="additional-info" *ngIf="!compact && template.metadata">
+    <div class="info-section" *ngIf="template.metadata['tags']">
+      <span class="info-label">Tags:</span>
+      <div class="tags">
+        <span 
+          *ngFor="let tag of template.metadata['tags']"
+          class="tag"
+        >
+          {{ tag }}
+        </span>
+      </div>
+    </div>
+
+    <div class="info-section" *ngIf="template.metadata['industry']">
+      <span class="info-label">Industry:</span>
+      <span class="info-value">{{ template.metadata['industry'] }}</span>
+    </div>
+
+    <div class="info-section" *ngIf="template.metadata['complexity']">
+      <span class="info-label">Complexity:</span>
+      <span 
+        class="complexity-badge"
+        [class.low]="template.metadata['complexity'] === 'low'"
+        [class.medium]="template.metadata['complexity'] === 'medium'"
+        [class.high]="template.metadata['complexity'] === 'high'"
+      >
+        {{ template.metadata['complexity'] }}
+      </span>
+    </div>
+  </div>
+</div>

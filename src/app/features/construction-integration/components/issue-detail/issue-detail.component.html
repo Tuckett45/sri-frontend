@@ -1,0 +1,75 @@
+<div class="issue-detail" *ngIf="{ issue: issue$ | async, loading: loading$ | async, saving: saving$ | async, error: error$ | async, projects: projectEntities$ | async } as vm">
+
+  <!-- Loading -->
+  <div *ngIf="vm.loading" class="loading-indicator">Loading issue…</div>
+
+  <!-- Error -->
+  <div *ngIf="vm.error" class="error-banner" role="alert">{{ vm.error }}</div>
+
+  <!-- Issue Content -->
+  <div *ngIf="!vm.loading && vm.issue">
+    <!-- Header -->
+    <div class="detail-header">
+      <a routerLink="../../issues" class="back-link">
+        <i class="pi pi-arrow-left"></i> Back to Issues
+      </a>
+      <h2>Issue Details</h2>
+    </div>
+
+    <!-- Metadata -->
+    <div class="metadata-section">
+      <div class="metadata-item">
+        <span class="metadata-label">Project</span>
+        <span class="metadata-value">{{ vm.projects ? getProjectName(vm.issue.projectId, vm.projects) : vm.issue.projectId }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="metadata-label">Description</span>
+        <span class="metadata-value description-value">{{ vm.issue.description }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="metadata-label">Severity</span>
+        <span class="severity-badge" [ngClass]="getSeverityClass(vm.issue.severity)">{{ vm.issue.severity }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="metadata-label">Status</span>
+        <span class="status-badge" [ngClass]="getStatusClass(vm.issue.status)">{{ vm.issue.status }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="metadata-label">Assigned To</span>
+        <span class="metadata-value">{{ vm.issue.assignedUserId || 'Unassigned' }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="metadata-label">Created</span>
+        <span class="metadata-value">{{ vm.issue.createdDate | date:'medium' }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="metadata-label">Updated</span>
+        <span class="metadata-value">{{ vm.issue.updatedDate | date:'medium' }}</span>
+      </div>
+    </div>
+
+    <!-- Status Transitions (Admin only) -->
+    <div *ngIf="isAdmin && getValidTransitions(vm.issue.status).length > 0" class="transition-section">
+      <h3>Status Transitions</h3>
+      <div class="transition-actions">
+        <button
+          *ngFor="let nextStatus of getValidTransitions(vm.issue.status)"
+          class="btn-transition"
+          [disabled]="vm.saving"
+          (click)="transitionStatus(vm.issue.id, nextStatus)">
+          {{ getTransitionLabel(nextStatus) }} → {{ nextStatus }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Closed state message -->
+    <div *ngIf="isAdmin && getValidTransitions(vm.issue.status).length === 0" class="closed-notice">
+      This issue is closed. No further transitions are available.
+    </div>
+  </div>
+
+  <!-- Not Found -->
+  <div *ngIf="!vm.loading && !vm.issue && !vm.error" class="empty-state">
+    Issue not found.
+  </div>
+</div>

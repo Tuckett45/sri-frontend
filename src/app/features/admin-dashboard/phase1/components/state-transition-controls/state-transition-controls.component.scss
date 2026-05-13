@@ -1,0 +1,315 @@
+.state-transition-controls {
+  .transition-controls-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .section-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .transition-selection {
+    .transition-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 0.75rem;
+
+      .transition-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+
+        &:hover:not(:disabled) {
+          background-color: #e9ecef;
+          border-color: #adb5bd;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        &.selected {
+          background-color: #e3f2fd;
+          border-color: #2196f3;
+          box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background-color: #f8f9fa;
+        }
+
+        &.requires-approval {
+          border-left: 4px solid #ff9800;
+        }
+
+        .transition-name {
+          font-weight: 600;
+          font-size: 0.875rem;
+          color: #212529;
+          margin-bottom: 0.25rem;
+        }
+
+        .transition-target {
+          font-size: 0.75rem;
+          color: #6c757d;
+          margin-bottom: 0.5rem;
+        }
+
+        .approval-badge {
+          display: inline-block;
+          padding: 0.25rem 0.5rem;
+          background-color: #fff3cd;
+          color: #856404;
+          border-radius: 4px;
+          font-size: 0.625rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+    }
+
+    .no-transitions {
+      padding: 2rem;
+      text-align: center;
+      color: #6c757d;
+      font-style: italic;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+  }
+
+  .transition-details {
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .approval-warning {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+    border-left: 4px solid #ff9800;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+
+    .warning-icon {
+      font-size: 1.5rem;
+      color: #ff9800;
+      flex-shrink: 0;
+    }
+
+    .warning-content {
+      flex-grow: 1;
+
+      strong {
+        display: block;
+        margin-bottom: 0.25rem;
+        color: #856404;
+        font-size: 0.875rem;
+      }
+
+      p {
+        margin: 0;
+        color: #856404;
+        font-size: 0.8125rem;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: #212529;
+
+      .required-indicator {
+        color: #dc3545;
+        margin-left: 0.25rem;
+      }
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      line-height: 1.5;
+      color: #212529;
+      background-color: #ffffff;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+      &:focus {
+        outline: none;
+        border-color: #80bdff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+      }
+
+      &.invalid {
+        border-color: #dc3545;
+
+        &:focus {
+          border-color: #dc3545;
+          box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+        }
+      }
+
+      &::placeholder {
+        color: #6c757d;
+        opacity: 0.7;
+      }
+    }
+
+    .error-message {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #dc3545;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+
+      &::before {
+        content: "⚠";
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .transition-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .info-label {
+        font-weight: 600;
+        font-size: 0.8125rem;
+        color: #6c757d;
+        min-width: 100px;
+      }
+
+      .info-value {
+        font-size: 0.875rem;
+        color: #212529;
+
+        &.role-badge {
+          display: inline-block;
+          padding: 0.25rem 0.75rem;
+          background-color: #e3f2fd;
+          color: #1976d2;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.75rem;
+        }
+      }
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.btn-primary {
+        background-color: #007bff;
+        color: #ffffff;
+
+        &:hover:not(:disabled) {
+          background-color: #0056b3;
+          box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
+
+        &:disabled {
+          background-color: #6c757d;
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+      }
+
+      &.btn-secondary {
+        background-color: #6c757d;
+        color: #ffffff;
+
+        &:hover {
+          background-color: #5a6268;
+        }
+      }
+    }
+  }
+
+  .no-selection {
+    padding: 2rem;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    background-color: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    border-radius: 8px;
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .state-transition-controls {
+    .transition-selection {
+      .transition-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-actions {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

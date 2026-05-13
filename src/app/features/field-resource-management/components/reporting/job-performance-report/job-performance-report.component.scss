@@ -1,0 +1,425 @@
+.performance-report-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+  }
+  
+  .export-buttons {
+    display: flex;
+    gap: 12px;
+    
+    button mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+.error-card {
+  margin-bottom: 24px;
+  background-color: #ffebee;
+  
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #c62828;
+  }
+}
+
+// Filters Section
+.filters-card {
+  margin-bottom: 24px;
+  
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: end;
+    
+    mat-form-field {
+      width: 100%;
+    }
+    
+    button {
+      height: 56px;
+    }
+  }
+}
+
+// Metrics Summary Cards
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+  }
+  
+  .metric-icon {
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+    }
+  }
+  
+  .metric-content {
+    flex: 1;
+  }
+  
+  .metric-label {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 4px;
+  }
+  
+  .metric-value {
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  
+  mat-progress-bar {
+    height: 8px;
+    border-radius: 4px;
+  }
+}
+
+// Schedule Adherence Gauge
+.adherence-card {
+  margin-bottom: 24px;
+  
+  mat-card-header {
+    margin-bottom: 16px;
+  }
+  
+  .gauge-container {
+    padding: 24px;
+    text-align: center;
+    
+    .gauge-value {
+      margin-bottom: 16px;
+      
+      .gauge-number {
+        font-size: 64px;
+        font-weight: 300;
+        line-height: 1;
+      }
+      
+      .gauge-unit {
+        font-size: 24px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+    
+    mat-progress-bar {
+      height: 20px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    
+    .gauge-label {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+}
+
+// Charts Section
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.chart-card {
+  mat-card-header {
+    margin-bottom: 16px;
+  }
+  
+  mat-card-content {
+    padding: 16px;
+  }
+  
+  .chart-container {
+    height: 350px;
+    position: relative;
+  }
+  
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 350px;
+    color: rgba(0, 0, 0, 0.4);
+    
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 8px;
+    }
+  }
+}
+
+// Top Performers Section
+.performers-card {
+  mat-card-header {
+    margin-bottom: 16px;
+    
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+  
+  .performers-table {
+    overflow-x: auto;
+  }
+  
+  .performers-table-content {
+    width: 100%;
+    
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      font-weight: 500;
+      
+      &.rank-1 {
+        background-color: #FFD700;
+        color: #000;
+      }
+      
+      &.rank-2 {
+        background-color: #C0C0C0;
+        color: #000;
+      }
+      
+      &.rank-3 {
+        background-color: #CD7F32;
+        color: #fff;
+      }
+    }
+    
+    .performer-row {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: rgba(25, 118, 210, 0.08);
+        transform: translateX(4px);
+      }
+    }
+    
+    .clickable-row {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: rgba(25, 118, 210, 0.08);
+        transform: translateX(4px);
+      }
+      
+      &:focus {
+        outline: 2px solid #1976d2;
+        outline-offset: -2px;
+        background-color: rgba(25, 118, 210, 0.12);
+      }
+    }
+  }
+  
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: rgba(0, 0, 0, 0.4);
+    
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 8px;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .performance-report-container {
+    padding: 16px;
+  }
+  
+  .report-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    
+    h1 {
+      font-size: 24px;
+    }
+    
+    .export-buttons {
+      width: 100%;
+      
+      button {
+        flex: 1;
+      }
+    }
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metric-card {
+    mat-card-content {
+      padding: 16px;
+    }
+    
+    .metric-icon mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+    
+    .metric-value {
+      font-size: 24px !important;
+    }
+  }
+  
+  .gauge-value .gauge-number {
+    font-size: 48px !important;
+  }
+  
+  .chart-container {
+    height: 300px !important;
+  }
+  
+  .performers-table-content {
+    font-size: 14px;
+    
+    th, td {
+      padding: 8px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .report-header h1 {
+    font-size: 20px;
+  }
+  
+  .export-buttons {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+  
+  .metric-value {
+    font-size: 20px !important;
+  }
+  
+  .gauge-value .gauge-number {
+    font-size: 36px !important;
+  }
+  
+  .chart-container {
+    height: 250px !important;
+  }
+}
+
+// Chart placeholder styles
+.chart-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+  text-align: center;
+  
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: rgba(0, 0, 0, 0.3);
+    margin-bottom: 16px;
+  }
+  
+  p {
+    margin: 0 0 16px 0;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .chart-data-preview {
+    width: 100%;
+    max-width: 300px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    padding: 12px;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    div {
+      padding: 6px 0;
+      font-size: 13px;
+      color: #333;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      strong {
+        color: #1976d2;
+        margin-right: 8px;
+      }
+    }
+  }
+}

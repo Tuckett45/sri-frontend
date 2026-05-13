@@ -1,0 +1,78 @@
+<div class="ai-insights-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>AI Insights & Recommendations</h1>
+    <p class="subtitle">AI-powered decision support and analytics across all contexts</p>
+  </div>
+
+  <!-- Context Selector -->
+  <div class="context-selector">
+    <label>Context:</label>
+    <div class="context-buttons">
+      <button
+        *ngFor="let context of availableContexts"
+        [class.active]="selectedContext === context.value"
+        (click)="changeContext(context.value)"
+        class="context-button">
+        {{ context.label }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-grid">
+    <!-- AI Advisory Panel Section -->
+    <section class="advisory-section">
+      <div class="section-header">
+        <h2>AI Recommendations</h2>
+        <p>Context-aware suggestions to optimize your workflows</p>
+      </div>
+      <app-ai-advisory-panel
+        [context]="selectedContext"
+        [autoRefresh]="true"
+        (recommendationAccepted)="onRecommendationAccepted($event)"
+        (recommendationRejected)="onRecommendationRejected($event)">
+      </app-ai-advisory-panel>
+    </section>
+
+    <!-- Insights Display Section -->
+    <section class="insights-section">
+      <div class="section-header">
+        <h2>Insights & Analytics</h2>
+        <p>Data-driven insights and trend analysis</p>
+        
+        <!-- Display Mode Selector -->
+        <div class="display-mode-selector">
+          <button
+            [class.active]="insightsDisplayMode === 'cards'"
+            (click)="changeInsightsDisplayMode('cards')"
+            class="mode-button"
+            title="Card View">
+            <span class="icon">⊞</span>
+          </button>
+          <button
+            [class.active]="insightsDisplayMode === 'list'"
+            (click)="changeInsightsDisplayMode('list')"
+            class="mode-button"
+            title="List View">
+            <span class="icon">☰</span>
+          </button>
+          <button
+            [class.active]="insightsDisplayMode === 'timeline'"
+            (click)="changeInsightsDisplayMode('timeline')"
+            class="mode-button"
+            title="Timeline View">
+            <span class="icon">⧗</span>
+          </button>
+        </div>
+      </div>
+      
+      <app-insights-display
+        [insights]="(insights$ | async) || []"
+        [displayMode]="insightsDisplayMode"
+        [showCharts]="true"
+        (insightSelected)="onInsightSelected($event)">
+      </app-insights-display>
+    </section>
+  </div>
+</div>

@@ -98,7 +98,8 @@ export class ConfigurationInterceptor implements HttpInterceptor {
     const externalApis = [
       'maps.googleapis.com',
       'googleapis.com',
-      'blob.core.windows.net'
+      'blob.core.windows.net',
+      'nominatim.openstreetmap.org'
     ];
 
     return externalApis.some(api => url.includes(api));

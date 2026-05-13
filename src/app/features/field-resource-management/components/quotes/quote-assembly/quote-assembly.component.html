@@ -1,0 +1,277 @@
+<!-- Page Header -->
+<div class="page-header">
+  <h2>Quote Assembly</h2>
+</div>
+
+<!-- Status Banner -->
+<div class="status-banner finalized" *ngIf="isFinalized">
+  <mat-icon>check_circle</mat-icon>
+  <span>This quote has been finalized{{ quoteDocument?.finalizedAt ? ' on ' + (quoteDocument!.finalizedAt | date:'medium') : '' }}{{ quoteDocument?.finalizedBy ? ' by ' + quoteDocument!.finalizedBy : '' }}.</span>
+</div>
+
+<!-- Draft Restored Banner -->
+<div class="draft-banner" *ngIf="draftRestored">
+  <mat-icon>restore</mat-icon>
+  <span>Unsaved changes have been restored.</span>
+  <button mat-button (click)="discardDraft()" aria-label="Discard draft and reload saved state">
+    Discard
+  </button>
+  <button mat-button (click)="dismissDraftBanner()" aria-label="Dismiss draft notification">
+    Dismiss
+  </button>
+</div>
+
+<div class="status-banner not-enabled" *ngIf="!isEnabled && !isFinalized">
+  <mat-icon>info</mat-icon>
+  <span>Quote assembly is available only after BOM validation is approved.</span>
+</div>
+
+<div class="quote-assembly-container" *ngIf="isEnabled || isFinalized">
+
+  <!-- Preview / Edit Toggle -->
+  <div class="mode-toggle">
+    <button mat-stroked-button (click)="togglePreview()" class="preview-toggle-btn">
+      <mat-icon>{{ isPreviewMode ? 'edit' : 'preview' }}</mat-icon>
+      {{ isPreviewMode ? 'Back to Edit' : 'Preview Quote Document' }}
+    </button>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- EDIT MODE -->
+  <!-- ===================================================================== -->
+  <ng-container *ngIf="!isPreviewMode">
+
+    <!-- Section 1: Price Summary -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Price Summary</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="price-summary-grid">
+          <div class="total-item">
+            <label>Total Labor Cost</label>
+            <span class="total-value">{{ priceSummary.totalLaborCost | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="total-item">
+            <label>Total Material Cost</label>
+            <span class="total-value">{{ priceSummary.totalMaterialCost | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="total-item" *ngIf="priceSummary.taxFreightVisible">
+            <label>Tax</label>
+            <span class="total-value">{{ priceSummary.tax | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="total-item" *ngIf="priceSummary.taxFreightVisible">
+            <label>Freight</label>
+            <span class="total-value">{{ priceSummary.freight | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="total-item grand-total">
+            <label>Combined Project Total</label>
+            <span class="total-value cost">{{ priceSummary.combinedProjectTotal | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 2: Statement of Work (SOW) -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Statement of Work</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="sow-field">
+          <mat-label>Scope of Work</mat-label>
+          <textarea
+            matInput
+            [formControl]="sowControl"
+            rows="10"
+            maxlength="10000"
+            placeholder="Enter the statement of work for this quote..."
+          ></textarea>
+          <mat-hint align="end">{{ sowCharCount }} / 10000</mat-hint>
+          <mat-error *ngIf="sowControl.hasError('maxlength')">
+            Statement of Work cannot exceed 10000 characters.
+          </mat-error>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section 3: BOM (Read-Only) -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Bill of Materials</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+
+        <!-- Empty State -->
+        <div class="empty-line-items" *ngIf="lineItems.length === 0">
+          <mat-icon>inventory_2</mat-icon>
+          <p>No BOM line items found.</p>
+        </div>
+
+        <!-- Line Items Table -->
+        <table class="bom-table" *ngIf="lineItems.length > 0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Material Description</th>
+              <th>Qty</th>
+              <th>UoM</th>
+              <th class="text-right">Unit Cost</th>
+              <th>Supplier</th>
+              <th class="text-right">Extended Cost</th>
+              <th class="text-right">Marked-Up Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of lineItems; let i = index">
+              <td class="line-number">{{ i + 1 }}</td>
+              <td>{{ item.materialDescription }}</td>
+              <td class="text-right">{{ item.quantity }}</td>
+              <td>{{ item.unitOfMeasure }}</td>
+              <td class="text-right">{{ item.unitCost | currency:'USD':'symbol':'1.2-2' }}</td>
+              <td>{{ item.supplierName }}</td>
+              <td class="text-right">{{ getExtendedCost(i) | currency:'USD':'symbol':'1.2-2' }}</td>
+              <td class="text-right markup-value">{{ getMarkedUpCost(i) | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- BOM Totals -->
+        <div class="totals-grid" *ngIf="lineItems.length > 0">
+          <div class="total-item">
+            <label>Subtotal (Marked-Up)</label>
+            <span class="total-value">{{ bomTotals.subtotal | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="total-item" *ngIf="taxFreightVisible">
+            <label>Tax</label>
+            <span class="total-value">{{ bomTotals.tax | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="total-item" *ngIf="taxFreightVisible">
+            <label>Freight</label>
+            <span class="total-value">{{ bomTotals.freight | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="total-item grand-total">
+            <label>Grand Total</label>
+            <span class="total-value cost">{{ bomTotals.grandTotal | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </ng-container>
+
+  <!-- ===================================================================== -->
+  <!-- PREVIEW MODE -->
+  <!-- ===================================================================== -->
+  <ng-container *ngIf="isPreviewMode">
+
+    <div class="preview-document">
+      <div class="preview-header">
+        <h3>Quote Document Preview</h3>
+        <p class="preview-subtitle" *ngIf="rfpRecord">
+          {{ rfpRecord.projectName }} — {{ rfpRecord.clientName }}
+        </p>
+      </div>
+
+      <!-- Preview: Price Summary -->
+      <div class="preview-section">
+        <h4>Price Summary</h4>
+        <table class="preview-summary-table">
+          <tbody>
+            <tr>
+              <td>Total Labor Cost</td>
+              <td class="text-right">{{ priceSummary.totalLaborCost | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+            <tr>
+              <td>Total Material Cost</td>
+              <td class="text-right">{{ priceSummary.totalMaterialCost | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+            <tr *ngIf="priceSummary.taxFreightVisible">
+              <td>Tax</td>
+              <td class="text-right">{{ priceSummary.tax | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+            <tr *ngIf="priceSummary.taxFreightVisible">
+              <td>Freight</td>
+              <td class="text-right">{{ priceSummary.freight | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+            <tr class="total-row">
+              <td><strong>Combined Project Total</strong></td>
+              <td class="text-right"><strong>{{ priceSummary.combinedProjectTotal | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Preview: Statement of Work -->
+      <div class="preview-section">
+        <h4>Statement of Work</h4>
+        <div class="preview-sow-text">{{ sowControl.value }}</div>
+      </div>
+
+      <!-- Preview: BOM -->
+      <div class="preview-section">
+        <h4>Bill of Materials</h4>
+        <table class="bom-table" *ngIf="lineItems.length > 0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Material Description</th>
+              <th>Qty</th>
+              <th>UoM</th>
+              <th class="text-right">Marked-Up Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of lineItems; let i = index">
+              <td class="line-number">{{ i + 1 }}</td>
+              <td>{{ item.materialDescription }}</td>
+              <td class="text-right">{{ item.quantity }}</td>
+              <td>{{ item.unitOfMeasure }}</td>
+              <td class="text-right markup-value">{{ getMarkedUpCost(i) | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Preview BOM Totals -->
+        <table class="preview-summary-table" *ngIf="lineItems.length > 0">
+          <tbody>
+            <tr>
+              <td>Subtotal (Marked-Up)</td>
+              <td class="text-right">{{ bomTotals.subtotal | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+            <tr *ngIf="taxFreightVisible">
+              <td>Tax</td>
+              <td class="text-right">{{ bomTotals.tax | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+            <tr *ngIf="taxFreightVisible">
+              <td>Freight</td>
+              <td class="text-right">{{ bomTotals.freight | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+            <tr class="total-row">
+              <td><strong>Grand Total</strong></td>
+              <td class="text-right"><strong>{{ bomTotals.grandTotal | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- Finalize Action -->
+  <div class="assembly-actions" *ngIf="canEdit && isEnabled">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="onFinalize()"
+      [disabled]="isFinalizing || sowControl.invalid"
+      class="finalize-btn"
+    >
+      <mat-spinner *ngIf="isFinalizing" diameter="20" class="button-spinner"></mat-spinner>
+      <mat-icon *ngIf="!isFinalizing">task_alt</mat-icon>
+      <span *ngIf="!isFinalizing">Finalize Quote</span>
+      <span *ngIf="isFinalizing">Finalizing...</span>
+    </button>
+  </div>
+
+</div>

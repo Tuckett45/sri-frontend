@@ -1,0 +1,63 @@
+<div class="reassign-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Reassign Job</h2>
+    <button mat-icon-button (click)="onCancel()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <!-- Job summary -->
+    <div class="job-summary">
+      <div class="job-summary-row">
+        <span class="job-id-badge">{{ job.jobId }}</span>
+        <span class="job-client">{{ job.client }}</span>
+      </div>
+      <div class="job-summary-detail">
+        <mat-icon>location_on</mat-icon>
+        <span>{{ job.siteName }}</span>
+      </div>
+      <div class="job-summary-detail">
+        <mat-icon>schedule</mat-icon>
+        <span>{{ job.scheduledStartDate | date:'short' }} – {{ job.scheduledEndDate | date:'shortTime' }}</span>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Assign To -->
+    <form [formGroup]="reassignForm" class="reassign-form">
+      <div class="section-label">Assign To</div>
+      <mat-radio-group formControlName="assignTo" class="assign-radio-group">
+        <mat-radio-button value="technician">Technician</mat-radio-button>
+        <mat-radio-button value="crew">Crew</mat-radio-button>
+      </mat-radio-group>
+
+      <mat-form-field appearance="outline" class="full-width" *ngIf="reassignForm.get('assignTo')?.value === 'technician'">
+        <mat-label>Select Technician</mat-label>
+        <mat-select formControlName="technicianId">
+          <mat-option *ngFor="let tech of technicians" [value]="tech.id">
+            {{ tech.firstName }} {{ tech.lastName }} ({{ tech.role }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width" *ngIf="reassignForm.get('assignTo')?.value === 'crew'">
+        <mat-label>Select Crew</mat-label>
+        <mat-select formControlName="crewId">
+          <mat-option *ngFor="let crew of crews" [value]="crew.id">
+            {{ crew.name }} ({{ crew.memberIds.length + 1 }} members)
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="onReassign()">
+      <mat-icon>swap_horiz</mat-icon>
+      Reassign
+    </button>
+  </mat-dialog-actions>
+</div>

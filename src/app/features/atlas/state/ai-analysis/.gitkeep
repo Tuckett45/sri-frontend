@@ -1,0 +1,9 @@
+# AI Analysis State Management
+
+Files to be implemented:
+- ai-analysis.state.ts - State interface definition
+- ai-analysis.actions.ts - Action definitions
+- ai-analysis.reducer.ts - Pure state transitions
+- ai-analysis.effects.ts - Side effects (API calls)
+- ai-analysis.selectors.ts - Memoized state selectors
+- index.ts - Public API exports

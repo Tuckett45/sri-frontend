@@ -1,0 +1,123 @@
+.kpi-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.kpi-hero-card {
+  flex: 1 1 0;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem 1rem;
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(20, 79, 128, 0.1);
+  }
+
+  &.kpi-primary {
+    border-left: 4px solid #144f80;
+
+    .kpi-icon {
+      color: #144f80;
+    }
+
+    .kpi-value {
+      color: #144f80;
+    }
+  }
+
+  &.kpi-success {
+    border-left: 4px solid #2e7d32;
+
+    .kpi-icon {
+      color: #2e7d32;
+    }
+
+    .kpi-value {
+      color: #2e7d32;
+    }
+  }
+
+  &.kpi-accent {
+    border-left: 4px solid #e65100;
+
+    .kpi-icon {
+      color: #e65100;
+    }
+
+    .kpi-value {
+      color: #e65100;
+    }
+  }
+
+  .kpi-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    margin-bottom: 0.5rem;
+  }
+
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .kpi-label {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  .kpi-trend {
+    margin-top: 0.5rem;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &.trend-positive mat-icon {
+      color: #2e7d32;
+    }
+
+    &.trend-negative mat-icon {
+      color: #d32f2f;
+    }
+
+    &.trend-neutral mat-icon {
+      color: #666;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-container {
+    flex-direction: column;
+  }
+
+  .kpi-hero-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+    min-width: unset;
+
+    .kpi-icon {
+      margin-bottom: 0;
+    }
+
+    .kpi-value {
+      font-size: 22px;
+    }
+  }
+}

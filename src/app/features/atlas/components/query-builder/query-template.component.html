@@ -1,0 +1,337 @@
+<!-- Query Template Component Template -->
+<div class="query-template-container">
+  <p-card header="Query Templates" styleClass="atlas-card">
+    <ng-template pTemplate="header">
+      <div class="templates-header">
+        <div class="header-title">
+          <i class="pi pi-bookmark"></i>
+          <span>Query Templates</span>
+        </div>
+        <div class="header-actions">
+          <button
+            pButton
+            label="Create Template"
+            icon="pi pi-plus"
+            class="p-button-primary"
+            (click)="openCreateDialog()"
+            pTooltip="Create new template"
+            tooltipPosition="bottom">
+          </button>
+          <button
+            pButton
+            icon="pi pi-refresh"
+            class="p-button-outlined"
+            (click)="refreshTemplates()"
+            [loading]="(templatesLoading$ | async) || false"
+            pTooltip="Refresh templates"
+            tooltipPosition="bottom">
+          </button>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="(templatesLoading$ | async)">
+      <p-progressSpinner></p-progressSpinner>
+      <p class="loading-message">Loading templates...</p>
+    </div>
+
+    <!-- Templates Table -->
+    <div class="templates-table-container" *ngIf="!(templatesLoading$ | async)">
+      <p-table
+        [value]="(templates$ | async) || []"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        styleClass="p-datatable-sm p-datatable-striped"
+        responsiveLayout="scroll">
+        
+        <!-- Table Header -->
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="name">
+              Name
+              <p-sortIcon field="name"></p-sortIcon>
+            </th>
+            <th>Description</th>
+            <th pSortableColumn="dataSource">
+              Data Source
+              <p-sortIcon field="dataSource"></p-sortIcon>
+            </th>
+            <th>Visibility</th>
+            <th pSortableColumn="createdAt">
+              Created
+              <p-sortIcon field="createdAt"></p-sortIcon>
+            </th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+
+        <!-- Table Body -->
+        <ng-template pTemplate="body" let-template>
+          <tr>
+            <td>
+              <strong>{{ template.name }}</strong>
+            </td>
+            <td>
+              <span [title]="template.description">
+                {{ template.description || '-' }}
+              </span>
+            </td>
+            <td>{{ template.dataSource || '-' }}</td>
+            <td>
+              <p-tag
+                [value]="getVisibilityTagLabel(template.isPublic)"
+                [severity]="getVisibilityTagSeverity(template.isPublic)">
+              </p-tag>
+            </td>
+            <td>{{ formatDate(template.createdAt) }}</td>
+            <td>
+              <div class="action-buttons">
+                <button
+                  pButton
+                  icon="pi pi-play"
+                  class="p-button-rounded p-button-text p-button-success"
+                  (click)="openExecuteDialog(template)"
+                  pTooltip="Execute template"
+                  tooltipPosition="top">
+                </button>
+                <button
+                  pButton
+                  icon="pi pi-eye"
+                  class="p-button-rounded p-button-text p-button-info"
+                  (click)="selectTemplate(template)"
+                  pTooltip="View details"
+                  tooltipPosition="top">
+                </button>
+                <button
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-text p-button-danger"
+                  (click)="deleteTemplate(template)"
+                  [disabled]="(templateDeleting$ | async) || false"
+                  pTooltip="Delete template"
+                  tooltipPosition="top">
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <!-- Empty Message -->
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-message">
+              <div class="empty-state">
+                <i class="pi pi-bookmark empty-icon"></i>
+                <p>No templates found</p>
+                <button
+                  pButton
+                  label="Create Your First Template"
+                  icon="pi pi-plus"
+                  class="p-button-outlined"
+                  (click)="openCreateDialog()">
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-card>
+</div>
+
+<!-- Create Template Dialog -->
+<p-dialog
+  [(visible)]="showCreateDialog"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  header="Create Query Template"
+  styleClass="create-template-dialog"
+  (onHide)="closeCreateDialog()">
+  
+  <form [formGroup]="createTemplateForm" (ngSubmit)="createTemplate()">
+    <div class="dialog-content">
+      <!-- Template Name -->
+      <div class="field">
+        <label for="templateName">Template Name *</label>
+        <input
+          id="templateName"
+          type="text"
+          pInputText
+          formControlName="name"
+          placeholder="Enter template name"
+          class="w-full" />
+        <small class="form-error" *ngIf="createTemplateForm.get('name')?.invalid && createTemplateForm.get('name')?.touched">
+          Template name is required
+        </small>
+      </div>
+
+      <!-- Description -->
+      <div class="field">
+        <label for="templateDescription">Description</label>
+        <textarea
+          id="templateDescription"
+          pInputTextarea
+          formControlName="description"
+          placeholder="Enter template description"
+          rows="3"
+          class="w-full">
+        </textarea>
+      </div>
+
+      <!-- Data Source -->
+      <div class="field">
+        <label for="templateDataSource">Data Source *</label>
+        <input
+          id="templateDataSource"
+          type="text"
+          pInputText
+          formControlName="dataSource"
+          placeholder="Enter data source name"
+          class="w-full" />
+        <small class="form-error" *ngIf="createTemplateForm.get('dataSource')?.invalid && createTemplateForm.get('dataSource')?.touched">
+          Data source is required
+        </small>
+      </div>
+
+      <!-- SQL Template -->
+      <div class="field">
+        <label for="sqlTemplate">SQL Template *</label>
+        <textarea
+          id="sqlTemplate"
+          pInputTextarea
+          formControlName="sqlTemplate"
+          placeholder="Enter SQL template with parameters (e.g., @param1, @param2)"
+          rows="6"
+          class="w-full sql-textarea">
+        </textarea>
+        <small class="field-help">Use &#64;paramName for parameters</small>
+        <small class="form-error" *ngIf="createTemplateForm.get('sqlTemplate')?.invalid && createTemplateForm.get('sqlTemplate')?.touched">
+          SQL template is required
+        </small>
+      </div>
+
+      <!-- Is Public -->
+      <div class="field-checkbox">
+        <p-checkbox
+          inputId="isPublic"
+          formControlName="isPublic"
+          [binary]="true">
+        </p-checkbox>
+        <label for="isPublic">Make this template public</label>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer">
+        <button
+          type="button"
+          pButton
+          label="Cancel"
+          icon="pi pi-times"
+          class="p-button-text"
+          (click)="closeCreateDialog()">
+        </button>
+        <button
+          type="submit"
+          pButton
+          label="Create"
+          icon="pi pi-check"
+          class="p-button-primary"
+          [disabled]="createTemplateForm.invalid || (templateCreating$ | async)"
+          [loading]="(templateCreating$ | async) || false">
+        </button>
+      </div>
+    </ng-template>
+  </form>
+</p-dialog>
+
+<!-- Execute Template Dialog -->
+<p-dialog
+  [(visible)]="showExecuteDialog"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [header]="'Execute Template: ' + (selectedTemplate?.name || '')"
+  styleClass="execute-template-dialog"
+  (onHide)="closeExecuteDialog()">
+  
+  <form [formGroup]="executeTemplateForm" (ngSubmit)="executeTemplate()">
+    <div class="dialog-content">
+      <!-- Template Info -->
+      <div class="template-info" *ngIf="selectedTemplate">
+        <p class="template-description">{{ selectedTemplate.description }}</p>
+        <p class="template-datasource">
+          <strong>Data Source:</strong> {{ selectedTemplate.dataSource }}
+        </p>
+      </div>
+
+      <!-- Parameters -->
+      <div class="parameters-section" *ngIf="selectedTemplate?.parameters && (selectedTemplate?.parameters?.length ?? 0) > 0">
+        <h4>Parameters</h4>
+        <div *ngFor="let param of (selectedTemplate?.parameters ?? [])" class="field">
+          <label [for]="'param-' + (param.name ?? '')">
+            {{ param.displayName || param.name }}
+            <span *ngIf="param.isRequired" class="required-indicator">*</span>
+          </label>
+          
+          <!-- Text/Number/Date inputs -->
+          <input
+            *ngIf="getParameterInputType(param) !== 'checkbox'"
+            [id]="'param-' + (param.name ?? '')"
+            [type]="getParameterInputType(param)"
+            pInputText
+            [formControlName]="param.name ?? ''"
+            [placeholder]="'Enter ' + (param.displayName || param.name)"
+            class="w-full" />
+          
+          <!-- Checkbox input -->
+          <p-checkbox
+            *ngIf="getParameterInputType(param) === 'checkbox'"
+            [inputId]="'param-' + (param.name ?? '')"
+            [formControlName]="param.name ?? ''"
+            [binary]="true">
+          </p-checkbox>
+
+          <small class="form-error" *ngIf="executeTemplateForm.get(param.name ?? '')?.invalid && executeTemplateForm.get(param.name ?? '')?.touched">
+            {{ param.displayName || param.name }} is required
+          </small>
+        </div>
+      </div>
+
+      <!-- No Parameters Message -->
+      <div class="no-parameters" *ngIf="!selectedTemplate?.parameters || (selectedTemplate?.parameters ?? []).length === 0">
+        <p>This template has no parameters. Click Execute to run it.</p>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer">
+        <button
+          type="button"
+          pButton
+          label="Cancel"
+          icon="pi pi-times"
+          class="p-button-text"
+          (click)="closeExecuteDialog()">
+        </button>
+        <button
+          type="submit"
+          pButton
+          label="Execute"
+          icon="pi pi-play"
+          class="p-button-primary"
+          [disabled]="executeTemplateForm.invalid || (templateExecuting$ | async)"
+          [loading]="(templateExecuting$ | async) || false">
+        </button>
+      </div>
+    </ng-template>
+  </form>
+</p-dialog>
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog></p-confirmDialog>

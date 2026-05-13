@@ -1,0 +1,100 @@
+.offline-indicator {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1100;
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  // Offline state (red/warning)
+  &.offline {
+    background-color: #dc2626;
+    color: #ffffff;
+    border: 1px solid #b91c1c;
+  }
+
+  // Online state (green/success)
+  &.online {
+    background-color: #16a34a;
+    color: #ffffff;
+    border: 1px solid #15803d;
+  }
+}
+
+.indicator-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.indicator-text {
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .offline-indicator {
+    top: 12px;
+    right: 12px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .indicator-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Accessibility - Reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .offline-indicator {
+    transition: opacity 0.1s ease;
+    transform: none;
+
+    &.visible {
+      transform: none;
+    }
+  }
+}
+
+// Accessibility - High contrast mode
+@media (prefers-contrast: high) {
+  .offline-indicator {
+    border-width: 2px;
+    box-shadow: 0 0 0 2px currentColor;
+
+    &.offline {
+      border-color: #ffffff;
+    }
+
+    &.online {
+      border-color: #ffffff;
+    }
+  }
+}
+
+// Focus styles for accessibility
+.offline-indicator:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}

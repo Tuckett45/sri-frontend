@@ -1,0 +1,303 @@
+<div class="admin-viewer-container">
+  <!-- Header -->
+  <div class="admin-viewer-header">
+    <h1>System Administration Dashboard</h1>
+    <div class="header-controls">
+      <button class="btn-refresh" (click)="refreshMetrics()" [disabled]="loading$ | async">
+        <span class="icon-refresh"></span>
+        Refresh
+      </button>
+      <button 
+        class="btn-auto-refresh" 
+        [class.active]="autoRefreshEnabled"
+        (click)="toggleAutoRefresh()">
+        <span class="icon-auto"></span>
+        Auto-Refresh ({{ refreshInterval / 1000 }}s)
+      </button>
+      <select 
+        class="time-range-selector" 
+        [(ngModel)]="selectedTimeRange" 
+        (change)="onTimeRangeChange(selectedTimeRange)">
+        <option value="last1hour">Last Hour</option>
+        <option value="last24hours">Last 24 Hours</option>
+        <option value="last7days">Last 7 Days</option>
+        <option value="last30days">Last 30 Days</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <app-loading-indicator 
+    *ngIf="loading$ | async" 
+    [overlay]="true"
+    [mode]="'spinner'"
+    [message]="'Loading admin data...'">
+  </app-loading-indicator>
+
+  <!-- Error Message -->
+  <div *ngIf="error$ | async as error" class="error-message">
+    <span class="icon-error"></span>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- System Health Status -->
+  <div class="health-status-section" *ngIf="systemHealth$ | async as health">
+    <h2>System Health</h2>
+    <div class="health-card" [ngClass]="getHealthStatusClass(health.status)">
+      <div class="health-indicator">
+        <span class="status-icon"></span>
+        <span class="status-text">{{ health.status | uppercase }}</span>
+      </div>
+      <div class="health-details">
+        <div class="health-metric">
+          <label>Uptime:</label>
+          <span>{{ formatDuration(health.uptime) }}</span>
+        </div>
+        <div class="health-metric">
+          <label>Last Check:</label>
+          <span>{{ formatTimestamp(health.lastCheck) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Health -->
+    <div class="services-grid" *ngIf="health.services && health.services.length > 0">
+      <div 
+        class="service-card" 
+        *ngFor="let service of health.services"
+        [ngClass]="'service-' + service.status">
+        <h4>{{ service.name }}</h4>
+        <div class="service-status">{{ service.status }}</div>
+        <div class="service-metrics">
+          <span>Response: {{ service.responseTime }}ms</span>
+          <span>Error Rate: {{ service.errorRate }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics Dashboard -->
+  <div class="metrics-section" *ngIf="adminMetrics$ | async as metrics">
+    <h2>System Metrics</h2>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon icon-users"></div>
+        <div class="metric-content">
+          <h3>Active Users</h3>
+          <p class="metric-value">{{ metrics.activeUsers }}</p>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon icon-jobs"></div>
+        <div class="metric-content">
+          <h3>Total Jobs</h3>
+          <p class="metric-value">{{ metrics.totalJobs }}</p>
+          <p class="metric-detail">
+            Completed: {{ metrics.completedJobs }} | Pending: {{ metrics.pendingJobs }}
+          </p>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon icon-deployments"></div>
+        <div class="metric-content">
+          <h3>Active Deployments</h3>
+          <p class="metric-value">{{ metrics.activeDeployments }}</p>
+        </div>
+      </div>
+
+      <div class="metric-card resource-card">
+        <div class="metric-icon icon-resources"></div>
+        <div class="metric-content">
+          <h3>Resource Utilization</h3>
+          <div class="resource-bars">
+            <div class="resource-item">
+              <label>CPU</label>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="metrics.resourceUtilization.cpu"></div>
+              </div>
+              <span>{{ metrics.resourceUtilization.cpu }}%</span>
+            </div>
+            <div class="resource-item">
+              <label>Memory</label>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="metrics.resourceUtilization.memory"></div>
+              </div>
+              <span>{{ metrics.resourceUtilization.memory }}%</span>
+            </div>
+            <div class="resource-item">
+              <label>Storage</label>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="metrics.resourceUtilization.storage"></div>
+              </div>
+              <span>{{ metrics.resourceUtilization.storage }}%</span>
+            </div>
+            <div class="resource-item">
+              <label>Network</label>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="metrics.resourceUtilization.network"></div>
+              </div>
+              <span>{{ metrics.resourceUtilization.network }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="metrics-timestamp">Last updated: {{ formatTimestamp(metrics.timestamp) }}</p>
+  </div>
+
+  <!-- AI Insights & Analytics Widget -->
+  <div class="ai-insights-section">
+    <div class="section-header">
+      <h2>AI Insights & Analytics</h2>
+      <p class="section-subtitle">AI-powered recommendations and system insights</p>
+    </div>
+    
+    <div class="insights-grid">
+      <!-- AI Recommendations Panel -->
+      <div class="insights-panel recommendations-panel">
+        <h3>AI Recommendations</h3>
+        <app-ai-advisory-panel
+          context="job"
+          [autoRefresh]="false">
+        </app-ai-advisory-panel>
+      </div>
+
+      <!-- System Insights Panel -->
+      <div class="insights-panel system-insights-panel">
+        <h3>System Insights</h3>
+        <app-insights-display
+          [insights]="(insights$ | async) || []"
+          [displayMode]="'cards'"
+          [showCharts]="false">
+        </app-insights-display>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Users Section -->
+  <div class="active-users-section" *ngIf="activeUsers$ | async as users">
+    <h2>Active Users ({{ users.length }})</h2>
+    <div class="users-table-container">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>User Name</th>
+            <th>Role</th>
+            <th>Last Action</th>
+            <th>Last Action Time</th>
+            <th>Session Duration</th>
+            <th>Actions Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>{{ user.userName }}</td>
+            <td><span class="role-badge">{{ user.role }}</span></td>
+            <td>{{ user.lastAction }}</td>
+            <td>{{ formatTimestamp(user.lastActionTime) }}</td>
+            <td>{{ formatDuration(user.sessionDuration) }}</td>
+            <td>{{ user.actionsCount }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="users.length === 0" class="no-data">No active users at this time.</p>
+    </div>
+  </div>
+
+  <!-- Audit Log Section -->
+  <div class="audit-log-section">
+    <div class="audit-log-header">
+      <h2>Audit Log</h2>
+      <div class="audit-log-controls">
+        <button class="btn-export" (click)="exportAuditLog('csv')">
+          <span class="icon-download"></span>
+          Export CSV
+        </button>
+        <button class="btn-export" (click)="exportAuditLog('pdf')">
+          <span class="icon-download"></span>
+          Export PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="audit-filters">
+      <div class="filter-group">
+        <label for="userFilter">Filter by User:</label>
+        <input 
+          id="userFilter"
+          type="text" 
+          [(ngModel)]="userIdFilter" 
+          placeholder="Enter User ID"
+          (input)="applyFilters()">
+      </div>
+
+      <div class="filter-group">
+        <label for="actionFilter">Filter by Action:</label>
+        <input 
+          id="actionFilter"
+          type="text" 
+          [(ngModel)]="actionTypeFilter" 
+          placeholder="Enter Action Type"
+          (input)="applyFilters()">
+      </div>
+
+      <div class="filter-group">
+        <label for="startDate">Start Date:</label>
+        <input 
+          id="startDate"
+          type="datetime-local" 
+          [(ngModel)]="startDateFilter"
+          (change)="applyFilters()">
+      </div>
+
+      <div class="filter-group">
+        <label for="endDate">End Date:</label>
+        <input 
+          id="endDate"
+          type="datetime-local" 
+          [(ngModel)]="endDateFilter"
+          (change)="applyFilters()">
+      </div>
+
+      <button class="btn-clear-filters" (click)="clearFilters()">
+        Clear Filters
+      </button>
+    </div>
+
+    <!-- Audit Log Table -->
+    <div class="audit-table-container" *ngIf="auditLog$ | async as auditLog">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Entity Type</th>
+            <th>Entity ID</th>
+            <th>IP Address</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of auditLog">
+            <td>{{ formatTimestamp(entry.timestamp) }}</td>
+            <td>{{ entry.userName }}</td>
+            <td><span class="action-badge">{{ entry.action }}</span></td>
+            <td>{{ entry.entityType }}</td>
+            <td class="entity-id">{{ entry.entityId }}</td>
+            <td>{{ entry.ipAddress }}</td>
+            <td>
+              <button class="btn-details" title="View Details">
+                <span class="icon-info"></span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="auditLog.length === 0" class="no-data">No audit log entries found.</p>
+    </div>
+  </div>
+</div>

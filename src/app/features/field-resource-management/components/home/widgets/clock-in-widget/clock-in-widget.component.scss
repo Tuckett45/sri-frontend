@@ -1,0 +1,192 @@
+.clock-in-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #144f80;
+      }
+    }
+  }
+
+  mat-card-content {
+    .job-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 1rem;
+
+      .site-name {
+        font-weight: 600;
+        font-size: 15px;
+        color: #333;
+      }
+
+      .job-id {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+
+    .proximity-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .proximity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 600;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &.on-site {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      &.en-route {
+        background-color: #fff3e0;
+        color: #e65100;
+      }
+
+      &.unknown {
+        background-color: #f5f5f5;
+        color: #999;
+      }
+    }
+
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    .location-error {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #d32f2f;
+      margin-bottom: 0.75rem;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .timer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0;
+
+      .elapsed {
+        font-size: 32px;
+        font-weight: 700;
+        font-family: 'Roboto Mono', monospace;
+        color: #144f80;
+        letter-spacing: 2px;
+      }
+
+      .timer-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+      }
+    }
+
+    .clock-btn {
+      width: 100%;
+      padding: 8px 0;
+      font-size: 15px;
+
+      mat-icon {
+        margin-right: 6px;
+      }
+    }
+
+    .break-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .break-btn {
+      flex: 1;
+      font-size: 13px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        margin-right: 4px;
+      }
+    }
+
+    .clockout-reasons {
+      display: flex;
+      flex-direction: column;
+      margin-top: 6px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+
+      button {
+        justify-content: flex-start;
+        border-radius: 0;
+        padding: 8px 16px;
+
+        mat-icon {
+          margin-right: 8px;
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+
+        &:not(:last-child) {
+          border-bottom: 1px solid #f0f0f0;
+        }
+      }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #999;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        font-size: 14px;
+      }
+    }
+  }
+}

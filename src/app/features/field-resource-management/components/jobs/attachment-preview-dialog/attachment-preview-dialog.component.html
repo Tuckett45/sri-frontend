@@ -1,0 +1,24 @@
+<div class="preview-header">
+  <h2 mat-dialog-title>{{ data.fileName }}</h2>
+  <button mat-icon-button (click)="close()" aria-label="Close preview">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="preview-content">
+  <!-- Image preview -->
+  <img
+    *ngIf="isImage"
+    [src]="safeUrl"
+    [alt]="data.fileName"
+    class="preview-image"
+  />
+
+  <!-- PDF preview -->
+  <iframe
+    *ngIf="isPdf"
+    [src]="safeUrl"
+    class="preview-pdf"
+    [title]="data.fileName"
+  ></iframe>
+</mat-dialog-content>

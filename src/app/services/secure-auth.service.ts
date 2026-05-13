@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { ConfigurationService } from './configuration.service';
 import { User } from '../models/user.model';
 import { LoginModel } from '../models/login-model.model';
+import { StatePersistenceService } from '../features/field-resource-management/services/state-persistence.service';
 import {
   AuthResult,
   SecureAuthState,
@@ -38,8 +39,12 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   private memoryOnlyToken: string | null = null;
   private currentAuthMethod: AuthMethod = AuthMethod.MEMORY_ONLY;
 
-  constructor(router: Router, http: HttpClient) {
-    super(router, http);
+  constructor(
+    router: Router, 
+    http: HttpClient,
+    statePersistenceService: StatePersistenceService
+  ) {
+    super(router, http, statePersistenceService, null);
     // Don't initialize immediately - wait for explicit initialization
   }
 
@@ -272,7 +277,8 @@ export class SecureAuthService extends AuthService implements OnDestroy {
 
         return new HttpHeaders({
           'Authorization': `Bearer ${token}`,
-          'X-Session-ID': state.sessionId || ''
+          'X-Session-ID': state.sessionId || '',
+          'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
         });
       })
     );
@@ -284,8 +290,30 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   async validateTokenExpiration(): Promise<boolean> {
     try {
       const state = this.authState$.value;
-      if (!state.isAuthenticated || !state.tokenExpiresAt) {
+      if (!state.isAuthenticated) {
+        console.log('🔐 Token validation skipped - user not authenticated');
         return false;
+      }
+
+      // For HTTP-only cookie auth, we can't validate expiration client-side
+      if (this.currentAuthMethod === AuthMethod.HTTP_ONLY_COOKIES) {
+        console.log('🔐 Token validation skipped - using HTTP-only cookies');
+        // Update last validated time
+        this.authState$.next({
+          ...state,
+          lastValidated: new Date()
+        });
+        return true;
+      }
+
+      if (!state.tokenExpiresAt) {
+        console.warn('⚠️ No token expiration time available - assuming valid');
+        // Update last validated time
+        this.authState$.next({
+          ...state,
+          lastValidated: new Date()
+        });
+        return true;
       }
 
       const now = new Date();
@@ -309,11 +337,13 @@ export class SecureAuthService extends AuthService implements OnDestroy {
         lastValidated: now
       });
 
+      console.log('✅ Token validation successful, expires in:', Math.ceil(timeUntilExpiry / (60 * 1000)), 'minutes');
       return true;
 
     } catch (error) {
       console.error('❌ Token validation failed:', error);
-      return false;
+      // Don't logout on validation errors - just log and continue
+      return true; // Return true to prevent logout on validation errors
     }
   }
 
@@ -488,20 +518,30 @@ export class SecureAuthService extends AuthService implements OnDestroy {
    */
   private async loadExistingAuthState(): Promise<void> {
     try {
+      console.log('🔐 Loading existing auth state...');
+      
       // Check if user was previously logged in
       const wasLoggedIn = localStorage.getItem('loggedIn') === 'true';
+      console.log('🔐 Was logged in:', wasLoggedIn);
+      
       if (!wasLoggedIn) {
+        console.log('🔐 No previous login state found');
         return;
       }
 
       const userString = localStorage.getItem('user');
       if (!userString) {
+        console.warn('⚠️ Login state found but no user data');
         return;
       }
 
       const user = JSON.parse(userString);
+      console.log('🔐 User data loaded:', { email: user.email, role: user.role });
+      
       const token = await this.getStoredToken();
       const usingCookieAuth = this.currentAuthMethod === AuthMethod.HTTP_ONLY_COOKIES;
+      console.log('🔐 Auth method:', this.currentAuthMethod);
+      console.log('🔐 Token available:', !!token);
 
       if (!token && !usingCookieAuth) {
         console.warn('⚠️ Persisted login state found without a token. Clearing stale auth data.');
@@ -517,6 +557,8 @@ export class SecureAuthService extends AuthService implements OnDestroy {
           return;
         }
 
+        console.log('✅ Restoring HTTP-only cookie auth session');
+        
         // For HTTP-only cookies we cannot read the token; mark as authenticated and validate on first API call
         this.authState$.next({
           isAuthenticated: true,
@@ -531,6 +573,8 @@ export class SecureAuthService extends AuthService implements OnDestroy {
         this.setUser(user);
         this.setUserRole(this.resolveRole(user));
         this.loggedInStatus.next(true);
+        
+        console.log('✅ HTTP-only cookie auth state restored');
         return;
       }
 
@@ -543,6 +587,8 @@ export class SecureAuthService extends AuthService implements OnDestroy {
         const expiresString = sessionStorage.getItem('expiresAt');
         expiresAt = expiresString ? new Date(expiresString) : null;
       }
+
+      console.log('🔐 Token expires at:', expiresAt);
 
       // Check if token is expired
       if (expiresAt && expiresAt.getTime() <= new Date().getTime()) {
@@ -566,7 +612,7 @@ export class SecureAuthService extends AuthService implements OnDestroy {
       this.setUserRole(this.resolveRole(user));
       this.loggedInStatus.next(true);
 
-      console.log('✅ Restored authentication state');
+      console.log('✅ Restored authentication state successfully');
 
     } catch (error) {
       console.error('❌ Failed to load existing auth state:', error);

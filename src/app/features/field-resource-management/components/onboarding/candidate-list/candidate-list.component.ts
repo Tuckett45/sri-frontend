@@ -1,0 +1,593 @@
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { OnboardingService } from '../../../services/onboarding.service';
+import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
+import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
+
+type SortDirection = 'asc' | 'desc';
+
+interface SortState {
+  column: keyof Candidate;
+  direction: SortDirection;
+}
+
+const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
+  pre_offer: 'Pre Offer',
+  offer: 'Offer',
+  offer_acceptance: 'Offer Acceptance',
+};
+
+@Component({
+  selector: 'app-candidate-list',
+  template: `
+    <div class="candidate-list-container">
+      <div class="header-row">
+        <h2>Candidates</h2>
+        <button type="button" class="add-candidate-btn" (click)="onAddCandidate()" aria-label="Add new candidate">
+          + Add Candidate
+        </button>
+      </div>
+
+      <!-- Error Banner -->
+      <div class="error-banner" *ngIf="errorMessage" role="alert">
+        <span>{{ errorMessage }}</span>
+        <button type="button" (click)="errorMessage = ''" aria-label="Dismiss error">Dismiss</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-row">
+        <div class="filter-field">
+          <label for="searchInput">Search</label>
+          <input id="searchInput"
+                 type="text"
+                 [value]="searchText"
+                 (input)="onSearchChange($event)"
+                 placeholder="Search by name, email, or work site" />
+        </div>
+        <div class="filter-field">
+          <label for="statusFilter">Offer Status</label>
+          <select id="statusFilter"
+                  [value]="statusFilter"
+                  (change)="onStatusFilterChange($event)">
+            <option value="">All Statuses</option>
+            <option value="pre_offer">Pre Offer</option>
+            <option value="offer">Offer</option>
+            <option value="offer_acceptance">Offer Acceptance</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Candidate Table -->
+      <table *ngIf="filteredCandidates.length > 0" class="candidate-table">
+        <thead>
+          <tr>
+            <th (click)="onSort('techName')" class="sortable">
+              Tech Name <span class="sort-icon">{{ getSortIcon('techName') }}</span>
+            </th>
+            <th (click)="onSort('techEmail')" class="sortable">
+              Tech Email <span class="sort-icon">{{ getSortIcon('techEmail') }}</span>
+            </th>
+            <th (click)="onSort('techPhone')" class="sortable">
+              Tech Phone <span class="sort-icon">{{ getSortIcon('techPhone') }}</span>
+            </th>
+            <th (click)="onSort('vestSize')" class="sortable">
+              Vest Size <span class="sort-icon">{{ getSortIcon('vestSize') }}</span>
+            </th>
+            <th (click)="onSort('drugTestComplete')" class="sortable">
+              Drug Test <span class="sort-icon">{{ getSortIcon('drugTestComplete') }}</span>
+            </th>
+            <th (click)="onSort('oshaCertified')" class="sortable">
+              OSHA <span class="sort-icon">{{ getSortIcon('oshaCertified') }}</span>
+            </th>
+            <th (click)="onSort('scissorLiftCertified')" class="sortable">
+              Scissor Lift <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
+            </th>
+            <th (click)="onSort('workSite')" class="sortable">
+              Work Site <span class="sort-icon">{{ getSortIcon('workSite') }}</span>
+            </th>
+            <th (click)="onSort('startDate')" class="sortable">
+              Start Date <span class="sort-icon">{{ getSortIcon('startDate') }}</span>
+            </th>
+            <th (click)="onSort('offerStatus')" class="sortable">
+              Offer Status <span class="sort-icon">{{ getSortIcon('offerStatus') }}</span>
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let candidate of filteredCandidates"
+              (click)="onRowClick(candidate)"
+              class="candidate-row"
+              tabindex="0"
+              (keydown.enter)="onRowClick(candidate)"
+              [attr.aria-label]="'Edit candidate ' + candidate.techName">
+            <td>{{ candidate.techName }}</td>
+            <td>{{ candidate.techEmail }}</td>
+            <td>{{ candidate.techPhone }}</td>
+            <td>{{ candidate.vestSize }}</td>
+            <td class="bool-cell"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
+            <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
+            <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
+            <td>{{ candidate.workSite }}</td>
+            <td>{{ candidate.startDate }}</td>
+            <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
+            <td class="actions-cell">
+              <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
+              <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <p *ngIf="!loading && filteredCandidates.length === 0 && !errorMessage" class="empty-state">
+        No candidates match the current filters.
+      </p>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading-indicator">
+        <span>Loading candidates...</span>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .candidate-list-container {
+      margin: 1.5rem;
+      padding: 1.5rem;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #212121;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .add-candidate-btn {
+      padding: 0.5rem 1rem;
+      background-color: #1976d2;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .add-candidate-btn:hover {
+      background-color: #1565c0;
+    }
+
+    .add-candidate-btn:focus {
+      outline: 2px solid #1976d2;
+      outline-offset: 2px;
+    }
+
+    .error-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      background: #fdecea;
+      border: 1px solid #f5c6cb;
+      border-radius: 4px;
+      color: #b71c1c;
+      font-size: 0.875rem;
+    }
+
+    .error-banner button {
+      background: none;
+      border: none;
+      color: #b71c1c;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .filters-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .filter-field label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #424242;
+    }
+
+    .filter-field input,
+    .filter-field select {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #bdbdbd;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      min-width: 200px;
+    }
+
+    .filter-field input:focus,
+    .filter-field select:focus {
+      outline: none;
+      border-color: #1976d2;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    }
+
+    .candidate-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .candidate-table thead th {
+      text-align: left;
+      padding: 0.625rem 0.75rem;
+      background: #f5f5f5;
+      border-bottom: 2px solid #e0e0e0;
+      font-weight: 600;
+      color: #424242;
+      white-space: nowrap;
+    }
+
+    .candidate-table thead th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .candidate-table thead th.sortable:hover {
+      background: #eeeeee;
+    }
+
+    .sort-icon {
+      font-size: 0.75rem;
+      margin-left: 0.25rem;
+    }
+
+    .candidate-table tbody td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #e0e0e0;
+      color: #212121;
+    }
+
+    .candidate-row {
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    .candidate-row:hover {
+      background-color: rgba(25, 118, 210, 0.04);
+    }
+
+    .candidate-row:focus {
+      outline: 2px solid #1976d2;
+      outline-offset: -2px;
+    }
+
+    .bool-cell {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .yn-yes {
+      color: #2e7d32;
+    }
+
+    .yn-no {
+      color: #c62828;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #757575;
+      font-size: 0.875rem;
+    }
+
+    .loading-indicator {
+      text-align: center;
+      padding: 2rem;
+      color: #757575;
+    }
+
+    .actions-cell {
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .action-btn {
+      padding: 0.25rem 0.625rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-right: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-view {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1px solid #90caf9;
+    }
+
+    .btn-view:hover { background: #bbdefb; }
+
+    .btn-edit-action {
+      background: #fff3e0;
+      color: #e65100;
+      border: 1px solid #ffcc80;
+    }
+
+    .btn-edit-action:hover { background: #ffe0b2; }
+
+    @media (max-width: 768px) {
+      .candidate-list-container {
+        margin: 1rem;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+
+      .filters-row {
+        flex-direction: column;
+      }
+
+      .filter-field input,
+      .filter-field select {
+        min-width: unset;
+        width: 100%;
+      }
+    }
+  `]
+})
+
+export class CandidateListComponent implements OnInit {
+  candidates: Candidate[] = [];
+  filteredCandidates: Candidate[] = [];
+  loading = false;
+  errorMessage = '';
+
+  searchText = '';
+  statusFilter = '';
+  incompleteCertsFilter = false;
+  sortState: SortState | null = null;
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private dialog: MatDialog,
+    private onboardingService: OnboardingService
+  ) {}
+
+  ngOnInit(): void {
+    // Read query params for pre-filtering (from pipeline dashboard navigation)
+    const params = this.route.snapshot.queryParams;
+    if (params['offerStatus']) {
+      this.statusFilter = params['offerStatus'];
+    }
+    if (params['search']) {
+      this.searchText = params['search'];
+    }
+    if (params['incompleteCerts'] === 'true') {
+      this.incompleteCertsFilter = true;
+    }
+
+    this.loadCandidates();
+  }
+
+  onSearchChange(event: Event): void {
+    this.searchText = (event.target as HTMLInputElement).value;
+    this.applyFiltersAndSort();
+  }
+
+  onStatusFilterChange(event: Event): void {
+    this.statusFilter = (event.target as HTMLSelectElement).value;
+    this.applyFiltersAndSort();
+  }
+
+  onSort(column: keyof Candidate): void {
+    if (this.sortState?.column === column) {
+      this.sortState = {
+        column,
+        direction: this.sortState.direction === 'asc' ? 'desc' : 'asc',
+      };
+    } else {
+      this.sortState = { column, direction: 'asc' };
+    }
+    this.applyFiltersAndSort();
+  }
+
+  getSortIcon(column: keyof Candidate): string {
+    if (this.sortState?.column !== column) return '';
+    return this.sortState.direction === 'asc' ? '▲' : '▼';
+  }
+
+  getStatusLabel(status: OfferStatus): string {
+    return OFFER_STATUS_LABELS[status] ?? status;
+  }
+
+  onRowClick(candidate: Candidate): void {
+    this.router.navigate(['candidates', candidate.candidateId], {
+      relativeTo: this.route.parent,
+    });
+  }
+
+  onEditCandidate(candidate: Candidate): void {
+    const dialogRef = this.dialog.open(AddCandidateModalComponent, {
+      width: '780px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: { candidate }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const payload = {
+          techName: `${result.basicInfo.firstName} ${result.basicInfo.lastName}`,
+          techEmail: result.basicInfo.email,
+          techPhone: result.basicInfo.phone,
+          vestSize: result.basicInfo.vestSize,
+          workSite: result.basicInfo.workSite,
+          startDate: result.basicInfo.startDate,
+          offerStatus: result.basicInfo.offerStatus,
+          drugTestComplete: result.coreQualifications.backgroundDrugScreen,
+          oshaCertified: result.coreQualifications.oshaCertification,
+          scissorLiftCertified: result.coreQualifications.liftCertification
+        };
+        this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+          next: () => this.loadCandidates(),
+          error: () => {
+            this.errorMessage = 'Failed to update candidate. Please try again.';
+            this.loadCandidates();
+          }
+        });
+      }
+    });
+  }
+
+  onAddCandidate(): void {
+    const dialogRef = this.dialog.open(AddCandidateModalComponent, {
+      width: '780px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const payload: CreateCandidatePayload = {
+          techName: `${result.basicInfo.firstName} ${result.basicInfo.lastName}`,
+          techEmail: result.basicInfo.email,
+          techPhone: result.basicInfo.phone,
+          vestSize: result.basicInfo.vestSize,
+          workSite: result.basicInfo.workSite,
+          startDate: result.basicInfo.startDate,
+          offerStatus: result.basicInfo.offerStatus
+        };
+
+        this.onboardingService.createCandidate(payload).subscribe({
+          next: () => {
+            this.loadCandidates();
+          },
+          error: () => {
+            this.errorMessage = 'Failed to create candidate. Please try again.';
+            this.loadCandidates();
+          }
+        });
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  private loadCandidates(): void {
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.onboardingService.getCandidates().subscribe({
+      next: (candidates) => {
+        this.candidates = candidates;
+        this.loading = false;
+        this.applyFiltersAndSort();
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorMessage = err?.message || 'Failed to load candidates.';
+        this.candidates = [];
+        this.filteredCandidates = [];
+      },
+    });
+  }
+
+  private getDummyCandidates(): Candidate[] {
+    const dateOnly = (daysOffset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + daysOffset);
+      return d.toISOString().split('T')[0];
+    };
+    const iso = (daysOffset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + daysOffset);
+      return d.toISOString();
+    };
+
+    return [
+      { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', startDate: dateOnly(5), offerStatus: 'offer_acceptance', createdBy: 'system', createdAt: iso(-30), updatedBy: 'system', updatedAt: iso(-5) },
+      { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', startDate: dateOnly(10), offerStatus: 'offer', createdBy: 'system', createdAt: iso(-25), updatedBy: 'system', updatedAt: iso(-3) },
+      { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', startDate: dateOnly(3), offerStatus: 'offer_acceptance', createdBy: 'system', createdAt: iso(-20), updatedBy: 'system', updatedAt: iso(-2) },
+      { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', startDate: dateOnly(18), offerStatus: 'pre_offer', createdBy: 'system', createdAt: iso(-15), updatedBy: 'system', updatedAt: iso(-1) },
+      { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', startDate: dateOnly(7), offerStatus: 'offer', createdBy: 'system', createdAt: iso(-10), updatedBy: 'system', updatedAt: iso(-1) },
+      { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', startDate: dateOnly(12), offerStatus: 'pre_offer', createdBy: 'system', createdAt: iso(-8), updatedBy: 'system', updatedAt: iso(-1) }
+    ];
+  }
+
+  private applyFiltersAndSort(): void {
+    let result = [...this.candidates];
+
+    // Text search filter
+    if (this.searchText.trim()) {
+      const term = this.searchText.trim().toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.techName.toLowerCase().includes(term) ||
+          c.techEmail.toLowerCase().includes(term) ||
+          c.workSite.toLowerCase().includes(term)
+      );
+    }
+
+    // Offer status filter
+    if (this.statusFilter) {
+      result = result.filter((c) => c.offerStatus === this.statusFilter);
+    }
+
+    // Incomplete certifications filter
+    if (this.incompleteCertsFilter) {
+      result = result.filter(
+        (c) => !c.oshaCertified || !c.scissorLiftCertified
+      );
+    }
+
+    // Sort
+    if (this.sortState) {
+      const { column, direction } = this.sortState;
+      result.sort((a, b) => {
+        const aVal = a[column];
+        const bVal = b[column];
+
+        let comparison = 0;
+        if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
+          comparison = (aVal === bVal) ? 0 : aVal ? -1 : 1;
+        } else if (typeof aVal === 'string' && typeof bVal === 'string') {
+          comparison = aVal.localeCompare(bVal);
+        } else {
+          comparison = String(aVal).localeCompare(String(bVal));
+        }
+
+        return direction === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    this.filteredCandidates = result;
+  }
+}

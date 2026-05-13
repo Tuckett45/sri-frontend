@@ -1,0 +1,465 @@
+<!-- Dialog Header -->
+<div class="dialog-header">
+  <h2 mat-dialog-title style="color: white !important;">{{ formTitle }}</h2>
+  <button mat-icon-button (click)="onCancel()" type="button" aria-label="Close dialog">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- Loading Spinner -->
+<div class="loading-container" *ngIf="isLoading">
+  <mat-spinner></mat-spinner>
+</div>
+
+<!-- Dialog Content -->
+<mat-dialog-content *ngIf="!isLoading">
+  <form [formGroup]="jobForm" (ngSubmit)="onSubmit()" class="job-form">
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Basic Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Client</mat-label>
+            <input matInput formControlName="client" placeholder="Enter client name" />
+            <mat-error *ngIf="hasError('client', 'required')">
+              {{ getErrorMessage('client') }}
+            </mat-error>
+            <mat-error *ngIf="hasError('client', 'maxlength')">
+              {{ getErrorMessage('client') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Site Name</mat-label>
+            <input matInput formControlName="siteName" placeholder="Enter site name" />
+            <mat-error *ngIf="hasError('siteName', 'required')">
+              {{ getErrorMessage('siteName') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Job Type</mat-label>
+            <mat-select formControlName="jobType">
+              <mat-option *ngFor="let type of jobTypeOptions" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('jobType') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Priority</mat-label>
+            <mat-select formControlName="priority">
+              <mat-option *ngFor="let priority of priorityOptions" [value]="priority">
+                {{ priority }}
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('priority') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <!-- Market field - Admin can select, CM sees their market (read-only) -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Market</mat-label>
+            <mat-select formControlName="market" *ngIf="isAdmin">
+              <mat-option *ngFor="let market of availableMarkets" [value]="market">
+                {{ market }}
+              </mat-option>
+            </mat-select>
+            <input matInput formControlName="market" *ngIf="!isAdmin" readonly />
+            <mat-hint *ngIf="!isAdmin">Your assigned market</mat-hint>
+            <mat-error>{{ getErrorMessage('market') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Site Address</mat-card-title>
+      </mat-card-header>
+      <mat-card-content formGroupName="siteAddress">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Street Address</mat-label>
+            <input matInput formControlName="street" placeholder="Enter street address" />
+            <mat-error>{{ getErrorMessage('siteAddress.street') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row three-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city" placeholder="Enter city" />
+            <mat-error>{{ getErrorMessage('siteAddress.city') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>State</mat-label>
+            <mat-select formControlName="state">
+              <mat-option *ngFor="let state of states" [value]="state">
+                {{ state }}
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('siteAddress.state') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>ZIP Code</mat-label>
+            <input matInput formControlName="zipCode" placeholder="12345" />
+            <mat-error>{{ getErrorMessage('siteAddress.zipCode') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Scope</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Scope Description</mat-label>
+            <textarea
+              matInput
+              formControlName="scopeDescription"
+              rows="4"
+              placeholder="Describe the work to be performed"
+            ></textarea>
+            <mat-hint align="end">
+              {{ getControl('scopeDescription')?.value?.length || 0 }}/2000
+            </mat-hint>
+            <mat-error>{{ getErrorMessage('scopeDescription') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <frm-skill-selector
+            [availableSkills]="availableSkills"
+            formControlName="requiredSkills"
+            label="Required Skills"
+          ></frm-skill-selector>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Required Crew Size</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="requiredCrewSize"
+              min="1"
+              max="20"
+            />
+            <mat-hint>Number of technicians needed</mat-hint>
+            <mat-error>{{ getErrorMessage('requiredCrewSize') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Estimated Labor Hours</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="estimatedLaborHours"
+              min="0.5"
+              step="0.5"
+            />
+            <mat-hint>Total estimated hours</mat-hint>
+            <mat-error>{{ getErrorMessage('estimatedLaborHours') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Schedule</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Scheduled Start Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="startPicker"
+              formControlName="scheduledStartDate"
+            />
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+            <mat-error>{{ getErrorMessage('scheduledStartDate') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Scheduled End Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="endPicker"
+              formControlName="scheduledEndDate"
+            />
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+            <mat-error>{{ getErrorMessage('scheduledEndDate') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-error" *ngIf="hasDateRangeError">
+          <mat-icon>error</mat-icon>
+          <span>End date must be after or equal to start date</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Customer Point of Contact (Optional)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content formGroupName="customerPOC">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" placeholder="Enter contact name" />
+            <mat-error>{{ getErrorMessage('customerPOC.name') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input
+              matInput
+              formControlName="phone"
+              placeholder="555-123-4567"
+              type="tel"
+            />
+            <mat-error>{{ getErrorMessage('customerPOC.phone') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input
+              matInput
+              formControlName="email"
+              placeholder="contact@example.com"
+              type="email"
+            />
+            <mat-error>{{ getErrorMessage('customerPOC.email') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Authorization &amp; Purchase Orders</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Authorization Status</mat-label>
+            <mat-select formControlName="authorizationStatus">
+              <mat-option value="authorized">Authorized</mat-option>
+              <mat-option value="pending">Pending Authorization</mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('authorizationStatus') }}</mat-error>
+          </mat-form-field>
+
+          <div class="toggle-field">
+            <mat-slide-toggle formControlName="hasPurchaseOrders" color="primary">
+              Client will work off purchase orders
+            </mat-slide-toggle>
+          </div>
+        </div>
+
+        <div class="form-row" *ngIf="jobForm.get('hasPurchaseOrders')?.value">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Purchase Order Number</mat-label>
+            <input matInput formControlName="purchaseOrderNumber" />
+            <mat-error>{{ getErrorMessage('purchaseOrderNumber') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Pricing &amp; Billing</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Standard Bill Rate ($)</mat-label>
+            <input matInput type="number" formControlName="standardBillRate" min="0.01" step="0.01" />
+            <mat-error>{{ getErrorMessage('standardBillRate') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Overtime Bill Rate ($)</mat-label>
+            <input matInput type="number" formControlName="overtimeBillRate" min="0.01" step="0.01" />
+            <mat-error>{{ getErrorMessage('overtimeBillRate') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Per Diem ($)</mat-label>
+            <input matInput type="number" formControlName="perDiem" min="0" step="0.01" />
+            <mat-error>{{ getErrorMessage('perDiem') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Invoicing Process</mat-label>
+            <mat-select formControlName="invoicingProcess">
+              <mat-option *ngFor="let opt of invoicingOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('invoicingProcess') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>SRI Internal</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Project Director</mat-label>
+            <input matInput formControlName="projectDirector" maxlength="150" />
+            <mat-error>{{ getErrorMessage('projectDirector') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Biz Dev Contact</mat-label>
+            <input matInput formControlName="bizDevContact" maxlength="150" />
+            <mat-error>{{ getErrorMessage('bizDevContact') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Target Resources (Crew Size)</mat-label>
+            <input matInput type="number" formControlName="targetResources" min="1" max="500" step="1" />
+            <mat-hint>Number of technicians needed</mat-hint>
+            <mat-error>{{ getErrorMessage('targetResources') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Requested Hours</mat-label>
+            <input matInput type="number" formControlName="requestedHours" min="0.01" step="0.01" />
+            <mat-hint>Total estimated labor hours</mat-hint>
+            <mat-error>{{ getErrorMessage('requestedHours') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-slide-toggle formControlName="overtimeRequired" color="primary">
+            Overtime is required for this job
+          </mat-slide-toggle>
+        </div>
+
+        <div class="form-row" *ngIf="jobForm.get('overtimeRequired')?.value">
+          <mat-form-field appearance="outline">
+            <mat-label>Estimated Overtime Hours</mat-label>
+            <input matInput type="number" formControlName="estimatedOvertimeHours" min="0.01" step="0.01" />
+            <mat-error>{{ getErrorMessage('estimatedOvertimeHours') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Assignment (Optional)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Lead Technician</mat-label>
+            <mat-select formControlName="leadTechnicianId">
+              <mat-option>None</mat-option>
+              <mat-option *ngFor="let tech of technicians" [value]="tech.id">
+                {{ tech.firstName }} {{ tech.lastName }} ({{ tech.role }})
+              </mat-option>
+            </mat-select>
+            <mat-hint>Assign a lead technician to this job</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Crew</mat-label>
+            <mat-select formControlName="crewId">
+              <mat-option>None</mat-option>
+              <mat-option *ngFor="let crew of crews" [value]="crew.id">
+                {{ crew.name }} ({{ crew.memberIds?.length || 0 }} members)
+              </mat-option>
+            </mat-select>
+            <mat-hint>Assign a crew to this job</mat-hint>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Notes (Optional)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Initial Note</mat-label>
+            <textarea
+              matInput
+              formControlName="initialNote"
+              rows="3"
+              placeholder="Add an initial note for this job"
+            ></textarea>
+            <mat-hint align="end">
+              {{ getControl('initialNote')?.value?.length || 0 }}/1000
+            </mat-hint>
+            <mat-error>{{ getErrorMessage('initialNote') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Attachments (Optional)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <frm-file-upload
+          [multiple]="true"
+          [maxFileSize]="10485760"
+          [allowedFileTypes]="['image/jpeg', 'image/png', 'image/heic', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']"
+          (filesSelected)="onFilesSelected($event)"
+        ></frm-file-upload>
+      </mat-card-content>
+    </mat-card>
+
+  </form>
+</mat-dialog-content>
+
+<!-- Dialog Actions -->
+<mat-dialog-actions align="end">
+  <button mat-button color="warn" type="button" (click)="onCancel()" class="cancel-btn">
+    Cancel
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="submit"
+    (click)="onSubmit()"
+    [disabled]="jobForm.invalid"
+    class="submit-btn"
+  >
+    {{ submitButtonText }}
+  </button>
+</mat-dialog-actions>

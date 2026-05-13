@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-03-06T20:04:27.800Z",
+  "totalFiles": 8,
+  "filesModified": 8,
+  "totalReplacements": 36,
+  "results": [
+    {
+      "file": "src/app/features/field-resource-management/state/reporting/reporting.actions.spec.ts",
+      "status": "fixed",
+      "replacements": 4
+    },
+    {
+      "file": "src/app/features/field-resource-management/state/reporting/reporting.effects.spec.ts",
+      "status": "fixed",
+      "replacements": 4
+    },
+    {
+      "file": "src/app/features/field-resource-management/state/reporting/reporting.reducer.spec.ts",
+      "status": "fixed",
+      "replacements": 4
+    },
+    {
+      "file": "src/app/features/field-resource-management/state/reporting/reporting.selectors.spec.ts",
+      "status": "fixed",
+      "replacements": 5
+    },
+    {
+      "file": "src/app/features/field-resource-management/state/jobs/job.actions.spec.ts",
+      "status": "fixed",
+      "replacements": 7
+    },
+    {
+      "file": "src/app/features/field-resource-management/state/jobs/job.effects.spec.ts",
+      "status": "fixed",
+      "replacements": 7
+    },
+    {
+      "file": "src/app/features/field-resource-management/state/jobs/job.reducer.spec.ts",
+      "status": "fixed",
+      "replacements": 4
+    },
+    {
+      "file": "src/app/features/field-resource-management/integration-tests/crew-workflows.e2e.spec.ts",
+      "status": "fixed",
+      "replacements": 1
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+<div class="crew-list-container">
+  <!-- Header -->
+  <div class="list-header">
+    <div class="header-title">
+      <mat-icon class="page-icon">groups</mat-icon>
+      <h2>Crews</h2>
+      <span class="page-subtitle">Manage crew assignments and composition</span>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button [matMenuTriggerFor]="exportMenu">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <mat-menu #exportMenu="matMenu">
+        <button mat-menu-item (click)="exportToCSV()">
+          <mat-icon>description</mat-icon>
+          <span>Export to CSV</span>
+        </button>
+        <button mat-menu-item (click)="exportToPDF()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <span>Export to PDF</span>
+        </button>
+      </mat-menu>
+      <button mat-raised-button class="btn-orange" (click)="openCrewDialog()">
+        <mat-icon>add</mat-icon>
+        Add Crew
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <mat-card class="filter-panel">
+    <mat-card-content>
+      <!-- Search Input -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search by name or ID</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Enter crew name or ID">
+        <mat-icon matPrefix>search</mat-icon>
+        <button
+          mat-icon-button
+          matSuffix
+          *ngIf="searchControl.value"
+          (click)="searchControl.setValue('')"
+          aria-label="Clear search"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Filter Expansion Panel -->
+      <mat-expansion-panel class="filter-expansion">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>filter_list</mat-icon>
+            <span>Filters</span>
+            <span class="filter-count" *ngIf="getActiveFilters().length > 0">
+              ({{ getActiveFilters().length }} active)
+            </span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <!-- Filters -->
+        <div class="filters-row">
+          <!-- Status Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select [formControl]="statusControl">
+              <mat-option value="">All Statuses</mat-option>
+              <mat-option *ngFor="let status of statusOptions" [value]="status">
+                {{ status }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Market Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Market</mat-label>
+            <mat-select [formControl]="marketControl">
+              <mat-option value="">All Markets</mat-option>
+              <mat-option *ngFor="let market of availableMarkets" [value]="market">
+                {{ market }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Company Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Company</mat-label>
+            <mat-select [formControl]="companyControl">
+              <mat-option value="">All Companies</mat-option>
+              <mat-option *ngFor="let company of availableCompanies" [value]="company">
+                {{ company }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Clear Filters Button -->
+          <button mat-stroked-button (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Active Filter Chips -->
+      <div class="active-filters" *ngIf="getActiveFilters().length > 0">
+        <span class="filter-label">Active Filters:</span>
+        <mat-chip-set aria-label="Active filters">
+          <mat-chip
+            *ngFor="let filter of getActiveFilters()"
+            [removable]="true"
+            (removed)="removeFilter(filter.key)"
+          >
+            <strong>{{ filter.label }}:</strong> {{ filter.value }}
+            <button matChipRemove><mat-icon>cancel</mat-icon></button>
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="(error$ | async) as error">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load crews</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" class="retry-button" (click)="retryLoad()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Card View -->
+  <div class="crew-cards" *ngIf="!(loading$ | async) && !(error$ | async)">
+    <div
+      class="crew-card"
+      *ngFor="let crew of dataSource.data"
+      (click)="viewCrew(crew)"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="viewCrew(crew)">
+      <div class="crew-card-header">
+        <span class="crew-card-title">{{ crew.name }}</span>
+        <span class="status-badge" [ngClass]="getStatusBadgeClass(crew.status)">{{ crew.status }}</span>
+      </div>
+      <div class="crew-card-body">
+        <div class="crew-card-row">
+          <span class="crew-card-label">Lead</span>
+          <span class="crew-card-value">{{ getTechnicianName(crew.leadTechnicianId) }}</span>
+        </div>
+        <div class="crew-card-row">
+          <span class="crew-card-label">Members</span>
+          <span class="crew-card-value">{{ getMemberCount(crew) }}</span>
+        </div>
+        <div class="crew-card-row">
+          <span class="crew-card-label">Market</span>
+          <span class="crew-card-value">{{ crew.market }}</span>
+        </div>
+        <div class="crew-card-row">
+          <span class="crew-card-label">Company</span>
+          <span class="crew-card-value">{{ crew.company }}</span>
+        </div>
+      </div>
+      <div class="crew-card-actions">
+        <button mat-icon-button [routerLink]="['./', crew.id]" (click)="$event.stopPropagation()" aria-label="View">
+          <mat-icon>visibility</mat-icon>
+        </button>
+        <button mat-icon-button (click)="openCrewDialog(crew.id); $event.stopPropagation()" aria-label="Edit">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="deleteCrew(crew); $event.stopPropagation()" aria-label="Delete" class="delete-action">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="dataSource.data.length === 0">
+      <mat-icon>groups_off</mat-icon>
+      <h3>No crews found</h3>
+      <p>Try adjusting your search or filters</p>
+    </div>
+
+    <mat-paginator
+      [length]="(crews$ | async)?.length || 0"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageIndex]="pageIndex"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+</div>

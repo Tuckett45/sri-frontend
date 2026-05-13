@@ -1,7 +1,11 @@
 import { Component, OnDestroy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { User } from 'src/app/models/user.model';
 import { FeatureFlagService } from '../../services/feature-flag.service';
+import { UserRole } from '../../models/role.enum';
 
 interface NavLink {
   label: string;
@@ -32,6 +36,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.authService.isClient() || this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM()
     },
     {
+      label: 'Phase Dashboard',
+      route: '/admin-dashboard/overview',
+      shouldShow: () => this.authService.isAdmin()
+    },
+    {
       label: 'Deployments',
       route: '/deployments',
       shouldShow: () => this.authService.isAdmin()
@@ -39,12 +48,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
     {
       label: 'Prelim Punch List',
       route: '/preliminary-punch-list',
-      shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM()
+      shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM() || this.authService.isEngineeringFieldSupport() || this.authService.isMaterialsManager()
     },
     {
       label: 'Street Sheet',
       route: '/street-sheet',
-      shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isTemp()
+      shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isTemp() || this.authService.isEngineeringFieldSupport() || this.authService.isMaterialsManager()
     },
     {
       label: 'OSP Coordinator',
@@ -62,14 +71,43 @@ export class NavbarComponent implements OnInit, OnDestroy {
     //   shouldShow: () => this.authService.isAdmin() || this.authService.isClient()
     // },
     {
+      label: 'Construction',
+      route: '/construction',
+      shouldShow: () => true
+    },
+    {
       label: 'Expenses',
       route: '/expenses',
-      shouldShow: () => this.authService.isAdmin() || this.authService.isHR()
+      shouldShow: () => this.authService.isAdmin() || this.authService.isHR() || this.authService.isPayroll()
     },
     {
       label: 'Notifications',
       route: '/notifications',
       shouldShow: () => this.featureFlags.flagEnabled('notifications')()
+    },
+    {
+      label: 'Agents',
+      route: '/atlas',
+      shouldShow: () => this.featureFlags.flagEnabled('atlas')()
+    },
+    {
+      label: 'Field Resources',
+      route: '/field-resource-management',
+      shouldShow: () => {
+        return this.authService.isUserInRole([
+          UserRole.User,
+          UserRole.Technician,
+          UserRole.CM,
+          UserRole.Admin,
+          UserRole.HR,
+          UserRole.Payroll,
+          UserRole.OSPCoordinator,
+          UserRole.Controller,
+          UserRole.EngineeringFieldSupport,
+          UserRole.MaterialsManager,
+          UserRole.PM
+        ]);
+      }
     },
     {
       label: 'Approvals',
@@ -85,20 +123,33 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ];
 
   private isMobileView = false;
+  private currentUrl = '';
+  private routerSub!: Subscription;
 
   constructor(
     public authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadUserProfile();
     this.updateViewMode();
+    this.currentUrl = this.router.url;
+    this.routerSub = this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+    ).subscribe(event => {
+      this.currentUrl = event.urlAfterRedirects || event.url;
+      this.cdr.detectChanges();
+    });
     window.addEventListener('resize', this.handleResize);
   }
 
   ngOnDestroy(): void {
     window.removeEventListener('resize', this.handleResize);
+    if (this.routerSub) {
+      this.routerSub.unsubscribe();
+    }
   }
 
   get primaryLinks(): NavLink[] {
@@ -111,7 +162,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
     const remainingSlots = Math.max(this.maxInlineLinks - pinned.length, 0);
     const nonPinned = visible.filter(link => !this.pinnedRoutes.includes(link.route));
 
-    return [...pinned, ...nonPinned.slice(0, remainingSlots)];
+    let primary = [...pinned, ...nonPinned.slice(0, remainingSlots)];
+
+    // If the active route is not in the primary set, swap it into the last non-pinned slot
+    const activeLink = visible.find(link => this.isLinkActive(link));
+    if (activeLink && !primary.includes(activeLink) && !this.pinnedRoutes.includes(activeLink.route)) {
+      const lastNonPinnedIndex = this.findLastNonPinnedIndex(primary);
+      if (lastNonPinnedIndex >= 0) {
+        primary[lastNonPinnedIndex] = activeLink;
+      }
+    }
+
+    return primary;
   }
 
   get extraLinks(): NavLink[] {
@@ -125,6 +187,30 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   private get visibleLinks(): NavLink[] {
     return this.navLinksConfig.filter(link => link.shouldShow());
+  }
+
+  /**
+   * Checks if a nav link matches the current URL.
+   * Uses startsWith for partial matching (most links) or exact match when configured.
+   */
+  private isLinkActive(link: NavLink): boolean {
+    if (link.exact) {
+      return this.currentUrl === link.route;
+    }
+    return this.currentUrl.startsWith(link.route);
+  }
+
+  /**
+   * Finds the index of the last non-pinned link in the primary array.
+   * This is the slot that gets swapped out for the active link.
+   */
+  private findLastNonPinnedIndex(primary: NavLink[]): number {
+    for (let i = primary.length - 1; i >= 0; i--) {
+      if (!this.pinnedRoutes.includes(primary[i].route)) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   getMatchOptions(link: NavLink) {

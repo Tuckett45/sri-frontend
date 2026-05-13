@@ -1,0 +1,106 @@
+<h2 mat-dialog-title>Assign Job</h2>
+
+<mat-dialog-content>
+  <p class="dialog-description">
+    Assign a technician and/or crew to <strong>{{ data.jobTitle }}</strong>.
+  </p>
+
+  <!-- Currently Assigned -->
+  <div class="current-assignment" *ngIf="currentlyAssigned.length > 0 || currentCrew">
+    <div class="section-label muted">
+      <mat-icon>badge</mat-icon>
+      <span>Currently Assigned</span>
+    </div>
+    <div class="assigned-chips">
+      <span class="assigned-chip tech-chip" *ngFor="let tech of currentlyAssigned">
+        <mat-icon class="chip-icon">person</mat-icon>
+        {{ tech.firstName }} {{ tech.lastName }}
+      </span>
+      <span class="assigned-chip crew-chip" *ngIf="currentCrew">
+        <mat-icon class="chip-icon">groups</mat-icon>
+        {{ currentCrew.name }}
+      </span>
+    </div>
+    <mat-divider class="section-divider"></mat-divider>
+  </div>
+
+  <form [formGroup]="form">
+    <!-- Technician -->
+    <div class="section-label">
+      <mat-icon>person_add</mat-icon>
+      <span>Technician</span>
+    </div>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Select Technician</mat-label>
+      <mat-select formControlName="technicianId">
+        <mat-option>None</mat-option>
+        <mat-option *ngFor="let tech of technicians" [value]="tech.id">
+          {{ getTechnicianDisplayName(tech) }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-card class="selection-details" *ngIf="selectedTechnician">
+      <mat-card-content>
+        <div class="detail-row">
+          <span class="label">Name:</span>
+          <span class="value">{{ selectedTechnician.firstName }} {{ selectedTechnician.lastName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Role:</span>
+          <span class="value">{{ selectedTechnician.role }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Region:</span>
+          <span class="value">{{ selectedTechnician.region }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-divider class="section-divider"></mat-divider>
+
+    <!-- Crew -->
+    <div class="section-label">
+      <mat-icon>groups</mat-icon>
+      <span>Crew</span>
+    </div>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Select Crew</mat-label>
+      <mat-select formControlName="crewId">
+        <mat-option>None</mat-option>
+        <mat-option *ngFor="let crew of crews" [value]="crew.id">
+          {{ crew.name }} ({{ crew.memberIds?.length || 0 }} members)
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-card class="selection-details" *ngIf="selectedCrew">
+      <mat-card-content>
+        <div class="detail-row">
+          <span class="label">Name:</span>
+          <span class="value">{{ selectedCrew.name }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Members:</span>
+          <span class="value">{{ selectedCrew.memberIds?.length || 0 }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Market:</span>
+          <span class="value">{{ selectedCrew.market }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </form>
+
+  <div class="validation-hint" *ngIf="!isValid">
+    <mat-icon>info</mat-icon>
+    <span>Select at least a technician or a crew to assign.</span>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button class="cancel-btn" (click)="onCancel()">Cancel</button>
+  <button mat-raised-button class="assign-btn" (click)="onConfirm()" [disabled]="!isValid">
+    Assign
+  </button>
+</mat-dialog-actions>

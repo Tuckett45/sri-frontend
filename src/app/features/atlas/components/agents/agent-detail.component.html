@@ -1,0 +1,337 @@
+<div class="agent-detail-container">
+  <!-- Header -->
+  <div class="detail-header">
+    <div class="header-left">
+      <button 
+        pButton 
+        icon="pi pi-arrow-left" 
+        class="p-button-text"
+        (click)="onBack()"
+        pTooltip="Back to Agents">
+      </button>
+      <h2>{{ agent?.agentName || agent?.agentId || 'Agent Details' }}</h2>
+    </div>
+    <div class="header-actions">
+      <button 
+        pButton 
+        icon="pi pi-refresh" 
+        label="Refresh" 
+        class="p-button-outlined"
+        (click)="onRefresh()"
+        [disabled]="loading"
+        pTooltip="Refresh agent data">
+      </button>
+      <button 
+        pButton 
+        icon="pi pi-play" 
+        label="Execute Agent" 
+        class="p-button-success"
+        (click)="onExecuteAgent()"
+        [disabled]="!isAgentActive() || loading"
+        pTooltip="Execute this agent">
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+    <p>Loading agent details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <p-message 
+      severity="error" 
+      [text]="error">
+    </p-message>
+    <button 
+      pButton 
+      icon="pi pi-refresh" 
+      label="Retry" 
+      class="p-button-outlined"
+      (click)="onRetry()">
+    </button>
+  </div>
+
+  <!-- Agent Details -->
+  <div *ngIf="!loading && !error && agent" class="detail-content">
+    <!-- Overview Card -->
+    <p-card header="Agent Overview" styleClass="overview-card">
+      <div class="overview-grid">
+        <div class="overview-item">
+          <label>Agent ID</label>
+          <span class="value">{{ agent.agentId }}</span>
+        </div>
+
+        <div class="overview-item">
+          <label>Version</label>
+          <span class="value version-badge">{{ agent.version || 'N/A' }}</span>
+        </div>
+
+        <div class="overview-item">
+          <label>Domain</label>
+          <p-tag 
+            [value]="agent.domain" 
+            [severity]="getDomainSeverity(agent.domain)">
+          </p-tag>
+        </div>
+
+        <div class="overview-item">
+          <label>Type</label>
+          <p-tag 
+            [value]="agent.type" 
+            [severity]="getTypeSeverity(agent.type)">
+          </p-tag>
+        </div>
+
+        <div class="overview-item">
+          <label>Status</label>
+          <p-tag 
+            [value]="agent.isActive ? 'Active' : 'Inactive'" 
+            [severity]="agent.isActive ? 'success' : 'secondary'">
+          </p-tag>
+        </div>
+
+        <div class="overview-item">
+          <label>Health</label>
+          <p-tag 
+            *ngIf="healthStatus"
+            [value]="healthStatus.state" 
+            [severity]="getHealthSeverity(healthStatus.state)"
+            [icon]="getHealthIcon(healthStatus.state)">
+          </p-tag>
+          <span *ngIf="!healthStatus && !loadingHealth" class="text-muted">Unknown</span>
+          <i *ngIf="loadingHealth" class="pi pi-spin pi-spinner"></i>
+        </div>
+
+        <div class="overview-item full-width" *ngIf="agent.description">
+          <label>Description</label>
+          <p class="description">{{ agent.description }}</p>
+        </div>
+
+        <div class="overview-item">
+          <label>Registered</label>
+          <span class="value">{{ formatDate(agent.registeredAt) }}</span>
+        </div>
+
+        <div class="overview-item" *ngIf="agent.registeredBy">
+          <label>Registered By</label>
+          <span class="value">{{ agent.registeredBy }}</span>
+        </div>
+
+        <div class="overview-item full-width" *ngIf="agent.capabilities && agent.capabilities.length > 0">
+          <label>Capabilities</label>
+          <div class="capabilities-list">
+            <p-tag 
+              *ngFor="let capability of agent.capabilities" 
+              [value]="capability"
+              severity="info"
+              styleClass="capability-tag">
+            </p-tag>
+          </div>
+        </div>
+
+        <div class="overview-item" *ngIf="versions.length > 0">
+          <label>Available Versions</label>
+          <div class="versions-list">
+            <span *ngFor="let version of versions" class="version-badge">{{ version }}</span>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Tabs for Configuration and Performance -->
+    <p-tabView [(activeIndex)]="activeTabIndex" styleClass="detail-tabs">
+      <!-- Configuration Tab -->
+      <p-tabPanel header="Configuration">
+        <div *ngIf="loadingConfiguration" class="tab-loading">
+          <p-progressSpinner [style]="{ width: '50px', height: '50px' }"></p-progressSpinner>
+          <p>Loading configuration...</p>
+        </div>
+
+        <div *ngIf="!loadingConfiguration && configuration" class="configuration-content">
+          <div class="config-section">
+            <h3>Configuration Details</h3>
+            <div class="config-grid">
+              <div class="config-item">
+                <label>Version</label>
+                <span class="value">{{ configuration.version || 'N/A' }}</span>
+              </div>
+              <div class="config-item">
+                <label>Last Updated</label>
+                <span class="value">{{ formatDate(configuration.lastUpdated) }}</span>
+              </div>
+              <div class="config-item" *ngIf="configuration.updatedBy">
+                <label>Updated By</label>
+                <span class="value">{{ configuration.updatedBy }}</span>
+              </div>
+            </div>
+          </div>
+
+          <p-divider></p-divider>
+
+          <div class="config-section" *ngIf="getConfigurationParameters().length > 0">
+            <h3>Parameters</h3>
+            <p-table 
+              [value]="getConfigurationParameters()"
+              styleClass="p-datatable-sm"
+              responsiveLayout="scroll">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Parameter</th>
+                  <th>Value</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-param>
+                <tr>
+                  <td><strong>{{ param.key }}</strong></td>
+                  <td><pre class="json-value">{{ formatJsonValue(param.value) }}</pre></td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <div class="config-section" *ngIf="configuration.thresholds">
+            <h3>Thresholds</h3>
+            <pre class="json-display">{{ formatJsonValue(configuration.thresholds) }}</pre>
+          </div>
+
+          <div class="config-section" *ngIf="configuration.featureFlags">
+            <h3>Feature Flags</h3>
+            <pre class="json-display">{{ formatJsonValue(configuration.featureFlags) }}</pre>
+          </div>
+        </div>
+
+        <div *ngIf="!loadingConfiguration && !configuration" class="empty-state">
+          <i class="pi pi-info-circle"></i>
+          <p>No configuration available</p>
+        </div>
+      </p-tabPanel>
+
+      <!-- Performance Tab -->
+      <p-tabPanel header="Performance Metrics">
+        <div *ngIf="loadingPerformance" class="tab-loading">
+          <p-progressSpinner [style]="{ width: '50px', height: '50px' }"></p-progressSpinner>
+          <p>Loading performance metrics...</p>
+        </div>
+
+        <div *ngIf="!loadingPerformance && performanceReport" class="performance-content">
+          <div class="metrics-grid">
+            <p-card header="Execution Statistics" styleClass="metric-card">
+              <div class="metric-item">
+                <label>Total Executions</label>
+                <span class="metric-value">{{ performanceReport.totalExecutions }}</span>
+              </div>
+              <div class="metric-item">
+                <label>Successful</label>
+                <span class="metric-value success">{{ performanceReport.successfulExecutions }}</span>
+              </div>
+              <div class="metric-item">
+                <label>Failed</label>
+                <span class="metric-value danger">{{ performanceReport.failedExecutions }}</span>
+              </div>
+              <div class="metric-item">
+                <label>Success Rate</label>
+                <span class="metric-value">{{ formatPercentage(performanceReport.successRate) }}</span>
+              </div>
+            </p-card>
+
+            <p-card header="Performance Metrics" styleClass="metric-card">
+              <div class="metric-item">
+                <label>Average Confidence</label>
+                <span class="metric-value">{{ formatPercentage(performanceReport.averageConfidenceScore * 100) }}</span>
+              </div>
+              <div class="metric-item">
+                <label>Average Duration</label>
+                <span class="metric-value">{{ performanceReport.averageDuration }}</span>
+              </div>
+              <div class="metric-item">
+                <label>P95 Duration</label>
+                <span class="metric-value">{{ performanceReport.p95Duration }}</span>
+              </div>
+              <div class="metric-item">
+                <label>P99 Duration</label>
+                <span class="metric-value">{{ performanceReport.p99Duration }}</span>
+              </div>
+            </p-card>
+
+            <p-card header="Report Period" styleClass="metric-card">
+              <div class="metric-item">
+                <label>Start Date</label>
+                <span class="metric-value">{{ formatDate(performanceReport.startDate) }}</span>
+              </div>
+              <div class="metric-item">
+                <label>End Date</label>
+                <span class="metric-value">{{ formatDate(performanceReport.endDate) }}</span>
+              </div>
+            </p-card>
+          </div>
+        </div>
+
+        <div *ngIf="!loadingPerformance && !performanceReport" class="empty-state">
+          <i class="pi pi-chart-line"></i>
+          <p>No performance data available</p>
+        </div>
+      </p-tabPanel>
+
+      <!-- Health Status Tab -->
+      <p-tabPanel header="Health Status">
+        <div *ngIf="loadingHealth" class="tab-loading">
+          <p-progressSpinner [style]="{ width: '50px', height: '50px' }"></p-progressSpinner>
+          <p>Loading health status...</p>
+        </div>
+
+        <div *ngIf="!loadingHealth && healthStatus" class="health-content">
+          <div class="health-overview">
+            <div class="health-status-badge">
+              <p-tag 
+                [value]="healthStatus.state" 
+                [severity]="getHealthSeverity(healthStatus.state)"
+                [icon]="getHealthIcon(healthStatus.state)"
+                styleClass="large-tag">
+              </p-tag>
+            </div>
+
+            <div class="health-metrics">
+              <div class="health-metric">
+                <label>Success Rate</label>
+                <span class="value">{{ formatSuccessRate(healthStatus.successRate) }}</span>
+              </div>
+              <div class="health-metric">
+                <label>Average Response Time</label>
+                <span class="value">{{ healthStatus.averageResponseTime }}</span>
+              </div>
+              <div class="health-metric">
+                <label>Last Execution</label>
+                <span class="value">{{ formatDate(healthStatus.lastExecutionTime) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <p-divider></p-divider>
+
+          <div *ngIf="healthStatus.issues && healthStatus.issues.length > 0" class="issues-section">
+            <h3>Current Issues</h3>
+            <p-message 
+              *ngFor="let issue of healthStatus.issues"
+              severity="warn" 
+              [text]="issue"
+              styleClass="issue-message">
+            </p-message>
+          </div>
+
+          <div *ngIf="!healthStatus.issues || healthStatus.issues.length === 0" class="no-issues">
+            <i class="pi pi-check-circle"></i>
+            <p>No issues detected</p>
+          </div>
+        </div>
+
+        <div *ngIf="!loadingHealth && !healthStatus" class="empty-state">
+          <i class="pi pi-heart"></i>
+          <p>No health status available</p>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>

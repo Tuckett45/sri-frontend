@@ -1,0 +1,154 @@
+<div class="distance-list">
+  <!-- Loading State -->
+  <div *ngIf="loading$ | async" class="distance-loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Calculating distances...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error$ | async as error" class="distance-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-button color="primary" (click)="refreshDistances()">
+      <mat-icon>refresh</mat-icon>
+      Retry
+    </button>
+  </div>
+
+  <ng-container *ngIf="!(loading$ | async) && !(error$ | async)">
+    <ng-container *ngIf="techniciansWithDistance$ | async as technicians">
+      <ng-container *ngIf="perDiemConfig$ | async as perDiemConfig">
+        <!-- Header with refresh button -->
+        <div class="list-header">
+          <h3>
+            <mat-icon>directions_car</mat-icon>
+            Technicians by Distance
+            <span class="count-badge">{{ technicians.length }}</span>
+          </h3>
+          <button mat-icon-button (click)="refreshDistances()" matTooltip="Refresh distances">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
+
+        <!-- Filter indicator -->
+        <div *ngIf="travelRequired" class="filter-indicator">
+          <mat-icon>filter_list</mat-icon>
+          <span>Showing only technicians willing to travel</span>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="technicians.length === 0" class="empty-state">
+          <mat-icon>person_search</mat-icon>
+          <p *ngIf="travelRequired">No technicians willing to travel found</p>
+          <p *ngIf="!travelRequired">No technicians with geocoded addresses found</p>
+        </div>
+
+        <!-- Distance Table -->
+        <div *ngIf="technicians.length > 0" class="table-container">
+          <table mat-table [dataSource]="technicians" [trackBy]="trackByTechnicianId">
+            <!-- Rank Column -->
+            <ng-container matColumnDef="rank">
+              <th mat-header-cell *matHeaderCellDef>#</th>
+              <td mat-cell *matCellDef="let tech; let i = index">
+                <span class="rank-badge" [class.recommended]="isRecommended(tech, i)">
+                  {{ i + 1 }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Technician Column -->
+            <ng-container matColumnDef="technician">
+              <th mat-header-cell *matHeaderCellDef>Technician</th>
+              <td mat-cell *matCellDef="let tech; let i = index">
+                <div class="technician-info">
+                  <span class="technician-name">{{ tech.technicianName }}</span>
+                  <span *ngIf="isRecommended(tech, i)" class="recommended-badge">
+                    <mat-icon>star</mat-icon>
+                    Recommended
+                  </span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Distance Column -->
+            <ng-container matColumnDef="distance">
+              <th mat-header-cell *matHeaderCellDef>Distance</th>
+              <td mat-cell *matCellDef="let tech">
+                <span class="distance-value">{{ formatDistance(tech.distanceMiles) }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Driving Time Column -->
+            <ng-container matColumnDef="drivingTime">
+              <th mat-header-cell *matHeaderCellDef>Driving Time</th>
+              <td mat-cell *matCellDef="let tech">
+                <span class="driving-time">{{ formatDrivingTime(tech.drivingTimeMinutes) }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Travel Status Column -->
+            <ng-container matColumnDef="travelStatus">
+              <th mat-header-cell *matHeaderCellDef>Travel Status</th>
+              <td mat-cell *matCellDef="let tech">
+                <span class="travel-status" [ngClass]="getTravelStatusClass(tech)">
+                  <mat-icon>{{ tech.willingToTravel ? 'check_circle' : 'cancel' }}</mat-icon>
+                  {{ getTravelStatusLabel(tech) }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Per Diem Column -->
+            <ng-container matColumnDef="perDiem">
+              <th mat-header-cell *matHeaderCellDef>Per Diem</th>
+              <td mat-cell *matCellDef="let tech">
+                <ng-container *ngIf="tech.perDiemEligible; else notEligible">
+                  <span class="per-diem-amount">
+                    {{ getPerDiemAmount(tech, perDiemConfig) | currency }}
+                  </span>
+                  <span class="per-diem-label">eligible</span>
+                </ng-container>
+                <ng-template #notEligible>
+                  <span class="per-diem-not-eligible">Not eligible</span>
+                </ng-template>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let tech">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="selectTechnician(tech)"
+                  [disabled]="travelRequired && !tech.willingToTravel">
+                  Select
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row 
+                *matRowDef="let row; columns: displayedColumns; let i = index"
+                [ngClass]="getRowClass(row, i)">
+            </tr>
+          </table>
+        </div>
+
+        <!-- Per Diem Info -->
+        <div class="per-diem-info">
+          <mat-icon>info</mat-icon>
+          <span>
+            Per diem eligibility: {{ perDiemConfig.minimumDistanceMiles }} miles minimum
+            <ng-container *ngIf="perDiemConfig.flatRateAmount !== null">
+              ({{ perDiemConfig.flatRateAmount | currency }} flat rate)
+            </ng-container>
+            <ng-container *ngIf="perDiemConfig.flatRateAmount === null">
+              ({{ perDiemConfig.ratePerMile | currency }}/mile)
+            </ng-container>
+          </span>
+        </div>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</div>

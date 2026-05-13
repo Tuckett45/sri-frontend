@@ -124,14 +124,17 @@ export class UserNotificationsComponent implements OnInit {
 
     const userId = this.getCurrentUserId();
     if (!userId) {
-      console.warn('Unable to determine user id for notifications.');
+      console.warn('⚠️ Unable to determine user id for notifications.');
       return;
     }
 
     try {
       await this.signalRService.connect(userId);
+      console.log('✅ SignalR notifications initialized');
     } catch (error) {
-      console.error('Failed to connect to deployment notification hub:', error);
+      console.warn('⚠️ SignalR connection failed - continuing without real-time notifications:', error);
+      // Don't show error to user - fail silently
+      // The app will continue to work, just without real-time push notifications
     }
   }
 

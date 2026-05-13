@@ -1,0 +1,133 @@
+<div class="add-task-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Add New Task</h2>
+    <button mat-icon-button (click)="onCancel()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <form [formGroup]="taskForm" class="task-form">
+      <!-- Job Info -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Client</mat-label>
+          <input matInput formControlName="client" placeholder="Client name">
+          <mat-error *ngIf="taskForm.get('client')?.hasError('required')">Client is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Site Name</mat-label>
+          <input matInput formControlName="siteName" placeholder="Site name">
+          <mat-error *ngIf="taskForm.get('siteName')?.hasError('required')">Site name is required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Job Type</mat-label>
+          <mat-select formControlName="jobType">
+            <mat-option *ngFor="let type of jobTypes" [value]="type">{{ type }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Priority</mat-label>
+          <mat-select formControlName="priority">
+            <mat-option *ngFor="let p of priorities" [value]="p">{{ p }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- Schedule -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Start Date/Time</mat-label>
+          <input matInput type="datetime-local" formControlName="scheduledStartDate">
+          <mat-error *ngIf="taskForm.get('scheduledStartDate')?.hasError('required')">Start date is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>End Date/Time</mat-label>
+          <input matInput type="datetime-local" formControlName="scheduledEndDate">
+          <mat-error *ngIf="taskForm.get('scheduledEndDate')?.hasError('required')">End date is required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="third-width">
+          <mat-label>Estimated Hours</mat-label>
+          <input matInput type="number" formControlName="estimatedLaborHours" min="0.5" step="0.5">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="third-width">
+          <mat-label>Crew Size</mat-label>
+          <input matInput type="number" formControlName="requiredCrewSize" min="1">
+        </mat-form-field>
+      </div>
+
+      <!-- Site Address -->
+      <div class="section-label">Site Address (Optional)</div>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Street</mat-label>
+          <input matInput formControlName="siteStreet">
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="third-width">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="siteCity">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="third-width">
+          <mat-label>State</mat-label>
+          <input matInput formControlName="siteState">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="third-width">
+          <mat-label>ZIP</mat-label>
+          <input matInput formControlName="siteZip">
+        </mat-form-field>
+      </div>
+
+      <!-- Description -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Scope Description</mat-label>
+        <textarea matInput formControlName="scopeDescription" rows="2" placeholder="Brief description of the work"></textarea>
+      </mat-form-field>
+
+      <!-- Assignment -->
+      <div class="section-label">Assign To (Optional)</div>
+      <mat-radio-group formControlName="assignTo" class="assign-radio-group">
+        <mat-radio-button value="none">Unassigned</mat-radio-button>
+        <mat-radio-button value="technician">Technician</mat-radio-button>
+        <mat-radio-button value="crew">Crew</mat-radio-button>
+      </mat-radio-group>
+
+      <mat-form-field appearance="outline" class="full-width" *ngIf="taskForm.get('assignTo')?.value === 'technician'">
+        <mat-label>Select Technician</mat-label>
+        <mat-select formControlName="technicianId">
+          <mat-option *ngFor="let tech of technicians" [value]="tech.id">
+            {{ tech.firstName }} {{ tech.lastName }} ({{ tech.role }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width" *ngIf="taskForm.get('assignTo')?.value === 'crew'">
+        <mat-label>Select Crew</mat-label>
+        <mat-select formControlName="crewId">
+          <mat-option *ngFor="let crew of crews" [value]="crew.id">
+            {{ crew.name }} ({{ crew.memberIds.length + 1 }} members)
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button color="warn" (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!taskForm.valid">
+      <mat-icon>add</mat-icon>
+      Create Task
+    </button>
+  </mat-dialog-actions>
+</div>

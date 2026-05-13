@@ -1,0 +1,7 @@
+# Exception Components Directory
+
+Components to be implemented:
+- exception-list/ - Exception list for deployment
+- exception-request/ - Exception request form
+- exception-detail/ - Exception detail view
+- exception-validation/ - Validation result display

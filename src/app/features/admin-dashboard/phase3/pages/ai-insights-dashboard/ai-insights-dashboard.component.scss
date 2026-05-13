@@ -1,0 +1,175 @@
+.ai-insights-dashboard {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+
+  .dashboard-header {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #666;
+      margin: 0;
+    }
+  }
+
+  .context-selector {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    label {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.95rem;
+    }
+
+    .context-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .context-button {
+      padding: 0.5rem 1rem;
+      border: 2px solid #dee2e6;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #495057;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: #0066cc;
+        color: #0066cc;
+        background: #f0f7ff;
+      }
+
+      &.active {
+        border-color: #0066cc;
+        background: #0066cc;
+        color: white;
+      }
+    }
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+
+    @media (max-width: 1200px) {
+      grid-template-columns: 1fr;
+    }
+
+    section {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+
+      .section-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+
+        h2 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #1a1a1a;
+          margin: 0;
+        }
+
+        p {
+          font-size: 0.9rem;
+          color: #666;
+          margin: 0.25rem 0 0 0;
+          flex-basis: 100%;
+        }
+
+        .display-mode-selector {
+          display: flex;
+          gap: 0.25rem;
+          background: #f8f9fa;
+          padding: 0.25rem;
+          border-radius: 6px;
+
+          .mode-button {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.2s ease;
+
+            .icon {
+              font-size: 1.2rem;
+            }
+
+            &:hover {
+              background: #e9ecef;
+              color: #333;
+            }
+
+            &.active {
+              background: white;
+              color: #0066cc;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+          }
+        }
+      }
+    }
+
+    .advisory-section {
+      // Specific styles for advisory panel section
+    }
+
+    .insights-section {
+      // Specific styles for insights section
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .ai-insights-dashboard {
+    padding: 1rem;
+
+    .dashboard-header h1 {
+      font-size: 1.5rem;
+    }
+
+    .context-selector {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dashboard-grid section {
+      padding: 1rem;
+
+      .section-header h2 {
+        font-size: 1.25rem;
+      }
+    }
+  }
+}

@@ -1,0 +1,86 @@
+<div class="issue-list-container" *ngIf="{ issues: issues$ | async, loading: loading$ | async, error: error$ | async, projects: projects$ | async } as vm">
+
+  <!-- Header -->
+  <div class="list-header">
+    <h2>Issues</h2>
+    <div class="header-actions">
+      <button class="btn-export" (click)="vm.issues && exportIssues(vm.issues)" [disabled]="!vm.issues || vm.issues.length === 0">
+        <i class="pi pi-download"></i> Export CSV
+      </button>
+      <a *ngIf="isAdmin" routerLink="create" class="btn-create">
+        <i class="pi pi-plus"></i> Create Issue
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label for="filterSeverity">Severity</label>
+      <select id="filterSeverity" [(ngModel)]="filterSeverity" (ngModelChange)="onFilterChange()">
+        <option value="">All</option>
+        <option *ngFor="let s of severities" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterStatus">Status</label>
+      <select id="filterStatus" [(ngModel)]="filterStatus" (ngModelChange)="onFilterChange()">
+        <option value="">All</option>
+        <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterProject">Project</label>
+      <select id="filterProject" [(ngModel)]="filterProjectId" (ngModelChange)="onFilterChange()">
+        <option value="">All</option>
+        <option *ngFor="let p of vm.projects" [value]="p.id">{{ p.name }}</option>
+      </select>
+    </div>
+    <button class="btn-clear-filters" (click)="clearFilters()">Clear Filters</button>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="vm.error" class="error-banner" role="alert">{{ vm.error }}</div>
+
+  <!-- Loading -->
+  <div *ngIf="vm.loading" class="loading-indicator">Loading issues…</div>
+
+  <!-- Empty State -->
+  <div *ngIf="!vm.loading && vm.issues && vm.issues.length === 0" class="empty-state">
+    No issues found matching the current filters.
+  </div>
+
+  <!-- Issues Table -->
+  <table *ngIf="!vm.loading && vm.issues && vm.issues.length > 0" class="issues-table" role="grid" aria-label="Issues list">
+    <thead>
+      <tr>
+        <th>Project</th>
+        <th>Description</th>
+        <th class="sortable" (click)="toggleSort('severity')" role="columnheader" [attr.aria-sort]="sortField === 'severity' ? (sortAscending ? 'ascending' : 'descending') : 'none'">
+          Severity <i [class]="getSortIcon('severity')"></i>
+        </th>
+        <th class="sortable" (click)="toggleSort('status')" role="columnheader" [attr.aria-sort]="sortField === 'status' ? (sortAscending ? 'ascending' : 'descending') : 'none'">
+          Status <i [class]="getSortIcon('status')"></i>
+        </th>
+        <th>Assigned</th>
+        <th class="sortable" (click)="toggleSort('createdDate')" role="columnheader" [attr.aria-sort]="sortField === 'createdDate' ? (sortAscending ? 'ascending' : 'descending') : 'none'">
+          Created <i [class]="getSortIcon('createdDate')"></i>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let issue of vm.issues">
+        <td>{{ getProjectName(issue.projectId) }}</td>
+        <td>
+          <a [routerLink]="[issue.id]" class="issue-link">{{ issue.description }}</a>
+        </td>
+        <td>
+          <span class="severity-badge" [ngClass]="getSeverityClass(issue.severity)">{{ issue.severity }}</span>
+        </td>
+        <td>{{ issue.status }}</td>
+        <td>{{ issue.assignedUserId || '—' }}</td>
+        <td>{{ issue.createdDate | date:'mediumDate' }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

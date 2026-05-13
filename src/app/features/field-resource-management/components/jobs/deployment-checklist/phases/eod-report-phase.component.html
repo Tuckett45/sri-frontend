@@ -1,0 +1,155 @@
+<div class="eod-report-phase">
+
+  <!-- ===================================================================== -->
+  <!-- Header with Add Button -->
+  <!-- ===================================================================== -->
+  <div class="phase-header">
+    <h4 class="section-heading">End of Day Reports</h4>
+    <button mat-raised-button color="primary"
+            *ngIf="canSubmitEOD && !showNewEntryForm"
+            (click)="onAddEntry()"
+            type="button">
+      <mat-icon>add</mat-icon>
+      Add EOD Report
+    </button>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- New Entry Form -->
+  <!-- ===================================================================== -->
+  <div class="new-entry-container" *ngIf="showNewEntryForm">
+    <h4 class="section-heading">New EOD Report</h4>
+    <app-eod-entry-form
+      [jobId]="jobId"
+      (save)="onEntrySaved($event)"
+      (cancel)="onEntryFormCancel()"
+      (formDirty)="onEntryFormDirty($event)">
+    </app-eod-entry-form>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- Empty State -->
+  <!-- ===================================================================== -->
+  <div class="empty-state" *ngIf="sortedEntries.length === 0 && !showNewEntryForm">
+    <mat-icon class="empty-icon">assignment</mat-icon>
+    <p class="empty-message">No End of Day reports have been submitted yet.</p>
+    <p class="empty-hint" *ngIf="canSubmitEOD">
+      Click "Add EOD Report" to create the first daily report.
+    </p>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- Existing Entries (Reverse Chronological) -->
+  <!-- ===================================================================== -->
+  <div class="entries-list" *ngIf="sortedEntries.length > 0">
+    <div class="entry-card" *ngFor="let entry of sortedEntries; trackBy: trackByEntryId">
+
+      <!-- Entry Header -->
+      <div class="entry-header">
+        <div class="entry-date">
+          <mat-icon>calendar_today</mat-icon>
+          <span>{{ formatDate(entry.date) }}</span>
+        </div>
+        <span class="entry-time">{{ formatTime(entry.timeIn) }} – {{ formatTime(entry.timeOut) }}</span>
+      </div>
+
+      <!-- Personnel -->
+      <div class="entry-section">
+        <div class="entry-detail">
+          <span class="detail-label">Personnel On-site:</span>
+          <span class="detail-value">{{ entry.personnelOnSite }}</span>
+        </div>
+        <div class="entry-detail">
+          <span class="detail-label">Technical Lead:</span>
+          <span class="detail-value">{{ entry.technicalLeadName }}</span>
+        </div>
+        <div class="entry-detail">
+          <span class="detail-label">Technicians:</span>
+          <span class="detail-value">{{ entry.technicianNames }}</span>
+        </div>
+      </div>
+
+      <!-- Customer Notification -->
+      <div class="entry-section">
+        <div class="entry-detail">
+          <span class="detail-label">Customer Notification:</span>
+          <span class="detail-value">{{ entry.customerNotificationName }} ({{ entry.customerNotificationMethod }})</span>
+        </div>
+      </div>
+
+      <!-- Daily Progress -->
+      <div class="entry-section">
+        <h5 class="subsection-heading">Daily Progress</h5>
+        <div class="progress-summary">
+          <div class="progress-item">
+            <span class="progress-label">Devices Racked</span>
+            <span class="progress-value">{{ entry.dailyProgress.devicesRacked }}%</span>
+          </div>
+          <div class="progress-item">
+            <span class="progress-label">Devices Powered</span>
+            <span class="progress-value">{{ entry.dailyProgress.devicesPowered }}%</span>
+          </div>
+          <div class="progress-item">
+            <span class="progress-label">Cabling Installed / Dressed</span>
+            <span class="progress-value">{{ entry.dailyProgress.cablingInstalledDressed }}%</span>
+          </div>
+          <div class="progress-item">
+            <span class="progress-label">Cables Tested</span>
+            <span class="progress-value">{{ entry.dailyProgress.cablesTested }}%</span>
+          </div>
+          <div class="progress-item">
+            <span class="progress-label">Labels Installed</span>
+            <span class="progress-value">{{ entry.dailyProgress.labelsInstalled }}%</span>
+          </div>
+          <div class="progress-item">
+            <span class="progress-label">Customer Validation</span>
+            <span class="progress-value">{{ entry.dailyProgress.customerValidation }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toggles -->
+      <div class="entry-section toggles-row">
+        <div class="toggle-display">
+          <mat-icon [class.toggle-yes]="entry.dailyPicturesProvided"
+                    [class.toggle-no]="!entry.dailyPicturesProvided">
+            {{ entry.dailyPicturesProvided ? 'check_circle' : 'cancel' }}
+          </mat-icon>
+          <span>Daily Pictures Provided</span>
+        </div>
+        <div class="toggle-display">
+          <mat-icon [class.toggle-yes]="entry.edpRedlineRequired"
+                    [class.toggle-no]="!entry.edpRedlineRequired">
+            {{ entry.edpRedlineRequired ? 'check_circle' : 'cancel' }}
+          </mat-icon>
+          <span>EDP Redline Required</span>
+        </div>
+      </div>
+
+      <!-- Narrative Fields -->
+      <div class="entry-section" *ngIf="entry.workCompletedToday">
+        <h5 class="subsection-heading">Work Completed Today</h5>
+        <p class="narrative-text">{{ entry.workCompletedToday }}</p>
+      </div>
+
+      <div class="entry-section" *ngIf="entry.issuesRoadblocks">
+        <h5 class="subsection-heading">Issues / Roadblocks</h5>
+        <p class="narrative-text">{{ entry.issuesRoadblocks }}</p>
+      </div>
+
+      <div class="entry-section" *ngIf="entry.planForTomorrow">
+        <h5 class="subsection-heading">Plan for Tomorrow</h5>
+        <p class="narrative-text">{{ entry.planForTomorrow }}</p>
+      </div>
+
+      <!-- Submission Info -->
+      <div class="entry-footer" *ngIf="entry.submittedBy">
+        <span class="submitted-info">
+          Submitted by {{ entry.submittedBy }} on {{ formatDate(entry.submittedAt) }}
+        </span>
+      </div>
+
+    </div>
+  </div>
+
+</div>

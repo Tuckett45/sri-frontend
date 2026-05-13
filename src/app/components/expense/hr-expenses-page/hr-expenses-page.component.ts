@@ -13,6 +13,7 @@ import { forkJoin, of, firstValueFrom } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { ExpenseStateService } from '../services/expense-state.service';
 import { ExpenseSelectionChange } from '../shared/expense-table/expense-table.component';
+import { AuthService } from '../../../services/auth.service';
 
 type DisplayExpense = Expense & {
   job?: string | null;
@@ -59,7 +60,8 @@ export class HrExpensesPageComponent implements OnInit {
     private imageExportService: ExpenseImageExportService,
     private toastr: ToastrService,
     private dialog: MatDialog,
-  private readonly expenseState: ExpenseStateService
+    private readonly expenseState: ExpenseStateService,
+    private authService: AuthService
   ) {}
 
   protected employeeOptions: string[] = [];
@@ -667,15 +669,24 @@ export class HrExpensesPageComponent implements OnInit {
     this.bulkUpdating = true;
     this.loading = true;
 
-    const updates$ = selected.map(expense =>
-      this.expenseApi.updateExpense({ ...expense, status }).pipe(
+    const user = this.authService.getUser();
+    const approvedBy = user?.id ?? user?.name ?? 'unknown';
+    const approvedAt = new Date().toISOString();
+
+    const updates$ = selected.map(expense => {
+      const updated: Expense = { ...expense, status };
+      if (status === ExpenseStatus.Approved) {
+        updated.approvedBy = approvedBy;
+        updated.approvedAt = approvedAt;
+      }
+      return this.expenseApi.updateExpense(updated).pipe(
         catchError(err => {
           console.error(`Failed to update expense ${expense.id}`, err);
           this.toastr.error(`Failed to update ${expense.vendor || expense.id}`);
           return of(null);
         })
-      )
-    );
+      );
+    });
 
     forkJoin(updates$)
       .pipe(
@@ -703,6 +714,12 @@ export class HrExpensesPageComponent implements OnInit {
 
     this.statusUpdatingIds.add(expense.id);
     const updated: Expense = { ...expense, status };
+
+    if (status === ExpenseStatus.Approved) {
+      const user = this.authService.getUser();
+      updated.approvedBy = user?.id ?? user?.name ?? 'unknown';
+      updated.approvedAt = new Date().toISOString();
+    }
 
     this.expenseApi.updateExpense(updated).subscribe({
       next: () => {

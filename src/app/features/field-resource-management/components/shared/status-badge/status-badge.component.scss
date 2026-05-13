@@ -1,0 +1,97 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+
+  &__icon {
+    font-size: inherit;
+    width: auto;
+    height: auto;
+  }
+
+  &__text {
+    line-height: 1;
+  }
+
+  // Size variants
+  &--small {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    gap: 2px;
+
+    .status-badge__icon {
+      font-size: 0.875rem;
+    }
+  }
+
+  &--medium {
+    font-size: 0.875rem;
+    padding: 4px 12px;
+    gap: 4px;
+
+    .status-badge__icon {
+      font-size: 1rem;
+    }
+  }
+
+  &--large {
+    font-size: 1rem;
+    padding: 6px 16px;
+    gap: 6px;
+
+    .status-badge__icon {
+      font-size: 1.25rem;
+    }
+  }
+
+  // Status color variants
+  &--notstarted {
+    background-color: #e0e0e0;
+    color: #616161;
+  }
+
+  &--enroute {
+    background-color: #e3f2fd;
+    color: #1976d2;
+  }
+
+  &--onsite {
+    background-color: #fff3e0;
+    color: #f57c00;
+  }
+
+  &--completed {
+    background-color: #e8f5e9;
+    color: #388e3c;
+  }
+
+  &--issue {
+    background-color: #ffebee;
+    color: #d32f2f;
+  }
+
+  &--cancelled {
+    background-color: #e0e0e0;
+    color: #757575;
+  }
+}
+
+// Mobile responsive adjustments
+@media (max-width: 767px) {
+  .status-badge {
+    &--medium {
+      font-size: 0.8125rem;
+      padding: 3px 10px;
+    }
+
+    &--large {
+      font-size: 0.9375rem;
+      padding: 5px 14px;
+    }
+  }
+}

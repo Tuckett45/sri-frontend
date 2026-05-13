@@ -33,7 +33,7 @@ export class ConfigurationService {
   
   // Fallback configuration for when backend is unavailable
   private readonly fallbackConfig: RuntimeConfiguration = {
-    vapidPublicKey: '', // Will be empty - notifications will be disabled
+    vapidPublicKey: environment.vapidPublicKey || '', // Use environment config as fallback
     apiBaseUrl: environment.apiUrl,
     apiSubscriptionKey: '', // Will be empty - API calls may fail
     pushSubscriptionEndpoint: `${environment.apiUrl}/push-subscriptions`,

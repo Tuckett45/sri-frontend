@@ -1,0 +1,202 @@
+.approval-list-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .page-header {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin: 0 0 0.5rem 0;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: var(--text-color-secondary);
+      margin: 0;
+    }
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    gap: 1rem;
+
+    p {
+      color: var(--text-color-secondary);
+      font-size: 1rem;
+    }
+  }
+
+  .error-message {
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+
+  .retry-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+
+    i {
+      font-size: 4rem;
+      color: var(--green-500);
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin: 0 0 0.5rem 0;
+    }
+
+    p {
+      color: var(--text-color-secondary);
+      font-size: 1rem;
+      margin: 0;
+    }
+  }
+
+  .table-container {
+    background: var(--surface-card);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .approval-id {
+      font-family: monospace;
+      font-size: 0.9rem;
+      cursor: help;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .text-center {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-color-secondary);
+    }
+  }
+}
+
+// Decision Dialog Styles
+.decision-dialog {
+  .dialog-content {
+    padding: 1rem 0;
+
+    .approval-info {
+      background: var(--surface-100);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .label {
+          font-weight: 600;
+          color: var(--text-color);
+        }
+
+        .value {
+          font-family: monospace;
+          font-size: 0.9rem;
+          color: var(--text-color-secondary);
+        }
+      }
+    }
+
+    .form-field {
+      margin-bottom: 1rem;
+
+      label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+
+        .required {
+          color: var(--red-500);
+          margin-left: 0.25rem;
+        }
+      }
+
+      textarea {
+        width: 100%;
+        font-family: inherit;
+      }
+
+      .help-text {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--text-color-secondary);
+        font-size: 0.875rem;
+      }
+    }
+
+    .dialog-loading {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--surface-100);
+      border-radius: 6px;
+      margin-top: 1rem;
+
+      span {
+        color: var(--text-color-secondary);
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .approval-list-container {
+    padding: 1rem;
+
+    .page-header {
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    .table-container {
+      padding: 1rem;
+    }
+  }
+
+  .decision-dialog {
+    ::ng-deep .p-dialog {
+      width: 95% !important;
+      max-width: 500px;
+    }
+  }
+}

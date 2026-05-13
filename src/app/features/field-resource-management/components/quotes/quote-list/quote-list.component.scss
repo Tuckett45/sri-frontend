@@ -1,0 +1,335 @@
+.quote-list-container {
+  padding: 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 767px) {
+    padding: 16px;
+    min-height: auto;
+    height: auto;
+  }
+}
+
+.quote-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .page-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+      color: #424242;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #9e9e9e;
+      margin-left: 8px;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+
+    button {
+      border-radius: 20px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    .header-title {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+
+      .page-subtitle {
+        margin-left: 0;
+      }
+    }
+
+    .header-actions {
+      width: 100%;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Filter card
+.filter-card {
+  margin-bottom: 24px;
+
+  mat-card-content {
+    padding: 16px;
+  }
+}
+
+.filter-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+
+  mat-form-field {
+    flex: 1;
+    max-width: 300px;
+  }
+
+  .clear-filter-btn {
+    margin-top: 8px;
+  }
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+
+    mat-form-field {
+      width: 100%;
+      max-width: none;
+    }
+
+    .clear-filter-btn {
+      width: 100%;
+      margin-top: 0;
+    }
+  }
+}
+
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+
+  .filter-label {
+    font-weight: 500;
+    color: #757575;
+  }
+}
+
+// Loading
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px;
+}
+
+// Error state
+.error-state {
+  .error-card {
+    background-color: #ffffff !important;
+    border: 1px solid #f44336;
+    border-radius: 8px;
+
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 24px;
+      gap: 8px;
+
+      h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+        color: #424242;
+      }
+
+      p {
+        margin: 0;
+        color: #757575;
+      }
+    }
+  }
+}
+
+// Quote cards
+.quote-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quote-card {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 14px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover,
+  &:focus {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    outline: none;
+  }
+
+  .quote-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .quote-card-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1976d2;
+    text-decoration: none;
+    line-height: 1.3;
+    flex: 1;
+    min-width: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .quote-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .quote-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+  }
+
+  .quote-card-label {
+    color: #757575;
+    font-weight: 500;
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+
+  .quote-card-value {
+    color: #212121;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .quote-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+
+    button {
+      color: #616161;
+    }
+  }
+}
+
+// Status badges
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-transform: none;
+
+  &.status-draft {
+    background-color: #e0e0e0;
+    color: #616161;
+  }
+
+  &.status-in-progress {
+    background-color: #fff3e0;
+    color: #e65100;
+  }
+
+  &.status-pending {
+    background-color: #e3f2fd;
+    color: #1565c0;
+  }
+
+  &.status-approved {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.status-rejected {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+
+  &.status-assembled {
+    background-color: #ede7f6;
+    color: #4527a0;
+  }
+
+  &.status-delivered {
+    background-color: #e0f2f1;
+    color: #00695c;
+  }
+
+  &.status-converted {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+  }
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: rgba(0, 0, 0, 0.26);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #616161;
+  }
+
+  p {
+    margin: 0 0 16px 0;
+    color: #9e9e9e;
+  }
+}

@@ -1,0 +1,9 @@
+# Query Builder State Management
+
+Files to be implemented:
+- query-builder.state.ts - State interface definition
+- query-builder.actions.ts - Action definitions
+- query-builder.reducer.ts - Pure state transitions
+- query-builder.effects.ts - Side effects (API calls)
+- query-builder.selectors.ts - Memoized state selectors
+- index.ts - Public API exports

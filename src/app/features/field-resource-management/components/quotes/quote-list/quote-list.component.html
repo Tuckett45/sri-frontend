@@ -1,0 +1,155 @@
+<div class="quote-list-container">
+  <!-- Header -->
+  <div class="quote-list-header">
+    <div class="header-title">
+      <mat-icon class="page-icon">request_quote</mat-icon>
+      <h2>Quotes</h2>
+      <span class="page-subtitle">Manage quotes and RFP workflows</span>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button class="btn-orange" (click)="createQuote()">
+        <mat-icon>add</mat-icon>
+        New Quote
+      </button>
+    </div>
+  </div>
+
+  <!-- Status Filter -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filter-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Workflow Status</mat-label>
+          <mat-select
+            [(ngModel)]="selectedStatus"
+            (selectionChange)="onStatusFilterChange()"
+          >
+            <mat-option [value]="null">All Statuses</mat-option>
+            <mat-option *ngFor="let status of statusOptions" [value]="status">
+              {{ getStatusLabel(status) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button
+          mat-stroked-button
+          *ngIf="selectedStatus"
+          (click)="clearFilter()"
+          class="clear-filter-btn"
+        >
+          <mat-icon>clear</mat-icon>
+          Clear Filter
+        </button>
+      </div>
+
+      <!-- Active Filter Chip -->
+      <div class="active-filters" *ngIf="selectedStatus">
+        <span class="filter-label">Filtered by:</span>
+        <mat-chip-set aria-label="Active filters">
+          <mat-chip [removable]="true" (removed)="clearFilter()">
+            <strong>Status:</strong> {{ getStatusLabel(selectedStatus) }}
+            <button matChipRemove><mat-icon>cancel</mat-icon></button>
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <div class="loading-container" *ngIf="loading$ | async">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="(error$ | async) as error">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load quotes</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" (click)="retryLoad()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Quote Cards -->
+  <div class="quote-cards" *ngIf="!(loading$ | async) && !(error$ | async)">
+    <div
+      class="quote-card"
+      *ngFor="let quote of displayedQuotes"
+      (click)="viewQuote(quote)"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="viewQuote(quote)"
+    >
+      <div class="quote-card-header">
+        <a
+          [routerLink]="['/field-resource-management/quotes', quote.id]"
+          class="quote-card-title"
+          (click)="$event.stopPropagation()"
+        >
+          {{ quote.rfpRecord.projectName }}
+        </a>
+        <span
+          class="status-badge"
+          [ngClass]="getStatusClass(quote.workflowStatus)"
+        >
+          {{ getStatusLabel(quote.workflowStatus) }}
+        </span>
+      </div>
+
+      <div class="quote-card-body">
+        <div class="quote-card-row">
+          <span class="quote-card-label">Client</span>
+          <span class="quote-card-value">{{ quote.rfpRecord.clientName }}</span>
+        </div>
+        <div class="quote-card-row">
+          <span class="quote-card-label">Created</span>
+          <span class="quote-card-value">{{ formatDate(quote.createdAt) }}</span>
+        </div>
+        <div class="quote-card-row">
+          <span class="quote-card-label">PO Number</span>
+          <span class="quote-card-value">{{ quote.poNumber || '—' }}</span>
+        </div>
+        <div class="quote-card-row">
+          <span class="quote-card-label">SRI Job #</span>
+          <span class="quote-card-value">{{ quote.sriJobNumber || '—' }}</span>
+        </div>
+      </div>
+
+      <div class="quote-card-actions">
+        <button
+          mat-icon-button
+          (click)="viewQuote(quote); $event.stopPropagation()"
+          aria-label="View quote workflow"
+        >
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="displayedQuotes.length === 0">
+      <mat-icon>request_quote</mat-icon>
+      <h3>No quotes found</h3>
+      <p *ngIf="selectedStatus">
+        No quotes match the selected status filter. Try clearing the filter.
+      </p>
+      <p *ngIf="!selectedStatus">
+        Get started by creating a new quote.
+      </p>
+      <button
+        mat-raised-button
+        class="btn-orange"
+        (click)="createQuote()"
+        *ngIf="!selectedStatus"
+      >
+        <mat-icon>add</mat-icon>
+        New Quote
+      </button>
+    </div>
+  </div>
+</div>

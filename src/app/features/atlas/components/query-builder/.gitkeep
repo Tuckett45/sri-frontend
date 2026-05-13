@@ -1,0 +1,8 @@
+# Query Builder Components Directory
+
+Components to be implemented:
+- query-builder/ - Dynamic query builder UI
+- query-results/ - Query results table with export
+- query-template/ - Template management
+- field-selector/ - Field selection component
+- filter-builder/ - Filter configuration component

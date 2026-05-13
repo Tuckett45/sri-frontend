@@ -1,0 +1,210 @@
+<div class="template-selector">
+  <!-- Loading Indicator -->
+  <app-loading-indicator 
+    *ngIf="loading$ | async" 
+    [overlay]="false"
+    [mode]="'skeleton'"
+    [skeletonLines]="4"
+    [message]="'Loading templates...'">
+  </app-loading-indicator>
+
+  <!-- Header -->
+  <div class="selector-header">
+    <h2>Select Workflow Template</h2>
+    
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <input 
+        type="text" 
+        [formControl]="searchControl"
+        placeholder="Search templates by name or description..."
+        class="search-input"
+      />
+      <button 
+        *ngIf="searchControl.value" 
+        (click)="searchControl.setValue('')"
+        class="clear-search-btn"
+        aria-label="Clear search"
+      >
+        ×
+      </button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <!-- View Mode Toggle -->
+        <button 
+          (click)="toggleViewMode()"
+          class="view-mode-btn"
+          [attr.aria-label]="'Switch to ' + (viewMode === 'grid' ? 'list' : 'grid') + ' view'"
+        >
+          <span *ngIf="viewMode === 'grid'">☰ List</span>
+          <span *ngIf="viewMode === 'list'">⊞ Grid</span>
+        </button>
+
+        <!-- Sort Options -->
+        <select 
+          [(ngModel)]="sortBy" 
+          (ngModelChange)="setSortBy($event)"
+          class="sort-select"
+          aria-label="Sort templates by"
+        >
+          <option value="rating">Sort by Rating</option>
+          <option value="usage">Sort by Usage</option>
+          <option value="name">Sort by Name</option>
+          <option value="date">Sort by Date</option>
+        </select>
+
+        <!-- Sort Direction -->
+        <button 
+          (click)="setSortBy(sortBy)"
+          class="sort-direction-btn"
+          [attr.aria-label]="'Sort ' + sortDirection + 'ending'"
+        >
+          {{ sortDirection === 'asc' ? '↑' : '↓' }}
+        </button>
+      </div>
+
+      <div class="toolbar-right">
+        <!-- Comparison Mode Toggle -->
+        <button 
+          (click)="toggleComparisonMode()"
+          class="comparison-btn"
+          [class.active]="comparisonMode"
+        >
+          {{ comparisonMode ? 'Exit Comparison' : 'Compare Templates' }}
+        </button>
+
+        <!-- Compare Button (shown when templates selected) -->
+        <button 
+          *ngIf="comparisonMode && selectedForComparison.size >= 2"
+          (click)="compareTemplates()"
+          class="compare-action-btn"
+        >
+          Compare ({{ selectedForComparison.size }})
+        </button>
+
+        <!-- Clear Filters -->
+        <button 
+          (click)="clearFilters()"
+          class="clear-filters-btn"
+          *ngIf="selectedCategory || searchControl.value"
+        >
+          Clear Filters
+        </button>
+
+        <!-- Refresh -->
+        <button 
+          (click)="refresh()"
+          class="refresh-btn"
+          aria-label="Refresh templates"
+        >
+          ↻
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="selector-content">
+    <!-- Sidebar - Categories -->
+    <aside class="categories-sidebar">
+      <h3>Categories</h3>
+      <ul class="category-list">
+        <li 
+          class="category-item"
+          [class.active]="selectedCategory === null"
+          (click)="filterByCategory(null)"
+        >
+          <span class="category-name">All Templates</span>
+        </li>
+        <li 
+          *ngFor="let category of categories$ | async; trackBy: trackByCategoryId"
+          class="category-item"
+          [class.active]="selectedCategory === category.id"
+          (click)="filterByCategory(category.id)"
+        >
+          <span class="category-icon">{{ category.icon }}</span>
+          <span class="category-name">{{ category.name }}</span>
+          <span class="category-count">{{ category.templateCount }}</span>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Templates Display -->
+    <main class="templates-main">
+      <!-- Loading State -->
+      <div *ngIf="loading$ | async" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading templates...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error$ | async as error" class="error-state">
+        <p class="error-message">{{ error }}</p>
+        <button (click)="refresh()" class="retry-btn">Retry</button>
+      </div>
+
+      <!-- Templates Grid/List -->
+      <div 
+        *ngIf="!(loading$ | async) && !(error$ | async)"
+        class="templates-container"
+        [class.grid-view]="viewMode === 'grid'"
+        [class.list-view]="viewMode === 'list'"
+      >
+        <ng-container *ngIf="(templates$ | async) as templates">
+          <!-- Empty State -->
+          <div *ngIf="templates.length === 0" class="empty-state">
+            <p>No templates found matching your criteria.</p>
+            <button (click)="clearFilters()" class="clear-filters-btn">
+              Clear Filters
+            </button>
+          </div>
+
+          <!-- Template Cards -->
+          <div 
+            *ngFor="let template of getSortedTemplates(templates); trackBy: trackByTemplateId"
+            class="template-card"
+            [class.selected]="currentTemplateId === template.id"
+            [class.comparison-selected]="isSelectedForComparison(template.id)"
+          >
+            <!-- Comparison Checkbox -->
+            <div *ngIf="comparisonMode" class="comparison-checkbox">
+              <input 
+                type="checkbox"
+                [checked]="isSelectedForComparison(template.id)"
+                [disabled]="!isSelectedForComparison(template.id) && selectedForComparison.size >= maxComparisonItems"
+                (change)="toggleComparisonSelection(template.id)"
+                [attr.aria-label]="'Select ' + template.name + ' for comparison'"
+              />
+            </div>
+
+            <!-- Template Metadata Component -->
+            <app-template-metadata 
+              [template]="template"
+              [compact]="viewMode === 'list'"
+            ></app-template-metadata>
+
+            <!-- Actions -->
+            <div class="template-actions">
+              <button 
+                (click)="previewTemplate(template)"
+                class="preview-btn"
+              >
+                Preview
+              </button>
+              <button 
+                (click)="selectTemplate(template)"
+                class="select-btn"
+                [disabled]="comparisonMode"
+              >
+                Select
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </main>
+  </div>
+</div>

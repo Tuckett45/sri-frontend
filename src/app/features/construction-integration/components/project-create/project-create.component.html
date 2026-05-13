@@ -1,0 +1,51 @@
+<div class="project-form-container">
+  <div class="form-header">
+    <a routerLink="../../forecast" class="back-link">
+      <i class="pi pi-arrow-left"></i> Back to Forecast
+    </a>
+    <h2>Create Project</h2>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error$ | async as error" class="error-banner" role="alert">{{ error }}</div>
+
+  <form [formGroup]="projectForm" (ngSubmit)="onSubmit()" class="project-form" novalidate>
+    <div class="form-field">
+      <label for="name">Project Name <span class="required">*</span></label>
+      <input id="name" type="text" formControlName="name" placeholder="Enter project name"
+             [class.invalid]="hasError('name')" />
+      <span class="field-error" *ngIf="hasError('name')">Project name is required.</span>
+    </div>
+
+    <div class="form-field">
+      <label for="clientName">Client Name <span class="required">*</span></label>
+      <input id="clientName" type="text" formControlName="clientName" placeholder="Enter client name"
+             [class.invalid]="hasError('clientName')" />
+      <span class="field-error" *ngIf="hasError('clientName')">Client name is required.</span>
+    </div>
+
+    <div class="form-field">
+      <label for="location">Location <span class="required">*</span></label>
+      <input id="location" type="text" formControlName="location" placeholder="Enter location"
+             [class.invalid]="hasError('location')" />
+      <span class="field-error" *ngIf="hasError('location')">Location is required.</span>
+    </div>
+
+    <div class="form-field">
+      <label for="category">Category <span class="required">*</span></label>
+      <select id="category" formControlName="category" [class.invalid]="hasError('category')">
+        <option value="" disabled>Select a category</option>
+        <option *ngFor="let cat of categories" [value]="cat.value">{{ cat.label }}</option>
+      </select>
+      <span class="field-error" *ngIf="hasError('category')">Category is required.</span>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-submit" [disabled]="loading$ | async">
+        <span *ngIf="!(loading$ | async)">Create Project</span>
+        <span *ngIf="loading$ | async">Creating…</span>
+      </button>
+      <a routerLink="../../forecast" class="btn-cancel">Cancel</a>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,223 @@
+.client-config-form-container {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #000000;
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+
+    button {
+      &[mat-raised-button] {
+        background: linear-gradient(135deg, var(--blue-500, #2196F3) 0%, var(--blue-600, #1976d2) 100%);
+        color: #ffffff;
+        font-weight: 500;
+        padding: 0.5rem 1.25rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+        border: none;
+        text-transform: none;
+        letter-spacing: 0.5px;
+
+        &:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+          background: linear-gradient(135deg, var(--blue-600, #1976d2) 0%, var(--blue-700, #1565c0) 100%);
+        }
+
+        &:active:not(:disabled) {
+          transform: translateY(0);
+          box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      &[mat-button] {
+        color: var(--primary-color, #1976d2);
+        font-weight: 500;
+        text-transform: none;
+        letter-spacing: 0.5px;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+
+        &:hover:not(:disabled) {
+          background-color: var(--blue-50, rgba(25, 118, 210, 0.08));
+        }
+      }
+
+      mat-icon {
+        margin-right: 0.5rem;
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+}
+
+.form-section {
+  margin-bottom: 1.5rem;
+  background-color: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, #e0e0e0);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  mat-card-header {
+    padding: 1.25rem 1.25rem 0 1.25rem;
+    margin-bottom: 1rem;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #000000;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0;
+
+      mat-icon {
+        color: var(--primary-color, #1976d2);
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
+  mat-card-content {
+    padding: 0 1.25rem 1.25rem 1.25rem !important;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.toggle-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  mat-slide-toggle {
+    font-weight: 500;
+    color: #000000;
+  }
+
+  .toggle-hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #666666;
+    line-height: 1.4;
+  }
+}
+
+// Material form field overrides
+::ng-deep {
+  .client-config-form-container {
+    mat-form-field {
+      .mat-mdc-text-field-wrapper {
+        background-color: var(--surface-card, #ffffff);
+      }
+
+      .mat-mdc-form-field-label,
+      .mat-mdc-floating-label,
+      .mdc-floating-label,
+      .mat-mdc-input-element,
+      input {
+        color: #000000 !important;
+      }
+
+      .mat-mdc-form-field-hint {
+        color: #666666 !important;
+      }
+
+      .mdc-notched-outline {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: var(--surface-border, #e0e0e0);
+        }
+      }
+
+      &.mat-focused {
+        .mdc-notched-outline {
+          .mdc-notched-outline__leading,
+          .mdc-notched-outline__notch,
+          .mdc-notched-outline__trailing {
+            border-color: var(--primary-color, #1976d2);
+          }
+        }
+      }
+
+      .mat-mdc-form-field-error {
+        color: var(--red-500, #d32f2f);
+      }
+    }
+
+    mat-slide-toggle {
+      .mdc-label,
+      .mat-mdc-slide-toggle-label {
+        color: #000000 !important;
+      }
+    }
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .client-config-form-container {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+
+    h2 {
+      font-size: 1.5rem;
+    }
+
+    .actions {
+      width: 100%;
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

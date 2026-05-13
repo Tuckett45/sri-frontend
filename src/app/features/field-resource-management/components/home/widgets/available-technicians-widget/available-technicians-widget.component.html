@@ -1,0 +1,48 @@
+<mat-card class="available-techs-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>engineering</mat-icon>
+      Available Technicians
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading$ | async" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>Unable to load data. Please try again.</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Data state -->
+    <ng-container *ngIf="!(loading$ | async) && !error">
+      <div class="count-header">
+        <span class="count">{{ availableCount$ | async }}</span>
+        <span class="count-label">technicians available</span>
+      </div>
+
+      <div *ngIf="(availableTechnicians$ | async) as technicians" class="technicians-list">
+        <div
+          *ngFor="let tech of technicians"
+          class="technician-item"
+          (click)="onTechnicianClick(tech.id)"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="onTechnicianClick(tech.id)"
+          [attr.aria-label]="tech.firstName + ' ' + tech.lastName"
+        >
+          <mat-icon class="tech-icon">person</mat-icon>
+          <span class="tech-name">{{ tech.firstName }} {{ tech.lastName }}</span>
+        </div>
+
+        <div *ngIf="technicians.length === 0" class="empty-state">
+          <mat-icon>group_off</mat-icon>
+          <p>No technicians available</p>
+        </div>
+      </div>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

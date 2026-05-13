@@ -1,0 +1,15 @@
+<div class="hr-payroll-dashboard">
+  <app-quick-actions-widget [actions]="quickActions"></app-quick-actions-widget>
+
+  <div class="dashboard-grid">
+    <app-approvals-widget></app-approvals-widget>
+    <app-travel-break-pto-widget></app-travel-break-pto-widget>
+    <app-timecard-review-widget
+      (timecardSelected)="onTimecardSelected($event)">
+    </app-timecard-review-widget>
+
+    <app-expenses-widget
+      (expenseSelected)="onExpenseSelected($event)">
+    </app-expenses-widget>
+  </div>
+</div>

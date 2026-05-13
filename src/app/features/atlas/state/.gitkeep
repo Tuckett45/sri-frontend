@@ -1,0 +1,18 @@
+# ATLAS State Management Directory
+
+This directory contains NgRx state management for ATLAS features.
+
+State slices to be implemented:
+- deployments/ - Deployment state (actions, reducers, effects, selectors)
+- ai-analysis/ - AI analysis state
+- approvals/ - Approval state
+- exceptions/ - Exception state
+- agents/ - Agent state
+- query-builder/ - Query builder state
+
+Each state slice follows the pattern:
+- {feature}.actions.ts - Action definitions
+- {feature}.reducer.ts - Pure state transitions
+- {feature}.effects.ts - Side effects (API calls)
+- {feature}.selectors.ts - Memoized state selectors
+- {feature}.state.ts - State interface definition

@@ -1,0 +1,452 @@
+.conflict-resolver-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fafafa;
+}
+
+// Header
+.resolver-header {
+  background-color: white;
+  padding: 24px;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-content {
+  h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 500;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    mat-icon {
+      color: #ff9800;
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+// Batch Toolbar
+.batch-toolbar {
+  background-color: #e3f2fd;
+  padding: 12px 24px;
+  border-bottom: 1px solid #90caf9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.selected-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1976d2;
+
+  mat-icon {
+    color: #1976d2;
+  }
+}
+
+.batch-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  button {
+    mat-icon {
+      margin-right: 4px;
+    }
+  }
+}
+
+// Table Container
+.table-container {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+}
+
+.conflicts-table {
+  width: 100%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    padding: 16px;
+  }
+
+  td {
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover {
+    background-color: #fafafa;
+  }
+}
+
+// Table Cells
+.technician-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    color: #666;
+  }
+
+  span {
+    font-size: 14px;
+    color: #333;
+  }
+}
+
+.jobs-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.job-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    color: #666;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  span {
+    font-size: 13px;
+    color: #333;
+  }
+}
+
+.time-range-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    color: #666;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  span {
+    font-size: 13px;
+    color: #333;
+  }
+}
+
+// Severity Badge
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.severity-error {
+    background-color: #ffebee;
+    color: #c62828;
+
+    mat-icon {
+      color: #c62828;
+    }
+  }
+
+  &.severity-warning {
+    background-color: #fff3e0;
+    color: #e65100;
+
+    mat-icon {
+      color: #e65100;
+    }
+  }
+}
+
+// Actions Cell
+.actions-cell {
+  display: flex;
+  gap: 4px;
+
+  button {
+    mat-icon {
+      color: #666;
+    }
+
+    &:hover mat-icon {
+      color: #2196f3;
+    }
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    color: #4caf50;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// Override Dialog
+.override-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.dialog-content {
+  position: relative;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.dialog-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.conflict-info {
+  background-color: #fff3e0;
+  padding: 16px;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+  margin-bottom: 24px;
+
+  p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #333;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: #e65100;
+    }
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .resolver-header {
+    padding: 16px;
+  }
+
+  .batch-toolbar {
+    padding: 12px 16px;
+  }
+
+  .table-container {
+    padding: 16px;
+  }
+
+  .conflicts-table {
+    th, td {
+      padding: 12px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .resolver-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .batch-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .batch-actions {
+    width: 100%;
+
+    button {
+      flex: 1;
+    }
+  }
+
+  .conflicts-table {
+    font-size: 12px;
+
+    th, td {
+      padding: 8px;
+    }
+  }
+
+  .technician-cell,
+  .time-range-cell,
+  .job-item {
+    mat-icon {
+      display: none;
+    }
+  }
+
+  .actions-cell {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .resolver-header {
+    padding: 12px;
+
+    h2 {
+      font-size: 20px;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
+  .table-container {
+    padding: 12px;
+  }
+
+  // Hide some columns on mobile
+  .conflicts-table {
+    .mat-column-select {
+      display: none;
+    }
+
+    .mat-column-timeRange {
+      display: none;
+    }
+  }
+
+  .dialog-content {
+    width: 95%;
+  }
+
+  .dialog-header,
+  .dialog-body,
+  .dialog-actions {
+    padding: 16px;
+  }
+}

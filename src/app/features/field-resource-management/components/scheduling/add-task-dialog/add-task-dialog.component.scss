@@ -1,0 +1,57 @@
+.add-task-dialog {
+  min-width: 500px;
+  max-width: 650px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0 8px;
+
+  h2 { margin: 0; font-size: 18px; font-weight: 500; }
+}
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.half-width { flex: 1; }
+.third-width { flex: 1; }
+.full-width { width: 100%; }
+
+.section-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  margin: 8px 0 4px;
+}
+
+.assign-radio-group {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+
+  ::ng-deep .mat-mdc-radio-button {
+    font-size: 13px;
+  }
+}
+
+mat-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 24px 24px;
+}
+
+@media (max-width: 600px) {
+  .add-task-dialog { min-width: auto; }
+  .form-row { flex-direction: column; gap: 0; }
+}

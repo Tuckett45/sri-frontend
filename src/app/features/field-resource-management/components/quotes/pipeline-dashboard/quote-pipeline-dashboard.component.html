@@ -1,0 +1,111 @@
+<mat-card class="pipeline-dashboard-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>assessment</mat-icon>
+      Quote Pipeline
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading$ | async" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error$ | async as error" class="widget-error">
+      <p>Unable to load pipeline data. Please try again.</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Pipeline categories -->
+    <ng-container *ngIf="!(loading$ | async) && !(error$ | async)">
+      <div class="pipeline-categories">
+        <div
+          *ngFor="let category of categories; trackBy: trackByCategory"
+          class="pipeline-category"
+          [ngClass]="category.colorClass"
+        >
+          <!-- Category header with count -->
+          <div
+            class="category-header"
+            (click)="toggleCategory(category.key)"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="toggleCategory(category.key)"
+            [attr.aria-expanded]="expandedCategory === category.key"
+            [attr.aria-label]="category.label + ' - ' + (category.count$ | async) + ' quotes'"
+          >
+            <div class="category-info">
+              <mat-icon class="category-icon">{{ category.icon }}</mat-icon>
+              <span class="category-label">{{ category.label }}</span>
+            </div>
+            <div class="category-count-wrapper">
+              <span
+                class="category-count"
+                (click)="$event.stopPropagation(); navigateToFilteredList(category)"
+                role="link"
+                tabindex="0"
+                (keydown.enter)="$event.stopPropagation(); navigateToFilteredList(category)"
+                [attr.aria-label]="'View all ' + category.label"
+              >
+                {{ category.count$ | async }}
+              </span>
+              <mat-icon class="expand-icon">
+                {{ expandedCategory === category.key ? 'expand_less' : 'expand_more' }}
+              </mat-icon>
+            </div>
+          </div>
+
+          <!-- Expanded quote list -->
+          <div
+            *ngIf="expandedCategory === category.key"
+            class="category-quotes"
+            role="list"
+          >
+            <ng-container *ngIf="category.quotes$ | async as quotes">
+              <div
+                *ngFor="let quote of quotes; trackBy: trackByQuote"
+                class="quote-item"
+                (click)="navigateToQuote(quote.id)"
+                role="listitem"
+                tabindex="0"
+                (keydown.enter)="navigateToQuote(quote.id)"
+                [attr.aria-label]="quote.rfpRecord.projectName + ' - ' + quote.rfpRecord.clientName"
+              >
+                <div class="quote-details">
+                  <span class="quote-project">{{ quote.rfpRecord.projectName }}</span>
+                  <span class="quote-client">{{ quote.rfpRecord.clientName }}</span>
+                </div>
+                <div class="quote-indicators">
+                  <span
+                    *ngIf="quote.poNumber"
+                    class="indicator po-indicator"
+                    matTooltip="PO Number: {{ quote.poNumber }}"
+                  >
+                    <mat-icon>receipt</mat-icon>
+                    PO
+                  </span>
+                  <span
+                    *ngIf="quote.sriJobNumber"
+                    class="indicator job-indicator"
+                    matTooltip="SRI Job #: {{ quote.sriJobNumber }}"
+                  >
+                    <mat-icon>work</mat-icon>
+                    Job#
+                  </span>
+                  <span class="status-badge" [ngClass]="'status-' + quote.workflowStatus">
+                    {{ getStatusLabel(quote.workflowStatus) }}
+                  </span>
+                </div>
+              </div>
+
+              <div *ngIf="quotes.length === 0" class="empty-category">
+                <span>No quotes in this category</span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

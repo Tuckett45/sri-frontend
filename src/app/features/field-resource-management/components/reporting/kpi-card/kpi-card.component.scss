@@ -1,0 +1,235 @@
+.kpi-card {
+  height: 100%;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:focus {
+    outline: 2px solid #1976d2;
+    outline-offset: 2px;
+  }
+  
+  mat-card-content {
+    padding: 20px;
+  }
+  
+  // Status-based border colors
+  &.status-on-track {
+    border-left: 4px solid #4CAF50;
+  }
+  
+  &.status-at-risk {
+    border-left: 4px solid #FF9800;
+  }
+  
+  &.status-below-target {
+    border-left: 4px solid #F44336;
+  }
+}
+
+// KPI Header
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  
+  .kpi-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+    flex: 1;
+  }
+  
+  .kpi-trend {
+    display: flex;
+    align-items: center;
+    
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+    
+    &.trend-up {
+      color: #4CAF50;
+    }
+    
+    &.trend-down {
+      color: #F44336;
+    }
+    
+    &.trend-stable {
+      color: #9E9E9E;
+    }
+  }
+}
+
+// KPI Value Section
+.kpi-value-section {
+  margin-bottom: 16px;
+  
+  .kpi-value {
+    margin-bottom: 4px;
+    
+    .value-number {
+      font-size: 36px;
+      font-weight: 300;
+      line-height: 1;
+      color: rgba(0, 0, 0, 0.87);
+    }
+    
+    .value-unit {
+      font-size: 18px;
+      color: rgba(0, 0, 0, 0.6);
+      margin-left: 4px;
+    }
+  }
+  
+  .kpi-target {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+// Progress Bar
+.kpi-progress {
+  margin-bottom: 12px;
+  
+  mat-progress-bar {
+    height: 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    
+    &.status-on-track ::ng-deep .mat-progress-bar-fill::after {
+      background-color: #4CAF50;
+    }
+    
+    &.status-at-risk ::ng-deep .mat-progress-bar-fill::after {
+      background-color: #FF9800;
+    }
+    
+    &.status-below-target ::ng-deep .mat-progress-bar-fill::after {
+      background-color: #F44336;
+    }
+  }
+  
+  .progress-label {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+    text-align: right;
+  }
+}
+
+// Status Badge
+.kpi-status {
+  margin-bottom: 12px;
+  
+  mat-chip {
+    font-size: 12px;
+    font-weight: 500;
+    height: 24px;
+    padding: 0 8px;
+    
+    &.status-on-track {
+      background-color: #E8F5E9;
+      color: #2E7D32;
+    }
+    
+    &.status-at-risk {
+      background-color: #FFF3E0;
+      color: #E65100;
+    }
+    
+    &.status-below-target {
+      background-color: #FFEBEE;
+      color: #C62828;
+    }
+  }
+}
+
+// Sparkline Chart
+.kpi-sparkline {
+  height: 40px;
+  margin-top: 12px;
+  position: relative;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .kpi-card {
+    mat-card-content {
+      padding: 16px;
+    }
+  }
+  
+  .kpi-value-section {
+    .kpi-value {
+      .value-number {
+        font-size: 28px;
+      }
+      
+      .value-unit {
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-header {
+    .kpi-name {
+      font-size: 14px;
+    }
+    
+    .kpi-trend mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  .kpi-value-section {
+    .kpi-value {
+      .value-number {
+        font-size: 24px;
+      }
+      
+      .value-unit {
+        font-size: 14px;
+      }
+    }
+    
+    .kpi-target {
+      font-size: 12px;
+    }
+  }
+}
+
+// Sparkline placeholder styles
+.sparkline-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(63, 81, 181, 0.08);
+  border-radius: 4px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #3f51b5;
+  }
+  
+  span {
+    font-family: 'Roboto Mono', monospace;
+  }
+}

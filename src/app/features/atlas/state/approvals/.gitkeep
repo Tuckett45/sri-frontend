@@ -1,0 +1,9 @@
+# Approval State Management
+
+Files to be implemented:
+- approval.state.ts - State interface definition
+- approval.actions.ts - Action definitions
+- approval.reducer.ts - Pure state transitions
+- approval.effects.ts - Side effects (API calls)
+- approval.selectors.ts - Memoized state selectors
+- index.ts - Public API exports

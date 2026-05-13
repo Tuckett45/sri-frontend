@@ -1,0 +1,19 @@
+<div class="payroll-nav-container">
+  <nav class="payroll-nav" aria-label="Payroll Services Navigation">
+    <ul class="payroll-nav-links">
+      <li *ngFor="let link of navLinks">
+        <a
+          *ngIf="link.visible"
+          [routerLink]="link.route"
+          routerLinkActive="active"
+          class="payroll-nav-link">
+          {{ link.label }}
+          <span *ngIf="readOnly" class="read-only-badge" aria-label="Read only">(View Only)</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <div class="payroll-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>

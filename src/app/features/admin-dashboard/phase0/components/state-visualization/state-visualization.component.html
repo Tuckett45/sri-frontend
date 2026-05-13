@@ -1,0 +1,125 @@
+<div class="state-visualization-container">
+  <div class="visualization-header">
+    <h3 class="visualization-title">State Machine Visualization</h3>
+    
+    <div class="visualization-controls">
+      <!-- Layout Selection -->
+      <div class="control-group">
+        <label for="layout-select">Layout:</label>
+        <select 
+          id="layout-select" 
+          [(ngModel)]="graphLayout" 
+          (change)="changeLayout(graphLayout)"
+          class="layout-select">
+          <option value="horizontal">Horizontal</option>
+          <option value="vertical">Vertical</option>
+          <option value="radial">Radial</option>
+        </select>
+      </div>
+
+      <!-- Export Options -->
+      <div class="control-group">
+        <button 
+          class="btn btn-secondary" 
+          (click)="exportDiagram('svg')"
+          title="Export as SVG">
+          <i class="pi pi-download"></i> SVG
+        </button>
+        <button 
+          class="btn btn-secondary" 
+          (click)="exportDiagram('png')"
+          title="Export as PNG">
+          <i class="pi pi-download"></i> PNG
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading$ | async" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Loading state visualization...</p>
+  </div>
+
+  <!-- SVG Container -->
+  <div 
+    #svgContainer 
+    class="svg-container"
+    [class.loading]="loading$ | async">
+  </div>
+
+  <!-- Legend -->
+  <div class="visualization-legend">
+    <h4>Legend</h4>
+    <div class="legend-items">
+      <div class="legend-item">
+        <span class="legend-color initial"></span>
+        <span class="legend-label">Initial State</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color intermediate"></span>
+        <span class="legend-label">Intermediate State</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color final"></span>
+        <span class="legend-label">Final State</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color error"></span>
+        <span class="legend-label">Error State</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color current"></span>
+        <span class="legend-label">Current State</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Information Panel -->
+  <div class="state-info-panel" *ngIf="currentState$ | async as currentState">
+    <h4>Current State</h4>
+    <div class="state-details">
+      <div class="detail-row">
+        <span class="detail-label">Name:</span>
+        <span class="detail-value">{{ currentState.name }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Type:</span>
+        <span class="detail-value">{{ currentState.type }}</span>
+      </div>
+      <div class="detail-row" *ngIf="currentState.metadata && getMetadataKeys(currentState.metadata).length > 0">
+        <span class="detail-label">Metadata:</span>
+        <span class="detail-value">{{ currentState.metadata | json }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Available Transitions -->
+  <div class="transitions-panel" *ngIf="showTransitions && (availableTransitions$ | async) as transitions">
+    <h4>Available Transitions ({{ transitions.length }})</h4>
+    <div class="transitions-list" *ngIf="transitions.length > 0; else noTransitions">
+      <div 
+        *ngFor="let transition of transitions" 
+        class="transition-item"
+        (click)="highlightTransition(transition)"
+        (mouseenter)="highlightTransition(transition)">
+        <div class="transition-header">
+          <span class="transition-trigger">{{ transition.trigger }}</span>
+          <span class="transition-arrow">→</span>
+          <span class="transition-target">{{ transition.toState }}</span>
+        </div>
+        <div class="transition-meta" *ngIf="transition.userName">
+          <small>By {{ transition.userName }} at {{ transition.timestamp | date:'short' }}</small>
+        </div>
+      </div>
+    </div>
+    <ng-template #noTransitions>
+      <p class="no-data">No transitions available from current state</p>
+    </ng-template>
+  </div>
+
+  <!-- Instructions -->
+  <div class="visualization-instructions">
+    <p><strong>Tip:</strong> Click and drag nodes to reposition them. Use mouse wheel to zoom. Click on a state to view details.</p>
+  </div>
+</div>

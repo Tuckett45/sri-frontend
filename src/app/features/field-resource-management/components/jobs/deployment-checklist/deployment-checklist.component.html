@@ -1,0 +1,134 @@
+<!-- SignalR Disconnection Warning Banner -->
+<div class="connection-warning" *ngIf="isDisconnected$ | async" role="alert">
+  <mat-icon>cloud_off</mat-icon>
+  <span>Real-time connection lost. Changes by other users may not appear until reconnected.</span>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="loading$ | async">
+  <mat-spinner diameter="48"></mat-spinner>
+  <p class="loading-text">Loading deployment checklist…</p>
+</div>
+
+<!-- Error State -->
+<ng-container *ngIf="error$ | async as errorMessage">
+  <div class="error-container" *ngIf="!(loading$ | async)">
+    <mat-icon class="error-icon">error_outline</mat-icon>
+    <p class="error-message">{{ errorMessage }}</p>
+    <button mat-raised-button color="primary" (click)="retryLoad()">
+      <mat-icon>refresh</mat-icon>
+      Retry
+    </button>
+  </div>
+</ng-container>
+
+<!-- Print-friendly view (hidden on screen, shown when printing) -->
+<app-checklist-print
+  *ngIf="checklist$ | async as checklistData"
+  [checklist]="checklistData"
+  [jobId]="jobId"
+  [checklistStatus]="(checklistStatus$ | async) ?? ChecklistStatus.NotStarted">
+</app-checklist-print>
+
+<!-- Main Checklist Content -->
+<div class="deployment-checklist-container"
+     *ngIf="!(loading$ | async) && !(error$ | async) && (checklist$ | async)">
+
+  <!-- Toolbar -->
+  <div class="checklist-toolbar">
+    <div class="toolbar-left">
+      <h3 class="checklist-title">Deployment Checklist</h3>
+      <span class="checklist-status-badge"
+            *ngIf="checklistStatus$ | async as status"
+            [ngClass]="getChecklistStatusClass(status)">
+        {{ getChecklistStatusLabel(status) }}
+      </span>
+    </div>
+    <div class="toolbar-actions">
+      <!-- Saving indicator -->
+      <span class="saving-indicator" *ngIf="saving$ | async">
+        <mat-spinner diameter="18"></mat-spinner>
+        <span>Saving…</span>
+      </span>
+      <button mat-button (click)="onPrint()" aria-label="Print checklist">
+        <mat-icon>print</mat-icon>
+        Print
+      </button>
+      <button mat-button (click)="onExportPdf()" aria-label="Export checklist as PDF">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Export PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Phase Tab Group -->
+  <mat-tab-group
+    [selectedIndex]="selectedPhaseIndex"
+    (selectedIndexChange)="onTabChange($event)"
+    animationDuration="200ms"
+    class="checklist-tabs">
+
+    <!-- Tab for each phase -->
+    <mat-tab *ngFor="let phase of phases; let i = index">
+      <ng-template mat-tab-label>
+        <div class="tab-label">
+          <span class="tab-label-text">{{ phase.label }}</span>
+          <span class="phase-status-badge"
+                *ngIf="getPhaseStatus$(i) | async as phaseStatus"
+                [ngClass]="getPhaseStatusClass(phaseStatus)">
+            {{ getPhaseStatusLabel(phaseStatus) }}
+          </span>
+        </div>
+      </ng-template>
+
+      <!-- Phase content rendered based on selected index -->
+      <div class="phase-content">
+        <ng-container [ngSwitch]="phase.phase">
+
+          <!-- Job Details Phase -->
+          <ng-container *ngSwitchCase="'jobDetails'">
+            <app-job-details-phase
+              [jobId]="jobId"
+              [job]="job"
+              [data]="jobDetailsData$ | async"
+              [canEdit]="(canEdit$ | async) ?? false"
+              (formDirty)="onFormDirtyChange($event)">
+            </app-job-details-phase>
+          </ng-container>
+
+          <!-- Pre-Installation Phase -->
+          <ng-container *ngSwitchCase="'preInstallation'">
+            <app-pre-installation-phase
+              [jobId]="jobId"
+              [data]="preInstallationData$ | async"
+              [canEdit]="(canEdit$ | async) ?? false"
+              (formDirty)="onFormDirtyChange($event)">
+            </app-pre-installation-phase>
+          </ng-container>
+
+          <!-- End of Day Reports Phase -->
+          <ng-container *ngSwitchCase="'eodReports'">
+            <app-eod-report-phase
+              [jobId]="jobId"
+              [entries]="(eodEntries$ | async) ?? []"
+              [canEdit]="(canEdit$ | async) ?? false"
+              [canSubmitEOD]="(canSubmitEOD$ | async) ?? false"
+              (formDirty)="onFormDirtyChange($event)">
+            </app-eod-report-phase>
+          </ng-container>
+
+          <!-- Close-Out Phase -->
+          <ng-container *ngSwitchCase="'closeOut'">
+            <app-close-out-phase
+              [jobId]="jobId"
+              [data]="closeOutData$ | async"
+              [canEdit]="(canEdit$ | async) ?? false"
+              (formDirty)="onFormDirtyChange($event)">
+            </app-close-out-phase>
+          </ng-container>
+
+        </ng-container>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

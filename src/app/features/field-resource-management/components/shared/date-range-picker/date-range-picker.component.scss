@@ -1,0 +1,38 @@
+.date-range-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+
+  &__presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button {
+      font-size: 0.875rem;
+    }
+  }
+
+  &__field {
+    width: 100%;
+    flex: 1;
+  }
+
+  &__clear {
+    align-self: flex-start;
+    margin-top: -8px;
+  }
+}
+
+// Mobile responsive adjustments
+@media (max-width: 767px) {
+  .date-range-picker {
+    &__presets {
+      button {
+        font-size: 0.8125rem;
+        padding: 0 12px;
+      }
+    }
+  }
+}

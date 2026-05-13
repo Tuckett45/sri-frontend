@@ -1,0 +1,414 @@
+/**
+ * Risk Assessment Component Styles
+ */
+
+.risk-assessment-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.risk-assessment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.risk-assessment-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+// Error handling
+.assessment-error-message {
+  margin-bottom: 1rem;
+}
+
+.error-actions {
+  margin-bottom: 1.5rem;
+}
+
+// Loading state
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.loading-text {
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+}
+
+// Assessment results
+.assessment-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Card styling
+::ng-deep {
+  .overall-risk-card,
+  .risks-card,
+  .mitigations-card {
+    .p-card-header {
+      background-color: var(--surface-50);
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .p-card-body {
+      padding: 1.5rem;
+    }
+
+    .p-card-footer {
+      background-color: var(--surface-50);
+      border-top: 1px solid var(--surface-border);
+      padding: 0.75rem 1.5rem;
+    }
+  }
+}
+
+.card-header {
+  padding: 1rem 1.5rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+}
+
+.card-footer {
+  small {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+  }
+}
+
+// Overall risk
+.overall-risk-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.risk-level-row,
+.risk-score-row,
+.risk-confidence-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.risk-label {
+  font-weight: 600;
+  min-width: 120px;
+  color: var(--text-color);
+}
+
+.risk-level-tag {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.risk-score-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.risk-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+
+  &.risk-score-critical {
+    color: var(--red-600);
+  }
+
+  &.risk-score-high {
+    color: var(--orange-600);
+  }
+
+  &.risk-score-medium {
+    color: var(--yellow-600);
+  }
+
+  &.risk-score-low {
+    color: var(--blue-600);
+  }
+
+  &.risk-score-very-low {
+    color: var(--green-600);
+  }
+}
+
+::ng-deep {
+  .p-progressbar {
+    height: 1rem;
+
+    &.risk-score-critical .p-progressbar-value {
+      background-color: var(--red-500);
+    }
+
+    &.risk-score-high .p-progressbar-value {
+      background-color: var(--orange-500);
+    }
+
+    &.risk-score-medium .p-progressbar-value {
+      background-color: var(--yellow-500);
+    }
+
+    &.risk-score-low .p-progressbar-value {
+      background-color: var(--blue-500);
+    }
+
+    &.risk-score-very-low .p-progressbar-value {
+      background-color: var(--green-500);
+    }
+  }
+}
+
+.risk-confidence {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.risk-reasoning {
+  h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-color-secondary);
+    line-height: 1.6;
+  }
+}
+
+// Risks
+::ng-deep {
+  .risks-accordion,
+  .mitigations-accordion {
+    .p-accordion-header-link {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .p-accordion-content {
+      padding: 1rem;
+    }
+  }
+}
+
+.risks-group,
+.mitigations-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.risk-item,
+.mitigation-item {
+  padding: 1rem;
+  background-color: var(--surface-50);
+  border-radius: 6px;
+  border-left: 3px solid var(--surface-border);
+}
+
+.risk-header,
+.mitigation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.risk-title,
+.mitigation-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-color);
+  flex: 1;
+}
+
+.risk-severity-tag,
+.mitigation-priority-tag {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.risk-category-tag,
+.mitigation-type-tag {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.risk-description,
+.mitigation-description {
+  margin: 0 0 0.75rem 0;
+  color: var(--text-color-secondary);
+  line-height: 1.6;
+}
+
+.risk-meta,
+.mitigation-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  margin-top: 0.75rem;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    i {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.risk-probability,
+.risk-confidence,
+.mitigation-effectiveness {
+  font-weight: 600;
+}
+
+.risk-impact {
+  color: var(--orange-600);
+}
+
+.risk-indicators,
+.risk-history {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: var(--surface-0);
+  border-radius: 4px;
+
+  strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--text-color-secondary);
+
+    li {
+      margin-bottom: 0.25rem;
+      line-height: 1.5;
+    }
+  }
+}
+
+// Mitigations
+.mitigation-effort {
+  color: var(--purple-600);
+}
+
+.mitigation-steps {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: var(--blue-50);
+  border-left: 3px solid var(--blue-500);
+  border-radius: 4px;
+
+  strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+  }
+
+  ol {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--text-color-secondary);
+
+    li {
+      margin-bottom: 0.5rem;
+      line-height: 1.5;
+    }
+  }
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  color: var(--text-color-secondary);
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+.empty-state-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-state-subtext {
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+  margin: 0;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .risk-assessment-container {
+    padding: 1rem;
+  }
+
+  .risk-assessment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .risk-level-row,
+  .risk-score-row,
+  .risk-confidence-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .risk-header,
+  .mitigation-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .risk-meta,
+  .mitigation-meta {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

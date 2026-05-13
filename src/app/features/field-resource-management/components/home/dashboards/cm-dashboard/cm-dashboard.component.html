@@ -1,0 +1,18 @@
+<div class="cm-dashboard">
+  <app-quick-actions-widget
+    [actions]="quickActions"
+    (actionClicked)="onQuickAction($event)">
+  </app-quick-actions-widget>
+
+  <div class="dashboard-grid">
+    <app-active-jobs-widget
+      [marketFilter]="marketFilter"
+      (jobSelected)="onJobSelected($event)">
+    </app-active-jobs-widget>
+
+    <app-recent-jobs-widget
+      [marketFilter]="marketFilter"
+      (jobSelected)="onJobSelected($event)">
+    </app-recent-jobs-widget>
+  </div>
+</div>

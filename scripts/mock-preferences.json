@@ -1,0 +1,51 @@
+[
+  {
+    "userId": "user-001",
+    "email": true,
+    "inApp": true,
+    "sms": false,
+    "approvalReminders": true,
+    "escalationAlerts": true,
+    "dailyDigest": false,
+    "quietHoursStart": "22:00",
+    "quietHoursEnd": "08:00",
+    "notificationTypes": {
+      "approval_reminder": true,
+      "critical_issue": true,
+      "broadcast": true,
+      "workflow_update": false,
+      "user_management": true,
+      "resource_allocation": true,
+      "reporting": false
+    }
+  },
+  {
+    "userId": "user-002",
+    "email": true,
+    "inApp": true,
+    "sms": true,
+    "approvalReminders": false,
+    "escalationAlerts": true,
+    "dailyDigest": true,
+    "notificationTypes": {
+      "approval_reminder": false,
+      "critical_issue": true,
+      "broadcast": true,
+      "workflow_update": true,
+      "user_management": false,
+      "resource_allocation": true,
+      "reporting": true
+    }
+  },
+  {
+    "userId": "user-003",
+    "email": false,
+    "inApp": true,
+    "sms": false,
+    "approvalReminders": true,
+    "escalationAlerts": false,
+    "dailyDigest": false,
+    "quietHoursStart": "23:00",
+    "quietHoursEnd": "07:00"
+  }
+]

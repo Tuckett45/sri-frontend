@@ -1,0 +1,483 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { provideMockStore, MockStore } from '@ngrx/store/testing';
+import { of, throwError } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { TimeTrackerComponent } from './time-tracker.component';
+import { Job, JobStatus, JobType, Priority } from '../../../models/job.model';
+import { TimeEntry, GeoLocation } from '../../../models/time-entry.model';
+import { GeolocationService, GeolocationErrorType } from '../../../services/geolocation.service';
+import { clockIn, clockOut, updateTimeEntry } from '../../../state/time-entries/time-entry.actions';
+import { selectActiveTimeEntry } from '../../../state/time-entries/time-entry.selectors';
+
+describe('TimeTrackerComponent', () => {
+  let component: TimeTrackerComponent;
+  let fixture: ComponentFixture<TimeTrackerComponent>;
+  let store: MockStore;
+  let geolocationService: jasmine.SpyObj<GeolocationService>;
+
+  const mockJob: Job = {
+    id: '1',
+    jobId: 'JOB-001',
+    client: 'Test Client',
+    siteName: 'Test Site',
+    siteAddress: {
+      street: '123 Main St',
+      city: 'Test City',
+      state: 'TS',
+      zipCode: '12345'
+    },
+    jobType: JobType.Install,
+    priority: Priority.Normal,
+    status: JobStatus.OnSite,
+    scopeDescription: 'Test job',
+    requiredSkills: [],
+    requiredCrewSize: 1,
+    estimatedLaborHours: 4,
+    scheduledStartDate: new Date(),
+    scheduledEndDate: new Date(),
+    attachments: [],
+    notes: [],
+    market: 'TEST_MARKET',
+    company: 'TEST_COMPANY',
+    createdBy: 'test-user',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  const mockLocation: GeoLocation = {
+    latitude: 37.7749,
+    longitude: -122.4194,
+    accuracy: 10
+  };
+
+  const mockTimeEntry: TimeEntry = {
+    id: 'te-1',
+    jobId: '1',
+    technicianId: 'tech-1',
+    clockInTime: new Date(),
+    clockInLocation: mockLocation,
+    isManuallyAdjusted: false,
+    isLocked: false,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  beforeEach(async () => {
+    const geoServiceSpy = jasmine.createSpyObj('GeolocationService', [
+      'getCurrentPositionWithFallback',
+      'calculateDistance',
+      'formatLocation'
+    ]);
+
+    await TestBed.configureTestingModule({
+      declarations: [TimeTrackerComponent],
+      imports: [
+        MatIconModule,
+        MatButtonModule,
+        MatCardModule,
+        MatFormFieldModule,
+        MatInputModule,
+        FormsModule,
+        BrowserAnimationsModule,
+        HttpClientTestingModule
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
+      providers: [
+        provideMockStore({
+          selectors: [
+            { selector: selectActiveTimeEntry, value: null }
+          ]
+        }),
+        { provide: GeolocationService, useValue: geoServiceSpy }
+      ]
+    }).compileComponents();
+
+    store = TestBed.inject(MockStore);
+    geolocationService = TestBed.inject(GeolocationService) as jasmine.SpyObj<GeolocationService>;
+    fixture = TestBed.createComponent(TimeTrackerComponent);
+    component = fixture.componentInstance;
+    component.job = mockJob;
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should subscribe to active time entry on init', () => {
+    store.overrideSelector(selectActiveTimeEntry, mockTimeEntry);
+    store.refreshState();
+    fixture.detectChanges();
+
+    expect(component.activeTimeEntry).toEqual(mockTimeEntry);
+    expect(component.isClockedIn).toBe(true);
+  });
+
+  it('should not be clocked in when no active entry', () => {
+    store.overrideSelector(selectActiveTimeEntry, null);
+    store.refreshState();
+    fixture.detectChanges();
+
+    expect(component.isClockedIn).toBe(false);
+  });
+
+  it('should not be clocked in when active entry is for different job', () => {
+    const differentJobEntry = { ...mockTimeEntry, jobId: 'different-job' };
+    store.overrideSelector(selectActiveTimeEntry, differentJobEntry);
+    store.refreshState();
+    fixture.detectChanges();
+
+    expect(component.isClockedIn).toBe(false);
+  });
+
+  it('should clock in with location', async () => {
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(of(mockLocation));
+    const dispatchSpy = spyOn(store, 'dispatch');
+
+    await component.onClockIn();
+
+    expect(geolocationService.getCurrentPositionWithFallback).toHaveBeenCalled();
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: clockIn.type,
+        jobId: mockJob.id,
+        location: mockLocation
+      })
+    );
+    expect(component.locationStatus).toBe(component.LocationStatus.Success);
+  });
+
+  it('should clock in without location on error', async () => {
+    const error = {
+      type: GeolocationErrorType.PermissionDenied,
+      message: 'Permission denied'
+    };
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(throwError(() => error));
+    const dispatchSpy = spyOn(store, 'dispatch');
+
+    await component.onClockIn();
+
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: clockIn.type,
+        jobId: mockJob.id
+      })
+    );
+    expect(component.locationStatus).toBe(component.LocationStatus.Failed);
+    expect(component.locationError).toBe(error.message);
+  });
+
+  it('should clock out with location', async () => {
+    component.activeTimeEntry = mockTimeEntry;
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(of(mockLocation));
+    const dispatchSpy = spyOn(store, 'dispatch');
+
+    await component.onClockOut();
+
+    expect(geolocationService.getCurrentPositionWithFallback).toHaveBeenCalled();
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: clockOut.type,
+        timeEntryId: mockTimeEntry.id,
+        location: mockLocation
+      })
+    );
+  });
+
+  it('should dispatch clock out with location when geolocation succeeds', async () => {
+    component.activeTimeEntry = mockTimeEntry;
+    const clockOutLocation: GeoLocation = {
+      latitude: 37.7849,
+      longitude: -122.4094,
+      accuracy: 10
+    };
+    
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(of(clockOutLocation));
+    const dispatchSpy = spyOn(store, 'dispatch');
+
+    await component.onClockOut();
+
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: clockOut.type,
+        timeEntryId: mockTimeEntry.id,
+        location: clockOutLocation
+      })
+    );
+    expect(component.locationStatus).toBe(component.LocationStatus.Success);
+  });
+
+  it('should not clock out when no active entry', async () => {
+    component.activeTimeEntry = null;
+    const dispatchSpy = spyOn(store, 'dispatch');
+
+    await component.onClockOut();
+
+    expect(dispatchSpy).not.toHaveBeenCalled();
+  });
+
+  it('should update elapsed time correctly', () => {
+    const clockInTime = new Date();
+    clockInTime.setHours(clockInTime.getHours() - 2);
+    clockInTime.setMinutes(clockInTime.getMinutes() - 30);
+    clockInTime.setSeconds(clockInTime.getSeconds() - 45);
+
+    component.activeTimeEntry = {
+      ...mockTimeEntry,
+      clockInTime
+    };
+    component.isClockedIn = true;
+
+    component['updateElapsedTime']();
+
+    expect(component.elapsedTime).toMatch(/\d{2}:\d{2}:\d{2}/);
+  });
+
+  it('should pad numbers correctly', () => {
+    expect(component['pad'](5)).toBe('05');
+    expect(component['pad'](15)).toBe('15');
+    expect(component['pad'](0)).toBe('00');
+  });
+
+  it('should convert meters to miles correctly', () => {
+    const meters = 1609.34; // 1 mile
+    const miles = component['metersToMiles'](meters);
+    expect(miles).toBeCloseTo(1, 2);
+  });
+
+  it('should show manual mileage entry on location error', async () => {
+    const error = {
+      type: GeolocationErrorType.PermissionDenied,
+      message: 'Permission denied'
+    };
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(throwError(() => error));
+
+    await component.onClockIn();
+
+    expect(component.showManualMileageEntry).toBe(true);
+  });
+
+  it('should save manual mileage', () => {
+    component.activeTimeEntry = mockTimeEntry;
+    component.manualMileage = 25.5;
+    const dispatchSpy = spyOn(store, 'dispatch');
+
+    component.saveManualMileage();
+
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      updateTimeEntry({
+        id: mockTimeEntry.id,
+        timeEntry: {
+          mileage: 25.5
+        }
+      })
+    );
+    expect(component.calculatedMileage).toBe(25.5);
+    expect(component.showManualMileageEntry).toBe(false);
+  });
+
+  it('should cancel manual mileage entry', () => {
+    component.manualMileage = 10;
+    component.showManualMileageEntry = true;
+
+    component.cancelManualMileage();
+
+    expect(component.showManualMileageEntry).toBe(false);
+    expect(component.manualMileage).toBeNull();
+  });
+
+  it('should retry location capture', () => {
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(of(mockLocation));
+
+    component.retryLocationCapture();
+
+    expect(geolocationService.getCurrentPositionWithFallback).toHaveBeenCalled();
+    expect(component.locationStatus).toBe(component.LocationStatus.Success);
+  });
+
+  it('should get correct location status icon', () => {
+    component.locationStatus = component.LocationStatus.Pending;
+    expect(component.locationStatusIcon).toBe('location_searching');
+
+    component.locationStatus = component.LocationStatus.Success;
+    expect(component.locationStatusIcon).toBe('location_on');
+
+    component.locationStatus = component.LocationStatus.Failed;
+    expect(component.locationStatusIcon).toBe('location_off');
+  });
+
+  it('should get correct location status color', () => {
+    component.locationStatus = component.LocationStatus.Pending;
+    expect(component.locationStatusColor).toBe('accent');
+
+    component.locationStatus = component.LocationStatus.Success;
+    expect(component.locationStatusColor).toBe('primary');
+
+    component.locationStatus = component.LocationStatus.Failed;
+    expect(component.locationStatusColor).toBe('warn');
+  });
+
+  it('should format mileage correctly', () => {
+    component.calculatedMileage = null;
+    expect(component.formattedMileage).toBe('N/A');
+
+    component.calculatedMileage = 25.567;
+    expect(component.formattedMileage).toBe('25.57 mi');
+  });
+
+  it('should format location correctly', () => {
+    // When job has a siteAddress, formattedLocation returns the address
+    expect(component.formattedLocation).toBe('123 Main St, Test City, TS 12345');
+
+    // When job has no siteAddress and no currentLocation, returns N/A
+    const jobWithoutAddress = { ...mockJob, siteAddress: undefined as any };
+    component.job = jobWithoutAddress;
+    component.currentLocation = null;
+    expect(component.formattedLocation).toBe('N/A');
+
+    // When job has no siteAddress but has currentLocation, falls back to coordinates
+    component.currentLocation = mockLocation;
+    geolocationService.formatLocation.and.returnValue('37.7749° N, 122.4194° W');
+    expect(component.formattedLocation).toBe('37.7749° N, 122.4194° W');
+
+    // Restore original job
+    component.job = mockJob;
+  });
+
+  it('should show manual time adjustment for admin', () => {
+    component.isAdmin = true;
+    component.activeTimeEntry = mockTimeEntry;
+    component.isClockedIn = true;
+
+    component.onManualTimeAdjustment();
+
+    expect(component.showManualTimeAdjustment).toBe(true);
+  });
+
+  it('should not show manual time adjustment for non-admin', () => {
+    component.isAdmin = false;
+    component.activeTimeEntry = mockTimeEntry;
+
+    component.onManualTimeAdjustment();
+
+    expect(component.showManualTimeAdjustment).toBe(false);
+  });
+
+  // --- Gap coverage: concurrent clock-in prevention (Req 1.4) ---
+  it('should hide clock-in button when already clocked in', () => {
+    store.overrideSelector(selectActiveTimeEntry, mockTimeEntry);
+    store.refreshState();
+    fixture.detectChanges();
+
+    expect(component.isClockedIn).toBe(true);
+
+    const clockInButton = fixture.nativeElement.querySelector('.time-tracker__clock-button--in');
+    expect(clockInButton).toBeNull();
+
+    const clockOutButton = fixture.nativeElement.querySelector('.time-tracker__clock-button--out');
+    expect(clockOutButton).toBeTruthy();
+  });
+
+  it('should show clock-in button when not clocked in', () => {
+    store.overrideSelector(selectActiveTimeEntry, null);
+    store.refreshState();
+    fixture.detectChanges();
+
+    expect(component.isClockedIn).toBe(false);
+
+    const clockInButton = fixture.nativeElement.querySelector('.time-tracker__clock-button--in');
+    expect(clockInButton).toBeTruthy();
+
+    const clockOutButton = fixture.nativeElement.querySelector('.time-tracker__clock-button--out');
+    expect(clockOutButton).toBeNull();
+  });
+
+  // --- Gap coverage: error state display (Req 1.5, 2.5) ---
+  it('should display location error message when location capture fails', async () => {
+    const error = {
+      type: GeolocationErrorType.PositionUnavailable,
+      message: 'Location information unavailable.'
+    };
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(throwError(() => error));
+
+    await component.onClockIn();
+    fixture.detectChanges();
+
+    expect(component.locationError).toBe('Location information unavailable.');
+    expect(component.locationStatus).toBe(component.LocationStatus.Failed);
+
+    const errorCard = fixture.nativeElement.querySelector('.time-tracker__error');
+    expect(errorCard).toBeTruthy();
+  });
+
+  it('should clear error and retry location capture on retry button click', () => {
+    // Set up failed state
+    component.locationStatus = component.LocationStatus.Failed;
+    component.locationError = 'Some error';
+    fixture.detectChanges();
+
+    // Retry succeeds
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(of(mockLocation));
+    component.retryLocationCapture();
+
+    expect(component.locationStatus).toBe(component.LocationStatus.Success);
+    expect(component.locationError).toBeNull();
+    expect(component.currentLocation).toEqual(mockLocation);
+  });
+
+  // --- Gap coverage: clock-out without location on geolocation failure (Req 2.3) ---
+  it('should clock out without location when geolocation fails', async () => {
+    component.activeTimeEntry = mockTimeEntry;
+    const error = {
+      type: GeolocationErrorType.Timeout,
+      message: 'Location request timed out.'
+    };
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(throwError(() => error));
+    const dispatchSpy = spyOn(store, 'dispatch');
+
+    await component.onClockOut();
+
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: clockOut.type,
+        timeEntryId: mockTimeEntry.id
+      })
+    );
+    expect(component.locationStatus).toBe(component.LocationStatus.Failed);
+  });
+
+  // --- Gap coverage: clock-out with reason (Req 2.1) ---
+  it('should clock out with a specific reason', async () => {
+    component.activeTimeEntry = mockTimeEntry;
+    geolocationService.getCurrentPositionWithFallback.and.returnValue(of(mockLocation));
+    const dispatchSpy = spyOn(store, 'dispatch');
+
+    await component.onClockOut('end_of_day');
+
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: clockOut.type,
+        timeEntryId: mockTimeEntry.id,
+        location: mockLocation,
+        reason: 'end_of_day'
+      })
+    );
+  });
+
+  it('should toggle clock out reasons visibility', () => {
+    expect(component.showClockOutReasons).toBe(false);
+
+    component.toggleClockOutReasons();
+    expect(component.showClockOutReasons).toBe(true);
+
+    component.toggleClockOutReasons();
+    expect(component.showClockOutReasons).toBe(false);
+  });
+});

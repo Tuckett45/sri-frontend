@@ -1,0 +1,115 @@
+.available-techs-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #144f80;
+      }
+    }
+  }
+
+  mat-card-content {
+    .widget-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .widget-error {
+      text-align: center;
+      padding: 1.5rem;
+      color: #d32f2f;
+
+      p {
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    .count-header {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 1rem;
+
+      .count {
+        font-size: 28px;
+        font-weight: 700;
+        color: #144f80;
+      }
+
+      .count-label {
+        font-size: 14px;
+        color: #666;
+      }
+    }
+
+    .technicians-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .technician-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: #f5f7fa;
+        border-color: #144f80;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(20, 79, 128, 0.1);
+      }
+
+      &:focus {
+        outline: 2px solid #144f80;
+        outline-offset: 2px;
+      }
+
+      .tech-icon {
+        color: #144f80;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .tech-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+      }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #999;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        font-size: 14px;
+      }
+    }
+  }
+}

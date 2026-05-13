@@ -1,0 +1,94 @@
+<div class="daily-view">
+  <!-- Header -->
+  <div class="daily-view__header">
+    <div class="daily-view__date">
+      <mat-icon class="daily-view__date-icon">today</mat-icon>
+      <h1 class="daily-view__date-text">{{ formattedDate }}</h1>
+    </div>
+    
+    <!-- Sync Status -->
+    <div class="daily-view__sync-status" [class.daily-view__sync-status--offline]="!isOnline">
+      <mat-icon class="daily-view__sync-icon" [class.daily-view__sync-icon--spinning]="isSyncing">
+        {{ syncStatusIcon }}
+      </mat-icon>
+      <span class="daily-view__sync-text">{{ syncStatusMessage }}</span>
+    </div>
+  </div>
+
+  <!-- Job Count Summary -->
+  <div class="daily-view__summary">
+    <div class="daily-view__summary-card daily-view__summary-card--total">
+      <div class="daily-view__summary-count">{{ jobCounts.total }}</div>
+      <div class="daily-view__summary-label">Total Jobs</div>
+    </div>
+    
+    <div class="daily-view__summary-card daily-view__summary-card--not-started">
+      <div class="daily-view__summary-count">{{ jobCounts.notStarted }}</div>
+      <div class="daily-view__summary-label">Not Started</div>
+    </div>
+    
+    <div class="daily-view__summary-card daily-view__summary-card--in-progress">
+      <div class="daily-view__summary-count">{{ jobCounts.enRoute + jobCounts.onSite }}</div>
+      <div class="daily-view__summary-label">In Progress</div>
+    </div>
+    
+    <div class="daily-view__summary-card daily-view__summary-card--completed">
+      <div class="daily-view__summary-count">{{ jobCounts.completed }}</div>
+      <div class="daily-view__summary-label">Completed</div>
+    </div>
+  </div>
+
+  <!-- Pull to Refresh Indicator -->
+  <div class="daily-view__refresh" *ngIf="isRefreshing">
+    <mat-spinner diameter="32"></mat-spinner>
+    <span>Refreshing...</span>
+  </div>
+
+  <!-- Job List -->
+  <div class="daily-view__content" 
+       (touchstart)="onRefresh()" 
+       [class.daily-view__content--refreshing]="isRefreshing">
+    
+    <ng-container *ngIf="jobs$ | async as jobs; else loading">
+      <ng-container *ngIf="jobs.length > 0; else noJobs">
+        <div class="daily-view__jobs">
+          <frm-job-card
+            *ngFor="let job of jobs; trackBy: trackByJobId"
+            [job]="job"
+            (swipeRight)="onSwipeRight(job)"
+            class="daily-view__job-card">
+          </frm-job-card>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- No Jobs State -->
+    <ng-template #noJobs>
+      <div class="daily-view__empty">
+        <mat-icon class="daily-view__empty-icon">event_available</mat-icon>
+        <h2 class="daily-view__empty-title">No Jobs Today</h2>
+        <p class="daily-view__empty-message">
+          You don't have any jobs scheduled for today. Enjoy your day!
+        </p>
+      </div>
+    </ng-template>
+
+    <!-- Loading State -->
+    <ng-template #loading>
+      <div class="daily-view__loading">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p>Loading your schedule...</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Floating Action Button -->
+  <button 
+    mat-fab 
+    color="primary" 
+    class="daily-view__fab"
+    (click)="onQuickAction()"
+    aria-label="Quick actions">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>

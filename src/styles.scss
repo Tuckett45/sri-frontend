@@ -4,6 +4,12 @@
 @import "primeicons/primeicons.css";
 @import "primeflex/primeflex.css";
 
+// ATLAS Brand Styles
+@import 'styles/atlas-variables';
+@import 'styles/atlas-components';
+
+// Field Resource Management Styles
+@import 'styles/field-resource-management';
 
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
@@ -44,3 +50,399 @@ mat-error{
   height: 100% !important;
 }
 
+
+/* Force black input text in Technicians search bar */
+.technician-list-container .search-field .mdc-text-field--outlined {
+  --mdc-outlined-text-field-input-text-color: #000000 !important;
+  --mdc-outlined-text-field-focus-input-text-color: #000000 !important;
+  --mdc-outlined-text-field-hover-input-text-color: #000000 !important;
+  --mdc-outlined-text-field-label-text-color: #000000 !important;
+  --mdc-outlined-text-field-focus-label-text-color: #000000 !important;
+  --mdc-outlined-text-field-hover-label-text-color: #000000 !important;
+}
+
+.technician-list-container .search-field .mdc-text-field__input {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+.technician-list-container .search-field .mdc-floating-label,
+.technician-list-container .search-field .mat-mdc-floating-label {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Force black text on technician form checkbox */
+.technician-form-container .mat-mdc-checkbox {
+  --mdc-checkbox-unselected-icon-color: #000000;
+  --mdc-checkbox-selected-icon-color: #FF6B00;
+  --mdc-checkbox-selected-focus-icon-color: #FF6B00;
+  --mdc-checkbox-selected-hover-icon-color: #E65C00;
+  --mdc-checkbox-selected-pressed-icon-color: #FF6B00;
+  --mdc-checkbox-selected-focus-state-layer-color: #FF6B00;
+  --mdc-checkbox-selected-hover-state-layer-color: #FF6B00;
+  --mdc-checkbox-selected-pressed-state-layer-color: #FF6B00;
+
+  label, .mdc-label, .mdc-form-field > label {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+}
+
+/* Force white background on filter panels and expansion panels in FRM list pages */
+.filter-panel,
+.filter-card {
+  background-color: #ffffff !important;
+  color: #424242 !important;
+
+  .mat-mdc-card-content {
+    color: #424242 !important;
+  }
+}
+
+.filter-panel .filter-expansion,
+.filter-card .filter-expansion,
+.filter-expansion.mat-expansion-panel {
+  background-color: #ffffff !important;
+  color: #424242 !important;
+
+  .mat-expansion-panel-header {
+    background-color: #fafafa !important;
+    color: #424242 !important;
+
+    .mat-expansion-panel-header-title,
+    .mat-expansion-indicator::after,
+    mat-panel-title {
+      color: #424242 !important;
+    }
+  }
+
+  .mat-expansion-panel-body {
+    background-color: #ffffff !important;
+    color: #424242 !important;
+  }
+}
+
+/* Force white on mat-form-field outlines inside filter areas */
+.filter-panel,
+.filter-card {
+  .mat-mdc-text-field-wrapper.mdc-text-field--outlined {
+    --mdc-outlined-text-field-input-text-color: #000000;
+    --mdc-outlined-text-field-label-text-color: #000000;
+    --mdc-outlined-text-field-focus-label-text-color: #000000;
+    --mdc-outlined-text-field-hover-label-text-color: #000000;
+    --mdc-outlined-text-field-outline-color: rgba(0, 0, 0, 0.38);
+    --mdc-outlined-text-field-hover-outline-color: rgba(0, 0, 0, 0.87);
+    --mdc-outlined-text-field-focus-outline-color: #1976d2;
+  }
+
+  .mat-mdc-select-value,
+  .mat-mdc-select-arrow {
+    color: #000000 !important;
+  }
+
+  .mdc-floating-label,
+  .mat-mdc-floating-label {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+
+  .mdc-text-field__input {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+}
+
+/* White background for certification datepicker calendar popup */
+.mat-datepicker-content {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+
+  .mat-calendar {
+    background-color: #ffffff !important;
+  }
+
+  .mat-calendar-body-cell-content {
+    color: #000000 !important;
+  }
+
+  .mat-calendar-body-label,
+  .mat-calendar-period-button,
+  .mat-calendar-table-header th {
+    color: rgba(0, 0, 0, 0.87) !important;
+  }
+
+  .mat-calendar-arrow {
+    fill: rgba(0, 0, 0, 0.87) !important;
+  }
+
+  .mat-calendar-previous-button,
+  .mat-calendar-next-button {
+    color: rgba(0, 0, 0, 0.87) !important;
+  }
+
+  .mat-calendar-body-today:not(.mat-calendar-body-selected) {
+    border-color: rgba(0, 0, 0, 0.38) !important;
+  }
+}
+
+/* Blue calendar icons in technician form certifications */
+.technician-form-container .certification-item .mat-datepicker-toggle {
+  color: #1976d2 !important;
+
+  .mat-mdc-icon-button {
+    color: #1976d2 !important;
+
+    .mat-mdc-button-persistent-ripple,
+    mat-icon,
+    svg {
+      color: #1976d2 !important;
+      fill: #1976d2 !important;
+    }
+  }
+}
+
+/* Blue back arrow buttons in detail pages */
+button[mat-icon-button] mat-icon,
+button.mat-mdc-icon-button mat-icon {
+  &[ng-reflect-font-icon="arrow_back"] {
+    color: #1976d2 !important;
+  }
+}
+
+.back-button,
+.back-button mat-icon,
+.back-button .mat-icon {
+  color: #1976d2 !important;
+}
+
+/* Target any icon button containing arrow_back icon in detail headers */
+.detail-header button[mat-icon-button],
+.detail-header button[mat-icon-button] mat-icon,
+.detail-header button[mat-icon-button] .mat-icon,
+.header-left button[mat-icon-button],
+.header-left button[mat-icon-button] mat-icon,
+.header-left button[mat-icon-button] .mat-icon,
+.header-content button[mat-icon-button],
+.header-content button[mat-icon-button] mat-icon,
+.header-content button[mat-icon-button] .mat-icon {
+  color: #1976d2 !important;
+}
+
+/* Force light theme on all Material dialogs */
+.cdk-overlay-container {
+  /* Dialog surface */
+  .mat-mdc-dialog-container,
+  .mat-mdc-dialog-surface,
+  .mdc-dialog__surface {
+    background-color: #ffffff !important;
+    color: #424242 !important;
+  }
+
+  /* Dialog title */
+  .mat-mdc-dialog-title,
+  .mdc-dialog__title {
+    color: #212121 !important;
+  }
+
+  /* Dialog content */
+  .mat-mdc-dialog-content,
+  .mdc-dialog__content {
+    color: #424242 !important;
+  }
+
+  /* Form fields inside dialogs */
+  .mat-mdc-text-field-wrapper.mdc-text-field--outlined {
+    --mdc-outlined-text-field-input-text-color: #000000;
+    --mdc-outlined-text-field-label-text-color: #000000;
+    --mdc-outlined-text-field-focus-label-text-color: #000000;
+    --mdc-outlined-text-field-hover-label-text-color: #000000;
+    --mdc-outlined-text-field-outline-color: rgba(0, 0, 0, 0.38);
+    --mdc-outlined-text-field-hover-outline-color: rgba(0, 0, 0, 0.87);
+    --mdc-outlined-text-field-focus-outline-color: #1976d2;
+  }
+
+  .mat-mdc-text-field-wrapper.mdc-text-field--filled {
+    --mdc-filled-text-field-input-text-color: #000000;
+    --mdc-filled-text-field-label-text-color: #000000;
+    --mdc-filled-text-field-container-color: #f5f5f5;
+  }
+
+  .mdc-text-field__input,
+  .mat-mdc-input-element {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+
+  .mdc-floating-label,
+  .mat-mdc-floating-label {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+
+  /* Select dropdowns inside dialogs */
+  .mat-mdc-select-value,
+  .mat-mdc-select-arrow {
+    color: #000000 !important;
+  }
+
+  /* Checkbox labels inside dialogs */
+  .mat-mdc-checkbox label,
+  .mdc-form-field > label {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+
+  /* Radio button labels */
+  .mat-mdc-radio-button label {
+    color: #000000 !important;
+  }
+
+  /* Mat-card inside dialogs */
+  .mat-mdc-card {
+    background-color: #ffffff !important;
+    color: #424242 !important;
+  }
+
+  /* Stepper inside dialogs (job form) */
+  .mat-stepper-horizontal,
+  .mat-stepper-vertical {
+    background-color: #ffffff !important;
+  }
+
+  .mat-step-header .mat-step-label {
+    color: #424242 !important;
+  }
+
+  /* Chip text */
+  .mat-mdc-chip {
+    color: #424242 !important;
+  }
+
+  /* Expansion panels inside dialogs */
+  .mat-expansion-panel {
+    background-color: #ffffff !important;
+    color: #424242 !important;
+
+    .mat-expansion-panel-header {
+      background-color: #fafafa !important;
+      color: #424242 !important;
+    }
+
+    .mat-expansion-panel-header-title {
+      color: #424242 !important;
+    }
+  }
+}
+
+/* Notification bell icon - orange with red badge */
+.notification-bell {
+  mat-icon, .mat-icon {
+    color: #FF6B00 !important;
+  }
+
+  .mat-badge-content {
+    background-color: #f44336 !important;
+    color: #ffffff !important;
+    font-size: 10px;
+    font-weight: 600;
+  }
+}
+
+/* Notification menu panel - force light theme */
+.notification-menu.mat-mdc-menu-panel,
+.mat-mdc-menu-panel.notification-menu {
+  background-color: #ffffff !important;
+
+  .notification-header {
+    background-color: #ffffff !important;
+
+    h3 {
+      color: #212121 !important;
+    }
+  }
+
+  .notification-list {
+    background-color: #ffffff !important;
+  }
+
+  .empty-state {
+    color: #9e9e9e !important;
+
+    mat-icon {
+      color: #bdbdbd !important;
+    }
+
+    p {
+      color: #9e9e9e !important;
+    }
+  }
+
+  .notification-group-header {
+    background-color: #f5f5f5 !important;
+    color: #757575 !important;
+  }
+
+  .mat-mdc-menu-item {
+    color: #424242 !important;
+
+    &.unread {
+      background-color: rgba(25, 118, 210, 0.08) !important;
+    }
+  }
+
+  .notification-message {
+    color: #212121 !important;
+  }
+
+  .notification-time {
+    color: #9e9e9e !important;
+  }
+
+  .notification-footer {
+    background-color: #ffffff !important;
+
+    mat-icon {
+      color: #757575 !important;
+    }
+
+    a {
+      color: #1976d2 !important;
+    }
+  }
+
+  mat-divider {
+    border-color: #e0e0e0 !important;
+  }
+}
+
+/* Fix white corners on dialog modals */
+.cdk-overlay-container .mat-mdc-dialog-container {
+  border-radius: 12px;
+  overflow: hidden;
+
+  .mdc-dialog__surface,
+  .mat-mdc-dialog-surface {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+}
+
+/* Mobile full-screen dialog */
+@media (max-width: 768px) {
+  .cdk-overlay-pane.mobile-dialog {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+
+    .mat-mdc-dialog-container {
+      border-radius: 0;
+
+      .mdc-dialog__surface,
+      .mat-mdc-dialog-surface {
+        border-radius: 0;
+      }
+    }
+  }
+}

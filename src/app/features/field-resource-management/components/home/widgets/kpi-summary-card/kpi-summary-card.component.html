@@ -1,0 +1,14 @@
+<div class="kpi-container">
+  <div
+    *ngFor="let kpi of kpis"
+    class="kpi-hero-card"
+    [ngClass]="getColorClass(kpi.color)"
+  >
+    <mat-icon class="kpi-icon">{{ kpi.icon }}</mat-icon>
+    <span class="kpi-value">{{ kpi.value }}</span>
+    <span class="kpi-label">{{ kpi.label }}</span>
+    <div *ngIf="kpi.trend" class="kpi-trend" [ngClass]="getTrendClass(kpi.trend)">
+      <mat-icon>{{ getTrendIcon(kpi.trend) }}</mat-icon>
+    </div>
+  </div>
+</div>

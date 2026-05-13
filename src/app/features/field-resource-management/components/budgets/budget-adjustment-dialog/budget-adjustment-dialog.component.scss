@@ -1,0 +1,67 @@
+@import '../../../styles/frm-variables';
+
+.current-budget-info {
+  margin-bottom: $frm-spacing-md;
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: $frm-spacing-xs 0;
+
+    .info-label {
+      color: $frm-text-secondary;
+      font-size: $frm-font-size-sm;
+    }
+
+    .info-value {
+      font-weight: $frm-font-weight-medium;
+    }
+  }
+}
+
+mat-divider {
+  margin: $frm-spacing-md 0;
+}
+
+.adjustment-form {
+  padding-top: $frm-spacing-md;
+
+  .full-width {
+    width: 100%;
+    margin-bottom: $frm-spacing-sm;
+  }
+}
+
+.preview-section {
+  background: $frm-bg-secondary;
+  border-radius: $frm-border-radius-md;
+  padding: $frm-spacing-md;
+  margin-top: $frm-spacing-sm;
+
+  h3 {
+    margin: 0 0 $frm-spacing-sm 0;
+    font-size: $frm-font-size-base;
+    font-weight: $frm-font-weight-medium;
+    color: $frm-text-secondary;
+  }
+
+  .preview-row {
+    display: flex;
+    justify-content: space-between;
+    padding: $frm-spacing-xs 0;
+
+    .preview-label {
+      font-size: $frm-font-size-sm;
+      color: $frm-text-secondary;
+    }
+
+    .preview-value {
+      font-weight: $frm-font-weight-bold;
+      color: $frm-primary;
+
+      &.negative-value {
+        color: $frm-error;
+      }
+    }
+  }
+}

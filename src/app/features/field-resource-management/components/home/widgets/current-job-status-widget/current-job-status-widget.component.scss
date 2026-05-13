@@ -1,0 +1,138 @@
+.current-job-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #144f80;
+      }
+    }
+  }
+
+  mat-card-content {
+    .widget-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .widget-error {
+      text-align: center;
+      padding: 1.5rem;
+      color: #d32f2f;
+
+      p {
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    .clocked-in-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 0.75rem;
+      border-radius: 8px;
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      font-size: 13px;
+      font-weight: 600;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      .clocked-label {
+        flex: 1;
+      }
+
+      .clocked-time {
+        font-family: 'Roboto Mono', monospace;
+        font-size: 14px;
+        letter-spacing: 1px;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .job-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+
+      .label {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .job-id {
+        color: #144f80;
+      }
+
+      .status-badge {
+        padding: 2px 10px;
+        border-radius: 12px;
+        background-color: #e3f2fd;
+        color: #1565c0;
+        font-size: 12px;
+
+        &.status-in-progress {
+          background-color: #e8f5e9;
+          color: #2e7d32;
+        }
+
+        &.status-not-started {
+          background-color: #f5f5f5;
+          color: #666;
+        }
+      }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #999;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        font-size: 14px;
+      }
+    }
+  }
+}

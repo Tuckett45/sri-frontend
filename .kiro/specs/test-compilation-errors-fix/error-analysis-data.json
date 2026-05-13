@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-03-06T19:59:32.066Z",
+  "totalErrors": 0,
+  "summary": {
+    "syntaxErrors": 0,
+    "enumErrors": 0,
+    "propertyErrors": 0,
+    "selectorErrors": 0,
+    "importErrors": 0,
+    "otherErrors": 0
+  },
+  "categorized": {
+    "syntaxErrors": [],
+    "enumErrors": [],
+    "propertyErrors": [],
+    "selectorErrors": [],
+    "importErrors": [],
+    "otherErrors": []
+  },
+  "allErrors": []
+}

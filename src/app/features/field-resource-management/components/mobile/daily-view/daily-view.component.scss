@@ -1,0 +1,272 @@
+.daily-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f5f5f5;
+  overflow: hidden;
+
+  // Header
+  &__header {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &__date {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__date-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  &__date-text {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  &__sync-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    opacity: 0.9;
+
+    &--offline {
+      color: #ffeb3b;
+    }
+  }
+
+  &__sync-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+
+    &--spinning {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &__sync-text {
+    font-size: 13px;
+  }
+
+  // Summary Cards
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 16px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  &__summary-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    min-height: 70px;
+    touch-action: manipulation;
+
+    &--total {
+      background-color: #e3f2fd;
+      color: #1976d2;
+    }
+
+    &--not-started {
+      background-color: #f5f5f5;
+      color: #757575;
+    }
+
+    &--in-progress {
+      background-color: #fff3e0;
+      color: #f57c00;
+    }
+
+    &--completed {
+      background-color: #e8f5e9;
+      color: #388e3c;
+    }
+  }
+
+  &__summary-count {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  &__summary-label {
+    font-size: 11px;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  // Refresh Indicator
+  &__refresh {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    background-color: white;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 14px;
+    color: #757575;
+  }
+
+  // Content Area
+  &__content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+
+    &--refreshing {
+      opacity: 0.6;
+    }
+  }
+
+  &__jobs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__job-card {
+    // Job cards will have their own styling
+  }
+
+  // Empty State
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+    min-height: 300px;
+  }
+
+  &__empty-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #bdbdbd;
+    margin-bottom: 16px;
+  }
+
+  &__empty-title {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #424242;
+  }
+
+  &__empty-message {
+    margin: 0;
+    font-size: 14px;
+    color: #757575;
+    max-width: 300px;
+  }
+
+  // Loading State
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    gap: 16px;
+    min-height: 300px;
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #757575;
+    }
+  }
+
+  // Floating Action Button
+  &__fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 100;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    
+    // Large touch target
+    min-width: 56px;
+    min-height: 56px;
+  }
+}
+
+// Animations
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Mobile Optimizations
+@media (max-width: 767px) {
+  .daily-view {
+    &__summary {
+      gap: 6px;
+      padding: 12px;
+    }
+
+    &__summary-card {
+      padding: 10px 6px;
+      min-height: 65px;
+    }
+
+    &__summary-count {
+      font-size: 24px;
+    }
+
+    &__summary-label {
+      font-size: 10px;
+    }
+
+    &__date-text {
+      font-size: 18px;
+    }
+
+    &__content {
+      padding: 12px;
+    }
+
+    &__jobs {
+      gap: 10px;
+    }
+  }
+}
+
+// Tablet Optimizations
+@media (min-width: 768px) and (max-width: 1023px) {
+  .daily-view {
+    &__summary {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 20px;
+    }
+
+    &__content {
+      padding: 20px;
+    }
+  }
+}

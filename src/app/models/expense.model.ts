@@ -80,6 +80,9 @@ export interface Expense {
 
   images?: ExpenseImage[];
 
+  approvedBy?: string;
+  approvedAt?: string;
+
   createdBy?: string;
   createdDate?: string;
   updatedBy?: string;

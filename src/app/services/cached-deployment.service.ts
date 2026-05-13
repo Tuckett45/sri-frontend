@@ -60,7 +60,7 @@ export interface CacheEntry<T> {
   providedIn: 'root'
 })
 export class CachedDeploymentService {
-  private readonly baseUrl = `${environment.apiUrl}/api/deployments`;
+  private readonly baseUrl = `${environment.apiUrl}/deployments`;
   private readonly cache = new Map<string, CacheEntry<any>>();
   
   // Cache configuration

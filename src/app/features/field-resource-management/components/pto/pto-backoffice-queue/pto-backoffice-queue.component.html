@@ -1,0 +1,79 @@
+<div class="pto-backoffice-queue">
+  <div class="queue-header">
+    <h2>Backoffice Approval Queue</h2>
+  </div>
+
+  <div class="queue-content" *ngIf="queue$ | async as queue">
+    <table *ngIf="queue.length > 0; else emptyState" class="queue-table">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Manager Approved</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Leave Type</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let request of queue; trackBy: trackByRequest">
+          <td>{{ request.employeeName }}</td>
+          <td>{{ getManagerApprovalDate(request) | date:'mediumDate' }}</td>
+          <td>{{ request.startDate | date:'mediumDate' }}</td>
+          <td>{{ request.endDate | date:'mediumDate' }}</td>
+          <td>{{ request.requestType }}</td>
+          <td class="notes-cell">{{ request.reason || '—' }}</td>
+          <td class="actions-cell">
+            <div class="action-buttons" *ngIf="rejectingRequestId !== request.id">
+              <button
+                class="btn-approve"
+                (click)="onApprove(request)"
+                type="button"
+                aria-label="Approve request">
+                Approve
+              </button>
+              <button
+                class="btn-reject"
+                (click)="onRejectStart(request)"
+                type="button"
+                aria-label="Reject request">
+                Reject
+              </button>
+            </div>
+
+            <div class="rejection-form" *ngIf="rejectingRequestId === request.id">
+              <textarea
+                [(ngModel)]="rejectionReason"
+                placeholder="Enter rejection reason..."
+                rows="2"
+                class="rejection-textarea"
+                aria-label="Rejection reason"></textarea>
+              <div class="rejection-actions">
+                <button
+                  class="btn-confirm-reject"
+                  (click)="onRejectConfirm(request)"
+                  [disabled]="!rejectionReason.trim()"
+                  type="button">
+                  Confirm Reject
+                </button>
+                <button
+                  class="btn-cancel"
+                  (click)="onRejectCancel()"
+                  type="button">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <p>No pending requests to review.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

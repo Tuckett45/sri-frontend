@@ -1,0 +1,22 @@
+<div class="permission-error-container">
+  <div class="error-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+  </div>
+  
+  <h2 class="error-title">Access Denied</h2>
+  
+  <p class="error-message">{{ displayMessage }}</p>
+  
+  <div class="error-actions">
+    <button *ngIf="showBackButton" class="btn btn-secondary" (click)="goBack()">
+      Go Back
+    </button>
+    <button *ngIf="showContactButton" class="btn btn-primary" (click)="contactAdmin()">
+      Contact Administrator
+    </button>
+  </div>
+</div>

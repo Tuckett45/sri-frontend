@@ -1,0 +1,74 @@
+<mat-card class="recent-jobs-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>history</mat-icon>
+      Recent Jobs
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading$ | async" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>Unable to load data. Please try again.</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Data state -->
+    <ng-container *ngIf="!(loading$ | async) && !error">
+      <div *ngIf="(recentJobs$ | async) as jobs" class="jobs-list">
+        <div
+          *ngFor="let job of jobs"
+          class="job-item"
+          (click)="onJobClick(job.id)"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="onJobClick(job.id)"
+          [attr.aria-label]="'Job ' + job.jobId + ' - ' + job.client + ' - ' + getStatusLabel(job.status)"
+        >
+          <div class="job-details">
+            <div class="job-header">
+              <div class="job-info">
+                <span class="job-id">{{ job.jobId }}</span>
+                <span class="job-client">{{ job.client }}</span>
+                <span class="job-site">{{ job.siteName }}</span>
+                <span class="job-updated">{{ formatDate(job.updatedAt) }}</span>
+              </div>
+              <span class="status-badge" [ngClass]="getStatusClass(job.status)">
+                {{ getStatusLabel(job.status) }}
+              </span>
+            </div>
+            <div class="tech-summary">
+              <mat-icon class="tech-summary-icon">engineering</mat-icon>
+              <span class="tech-count">{{ job.assignedTechnicians.length }}</span>
+              <span class="tech-count-label">
+                {{ job.assignedTechnicians.length === 1 ? 'technician' : 'technicians' }}
+              </span>
+            </div>
+            <div *ngIf="job.assignedTechnicians.length > 0" class="tech-list">
+              <div *ngFor="let tech of job.assignedTechnicians" class="tech-chip">
+                <mat-icon class="tech-chip-icon">person</mat-icon>
+                <span>{{ tech.firstName }} {{ tech.lastName }}</span>
+              </div>
+            </div>
+            <div *ngIf="job.assignedTechnicians.length === 0" class="tech-list-empty">
+              <span>No technicians assigned</span>
+            </div>
+            <div *ngIf="job.crew" class="crew-info">
+              <mat-icon class="crew-icon">groups</mat-icon>
+              <span class="crew-name">{{ job.crew.name }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="jobs.length === 0" class="empty-state">
+          <mat-icon>inbox</mat-icon>
+          <p>No recent jobs</p>
+        </div>
+      </div>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

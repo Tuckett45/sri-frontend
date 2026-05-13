@@ -1,0 +1,210 @@
+<div class="approval-list-container">
+  <div class="page-header">
+    <h1>Pending Approvals</h1>
+    <p class="subtitle">Review and approve deployment state transitions</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+    <p>Loading pending approvals...</p>
+  </div>
+
+  <!-- Error State -->
+  <p-message 
+    *ngIf="error && !loading" 
+    severity="error" 
+    [text]="error"
+    styleClass="error-message">
+  </p-message>
+  <div *ngIf="error && !loading" class="retry-container">
+    <p-button 
+      label="Retry" 
+      icon="pi pi-refresh" 
+      (onClick)="onRetry()"
+      styleClass="p-button-outlined">
+    </p-button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && pendingApprovals.length === 0" class="empty-state">
+    <i class="pi pi-check-circle"></i>
+    <h3>No Pending Approvals</h3>
+    <p>You have no approval requests at this time.</p>
+  </div>
+
+  <!-- Approvals Table -->
+  <div *ngIf="!loading && !error && pendingApprovals.length > 0" class="table-container">
+    <p-table 
+      [value]="pendingApprovals"
+      [paginator]="true"
+      [rows]="10"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} approvals"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="p-datatable-striped"
+      responsiveLayout="scroll">
+      
+      <!-- ID Column -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Approval ID</th>
+          <th>For State</th>
+          <th>Status</th>
+          <th>Approver</th>
+          <th>Approved At</th>
+          <th>Comments</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+
+      <!-- Data Rows -->
+      <ng-template pTemplate="body" let-approval>
+        <tr>
+          <!-- ID -->
+          <td>
+            <span class="approval-id" [pTooltip]="approval.id">
+              {{ approval.id.substring(0, 8) }}...
+            </span>
+          </td>
+
+          <!-- For State -->
+          <td>
+            <p-tag 
+              [value]="formatStateLabel(approval.forState)" 
+              [severity]="getStateSeverity(approval.forState)">
+            </p-tag>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <p-tag 
+              [value]="formatStatusLabel(approval.status)" 
+              [severity]="getStatusSeverity(approval.status)">
+            </p-tag>
+          </td>
+
+          <!-- Approver -->
+          <td>
+            {{ approval.approverId || 'N/A' }}
+          </td>
+
+          <!-- Approved At -->
+          <td>
+            {{ formatDate(approval.approvedAt) }}
+          </td>
+
+          <!-- Comments -->
+          <td>
+            <span [pTooltip]="approval.comments || 'No comments'" tooltipPosition="top">
+              {{ approval.comments ? (approval.comments.length > 50 ? approval.comments.substring(0, 50) + '...' : approval.comments) : 'N/A' }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <div class="action-buttons">
+              <p-button 
+                *ngIf="approval.status === ApprovalStatus.PENDING"
+                label="Approve" 
+                icon="pi pi-check" 
+                (onClick)="onApprove(approval)"
+                styleClass="p-button-success p-button-sm"
+                [disabled]="recordingDecision">
+              </p-button>
+              <p-button 
+                *ngIf="approval.status === ApprovalStatus.PENDING"
+                label="Deny" 
+                icon="pi pi-times" 
+                (onClick)="onDeny(approval)"
+                styleClass="p-button-danger p-button-sm"
+                [disabled]="recordingDecision">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty Message -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">
+            No pending approvals found.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Decision Dialog -->
+  <p-dialog 
+    [(visible)]="showDecisionDialog"
+    [header]="getDialogTitle()"
+    [modal]="true"
+    [closable]="!recordingDecision"
+    [closeOnEscape]="!recordingDecision"
+    [style]="{width: '500px'}"
+    styleClass="decision-dialog">
+    
+    <div class="dialog-content">
+      <!-- Approval Info -->
+      <div class="approval-info" *ngIf="selectedApproval">
+        <div class="info-row">
+          <span class="label">Approval ID:</span>
+          <span class="value">{{ selectedApproval.id }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">For State:</span>
+          <p-tag 
+            [value]="formatStateLabel(selectedApproval.forState)" 
+            [severity]="getStateSeverity(selectedApproval.forState)">
+          </p-tag>
+        </div>
+      </div>
+
+      <!-- Comments Field -->
+      <div class="form-field">
+        <label for="comments">
+          Comments
+          <span *ngIf="decisionType === 'DENIED'" class="required">*</span>
+        </label>
+        <textarea 
+          id="comments"
+          pInputTextarea 
+          [(ngModel)]="decisionComments"
+          [rows]="4"
+          [autoResize]="true"
+          placeholder="Enter your comments..."
+          [disabled]="recordingDecision">
+        </textarea>
+        <small *ngIf="decisionType === 'DENIED'" class="help-text">
+          Comments are required when denying an approval request.
+        </small>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div *ngIf="recordingDecision" class="dialog-loading">
+        <p-progressSpinner [style]="{width: '30px', height: '30px'}"></p-progressSpinner>
+        <span>Recording decision...</span>
+      </div>
+    </div>
+
+    <!-- Dialog Footer -->
+    <ng-template pTemplate="footer">
+      <p-button 
+        label="Cancel" 
+        icon="pi pi-times" 
+        (onClick)="closeDecisionDialog()"
+        styleClass="p-button-text"
+        [disabled]="recordingDecision">
+      </p-button>
+      <p-button 
+        [label]="decisionType === 'APPROVED' ? 'Approve' : 'Deny'" 
+        [icon]="decisionType === 'APPROVED' ? 'pi pi-check' : 'pi pi-times'" 
+        (onClick)="onSubmitDecision()"
+        [styleClass]="decisionType === 'APPROVED' ? 'p-button-success' : 'p-button-danger'"
+        [disabled]="!canSubmitDecision() || (decisionType === 'DENIED' && !decisionComments)">
+      </p-button>
+    </ng-template>
+  </p-dialog>
+</div>

@@ -1,0 +1,235 @@
+<div class="budget-dashboard" role="main" aria-label="Budget Dashboard">
+  <!-- Access Denied -->
+  <div *ngIf="accessDenied" class="dashboard-error" role="alert">
+    <mat-icon>lock</mat-icon>
+    <p>You don't have permission to view budget information. Contact your administrator for access.</p>
+  </div>
+
+  <ng-container *ngIf="!accessDenied">
+  <!-- Loading State -->
+  <mat-progress-bar *ngIf="loading$ | async" mode="indeterminate"></mat-progress-bar>
+
+  <!-- Error State -->
+  <div *ngIf="error$ | async as error" class="dashboard-error" role="alert">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Hero Header -->
+  <div class="dashboard-header">
+    <div class="header-info">
+      <h1>Budget Dashboard</h1>
+      <p class="header-subtitle">Monitor budget health across all active jobs</p>
+    </div>
+  </div>
+
+  <!-- Statistics Overview -->
+  <ng-container *ngIf="budgetStatistics$ | async as stats">
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <mat-icon>account_balance_wallet</mat-icon>
+        <div class="stat-info">
+          <span class="stat-value">{{ stats.total }}</span>
+          <span class="stat-label">Total Budgets</span>
+        </div>
+      </div>
+
+      <div class="stat-card on-track">
+        <mat-icon>check_circle</mat-icon>
+        <div class="stat-info">
+          <span class="stat-value">{{ stats.byStatus['on-track'] || 0 }}</span>
+          <span class="stat-label">On Track</span>
+        </div>
+      </div>
+
+      <div class="stat-card warning">
+        <mat-icon>warning</mat-icon>
+        <div class="stat-info">
+          <span class="stat-value">{{ stats.byStatus['warning'] || 0 }}</span>
+          <span class="stat-label">At Risk</span>
+        </div>
+      </div>
+
+      <div class="stat-card over-budget">
+        <mat-icon>error</mat-icon>
+        <div class="stat-info">
+          <span class="stat-value">{{ stats.byStatus['over-budget'] || 0 }}</span>
+          <span class="stat-label">Over Budget</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hours Summary -->
+    <div class="section-card hours-summary-card">
+      <div class="section-header">
+        <h2>Hours Summary</h2>
+      </div>
+      <div class="section-body">
+        <div class="hours-grid">
+          <div class="hours-item">
+            <span class="hours-label">Total Allocated</span>
+            <span class="hours-value allocated">{{ stats.totalAllocated | number:'1.0-0' }} hrs</span>
+          </div>
+          <div class="hours-item">
+            <span class="hours-label">Total Consumed</span>
+            <span class="hours-value consumed">{{ stats.totalConsumed | number:'1.0-0' }} hrs</span>
+          </div>
+          <div class="hours-item">
+            <span class="hours-label">Total Remaining</span>
+            <span class="hours-value remaining">{{ stats.totalRemaining | number:'1.0-0' }} hrs</span>
+          </div>
+          <div class="hours-item">
+            <span class="hours-label">Avg Consumption</span>
+            <span class="hours-value consumption">{{ stats.averageConsumptionRate | number:'1.1-1' }}%</span>
+          </div>
+        </div>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="stats.averageConsumptionRate > 100 ? 100 : stats.averageConsumptionRate"
+          [color]="stats.averageConsumptionRate > 100 ? 'warn' : stats.averageConsumptionRate > 80 ? 'accent' : 'primary'">
+        </mat-progress-bar>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Jobs Needing Attention -->
+  <div class="section-card attention-card">
+    <div class="section-header">
+      <h2><mat-icon color="warn">warning</mat-icon> Jobs Requiring Attention</h2>
+    </div>
+    <div class="section-body">
+      <ng-container *ngIf="budgetsNeedingAttention$ | async as budgets">
+        <div *ngIf="budgets.length === 0" class="empty-state">
+          <mat-icon color="primary">check_circle</mat-icon>
+          <p>All jobs are on track!</p>
+        </div>
+
+        <div *ngIf="budgets.length > 0" class="attention-list">
+          <div *ngFor="let budget of budgets"
+               class="attention-item"
+               (click)="navigateToJob(budget.jobId)"
+               (keydown.enter)="navigateToJob(budget.jobId)"
+               tabindex="0"
+               role="button"
+               [attr.aria-label]="'View job ' + budget.jobId">
+            <div class="attention-header">
+              <span class="job-id">{{ budget.jobId }}</span>
+              <span class="status-chip" [ngClass]="getStatusColor(budget.status)">
+                <mat-icon>{{ getStatusIcon(budget.status) }}</mat-icon>
+                {{ getStatusLabel(budget.status) }}
+              </span>
+            </div>
+            <div class="attention-progress">
+              <div class="progress-info">
+                <span>{{ budget.consumedHours | number:'1.1-1' }} / {{ budget.allocatedHours | number:'1.1-1' }} hrs</span>
+                <span class="percentage">{{ getConsumptionPercentage(budget) }}%</span>
+              </div>
+              <mat-progress-bar
+                mode="determinate"
+                [value]="getConsumptionPercentage(budget) > 100 ? 100 : getConsumptionPercentage(budget)"
+                [color]="getProgressBarColor(budget.status)">
+              </mat-progress-bar>
+            </div>
+            <div class="attention-footer">
+              <span class="remaining" [ngClass]="getStatusColor(budget.status)">
+                {{ budget.remainingHours >= 0 ? budget.remainingHours : 0 | number:'1.1-1' }} hrs remaining
+              </span>
+              <mat-icon class="drill-down-icon">chevron_right</mat-icon>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Budget Status Distribution -->
+  <div class="distribution-grid">
+    <div class="section-card distribution-card over-budget">
+      <div class="section-header">
+        <h2><mat-icon>error</mat-icon> Over Budget</h2>
+      </div>
+      <div class="section-body">
+        <ng-container *ngIf="overBudgetBudgets$ | async as budgets">
+          <div *ngIf="budgets.length === 0" class="empty-state small">
+            <p>No jobs over budget</p>
+          </div>
+          <div *ngIf="budgets.length > 0" class="budget-list">
+            <div *ngFor="let budget of budgets.slice(0, 5)"
+                 class="budget-item"
+                 (click)="navigateToJob(budget.jobId)"
+                 tabindex="0"
+                 role="button">
+              <span class="job-id">{{ budget.jobId }}</span>
+              <span class="overage">+{{ (budget.consumedHours - budget.allocatedHours) | number:'1.1-1' }} hrs</span>
+            </div>
+            <button *ngIf="budgets.length > 5" mat-button color="primary" class="view-all-btn">
+              View all {{ budgets.length }} jobs
+            </button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="section-card distribution-card warning">
+      <div class="section-header">
+        <h2><mat-icon>warning</mat-icon> At Risk (80%+)</h2>
+      </div>
+      <div class="section-body">
+        <ng-container *ngIf="warningBudgets$ | async as budgets">
+          <div *ngIf="budgets.length === 0" class="empty-state small">
+            <p>No jobs at risk</p>
+          </div>
+          <div *ngIf="budgets.length > 0" class="budget-list">
+            <div *ngFor="let budget of budgets.slice(0, 5)"
+                 class="budget-item"
+                 (click)="navigateToJob(budget.jobId)"
+                 tabindex="0"
+                 role="button">
+              <span class="job-id">{{ budget.jobId }}</span>
+              <span class="remaining-small">{{ budget.remainingHours | number:'1.1-1' }} hrs left</span>
+            </div>
+            <button *ngIf="budgets.length > 5" mat-button color="primary" class="view-all-btn">
+              View all {{ budgets.length }} jobs
+            </button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Adjustments -->
+  <div class="section-card adjustments-card">
+    <div class="section-header">
+      <h2><mat-icon>history</mat-icon> Recent Budget Adjustments</h2>
+    </div>
+    <div class="section-body">
+      <ng-container *ngIf="recentAdjustments$ | async as adjustments">
+        <div *ngIf="adjustments.length === 0" class="empty-state">
+          <mat-icon>history</mat-icon>
+          <p>No recent adjustments</p>
+        </div>
+        <div *ngIf="adjustments.length > 0" class="adjustments-list">
+          <div *ngFor="let adj of adjustments" class="adjustment-item">
+            <mat-icon [ngClass]="adj.amount >= 0 ? 'positive' : 'negative'">
+              {{ adj.amount >= 0 ? 'add_circle' : 'remove_circle' }}
+            </mat-icon>
+            <div class="adjustment-info">
+              <div class="adjustment-title">
+                <span class="adjustment-job" (click)="navigateToJob(adj.jobId)">{{ adj.jobId }}</span>
+                <span class="adjustment-amount" [ngClass]="adj.amount >= 0 ? 'positive' : 'negative'">
+                  {{ adj.amount >= 0 ? '+' : '' }}{{ adj.amount | number:'1.1-1' }} hrs
+                </span>
+              </div>
+              <div class="adjustment-meta">
+                <span>{{ adj.adjustedByName }}</span>
+                <span>{{ adj.reason }}</span>
+                <span>{{ formatDate(adj.timestamp) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+  </ng-container>
+</div>

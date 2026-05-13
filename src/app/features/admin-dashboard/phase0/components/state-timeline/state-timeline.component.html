@@ -1,0 +1,206 @@
+<div class="state-timeline-container">
+  <!-- Header with controls -->
+  <div class="timeline-header">
+    <h3 class="timeline-title">State Transition History</h3>
+    
+    <div class="timeline-controls">
+      <!-- View options -->
+      <div class="view-options">
+        <button 
+          class="btn-icon" 
+          [class.active]="groupByDate"
+          (click)="toggleGroupByDate()"
+          title="Group by date">
+          <span class="icon">📅</span>
+        </button>
+        <button 
+          class="btn-icon" 
+          [class.active]="showMetadata"
+          (click)="toggleMetadata()"
+          title="Show metadata">
+          <span class="icon">ℹ️</span>
+        </button>
+        <button 
+          class="btn-icon" 
+          [class.active]="compactView"
+          (click)="toggleCompactView()"
+          title="Compact view">
+          <span class="icon">📋</span>
+        </button>
+      </div>
+
+      <!-- Export options -->
+      <div class="export-options">
+        <button class="btn-secondary" (click)="exportTimeline('csv')">
+          Export CSV
+        </button>
+        <button class="btn-secondary" (click)="exportTimeline('json')">
+          Export JSON
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="timeline-filters">
+    <div class="filter-group">
+      <label for="dateRangeStart">From:</label>
+      <input 
+        type="date" 
+        id="dateRangeStart"
+        #startDate
+        class="filter-input">
+    </div>
+
+    <div class="filter-group">
+      <label for="dateRangeEnd">To:</label>
+      <input 
+        type="date" 
+        id="dateRangeEnd"
+        #endDate
+        class="filter-input">
+    </div>
+
+    <button 
+      class="btn-primary" 
+      (click)="filterByDateRange(startDate.valueAsDate!, endDate.valueAsDate!)">
+      Apply Date Filter
+    </button>
+
+    <div class="filter-group">
+      <label for="userFilter">User:</label>
+      <select 
+        id="userFilter" 
+        class="filter-input"
+        #userSelect
+        (change)="filterByUser(userSelect.value)">
+        <option value="">All Users</option>
+        <option *ngFor="let user of getUniqueUsers()" [value]="user.userId">
+          {{ user.userName }}
+        </option>
+      </select>
+    </div>
+
+    <button class="btn-secondary" (click)="clearFilters()">
+      Clear Filters
+    </button>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="loading$ | async" class="timeline-loading">
+    <div class="spinner"></div>
+    <p>Loading timeline...</p>
+  </div>
+
+  <!-- Timeline content -->
+  <div *ngIf="!(loading$ | async)" class="timeline-content">
+    <!-- Grouped by date view -->
+    <div *ngIf="groupByDate" class="timeline-grouped">
+      <div *ngFor="let group of getGroupedTimeline()" class="timeline-group">
+        <div class="group-header">
+          <h4 class="group-date">{{ group.date }}</h4>
+          <span class="group-count">{{ group.transitions.length }} transition(s)</span>
+        </div>
+        
+        <div class="timeline-items">
+          <div 
+            *ngFor="let transition of group.transitions; let i = index"
+            class="timeline-item"
+            [class.compact]="compactView"
+            (click)="onTransitionClick(transition)">
+            
+            <div class="timeline-marker">
+              <div class="marker-dot"></div>
+              <div class="marker-line" *ngIf="i < group.transitions.length - 1"></div>
+            </div>
+
+            <div class="timeline-card">
+              <div class="card-header">
+                <span class="transition-time">{{ formatTime(transition.timestamp) }}</span>
+                <span class="transition-trigger">{{ transition.trigger }}</span>
+              </div>
+
+              <div class="card-body">
+                <div class="state-change">
+                  <span class="state from-state">{{ transition.fromState }}</span>
+                  <span class="arrow">→</span>
+                  <span class="state to-state">{{ transition.toState }}</span>
+                </div>
+
+                <div class="transition-user">
+                  <span class="user-icon">👤</span>
+                  <span class="user-name">{{ transition.userName }}</span>
+                </div>
+
+                <div *ngIf="transition.reason" class="transition-reason">
+                  <strong>Reason:</strong> {{ transition.reason }}
+                </div>
+
+                <div *ngIf="showMetadata && transition.metadata" class="transition-metadata">
+                  <details>
+                    <summary>Metadata</summary>
+                    <pre>{{ transition.metadata | json }}</pre>
+                  </details>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="getGroupedTimeline().length === 0" class="timeline-empty">
+        <p>No transitions found matching the current filters.</p>
+      </div>
+    </div>
+
+    <!-- Flat list view -->
+    <div *ngIf="!groupByDate" class="timeline-flat">
+      <div 
+        *ngFor="let transition of filteredTimeline; let i = index"
+        class="timeline-item"
+        [class.compact]="compactView"
+        (click)="onTransitionClick(transition)">
+        
+        <div class="timeline-marker">
+          <div class="marker-dot"></div>
+          <div class="marker-line" *ngIf="i < filteredTimeline.length - 1"></div>
+        </div>
+
+        <div class="timeline-card">
+          <div class="card-header">
+            <span class="transition-timestamp">{{ formatTimestamp(transition.timestamp) }}</span>
+            <span class="transition-trigger">{{ transition.trigger }}</span>
+          </div>
+
+          <div class="card-body">
+            <div class="state-change">
+              <span class="state from-state">{{ transition.fromState }}</span>
+              <span class="arrow">→</span>
+              <span class="state to-state">{{ transition.toState }}</span>
+            </div>
+
+            <div class="transition-user">
+              <span class="user-icon">👤</span>
+              <span class="user-name">{{ transition.userName }}</span>
+            </div>
+
+            <div *ngIf="transition.reason" class="transition-reason">
+              <strong>Reason:</strong> {{ transition.reason }}
+            </div>
+
+            <div *ngIf="showMetadata && transition.metadata" class="transition-metadata">
+              <details>
+                <summary>Metadata</summary>
+                <pre>{{ transition.metadata | json }}</pre>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="filteredTimeline.length === 0" class="timeline-empty">
+        <p>No transitions found matching the current filters.</p>
+      </div>
+    </div>
+  </div>
+</div>

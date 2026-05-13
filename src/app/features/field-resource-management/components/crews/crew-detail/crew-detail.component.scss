@@ -1,0 +1,726 @@
+.crew-detail-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+// Material form field input text color override
+::ng-deep .mat-mdc-input-element {
+  color: #000000 !important;
+}
+
+::ng-deep .mat-mdc-form-field {
+  .mat-mdc-input-element::placeholder {
+    color: #000000 !important;
+    opacity: 0.6;
+  }
+}
+
+// Button color overrides (dark theme bleeds through on Material primary)
+:host ::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: #1976d2 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-raised-button.mat-warn {
+    background-color: #f44336 !important;
+    color: white !important;
+  }
+
+  .mat-mdc-outlined-button.mat-primary,
+  .mat-mdc-stroked-button.mat-primary {
+    border-color: #1976d2 !important;
+    color: #1976d2 !important;
+  }
+
+  .mat-mdc-outlined-button.mat-primary:hover,
+  .mat-mdc-stroked-button.mat-primary:hover {
+    background-color: rgba(25, 118, 210, 0.08) !important;
+  }
+}
+
+// Header Section
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .crew-name {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 500;
+        color: #333;
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+
+    button {
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+// Main Content
+.detail-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Info Card
+.info-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 500;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+
+    .add-member-btn {
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+
+  mat-card-content {
+    padding-top: 16px;
+  }
+}
+
+// Add Member Panel
+.add-member-panel {
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  border: 1px dashed #1976d2;
+
+  .add-member-select {
+    width: 100%;
+  }
+}
+
+// Material form field overrides for add member panel
+::ng-deep .add-member-panel {
+  .mat-mdc-form-field {
+    .mat-mdc-floating-label,
+    .mdc-floating-label {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-value-text {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-placeholder {
+      color: #000000 !important;
+      opacity: 0.6;
+    }
+  }
+
+  .mat-mdc-form-field-hint {
+    color: #000000 !important;
+  }
+}
+
+// Info Grid
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .info-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      color: #333;
+      word-break: break-word;
+    }
+  }
+}
+
+// Status Badge
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.status-available {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.status-on-job {
+    background-color: #fff3e0;
+    color: #ef6c00;
+  }
+
+  &.status-unavailable {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+}
+
+// Technician Card
+.technician-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:focus {
+    outline: 2px solid #1976d2;
+    outline-offset: 2px;
+  }
+
+  .technician-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .technician-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: #1976d2;
+    }
+
+    .technician-details {
+      .technician-name {
+        margin: 0 0 4px 0;
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .technician-meta {
+        margin: 2px 0;
+        font-size: 14px;
+        color: #666;
+      }
+    }
+  }
+
+  .nav-icon {
+    color: #999;
+  }
+}
+
+// Members List
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:focus {
+    outline: 2px solid #1976d2;
+    outline-offset: 2px;
+  }
+
+  .member-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+
+    .member-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .member-details {
+      flex: 1;
+
+      .member-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 4px;
+      }
+
+      .member-name {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .member-status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+
+        &.status-active {
+          background-color: #e8f5e9;
+          color: #2e7d32;
+        }
+
+        &.status-inactive {
+          background-color: #ffebee;
+          color: #c62828;
+        }
+      }
+
+      .member-role {
+        margin: 4px 0;
+        font-size: 13px;
+        font-weight: 500;
+        color: #1976d2;
+      }
+
+      .member-meta {
+        margin: 2px 0;
+        font-size: 13px;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+          color: #999;
+        }
+      }
+
+      .member-skills {
+        margin-top: 8px;
+
+        mat-chip-set {
+          mat-chip {
+            font-size: 11px;
+            min-height: 24px;
+            padding: 4px 8px;
+          }
+        }
+      }
+    }
+  }
+
+  .nav-icon {
+    color: #999;
+  }
+}
+
+// Member actions (remove + nav)
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .nav-icon {
+    color: #999;
+  }
+}
+
+// Ensure chip text is black
+::ng-deep mat-chip {
+  .mdc-evolution-chip__text-label,
+  .mat-mdc-chip-action-label {
+    color: #000000 !important;
+  }
+}
+
+// Job Card
+.job-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:focus {
+    outline: 2px solid #1976d2;
+    outline-offset: 2px;
+  }
+
+  .job-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex: 1;
+
+    .job-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+      color: #1976d2;
+      margin-top: 4px;
+    }
+
+    .job-details {
+      flex: 1;
+
+      .job-title {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .job-meta {
+        margin: 4px 0;
+        font-size: 14px;
+        color: #666;
+      }
+
+      .job-badges {
+        display: flex;
+        gap: 8px;
+        margin: 8px 0;
+
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 500;
+          text-transform: uppercase;
+
+          &.priority-low {
+            background-color: #e3f2fd;
+            color: #1976d2;
+          }
+
+          &.priority-medium {
+            background-color: #fff3e0;
+            color: #f57c00;
+          }
+
+          &.priority-high {
+            background-color: #ffe0b2;
+            color: #e65100;
+          }
+
+          &.priority-critical {
+            background-color: #ffebee;
+            color: #c62828;
+          }
+
+          &.status-pending {
+            background-color: #f5f5f5;
+            color: #666;
+          }
+
+          &.status-scheduled {
+            background-color: #e3f2fd;
+            color: #1976d2;
+          }
+
+          &.status-in_progress {
+            background-color: #fff3e0;
+            color: #f57c00;
+          }
+
+          &.status-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+          }
+
+          &.status-cancelled {
+            background-color: #ffebee;
+            color: #c62828;
+          }
+
+          &.status-on_hold {
+            background-color: #fce4ec;
+            color: #c2185b;
+          }
+        }
+      }
+
+      .job-location {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 8px;
+        font-size: 13px;
+        color: #666;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  .nav-icon {
+    color: #999;
+  }
+}
+
+// Location History
+.location-history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .location-entry {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #eeeeee;
+    }
+
+    .location-time,
+    .location-coords,
+    .location-accuracy {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #333;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: #666;
+      }
+    }
+
+    .location-accuracy {
+      font-size: 12px;
+      color: #666;
+    }
+  }
+}
+
+// Loading and Error States for Location History
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 12px;
+
+  p {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+// Empty State
+.empty-state {
+  text-align: center;
+  padding: 32px;
+  color: #999;
+  font-style: italic;
+}
+
+// Loading Container
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+
+  p {
+    color: #666;
+    font-size: 16px;
+  }
+}
+
+// Error Container
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+  }
+
+  h2 {
+    margin: 0;
+    color: #333;
+  }
+
+  p {
+    color: #666;
+    max-width: 500px;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .crew-detail-container {
+    padding: 16px;
+  }
+
+  .detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    .header-content {
+      width: 100%;
+
+      .header-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+
+        .crew-name {
+          font-size: 24px;
+        }
+      }
+    }
+
+    .header-actions {
+      width: 100%;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .technician-card,
+  .member-card,
+  .job-card {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .nav-icon {
+      align-self: flex-end;
+    }
+  }
+
+  .location-entry {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
+    grid-template-columns: 1fr !important;
+  }
+}

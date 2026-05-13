@@ -1,0 +1,16 @@
+PLACEHOLDER LOGO FILES
+
+Please replace these placeholder files with the actual ATLAS logo images:
+
+1. atlas-logo-light.png - Blue logo for light backgrounds
+2. atlas-logo-dark.png - White logo for dark backgrounds
+
+The actual logo images were provided in the conversation and should be:
+- Saved with the exact filenames above
+- Placed in this directory (src/assets/images/atlas/)
+- Optimized for web (PNG format, compressed)
+- Minimum width: 600px for retina display support
+
+Once the actual logos are in place, you can delete this PLACEHOLDER.txt file.
+
+For now, the application will show broken image icons until the real logos are added.

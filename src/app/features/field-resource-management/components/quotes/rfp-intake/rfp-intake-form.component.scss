@@ -1,0 +1,282 @@
+// Page Header
+.page-header {
+  padding: 16px 24px;
+  background-color: #144f80;
+  color: white;
+  margin-bottom: 24px;
+  border-radius: 4px;
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+    color: white;
+  }
+}
+
+// Draft Restored Banner
+.draft-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  color: #e65100;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #e65100;
+  }
+
+  span {
+    flex: 1;
+    font-size: 14px;
+  }
+
+  button {
+    color: #e65100;
+  }
+}
+
+// Form Layout
+.rfp-intake-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 24px 24px;
+  max-width: 960px;
+}
+
+// Form Sections
+.form-section {
+  margin-bottom: 0;
+  background-color: white;
+
+  mat-card-header {
+    margin-bottom: 16px;
+    background-color: #f8f9fa;
+    padding: 12px 16px;
+    border-radius: 4px;
+
+    mat-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #144f80;
+      margin: 0;
+    }
+  }
+
+  mat-card-content {
+    padding: 16px;
+  }
+}
+
+// Form Rows
+.form-row {
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &.three-columns {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  mat-form-field {
+    width: 100%;
+
+    &.full-width {
+      width: 100%;
+    }
+  }
+}
+
+// Date Range Error
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  color: #c62828;
+  font-size: 14px;
+  margin-top: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Attachment Hint
+.attachment-hint {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+// Form Actions
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.cancel-btn {
+  background-color: white !important;
+  color: #144f80 !important;
+  border: 2px solid #144f80 !important;
+  padding: 10px 24px !important;
+  border-radius: 5px !important;
+  font-weight: 500 !important;
+
+  &:hover {
+    background-color: #f0f4f8 !important;
+  }
+}
+
+.submit-btn {
+  background-color: #e18a25 !important;
+  color: white !important;
+  padding: 10px 24px !important;
+  border-radius: 5px !important;
+  font-weight: 500 !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover:not(:disabled) {
+    background-color: #b86404 !important;
+    transform: scale(1.02);
+  }
+
+  &:disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+  }
+}
+
+.button-spinner {
+  display: inline-block;
+
+  ::ng-deep circle {
+    stroke: white;
+  }
+}
+
+// Textarea styles
+textarea.mat-mdc-input-element {
+  resize: vertical;
+  min-height: 100px;
+}
+
+// Error message styles
+mat-error {
+  font-size: 12px;
+}
+
+// Hint styles
+mat-hint {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+// Card styling
+mat-card {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+}
+
+mat-card-content {
+  overflow: visible;
+}
+
+// Mobile-specific optimizations
+@media (max-width: 767px) {
+  .page-header {
+    padding: 12px 16px;
+
+    h2 {
+      font-size: 20px;
+    }
+  }
+
+  .rfp-intake-form {
+    padding: 0 16px 16px;
+  }
+
+  .form-section {
+    mat-card-content {
+      padding: 12px;
+    }
+  }
+
+  .form-row {
+    margin-bottom: 12px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  mat-form-field {
+    font-size: 14px;
+  }
+}
+
+// Ensure white backgrounds for form fields
+::ng-deep .mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: white;
+  }
+}
+
+// Fix input and label colors
+::ng-deep .mat-mdc-input-element {
+  color: #000000 !important;
+}
+
+::ng-deep .mat-mdc-form-field-label,
+::ng-deep .mdc-floating-label {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+::ng-deep .mdc-floating-label--float-above {
+  color: #144f80 !important;
+}
+
+::ng-deep .mat-mdc-select-value {
+  color: #000000 !important;
+}

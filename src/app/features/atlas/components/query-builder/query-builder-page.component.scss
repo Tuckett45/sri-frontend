@@ -1,0 +1,117 @@
+/**
+ * Query Builder Page Styles
+ */
+
+.query-builder-page {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+}
+
+.page-header {
+  background: linear-gradient(135deg, #1E5A8E 0%, #2C7AB8 100%);
+  color: white;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  .page-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+
+    i {
+      font-size: 2.5rem;
+    }
+  }
+
+  .page-description {
+    font-size: 1.125rem;
+    margin: 0;
+    opacity: 0.95;
+  }
+}
+
+.page-content {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+// Tab styling
+::ng-deep {
+  .query-builder-tabs {
+    .p-tabview-nav {
+      background-color: white;
+      border-bottom: 2px solid #1E5A8E;
+
+      li {
+        .p-tabview-nav-link {
+          padding: 1rem 1.5rem;
+          font-weight: 500;
+          color: #495057;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background-color: #f8f9fa;
+            color: #1E5A8E;
+          }
+        }
+
+        &.p-highlight {
+          .p-tabview-nav-link {
+            color: #1E5A8E;
+            border-color: #1E5A8E;
+            background-color: #f8f9fa;
+          }
+        }
+      }
+    }
+
+    .p-tabview-panels {
+      background-color: transparent;
+      padding: 0;
+    }
+  }
+}
+
+.tab-content {
+  padding-top: 1rem;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .page-header {
+    padding: 1.5rem 1rem;
+
+    .page-title {
+      font-size: 1.5rem;
+
+      i {
+        font-size: 2rem;
+      }
+    }
+
+    .page-description {
+      font-size: 1rem;
+    }
+  }
+
+  .page-content {
+    padding: 1rem 0.5rem;
+  }
+
+  ::ng-deep {
+    .query-builder-tabs {
+      .p-tabview-nav {
+        li {
+          .p-tabview-nav-link {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,114 @@
+<div class="file-upload">
+  <div
+    class="file-upload__dropzone"
+    [class.file-upload__dropzone--dragging]="isDragging"
+    [class.file-upload__dropzone--disabled]="disabled"
+    [attr.tabindex]="disabled ? -1 : 0"
+    role="button"
+    [attr.aria-label]="'Upload files. ' + hintText"
+    [attr.aria-disabled]="disabled"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="!disabled && fileInput.click()"
+    (keydown)="onKeyDown($event, fileInput)">
+    <mat-icon class="file-upload__icon" aria-hidden="true">cloud_upload</mat-icon>
+    <p class="file-upload__text">
+      Drag and drop files here or <span class="file-upload__link">browse</span>
+    </p>
+    <p class="file-upload__hint">
+      {{ hintText }}
+    </p>
+    <input
+      #fileInput
+      type="file"
+      class="file-upload__input"
+      [multiple]="multiple"
+      [accept]="acceptAttribute"
+      [disabled]="disabled"
+      [attr.aria-label]="'File input for ' + label"
+      (change)="onFileSelected($event)" />
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="file-upload__error" role="alert" aria-live="polite">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Upload Progress -->
+  <div *ngIf="uploadProgressValue > 0 && uploadProgressValue < 100" class="file-upload__progress">
+    <mat-progress-bar 
+      mode="determinate" 
+      [value]="uploadProgressValue"
+      [attr.aria-label]="'Upload progress: ' + uploadProgressValue + ' percent'">
+    </mat-progress-bar>
+    <span class="file-upload__progress-text" aria-live="polite">{{ uploadProgressValue }}%</span>
+  </div>
+
+  <!-- Selected Files List -->
+  <div *ngIf="selectedFiles.length > 0" class="file-upload__files">
+    <div class="file-upload__files-header">
+      <h4 id="selected-files-heading">Selected Files ({{ selectedFiles.length }})</h4>
+      <button 
+        mat-button 
+        color="warn" 
+        (click)="clearFiles()"
+        [disabled]="disabled"
+        aria-label="Clear all selected files">
+        <mat-icon aria-hidden="true">clear_all</mat-icon>
+        Clear All
+      </button>
+    </div>
+
+    <div 
+      class="file-upload__files-list" 
+      role="list" 
+      aria-labelledby="selected-files-heading">
+      <div 
+        *ngFor="let filePreview of filePreviews" 
+        class="file-upload__file-item"
+        role="listitem">
+        <div class="file-upload__file-preview" [attr.aria-label]="'Preview of ' + filePreview.file.name">
+          <img [src]="filePreview.preview" [alt]="filePreview.file.name" />
+        </div>
+        <div class="file-upload__file-info">
+          <span class="file-upload__file-name">{{ filePreview.file.name }}</span>
+          <span class="file-upload__file-size">{{ getFileSize(filePreview.file.size) }}</span>
+        </div>
+        <button
+          mat-icon-button
+          color="warn"
+          (click)="removeFile(filePreview.file)"
+          [disabled]="disabled"
+          [attr.aria-label]="'Remove ' + filePreview.file.name">
+          <mat-icon aria-hidden="true">close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Files without preview -->
+      <div
+        *ngFor="let file of selectedFiles"
+        class="file-upload__file-item"
+        role="listitem">
+        <ng-container *ngIf="!hasPreview(file)">
+          <div class="file-upload__file-icon" [attr.aria-label]="'File icon for ' + file.name">
+            <mat-icon aria-hidden="true">insert_drive_file</mat-icon>
+          </div>
+          <div class="file-upload__file-info">
+            <span class="file-upload__file-name">{{ file.name }}</span>
+            <span class="file-upload__file-size">{{ getFileSize(file.size) }}</span>
+          </div>
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="removeFile(file)"
+            [disabled]="disabled"
+            [attr.aria-label]="'Remove ' + file.name">
+            <mat-icon aria-hidden="true">close</mat-icon>
+          </button>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>

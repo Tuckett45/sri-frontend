@@ -1,0 +1,188 @@
+<!-- Dialog Mode -->
+<ng-container *ngIf="dialogRef; else routeMode">
+  <h2 mat-dialog-title>{{ formTitle }}</h2>
+
+  <mat-dialog-content class="crew-dialog-content">
+    <!-- Error Display -->
+    <mat-card *ngIf="error$ | async as error" class="error-card">
+      <mat-card-content>
+        <div class="error-message">
+          <mat-icon color="warn">error</mat-icon>
+          <span>{{ error }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading$ | async" class="loading-overlay">
+      <mat-spinner></mat-spinner>
+      <p>{{ isEditMode ? 'Updating crew...' : 'Creating crew...' }}</p>
+    </div>
+
+    <ng-container *ngTemplateOutlet="formContent"></ng-container>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button color="warn" type="button" (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary"
+            type="submit"
+            (click)="onSubmit()"
+            [disabled]="crewForm.invalid || (isLoading$ | async)">
+      {{ submitButtonText }}
+    </button>
+  </mat-dialog-actions>
+</ng-container>
+
+<!-- Route Mode (standalone page) -->
+<ng-template #routeMode>
+  <div class="crew-form-container">
+    <!-- Error Display -->
+    <mat-card *ngIf="error$ | async as error" class="error-card">
+      <mat-card-content>
+        <div class="error-message">
+          <mat-icon color="warn">error</mat-icon>
+          <span>{{ error }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading$ | async" class="loading-overlay">
+      <mat-spinner></mat-spinner>
+      <p>{{ isEditMode ? 'Updating crew...' : 'Creating crew...' }}</p>
+    </div>
+
+    <div class="form-header">
+      <h2>{{ formTitle }}</h2>
+    </div>
+
+    <div class="form-card">
+      <ng-container *ngTemplateOutlet="formContent"></ng-container>
+    </div>
+
+    <div class="form-actions">
+      <button mat-button color="warn" type="button" (click)="onCancel()">Cancel</button>
+      <button mat-raised-button color="primary"
+              type="submit"
+              (click)="onSubmit()"
+              [disabled]="crewForm.invalid || (isLoading$ | async)">
+        {{ submitButtonText }}
+      </button>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Shared Form Content -->
+<ng-template #formContent>
+  <form [formGroup]="crewForm" (ngSubmit)="onSubmit()" class="crew-form">
+
+    <!-- Basic Information Section -->
+    <div class="form-section">
+      <h3 class="section-title">Basic Information</h3>
+
+      <mat-form-field appearance="outline" class="full-width" style="padding-top: 18px;">
+        <mat-label>Crew Name</mat-label>
+        <input matInput formControlName="name" required>
+        <mat-error *ngIf="hasError('name', 'required')">Crew name is required</mat-error>
+        <mat-error *ngIf="hasError('name', 'minlength')">{{ getErrorMessage('name') }}</mat-error>
+        <mat-error *ngIf="hasError('name', 'maxlength')">{{ getErrorMessage('name') }}</mat-error>
+        <mat-hint>Enter a crew name between 3 and 100 characters</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width" style="padding-top: 18px;">
+        <mat-label>Lead Technician</mat-label>
+        <mat-select formControlName="leadTechnicianId"
+                    (selectionChange)="onLeadTechnicianChange($any($event).value)"
+                    required>
+          <mat-option *ngFor="let tech of availableTechnicians" [value]="tech.id">
+            {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }})
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="hasError('leadTechnicianId', 'required')">Lead technician is required</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Crew Members Section -->
+    <div class="crew-members-section">
+      <h3 class="section-title">Crew Members</h3>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Add Crew Members</mat-label>
+        <mat-select formControlName="memberIds"
+                    multiple
+                    (selectionChange)="onMemberSelectionChange($any($event).value)">
+          <mat-option *ngFor="let tech of availableMemberTechnicians" [value]="tech.id">
+            {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }})
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="hasError('memberIds', 'leadInMembers')">{{ getErrorMessage('memberIds') }}</mat-error>
+        <mat-hint>Select crew members (excluding lead technician)</mat-hint>
+      </mat-form-field>
+
+      <div class="selected-members-list" *ngIf="selectedMemberIds.length > 0">
+        <div class="members-header">
+          <h4>Selected Members ({{ selectedMemberIds.length }})</h4>
+          <button mat-button type="button" color="warn" (click)="clearAllMembers()" class="clear-all-btn">
+            <mat-icon>clear_all</mat-icon> Clear All
+          </button>
+        </div>
+        <div class="members-grid">
+          <mat-card *ngFor="let memberId of selectedMemberIds" class="member-card">
+            <mat-card-content>
+              <div class="member-info">
+                <mat-icon class="member-icon">person</mat-icon>
+                <div class="member-details">
+                  <div class="member-name">{{ getTechnicianDisplayName(memberId) }}</div>
+                  <div class="member-meta" *ngIf="getTechnicianById(memberId) as tech">
+                    <span class="tech-id">ID: {{ tech.id }}</span>
+                    <span class="tech-role">{{ tech.role }}</span>
+                  </div>
+                </div>
+                <button mat-icon-button type="button" color="warn" (click)="removeMember(memberId)" matTooltip="Remove from crew" class="remove-member-btn">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+
+      <div class="empty-members-state" *ngIf="selectedMemberIds.length === 0">
+        <mat-icon class="empty-icon">group_add</mat-icon>
+        <p>No crew members selected</p>
+        <p class="empty-hint">Select technicians from the dropdown above to add them to this crew</p>
+      </div>
+    </div>
+
+    <!-- Assignment Section -->
+    <div class="form-section">
+      <h3 class="section-title">Assignment</h3>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Market</mat-label>
+        <mat-select formControlName="market" required>
+          <mat-option *ngFor="let market of availableMarkets" [value]="market">{{ market }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="hasError('market', 'required')">Market is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Company</mat-label>
+        <mat-select formControlName="company" required>
+          <mat-option *ngFor="let company of availableCompanies" [value]="company">{{ company }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="hasError('company', 'required')">Company is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status" required>
+          <mat-option *ngFor="let status of statusOptions" [value]="status">{{ status }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="hasError('status', 'required')">Status is required</mat-error>
+        <mat-error *ngIf="hasError('status', 'invalidStatus')">{{ getErrorMessage('status') }}</mat-error>
+      </mat-form-field>
+    </div>
+
+  </form>
+</ng-template>

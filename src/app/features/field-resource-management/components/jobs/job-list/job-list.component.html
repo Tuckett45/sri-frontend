@@ -1,0 +1,291 @@
+<div class="job-list-container">
+  <!-- Header -->
+  <div class="job-list-header">
+    <div class="header-title">
+      <mat-icon class="page-icon">work</mat-icon>
+      <h2>Job Management</h2>
+      <span class="page-subtitle">Create, edit, and manage work orders</span>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button [matMenuTriggerFor]="exportMenu">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <mat-menu #exportMenu="matMenu">
+        <button mat-menu-item (click)="exportToCSV()">
+          <mat-icon>description</mat-icon>
+          <span>Export to CSV</span>
+        </button>
+        <button mat-menu-item (click)="exportToPDF()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <span>Export to PDF</span>
+        </button>
+      </mat-menu>
+      <button mat-raised-button class="btn-orange" (click)="createJob()">
+        <mat-icon>add</mat-icon>
+        Create Job
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <!-- Search -->
+      <div class="search-row">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search jobs</mat-label>
+          <input
+            matInput
+            placeholder="Search by Job ID, Client, Site Name, or Address"
+            [value]="searchTerm"
+            (input)="onSearchChange($any($event.target).value)"
+          />
+          <mat-icon matPrefix>search</mat-icon>
+          <button
+            mat-icon-button
+            matSuffix
+            *ngIf="searchTerm"
+            (click)="onSearchChange('')"
+            aria-label="Clear search"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+      </div>
+
+      <!-- Filter Expansion Panel -->
+      <mat-expansion-panel class="filter-expansion">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>filter_list</mat-icon>
+            <span>Filters</span>
+            <span class="filter-count" *ngIf="getActiveFilters().length > 0">
+              ({{ getActiveFilters().length }} active)
+            </span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <!-- Filters -->
+        <div class="filter-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select [(ngModel)]="selectedStatus" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let status of statusOptions" [value]="status">
+                {{ status }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Priority</mat-label>
+            <mat-select [(ngModel)]="selectedPriority" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let priority of priorityOptions" [value]="priority">
+                {{ priority }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Job Type</mat-label>
+            <mat-select [(ngModel)]="selectedJobType" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let type of jobTypeOptions" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Client</mat-label>
+            <mat-select [(ngModel)]="selectedClient" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let client of clientOptions" [value]="client">
+                {{ client }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Market</mat-label>
+            <mat-select [(ngModel)]="selectedMarket" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let market of marketOptions" [value]="market">
+                {{ market }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Job Readiness</mat-label>
+            <mat-select [(ngModel)]="selectedJobReadiness" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let readiness of jobReadinessOptions" [value]="readiness">
+                {{ formatReadiness(readiness) }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Customer Ready</mat-label>
+            <mat-select [(ngModel)]="selectedCustomerReady" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let ready of customerReadyOptions" [value]="ready">
+                {{ formatReadiness(ready) }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <frm-date-range-picker
+            [(ngModel)]="dateRange"
+            (ngModelChange)="applyFilters()"
+          ></frm-date-range-picker>
+
+          <button
+            mat-stroked-button
+            (click)="clearFilters()"
+            class="clear-filters-btn"
+          >
+            <mat-icon>clear</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Active Filter Chips -->
+      <div class="active-filters" *ngIf="getActiveFilters().length > 0">
+        <span class="filter-label">Active Filters:</span>
+        <mat-chip-set aria-label="Active filters">
+          <mat-chip
+            *ngFor="let filter of getActiveFilters()"
+            [removable]="true"
+            (removed)="removeFilter(filter.key)"
+          >
+            <strong>{{ filter.label }}:</strong> {{ filter.value }}
+            <button matChipRemove><mat-icon>cancel</mat-icon></button>
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Batch Operations Toolbar -->
+  <div class="batch-toolbar" *ngIf="selectedCount > 0">
+    <div class="batch-info">
+      <span class="selected-count">{{ selectedCount }} selected</span>
+      <button mat-button (click)="clearSelection()">
+        <mat-icon>close</mat-icon>
+        Clear Selection
+      </button>
+    </div>
+    <div class="batch-actions">
+      <button mat-button (click)="batchUpdateStatus()" *roleBasedShow="[UserRole.Admin, UserRole.PM, UserRole.CM]">
+        <mat-icon>update</mat-icon>
+        Update Status
+      </button>
+      <button mat-button (click)="batchAssign()" *roleBasedShow="[UserRole.Admin, UserRole.PM, UserRole.CM]">
+        <mat-icon>person_add</mat-icon>
+        Assign
+      </button>
+      <button mat-button color="warn" (click)="batchDelete()" *roleBasedShow="[UserRole.Admin]">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="loading-container" *ngIf="loading$ | async">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="(error$ | async) as error">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <h3>Failed to load jobs</h3>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" (click)="retryLoad()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Job Cards -->
+  <div class="job-cards" *ngIf="!(loading$ | async) && !(error$ | async)">
+    <div
+      class="job-card"
+      *ngFor="let job of displayedJobs"
+      (click)="viewJob(job)"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="viewJob(job)">
+      <div class="job-card-header">
+        <a [routerLink]="['/field-resource-management/jobs', job.id]" class="job-card-title" (click)="$event.stopPropagation()">
+          {{ job.jobId }}
+        </a>
+        <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+      </div>
+      <div class="job-card-body">
+        <div class="job-card-row">
+          <span class="job-card-label">Client</span>
+          <span class="job-card-value">{{ job.client }}</span>
+        </div>
+        <div class="job-card-row">
+          <span class="job-card-label">Site</span>
+          <span class="job-card-value">{{ job.siteName }} · {{ job.siteAddress.city }}, {{ job.siteAddress.state }}</span>
+        </div>
+        <div class="job-card-row">
+          <span class="job-card-label">Type</span>
+          <span class="job-card-value">{{ job.jobType }}</span>
+        </div>
+        <div class="job-card-row">
+          <span class="job-card-label">Priority</span>
+          <span class="priority-badge" [ngClass]="getPriorityClass(job.priority)">{{ job.priority }}</span>
+        </div>
+        <div class="job-card-row">
+          <span class="job-card-label">Scheduled</span>
+          <span class="job-card-value">{{ formatDate(job.scheduledStartDate) }}</span>
+        </div>
+        <div class="job-card-row">
+          <span class="job-card-label">Assigned</span>
+          <span class="job-card-value">{{ getAssignedTechnicians(job) }}</span>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <button mat-icon-button (click)="editJob(job); $event.stopPropagation()" aria-label="Edit job">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="assignJob(job); $event.stopPropagation()" aria-label="Assign job">
+          <mat-icon>person_add</mat-icon>
+        </button>
+        <button mat-icon-button (click)="deleteJob(job); $event.stopPropagation()" aria-label="Delete job" class="delete-action">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="displayedJobs.length === 0">
+      <mat-icon>work_off</mat-icon>
+      <h3>No jobs found</h3>
+      <p>Try adjusting your search or filters</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <mat-paginator
+    *ngIf="totalJobs > 0"
+    [length]="totalJobs"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    [pageIndex]="pageIndex"
+    (page)="onPageChange($event)"
+    showFirstLastButtons
+  >
+  </mat-paginator>
+</div>

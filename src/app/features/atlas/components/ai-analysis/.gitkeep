@@ -1,0 +1,7 @@
+# AI Analysis Components Directory
+
+Components to be implemented:
+- ai-analysis/ - Analysis results display
+- risk-assessment/ - Risk assessment visualization
+- recommendations/ - Recommendation list and details
+- findings-list/ - Analysis findings grouped by severity

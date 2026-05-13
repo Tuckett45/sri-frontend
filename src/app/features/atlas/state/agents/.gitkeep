@@ -1,0 +1,9 @@
+# Agent State Management
+
+Files to be implemented:
+- agent.state.ts - State interface definition
+- agent.actions.ts - Action definitions
+- agent.reducer.ts - Pure state transitions
+- agent.effects.ts - Side effects (API calls)
+- agent.selectors.ts - Memoized state selectors
+- index.ts - Public API exports

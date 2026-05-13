@@ -1,0 +1,46 @@
+<div class="issue-form-container">
+  <div class="form-header">
+    <a routerLink="../" class="back-link">
+      <i class="pi pi-arrow-left"></i> Back to Issues
+    </a>
+    <h2>Create Issue</h2>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error$ | async as error" class="error-banner" role="alert">{{ error }}</div>
+
+  <form [formGroup]="issueForm" (ngSubmit)="onSubmit()" class="issue-form" novalidate>
+    <div class="form-field">
+      <label for="projectId">Project <span class="required">*</span></label>
+      <select id="projectId" formControlName="projectId" [class.invalid]="hasError('projectId')">
+        <option value="" disabled>Select a project</option>
+        <option *ngFor="let p of projects$ | async" [value]="p.id">{{ p.name }}</option>
+      </select>
+      <span class="field-error" *ngIf="hasError('projectId')">Project is required.</span>
+    </div>
+
+    <div class="form-field">
+      <label for="description">Description <span class="required">*</span></label>
+      <textarea id="description" formControlName="description" rows="4" placeholder="Describe the issue"
+                [class.invalid]="hasError('description')"></textarea>
+      <span class="field-error" *ngIf="hasError('description')">Description is required.</span>
+    </div>
+
+    <div class="form-field">
+      <label for="severity">Severity <span class="required">*</span></label>
+      <select id="severity" formControlName="severity" [class.invalid]="hasError('severity')">
+        <option value="" disabled>Select severity</option>
+        <option *ngFor="let s of severities" [value]="s.value">{{ s.label }}</option>
+      </select>
+      <span class="field-error" *ngIf="hasError('severity')">Severity is required.</span>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-submit" [disabled]="saving$ | async">
+        <span *ngIf="!(saving$ | async)">Create Issue</span>
+        <span *ngIf="saving$ | async">Creating…</span>
+      </button>
+      <a routerLink="../" class="btn-cancel">Cancel</a>
+    </div>
+  </form>
+</div>

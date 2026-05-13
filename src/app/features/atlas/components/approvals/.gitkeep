@@ -1,0 +1,7 @@
+# Approval Components Directory
+
+Components to be implemented:
+- approval-list/ - Pending approvals for user
+- approval-decision/ - Approval decision form
+- approval-status/ - Approval status display
+- critical-gate-info/ - Critical gate requirements

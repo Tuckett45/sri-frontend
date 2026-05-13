@@ -1,0 +1,285 @@
+<div class="job-cost-report" role="region" aria-label="Job Cost Report">
+  <!-- Loading State -->
+  <div *ngIf="loading$ | async" class="report-loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading cost report...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error$ | async as error" class="report-error" role="alert">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-stroked-button (click)="loadReport()">Retry</button>
+  </div>
+
+  <!-- Report Content -->
+  <ng-container *ngIf="costBreakdown$ | async as breakdown">
+    <!-- Report Header -->
+    <div class="report-header">
+      <div class="header-info">
+        <h2>Job Cost Report</h2>
+        <span class="job-id-label">Job: {{ breakdown.jobId }}</span>
+      </div>
+      <div class="header-actions">
+        <button mat-stroked-button
+                [matMenuTriggerFor]="exportMenu"
+                [disabled]="exporting$ | async"
+                aria-label="Export report">
+          <mat-icon>download</mat-icon>
+          Export
+        </button>
+        <mat-menu #exportMenu="matMenu">
+          <button mat-menu-item (click)="exportReport('pdf')">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Export as PDF
+          </button>
+          <button mat-menu-item (click)="exportReport('excel')">
+            <mat-icon>table_chart</mat-icon>
+            Export as Excel
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+
+    <!-- Budget Comparison Card -->
+    <mat-card class="budget-comparison-card" *ngIf="budgetComparison$ | async as comparison">
+      <mat-card-header>
+        <mat-card-title>Budget vs Actual</mat-card-title>
+        <span class="status-chip" [ngClass]="getStatusColor(comparison.status)">
+          {{ getStatusLabel(comparison.status) }}
+        </span>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="comparison-grid">
+          <div class="comparison-item">
+            <span class="comparison-label">Allocated Budget</span>
+            <span class="comparison-value allocated">{{ formatCurrency(comparison.allocatedBudget) }}</span>
+          </div>
+          <div class="comparison-item">
+            <span class="comparison-label">Actual Cost</span>
+            <span class="comparison-value actual">{{ formatCurrency(comparison.actualCost) }}</span>
+          </div>
+          <div class="comparison-item">
+            <span class="comparison-label">Variance</span>
+            <span class="comparison-value" [ngClass]="getVarianceClass(comparison.variance)">
+              {{ comparison.variance >= 0 ? '+' : '' }}{{ formatCurrency(comparison.variance) }}
+            </span>
+          </div>
+          <div class="comparison-item">
+            <span class="comparison-label">Variance %</span>
+            <span class="comparison-value" [ngClass]="getVarianceClass(comparison.variancePercent)">
+              {{ comparison.variancePercent >= 0 ? '+' : '' }}{{ comparison.variancePercent | number:'1.1-1' }}%
+            </span>
+          </div>
+        </div>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="comparison.allocatedBudget > 0 ? (comparison.actualCost / comparison.allocatedBudget) * 100 : 0"
+          [color]="comparison.status === BudgetStatus.OverBudget ? 'warn' : comparison.status === BudgetStatus.Warning ? 'accent' : 'primary'">
+        </mat-progress-bar>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Cost Summary Cards -->
+    <div class="cost-summary-grid">
+      <mat-card class="cost-summary-card total">
+        <mat-card-content>
+          <mat-icon>account_balance</mat-icon>
+          <div class="cost-info">
+            <span class="cost-label">Total Cost</span>
+            <span class="cost-value">{{ formatCurrency(breakdown.totalCosts) }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="cost-summary-card labor">
+        <mat-card-content>
+          <mat-icon>schedule</mat-icon>
+          <div class="cost-info">
+            <span class="cost-label">Labor</span>
+            <span class="cost-value">{{ formatCurrency(breakdown.laborCosts.totalCost) }}</span>
+            <span class="cost-percent">{{ calculatePercentage(breakdown.laborCosts.totalCost, breakdown.totalCosts) }}%</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="cost-summary-card materials">
+        <mat-card-content>
+          <mat-icon>inventory_2</mat-icon>
+          <div class="cost-info">
+            <span class="cost-label">Materials</span>
+            <span class="cost-value">{{ formatCurrency(breakdown.materialCosts.totalCost) }}</span>
+            <span class="cost-percent">{{ calculatePercentage(breakdown.materialCosts.totalCost, breakdown.totalCosts) }}%</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="cost-summary-card travel">
+        <mat-card-content>
+          <mat-icon>directions_car</mat-icon>
+          <div class="cost-info">
+            <span class="cost-label">Travel</span>
+            <span class="cost-value">{{ formatCurrency(breakdown.travelCosts.totalCost) }}</span>
+            <span class="cost-percent">{{ calculatePercentage(breakdown.travelCosts.totalCost, breakdown.totalCosts) }}%</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Cost Distribution Chart -->
+    <mat-card class="chart-card" *ngIf="costDistributionData.length > 0">
+      <mat-card-header>
+        <mat-card-title>Cost Distribution</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="distribution-bars">
+          <div *ngFor="let item of costDistributionData" class="distribution-item">
+            <div class="distribution-label">
+              <span class="dot" [style.background-color]="item.color"></span>
+              {{ item.name }}
+            </div>
+            <div class="distribution-bar-container">
+              <div class="distribution-bar"
+                   [style.width.%]="calculatePercentage(item.value, breakdown.totalCosts)"
+                   [style.background-color]="item.color">
+              </div>
+            </div>
+            <span class="distribution-value">{{ formatCurrency(item.value) }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Detail Tabs -->
+    <mat-card class="detail-card">
+      <mat-tab-group>
+        <!-- Labor Costs Tab -->
+        <mat-tab label="Labor ({{ breakdown.laborCosts.byTechnician.length }})">
+          <div class="tab-content">
+            <div class="tab-summary">
+              <span>Total Hours: {{ breakdown.laborCosts.totalRoundedHours | number:'1.1-1' }}</span>
+              <span>Avg Rate: {{ formatCurrency(breakdown.laborCosts.averageHourlyRate) }}/hr</span>
+              <span>Total: {{ formatCurrency(breakdown.laborCosts.totalCost) }}</span>
+            </div>
+            <div *ngIf="breakdown.laborCosts.byTechnician.length === 0" class="empty-state">
+              <mat-icon>person_off</mat-icon>
+              <p>No labor costs recorded</p>
+            </div>
+            <table mat-table [dataSource]="breakdown.laborCosts.byTechnician"
+                   *ngIf="breakdown.laborCosts.byTechnician.length > 0"
+                   class="detail-table">
+              <ng-container matColumnDef="technician">
+                <th mat-header-cell *matHeaderCellDef>Technician</th>
+                <td mat-cell *matCellDef="let row">{{ row.technicianName }}</td>
+              </ng-container>
+              <ng-container matColumnDef="hours">
+                <th mat-header-cell *matHeaderCellDef>Actual Hours</th>
+                <td mat-cell *matCellDef="let row">{{ row.hours | number:'1.1-1' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="roundedHours">
+                <th mat-header-cell *matHeaderCellDef>Rounded Hours</th>
+                <td mat-cell *matCellDef="let row">{{ row.roundedHours | number:'1.1-1' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="rate">
+                <th mat-header-cell *matHeaderCellDef>Rate</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.hourlyRate) }}/hr</td>
+              </ng-container>
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef>Total</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalCost) }}</td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="laborColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: laborColumns;"></tr>
+            </table>
+          </div>
+        </mat-tab>
+
+        <!-- Material Costs Tab -->
+        <mat-tab label="Materials ({{ breakdown.materialCosts.byMaterial.length }})">
+          <div class="tab-content">
+            <div class="tab-summary">
+              <span>Total: {{ formatCurrency(breakdown.materialCosts.totalCost) }}</span>
+            </div>
+            <div *ngIf="breakdown.materialCosts.byMaterial.length === 0" class="empty-state">
+              <mat-icon>inventory_2</mat-icon>
+              <p>No material costs recorded</p>
+            </div>
+            <table mat-table [dataSource]="breakdown.materialCosts.byMaterial"
+                   *ngIf="breakdown.materialCosts.byMaterial.length > 0"
+                   class="detail-table">
+              <ng-container matColumnDef="material">
+                <th mat-header-cell *matHeaderCellDef>Material</th>
+                <td mat-cell *matCellDef="let row">{{ row.materialName }}</td>
+              </ng-container>
+              <ng-container matColumnDef="quantity">
+                <th mat-header-cell *matHeaderCellDef>Quantity</th>
+                <td mat-cell *matCellDef="let row">{{ row.quantity }}</td>
+              </ng-container>
+              <ng-container matColumnDef="unitCost">
+                <th mat-header-cell *matHeaderCellDef>Unit Cost</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.unitCost) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef>Total</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalCost) }}</td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="materialColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: materialColumns;"></tr>
+            </table>
+          </div>
+        </mat-tab>
+
+        <!-- Travel Costs Tab -->
+        <mat-tab label="Travel ({{ breakdown.travelCosts.byTechnician.length }})">
+          <div class="tab-content">
+            <div class="tab-summary">
+              <span>Total: {{ formatCurrency(breakdown.travelCosts.totalCost) }}</span>
+            </div>
+            <div *ngIf="breakdown.travelCosts.byTechnician.length === 0" class="empty-state">
+              <mat-icon>directions_car</mat-icon>
+              <p>No travel costs recorded</p>
+            </div>
+            <table mat-table [dataSource]="breakdown.travelCosts.byTechnician"
+                   *ngIf="breakdown.travelCosts.byTechnician.length > 0"
+                   class="detail-table">
+              <ng-container matColumnDef="technician">
+                <th mat-header-cell *matHeaderCellDef>Technician</th>
+                <td mat-cell *matCellDef="let row">{{ row.technicianName }}</td>
+              </ng-container>
+              <ng-container matColumnDef="distance">
+                <th mat-header-cell *matHeaderCellDef>Distance (mi)</th>
+                <td mat-cell *matCellDef="let row">{{ row.distanceMiles | number:'1.0-0' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="perDiem">
+                <th mat-header-cell *matHeaderCellDef>Per Diem</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.perDiemAmount) }}</td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="travelColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: travelColumns;"></tr>
+            </table>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+
+    <!-- Variance Analysis -->
+    <mat-card class="variance-card">
+      <mat-card-header>
+        <mat-card-title>Variance Analysis</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="variance-grid">
+          <div class="variance-item">
+            <span class="variance-label">Budget Variance</span>
+            <span class="variance-value" [ngClass]="getVarianceClass(breakdown.budgetVariance)">
+              {{ breakdown.budgetVariance >= 0 ? '+' : '' }}{{ formatCurrency(breakdown.budgetVariance) }}
+            </span>
+          </div>
+          <div class="variance-item">
+            <span class="variance-label">Variance Percentage</span>
+            <span class="variance-value" [ngClass]="getVarianceClass(breakdown.budgetVariancePercent)">
+              {{ breakdown.budgetVariancePercent >= 0 ? '+' : '' }}{{ breakdown.budgetVariancePercent | number:'1.1-1' }}%
+            </span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+</div>

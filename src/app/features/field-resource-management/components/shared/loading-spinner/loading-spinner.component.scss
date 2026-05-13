@@ -1,0 +1,42 @@
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+
+  &--overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 1000;
+    padding: 0;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__message {
+    margin: 0;
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.6);
+    text-align: center;
+  }
+}
+
+// Mobile responsive adjustments
+@media (max-width: 767px) {
+  .loading-spinner {
+    padding: 16px;
+
+    &__message {
+      font-size: 0.8125rem;
+    }
+  }
+}

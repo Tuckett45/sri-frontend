@@ -1,0 +1,287 @@
+<form class="user-form" (ngSubmit)="onSubmit()">
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <!-- Basic Information Section -->
+  <div class="form-section">
+    <h3>Basic Information</h3>
+
+    <div class="form-group" [class.has-error]="hasFieldError('name')">
+      <label for="name">Name <span class="required">*</span></label>
+      <input
+        id="name"
+        type="text"
+        [(ngModel)]="formData.name"
+        name="name"
+        class="form-control"
+        placeholder="Enter full name"
+        required
+      />
+      <span *ngIf="hasFieldError('name')" class="error-message">
+        {{ getFieldError('name') }}
+      </span>
+    </div>
+
+    <div class="form-group" [class.has-error]="hasFieldError('email')">
+      <label for="email">Email <span class="required">*</span></label>
+      <input
+        id="email"
+        type="email"
+        [(ngModel)]="formData.email"
+        name="email"
+        class="form-control"
+        placeholder="Enter email address"
+        [disabled]="mode === 'edit'"
+        required
+      />
+      <span *ngIf="hasFieldError('email')" class="error-message">
+        {{ getFieldError('email') }}
+      </span>
+      <span *ngIf="mode === 'edit'" class="help-text">
+        Email cannot be changed after user creation
+      </span>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" [class.has-error]="hasFieldError('role')">
+        <label for="role">Role <span class="required">*</span></label>
+        <select
+          id="role"
+          [(ngModel)]="formData.role"
+          name="role"
+          class="form-control"
+          (ngModelChange)="onRoleChange()"
+          required
+        >
+          <option [ngValue]="null" disabled>Select a role</option>
+          <option *ngFor="let role of roleOptions" [ngValue]="role.value">
+            {{ role.label }}
+          </option>
+        </select>
+        <span *ngIf="hasFieldError('role')" class="error-message">
+          {{ getFieldError('role') }}
+        </span>
+      </div>
+
+      <div class="form-group" [class.has-error]="hasFieldError('market')">
+        <label for="market">Market <span class="required">*</span></label>
+        <select
+          id="market"
+          [(ngModel)]="formData.market"
+          name="market"
+          class="form-control"
+          required
+        >
+          <option value="" disabled>Select a market</option>
+          <option *ngFor="let market of marketOptions" [value]="market">
+            {{ market }}
+          </option>
+        </select>
+        <span *ngIf="hasFieldError('market')" class="error-message">
+          {{ getFieldError('market') }}
+        </span>
+      </div>
+    </div>
+
+    <div class="form-group" [class.has-error]="hasFieldError('company')">
+      <label for="company">Company <span class="required">*</span></label>
+      <select
+        id="company"
+        [(ngModel)]="formData.company"
+        name="company"
+        class="form-control"
+        required
+      >
+        <option value="" disabled>Select a company</option>
+        <option *ngFor="let company of companyOptions" [value]="company">
+          {{ company }}
+        </option>
+      </select>
+      <span *ngIf="hasFieldError('company')" class="error-message">
+        {{ getFieldError('company') }}
+      </span>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="formData.isApproved"
+          name="isApproved"
+        />
+        <span>Approve user immediately</span>
+      </label>
+      <span class="help-text">
+        If unchecked, user will need admin approval before accessing the system
+      </span>
+    </div>
+  </div>
+
+  <!-- Permissions Section -->
+  <div class="form-section">
+    <h3>Permissions</h3>
+    <p class="section-description">
+      Configure what actions this user can perform. Permissions are automatically set based on role but can be customized.
+    </p>
+
+    <div class="permissions-grid">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="permissions.canCreateProjects"
+          name="canCreateProjects"
+        />
+        <span>Create Projects</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="permissions.canEditProjects"
+          name="canEditProjects"
+        />
+        <span>Edit Projects</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="permissions.canDeleteProjects"
+          name="canDeleteProjects"
+        />
+        <span>Delete Projects</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="permissions.canManageUsers"
+          name="canManageUsers"
+        />
+        <span>Manage Users</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="permissions.canViewReports"
+          name="canViewReports"
+        />
+        <span>View Reports</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="permissions.canExportData"
+          name="canExportData"
+        />
+        <span>Export Data</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="permissions.canApproveWorkflows"
+          name="canApproveWorkflows"
+        />
+        <span>Approve Workflows</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="permissions.canManageResources"
+          name="canManageResources"
+        />
+        <span>Manage Resources</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Notification Preferences Section -->
+  <div class="form-section">
+    <h3>Notification Preferences</h3>
+    <p class="section-description">
+      Configure how this user receives notifications from the system.
+    </p>
+
+    <div class="notifications-grid">
+      <div class="notification-group">
+        <h4>Channels</h4>
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="notificationPreferences.email"
+            name="notifyEmail"
+          />
+          <span>Email Notifications</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="notificationPreferences.inApp"
+            name="notifyInApp"
+          />
+          <span>In-App Notifications</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="notificationPreferences.sms"
+            name="notifySms"
+          />
+          <span>SMS Notifications</span>
+        </label>
+      </div>
+
+      <div class="notification-group">
+        <h4>Types</h4>
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="notificationPreferences.approvalReminders"
+            name="notifyApprovalReminders"
+          />
+          <span>Approval Reminders</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="notificationPreferences.escalationAlerts"
+            name="notifyEscalationAlerts"
+          />
+          <span>Escalation Alerts</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="notificationPreferences.dailyDigest"
+            name="notifyDailyDigest"
+          />
+          <span>Daily Digest</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="onCancel()">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn btn-primary"
+      [disabled]="submitting"
+    >
+      {{ submitting ? 'Saving...' : (mode === 'create' ? 'Create User' : 'Update User') }}
+    </button>
+  </div>
+</form>

@@ -1,0 +1,13 @@
+# ATLAS Guards Directory
+
+This directory contains route guards for ATLAS feature protection.
+
+Guards to be implemented:
+- atlas-feature.guard.ts - Checks if ATLAS integration is enabled via feature flag
+- atlas-auth.guard.ts - Ensures user is authenticated for ATLAS routes
+- atlas-role.guard.ts - Validates user has required roles/permissions
+
+Guards integrate with:
+- AtlasConfigService for feature flag checks
+- AuthService for authentication validation
+- User role/permission system for authorization

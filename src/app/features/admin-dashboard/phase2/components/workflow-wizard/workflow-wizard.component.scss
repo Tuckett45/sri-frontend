@@ -1,0 +1,363 @@
+.workflow-wizard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+
+  .wizard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 600;
+    }
+
+    .wizard-actions {
+      display: flex;
+      gap: 1rem;
+    }
+  }
+
+  .wizard-progress {
+    margin-bottom: 2rem;
+
+    .progress-bar {
+      height: 8px;
+      background-color: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+
+      .progress-fill {
+        height: 100%;
+        background-color: #4caf50;
+        transition: width 0.3s ease;
+      }
+    }
+
+    .progress-text {
+      text-align: center;
+      font-size: 0.875rem;
+      color: #666;
+    }
+  }
+
+  .wizard-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: #e0e0e0;
+      z-index: 0;
+    }
+
+    .step-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+      cursor: default;
+
+      &.clickable {
+        cursor: pointer;
+
+        &:hover .step-number {
+          transform: scale(1.1);
+        }
+      }
+
+      &.active .step-number {
+        background-color: #2196f3;
+        color: white;
+        border-color: #2196f3;
+      }
+
+      &.completed .step-number {
+        background-color: #4caf50;
+        color: white;
+        border-color: #4caf50;
+      }
+
+      .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: white;
+        border: 2px solid #e0e0e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+
+        .check-icon {
+          font-size: 1.25rem;
+        }
+      }
+
+      .step-info {
+        text-align: center;
+        max-width: 150px;
+
+        .step-name {
+          font-weight: 600;
+          font-size: 0.875rem;
+          margin-bottom: 0.25rem;
+        }
+
+        .step-description {
+          font-size: 0.75rem;
+          color: #666;
+        }
+      }
+    }
+  }
+
+  .wizard-content {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    min-height: 400px;
+
+    .step-content {
+      h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+      }
+
+      .step-description {
+        color: #666;
+        margin-bottom: 2rem;
+      }
+
+      .step-form {
+        .form-group {
+          margin-bottom: 1.5rem;
+
+          label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+          }
+
+          .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+
+            &:focus {
+              outline: none;
+              border-color: #2196f3;
+              box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+            }
+          }
+
+          textarea.form-control {
+            resize: vertical;
+          }
+        }
+
+        .text-muted {
+          color: #999;
+          font-style: italic;
+        }
+      }
+
+      .validation-errors {
+        margin-top: 1rem;
+
+        .alert {
+          padding: 0.75rem 1rem;
+          border-radius: 4px;
+          margin-bottom: 0.5rem;
+
+          &.alert-danger {
+            background-color: #ffebee;
+            border: 1px solid #ef5350;
+            color: #c62828;
+          }
+        }
+      }
+    }
+  }
+
+  .wizard-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+
+    .btn {
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      &.btn-primary {
+        background-color: #2196f3;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background-color: #1976d2;
+        }
+      }
+
+      &.btn-secondary {
+        background-color: #757575;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background-color: #616161;
+        }
+      }
+
+      &.btn-success {
+        background-color: #4caf50;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background-color: #388e3c;
+        }
+      }
+
+      &.btn-outline {
+        background-color: transparent;
+        border: 1px solid #ddd;
+        color: #666;
+
+        &:hover:not(:disabled) {
+          background-color: #f5f5f5;
+        }
+      }
+    }
+  }
+
+  .save-status {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+
+    .text-success {
+      color: #4caf50;
+    }
+
+    .text-danger {
+      color: #f44336;
+    }
+  }
+
+  // Grid layout for wizard with AI sidebar
+  .wizard-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+
+    @media (max-width: 1200px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .wizard-left-column {
+    min-width: 0; // Prevents grid blowout
+  }
+
+  .wizard-right-column {
+    .ai-advisory-sidebar {
+      position: sticky;
+      top: 2rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      max-height: calc(100vh - 4rem);
+      overflow-y: auto;
+
+      h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a1a;
+      }
+
+      .sidebar-description {
+        margin: 0 0 1rem 0;
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      @media (max-width: 1200px) {
+        position: static;
+        max-height: none;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .workflow-wizard {
+    padding: 1rem;
+
+    .wizard-steps {
+      flex-direction: column;
+      gap: 1rem;
+
+      &::before {
+        display: none;
+      }
+
+      .step-item {
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+
+        .step-number {
+          margin-right: 1rem;
+          margin-bottom: 0;
+        }
+
+        .step-info {
+          text-align: left;
+          max-width: none;
+        }
+      }
+    }
+
+    .wizard-content {
+      padding: 1rem;
+    }
+
+    .wizard-footer {
+      flex-direction: column;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+}

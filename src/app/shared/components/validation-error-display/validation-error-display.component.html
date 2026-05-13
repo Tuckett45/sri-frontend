@@ -1,0 +1,21 @@
+<!-- Inline validation errors (for individual fields) -->
+<div *ngIf="hasErrors && mode === 'inline'" class="validation-error-inline">
+  <div *ngFor="let error of errorList" class="error-message" [class.warning]="error.severity === 'warning'">
+    <span class="error-icon">⚠</span>
+    <span class="error-text">{{ error.message }}</span>
+  </div>
+</div>
+
+<!-- Summary validation errors (for form-level errors) -->
+<div *ngIf="hasErrors && mode === 'summary'" class="validation-error-summary">
+  <div class="summary-header">
+    <span class="summary-icon">⚠</span>
+    <span class="summary-title">Please correct the following errors:</span>
+  </div>
+  <ul class="error-list">
+    <li *ngFor="let error of errorList" class="error-item" [class.warning]="error.severity === 'warning'">
+      <strong *ngIf="error.field">{{ error.field }}:</strong>
+      {{ error.message }}
+    </li>
+  </ul>
+</div>

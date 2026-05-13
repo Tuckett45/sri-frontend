@@ -1,0 +1,232 @@
+// ---------------------------------------------------------------------------
+// Connection Warning Banner
+// ---------------------------------------------------------------------------
+
+.connection-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 8px;
+  color: #e65100;
+  font-size: 14px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #ef6c00;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Loading State
+// ---------------------------------------------------------------------------
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 16px;
+  gap: 16px;
+
+  .loading-text {
+    color: #757575;
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Error State
+// ---------------------------------------------------------------------------
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 16px;
+  gap: 12px;
+
+  .error-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #e53935;
+  }
+
+  .error-message {
+    color: #d32f2f;
+    font-size: 14px;
+    margin: 0;
+    text-align: center;
+    max-width: 400px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main Container
+// ---------------------------------------------------------------------------
+
+.deployment-checklist-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ---------------------------------------------------------------------------
+// Toolbar
+// ---------------------------------------------------------------------------
+
+.checklist-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .checklist-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #212121;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .saving-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #757575;
+    font-size: 13px;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    .toolbar-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Status Badges (inline — not using StatusBadgeComponent)
+// ---------------------------------------------------------------------------
+
+.checklist-status-badge,
+.phase-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.status-not-started {
+  background-color: #e0e0e0;
+  color: #616161;
+}
+
+.status-in-progress {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+// ---------------------------------------------------------------------------
+// Tab Group
+// ---------------------------------------------------------------------------
+
+.checklist-tabs {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+
+  ::ng-deep {
+    .mat-mdc-tab-header {
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .mat-mdc-tab {
+      min-width: 140px;
+    }
+  }
+}
+
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .tab-label-text {
+    font-size: 14px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase Content
+// ---------------------------------------------------------------------------
+
+.phase-content {
+  padding: 24px 16px;
+  min-height: 200px;
+
+  @media (max-width: 600px) {
+    padding: 16px 8px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Print Styles
+// ---------------------------------------------------------------------------
+
+@media print {
+  .connection-warning,
+  .checklist-toolbar .toolbar-actions,
+  .saving-indicator {
+    display: none !important;
+  }
+
+  .deployment-checklist-container {
+    display: none !important;
+  }
+
+  .loading-container,
+  .error-container {
+    display: none !important;
+  }
+
+  .checklist-tabs {
+    box-shadow: none;
+  }
+}

@@ -1,0 +1,222 @@
+<div class="insights-display">
+  <!-- Header with Controls -->
+  <div class="insights-header">
+    <h2>AI Insights</h2>
+    <div class="header-actions">
+      <button class="btn-export" (click)="exportInsights('csv')">
+        <span class="icon-download"></span>
+        Export CSV
+      </button>
+      <button class="btn-export" (click)="exportInsights('pdf')">
+        <span class="icon-download"></span>
+        Export PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="insights-filters">
+    <!-- Search -->
+    <div class="filter-group search-group">
+      <input 
+        type="text" 
+        class="search-input"
+        [(ngModel)]="searchQuery"
+        (input)="applySearch()"
+        placeholder="Search insights...">
+    </div>
+
+    <!-- Category Filter -->
+    <div class="filter-group">
+      <label>Category:</label>
+      <select 
+        class="filter-select"
+        [(ngModel)]="filterByCategory"
+        (change)="applyCategoryFilter(filterByCategory)">
+        <option [ngValue]="null">All Categories</option>
+        <option *ngFor="let category of availableCategories" [value]="category">
+          {{ category | titlecase }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Severity Filter -->
+    <div class="filter-group">
+      <label>Severity:</label>
+      <select 
+        class="filter-select"
+        [(ngModel)]="filterByPriority"
+        (change)="applyPriorityFilter(filterByPriority)">
+        <option [ngValue]="null">All Severities</option>
+        <option value="critical">Critical</option>
+        <option value="warning">Warning</option>
+        <option value="info">Info</option>
+      </select>
+    </div>
+
+    <!-- Sort Controls -->
+    <div class="filter-group">
+      <label>Sort by:</label>
+      <select 
+        class="filter-select"
+        [(ngModel)]="sortBy"
+        (change)="changeSortBy(sortBy)">
+        <option value="priority">Priority</option>
+        <option value="date">Date</option>
+        <option value="category">Category</option>
+      </select>
+    </div>
+
+    <!-- Clear Filters -->
+    <button class="btn-clear" (click)="clearFilters()">
+      Clear Filters
+    </button>
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-info">
+    <p>Showing {{ filteredInsights.length }} of {{ insights.length }} insights</p>
+  </div>
+
+  <!-- No Insights Message -->
+  <div *ngIf="filteredInsights.length === 0" class="no-insights">
+    <span class="icon-info"></span>
+    <p *ngIf="insights.length === 0">No insights available.</p>
+    <p *ngIf="insights.length > 0">No insights match the current filters.</p>
+  </div>
+
+  <!-- Cards View -->
+  <div *ngIf="displayMode === 'cards' && filteredInsights.length > 0" class="insights-cards">
+    <div 
+      *ngFor="let insight of filteredInsights" 
+      class="insight-card"
+      [ngClass]="getSeverityClass(insight.severity)"
+      (click)="selectInsight(insight)">
+      
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="header-badges">
+          <span class="severity-badge" [ngClass]="getSeverityClass(insight.severity)">
+            {{ insight.severity | uppercase }}
+          </span>
+          <span class="category-badge" [ngClass]="getCategoryClass(insight.category)">
+            {{ insight.category | titlecase }}
+          </span>
+        </div>
+        <span class="card-date">{{ formatTimestamp(insight.createdAt) }}</span>
+      </div>
+
+      <!-- Card Title -->
+      <h3 class="card-title">{{ insight.title }}</h3>
+
+      <!-- Card Description -->
+      <p class="card-description">{{ insight.description }}</p>
+
+      <!-- Metrics -->
+      <div class="metrics-section" *ngIf="hasMetrics(insight)">
+        <h4>Key Metrics</h4>
+        <div class="metrics-grid">
+          <div *ngFor="let metric of insight.metrics" class="metric-item">
+            <div class="metric-header">
+              <span class="metric-name">{{ metric.name }}</span>
+              <span class="metric-trend" [ngClass]="getTrendClass(metric.trend)">
+                {{ getTrendIcon(metric.trend) }}
+              </span>
+            </div>
+            <div class="metric-value">{{ getMetricDisplay(metric) }}</div>
+            <div class="metric-change" [ngClass]="getTrendClass(metric.trend)">
+              {{ formatChangePercent(metric.changePercentage) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="recommendations-section" *ngIf="hasRecommendations(insight)">
+        <h4>Recommendations</h4>
+        <ul class="recommendations-list">
+          <li *ngFor="let rec of insight.recommendations">{{ rec }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- List View -->
+  <div *ngIf="displayMode === 'list' && filteredInsights.length > 0" class="insights-list">
+    <div 
+      *ngFor="let insight of filteredInsights" 
+      class="insight-list-item"
+      [ngClass]="getSeverityClass(insight.severity)"
+      (click)="selectInsight(insight)">
+      
+      <div class="list-item-left">
+        <span class="severity-indicator" [ngClass]="getSeverityClass(insight.severity)"></span>
+        <div class="list-item-content">
+          <div class="list-item-header">
+            <h3>{{ insight.title }}</h3>
+            <span class="category-badge" [ngClass]="getCategoryClass(insight.category)">
+              {{ insight.category | titlecase }}
+            </span>
+          </div>
+          <p class="list-item-description">{{ insight.description }}</p>
+          
+          <!-- Metrics Summary -->
+          <div class="metrics-summary" *ngIf="hasMetrics(insight)">
+            <span *ngFor="let metric of insight.metrics" class="metric-summary-item">
+              <strong>{{ metric.name }}:</strong> {{ getMetricDisplay(metric) }}
+              <span class="trend-indicator" [ngClass]="getTrendClass(metric.trend)">
+                {{ getTrendIcon(metric.trend) }} {{ formatChangePercent(metric.changePercentage) }}
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-item-right">
+        <span class="list-item-date">{{ formatTimestamp(insight.createdAt) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline View -->
+  <div *ngIf="displayMode === 'timeline' && filteredInsights.length > 0" class="insights-timeline">
+    <div 
+      *ngFor="let insight of filteredInsights; let i = index" 
+      class="timeline-item"
+      [ngClass]="getSeverityClass(insight.severity)">
+      
+      <div class="timeline-marker">
+        <div class="marker-dot" [ngClass]="getSeverityClass(insight.severity)"></div>
+        <div class="marker-line" *ngIf="i < filteredInsights.length - 1"></div>
+      </div>
+
+      <div class="timeline-content" (click)="selectInsight(insight)">
+        <div class="timeline-header">
+          <span class="timeline-date">{{ formatTimestamp(insight.createdAt) }}</span>
+          <div class="timeline-badges">
+            <span class="severity-badge" [ngClass]="getSeverityClass(insight.severity)">
+              {{ insight.severity | uppercase }}
+            </span>
+            <span class="category-badge" [ngClass]="getCategoryClass(insight.category)">
+              {{ insight.category | titlecase }}
+            </span>
+          </div>
+        </div>
+
+        <h3 class="timeline-title">{{ insight.title }}</h3>
+        <p class="timeline-description">{{ insight.description }}</p>
+
+        <!-- Metrics -->
+        <div class="timeline-metrics" *ngIf="hasMetrics(insight)">
+          <div *ngFor="let metric of insight.metrics" class="timeline-metric">
+            <span class="metric-name">{{ metric.name }}:</span>
+            <span class="metric-value">{{ getMetricDisplay(metric) }}</span>
+            <span class="metric-change" [ngClass]="getTrendClass(metric.trend)">
+              {{ getTrendIcon(metric.trend) }} {{ formatChangePercent(metric.changePercentage) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

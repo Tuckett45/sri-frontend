@@ -1,0 +1,110 @@
+<!-- Query Results Component Template -->
+<div class="query-results-container">
+  <p-card styleClass="atlas-card">
+    <ng-template pTemplate="header">
+      <div class="results-header">
+        <div class="header-title">
+          <i class="pi pi-table"></i>
+          <span>Query Results</span>
+        </div>
+        <div class="header-actions" *ngIf="(hasResults$ | async)">
+          <p-menu #exportMenu [model]="exportMenuItems" [popup]="true"></p-menu>
+          <button
+            pButton
+            label="Export"
+            icon="pi pi-download"
+            class="p-button-outlined"
+            (click)="exportMenu.toggle($event)"
+            [disabled]="(exporting$ | async) || false"
+            [loading]="(exporting$ | async) || false"
+            pTooltip="Export results"
+            tooltipPosition="bottom">
+          </button>
+          <button
+            pButton
+            icon="pi pi-times"
+            class="p-button-outlined p-button-secondary"
+            (click)="clearResults()"
+            pTooltip="Clear results"
+            tooltipPosition="bottom">
+          </button>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="(executing$ | async)">
+      <p-progressSpinner></p-progressSpinner>
+      <p class="loading-message">Executing query...</p>
+    </div>
+
+    <!-- No Results State -->
+    <div class="no-results-container" *ngIf="!(executing$ | async) && !(hasResults$ | async)">
+      <i class="pi pi-inbox no-results-icon"></i>
+      <p class="no-results-message">No results to display</p>
+      <p class="no-results-hint">Execute a query to see results here</p>
+    </div>
+
+    <!-- Results Table -->
+    <div class="results-table-container" *ngIf="!(executing$ | async) && (hasResults$ | async)">
+      <!-- Results Metadata -->
+      <div class="results-metadata">
+        <div class="metadata-item">
+          <span class="metadata-label">Total Rows:</span>
+          <span class="metadata-value">{{ (resultRowCount$ | async) | number }}</span>
+        </div>
+        <div class="metadata-item">
+          <span class="metadata-label">Execution Time:</span>
+          <span class="metadata-value">{{ (executionTime$ | async) }} ms</span>
+        </div>
+        <div class="metadata-item" *ngIf="(resultsFromCache$ | async)">
+          <span class="metadata-badge cache-badge">
+            <i class="pi pi-bolt"></i>
+            From Cache
+          </span>
+        </div>
+      </div>
+
+      <!-- Table with Virtual Scrolling -->
+      <p-table
+        [value]="getTableData(queryResult$ | async)"
+        [columns]="getTableColumns(queryResult$ | async)"
+        [scrollable]="true"
+        [scrollHeight]="scrollHeight"
+        [virtualScroll]="true"
+        [virtualScrollItemSize]="virtualScrollItemSize"
+        [rows]="20"
+        styleClass="p-datatable-sm p-datatable-striped"
+        responsiveLayout="scroll">
+        
+        <!-- Table Header -->
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+              {{ col.header }}
+              <p-sortIcon [field]="col.field"></p-sortIcon>
+            </th>
+          </tr>
+        </ng-template>
+
+        <!-- Table Body -->
+        <ng-template pTemplate="body" let-rowData let-columns="columns">
+          <tr>
+            <td *ngFor="let col of columns" [title]="rowData[col.field]">
+              {{ formatCellValue(rowData[col.field], col.dataType) }}
+            </td>
+          </tr>
+        </ng-template>
+
+        <!-- Empty Message -->
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td [attr.colspan]="getTableColumns(queryResult$ | async).length" class="empty-message">
+              No data available
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-card>
+</div>
