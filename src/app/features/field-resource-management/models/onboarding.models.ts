@@ -15,10 +15,34 @@ export interface Candidate {
   drugTestComplete: boolean;
   oshaCertified: boolean;
   scissorLiftCertified: boolean;
-  biisciCertified: boolean;
+  biisciCertified?: boolean;
   workSite: string;
   startDate: string;          // ISO date
   offerStatus: OfferStatus;
+  notes?: string;
+
+  // Badges & Access
+  attBadge?: boolean;
+  lumenBadge?: boolean;
+  attSupplierTraining?: boolean;
+  cienaBasicTraining?: boolean;
+  googleRedBadge?: boolean;
+  googleLdap?: boolean;
+  metaGreenListing?: boolean;
+
+  // Training & Certs
+  obsTraining?: boolean;
+  techHandTools?: boolean;
+  osha10?: boolean;
+  osha30?: boolean;
+
+  // Equipment Kits
+  ciKitAssigned?: boolean;
+  fiberKitAssigned?: boolean;
+  labelingKitAssigned?: boolean;
+  powerKitAssigned?: boolean;
+  testingEqptAssigned?: boolean;
+
   createdBy: string;
   createdAt: string;          // ISO datetime
   updatedBy: string;
@@ -45,7 +69,6 @@ export interface UpdateCandidatePayload {
   drugTestComplete?: boolean;
   oshaCertified?: boolean;
   scissorLiftCertified?: boolean;
-  biisciCertified?: boolean;
   workSite?: string;
   startDate?: string;
   offerStatus?: OfferStatus;

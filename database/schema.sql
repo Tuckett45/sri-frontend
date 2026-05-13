@@ -640,7 +640,6 @@ CREATE TABLE candidates (
   drug_test_complete      BOOLEAN NOT NULL DEFAULT FALSE,
   osha_certified          BOOLEAN NOT NULL DEFAULT FALSE,
   scissor_lift_certified  BOOLEAN NOT NULL DEFAULT FALSE,
-  biisci_certified        BOOLEAN NOT NULL DEFAULT FALSE,
   work_site               VARCHAR(255),
   start_date              DATE,
   offer_status            offer_status NOT NULL DEFAULT 'pre_offer',

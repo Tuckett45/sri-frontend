@@ -1,8 +1,10 @@
 import { Component, Input, Output, EventEmitter, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { TechnicianService } from '../../../services/technician.service';
 import { PRC, PRCGoal, PRCGoalStatus, PRCRecordStatus } from '../../../models/prc.model';
 import { computePRCStatus } from '../../../utils/prc-timer.util';
+import { GoalEditModalComponent, GoalEditModalData } from '../goal-edit-modal/goal-edit-modal.component';
 
 @Component({
   selector: 'app-prc-section',
@@ -12,8 +14,8 @@ import { computePRCStatus } from '../../../utils/prc-timer.util';
         <h3 class="prc-section-title">Performance Review Cycle (PRC)</h3>
         <button
           class="add-goal-button"
-          (click)="toggleAddGoalForm()"
-          *ngIf="prc && !showAddGoalForm"
+          (click)="openAddGoalModal()"
+          *ngIf="prc"
         >
           Add Goal
         </button>
@@ -65,43 +67,7 @@ import { computePRCStatus } from '../../../utils/prc-timer.util';
         <div class="prc-goals-section">
           <h4 class="goals-title">Goals</h4>
 
-          <div *ngIf="showAddGoalForm" class="add-form">
-            <h4 class="form-title">Add New Goal</h4>
-            <div class="form-group">
-              <label class="form-label" for="goalDescription">Description</label>
-              <input
-                id="goalDescription"
-                type="text"
-                class="form-input"
-                [(ngModel)]="goalDescription"
-                placeholder="Enter goal description"
-              />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="goalTargetDate">Target Date</label>
-              <input
-                id="goalTargetDate"
-                type="date"
-                class="form-input"
-                [(ngModel)]="goalTargetDate"
-              />
-            </div>
-            <div *ngIf="validationError" class="validation-error">
-              {{ validationError }}
-            </div>
-            <div class="form-actions">
-              <button
-                class="submit-button"
-                (click)="submitGoal()"
-                [disabled]="isSubmitting"
-              >
-                {{ isSubmitting ? 'Adding...' : 'Add' }}
-              </button>
-              <button class="cancel-button" (click)="cancelAddGoalForm()">Cancel</button>
-            </div>
-          </div>
-
-          <div *ngIf="prc.goals.length === 0 && !showAddGoalForm" class="empty-goals">
+          <div *ngIf="prc.goals.length === 0" class="empty-goals">
             <p>No goals defined</p>
           </div>
 
@@ -128,24 +94,12 @@ import { computePRCStatus } from '../../../utils/prc-timer.util';
                 </div>
               </div>
               <div class="goal-card-actions">
-                <div *ngIf="completionNotesGoalId === goal.id" class="completion-notes-form">
-                  <input
-                    type="text"
-                    class="form-input"
-                    [(ngModel)]="completionNotes"
-                    placeholder="Completion notes (optional)"
-                  />
-                  <div class="form-actions">
-                    <button class="submit-button" (click)="confirmGoalComplete(goal)">Confirm</button>
-                    <button class="cancel-button" (click)="cancelCompletionNotes()">Cancel</button>
-                  </div>
-                </div>
                 <button
-                  *ngIf="goal.status !== 'completed' && completionNotesGoalId !== goal.id"
+                  *ngIf="goal.status !== 'completed'"
                   class="update-status-button"
-                  (click)="updateGoalStatus(goal)"
+                  (click)="openEditGoalModal(goal)"
                 >
-                  Update Goal Status
+                  Edit Goal
                 </button>
               </div>
             </div>
@@ -357,101 +311,6 @@ import { computePRCStatus } from '../../../utils/prc-timer.util';
       color: #212121;
     }
 
-    .add-form {
-      background: #f5f7fa;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-    }
-
-    .form-title {
-      margin: 0 0 1rem 0;
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: #212121;
-    }
-
-    .form-group {
-      margin-bottom: 0.75rem;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: #616161;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      margin-bottom: 0.25rem;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #bdbdbd;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      color: #212121;
-      background-color: #ffffff;
-      box-sizing: border-box;
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: #1976d2;
-      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
-    }
-
-    .validation-error {
-      color: #d32f2f;
-      font-size: 0.8125rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    .submit-button {
-      padding: 0.5rem 1.25rem;
-      background-color: #1976d2;
-      color: #ffffff;
-      border: none;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .submit-button:hover:not(:disabled) {
-      background-color: #1565c0;
-    }
-
-    .submit-button:disabled {
-      background-color: #90caf9;
-      cursor: not-allowed;
-    }
-
-    .cancel-button {
-      padding: 0.5rem 1.25rem;
-      background-color: transparent;
-      color: #616161;
-      border: 1px solid #bdbdbd;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .cancel-button:hover {
-      background-color: #f5f5f5;
-    }
-
     .empty-goals {
       text-align: center;
       padding: 1rem;
@@ -567,12 +426,6 @@ import { computePRCStatus } from '../../../utils/prc-timer.util';
       border-top: 1px solid #f0f0f0;
     }
 
-    .completion-notes-form {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
     .update-status-button {
       padding: 0.375rem 0.875rem;
       background-color: transparent;
@@ -609,21 +462,16 @@ export class PRCSectionComponent implements OnDestroy, OnChanges {
   isUpcoming = false;
   isOverdue = false;
 
-  showAddGoalForm = false;
-  goalDescription = '';
-  goalTargetDate = '';
-  validationError = '';
   errorMessage = '';
-  isSubmitting = false;
   isCompletingPRC = false;
-
-  completionNotesGoalId: string | null = null;
-  completionNotes = '';
 
   private lastAction: (() => void) | null = null;
   private subscriptions: Subscription[] = [];
 
-  constructor(private technicianService: TechnicianService) {}
+  constructor(
+    private technicianService: TechnicianService,
+    private dialog: MatDialog
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['prc']) {
@@ -635,131 +483,49 @@ export class PRCSectionComponent implements OnDestroy, OnChanges {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  toggleAddGoalForm(): void {
-    this.showAddGoalForm = true;
-    this.resetGoalForm();
-  }
-
-  cancelAddGoalForm(): void {
-    this.showAddGoalForm = false;
-    this.resetGoalForm();
-  }
-
-  submitGoal(): void {
-    this.validationError = '';
-    this.errorMessage = '';
-
-    if (!this.goalDescription.trim()) {
-      this.validationError = 'Please enter a goal description.';
-      return;
-    }
-
-    if (!this.goalTargetDate) {
-      this.validationError = 'Please enter a target date.';
-      return;
-    }
-
+  openAddGoalModal(): void {
     if (!this.prc) {
       return;
     }
 
-    this.isSubmitting = true;
-    this.lastAction = () => this.submitGoal();
+    const dialogData: GoalEditModalData = {
+      mode: 'add',
+      prcId: this.prc.id
+    };
 
-    const goal: Omit<PRCGoal, 'id'> = {
+    const dialogRef = this.dialog.open(GoalEditModalComponent, {
+      width: '480px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.performAddGoal(result);
+      }
+    });
+  }
+
+  openEditGoalModal(goal: PRCGoal): void {
+    if (!this.prc) {
+      return;
+    }
+
+    const dialogData: GoalEditModalData = {
+      mode: 'edit',
       prcId: this.prc.id,
-      description: this.goalDescription.trim(),
-      targetDate: this.goalTargetDate,
-      status: 'not_started',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      goal
     };
 
-    const addSub = this.technicianService.addPRCGoal(this.technicianId, this.prc.id, goal).subscribe({
-      next: () => {
-        this.showAddGoalForm = false;
-        this.resetGoalForm();
-        this.isSubmitting = false;
-        this.prcChanged.emit();
-      },
-      error: () => {
-        this.errorMessage = 'Failed to add goal. Please try again.';
-        this.isSubmitting = false;
-      }
+    const dialogRef = this.dialog.open(GoalEditModalComponent, {
+      width: '480px',
+      data: dialogData
     });
 
-    this.subscriptions.push(addSub);
-  }
-
-  updateGoalStatus(goal: PRCGoal): void {
-    if (!this.prc) {
-      return;
-    }
-
-    const nextStatus = this.getNextGoalStatus(goal.status);
-
-    if (nextStatus === 'completed') {
-      this.completionNotesGoalId = goal.id;
-      this.completionNotes = '';
-      return;
-    }
-
-    this.errorMessage = '';
-    this.lastAction = () => this.updateGoalStatus(goal);
-
-    const updateSub = this.technicianService.updatePRCGoal(
-      this.technicianId,
-      this.prc.id,
-      goal.id,
-      { status: nextStatus, updatedAt: new Date().toISOString() }
-    ).subscribe({
-      next: () => {
-        this.prcChanged.emit();
-      },
-      error: () => {
-        this.errorMessage = 'Failed to update goal status. Please try again.';
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.performUpdateGoal(goal.id, result);
       }
     });
-
-    this.subscriptions.push(updateSub);
-  }
-
-  confirmGoalComplete(goal: PRCGoal): void {
-    if (!this.prc) {
-      return;
-    }
-
-    this.errorMessage = '';
-    this.lastAction = () => this.confirmGoalComplete(goal);
-
-    const update: Partial<PRCGoal> = {
-      status: 'completed',
-      completionNotes: this.completionNotes.trim() || undefined,
-      updatedAt: new Date().toISOString()
-    };
-
-    const updateSub = this.technicianService.updatePRCGoal(
-      this.technicianId,
-      this.prc.id,
-      goal.id,
-      update
-    ).subscribe({
-      next: () => {
-        this.completionNotesGoalId = null;
-        this.completionNotes = '';
-        this.prcChanged.emit();
-      },
-      error: () => {
-        this.errorMessage = 'Failed to complete goal. Please try again.';
-      }
-    });
-
-    this.subscriptions.push(updateSub);
-  }
-
-  cancelCompletionNotes(): void {
-    this.completionNotesGoalId = null;
-    this.completionNotes = '';
   }
 
   markPRCComplete(): void {
@@ -852,6 +618,71 @@ export class PRCSectionComponent implements OnDestroy, OnChanges {
     });
   }
 
+  private performAddGoal(formData: any): void {
+    if (!this.prc) {
+      return;
+    }
+
+    this.errorMessage = '';
+    this.lastAction = () => this.performAddGoal(formData);
+
+    const goal: Omit<PRCGoal, 'id'> = {
+      prcId: this.prc.id,
+      description: formData.description,
+      targetDate: formData.targetDate,
+      status: 'not_started',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const addSub = this.technicianService.addPRCGoal(this.technicianId, this.prc.id, goal).subscribe({
+      next: () => {
+        this.prcChanged.emit();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to add goal. Please try again.';
+      }
+    });
+
+    this.subscriptions.push(addSub);
+  }
+
+  private performUpdateGoal(goalId: string, formData: any): void {
+    if (!this.prc) {
+      return;
+    }
+
+    this.errorMessage = '';
+    this.lastAction = () => this.performUpdateGoal(goalId, formData);
+
+    const update: Partial<PRCGoal> = {
+      description: formData.description,
+      targetDate: formData.targetDate,
+      status: formData.status,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (formData.completionNotes) {
+      update.completionNotes = formData.completionNotes;
+    }
+
+    const updateSub = this.technicianService.updatePRCGoal(
+      this.technicianId,
+      this.prc.id,
+      goalId,
+      update
+    ).subscribe({
+      next: () => {
+        this.prcChanged.emit();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to update goal. Please try again.';
+      }
+    });
+
+    this.subscriptions.push(updateSub);
+  }
+
   private computeDisplayStatus(): void {
     if (!this.prc) {
       this.displayStatus = 'upcoming';
@@ -866,7 +697,6 @@ export class PRCSectionComponent implements OnDestroy, OnChanges {
 
     this.displayStatus = computePRCStatus(dueDate, completionDate, now);
 
-    // Upcoming indicator: due date within 14 days and not completed
     if (!completionDate) {
       const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       this.isUpcoming = daysUntilDue >= 0 && daysUntilDue <= 14;
@@ -875,22 +705,5 @@ export class PRCSectionComponent implements OnDestroy, OnChanges {
       this.isUpcoming = false;
       this.isOverdue = false;
     }
-  }
-
-  private getNextGoalStatus(currentStatus: PRCGoalStatus): PRCGoalStatus {
-    switch (currentStatus) {
-      case 'not_started':
-        return 'in_progress';
-      case 'in_progress':
-        return 'completed';
-      default:
-        return currentStatus;
-    }
-  }
-
-  private resetGoalForm(): void {
-    this.goalDescription = '';
-    this.goalTargetDate = '';
-    this.validationError = '';
   }
 }

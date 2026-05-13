@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
 import { OnboardingRoutingModule } from './onboarding-routing.module';
+import { SharedMaterialModule } from '../../shared-material.module';
 
 import { OnboardingNavComponent } from './onboarding-nav/onboarding-nav.component';
 import { CandidateListComponent } from './candidate-list/candidate-list.component';
@@ -17,6 +18,15 @@ import { CompetencySectionComponent } from './competency-section/competency-sect
 import { PRCSectionComponent } from './prc-section/prc-section.component';
 import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-checklist.component';
 import { ReferralTrackerComponent } from './referral-tracker/referral-tracker.component';
+import { OnboardingInfoModalComponent } from './onboarding-info-modal/onboarding-info-modal.component';
+import { CandidateDetailComponent } from './candidate-detail/candidate-detail.component';
+import { OnboardingProgressHeaderComponent } from './onboarding-progress-header/onboarding-progress-header.component';
+import { CredentialFormModalComponent } from './credential-form-modal/credential-form-modal.component';
+import { AddCandidateModalComponent } from './add-candidate-modal/add-candidate-modal.component';
+import { EquipmentEditModalComponent } from './equipment-edit-modal/equipment-edit-modal.component';
+import { CompetencyEditModalComponent } from './competency-edit-modal/competency-edit-modal.component';
+import { GoalEditModalComponent } from './goal-edit-modal/goal-edit-modal.component';
+import { ConfirmDeleteModalComponent } from './confirm-delete-modal/confirm-delete-modal.component';
 
 @NgModule({
   declarations: [
@@ -31,14 +41,24 @@ import { ReferralTrackerComponent } from './referral-tracker/referral-tracker.co
     CompetencySectionComponent,
     PRCSectionComponent,
     OnboardingChecklistComponent,
-    ReferralTrackerComponent
+    ReferralTrackerComponent,
+    OnboardingInfoModalComponent,
+    CandidateDetailComponent,
+    OnboardingProgressHeaderComponent,
+    CredentialFormModalComponent,
+    AddCandidateModalComponent,
+    EquipmentEditModalComponent,
+    CompetencyEditModalComponent,
+    GoalEditModalComponent,
+    ConfirmDeleteModalComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    OnboardingRoutingModule
+    OnboardingRoutingModule,
+    SharedMaterialModule
   ]
 })
 export class OnboardingModule { }

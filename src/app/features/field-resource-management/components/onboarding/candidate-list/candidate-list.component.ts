@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { OnboardingService } from '../../../services/onboarding.service';
-import { Candidate, OfferStatus } from '../../../models/onboarding.models';
+import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
+import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -81,9 +83,6 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('scissorLiftCertified')" class="sortable">
               Scissor Lift <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
             </th>
-            <th (click)="onSort('biisciCertified')" class="sortable">
-              BIISCI <span class="sort-icon">{{ getSortIcon('biisciCertified') }}</span>
-            </th>
             <th (click)="onSort('workSite')" class="sortable">
               Work Site <span class="sort-icon">{{ getSortIcon('workSite') }}</span>
             </th>
@@ -93,6 +92,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('offerStatus')" class="sortable">
               Offer Status <span class="sort-icon">{{ getSortIcon('offerStatus') }}</span>
             </th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -106,13 +106,16 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
             <td>{{ candidate.vestSize }}</td>
-            <td class="bool-cell">{{ candidate.drugTestComplete ? '✓' : '—' }}</td>
-            <td class="bool-cell">{{ candidate.oshaCertified ? '✓' : '—' }}</td>
-            <td class="bool-cell">{{ candidate.scissorLiftCertified ? '✓' : '—' }}</td>
-            <td class="bool-cell">{{ candidate.biisciCertified ? '✓' : '—' }}</td>
+            <td class="bool-cell"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
+            <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
+            <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
             <td>{{ candidate.workSite }}</td>
             <td>{{ candidate.startDate }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
+            <td class="actions-cell">
+              <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
+              <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -281,7 +284,16 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 
     .bool-cell {
       text-align: center;
-      font-size: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .yn-yes {
+      color: #2e7d32;
+    }
+
+    .yn-no {
+      color: #c62828;
     }
 
     .empty-state {
@@ -296,6 +308,37 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       padding: 2rem;
       color: #757575;
     }
+
+    .actions-cell {
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .action-btn {
+      padding: 0.25rem 0.625rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-right: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-view {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1px solid #90caf9;
+    }
+
+    .btn-view:hover { background: #bbdefb; }
+
+    .btn-edit-action {
+      background: #fff3e0;
+      color: #e65100;
+      border: 1px solid #ffcc80;
+    }
+
+    .btn-edit-action:hover { background: #ffe0b2; }
 
     @media (max-width: 768px) {
       .candidate-list-container {
@@ -331,6 +374,7 @@ export class CandidateListComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private dialog: MatDialog,
     private onboardingService: OnboardingService
   ) {}
 
@@ -387,9 +431,69 @@ export class CandidateListComponent implements OnInit {
     });
   }
 
+  onEditCandidate(candidate: Candidate): void {
+    const dialogRef = this.dialog.open(AddCandidateModalComponent, {
+      width: '780px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: { candidate }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const payload = {
+          techName: `${result.basicInfo.firstName} ${result.basicInfo.lastName}`,
+          techEmail: result.basicInfo.email,
+          techPhone: result.basicInfo.phone,
+          vestSize: result.basicInfo.vestSize,
+          workSite: result.basicInfo.workSite,
+          startDate: result.basicInfo.startDate,
+          offerStatus: result.basicInfo.offerStatus,
+          drugTestComplete: result.coreQualifications.backgroundDrugScreen,
+          oshaCertified: result.coreQualifications.oshaCertification,
+          scissorLiftCertified: result.coreQualifications.liftCertification
+        };
+        this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+          next: () => this.loadCandidates(),
+          error: () => {
+            this.errorMessage = 'Failed to update candidate. Please try again.';
+            this.loadCandidates();
+          }
+        });
+      }
+    });
+  }
+
   onAddCandidate(): void {
-    this.router.navigate(['candidates', 'new'], {
-      relativeTo: this.route.parent,
+    const dialogRef = this.dialog.open(AddCandidateModalComponent, {
+      width: '780px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const payload: CreateCandidatePayload = {
+          techName: `${result.basicInfo.firstName} ${result.basicInfo.lastName}`,
+          techEmail: result.basicInfo.email,
+          techPhone: result.basicInfo.phone,
+          vestSize: result.basicInfo.vestSize,
+          workSite: result.basicInfo.workSite,
+          startDate: result.basicInfo.startDate,
+          offerStatus: result.basicInfo.offerStatus
+        };
+
+        this.onboardingService.createCandidate(payload).subscribe({
+          next: () => {
+            this.loadCandidates();
+          },
+          error: () => {
+            this.errorMessage = 'Failed to create candidate. Please try again.';
+            this.loadCandidates();
+          }
+        });
+      }
     });
   }
 
@@ -416,6 +520,28 @@ export class CandidateListComponent implements OnInit {
     });
   }
 
+  private getDummyCandidates(): Candidate[] {
+    const dateOnly = (daysOffset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + daysOffset);
+      return d.toISOString().split('T')[0];
+    };
+    const iso = (daysOffset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + daysOffset);
+      return d.toISOString();
+    };
+
+    return [
+      { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', startDate: dateOnly(5), offerStatus: 'offer_acceptance', createdBy: 'system', createdAt: iso(-30), updatedBy: 'system', updatedAt: iso(-5) },
+      { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', startDate: dateOnly(10), offerStatus: 'offer', createdBy: 'system', createdAt: iso(-25), updatedBy: 'system', updatedAt: iso(-3) },
+      { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', startDate: dateOnly(3), offerStatus: 'offer_acceptance', createdBy: 'system', createdAt: iso(-20), updatedBy: 'system', updatedAt: iso(-2) },
+      { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', startDate: dateOnly(18), offerStatus: 'pre_offer', createdBy: 'system', createdAt: iso(-15), updatedBy: 'system', updatedAt: iso(-1) },
+      { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', startDate: dateOnly(7), offerStatus: 'offer', createdBy: 'system', createdAt: iso(-10), updatedBy: 'system', updatedAt: iso(-1) },
+      { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', startDate: dateOnly(12), offerStatus: 'pre_offer', createdBy: 'system', createdAt: iso(-8), updatedBy: 'system', updatedAt: iso(-1) }
+    ];
+  }
+
   private applyFiltersAndSort(): void {
     let result = [...this.candidates];
 
@@ -438,7 +564,7 @@ export class CandidateListComponent implements OnInit {
     // Incomplete certifications filter
     if (this.incompleteCertsFilter) {
       result = result.filter(
-        (c) => !c.oshaCertified || !c.scissorLiftCertified || !c.biisciCertified
+        (c) => !c.oshaCertified || !c.scissorLiftCertified
       );
     }
 

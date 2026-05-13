@@ -58,21 +58,15 @@
         </div>
         <div class="info-item toggle-item">
           <label>Willing to Travel</label>
-          <mat-slide-toggle
-            [checked]="technician.willingToTravel"
-            (change)="toggleWillingToTravel(technician, $event.checked)"
-            color="primary"
-            aria-label="Toggle willing to travel">
-          </mat-slide-toggle>
+          <span class="status-badge" [class.active]="technician.willingToTravel" [class.inactive]="!technician.willingToTravel">
+            {{ technician.willingToTravel ? 'Yes' : 'No' }}
+          </span>
         </div>
         <div class="info-item toggle-item">
           <label>Scissor Lift Training</label>
-          <mat-slide-toggle
-            [checked]="technician.scissorLiftCertified"
-            (change)="toggleScissorLiftCertified(technician, $event.checked)"
-            color="primary"
-            aria-label="Toggle scissor lift training">
-          </mat-slide-toggle>
+          <span class="status-badge" [class.active]="technician.scissorLiftCertified" [class.inactive]="!technician.scissorLiftCertified">
+            {{ technician.scissorLiftCertified ? 'Yes' : 'No' }}
+          </span>
         </div>
       </div>
     </mat-card-content>

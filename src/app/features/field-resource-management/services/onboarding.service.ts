@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth.service';
 import { environment, local_environment } from '../../../../environments/environments';
 import {
@@ -66,8 +66,16 @@ export class OnboardingService {
     if (filters?.incompleteCerts != null) params = params.set('incompleteCerts', String(filters.incompleteCerts));
 
     return this.http
-      .get<Candidate[]>(`${this.baseUrl}/candidates`, { params })
-      .pipe(catchError(this.mapError('getCandidates')));
+      .get<any>(`${this.baseUrl}/candidates`, { params })
+      .pipe(
+        map(response => {
+          // Handle paginated response { items: [...] } or flat array
+          if (Array.isArray(response)) return response;
+          if (response && Array.isArray(response.items)) return response.items;
+          return [];
+        }),
+        catchError(this.mapError('getCandidates'))
+      );
   }
 
   getCandidateById(id: string): Observable<Candidate> {
@@ -94,5 +102,17 @@ export class OnboardingService {
     return this.http
       .delete<void>(`${this.baseUrl}/candidates/${id}`)
       .pipe(catchError(this.mapError('deleteCandidateById')));
+  }
+
+  /**
+   * Converts a candidate to a technician.
+   * Creates a Technician record from the candidate data and links them via CandidateId.
+   * @param candidateId The candidate to convert
+   * @returns Observable with the new technician's ID
+   */
+  convertToTechnician(candidateId: string): Observable<{ technicianId: string }> {
+    return this.http
+      .post<{ technicianId: string }>(`${this.baseUrl}/candidates/${candidateId}/convert-to-technician`, {})
+      .pipe(catchError(this.mapError('convertToTechnician')));
   }
 }

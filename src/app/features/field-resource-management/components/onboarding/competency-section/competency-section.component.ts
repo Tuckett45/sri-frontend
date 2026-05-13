@@ -1,7 +1,11 @@
 import { Component, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { TechnicianService } from '../../../services/technician.service';
 import { TechnicalCompetency, ProficiencyLevel, PREDEFINED_COMPETENCIES } from '../../../models/competency.model';
+import { CompetencyEditModalComponent, CompetencyEditModalData } from '../competency-edit-modal/competency-edit-modal.component';
+import { ConfirmDeleteModalComponent, ConfirmDeleteModalData } from '../confirm-delete-modal/confirm-delete-modal.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-competency-section',
@@ -11,8 +15,7 @@ import { TechnicalCompetency, ProficiencyLevel, PREDEFINED_COMPETENCIES } from '
         <h3 class="competency-section-title">Technical Competencies</h3>
         <button
           class="add-competency-button"
-          (click)="toggleAddForm()"
-          *ngIf="!showAddForm"
+          (click)="openAddModal()"
         >
           Add Competency
         </button>
@@ -23,90 +26,7 @@ import { TechnicalCompetency, ProficiencyLevel, PREDEFINED_COMPETENCIES } from '
         <button class="retry-button" (click)="retryLastAction()">Retry</button>
       </div>
 
-      <div *ngIf="showAddForm" class="add-form">
-        <h4 class="form-title">Add New Competency</h4>
-        <div class="form-group">
-          <label class="form-label" for="competencyName">Competency Name</label>
-          <select
-            id="competencyName"
-            class="form-select"
-            [(ngModel)]="selectedCompetency"
-            (ngModelChange)="onCompetencySelectionChange()"
-          >
-            <option value="" disabled>Select competency</option>
-            <option *ngFor="let name of predefinedCompetencies" [value]="name">{{ name }}</option>
-            <option value="custom">Custom...</option>
-          </select>
-        </div>
-        <div class="form-group" *ngIf="selectedCompetency === 'custom'">
-          <label class="form-label" for="customCompetencyName">Custom Competency Name</label>
-          <input
-            id="customCompetencyName"
-            type="text"
-            class="form-input"
-            [(ngModel)]="customCompetencyName"
-            placeholder="Enter custom competency name"
-          />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="verificationDate">Verification Date</label>
-          <input
-            id="verificationDate"
-            type="date"
-            class="form-input"
-            [(ngModel)]="verificationDate"
-          />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="verifiedBy">Verified By</label>
-          <input
-            id="verifiedBy"
-            type="text"
-            class="form-input"
-            [(ngModel)]="verifiedBy"
-            placeholder="Enter verifier name"
-          />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="proficiencyLevel">Proficiency Level</label>
-          <select
-            id="proficiencyLevel"
-            class="form-select"
-            [(ngModel)]="proficiencyLevel"
-          >
-            <option value="" disabled>Select proficiency level</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
-            <option value="expert">Expert</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="notes">Notes (optional)</label>
-          <textarea
-            id="notes"
-            class="form-textarea"
-            [(ngModel)]="notes"
-            placeholder="Enter any additional notes"
-            rows="3"
-          ></textarea>
-        </div>
-        <div *ngIf="validationError" class="validation-error">
-          {{ validationError }}
-        </div>
-        <div class="form-actions">
-          <button
-            class="submit-button"
-            (click)="submitCompetency()"
-            [disabled]="isSubmitting"
-          >
-            {{ isSubmitting ? 'Adding...' : 'Add' }}
-          </button>
-          <button class="cancel-button" (click)="cancelAddForm()">Cancel</button>
-        </div>
-      </div>
-
-      <div *ngIf="sortedCompetencies.length === 0 && !showAddForm" class="empty-state">
+      <div *ngIf="sortedCompetencies.length === 0" class="empty-state">
         <p>No competencies recorded</p>
       </div>
 
@@ -135,6 +55,10 @@ import { TechnicalCompetency, ProficiencyLevel, PREDEFINED_COMPETENCIES } from '
               <span class="field-label">Notes</span>
               <span class="field-value notes-value">{{ competency.notes }}</span>
             </div>
+          </div>
+          <div class="competency-card-actions">
+            <button class="edit-button" (click)="openEditModal(competency)">Edit</button>
+            <button class="delete-button" (click)="deleteCompetency(competency)">Delete</button>
           </div>
         </div>
       </div>
@@ -212,111 +136,6 @@ import { TechnicalCompetency, ProficiencyLevel, PREDEFINED_COMPETENCIES } from '
 
     .retry-button:hover {
       background-color: #1565c0;
-    }
-
-    .add-form {
-      background: #f5f7fa;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-    }
-
-    .form-title {
-      margin: 0 0 1rem 0;
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: #212121;
-    }
-
-    .form-group {
-      margin-bottom: 0.75rem;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: #616161;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      margin-bottom: 0.25rem;
-    }
-
-    .form-select,
-    .form-input,
-    .form-textarea {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #bdbdbd;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      color: #212121;
-      background-color: #ffffff;
-      box-sizing: border-box;
-      font-family: inherit;
-    }
-
-    .form-textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-
-    .form-select:focus,
-    .form-input:focus,
-    .form-textarea:focus {
-      outline: none;
-      border-color: #1976d2;
-      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
-    }
-
-    .validation-error {
-      color: #d32f2f;
-      font-size: 0.8125rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    .submit-button {
-      padding: 0.5rem 1.25rem;
-      background-color: #1976d2;
-      color: #ffffff;
-      border: none;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .submit-button:hover:not(:disabled) {
-      background-color: #1565c0;
-    }
-
-    .submit-button:disabled {
-      background-color: #90caf9;
-      cursor: not-allowed;
-    }
-
-    .cancel-button {
-      padding: 0.5rem 1.25rem;
-      background-color: transparent;
-      color: #616161;
-      border: 1px solid #bdbdbd;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .cancel-button:hover {
-      background-color: #f5f5f5;
     }
 
     .empty-state {
@@ -408,7 +227,7 @@ import { TechnicalCompetency, ProficiencyLevel, PREDEFINED_COMPETENCIES } from '
     }
 
     .competency-card-body {
-      margin-bottom: 0;
+      margin-bottom: 0.75rem;
     }
 
     .competency-field {
@@ -437,6 +256,45 @@ import { TechnicalCompetency, ProficiencyLevel, PREDEFINED_COMPETENCIES } from '
       word-wrap: break-word;
     }
 
+    .competency-card-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .edit-button {
+      padding: 0.375rem 0.875rem;
+      background-color: transparent;
+      color: #1976d2;
+      border: 1px solid #1976d2;
+      border-radius: 4px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .edit-button:hover {
+      background-color: rgba(25, 118, 210, 0.04);
+    }
+
+    .delete-button {
+      padding: 0.375rem 0.875rem;
+      background-color: transparent;
+      color: #d32f2f;
+      border: 1px solid #d32f2f;
+      border-radius: 4px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .delete-button:hover {
+      background-color: rgba(211, 47, 47, 0.04);
+    }
+
     @media (max-width: 768px) {
       .competency-section-container {
         padding: 1rem;
@@ -460,101 +318,57 @@ export class CompetencySectionComponent implements OnDestroy {
   @Output() competencyChanged = new EventEmitter<void>();
 
   sortedCompetencies: TechnicalCompetency[] = [];
-  predefinedCompetencies = PREDEFINED_COMPETENCIES;
-
-  showAddForm = false;
-  selectedCompetency = '';
-  customCompetencyName = '';
-  verificationDate = '';
-  verifiedBy = '';
-  proficiencyLevel: ProficiencyLevel | '' = '';
-  notes = '';
-  validationError = '';
   errorMessage = '';
-  isSubmitting = false;
 
   private _competencies: TechnicalCompetency[] = [];
   private lastAction: (() => void) | null = null;
   private subscriptions: Subscription[] = [];
 
-  constructor(private technicianService: TechnicianService) {}
+  constructor(
+    private technicianService: TechnicianService,
+    private dialog: MatDialog,
+    private toastr: ToastrService
+  ) {}
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  toggleAddForm(): void {
-    this.showAddForm = true;
-    this.resetForm();
-  }
-
-  cancelAddForm(): void {
-    this.showAddForm = false;
-    this.resetForm();
-  }
-
-  onCompetencySelectionChange(): void {
-    if (this.selectedCompetency !== 'custom') {
-      this.customCompetencyName = '';
-    }
-  }
-
-  submitCompetency(): void {
-    this.validationError = '';
-    this.errorMessage = '';
-
-    const competencyName = this.selectedCompetency === 'custom'
-      ? this.customCompetencyName.trim()
-      : this.selectedCompetency;
-
-    if (!competencyName) {
-      this.validationError = 'Please select or enter a competency name.';
-      return;
-    }
-
-    if (!this.verificationDate) {
-      this.validationError = 'Please enter a verification date.';
-      return;
-    }
-
-    if (!this.verifiedBy.trim()) {
-      this.validationError = 'Please enter who verified this competency.';
-      return;
-    }
-
-    if (!this.proficiencyLevel) {
-      this.validationError = 'Please select a proficiency level.';
-      return;
-    }
-
-    this.isSubmitting = true;
-    this.lastAction = () => this.submitCompetency();
-
-    const competency: Omit<TechnicalCompetency, 'id'> = {
-      technicianId: this.technicianId,
-      competencyName,
-      verificationDate: this.verificationDate,
-      verifiedBy: this.verifiedBy.trim(),
-      proficiencyLevel: this.proficiencyLevel as ProficiencyLevel,
-      notes: this.notes.trim() || undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+  openAddModal(): void {
+    const dialogData: CompetencyEditModalData = {
+      mode: 'add',
+      technicianId: this.technicianId
     };
 
-    const addSub = this.technicianService.addTechnicianCompetency(this.technicianId, competency).subscribe({
-      next: () => {
-        this.showAddForm = false;
-        this.resetForm();
-        this.isSubmitting = false;
-        this.competencyChanged.emit();
-      },
-      error: () => {
-        this.errorMessage = 'Failed to add competency. Please try again.';
-        this.isSubmitting = false;
-      }
+    const dialogRef = this.dialog.open(CompetencyEditModalComponent, {
+      width: '480px',
+      data: dialogData
     });
 
-    this.subscriptions.push(addSub);
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.performAdd(result);
+      }
+    });
+  }
+
+  openEditModal(competency: TechnicalCompetency): void {
+    const dialogData: CompetencyEditModalData = {
+      mode: 'edit',
+      technicianId: this.technicianId,
+      competency
+    };
+
+    const dialogRef = this.dialog.open(CompetencyEditModalComponent, {
+      width: '480px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.performUpdate(competency.id, result);
+      }
+    });
   }
 
   retryLastAction(): void {
@@ -562,6 +376,34 @@ export class CompetencySectionComponent implements OnDestroy {
     if (this.lastAction) {
       this.lastAction();
     }
+  }
+
+  deleteCompetency(competency: TechnicalCompetency): void {
+    const dialogData: ConfirmDeleteModalData = {
+      title: 'Delete Competency',
+      message: 'Are you sure you want to delete this competency?',
+      itemName: competency.competencyName
+    };
+
+    const dialogRef = this.dialog.open(ConfirmDeleteModalComponent, {
+      width: '420px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.errorMessage = '';
+        this.technicianService.deleteTechnicianCompetency(this.technicianId, competency.id).subscribe({
+          next: () => {
+            this.toastr.success('Competency deleted successfully', 'Deleted');
+            this.competencyChanged.emit();
+          },
+          error: () => {
+            this.toastr.error('Failed to delete competency. Please try again.', 'Error');
+          }
+        });
+      }
+    });
   }
 
   getProficiencyClass(level: ProficiencyLevel): string {
@@ -607,6 +449,62 @@ export class CompetencySectionComponent implements OnDestroy {
     });
   }
 
+  private performAdd(formData: any): void {
+    this.errorMessage = '';
+    this.lastAction = () => this.performAdd(formData);
+
+    const competency: Omit<TechnicalCompetency, 'id'> = {
+      technicianId: this.technicianId,
+      competencyName: formData.competencyName,
+      verificationDate: formData.verificationDate,
+      verifiedBy: formData.verifiedBy,
+      proficiencyLevel: formData.proficiencyLevel,
+      notes: formData.notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const addSub = this.technicianService.addTechnicianCompetency(this.technicianId, competency).subscribe({
+      next: () => {
+        this.competencyChanged.emit();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to add competency. Please try again.';
+      }
+    });
+
+    this.subscriptions.push(addSub);
+  }
+
+  private performUpdate(competencyId: string, formData: any): void {
+    this.errorMessage = '';
+    this.lastAction = () => this.performUpdate(competencyId, formData);
+
+    const update: Partial<TechnicalCompetency> = {
+      competencyName: formData.competencyName,
+      verificationDate: formData.verificationDate,
+      verifiedBy: formData.verifiedBy,
+      proficiencyLevel: formData.proficiencyLevel,
+      notes: formData.notes,
+      updatedAt: new Date().toISOString()
+    };
+
+    const updateSub = this.technicianService.updateTechnicianCompetency(
+      this.technicianId,
+      competencyId,
+      update
+    ).subscribe({
+      next: () => {
+        this.competencyChanged.emit();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to update competency. Please try again.';
+      }
+    });
+
+    this.subscriptions.push(updateSub);
+  }
+
   private sortByProficiency(competencies: TechnicalCompetency[]): TechnicalCompetency[] {
     const order: Record<ProficiencyLevel, number> = {
       expert: 0,
@@ -618,15 +516,5 @@ export class CompetencySectionComponent implements OnDestroy {
     return [...competencies].sort((a, b) => {
       return (order[a.proficiencyLevel] ?? 4) - (order[b.proficiencyLevel] ?? 4);
     });
-  }
-
-  private resetForm(): void {
-    this.selectedCompetency = '';
-    this.customCompetencyName = '';
-    this.verificationDate = '';
-    this.verifiedBy = '';
-    this.proficiencyLevel = '';
-    this.notes = '';
-    this.validationError = '';
   }
 }

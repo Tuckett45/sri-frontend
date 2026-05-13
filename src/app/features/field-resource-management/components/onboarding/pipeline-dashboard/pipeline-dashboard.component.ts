@@ -227,16 +227,16 @@ export class PipelineDashboardComponent implements OnInit {
   statusLabel(status: OfferStatus): string { return this.STATUS_LABELS[status] ?? status; }
 
   isReady(c: Candidate): boolean {
-    return c.drugTestComplete && c.oshaCertified && c.scissorLiftCertified && c.biisciCertified;
+    return c.drugTestComplete && c.oshaCertified && c.scissorLiftCertified;
   }
 
   certsComplete(c: Candidate): boolean {
-    return c.oshaCertified && c.scissorLiftCertified && c.biisciCertified;
+    return c.oshaCertified && c.scissorLiftCertified;
   }
 
   certsFraction(c: Candidate): string {
-    const done = [c.oshaCertified, c.scissorLiftCertified, c.biisciCertified].filter(Boolean).length;
-    return done + '/3';
+    const done = [c.oshaCertified, c.scissorLiftCertified].filter(Boolean).length;
+    return done + '/2';
   }
 
   private loadCandidates(): void {
@@ -244,11 +244,7 @@ export class PipelineDashboardComponent implements OnInit {
     this.errorMessage = '';
     this.onboardingService.getCandidates().subscribe({
       next: (candidates) => {
-        this.computeCounts(candidates);
-        this.buildFunnel();
-        this.buildUpcomingStarts(candidates);
-        this.buildRecentCandidates(candidates);
-        this.loading = false;
+        this.populateDashboard(candidates);
       },
       error: (err) => {
         this.loading = false;
@@ -257,11 +253,41 @@ export class PipelineDashboardComponent implements OnInit {
     });
   }
 
+  private populateDashboard(candidates: Candidate[]): void {
+    this.computeCounts(candidates);
+    this.buildFunnel();
+    this.buildUpcomingStarts(candidates);
+    this.buildRecentCandidates(candidates);
+    this.loading = false;
+  }
+
+  private getDummyCandidates(): Candidate[] {
+    const dateOnly = (daysOffset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + daysOffset);
+      return d.toISOString().split('T')[0];
+    };
+    const iso = (daysOffset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + daysOffset);
+      return d.toISOString();
+    };
+
+    return [
+      { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', startDate: dateOnly(5), offerStatus: 'offer_acceptance', createdBy: 'system', createdAt: iso(-30), updatedBy: 'system', updatedAt: iso(-5) },
+      { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', startDate: dateOnly(10), offerStatus: 'offer', createdBy: 'system', createdAt: iso(-25), updatedBy: 'system', updatedAt: iso(-3) },
+      { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', startDate: dateOnly(3), offerStatus: 'offer_acceptance', createdBy: 'system', createdAt: iso(-20), updatedBy: 'system', updatedAt: iso(-2) },
+      { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', startDate: dateOnly(18), offerStatus: 'pre_offer', createdBy: 'system', createdAt: iso(-15), updatedBy: 'system', updatedAt: iso(-1) },
+      { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', startDate: dateOnly(7), offerStatus: 'offer', createdBy: 'system', createdAt: iso(-10), updatedBy: 'system', updatedAt: iso(-1) },
+      { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', startDate: dateOnly(12), offerStatus: 'pre_offer', createdBy: 'system', createdAt: iso(-8), updatedBy: 'system', updatedAt: iso(-1) }
+    ];
+  }
+
   private computeCounts(candidates: Candidate[]): void {
     this.preOfferCount = candidates.filter(c => c.offerStatus === 'pre_offer').length;
     this.offerCount = candidates.filter(c => c.offerStatus === 'offer').length;
     this.offerAcceptanceCount = candidates.filter(c => c.offerStatus === 'offer_acceptance').length;
-    this.incompleteCertsCount = candidates.filter(c => !c.oshaCertified || !c.scissorLiftCertified || !c.biisciCertified).length;
+    this.incompleteCertsCount = candidates.filter(c => !c.oshaCertified || !c.scissorLiftCertified).length;
     this.incompleteDrugTestCount = candidates.filter(c => !c.drugTestComplete).length;
 
     const today = new Date(); today.setHours(0, 0, 0, 0);

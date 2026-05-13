@@ -177,13 +177,6 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
               Scissor Lift Certified
             </label>
           </div>
-
-          <div class="form-field checkbox-field">
-            <label>
-              <input type="checkbox" formControlName="biisciCertified" />
-              BIISCI Certified
-            </label>
-          </div>
         </ng-container>
 
         <!-- Submit Button -->
@@ -456,7 +449,6 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       drugTestComplete: [false],
       oshaCertified: [false],
       scissorLiftCertified: [false],
-      biisciCertified: [false],
     });
   }
 
@@ -507,7 +499,6 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       drugTestComplete: candidate.drugTestComplete,
       oshaCertified: candidate.oshaCertified,
       scissorLiftCertified: candidate.scissorLiftCertified,
-      biisciCertified: candidate.biisciCertified,
     });
     // Reset dirty state after population
     this.candidateForm.markAsPristine();
@@ -563,7 +554,6 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       drugTestComplete: formValue.drugTestComplete,
       oshaCertified: formValue.oshaCertified,
       scissorLiftCertified: formValue.scissorLiftCertified,
-      biisciCertified: formValue.biisciCertified,
     };
 
     this.onboardingService.updateCandidate(this.candidateId!, payload).subscribe({

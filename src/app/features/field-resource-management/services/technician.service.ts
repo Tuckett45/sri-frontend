@@ -100,10 +100,17 @@ export class TechnicianService {
 
     return this.http.get<any>(this.apiUrl, { params })
       .pipe(
-        retry(this.retryCount),
         map(response => {
-          // API returns paginated response with items array
-          const technicians: Technician[] = response.items || response;
+          // API may return paginated response { items: [...] } or a plain array
+          let technicians: Technician[];
+          if (Array.isArray(response)) {
+            technicians = response;
+          } else if (response && Array.isArray(response.items)) {
+            technicians = response.items;
+          } else {
+            console.warn('[TechnicianService] Unexpected response format:', response);
+            technicians = [];
+          }
           return this.applyRoleBasedFiltering(technicians);
         }),
         catchError(this.handleError)
@@ -409,7 +416,6 @@ export class TechnicianService {
   getTechnicianEquipment(technicianId: string): Observable<EquipmentAssignment[]> {
     return this.http.get<EquipmentAssignment[]>(`${this.apiUrl}/${technicianId}/equipment`)
       .pipe(
-        retry(this.retryCount),
         catchError(this.handleError)
       );
   }
@@ -443,6 +449,22 @@ export class TechnicianService {
   }
 
   /**
+   * Deletes an equipment assignment
+   */
+  deleteEquipmentAssignment(technicianId: string, equipmentId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${technicianId}/equipment/${equipmentId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Deletes a technical competency
+   */
+  deleteTechnicianCompetency(technicianId: string, competencyId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${technicianId}/competencies/${competencyId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
    * Validates that an asset identifier is unique across all technicians
    * @param assetIdentifier The asset identifier to validate
    * @param excludeTechnicianId Optional technician ID to exclude from the check
@@ -468,7 +490,6 @@ export class TechnicianService {
   getTechnicianCompetencies(technicianId: string): Observable<TechnicalCompetency[]> {
     return this.http.get<TechnicalCompetency[]>(`${this.apiUrl}/${technicianId}/competencies`)
       .pipe(
-        retry(this.retryCount),
         catchError(this.handleError)
       );
   }
@@ -509,7 +530,6 @@ export class TechnicianService {
   getTechnicianPRC(technicianId: string): Observable<PRC | null> {
     return this.http.get<PRC | null>(`${this.apiUrl}/${technicianId}/prc`)
       .pipe(
-        retry(this.retryCount),
         catchError(this.handleError)
       );
   }
@@ -583,7 +603,6 @@ export class TechnicianService {
   getRoleCredentialTemplate(role: TechnicianRole): Observable<RoleCredentialTemplate> {
     return this.http.get<RoleCredentialTemplate>(`${this.apiUrl}/role-templates/${role}`)
       .pipe(
-        retry(this.retryCount),
         catchError(this.handleError)
       );
   }

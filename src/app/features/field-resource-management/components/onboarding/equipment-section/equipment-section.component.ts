@@ -1,7 +1,11 @@
 import { Component, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { TechnicianService } from '../../../services/technician.service';
 import { EquipmentAssignment, EquipmentAssetType, EquipmentStatus } from '../../../models/equipment.model';
+import { EquipmentEditModalComponent, EquipmentEditModalData } from '../equipment-edit-modal/equipment-edit-modal.component';
+import { ConfirmDeleteModalComponent, ConfirmDeleteModalData } from '../confirm-delete-modal/confirm-delete-modal.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-equipment-section',
@@ -11,8 +15,7 @@ import { EquipmentAssignment, EquipmentAssetType, EquipmentStatus } from '../../
         <h3 class="equipment-section-title">Equipment</h3>
         <button
           class="assign-equipment-button"
-          (click)="toggleAssignForm()"
-          *ngIf="!showAssignForm"
+          (click)="openAddModal()"
         >
           Assign Equipment
         </button>
@@ -23,47 +26,7 @@ import { EquipmentAssignment, EquipmentAssetType, EquipmentStatus } from '../../
         <button class="retry-button" (click)="retryLastAction()">Retry</button>
       </div>
 
-      <div *ngIf="showAssignForm" class="assign-form">
-        <h4 class="form-title">Assign New Equipment</h4>
-        <div class="form-group">
-          <label class="form-label" for="assetType">Asset Type</label>
-          <select
-            id="assetType"
-            class="form-select"
-            [(ngModel)]="assetType"
-          >
-            <option value="" disabled>Select asset type</option>
-            <option value="badge">Badge</option>
-            <option value="laptop">Laptop</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="assetIdentifier">Asset Identifier</label>
-          <input
-            id="assetIdentifier"
-            type="text"
-            class="form-input"
-            [(ngModel)]="assetIdentifier"
-            placeholder="Enter asset identifier"
-          />
-        </div>
-        <div *ngIf="validationError" class="validation-error">
-          {{ validationError }}
-        </div>
-        <div class="form-actions">
-          <button
-            class="submit-button"
-            (click)="submitAssignment()"
-            [disabled]="isSubmitting"
-          >
-            {{ isSubmitting ? 'Assigning...' : 'Assign' }}
-          </button>
-          <button class="cancel-button" (click)="cancelAssignForm()">Cancel</button>
-        </div>
-      </div>
-
-      <div *ngIf="equipmentAssignments.length === 0 && !showAssignForm" class="empty-state">
+      <div *ngIf="equipmentAssignments.length === 0" class="empty-state">
         <p>No equipment assigned</p>
       </div>
 
@@ -92,10 +55,14 @@ import { EquipmentAssignment, EquipmentAssetType, EquipmentStatus } from '../../
               <span class="field-label">Returned</span>
               <span class="field-value">{{ formatDate(assignment.returnDate) }}</span>
             </div>
+            <div class="equipment-field" *ngIf="assignment.notes">
+              <span class="field-label">Notes</span>
+              <span class="field-value">{{ assignment.notes }}</span>
+            </div>
           </div>
-          <div class="equipment-card-actions" *ngIf="assignment.status === 'assigned'">
-            <button class="return-button" (click)="markAsReturned(assignment)">Mark as Returned</button>
-            <button class="lost-button" (click)="markAsLost(assignment)">Mark as Lost</button>
+          <div class="equipment-card-actions">
+            <button class="edit-button" (click)="openEditModal(assignment)">Edit</button>
+            <button class="delete-button" (click)="deleteEquipment(assignment)">Delete</button>
           </div>
         </div>
       </div>
@@ -173,103 +140,6 @@ import { EquipmentAssignment, EquipmentAssetType, EquipmentStatus } from '../../
 
     .retry-button:hover {
       background-color: #1565c0;
-    }
-
-    .assign-form {
-      background: #f5f7fa;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-    }
-
-    .form-title {
-      margin: 0 0 1rem 0;
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: #212121;
-    }
-
-    .form-group {
-      margin-bottom: 0.75rem;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: #616161;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      margin-bottom: 0.25rem;
-    }
-
-    .form-select,
-    .form-input {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #bdbdbd;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      color: #212121;
-      background-color: #ffffff;
-      box-sizing: border-box;
-    }
-
-    .form-select:focus,
-    .form-input:focus {
-      outline: none;
-      border-color: #1976d2;
-      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
-    }
-
-    .validation-error {
-      color: #d32f2f;
-      font-size: 0.8125rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    .submit-button {
-      padding: 0.5rem 1.25rem;
-      background-color: #1976d2;
-      color: #ffffff;
-      border: none;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .submit-button:hover:not(:disabled) {
-      background-color: #1565c0;
-    }
-
-    .submit-button:disabled {
-      background-color: #90caf9;
-      cursor: not-allowed;
-    }
-
-    .cancel-button {
-      padding: 0.5rem 1.25rem;
-      background-color: transparent;
-      color: #616161;
-      border: 1px solid #bdbdbd;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .cancel-button:hover {
-      background-color: #f5f5f5;
     }
 
     .empty-state {
@@ -382,7 +252,7 @@ import { EquipmentAssignment, EquipmentAssetType, EquipmentStatus } from '../../
       border-top: 1px solid #f0f0f0;
     }
 
-    .return-button {
+    .edit-button {
       padding: 0.375rem 0.875rem;
       background-color: transparent;
       color: #1976d2;
@@ -394,11 +264,11 @@ import { EquipmentAssignment, EquipmentAssetType, EquipmentStatus } from '../../
       transition: background-color 0.2s;
     }
 
-    .return-button:hover {
+    .edit-button:hover {
       background-color: rgba(25, 118, 210, 0.04);
     }
 
-    .lost-button {
+    .delete-button {
       padding: 0.375rem 0.875rem;
       background-color: transparent;
       color: #d32f2f;
@@ -410,7 +280,7 @@ import { EquipmentAssignment, EquipmentAssetType, EquipmentStatus } from '../../
       transition: background-color 0.2s;
     }
 
-    .lost-button:hover {
+    .delete-button:hover {
       background-color: rgba(211, 47, 47, 0.04);
     }
 
@@ -422,10 +292,6 @@ import { EquipmentAssignment, EquipmentAssetType, EquipmentStatus } from '../../
       .equipment-list {
         grid-template-columns: 1fr;
       }
-
-      .equipment-card-actions {
-        flex-direction: column;
-      }
     }
   `]
 })
@@ -434,109 +300,56 @@ export class EquipmentSectionComponent implements OnDestroy {
   @Input() equipmentAssignments: EquipmentAssignment[] = [];
   @Output() equipmentChanged = new EventEmitter<void>();
 
-  showAssignForm = false;
-  assetType: EquipmentAssetType | '' = '';
-  assetIdentifier = '';
-  validationError = '';
   errorMessage = '';
-  isSubmitting = false;
 
   private lastAction: (() => void) | null = null;
   private subscriptions: Subscription[] = [];
 
-  constructor(private technicianService: TechnicianService) {}
+  constructor(
+    private technicianService: TechnicianService,
+    private dialog: MatDialog,
+    private toastr: ToastrService
+  ) {}
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  toggleAssignForm(): void {
-    this.showAssignForm = true;
-    this.resetForm();
-  }
+  openAddModal(): void {
+    const dialogData: EquipmentEditModalData = {
+      mode: 'add',
+      technicianId: this.technicianId
+    };
 
-  cancelAssignForm(): void {
-    this.showAssignForm = false;
-    this.resetForm();
-  }
-
-  submitAssignment(): void {
-    this.validationError = '';
-    this.errorMessage = '';
-
-    if (!this.assetType) {
-      this.validationError = 'Please select an asset type.';
-      return;
-    }
-
-    if (!this.assetIdentifier.trim()) {
-      this.validationError = 'Please enter an asset identifier.';
-      return;
-    }
-
-    this.isSubmitting = true;
-    this.lastAction = () => this.submitAssignment();
-
-    const validateSub = this.technicianService.validateAssetUniqueness(
-      this.assetIdentifier.trim(),
-      this.technicianId
-    ).subscribe({
-      next: (isUnique) => {
-        if (!isUnique) {
-          this.validationError = 'This asset is currently assigned to another technician.';
-          this.isSubmitting = false;
-        } else {
-          this.performAssignment();
-        }
-      },
-      error: () => {
-        this.errorMessage = 'Failed to validate asset uniqueness. Please try again.';
-        this.isSubmitting = false;
-      }
+    const dialogRef = this.dialog.open(EquipmentEditModalComponent, {
+      width: '480px',
+      data: dialogData
     });
 
-    this.subscriptions.push(validateSub);
-  }
-
-  markAsReturned(assignment: EquipmentAssignment): void {
-    this.errorMessage = '';
-    this.lastAction = () => this.markAsReturned(assignment);
-
-    const today = new Date().toISOString().split('T')[0];
-    const updateSub = this.technicianService.updateEquipmentAssignment(
-      this.technicianId,
-      assignment.id,
-      { status: 'returned', returnDate: today }
-    ).subscribe({
-      next: () => {
-        this.equipmentChanged.emit();
-      },
-      error: () => {
-        this.errorMessage = 'Failed to update equipment status. Please try again.';
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.performAssignment(result);
       }
     });
-
-    this.subscriptions.push(updateSub);
   }
 
-  markAsLost(assignment: EquipmentAssignment): void {
-    this.errorMessage = '';
-    this.lastAction = () => this.markAsLost(assignment);
+  openEditModal(assignment: EquipmentAssignment): void {
+    const dialogData: EquipmentEditModalData = {
+      mode: 'edit',
+      technicianId: this.technicianId,
+      equipment: assignment
+    };
 
-    const updateSub = this.technicianService.updateEquipmentAssignment(
-      this.technicianId,
-      assignment.id,
-      { status: 'lost' }
-    ).subscribe({
-      next: () => {
-        this.equipmentChanged.emit();
-      },
-      error: () => {
-        this.errorMessage = 'Failed to update equipment status. Please try again.';
-      }
+    const dialogRef = this.dialog.open(EquipmentEditModalComponent, {
+      width: '480px',
+      data: dialogData
     });
 
-    this.subscriptions.push(updateSub);
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.performUpdate(assignment.id, result);
+      }
+    });
   }
 
   retryLastAction(): void {
@@ -544,6 +357,34 @@ export class EquipmentSectionComponent implements OnDestroy {
     if (this.lastAction) {
       this.lastAction();
     }
+  }
+
+  deleteEquipment(assignment: EquipmentAssignment): void {
+    const dialogData: ConfirmDeleteModalData = {
+      title: 'Delete Equipment',
+      message: 'Are you sure you want to delete this equipment assignment?',
+      itemName: `${this.formatAssetType(assignment.assetType)} — ${assignment.assetIdentifier}`
+    };
+
+    const dialogRef = this.dialog.open(ConfirmDeleteModalComponent, {
+      width: '420px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.errorMessage = '';
+        this.technicianService.deleteEquipmentAssignment(this.technicianId, assignment.id).subscribe({
+          next: () => {
+            this.toastr.success('Equipment deleted successfully', 'Deleted');
+            this.equipmentChanged.emit();
+          },
+          error: () => {
+            this.toastr.error('Failed to delete equipment. Please try again.', 'Error');
+          }
+        });
+      }
+    });
   }
 
   getStatusClass(status: EquipmentStatus): string {
@@ -594,36 +435,62 @@ export class EquipmentSectionComponent implements OnDestroy {
     });
   }
 
-  private performAssignment(): void {
+  private performAssignment(formData: any): void {
+    this.errorMessage = '';
+    this.lastAction = () => this.performAssignment(formData);
+
     const equipment: Omit<EquipmentAssignment, 'id'> = {
       technicianId: this.technicianId,
-      assetType: this.assetType as EquipmentAssetType,
-      assetIdentifier: this.assetIdentifier.trim(),
+      assetType: formData.assetType,
+      assetIdentifier: formData.assetIdentifier,
       assignmentDate: new Date().toISOString().split('T')[0],
       status: 'assigned',
+      notes: formData.notes,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
     const assignSub = this.technicianService.assignEquipment(this.technicianId, equipment).subscribe({
       next: () => {
-        this.showAssignForm = false;
-        this.resetForm();
-        this.isSubmitting = false;
         this.equipmentChanged.emit();
       },
       error: () => {
         this.errorMessage = 'Failed to assign equipment. Please try again.';
-        this.isSubmitting = false;
       }
     });
 
     this.subscriptions.push(assignSub);
   }
 
-  private resetForm(): void {
-    this.assetType = '';
-    this.assetIdentifier = '';
-    this.validationError = '';
+  private performUpdate(equipmentId: string, formData: any): void {
+    this.errorMessage = '';
+    this.lastAction = () => this.performUpdate(equipmentId, formData);
+
+    const update: Partial<EquipmentAssignment> = {
+      assetType: formData.assetType,
+      assetIdentifier: formData.assetIdentifier,
+      status: formData.status,
+      notes: formData.notes,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (formData.returnDate) {
+      update.returnDate = formData.returnDate;
+    }
+
+    const updateSub = this.technicianService.updateEquipmentAssignment(
+      this.technicianId,
+      equipmentId,
+      update
+    ).subscribe({
+      next: () => {
+        this.equipmentChanged.emit();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to update equipment. Please try again.';
+      }
+    });
+
+    this.subscriptions.push(updateSub);
   }
 }

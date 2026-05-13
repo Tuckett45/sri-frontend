@@ -10,6 +10,7 @@ import { CredentialDetailComponent } from './credential-detail/credential-detail
 import { CredentialFormComponent } from './credential-form/credential-form.component';
 import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-checklist.component';
 import { ReferralTrackerComponent } from './referral-tracker/referral-tracker.component';
+import { CandidateDetailComponent } from './candidate-detail/candidate-detail.component';
 import { UnsavedChangesGuard } from '../../guards/unsaved-changes.guard';
 
 const routes: Routes = [
@@ -35,6 +36,11 @@ const routes: Routes = [
       },
       {
         path: 'candidates/:candidateId',
+        component: CandidateDetailComponent,
+        data: { title: 'Candidate Detail', breadcrumb: 'Candidate Detail' }
+      },
+      {
+        path: 'candidates/:candidateId/edit',
         component: CandidateFormComponent,
         canDeactivate: [UnsavedChangesGuard],
         data: { title: 'Edit Candidate', breadcrumb: 'Edit Candidate' }
