@@ -203,7 +203,7 @@ export class StreetSheetService {
     }
 
     this.streetSheetsCache$ = null;
-    return this.http.put<any>(`${environment.apiUrl}/StreetSheet/${streetSheet.segmentId}`, streetSheet, this.httpOptions);
+    return this.http.put<any>(`${environment.apiUrl}/StreetSheet/${segmentId}`, formData, { headers });
   }
 
   deleteStreetSheet(streetSheet: StreetSheet): Observable<any> {
