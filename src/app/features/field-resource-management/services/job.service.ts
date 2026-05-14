@@ -17,7 +17,7 @@ import {
   UpdateJobDto,
   JobFilters
 } from '../models/dtos';
-import { environment, local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Status history entry for tracking job status changes
@@ -39,7 +39,7 @@ export interface StatusHistory {
   providedIn: 'root'
 })
 export class JobService {
-  private readonly apiUrl = `${local_environment.apiUrl}/jobs`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/jobs`;
   private readonly retryCount = 2;
 
   constructor(private http: HttpClient) {}

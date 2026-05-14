@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 import { ClientConfiguration } from '../models/quote-workflow.model';
 
 /**
@@ -15,7 +15,7 @@ import { ClientConfiguration } from '../models/quote-workflow.model';
  */
 @Injectable({ providedIn: 'root' })
 export class ClientConfigurationService {
-  private readonly apiUrl = `${local_environment.apiUrl}/client-configurations`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/client-configurations`;
 
   constructor(private http: HttpClient) {}
 

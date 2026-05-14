@@ -194,13 +194,10 @@ export class StreetSheetService {
     return this.http.post<any>(`${environment.apiUrl}/StreetSheet`, formData, { headers });
   }
 
-  updateStreetSheet(streetSheet: StreetSheet): Observable<any> {
-    // Validate market ownership for CMs
-    if (this.authService.isCM() && !this.authService.isAdmin()) {
-      if (!this.roleBasedDataService.canAccessMarket(streetSheet.state || '')) {
-        return throwError(() => new Error('You do not have permission to update street sheets from other markets'));
-      }
-    }
+  updateStreetSheet(formData: FormData, segmentId: string): Observable<any> {
+    const headers = new HttpHeaders({
+      // Don't set Content-Type for FormData - browser will set it with boundary
+    });
 
     this.streetSheetsCache$ = null;
     return this.http.put<any>(`${environment.apiUrl}/StreetSheet/${segmentId}`, formData, { headers });

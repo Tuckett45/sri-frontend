@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 import {
   ConvertToJobData,
   DeliveryRecord,
@@ -30,7 +30,7 @@ interface QuoteDraft {
  */
 @Injectable({ providedIn: 'root' })
 export class QuoteWorkflowService {
-  private readonly apiUrl = `${local_environment.apiUrl}/quotes`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/quotes`;
   private readonly DRAFT_KEY_PREFIX = 'frm_quote_draft';
   private readonly DEBOUNCE_MS = 3000;
   private readonly DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours

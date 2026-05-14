@@ -2,7 +2,7 @@ export const environment = {
   production: true,
   apiUrl: 'https://sri-api.azurewebsites.net/api',
   // ATLAS platform backend (governance & lifecycle API)
-  atlasApiUrl: 'https://sri-backend.azure-api.net/atlas/v1',
+  atlasApiUrl: 'https://atlas-api-apim.azure-api.net/atlas/v1',
   // API subscription key and VAPID key are now fetched securely at runtime
   // from the backend configuration service for security
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',

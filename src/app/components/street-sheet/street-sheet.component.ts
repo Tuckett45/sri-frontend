@@ -241,7 +241,24 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   }
 
   updateStreetSheet(updatedStreetSheet: StreetSheet): void {
-    this.streetSheetService.updateStreetSheet(updatedStreetSheet).subscribe(result => {
+    const formData = new FormData();
+    formData.append('Id', updatedStreetSheet.id || '');
+    formData.append('SegmentId', updatedStreetSheet.segmentId || '');
+    formData.append('PM', updatedStreetSheet.pm || '');
+    formData.append('VendorName', updatedStreetSheet.vendorName || '');
+    formData.append('StreetAddress', updatedStreetSheet.streetAddress || '');
+    formData.append('City', updatedStreetSheet.city || '');
+    formData.append('State', updatedStreetSheet.state || '');
+    formData.append('Deployment', updatedStreetSheet.deployment || '');
+    formData.append('Equipment', updatedStreetSheet.equipment || '');
+    formData.append('Date', updatedStreetSheet.date ? new Date(updatedStreetSheet.date).toISOString() : '');
+    formData.append('AdditionalConcerns', updatedStreetSheet.additionalConcerns || '');
+    formData.append('CreatedBy', updatedStreetSheet.createdBy || '');
+    formData.append('UpdatedBy', updatedStreetSheet.updatedBy || '');
+    formData.append('UpdatedDate', updatedStreetSheet.updatedDate instanceof Date ? updatedStreetSheet.updatedDate.toISOString() : (updatedStreetSheet.updatedDate || new Date().toISOString()));
+    formData.append('MarkerJson', JSON.stringify(updatedStreetSheet.marker || []));
+
+    this.streetSheetService.updateStreetSheet(formData, updatedStreetSheet.segmentId || '').subscribe(result => {
       this.streetSheetMapComponent.loadStreetSheets(); 
     });
   }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 import { JobSummaryData, QuoteWorkflow } from '../models/quote-workflow.model';
 
 /**
@@ -12,7 +12,7 @@ import { JobSummaryData, QuoteWorkflow } from '../models/quote-workflow.model';
  */
 @Injectable({ providedIn: 'root' })
 export class JobSummaryService {
-  private readonly apiUrl = `${local_environment.apiUrl}/quotes`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/quotes`;
 
   constructor(private http: HttpClient) {}
 

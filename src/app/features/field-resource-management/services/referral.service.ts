@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth.service';
-import { local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 import {
   Referral,
   ReferralFilters,
@@ -15,7 +15,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class ReferralService {
-  private readonly baseUrl = `${local_environment.apiUrl}/onboarding/referrals`;
+  private readonly baseUrl = `${environment.atlasApiUrl}/onboarding/referrals`;
 
   constructor(
     private http: HttpClient,

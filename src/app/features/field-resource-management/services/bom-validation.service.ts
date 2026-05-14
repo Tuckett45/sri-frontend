@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 import { ValidationRequest, ValidationStepEntry } from '../models/quote-workflow.model';
 
 /**
@@ -16,7 +16,7 @@ import { ValidationRequest, ValidationStepEntry } from '../models/quote-workflow
  */
 @Injectable({ providedIn: 'root' })
 export class BomValidationService {
-  private readonly apiUrl = `${local_environment.apiUrl}/quotes`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/quotes`;
 
   constructor(private http: HttpClient) {}
 

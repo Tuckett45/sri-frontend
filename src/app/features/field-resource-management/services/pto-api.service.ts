@@ -8,7 +8,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { PtoRequest, CreatePtoRequestDto, LeaveType } from '../models/pto.models';
-import { local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 
 interface PaginatedResponse<T> {
   items: T[];
@@ -24,7 +24,7 @@ interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class PtoApiService {
-  private readonly apiUrl = `${local_environment.apiUrl}/pto-requests`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/pto-requests`;
 
   constructor(private http: HttpClient) {}
 

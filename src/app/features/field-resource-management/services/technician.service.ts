@@ -22,7 +22,7 @@ import { TechnicalCompetency } from '../models/competency.model';
 import { PRC, PRCGoal } from '../models/prc.model';
 import { RoleBasedDataService } from '../../../services/role-based-data.service';
 import { AuthService } from '../../../services/auth.service';
-import { environment, local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Service for managing technician data and operations
@@ -32,7 +32,7 @@ import { environment, local_environment } from '../../../../environments/environ
   providedIn: 'root'
 })
 export class TechnicianService {
-  private readonly apiUrl = `${local_environment.apiUrl}/technicians`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/technicians`;
   private readonly retryCount = 2;
 
   constructor(

@@ -4,7 +4,7 @@ import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { TimeEntry, GeoLocation } from '../models/time-entry.model';
 import { TimeCategory, PayType, SyncStatus } from '../../../models/time-payroll.enum';
-import { environment, local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Time Tracking Service
@@ -27,7 +27,7 @@ import { environment, local_environment } from '../../../../environments/environ
   providedIn: 'root'
 })
 export class TimeTrackingService {
-  private readonly apiUrl = `${local_environment.apiUrl}/time-entries`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/time-entries`;
 
   constructor(private http: HttpClient) {}
 
