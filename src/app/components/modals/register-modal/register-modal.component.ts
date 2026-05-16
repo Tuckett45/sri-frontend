@@ -35,7 +35,7 @@ export class RegisterModalComponent {
   ];
   companys: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction'];
   markets: { name: string, abbreviation: string }[] = [
-    { name: 'Alabama', abbreviation: 'Al' },
+    { name: 'Alabama', abbreviation: 'AL' },
     { name: 'Arizona', abbreviation: 'AZ' },
     { name: 'California', abbreviation: 'CA' },
     { name: 'Colorado', abbreviation: 'CO' },
