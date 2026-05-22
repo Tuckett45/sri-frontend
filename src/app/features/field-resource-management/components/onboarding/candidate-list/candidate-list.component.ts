@@ -375,6 +375,7 @@ export class CandidateListComponent implements OnInit {
   candidates: Candidate[] = [];
   filteredCandidates: Candidate[] = [];
   loading = false;
+  submitting = false;
   errorMessage = '';
 
   searchText = '';
@@ -479,6 +480,8 @@ export class CandidateListComponent implements OnInit {
   }
 
   onAddCandidate(): void {
+    if (this.submitting) return;
+
     const dialogRef = this.dialog.open(AddCandidateModalComponent, {
       width: '780px',
       maxWidth: '90vw',
@@ -488,6 +491,7 @@ export class CandidateListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        this.submitting = true;
         const payload: CreateCandidatePayload = {
           techName: `${result.basicInfo.firstName} ${result.basicInfo.lastName}`,
           middleName: result.basicInfo.middleName,
@@ -503,9 +507,11 @@ export class CandidateListComponent implements OnInit {
 
         this.onboardingService.createCandidate(payload).subscribe({
           next: () => {
+            this.submitting = false;
             this.loadCandidates();
           },
           error: () => {
+            this.submitting = false;
             this.errorMessage = 'Failed to create candidate. Please try again.';
             this.loadCandidates();
           }

@@ -136,8 +136,10 @@ export class ErrorInterceptor implements HttpInterceptor {
 
     return next.handle(request).pipe(
       // Retry logic with endpoint-specific configuration
+      // Only retry idempotent (GET, HEAD, OPTIONS) requests to prevent
+      // duplicate side-effects (e.g. creating multiple candidates on POST retry)
       retry({
-        count: retryConfig.maxRetries,
+        count: this.isIdempotentRequest(request) ? retryConfig.maxRetries : 0,
         delay: (error: HttpErrorResponse, retryCount: number) => {
           if (GlobalErrorHandlerService.isRetryableError(error)) {
             const delayMs = Math.min(
@@ -197,6 +199,17 @@ export class ErrorInterceptor implements HttpInterceptor {
         return throwError(() => error);
       })
     );
+  }
+
+  /**
+   * Determine if the request method is idempotent (safe to retry).
+   * POST, PUT, DELETE, and PATCH are non-idempotent and must not be retried
+   * because retrying them can cause duplicate side-effects (e.g. creating
+   * multiple records).
+   */
+  private isIdempotentRequest(request: HttpRequest<unknown>): boolean {
+    const NON_IDEMPOTENT_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
+    return !NON_IDEMPOTENT_METHODS.includes(request.method.toUpperCase());
   }
 
   /**
