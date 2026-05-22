@@ -145,7 +145,7 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
 
     // Check if this is a technicians endpoint request
     // Match URLs containing /technicians (but not /onboarding/)
-    if (!url.match(/\/technicians(\/|$)/)) {
+    if (!url.match(/\/technicians(\/|\?|$)/)) {
       return null;
     }
 
@@ -247,7 +247,7 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
     }
 
     // --- GET /technicians/:id ---
-    const getByIdMatch = url.match(/\/technicians\/([^/]+)$/);
+    const getByIdMatch = url.match(/\/technicians\/([^/?]+)(?:\?.*)?$/);
     if (req.method === 'GET' && getByIdMatch) {
       const techId = getByIdMatch[1];
       const technician = this.technicians.find(t => t.id === techId);
@@ -275,7 +275,7 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
     }
 
     // --- GET /technicians ---
-    if (req.method === 'GET' && url.match(/\/technicians$/)) {
+    if (req.method === 'GET' && url.match(/\/technicians(\?.*)?$/)) {
       return ok(this.technicians);
     }
 

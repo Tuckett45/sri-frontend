@@ -21,7 +21,7 @@
     <ng-container *ngIf="!(loading$ | async) && !error">
       <div class="count-header">
         <span class="count">{{ availableCount$ | async }}</span>
-        <span class="count-label">technicians available</span>
+        <span class="count-label">of {{ totalCount$ | async }} technicians available</span>
       </div>
 
       <div *ngIf="(availableTechnicians$ | async) as technicians" class="technicians-list">

@@ -8,7 +8,7 @@ import {
 import { Store } from '@ngrx/store';
 import { Observable, Subject, combineLatest } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { selectActiveTechnicians, selectTechniciansLoading, selectTechniciansError } from '../../../../state/technicians/technician.selectors';
+import { selectActiveTechnicians, selectTechniciansLoading, selectTechniciansError, selectTechniciansTotal } from '../../../../state/technicians/technician.selectors';
 import { selectActiveAssignments } from '../../../../state/assignments/assignment.selectors';
 import { Technician } from '../../../../models/technician.model';
 
@@ -22,6 +22,7 @@ export class AvailableTechniciansWidgetComponent implements OnInit, OnDestroy {
 
   availableTechnicians$!: Observable<Technician[]>;
   availableCount$!: Observable<number>;
+  totalCount$!: Observable<number>;
   loading$!: Observable<boolean>;
   error: string | null = null;
 
@@ -51,6 +52,8 @@ export class AvailableTechniciansWidgetComponent implements OnInit, OnDestroy {
     this.availableCount$ = this.availableTechnicians$.pipe(
       map(techs => techs.length)
     );
+
+    this.totalCount$ = this.store.select(selectTechniciansTotal);
   }
 
   ngOnDestroy(): void {

@@ -55,6 +55,11 @@ export class TechnicianService {
   getTechnicians(filters?: TechnicianFilters): Observable<Technician[]> {
     let params = new HttpParams();
 
+    // For Admin users, request all technicians (not just self)
+    if (this.authService.isAdmin()) {
+      params = params.set('scope', 'all');
+    }
+
     // Apply filters if provided
     if (filters) {
       // Search term filter - searches across name, email, phone
@@ -111,6 +116,12 @@ export class TechnicianService {
             console.warn('[TechnicianService] Unexpected response format:', response);
             technicians = [];
           }
+          // Normalize: default isActive/isAvailable to true if not provided by API
+          technicians = technicians.map(t => ({
+            ...t,
+            isActive: t.isActive ?? true,
+            isAvailable: t.isAvailable ?? true
+          }));
           return this.applyRoleBasedFiltering(technicians);
         }),
         catchError(this.handleError)
