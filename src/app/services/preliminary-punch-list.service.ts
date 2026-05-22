@@ -505,7 +505,14 @@ export class PreliminaryPunchListService {
     // Validate market ownership for CMs
     if (this.authService.isCM() && !this.authService.isAdmin()) {
       if (!this.roleBasedDataService.canAccessMarket(punchList['market'] || '')) {
-        return throwError(() => new Error('You do not have permission to update punch lists from other markets'));
+        const user = this.authService.getUser();
+        const userMarket = user?.market || 'your assigned market';
+        const punchListMarket = punchList['market'] || 'a different market';
+        return throwError(() => new Error(
+          `You do not have permission to update this punch list. ` +
+          `Your market is "${userMarket}" but this punch list belongs to "${punchListMarket}". ` +
+          `Only administrators or users assigned to that market can make changes.`
+        ));
       }
     }
 

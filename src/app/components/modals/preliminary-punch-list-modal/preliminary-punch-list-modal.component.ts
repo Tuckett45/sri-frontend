@@ -600,12 +600,43 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   
       this.dialogRef.close(punchList);
     } else {
-      this.preliminaryPunchListForm.get('segmentId')?.hasError('required') ? this.preliminaryPunchListForm.markAsTouched({'emitEvent': true}) : this.preliminaryPunchListForm.markAsTouched({'emitEvent': true});
-      this.preliminaryPunchListForm.get('vendorName')?.hasError('required');
-      this.preliminaryPunchListForm.get('streetAddress')?.hasError('required');
-      this.preliminaryPunchListForm.get('city')?.hasError('required');
-      this.preliminaryPunchListForm.get('state')?.hasError('required');
-      this.toastr.error('Form is invalid. Check required fields');
+      this.preliminaryPunchListForm.markAllAsTouched();
+
+      // Build specific error messages so the user knows exactly what to fix
+      const errors: string[] = [];
+      const form = this.preliminaryPunchListForm;
+
+      if (form.get('segmentId')?.hasError('required')) {
+        errors.push('Segment ID is required');
+      }
+      if (form.get('vendorName')?.hasError('required')) {
+        errors.push('Vendor Name is required');
+      }
+      if (form.get('streetAddress')?.hasError('required')) {
+        errors.push('Street Address is required');
+      }
+      if (form.get('city')?.hasError('required')) {
+        errors.push('City is required');
+      } else if (form.get('city')?.hasError('pattern')) {
+        errors.push('City must contain only letters and spaces (no numbers or special characters)');
+      }
+      if (form.get('state')?.hasError('required')) {
+        errors.push('State is required');
+      } else if (form.get('state')?.hasError('pattern')) {
+        errors.push('State must be a 2-letter abbreviation (e.g. AZ, CO, TX)');
+      }
+
+      // Show each error as its own toast so the user can address them one by one
+      if (errors.length > 0) {
+        const message = errors.length === 1
+          ? errors[0]
+          : 'Please fix the following:\n• ' + errors.join('\n• ');
+        this.toastr.error(message, 'Punch List cannot be saved', {
+          timeOut: 8000,
+          enableHtml: false,
+          closeButton: true
+        });
+      }
     }
   }
   
