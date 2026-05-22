@@ -1,6 +1,6 @@
 // --- Type Aliases ---
 
-export type OfferStatus = 'pre_offer' | 'offer' | 'offer_acceptance';
+export type OfferStatus = 'needs_review' | 'vetted_available' | 'offer_extended' | 'offer_accepted_onboarding';
 
 export type VestSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
 
@@ -9,6 +9,7 @@ export type VestSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
 export interface Candidate {
   candidateId: string;
   techName: string;
+  middleName?: string;
   techEmail: string;
   techPhone: string;
   vestSize: VestSize;
@@ -17,8 +18,12 @@ export interface Candidate {
   scissorLiftCertified: boolean;
   biisciCertified?: boolean;
   workSite: string;
+  homeAddress?: string;
   startDate: string;          // ISO date
   offerStatus: OfferStatus;
+  resumeUrl?: string;
+  headshotUrl?: string;
+  referredBy?: string;
   notes?: string;
 
   // Badges & Access
@@ -53,16 +58,20 @@ export interface Candidate {
 
 export interface CreateCandidatePayload {
   techName: string;
+  middleName: string;
   techEmail: string;
   techPhone: string;
   vestSize: VestSize;
   workSite: string;
+  homeAddress: string;
   startDate: string;
   offerStatus: OfferStatus;
+  referredBy?: string;
 }
 
 export interface UpdateCandidatePayload {
   techName?: string;
+  middleName?: string;
   techEmail?: string;
   techPhone?: string;
   vestSize?: VestSize;
@@ -70,8 +79,10 @@ export interface UpdateCandidatePayload {
   oshaCertified?: boolean;
   scissorLiftCertified?: boolean;
   workSite?: string;
+  homeAddress?: string;
   startDate?: string;
   offerStatus?: OfferStatus;
+  referredBy?: string;
 }
 
 // --- Filters ---

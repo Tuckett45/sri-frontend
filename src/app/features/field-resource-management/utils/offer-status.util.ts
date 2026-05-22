@@ -4,14 +4,16 @@ import { OfferStatus } from '../models/onboarding.models';
  * Defines the valid offer status transitions.
  *
  * State machine:
- *   pre_offer → offer
- *   offer → pre_offer | offer_acceptance
- *   offer_acceptance → offer
+ *   needs_review → vetted_available
+ *   vetted_available → offer_extended | needs_review
+ *   offer_extended → offer_accepted_onboarding | vetted_available
+ *   offer_accepted_onboarding → vetted_available (for reassignment)
  */
 export const OFFER_TRANSITIONS: Record<OfferStatus, OfferStatus[]> = {
-  pre_offer: ['offer'],
-  offer: ['pre_offer', 'offer_acceptance'],
-  offer_acceptance: ['offer'],
+  needs_review: ['vetted_available'],
+  vetted_available: ['offer_extended', 'needs_review'],
+  offer_extended: ['offer_accepted_onboarding', 'vetted_available'],
+  offer_accepted_onboarding: ['vetted_available'],
 };
 
 /**

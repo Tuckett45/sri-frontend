@@ -115,4 +115,42 @@ export class OnboardingService {
       .post<{ technicianId: string }>(`${this.baseUrl}/candidates/${candidateId}/convert-to-technician`, {})
       .pipe(catchError(this.mapError('convertToTechnician')));
   }
+
+  // ---------------------------------------------------------------------------
+  // File Uploads
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Uploads a resume file for a candidate.
+   * @param candidateId The candidate's ID
+   * @param file The resume file (PDF, DOC, DOCX, max 10MB)
+   * @returns Observable with the upload response containing the URL
+   */
+  uploadResume(candidateId: string, file: File): Observable<{ url: string; originalFileName: string; fileSizeBytes: number }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userName', this.getAuditMetadata().userName);
+
+    return this.http
+      .post<{ url: string; originalFileName: string; fileSizeBytes: number }>(
+        `${this.baseUrl}/candidates/${candidateId}/resume`, formData)
+      .pipe(catchError(this.mapError('uploadResume')));
+  }
+
+  /**
+   * Uploads a headshot image for a candidate.
+   * @param candidateId The candidate's ID
+   * @param file The headshot file (JPG, PNG, max 5MB)
+   * @returns Observable with the upload response containing the URL
+   */
+  uploadHeadshot(candidateId: string, file: File): Observable<{ url: string; originalFileName: string; fileSizeBytes: number }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userName', this.getAuditMetadata().userName);
+
+    return this.http
+      .post<{ url: string; originalFileName: string; fileSizeBytes: number }>(
+        `${this.baseUrl}/candidates/${candidateId}/headshot`, formData)
+      .pipe(catchError(this.mapError('uploadHeadshot')));
+  }
 }
