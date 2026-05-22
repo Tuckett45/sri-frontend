@@ -80,14 +80,30 @@ export class RoleBasedDataService {
       return data;
     }
 
-    // CM users see only their assigned market
+    // CM users see only their assigned market (regional CMs see all)
     if (this.authService.isCM()) {
       const user = this.authService.getUser();
       if (!user || !user.market) {
         return [];
       }
 
-      let filtered = data.filter(item => item.market === user.market);
+      // Regional CMs (market = 'RG') can see all markets
+      if (user.market.toUpperCase() === 'RG') {
+        if (options?.specificMarket) {
+          return data.filter(item => item.market?.toUpperCase() === options.specificMarket?.toUpperCase());
+        }
+        // Exclude RG markets for street sheets if specified
+        if (options?.excludeRGMarkets) {
+          return data.filter(item => 
+            !item.market || !item.market.toUpperCase().includes('RG')
+          );
+        }
+        return data;
+      }
+
+      let filtered = data.filter(item => 
+        item.market?.toUpperCase() === user.market.toUpperCase()
+      );
 
       // Exclude RG markets for street sheets if specified
       if (options?.excludeRGMarkets) {
@@ -154,10 +170,17 @@ export class RoleBasedDataService {
       return true;
     }
 
-    // CM can only access their assigned market
+    // CM can only access their assigned market (regional CMs with 'RG' can access all)
     if (this.authService.isCM()) {
       const user = this.authService.getUser();
-      return user && user.market === market;
+      if (!user || !user.market) {
+        return false;
+      }
+      // Regional users (market = 'RG') have access to all markets
+      if (user.market.toUpperCase() === 'RG') {
+        return true;
+      }
+      return user.market.toUpperCase() === market.toUpperCase();
     }
 
     // Other roles - default to false for security
