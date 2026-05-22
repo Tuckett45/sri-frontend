@@ -97,7 +97,8 @@ export class AuthService {
       phone: '',
       role: TechnicianRole.Level1,
       region: user.market,
-      isAvailable: true
+      isAvailable: true,
+      userId: user.id
     };
   }
 
