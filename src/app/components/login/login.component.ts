@@ -119,6 +119,8 @@ export class LoginComponent implements OnInit {
       case 'Controller':
         await this.router.navigate(['/market-controller-tracker'], { replaceUrl: true });
         return;
+      case 'Technician':
+      case 'Admin':
       case 'HR':
       case 'Payroll':
         await this.router.navigate(['/field-resource-management/dashboard'], { replaceUrl: true });
