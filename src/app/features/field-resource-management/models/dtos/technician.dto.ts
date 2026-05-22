@@ -12,6 +12,7 @@ export interface CreateTechnicianDto {
   role: TechnicianRole;
   region: string;
   isAvailable?: boolean;
+  userId?: string;
   skills?: Skill[];
   certifications?: Omit<Certification, 'id' | 'status'>[];
   availability?: Omit<Availability, 'id'>[];

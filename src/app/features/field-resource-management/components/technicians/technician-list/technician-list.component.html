@@ -193,7 +193,7 @@
           <button mat-icon-button [routerLink]="['./', technician.id, 'edit']" (click)="$event.stopPropagation()" aria-label="Edit">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button (click)="toggleTechnicianStatus(technician); $event.stopPropagation()" aria-label="Delete" class="delete-action">
+          <button mat-icon-button (click)="deleteTechnician(technician); $event.stopPropagation()" aria-label="Delete" class="delete-action">
             <mat-icon>delete</mat-icon>
           </button>
         </div>
