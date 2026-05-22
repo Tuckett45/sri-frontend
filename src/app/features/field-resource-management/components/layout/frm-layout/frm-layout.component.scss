@@ -1,6 +1,13 @@
+:host {
+  display: block;
+  height: calc(100vh - 64px - 40px); // viewport - navbar - main-content padding (20px top + 20px bottom)
+  overflow: hidden;
+  margin: -20px; // Negate the .main-content padding so FRM fills edge-to-edge
+}
+
 .frm-layout {
   display: flex;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
   position: relative;
   width: 100%;
@@ -18,7 +25,7 @@
   transition: transform 0.3s ease-in-out;
   z-index: 100;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-  height: 100vh;
+  height: 100%;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -28,36 +35,54 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    min-height: 0; // Allow flex child to shrink below content size
+    min-height: 0;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    position: relative;
 
-    // Subtle scrollbar that blends with the dark sidebar
+    // Always-visible scrollbar so users know it scrolls
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.08);
 
     &::-webkit-scrollbar {
-      width: 4px;
+      width: 6px;
     }
 
     &::-webkit-scrollbar-track {
-      background: transparent;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      margin: 8px 0;
     }
 
     &::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
+      background-color: rgba(255, 255, 255, 0.35);
+      border-radius: 6px;
+      min-height: 40px;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.35);
+        background-color: rgba(255, 255, 255, 0.5);
       }
     }
   }
 
+  // Bottom fade gradient to hint there's more content below
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, #1e293b);
+    pointer-events: none;
+    z-index: 1;
+  }
+
   @media (max-width: 768px) {
     position: fixed;
-    top: 0;
+    top: 64px; // Below the main app navbar
     left: 0;
-    height: 100vh;
+    height: calc(100vh - 64px);
     z-index: 1000;
     transform: translateX(-100%);
 

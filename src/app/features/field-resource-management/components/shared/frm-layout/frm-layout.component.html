@@ -44,7 +44,7 @@
   <!-- Sidebar and Content -->
   <mat-drawer-container class="frm-layout__container" autosize>
     <!-- Navigation Drawer -->
-    <mat-drawer #drawer class="frm-layout__drawer" mode="side" opened>
+    <mat-drawer #drawer class="frm-layout__drawer" [mode]="drawerMode" [opened]="drawerOpened">
       <frm-nav-menu></frm-nav-menu>
     </mat-drawer>
 

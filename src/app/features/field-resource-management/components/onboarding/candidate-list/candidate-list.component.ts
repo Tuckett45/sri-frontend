@@ -112,7 +112,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
             <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
             <td>{{ candidate.workSite }}</td>
-            <td>{{ candidate.startDate }}</td>
+            <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
             <td class="actions-cell">
               <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
