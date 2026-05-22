@@ -502,16 +502,19 @@ export class PreliminaryPunchListService {
   }
 
   updateEntry(punchList: PreliminaryPunchList): Observable<any> {
-    // Validate market ownership for CMs
+    // Validate market ownership for CMs (regional CMs with market 'RG' can access all markets)
     if (this.authService.isCM() && !this.authService.isAdmin()) {
-      if (!this.roleBasedDataService.canAccessMarket(punchList['market'] || '')) {
-        const user = this.authService.getUser();
-        const userMarket = user?.market || 'your assigned market';
-        const punchListMarket = punchList['market'] || 'a different market';
+      const user = this.authService.getUser();
+      const userMarket = (user?.market || '').toUpperCase();
+      const isRegional = userMarket === 'RG';
+      
+      // Regional CMs can access all markets, non-regional CMs can only access their own
+      if (!isRegional && !this.roleBasedDataService.canAccessMarket(punchList['market'] || '')) {
+        const punchListMarket = punchList['market'] || punchList.state || 'a different market';
         return throwError(() => new Error(
           `You do not have permission to update this punch list. ` +
           `Your market is "${userMarket}" but this punch list belongs to "${punchListMarket}". ` +
-          `Only administrators or users assigned to that market can make changes.`
+          `Only administrators, regional users, or users assigned to that market can make changes.`
         ));
       }
     }
