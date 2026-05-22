@@ -264,7 +264,7 @@ import { Candidate } from '../../../models/onboarding.models';
 
             <div class="step-actions">
               <button mat-button matStepperPrevious>Back</button>
-              <button mat-raised-button color="primary" (click)="onSubmit()">{{ isEditMode ? 'Update' : 'Submit' }}</button>
+              <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="submitting">{{ isEditMode ? 'Update' : 'Submit' }}</button>
             </div>
           </form>
         </mat-step>
@@ -407,6 +407,7 @@ import { Candidate } from '../../../models/onboarding.models';
 export class AddCandidateModalComponent {
   vestSizes = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
   isEditMode = false;
+  submitting = false;
   resumeFile: File | null = null;
   headshotFile: File | null = null;
 
@@ -504,10 +505,14 @@ export class AddCandidateModalComponent {
   }
 
   onSubmit(): void {
+    if (this.submitting) return;
+
     if (this.basicInfoForm.invalid) {
       this.basicInfoForm.markAllAsTouched();
       return;
     }
+
+    this.submitting = true;
 
     const startDateValue = this.basicInfoForm.get('startDate')?.value;
     const startDate = startDateValue instanceof Date
