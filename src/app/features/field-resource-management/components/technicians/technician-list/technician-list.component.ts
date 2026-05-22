@@ -6,12 +6,14 @@ import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { Technician, TechnicianRole } from '../../../models/technician.model';
 import { TechnicianFilters } from '../../../models/dtos/filters.dto';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 import { selectTechnicianCurrentJobMap, selectTechnicianCrewMap } from '../../../state/technicians/technician.selectors';
 import { ExportService } from '../../../services/export.service';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { UserRole } from '../../../../../models/role.enum';
 
 @Component({
@@ -59,6 +61,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
+    private dialog: MatDialog,
     private exportService: ExportService
   ) {
     this.technicians$ = this.store.select(TechnicianSelectors.selectFilteredTechnicians);
@@ -301,6 +304,25 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       id: technician.id,
       technician: { isActive: !technician.isActive }
     }));
+  }
+
+  deleteTechnician(technician: Technician): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Delete Technician',
+        message: `Are you sure you want to delete technician "${this.getFullName(technician)}"? This action cannot be undone.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        variant: 'danger'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.store.dispatch(TechnicianActions.deleteTechnician({ id: technician.id }));
+        this.snackBar.open('Technician deleted successfully', 'Close', { duration: 3000 });
+      }
+    });
   }
   
   getFullName(technician: Technician): string {
