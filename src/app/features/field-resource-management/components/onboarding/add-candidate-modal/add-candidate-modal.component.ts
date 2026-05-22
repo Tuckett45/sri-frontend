@@ -20,6 +20,12 @@ import { Candidate } from '../../../models/onboarding.models';
               </mat-form-field>
 
               <mat-form-field appearance="outline">
+                <mat-label>Middle Name</mat-label>
+                <input matInput formControlName="middleName" required placeholder="Enter middle name or N/A" />
+                <mat-error *ngIf="basicInfoForm.get('middleName')?.hasError('required')">Middle name is required (use N/A if not applicable)</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
                 <mat-label>Last Name</mat-label>
                 <input matInput formControlName="lastName" required />
                 <mat-error *ngIf="basicInfoForm.get('lastName')?.hasError('required')">Last name is required</mat-error>
@@ -50,6 +56,19 @@ import { Candidate } from '../../../models/onboarding.models';
               </mat-form-field>
 
               <mat-form-field appearance="outline">
+                <mat-label>Home Address</mat-label>
+                <input matInput formControlName="homeAddress" required placeholder="Candidate's home address" />
+                <mat-error *ngIf="basicInfoForm.get('homeAddress')?.hasError('required')">Home address is required</mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Referred By</mat-label>
+                <input matInput formControlName="referredBy" placeholder="Referral source (optional)" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
                 <mat-label>Work Site</mat-label>
                 <input matInput formControlName="workSite" required />
                 <mat-error *ngIf="basicInfoForm.get('workSite')?.hasError('required')">Work site is required</mat-error>
@@ -68,9 +87,10 @@ import { Candidate } from '../../../models/onboarding.models';
               <mat-form-field appearance="outline">
                 <mat-label>Offer Status</mat-label>
                 <mat-select formControlName="offerStatus">
-                  <mat-option value="pre_offer">Pre Offer</mat-option>
-                  <mat-option value="offer">Offer</mat-option>
-                  <mat-option value="offer_acceptance">Offer Acceptance</mat-option>
+                  <mat-option value="needs_review">Needs Review</mat-option>
+                  <mat-option value="vetted_available">Vetted/Available</mat-option>
+                  <mat-option value="offer_extended">Offer Extended</mat-option>
+                  <mat-option value="offer_accepted_onboarding">Offer Accepted/Onboarding</mat-option>
                 </mat-select>
               </mat-form-field>
             </div>
@@ -78,6 +98,25 @@ import { Candidate } from '../../../models/onboarding.models';
             <div class="step-actions">
               <button mat-button mat-dialog-close>Cancel</button>
               <button mat-raised-button color="primary" matStepperNext>Next</button>
+            </div>
+
+            <!-- File Uploads Section -->
+            <div class="upload-section">
+              <h4>File Uploads</h4>
+              <div class="upload-row">
+                <div class="upload-field">
+                  <label>Resume (PDF, DOC, DOCX) *</label>
+                  <input type="file" accept=".pdf,.doc,.docx" (change)="onResumeSelected($event)" />
+                  <span class="file-info" *ngIf="resumeFile">{{ resumeFile.name }} ({{ formatFileSize(resumeFile.size) }})</span>
+                  <span class="upload-hint" *ngIf="!resumeFile && !isEditMode">Required — max 10MB</span>
+                </div>
+                <div class="upload-field">
+                  <label>Headshot (JPG, PNG)</label>
+                  <input type="file" accept=".jpg,.jpeg,.png" (change)="onHeadshotSelected($event)" />
+                  <span class="file-info" *ngIf="headshotFile">{{ headshotFile.name }} ({{ formatFileSize(headshotFile.size) }})</span>
+                  <span class="upload-hint" *ngIf="!headshotFile">Optional — max 5MB</span>
+                </div>
+              </div>
             </div>
           </form>
         </mat-step>
@@ -317,11 +356,59 @@ import { Candidate } from '../../../models/onboarding.models';
         grid-template-columns: 1fr;
       }
     }
+
+    .upload-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .upload-section h4 {
+      margin: 0 0 12px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #424242;
+    }
+
+    .upload-row {
+      display: flex;
+      gap: 24px;
+    }
+
+    .upload-field {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .upload-field label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #424242;
+    }
+
+    .upload-field input[type="file"] {
+      font-size: 0.8125rem;
+    }
+
+    .file-info {
+      font-size: 0.75rem;
+      color: #1976d2;
+      font-weight: 500;
+    }
+
+    .upload-hint {
+      font-size: 0.75rem;
+      color: #9e9e9e;
+    }
   `]
 })
 export class AddCandidateModalComponent {
   vestSizes = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
   isEditMode = false;
+  resumeFile: File | null = null;
+  headshotFile: File | null = null;
 
   basicInfoForm: FormGroup;
   coreQualificationsForm: FormGroup;
@@ -347,13 +434,16 @@ export class AddCandidateModalComponent {
 
     this.basicInfoForm = this.fb.group({
       firstName: [firstName || '', Validators.required],
+      middleName: [candidate?.middleName || '', Validators.required],
       lastName: [lastName || '', Validators.required],
       email: [candidate?.techEmail || '', [Validators.required, Validators.email]],
       phone: [candidate?.techPhone || '', Validators.required],
       vestSize: [candidate?.vestSize || 'L'],
+      homeAddress: [candidate?.homeAddress || '', Validators.required],
+      referredBy: [candidate?.referredBy || ''],
       workSite: [candidate?.workSite || '', Validators.required],
       startDate: [candidate?.startDate || '', Validators.required],
-      offerStatus: [candidate?.offerStatus || 'pre_offer']
+      offerStatus: [candidate?.offerStatus || 'needs_review']
     });
 
     this.coreQualificationsForm = this.fb.group({
@@ -393,6 +483,26 @@ export class AddCandidateModalComponent {
     });
   }
 
+  onResumeSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.resumeFile = input.files[0];
+    }
+  }
+
+  onHeadshotSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.headshotFile = input.files[0];
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
   onSubmit(): void {
     if (this.basicInfoForm.invalid) {
       this.basicInfoForm.markAllAsTouched();
@@ -412,7 +522,11 @@ export class AddCandidateModalComponent {
       coreQualifications: this.coreQualificationsForm.value,
       badgesAccess: this.badgesAccessForm.value,
       trainingCerts: this.trainingCertsForm.value,
-      equipmentKits: this.equipmentKitsForm.value
+      equipmentKits: this.equipmentKitsForm.value,
+      files: {
+        resume: this.resumeFile,
+        headshot: this.headshotFile
+      }
     };
 
     this.dialogRef.close(result);

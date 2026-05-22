@@ -32,6 +32,8 @@
     width: 280px;
     border-right: 1px solid rgba(255, 255, 255, 0.12);
     background-color: #1e1e1e;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   &__content {

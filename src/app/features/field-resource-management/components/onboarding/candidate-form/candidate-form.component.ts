@@ -13,9 +13,10 @@ import {
 const VEST_SIZES: VestSize[] = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
-  { value: 'pre_offer', label: 'Pre Offer' },
-  { value: 'offer', label: 'Offer' },
-  { value: 'offer_acceptance', label: 'Offer Acceptance' },
+  { value: 'needs_review', label: 'Needs Review' },
+  { value: 'vetted_available', label: 'Vetted/Available' },
+  { value: 'offer_extended', label: 'Offer Extended' },
+  { value: 'offer_accepted_onboarding', label: 'Offer Accepted/Onboarding' },
 ];
 
 @Component({
@@ -57,6 +58,19 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
           <span class="field-error"
                 *ngIf="showError('techName')">
             Tech Name is required.
+          </span>
+        </div>
+
+        <!-- Middle Name -->
+        <div class="form-field">
+          <label for="middleName">Middle Name *</label>
+          <input id="middleName"
+                 formControlName="middleName"
+                 placeholder="Enter middle name or N/A"
+                 (blur)="markTouched('middleName')" />
+          <span class="field-error"
+                *ngIf="showError('middleName')">
+            Middle Name is required (use N/A if not applicable).
           </span>
         </div>
 
@@ -123,6 +137,27 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
                 *ngIf="showError('workSite')">
             Work Site is required.
           </span>
+        </div>
+
+        <!-- Home Address -->
+        <div class="form-field">
+          <label for="homeAddress">Home Address *</label>
+          <input id="homeAddress"
+                 formControlName="homeAddress"
+                 placeholder="Enter candidate's home address"
+                 (blur)="markTouched('homeAddress')" />
+          <span class="field-error"
+                *ngIf="showError('homeAddress')">
+            Home Address is required.
+          </span>
+        </div>
+
+        <!-- Referred By -->
+        <div class="form-field">
+          <label for="referredBy">Referred By</label>
+          <input id="referredBy"
+                 formControlName="referredBy"
+                 placeholder="Referral source (optional)" />
         </div>
 
         <!-- Start Date -->
@@ -396,7 +431,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       this.loadCandidate(this.candidateId);
     } else {
       // Create mode defaults
-      this.candidateForm.patchValue({ offerStatus: 'pre_offer' });
+      this.candidateForm.patchValue({ offerStatus: 'needs_review' });
     }
   }
 
@@ -440,10 +475,13 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
   private buildForm(): void {
     this.candidateForm = this.fb.group({
       techName: ['', Validators.required],
+      middleName: ['', Validators.required],
       techEmail: ['', [Validators.required, Validators.email]],
       techPhone: ['', [Validators.required, CandidateFormComponent.phoneValidator]],
       vestSize: ['', Validators.required],
+      homeAddress: ['', Validators.required],
       workSite: ['', Validators.required],
+      referredBy: [''],
       startDate: ['', Validators.required],
       offerStatus: ['', Validators.required],
       drugTestComplete: [false],
@@ -490,10 +528,13 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
   private populateForm(candidate: Candidate): void {
     this.candidateForm.patchValue({
       techName: candidate.techName,
+      middleName: candidate.middleName || '',
       techEmail: candidate.techEmail,
       techPhone: candidate.techPhone,
       vestSize: candidate.vestSize,
+      homeAddress: candidate.homeAddress || '',
       workSite: candidate.workSite,
+      referredBy: candidate.referredBy || '',
       startDate: candidate.startDate,
       offerStatus: candidate.offerStatus,
       drugTestComplete: candidate.drugTestComplete,
@@ -517,10 +558,13 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
     const formValue = this.candidateForm.value;
     const payload = {
       techName: formValue.techName,
+      middleName: formValue.middleName,
       techEmail: formValue.techEmail,
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
+      homeAddress: formValue.homeAddress,
       workSite: formValue.workSite,
+      referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
     };
@@ -545,10 +589,13 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
     const formValue = this.candidateForm.value;
     const payload = {
       techName: formValue.techName,
+      middleName: formValue.middleName,
       techEmail: formValue.techEmail,
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
+      homeAddress: formValue.homeAddress,
       workSite: formValue.workSite,
+      referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
       drugTestComplete: formValue.drugTestComplete,

@@ -7,9 +7,10 @@ import { OnboardingInfoModalComponent } from '../onboarding-info-modal/onboardin
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
 
 const STATUS_LABELS: Record<OfferStatus, string> = {
-  pre_offer: 'Pre Offer',
-  offer: 'Offer',
-  offer_acceptance: 'Offer Acceptance',
+  needs_review: 'Needs Review',
+  vetted_available: 'Vetted/Available',
+  offer_extended: 'Offer Extended',
+  offer_accepted_onboarding: 'Offer Accepted/Onboarding',
 };
 
 @Component({
@@ -28,12 +29,13 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
           <button class="btn-back" (click)="goBack()">&larr; Back to Candidates</button>
           <div class="header-actions">
             <button class="btn-edit" (click)="editCandidate()">Edit</button>
-            <button class="btn-advance" *ngIf="candidate.offerStatus !== 'offer_acceptance'" (click)="advanceStatus()">
+            <button class="btn-advance" *ngIf="candidate.offerStatus !== 'offer_accepted_onboarding'" (click)="advanceStatus()">
               Advance Status
             </button>
             <button class="btn-convert" *ngIf="canConvert(candidate)" (click)="convertToTechnician()" [disabled]="isConverting">
               {{ isConverting ? 'Converting...' : 'Convert to Technician' }}
             </button>
+            <button class="btn-delete" (click)="deleteCandidate()">Delete</button>
           </div>
         </div>
 
@@ -179,6 +181,19 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
     .btn-convert:hover:not(:disabled) { background: #6a1b9a; }
     .btn-convert:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    .btn-delete {
+      padding: 0.5rem 1.25rem;
+      background: #c62828;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-delete:hover { background: #b71c1c; }
+
     .detail-card {
       background: #fff;
       border: 1px solid #e0e0e0;
@@ -210,9 +225,10 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
       text-transform: uppercase;
     }
 
-    .status-chip.status-pre-offer { background: #e3f2fd; color: #1565c0; }
-    .status-chip.status-offer { background: #fff3e0; color: #e65100; }
-    .status-chip.status-offer-acceptance { background: #e8f5e9; color: #2e7d32; }
+    .status-chip.status-needs-review { background: #e3f2fd; color: #1565c0; }
+    .status-chip.status-vetted-available { background: #e8f5e9; color: #2e7d32; }
+    .status-chip.status-offer-extended { background: #fff3e0; color: #e65100; }
+    .status-chip.status-offer-accepted { background: #f3e5f5; color: #6a1b9a; }
 
     .detail-grid {
       display: grid;
@@ -374,12 +390,15 @@ export class CandidateDetailComponent implements OnInit {
       if (result) {
         const payload = {
           techName: `${result.basicInfo.firstName} ${result.basicInfo.lastName}`,
+          middleName: result.basicInfo.middleName,
           techEmail: result.basicInfo.email,
           techPhone: result.basicInfo.phone,
           vestSize: result.basicInfo.vestSize,
           workSite: result.basicInfo.workSite,
+          homeAddress: result.basicInfo.homeAddress,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
+          referredBy: result.basicInfo.referredBy || undefined,
           drugTestComplete: result.coreQualifications.backgroundDrugScreen,
           oshaCertified: result.coreQualifications.oshaCertification,
           scissorLiftCertified: result.coreQualifications.liftCertification
@@ -395,8 +414,9 @@ export class CandidateDetailComponent implements OnInit {
   advanceStatus(): void {
     if (!this.candidate) return;
     const nextStatus: Record<string, OfferStatus> = {
-      'pre_offer': 'offer',
-      'offer': 'offer_acceptance'
+      'needs_review': 'vetted_available',
+      'vetted_available': 'offer_extended',
+      'offer_extended': 'offer_accepted_onboarding'
     };
     const next = nextStatus[this.candidate.offerStatus];
     if (next) {
@@ -413,15 +433,16 @@ export class CandidateDetailComponent implements OnInit {
 
   getStatusClass(status: OfferStatus): string {
     switch (status) {
-      case 'pre_offer': return 'status-pre-offer';
-      case 'offer': return 'status-offer';
-      case 'offer_acceptance': return 'status-offer-acceptance';
+      case 'needs_review': return 'status-needs-review';
+      case 'vetted_available': return 'status-vetted-available';
+      case 'offer_extended': return 'status-offer-extended';
+      case 'offer_accepted_onboarding': return 'status-offer-accepted';
       default: return '';
     }
   }
 
   canConvert(candidate: Candidate): boolean {
-    return candidate.offerStatus === 'offer_acceptance' &&
+    return candidate.offerStatus === 'offer_accepted_onboarding' &&
            candidate.drugTestComplete &&
            candidate.oshaCertified;
   }
@@ -448,14 +469,32 @@ export class CandidateDetailComponent implements OnInit {
     });
   }
 
+  deleteCandidate(): void {
+    if (!this.candidate) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to remove ${this.candidate.techName}? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    this.onboardingService.deleteCandidateById(this.candidateId).subscribe({
+      next: () => {
+        this.goBack();
+      },
+      error: () => {
+        alert('Failed to delete candidate. Please try again.');
+      }
+    });
+  }
+
   private getDummyCandidate(): Candidate | null {
     const dummies: Record<string, Candidate> = {
-      'cand-001': { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', startDate: '2026-06-01', offerStatus: 'offer_acceptance', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-002': { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', startDate: '2026-06-10', offerStatus: 'offer', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-003': { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', startDate: '2026-05-20', offerStatus: 'offer_acceptance', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-004': { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', startDate: '2026-07-01', offerStatus: 'pre_offer', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-005': { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', startDate: '2026-06-15', offerStatus: 'offer', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-006': { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', startDate: '2026-06-20', offerStatus: 'pre_offer', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() }
+      'cand-001': { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', startDate: '2026-06-01', offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-002': { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', startDate: '2026-06-10', offerStatus: 'offer_extended', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-003': { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', startDate: '2026-05-20', offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-004': { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', startDate: '2026-07-01', offerStatus: 'needs_review', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-005': { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', startDate: '2026-06-15', offerStatus: 'vetted_available', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-006': { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', startDate: '2026-06-20', offerStatus: 'needs_review', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() }
     };
     return dummies[this.candidateId] || null;
   }
