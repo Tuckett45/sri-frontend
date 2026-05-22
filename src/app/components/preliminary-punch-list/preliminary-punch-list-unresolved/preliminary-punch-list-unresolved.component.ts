@@ -325,11 +325,47 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
           this.toastr.success('Punch List saved');
           this.punchListService.triggerRefresh();
         },
-        error: () => {
-          this.toastr.error('Error saving Punch List.');
+        error: (err: any) => {
+          const message = this.getPunchListSaveErrorMessage(err);
+          this.toastr.error(message, 'Punch List cannot be saved', {
+            timeOut: 10000,
+            closeButton: true
+          });
         }
       });
     });
+  }
+
+  private getPunchListSaveErrorMessage(err: any): string {
+    const raw = typeof err === 'string' ? err : (err?.error || err?.message || '');
+    const errorText = typeof raw === 'string' ? raw : (raw?.message || raw?.title || JSON.stringify(raw));
+
+    if (errorText.includes('already exists')) {
+      return 'This punch list was already saved. Please close this form and refresh the list to see it.';
+    }
+    if (errorText.includes('permission') || errorText.includes('market')) {
+      return 'You do not have permission to save punch lists for this market. You can only edit punch lists in your assigned market.';
+    }
+    if (errorText.includes('Invalid punch list data')) {
+      return 'The punch list data is incomplete. Please ensure all required fields (Segment ID, Vendor, Address, City, State) are filled in and try again.';
+    }
+    if (errorText.includes('truncat') || errorText.includes('String or binary data')) {
+      return 'One or more fields exceed the maximum allowed length. Try shortening the Additional Concerns or Street Address text.';
+    }
+    if (errorText.includes('timeout') || errorText.includes('Timeout')) {
+      return 'The server took too long to respond. Please check your internet connection and try again.';
+    }
+    if (errorText.includes('0 Unknown') || errorText.includes('status: 0')) {
+      return 'Unable to reach the server. Please check your internet connection and try again.';
+    }
+    if (errorText.includes('404') || errorText.includes('Not Found')) {
+      return 'This punch list no longer exists. It may have been deleted by another user. Please refresh the page.';
+    }
+    if (errorText.includes('409') || errorText.includes('Conflict')) {
+      return 'This punch list was already saved. Please close this form and refresh the list.';
+    }
+
+    return 'Unable to save the punch list. Please try again. If the problem persists, contact your administrator.';
   }
 
   refreshPunchLists(): void {
