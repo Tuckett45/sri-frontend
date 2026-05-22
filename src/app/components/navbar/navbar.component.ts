@@ -35,11 +35,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       route: '/overview',
       shouldShow: () => this.authService.isClient() || this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM()
     },
-    {
-      label: 'Phase Dashboard',
-      route: '/admin-dashboard/overview',
-      shouldShow: () => this.authService.isAdmin()
-    },
+    // {
+    //   label: 'Phase Dashboard',
+    //   route: '/admin-dashboard/overview',
+    //   shouldShow: () => this.authService.isAdmin()
+    // },
     {
       label: 'Deployments',
       route: '/deployments',
