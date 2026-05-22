@@ -71,7 +71,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     //   shouldShow: () => this.authService.isAdmin() || this.authService.isClient()
     // },
     {
-      label: 'Construction',
+      label: 'Hyperscale Construction',
       route: '/construction',
       shouldShow: () => true
     },
