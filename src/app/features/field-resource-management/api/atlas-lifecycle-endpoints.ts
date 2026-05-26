@@ -16,9 +16,11 @@ import { environment } from '../../../../environments/environments';
 
 /**
  * SRI Project Lifecycle API base URL
- * This is the project lifecycle backend that runs alongside the main atlas-api
+ * This is a separate APIM resource from the Atlas Core API.
+ * If your APIM requires a different subscription key for this resource,
+ * configure it in the AtlasAuthInterceptor or add a dedicated interceptor.
  */
-export const LIFECYCLE_API_BASE = environment.atlasApiUrl.replace('/v1', '/api');
+export const LIFECYCLE_API_BASE = environment.lifecycleApiUrl;
 
 /**
  * Atlas Core API base URL (v1 versioned endpoints)

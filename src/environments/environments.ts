@@ -3,6 +3,8 @@ export const environment = {
   apiUrl: 'https://sri-api.azurewebsites.net/api',
   // ATLAS platform backend (governance & lifecycle API)
   atlasApiUrl: 'https://atlas-api-fqf5e6dfgdebepan.centralus-01.azurewebsites.net/v1',
+  // SRI Project Lifecycle API (separate APIM resource on same host)
+  lifecycleApiUrl: 'https://atlas-api-fqf5e6dfgdebepan.centralus-01.azurewebsites.net/api',
   // API subscription key and VAPID key are now fetched securely at runtime
   // from the backend configuration service for security
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
@@ -17,6 +19,8 @@ export const staging_environment = {
   apiUrl: 'https://sri-api-staging-b0amh5fpbjbtchf5.centralus-01.azurewebsites.net/v1',
   // ATLAS platform backend (staging)
   atlasApiUrl: 'https://atlas-api-staging.azurewebsites.net/v1',
+  // SRI Project Lifecycle API (staging)
+  lifecycleApiUrl: 'https://atlas-api-staging.azurewebsites.net/api',
   // API subscription key and VAPID key are now fetched securely at runtime
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
@@ -30,6 +34,8 @@ export const local_environment = {
   apiUrl: 'https://localhost:44350/v1',
   // ATLAS platform backend (local)
   atlasApiUrl: 'https://localhost:7028',
+  // SRI Project Lifecycle API (local — runs on separate port)
+  lifecycleApiUrl: 'https://localhost:7029/api',
   // API subscription key and VAPID key are now fetched securely at runtime
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',

@@ -109,18 +109,64 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
       return true;
     }
 
+    // Check if URL targets the Atlas Platform API (atlas-api or sri-project-lifecycle-api)
+    // These are separate APIM resources but share the same atlas-api host
+    const atlasApiHost = this.getAtlasApiHost();
+    if (atlasApiHost && url.includes(atlasApiHost)) {
+      return true;
+    }
+
     // Check if URL matches any ATLAS endpoint patterns
     const atlasPatterns = [
       '/v1/deployments',
       '/v1/ai-analysis',
       '/v1/approvals',
       '/v1/exceptions',
+      '/v1/time-entries',
+      '/v1/payroll',
+      '/v1/jobs',
+      '/v1/technicians',
+      '/v1/crews',
+      '/v1/pto-requests',
+      '/v1/expenses',
       '/api/agents',
       '/v1/query-builder',
-      '/hubs/atlas'
+      '/hubs/atlas',
+      // SRI Project Lifecycle API endpoints
+      '/api/Projects',
+      '/api/Reports',
+      '/api/Integrations',
+      '/api/projects'
     ];
 
     return atlasPatterns.some(pattern => url.includes(pattern));
+  }
+
+  /**
+   * Extract the Atlas API host from environment configuration
+   * to match requests regardless of path.
+   */
+  private getAtlasApiHost(): string | null {
+    try {
+      // Import would create circular dependency, so we read from environment directly
+      const atlasUrl = (window as any).__ATLAS_API_URL__ || this.getAtlasUrlFromConfig();
+      if (!atlasUrl) return null;
+      const url = new URL(atlasUrl);
+      return url.host;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get the Atlas API URL from the injected config service
+   */
+  private getAtlasUrlFromConfig(): string | null {
+    const baseUrl = this.configService.getBaseUrl();
+    if (baseUrl && baseUrl.startsWith('http')) {
+      return baseUrl;
+    }
+    return null;
   }
 
   /**
