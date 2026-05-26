@@ -1,0 +1,256 @@
+.performance-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #144f80;
+      }
+    }
+  }
+
+  mat-card-content {
+    .widget-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .widget-error {
+      text-align: center;
+      padding: 1.5rem;
+      color: #d32f2f;
+
+      p {
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+}
+
+// Health banner
+.health-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 13px;
+  font-weight: 500;
+
+  &.health-healthy {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.health-at-risk {
+    background-color: #fff3e0;
+    color: #e65100;
+  }
+
+  &.health-critical {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+
+  .health-text {
+    flex: 1;
+  }
+}
+
+// Metrics grid (project-level)
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f5f7fa;
+  }
+
+  &.metric-healthy {
+    border-color: #4caf50;
+    .metric-value { color: #2e7d32; }
+  }
+
+  &.metric-warning {
+    border-color: #ff9800;
+    .metric-value { color: #e65100; }
+  }
+
+  &.metric-critical {
+    border-color: #f44336;
+    .metric-value { color: #c62828; }
+  }
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #144f80;
+  line-height: 1.2;
+}
+
+.metric-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 4px;
+}
+
+.metric-hint {
+  font-size: 11px;
+  color: #999;
+}
+
+// Bottlenecks
+.bottlenecks-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #d32f2f;
+    margin: 0 0 8px 0;
+  }
+}
+
+.bottleneck-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: #555;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #ff9800;
+  }
+}
+
+// Portfolio grid
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.portfolio-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+
+  &.stat-success .stat-value { color: #2e7d32; }
+  &.stat-danger .stat-value { color: #c62828; }
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #144f80;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+// Phase breakdown
+.phase-breakdown {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 10px 0;
+  }
+}
+
+.phase-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.phase-bar-item {
+  display: grid;
+  grid-template-columns: 100px 1fr 30px;
+  align-items: center;
+  gap: 8px;
+}
+
+.phase-name {
+  font-size: 12px;
+  color: #555;
+  text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phase-bar {
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.phase-bar-fill {
+  height: 100%;
+  background-color: #144f80;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.phase-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .metrics-grid,
+  .portfolio-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .metric-value,
+  .stat-value {
+    font-size: 22px;
+  }
+}

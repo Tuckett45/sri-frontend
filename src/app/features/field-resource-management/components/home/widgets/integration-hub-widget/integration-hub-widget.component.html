@@ -1,0 +1,53 @@
+<mat-card class="integration-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>hub</mat-icon>
+      Integration Hub
+    </mat-card-title>
+    <!-- Health indicator -->
+    <div class="health-dot" *ngIf="healthStatus"
+         [ngClass]="getStatusClass(healthStatus.overallStatus)"
+         [matTooltip]="'System: ' + healthStatus.overallStatus">
+    </div>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Action buttons grid -->
+    <div class="actions-grid">
+      <button
+        *ngFor="let action of actions"
+        mat-stroked-button
+        class="action-btn"
+        [disabled]="action.loading || !projectId"
+        (click)="executeAction(action)">
+        <div class="action-content">
+          <mat-icon [style.color]="action.color">{{ action.icon }}</mat-icon>
+          <span class="action-label">{{ action.label }}</span>
+          <span class="action-desc">{{ action.description }}</span>
+        </div>
+        <mat-spinner *ngIf="action.loading" diameter="20" class="action-spinner"></mat-spinner>
+      </button>
+    </div>
+
+    <!-- Integration health details -->
+    <div *ngIf="healthStatus?.integrations" class="health-details">
+      <h4>System Status</h4>
+      <div class="health-list">
+        <div *ngFor="let integration of healthStatus.integrations" class="health-item">
+          <mat-icon [ngClass]="getStatusClass(integration.status)">
+            {{ getStatusIcon(integration.status) }}
+          </mat-icon>
+          <span class="health-name">{{ integration.name }}</span>
+          <span class="health-response" *ngIf="integration.responseTime">
+            {{ integration.responseTime }}ms
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- No project selected -->
+    <div *ngIf="!projectId" class="no-project">
+      <mat-icon>info</mat-icon>
+      <span>Select a project to use integrations</span>
+    </div>
+  </mat-card-content>
+</mat-card>

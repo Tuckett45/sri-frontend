@@ -1,0 +1,78 @@
+<mat-card class="financial-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>account_balance</mat-icon>
+      Project Financials
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>{{ error }}</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Data state -->
+    <ng-container *ngIf="!loading && !error && report">
+      <!-- Budget vs Actual bar -->
+      <div class="budget-overview">
+        <div class="budget-header">
+          <span class="budget-label">Budget Utilization</span>
+          <span class="budget-pct" [ngClass]="utilizationClass">{{ formatPercentage(budgetUtilization) }}</span>
+        </div>
+        <div class="budget-bar-container">
+          <div class="budget-bar-fill" [ngClass]="utilizationClass"
+               [style.width.%]="budgetUtilization > 100 ? 100 : budgetUtilization"></div>
+          <div *ngIf="budgetUtilization > 100" class="budget-bar-overflow"
+               [style.width.%]="(budgetUtilization - 100) > 50 ? 50 : (budgetUtilization - 100)"></div>
+        </div>
+        <div class="budget-amounts">
+          <span>{{ formatCurrency(report.actualCost) }} spent</span>
+          <span>of {{ formatCurrency(report.budgetAmount) }}</span>
+        </div>
+      </div>
+
+      <!-- Key financial metrics -->
+      <div class="financial-metrics">
+        <div class="fin-metric">
+          <span class="fin-metric-label">Variance</span>
+          <span class="fin-metric-value" [ngClass]="varianceClass">
+            {{ report.budgetVariance >= 0 ? '+' : '' }}{{ formatCurrency(report.budgetVariance) }}
+          </span>
+        </div>
+        <div class="fin-metric">
+          <span class="fin-metric-label">EAC</span>
+          <span class="fin-metric-value">{{ formatCurrency(report.estimateAtCompletion) }}</span>
+        </div>
+        <div class="fin-metric">
+          <span class="fin-metric-label">ETC</span>
+          <span class="fin-metric-value">{{ formatCurrency(report.estimateToComplete) }}</span>
+        </div>
+        <div class="fin-metric">
+          <span class="fin-metric-label">Profit Margin</span>
+          <span class="fin-metric-value" [ngClass]="report.profitMargin >= 0 ? 'variance-under' : 'variance-over'">
+            {{ formatPercentage(report.profitMargin) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Top expense categories -->
+      <div class="category-breakdown" *ngIf="topCategories.length > 0">
+        <h4>Top Categories</h4>
+        <div *ngFor="let cat of topCategories" class="category-row">
+          <span class="category-name">{{ cat.name }}</span>
+          <span class="category-amount">{{ formatCurrency(cat.amount) }}</span>
+          <div class="category-bar">
+            <div class="category-bar-fill"
+                 [style.width.%]="(cat.amount / report.actualCost) * 100"></div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

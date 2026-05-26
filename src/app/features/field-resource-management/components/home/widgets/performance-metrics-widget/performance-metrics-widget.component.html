@@ -1,0 +1,99 @@
+<mat-card class="performance-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>speed</mat-icon>
+      <span *ngIf="!projectId">Portfolio Performance</span>
+      <span *ngIf="projectId">Project Performance</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- Loading state -->
+    <div *ngIf="loading" class="widget-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="widget-error">
+      <p>{{ error }}</p>
+      <button mat-button color="primary" (click)="retry()">Retry</button>
+    </div>
+
+    <!-- Project-level metrics -->
+    <ng-container *ngIf="!loading && !error && projectMetrics">
+      <!-- Health indicator -->
+      <div class="health-banner" [ngClass]="healthClass">
+        <mat-icon>{{ healthIcon }}</mat-icon>
+        <span class="health-text">{{ projectHealth?.summary }}</span>
+      </div>
+
+      <!-- SPI / CPI gauges -->
+      <div class="metrics-grid">
+        <div class="metric-item" [ngClass]="spiClass">
+          <span class="metric-value">{{ formatIndex(projectMetrics.schedulePerformanceIndex) }}</span>
+          <span class="metric-label">SPI</span>
+          <span class="metric-hint">Schedule Performance</span>
+        </div>
+        <div class="metric-item" [ngClass]="cpiClass">
+          <span class="metric-value">{{ formatIndex(projectMetrics.costPerformanceIndex) }}</span>
+          <span class="metric-label">CPI</span>
+          <span class="metric-hint">Cost Performance</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-value">{{ formatPercentage(projectMetrics.onTimeDeliveryRate) }}</span>
+          <span class="metric-label">On-Time</span>
+          <span class="metric-hint">Delivery Rate</span>
+        </div>
+        <div class="metric-item" [ngClass]="projectMetrics.budgetVariancePercentage > 0 ? 'metric-critical' : 'metric-healthy'">
+          <span class="metric-value">{{ formatPercentage(projectMetrics.budgetVariancePercentage) }}</span>
+          <span class="metric-label">Budget Var.</span>
+          <span class="metric-hint">Variance %</span>
+        </div>
+      </div>
+
+      <!-- Bottlenecks -->
+      <div *ngIf="projectMetrics.bottlenecks?.length > 0" class="bottlenecks-section">
+        <h4>Bottlenecks Identified</h4>
+        <div *ngFor="let bottleneck of projectMetrics.bottlenecks" class="bottleneck-item">
+          <mat-icon>report_problem</mat-icon>
+          <span>{{ bottleneck }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Portfolio-level metrics -->
+    <ng-container *ngIf="!loading && !error && portfolioStatus">
+      <div class="portfolio-grid">
+        <div class="portfolio-stat">
+          <span class="stat-value">{{ portfolioStatus.totalProjects }}</span>
+          <span class="stat-label">Active Projects</span>
+        </div>
+        <div class="portfolio-stat stat-success">
+          <span class="stat-value">{{ portfolioStatus.projectsOnSchedule }}</span>
+          <span class="stat-label">On Schedule</span>
+        </div>
+        <div class="portfolio-stat stat-danger">
+          <span class="stat-value">{{ portfolioStatus.projectsDelayed }}</span>
+          <span class="stat-label">Delayed</span>
+        </div>
+        <div class="portfolio-stat">
+          <span class="stat-value">{{ formatPercentage(100 - (portfolioStatus.averageBudgetVariance / (portfolioStatus.totalBudget || 1)) * 100) }}</span>
+          <span class="stat-label">Budget Accuracy</span>
+        </div>
+      </div>
+
+      <!-- Phase breakdown -->
+      <div class="phase-breakdown" *ngIf="portfolioStatus.projectsByPhase">
+        <h4>By Phase</h4>
+        <div class="phase-bars">
+          <div *ngFor="let entry of portfolioStatus.projectsByPhase | keyvalue" class="phase-bar-item">
+            <span class="phase-name">{{ entry.key }}</span>
+            <div class="phase-bar">
+              <div class="phase-bar-fill" [style.width.%]="(entry.value / portfolioStatus.totalProjects) * 100"></div>
+            </div>
+            <span class="phase-count">{{ entry.value }}</span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </mat-card-content>
+</mat-card>
