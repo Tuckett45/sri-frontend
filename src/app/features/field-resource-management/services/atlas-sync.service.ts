@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
@@ -13,6 +13,8 @@ import {
 } from '../../../models/time-payroll.model';
 import { ValidationResult } from '../validators/payroll-validators';
 import { TIMECARD_ENDPOINTS } from '../api/api-endpoints';
+import { ATLAS_LABOR_ENDPOINTS } from '../api/atlas-lifecycle-endpoints';
+import { LaborSummary } from '../models/atlas-lifecycle.models';
 import {
   serializeTimeEntry,
   validateAtlasPayload as validatePayload,
@@ -29,11 +31,19 @@ import { AuthService } from '../../../services/auth.service';
 /**
  * Atlas Sync Service
  *
- * Handles reliable serialization and synchronization of time entries
- * with the ATLAS backend API. Delegates pure serialization and
- * validation logic to the AtlasPayloadSerializer utility functions,
- * and manages HTTP communication, error handling, retry queuing
- * (via NgRx), and audit logging.
+ * Handles bidirectional synchronization with the ATLAS backend API:
+ *
+ * PUSH (existing): Serializes and syncs time entries TO Atlas.
+ * PULL (new): Retrieves computed labor summaries, cost aggregations,
+ *   and variance data FROM Atlas back into FRM budget views.
+ *
+ * Push operations delegate pure serialization and validation logic
+ * to the AtlasPayloadSerializer utility functions, and manage HTTP
+ * communication, error handling, retry queuing (via NgRx), and audit logging.
+ *
+ * Pull operations consume the Atlas Core API's labor-summary and
+ * time-entries endpoints to retrieve computed data that informs
+ * budget tracking, variance analysis, and resource planning.
  *
  * Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7
  */
@@ -295,5 +305,86 @@ export class AtlasSyncService {
       console.error(`AtlasSyncService [${operation}] error:`, message, error);
       return throwError(() => new Error(message));
     };
+  }
+
+  // ─── PULL Operations (Bidirectional Sync) ─────────────────────────────────
+
+  /**
+   * Get computed labor summary for a job from the Atlas Core API.
+   *
+   * Returns total hours worked, mileage, technician count, and variance
+   * against estimated hours. This data is computed server-side from all
+   * time entries for the job and provides authoritative cost/effort data
+   * that should inform FRM budget views.
+   *
+   * Backend: GET /v1/time-entries/labor-summary/:jobId
+   */
+  getLaborSummary(jobId: string): Observable<LaborSummary> {
+    return this.http.get<any>(
+      ATLAS_LABOR_ENDPOINTS.getLaborSummary(jobId)
+    ).pipe(
+      map(response => ({
+        jobId: response.jobId || response.JobId,
+        totalHours: response.totalHours ?? response.TotalHours ?? 0,
+        totalMileage: response.totalMileage ?? response.TotalMileage ?? 0,
+        technicianCount: response.technicianCount ?? response.TechnicianCount ?? 0,
+        estimatedHours: response.estimatedHours ?? response.EstimatedHours ?? 0,
+        variance: response.variance ?? response.Variance ?? 0
+      })),
+      catchError(this.handleError('getLaborSummary'))
+    );
+  }
+
+  /**
+   * Get time entries for a specific job from Atlas Core API.
+   * Useful for detailed reconciliation and audit.
+   *
+   * Backend: GET /v1/time-entries?jobId=:jobId
+   */
+  getTimeEntriesForJob(jobId: string, startDate?: Date, endDate?: Date): Observable<any[]> {
+    let params = new HttpParams().set('jobId', jobId);
+    if (startDate) params = params.set('startDate', startDate.toISOString());
+    if (endDate) params = params.set('endDate', endDate.toISOString());
+
+    return this.http.get<any>(
+      ATLAS_LABOR_ENDPOINTS.getTimeEntries(),
+      { params }
+    ).pipe(
+      map(response => this.extractArray(response)),
+      catchError(this.handleError('getTimeEntriesForJob'))
+    );
+  }
+
+  /**
+   * Get labor summary and compare against local budget data.
+   * Returns the variance between Atlas-computed hours and budgeted hours.
+   *
+   * This enables the FRM budget view to display real variance calculated
+   * from actual Atlas time entry data rather than locally-estimated values.
+   */
+  getBudgetVarianceFromAtlas(jobId: string, budgetedHours: number): Observable<{
+    jobId: string;
+    budgetedHours: number;
+    actualHours: number;
+    variance: number;
+    variancePercentage: number;
+    isOverBudget: boolean;
+  }> {
+    return this.getLaborSummary(jobId).pipe(
+      map(summary => {
+        const variance = budgetedHours - summary.totalHours;
+        const variancePercentage = budgetedHours > 0
+          ? (variance / budgetedHours) * 100
+          : 0;
+        return {
+          jobId,
+          budgetedHours,
+          actualHours: summary.totalHours,
+          variance,
+          variancePercentage,
+          isOverBudget: summary.totalHours > budgetedHours
+        };
+      })
+    );
   }
 }

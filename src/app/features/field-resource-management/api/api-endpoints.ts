@@ -272,3 +272,21 @@ export const REPORTING_ENDPOINTS = {
   /** GET /api/reports/export/:reportType - Export report */
   exportReport: (reportType: string) => `${API_BASE_URL}/reports/export/${reportType}`,
 } as const;
+
+
+
+/**
+ * Re-export Atlas Lifecycle endpoints for convenience.
+ * These provide access to project lifecycle management, cost management,
+ * performance metrics, and integration hub capabilities from the
+ * SRI Project Lifecycle API (atlas-platform).
+ */
+export {
+  PROJECT_LIFECYCLE_ENDPOINTS,
+  ACTIVITY_ENDPOINTS,
+  LIFECYCLE_REPORTS_ENDPOINTS,
+  INTEGRATION_HUB_ENDPOINTS,
+  ATLAS_LABOR_ENDPOINTS,
+  LIFECYCLE_API_BASE,
+  ATLAS_CORE_API_BASE
+} from './atlas-lifecycle-endpoints';
