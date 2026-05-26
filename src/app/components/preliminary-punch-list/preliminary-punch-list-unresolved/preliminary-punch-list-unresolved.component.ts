@@ -343,7 +343,7 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
     if (errorText.includes('already exists')) {
       return 'This punch list was already saved. Please close this form and refresh the list to see it.';
     }
-    if (errorText.includes('permission') || errorText.includes('market')) {
+    if (errorText.includes('do not have permission') || errorText.includes('Only administrators, regional users')) {
       return 'You do not have permission to save punch lists for this market. You can only edit punch lists in your assigned market.';
     }
     if (errorText.includes('Invalid punch list data')) {

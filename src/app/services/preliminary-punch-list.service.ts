@@ -326,20 +326,20 @@ export class PreliminaryPunchListService {
 
     // CM users: filter by their market
     if (this.authService.isCM()) {
-      // Map state to market for filtering
-      const itemsWithMarket = response.items.map(item => ({ ...item, market: item.state }));
-      const filteredItems = this.roleBasedDataService.applyMarketFilter(
-        itemsWithMarket,
-        { specificMarket: user.market }
+      const userMarket = (user.market || '').trim().toUpperCase();
+
+      // Regional CMs (market = 'RG') can see all markets — no filtering needed
+      if (userMarket === 'RG') {
+        return response;
+      }
+
+      // Non-regional CMs: filter to only their market
+      const items = response.items.filter(item =>
+        (item.state || '').trim().toUpperCase() === userMarket
       );
-      // Map back to original PreliminaryPunchList objects
-      const items = filteredItems.map(item => {
-        const { market, ...rest } = item as any;
-        return rest as PreliminaryPunchList;
-      });
       return {
         ...response,
-        items: items,
+        items,
         total: items.length
       };
     }
@@ -505,11 +505,11 @@ export class PreliminaryPunchListService {
     // Validate market ownership for CMs (regional CMs with market 'RG' can access all markets)
     if (this.authService.isCM() && !this.authService.isAdmin()) {
       const user = this.authService.getUser();
-      const userMarket = (user?.market || '').toUpperCase();
+      const userMarket = (user?.market || '').trim().toUpperCase();
       const isRegional = userMarket === 'RG';
       
       // Regional CMs can access all markets, non-regional CMs can only access their own
-      if (!isRegional && !this.roleBasedDataService.canAccessMarket(punchList['market'] || '')) {
+      if (!isRegional && !this.roleBasedDataService.canAccessMarket(punchList['market'] || punchList.state || '')) {
         const punchListMarket = punchList['market'] || punchList.state || 'a different market';
         return throwError(() => new Error(
           `You do not have permission to update this punch list. ` +

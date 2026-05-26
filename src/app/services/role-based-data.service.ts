@@ -88,8 +88,8 @@ export class RoleBasedDataService {
       }
 
       // Regional CMs (market = 'RG') can see all markets
-      if (user.market.toUpperCase() === 'RG') {
-        if (options?.specificMarket) {
+      if (user.market.trim().toUpperCase() === 'RG') {
+        if (options?.specificMarket && options.specificMarket.trim().toUpperCase() !== 'RG') {
           return data.filter(item => item.market?.toUpperCase() === options.specificMarket?.toUpperCase());
         }
         // Exclude RG markets for street sheets if specified
@@ -161,7 +161,7 @@ export class RoleBasedDataService {
    * @returns True if user can access the market
    */
   canAccessMarket(market: string): boolean {
-    if (!market) {
+    if (!market || !market.trim()) {
       return false;
     }
 
@@ -177,10 +177,10 @@ export class RoleBasedDataService {
         return false;
       }
       // Regional users (market = 'RG') have access to all markets
-      if (user.market.toUpperCase() === 'RG') {
+      if (user.market.trim().toUpperCase() === 'RG') {
         return true;
       }
-      return user.market.toUpperCase() === market.toUpperCase();
+      return user.market.trim().toUpperCase() === market.trim().toUpperCase();
     }
 
     // Other roles - default to false for security
