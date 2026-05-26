@@ -1,17 +1,13 @@
 import { HttpHeaders, HttpClient } from '@angular/common/http';
-import { Injectable, Optional } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of, tap } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { User } from '../models/user.model';
 import { LoginModel } from '../models/login-model.model';
 import { environment, local_environment } from '../../environments/environments';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../models/role.enum';
 import { StatePersistenceService } from '../features/field-resource-management/services/state-persistence.service';
-import { TechnicianService } from '../features/field-resource-management/services/technician.service';
-import { TechnicianRole } from '../features/field-resource-management/models/technician.model';
-import { CreateTechnicianDto } from '../features/field-resource-management/models/dtos/technician.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -32,8 +28,7 @@ export class AuthService {
   constructor(
     protected router: Router,
     protected http: HttpClient,
-    private statePersistenceService: StatePersistenceService,
-    @Optional() private technicianService: TechnicianService | null
+    private statePersistenceService: StatePersistenceService
   ) {
     this.loadUserFromLocalStorage();
    }
@@ -66,40 +61,13 @@ export class AuthService {
     return '';
   }
 
-  register(user: User): Observable<User> {
+  register(user: User): Observable<any> {
     if (!user.id) {
       user.id = uuidv4();
       user.createdDate.toISOString();
     }
-    return this.http.post<User>(`${environment.apiUrl}/auth/register`, user, this.httpOptions).pipe(
-      switchMap(registeredUser => {
-        if (registeredUser.role === UserRole.Technician && this.technicianService) {
-          const techDto = this.buildTechnicianDto(registeredUser);
-          return this.technicianService.createTechnician(techDto).pipe(
-            map(() => registeredUser),
-            catchError(err => {
-              console.error('Failed to sync technician to ATLAS:', err);
-              return of(registeredUser);
-            })
-          );
-        }
-        return of(registeredUser);
-      })
-    );
-  }
-
-  private buildTechnicianDto(user: User): CreateTechnicianDto {
-    const parts = user.name.trim().split(' ');
-    return {
-      firstName: parts[0] || '',
-      lastName: parts.slice(1).join(' ') || '',
-      email: user.email,
-      phone: '',
-      role: TechnicianRole.Level1,
-      region: user.market,
-      isAvailable: true,
-      userId: user.id
-    };
+    // Atlas technician sync is handled server-side on approval (AtlasSyncService)
+    return this.http.post<any>(`${environment.apiUrl}/auth/register`, user, this.httpOptions);
   }
 
   getUserById(userId: string){
