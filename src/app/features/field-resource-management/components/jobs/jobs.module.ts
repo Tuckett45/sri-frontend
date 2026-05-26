@@ -29,6 +29,7 @@ import { CustomerInfoStepComponent } from './job-setup/steps/customer-info-step.
 import { PricingBillingStepComponent } from './job-setup/steps/pricing-billing-step.component';
 import { SriInternalStepComponent } from './job-setup/steps/sri-internal-step.component';
 import { ReviewStepComponent } from './job-setup/steps/review-step.component';
+import { ImportDocumentDialogComponent } from './job-setup/import-document-dialog/import-document-dialog.component';
 
 // Deployment Checklist Components
 import { DeploymentChecklistComponent } from './deployment-checklist/deployment-checklist.component';
@@ -98,6 +99,7 @@ const routes: Routes = [
     PricingBillingStepComponent,
     SriInternalStepComponent,
     ReviewStepComponent,
+    ImportDocumentDialogComponent,
     JobDetailsPhaseComponent,
     PreInstallationPhaseComponent,
     EodReportPhaseComponent,

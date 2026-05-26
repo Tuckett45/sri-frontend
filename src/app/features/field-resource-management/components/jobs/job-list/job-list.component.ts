@@ -29,6 +29,11 @@ import { JobFormComponent } from '../job-form/job-form.component';
 import { ExportService } from '../../../services/export.service';
 import { AuthService } from '../../../../../services/auth.service';
 import { UserRole } from '../../../../../models/role.enum';
+import { JobDocumentImportService } from '../../../services/job-document-import.service';
+import {
+  ImportDocumentDialogComponent,
+  ImportDocumentDialogResult
+} from '../job-setup/import-document-dialog/import-document-dialog.component';
 
 /**
  * Job List Component
@@ -137,6 +142,7 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
     private snackBar: MatSnackBar,
     private exportService: ExportService,
     private authService: AuthService,
+    private importService: JobDocumentImportService,
     private ngZone: NgZone
   ) {
     this.jobs$ = this.store.select(JobSelectors.selectFilteredJobs);
@@ -654,6 +660,36 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result?.success) {
         this.applyFilters();
+      }
+    });
+  }
+
+  /**
+   * Opens the Import Document dialog. On successful parse, navigates to the
+   * Job Setup wizard with the extracted data pre-populated.
+   */
+  openImportDialog(): void {
+    const dialogRef = this.dialog.open(ImportDocumentDialogComponent, {
+      width: '520px',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe((result: ImportDocumentDialogResult | undefined) => {
+      if (result?.parsed) {
+        // Store the parsed data in session storage so the job-setup component can pick it up
+        const formPatch = this.importService.mapToFormValue(result.parsed);
+        sessionStorage.setItem('frm_job_import_data', JSON.stringify(formPatch));
+
+        // Navigate to the job setup wizard
+        this.router.navigate(['/field-resource-management/jobs/new'], {
+          queryParams: { imported: 'true' }
+        });
+
+        this.snackBar.open(
+          'Document imported — review the pre-filled form',
+          'OK',
+          { duration: 4000 }
+        );
       }
     });
   }

@@ -1,11 +1,18 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { JobSetupService } from '../../../services/job-setup.service';
+import { JobDocumentImportService } from '../../../services/job-document-import.service';
 import { JobSetupFormValue } from '../../../models/job-setup.models';
+import {
+  ImportDocumentDialogComponent,
+  ImportDocumentDialogResult
+} from './import-document-dialog/import-document-dialog.component';
 
 export interface JobSetupStep {
   label: string;
@@ -28,7 +35,19 @@ export interface JobSetupStep {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="job-setup-container">
-      <h2 class="page-title">New Job Setup</h2>
+      <div class="page-header">
+        <h2 class="page-title">New Job Setup</h2>
+        <button
+          mat-stroked-button
+          color="primary"
+          class="import-btn"
+          (click)="openImportDialog()"
+          matTooltip="Import a job one-pager to auto-fill the form"
+        >
+          <mat-icon>upload_file</mat-icon>
+          Import Documentation
+        </button>
+      </div>
 
       <!-- Step Indicator -->
       <div class="step-indicator">
@@ -123,6 +142,21 @@ export interface JobSetupStep {
       margin: 0 0 24px;
       font-size: 24px;
       font-weight: 500;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-header .page-title {
+      margin: 0;
+    }
+
+    .import-btn mat-icon {
+      margin-right: 4px;
     }
 
     /* Step Indicator */
@@ -243,7 +277,10 @@ export class JobSetupComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private router: Router,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
     private jobSetupService: JobSetupService,
+    private importService: JobDocumentImportService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -270,6 +307,7 @@ export class JobSetupComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.buildForm();
     this.restoreDraft();
+    this.restoreImportedData();
     this.setupAutoSave();
   }
 
@@ -323,6 +361,33 @@ export class JobSetupComponent implements OnInit, OnDestroy {
   cancel(): void {
     this.jobSetupService.clearDraft();
     this.router.navigate(['/field-resource-management/jobs']);
+  }
+
+  /**
+   * Opens the Import Document dialog. On successful parse, patches the form
+   * with extracted data and shows a confirmation snackbar.
+   */
+  openImportDialog(): void {
+    const dialogRef = this.dialog.open(ImportDocumentDialogComponent, {
+      width: '520px',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe((result: ImportDocumentDialogResult | undefined) => {
+      if (result?.parsed) {
+        const formPatch = this.importService.mapToFormValue(result.parsed);
+        this.form.patchValue(formPatch);
+        this.form.markAsDirty();
+        this.cdr.markForCheck();
+
+        const fieldCount = this.countExtractedFields(formPatch);
+        this.snackBar.open(
+          `Imported ${fieldCount} field${fieldCount !== 1 ? 's' : ''} from document`,
+          'OK',
+          { duration: 4000 }
+        );
+      }
+    });
   }
 
   submit(): void {
@@ -402,11 +467,47 @@ export class JobSetupComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Checks for imported document data in session storage (set by the job-list Import flow).
+   * If found, patches the form and clears the stored data.
+   */
+  private restoreImportedData(): void {
+    try {
+      const raw = sessionStorage.getItem('frm_job_import_data');
+      if (raw) {
+        const importedPatch = JSON.parse(raw);
+        this.form.patchValue(importedPatch);
+        this.form.markAsDirty();
+        sessionStorage.removeItem('frm_job_import_data');
+        this.cdr.markForCheck();
+      }
+    } catch (e) {
+      console.warn('JobSetupComponent: failed to restore imported data', e);
+    }
+  }
+
   private getStepFormGroup(stepIndex: number): FormGroup | null {
     const name = this.steps[stepIndex]?.formGroupName;
     if (!name) {
       return null;
     }
     return this.form.get(name) as FormGroup;
+  }
+
+  /**
+   * Counts the number of non-empty fields in a partial form value.
+   */
+  private countExtractedFields(patch: Partial<JobSetupFormValue>): number {
+    let count = 0;
+    for (const section of Object.values(patch)) {
+      if (section && typeof section === 'object') {
+        for (const value of Object.values(section)) {
+          if (value != null && value !== '') {
+            count++;
+          }
+        }
+      }
+    }
+    return count;
   }
 }
