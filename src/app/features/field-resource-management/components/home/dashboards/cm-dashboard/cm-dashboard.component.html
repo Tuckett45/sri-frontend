@@ -37,16 +37,19 @@
     </app-live-activity-feed-widget>
 
     <app-available-technicians-widget
+      [technicianIds]="myTeamEnabled ? teamTechnicianIds : null"
       (technicianSelected)="onTechnicianSelected($event)">
     </app-available-technicians-widget>
 
     <app-active-jobs-widget
       [marketFilter]="myTeamEnabled ? null : marketFilter"
+      [technicianIds]="myTeamEnabled ? teamTechnicianIds : null"
       (jobSelected)="onJobSelected($event)">
     </app-active-jobs-widget>
 
     <app-recent-jobs-widget
       [marketFilter]="myTeamEnabled ? null : marketFilter"
+      [technicianIds]="myTeamEnabled ? teamTechnicianIds : null"
       (jobSelected)="onJobSelected($event)">
     </app-recent-jobs-widget>
 

@@ -137,7 +137,13 @@ export class TimecardManagerViewComponent implements OnInit, OnDestroy {
     
     // Subscribe to filtered periods for table datasource
     this.filteredPeriods$.pipe(takeUntil(this.destroy$)).subscribe(periods => {
-      this.filteredPeriodsData = periods;
+      // Apply "My Team" filter if enabled
+      if (this.myTeamEnabled && this.teamTechnicianIds.length > 0) {
+        const teamSet = new Set(this.teamTechnicianIds);
+        this.filteredPeriodsData = periods.filter(p => teamSet.has(p.technicianId));
+      } else {
+        this.filteredPeriodsData = periods;
+      }
     });
   }
   

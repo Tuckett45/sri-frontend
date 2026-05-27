@@ -84,6 +84,14 @@
   <mat-card class="filters-card">
     <mat-card-content>
       <div class="filters-container">
+        <!-- My Team Toggle -->
+        <mat-slide-toggle
+          [formControl]="myTeamControl"
+          class="my-team-toggle"
+          matTooltip="Show only your direct reports' timecards">
+          My Team
+        </mat-slide-toggle>
+
         <!-- Date Range Filter -->
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Date Range</mat-label>
