@@ -1,0 +1,90 @@
+<div class="pending-timecards-widget">
+  <div class="widget-header">
+    <div class="header-left">
+      <mat-icon>receipt_long</mat-icon>
+      <h3>Pending Timecards</h3>
+      <span class="badge" *ngIf="totalCount > 0">{{totalCount}}</span>
+    </div>
+  </div>
+
+  <div class="widget-body">
+    <div *ngIf="loading" class="loading-state">
+      <mat-spinner diameter="24"></mat-spinner>
+      <span>Loading pending timecards...</span>
+    </div>
+
+    <div *ngIf="error && !loading" class="error-state">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{error}}</span>
+      <button mat-button color="primary" (click)="loadPendingTimecards()">Retry</button>
+    </div>
+
+    <div *ngIf="!loading && !error && pendingTimecards.length === 0" class="empty-state">
+      <mat-icon>task_alt</mat-icon>
+      <span>All caught up! No timecards pending review.</span>
+    </div>
+
+    <div class="timecard-list" *ngIf="!loading && !error && pendingTimecards.length > 0">
+      <div *ngFor="let tc of pendingTimecards" class="timecard-item" [class.actioning]="actionInProgress === tc.id">
+        <div class="timecard-info" (click)="viewDetails(tc.id)">
+          <div class="tech-name">{{tc.technicianName || 'Unknown Technician'}}</div>
+          <div class="period">{{formatPeriod(tc.periodStart, tc.periodEnd)}}</div>
+          <div class="hours-row">
+            <span class="hours">{{tc.totalRegularHours | number:'1.1-1'}}h regular</span>
+            <span class="overtime" *ngIf="hasOvertime(tc)">
+              + {{tc.totalOvertimeHours | number:'1.1-1'}}h OT
+            </span>
+          </div>
+          <div class="submitted-at" *ngIf="tc.submittedAt">
+            Submitted {{tc.submittedAt | date:'short'}}
+          </div>
+        </div>
+
+        <!-- Reject reason input -->
+        <div class="reject-form" *ngIf="rejectingId === tc.id">
+          <input
+            type="text"
+            [(ngModel)]="rejectReason"
+            placeholder="Enter reason for rejection..."
+            class="reject-input"
+            (keyup.enter)="confirmReject()">
+          <div class="reject-actions">
+            <button mat-button color="warn" (click)="confirmReject()" [disabled]="!rejectReason.trim()">
+              Confirm Reject
+            </button>
+            <button mat-button (click)="cancelReject()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="timecard-actions" *ngIf="rejectingId !== tc.id">
+          <button
+            mat-icon-button
+            color="primary"
+            matTooltip="Approve"
+            (click)="approveTimecard(tc)"
+            [disabled]="actionInProgress === tc.id">
+            <mat-icon>check_circle</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            color="warn"
+            matTooltip="Reject"
+            (click)="startReject(tc.id)"
+            [disabled]="actionInProgress === tc.id">
+            <mat-icon>cancel</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            matTooltip="Request Correction"
+            (click)="requestCorrection(tc)"
+            [disabled]="actionInProgress === tc.id">
+            <mat-icon>edit_note</mat-icon>
+          </button>
+        </div>
+
+        <mat-spinner *ngIf="actionInProgress === tc.id" diameter="20"></mat-spinner>
+      </div>
+    </div>
+  </div>
+</div>

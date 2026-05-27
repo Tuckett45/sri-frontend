@@ -5,6 +5,14 @@
   </app-quick-actions-widget>
 
   <div class="dashboard-grid">
+    <app-live-activity-feed-widget
+      [marketFilter]="marketFilter">
+    </app-live-activity-feed-widget>
+
+    <app-available-technicians-widget
+      (technicianSelected)="onTechnicianSelected($event)">
+    </app-available-technicians-widget>
+
     <app-active-jobs-widget
       [marketFilter]="marketFilter"
       (jobSelected)="onJobSelected($event)">
@@ -14,5 +22,7 @@
       [marketFilter]="marketFilter"
       (jobSelected)="onJobSelected($event)">
     </app-recent-jobs-widget>
+
+    <app-notification-feed-widget></app-notification-feed-widget>
   </div>
 </div>

@@ -42,6 +42,10 @@ export class CmDashboardComponent implements OnInit {
     this.router.navigate(['/field-resource-management/jobs', jobId]);
   }
 
+  onTechnicianSelected(technicianId: string): void {
+    this.router.navigate(['/field-resource-management/technicians', technicianId]);
+  }
+
   onQuickAction(actionName: string): void {
     if (actionName === 'createJob') {
       this.dialog.open(CreateJobFromQuoteDialogComponent, {

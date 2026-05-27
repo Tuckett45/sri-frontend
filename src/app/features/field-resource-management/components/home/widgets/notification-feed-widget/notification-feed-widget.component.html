@@ -1,0 +1,53 @@
+<div class="notification-feed-widget">
+  <div class="widget-header">
+    <div class="header-left">
+      <mat-icon>notifications</mat-icon>
+      <h3>Notifications</h3>
+      <span class="badge" *ngIf="unreadCount > 0">{{unreadCount}}</span>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button (click)="markAllRead()" *ngIf="unreadCount > 0" matTooltip="Mark all as read">
+        <mat-icon>done_all</mat-icon>
+      </button>
+      <button mat-button color="primary" (click)="viewAll()">View All</button>
+    </div>
+  </div>
+
+  <div class="widget-body">
+    <div *ngIf="loading" class="loading-state">
+      <mat-spinner diameter="24"></mat-spinner>
+      <span>Loading...</span>
+    </div>
+
+    <div *ngIf="error && !loading" class="error-state">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{error}}</span>
+    </div>
+
+    <div *ngIf="!loading && !error && notifications.length === 0" class="empty-state">
+      <mat-icon>notifications_none</mat-icon>
+      <span>No notifications yet</span>
+    </div>
+
+    <div class="notification-list" *ngIf="!loading && !error && notifications.length > 0">
+      <div
+        *ngFor="let n of notifications"
+        class="notification-item"
+        [class.unread]="!n.readAt"
+        [ngClass]="getPriorityClass(n.priority)"
+        (click)="onNotificationClick(n)">
+        <div class="notification-icon">
+          <mat-icon>{{getIcon(n.type)}}</mat-icon>
+        </div>
+        <div class="notification-content">
+          <div class="notification-title">{{n.title}}</div>
+          <div class="notification-message" *ngIf="n.message !== n.title">{{n.message}}</div>
+          <div class="notification-time">{{n.createdAt | date:'short'}}</div>
+        </div>
+        <div class="notification-status" *ngIf="!n.readAt">
+          <span class="unread-dot"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
