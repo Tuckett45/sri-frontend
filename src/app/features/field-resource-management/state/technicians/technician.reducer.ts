@@ -57,13 +57,17 @@ export const technicianReducer = createReducer(
     error: null
   })),
 
-  on(TechnicianActions.createTechnicianSuccess, (state, { technician }) =>
-    technicianAdapter.addOne(technician, {
-      ...state,
+  on(TechnicianActions.createTechnicianSuccess, (state, { technician, tempId }) => {
+    // If tempId is provided (from optimistic create), remove the temp entity first
+    const stateAfterRemoval = tempId
+      ? technicianAdapter.removeOne(tempId, state)
+      : state;
+    return technicianAdapter.upsertOne(technician, {
+      ...stateAfterRemoval,
       loading: false,
       error: null
-    })
-  ),
+    });
+  }),
 
   on(TechnicianActions.createTechnicianFailure, (state, { error }) => ({
     ...state,

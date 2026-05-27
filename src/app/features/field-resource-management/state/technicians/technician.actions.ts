@@ -33,7 +33,7 @@ export const createTechnician = createAction(
 
 export const createTechnicianSuccess = createAction(
   '[Technician] Create Technician Success',
-  props<{ technician: Technician }>()
+  props<{ technician: Technician; tempId?: string }>()
 );
 
 export const createTechnicianFailure = createAction(
