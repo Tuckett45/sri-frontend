@@ -3,101 +3,156 @@
   <!-- Magic 8 Ball Section - Hidden but functionality preserved -->
   <!-- The Magic 8 Ball service and notification methods remain available for future use -->
   
-  <!-- Notifications Section -->
+  <!-- Combined Notifications Header -->
   <div class="notifications-card surface-card border-round shadow-1">
     <header class="section-header">
       <div class="title-group">
         <i class="pi pi-bell"></i>
         <div>
           <h2>Notifications</h2>
-          <p>Stay current on project activity and important alerts.</p>
+          <p>Stay current on project activity, workforce updates, and important alerts.</p>
         </div>
       </div>
       <div class="header-actions">
-        <span class="unread-count" *ngIf="unreadCount() > 0" [class.active]="unreadCount() > 0">
-          {{ unreadCount() }}
+        <span class="unread-count" *ngIf="totalUnreadCount() > 0" [class.active]="totalUnreadCount() > 0">
+          {{ totalUnreadCount() }}
         </span>
         <button
           mat-raised-button
           type="button"
           class="accent-action"
-          [disabled]="unreadCount() === 0"
-          (click)="markAllAsRead()"
+          [disabled]="totalUnreadCount() === 0"
+          (click)="markAllAsRead(); markAllWorkforceAsRead()"
         >Mark all read</button>
       </div>
     </header>
 
     <div class="card-body">
       <ng-container *ngIf="notificationsEnabled(); else disabledFlag">
-        <div *ngIf="notificationsAvailable(); else emptyState" class="feed">
-          <div
-            class="notification-card unread"
-            *ngFor="let notification of unreadNotifications(); trackBy: trackByNotificationId"
-          >
-            <div class="notification-header">
-              <div class="meta">
-                <p-tag [value]="notification.category | titlecase" [severity]="tagSeverity(notification.category)"></p-tag>
-                <span class="title">{{ notification.title }}</span>
-              </div>
-              <span class="timestamp">{{ notification.timestamp | date: 'short' }}</span>
-            </div>
-            <p class="message">{{ notification.message }}</p>
-            <div class="notification-actions">
-              <div class="left" *ngIf="notification.action">
-                <button mat-raised-button type="button" class="primary-action" 
-                (click)="goToAction(notification)">
-                  {{ notification.action.label }}
-                </button>
-              </div>
-              <button
-                mat-raised-button
-                type="button"
-                class="accent-action"
-                (click)="markAsRead(notification)"
-              >Mark read</button>
-            </div>
+
+        <!-- Workforce Notifications (Jobs, Timecards, Clock-in/out) -->
+        <div class="feed-section" *ngIf="workforceNotifications().length > 0 || workforceLoading()">
+          <h3 class="feed-section-title">
+            <mat-icon>groups</mat-icon> Workforce & Timecards
+            <span class="section-badge" *ngIf="workforceUnreadCount() > 0">{{ workforceUnreadCount() }}</span>
+          </h3>
+
+          <div *ngIf="workforceLoading()" class="loading-state">
+            <mat-spinner diameter="24"></mat-spinner>
+            <span>Loading notifications...</span>
           </div>
 
-          <p-divider *ngIf="readNotifications().length"></p-divider>
-
-          <div
-            class="notification-card read"
-            *ngFor="let notification of readNotifications(); trackBy: trackByNotificationId"
-          >
-            <div class="notification-header">
-              <div class="meta">
-                <p-tag [value]="notification.category | titlecase" [severity]="tagSeverity(notification.category)"></p-tag>
-                <span class="title">{{ notification.title }}</span>
+          <div class="feed" *ngIf="!workforceLoading()">
+            <div
+              class="notification-card"
+              [class.unread]="!n.readAt"
+              [class.read]="n.readAt"
+              *ngFor="let n of workforceNotifications(); trackBy: trackByWorkforceId"
+            >
+              <div class="notification-header">
+                <div class="meta">
+                  <p-tag [value]="getWorkforceCategory(n.type) | titlecase" [severity]="tagSeverity(getWorkforceCategory(n.type))"></p-tag>
+                  <mat-icon class="type-icon">{{ getWorkforceIcon(n.type) }}</mat-icon>
+                  <span class="title">{{ n.title || n.message }}</span>
+                </div>
+                <span class="timestamp">{{ n.createdAt | date: 'short' }}</span>
               </div>
-              <span class="timestamp">{{ notification.timestamp | date: 'short' }}</span>
-            </div>
-            <p class="message">{{ notification.message }}</p>
-            <div class="notification-actions">
-              <div class="left" *ngIf="notification.action">
+              <p class="message" *ngIf="n.message && n.message !== n.title">{{ n.message }}</p>
+              <div class="notification-actions">
+                <div class="left" *ngIf="n.relatedEntityId || n.actionUrl">
+                  <button mat-raised-button type="button" class="primary-action"
+                    (click)="goToWorkforceAction(n)">
+                    View
+                  </button>
+                </div>
                 <button
                   mat-raised-button
                   type="button"
-                  class="primary-action outlined"
-                  (click)="goToAction(notification)"
-                >{{ notification.action.label }}</button>
+                  class="accent-action"
+                  *ngIf="!n.readAt"
+                  (click)="markWorkforceAsRead(n)"
+                >Mark read</button>
               </div>
-              <button
-                mat-raised-button
-                type="button"
-                class="unread-action"
-                (click)="markAsUnread(notification)"
-              >Mark unread</button>
             </div>
           </div>
         </div>
 
-        <ng-template #emptyState>
+        <!-- Deployment Notifications (existing) -->
+        <div class="feed-section" *ngIf="notificationsAvailable()">
+          <h3 class="feed-section-title">
+            <mat-icon>rocket_launch</mat-icon> Deployments
+            <span class="section-badge" *ngIf="unreadCount() > 0">{{ unreadCount() }}</span>
+          </h3>
+
+          <div class="feed">
+            <div
+              class="notification-card unread"
+              *ngFor="let notification of unreadNotifications(); trackBy: trackByNotificationId"
+            >
+              <div class="notification-header">
+                <div class="meta">
+                  <p-tag [value]="notification.category | titlecase" [severity]="tagSeverity(notification.category)"></p-tag>
+                  <span class="title">{{ notification.title }}</span>
+                </div>
+                <span class="timestamp">{{ notification.timestamp | date: 'short' }}</span>
+              </div>
+              <p class="message">{{ notification.message }}</p>
+              <div class="notification-actions">
+                <div class="left" *ngIf="notification.action">
+                  <button mat-raised-button type="button" class="primary-action" 
+                  (click)="goToAction(notification)">
+                    {{ notification.action.label }}
+                  </button>
+                </div>
+                <button
+                  mat-raised-button
+                  type="button"
+                  class="accent-action"
+                  (click)="markAsRead(notification)"
+                >Mark read</button>
+              </div>
+            </div>
+
+            <div
+              class="notification-card read"
+              *ngFor="let notification of readNotifications(); trackBy: trackByNotificationId"
+            >
+              <div class="notification-header">
+                <div class="meta">
+                  <p-tag [value]="notification.category | titlecase" [severity]="tagSeverity(notification.category)"></p-tag>
+                  <span class="title">{{ notification.title }}</span>
+                </div>
+                <span class="timestamp">{{ notification.timestamp | date: 'short' }}</span>
+              </div>
+              <p class="message">{{ notification.message }}</p>
+              <div class="notification-actions">
+                <div class="left" *ngIf="notification.action">
+                  <button
+                    mat-raised-button
+                    type="button"
+                    class="primary-action outlined"
+                    (click)="goToAction(notification)"
+                  >{{ notification.action.label }}</button>
+                </div>
+                <button
+                  mat-raised-button
+                  type="button"
+                  class="unread-action"
+                  (click)="markAsUnread(notification)"
+                >Mark unread</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state when both sources are empty -->
+        <ng-container *ngIf="!notificationsAvailable() && workforceNotifications().length === 0 && !workforceLoading()">
           <div class="empty-state surface-100 border-round p-5 text-center">
             <i class="pi pi-inbox text-3xl text-500 mb-3"></i>
             <h3 class="m-0">You're all caught up!</h3>
-            <p class="mt-2 mb-0 text-600">Keep an eye here for project updates and alerts.</p>
+            <p class="mt-2 mb-0 text-600">Keep an eye here for project updates, job assignments, and timecard activity.</p>
           </div>
-        </ng-template>
+        </ng-container>
       </ng-container>
 
       <ng-template #disabledFlag>
