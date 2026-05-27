@@ -175,6 +175,8 @@ export class TechnicianEffects {
           TechnicianActions.createTechnicianFailure,
           TechnicianActions.updateTechnicianFailure,
           TechnicianActions.deleteTechnicianFailure,
+          TechnicianActions.deactivateTechnicianFailure,
+          TechnicianActions.reactivateTechnicianFailure,
           TechnicianActions.updateTechnicianLocationFailure
         ),
         tap((action) => {
@@ -182,6 +184,44 @@ export class TechnicianEffects {
         })
       ),
     { dispatch: false }
+  );
+
+  // Deactivate Technician Effect
+  deactivateTechnician$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TechnicianActions.deactivateTechnician),
+      switchMap(({ id }) =>
+        this.technicianService.deactivateTechnician(id).pipe(
+          map((technician) =>
+            TechnicianActions.deactivateTechnicianSuccess({ technician })
+          ),
+          catchError((error) =>
+            of(TechnicianActions.deactivateTechnicianFailure({
+              error: error.message || 'Failed to deactivate technician'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  // Reactivate Technician Effect
+  reactivateTechnician$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TechnicianActions.reactivateTechnician),
+      switchMap(({ id }) =>
+        this.technicianService.reactivateTechnician(id).pipe(
+          map((technician) =>
+            TechnicianActions.reactivateTechnicianSuccess({ technician })
+          ),
+          catchError((error) =>
+            of(TechnicianActions.reactivateTechnicianFailure({
+              error: error.message || 'Failed to reactivate technician'
+            }))
+          )
+        )
+      )
+    )
   );
 
   constructor(

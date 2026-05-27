@@ -295,7 +295,43 @@ export class TechnicianService {
   }
 
   /**
-   * Deletes a technician
+   * Deactivates a technician (soft-delete)
+   * Sets the technician to inactive status while preserving the record
+   * Only Admin users can deactivate technicians
+   * @param id Technician ID
+   * @returns Observable of updated technician
+   */
+  deactivateTechnician(id: string): Observable<Technician> {
+    if (!this.authService.isAdmin()) {
+      return throwError(() => new Error('Only administrators can deactivate technicians'));
+    }
+
+    return this.http.patch<Technician>(`${this.apiUrl}/${id}/deactivate`, {})
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Reactivates a previously deactivated technician
+   * Only Admin users can reactivate technicians
+   * @param id Technician ID
+   * @returns Observable of updated technician
+   */
+  reactivateTechnician(id: string): Observable<Technician> {
+    if (!this.authService.isAdmin()) {
+      return throwError(() => new Error('Only administrators can reactivate technicians'));
+    }
+
+    return this.http.patch<Technician>(`${this.apiUrl}/${id}/reactivate`, {})
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Permanently deletes a technician record
+   * This action cannot be undone - use deactivateTechnician for soft-delete
    * Only Admin users can delete technicians
    * @param id Technician ID
    * @returns Observable of void

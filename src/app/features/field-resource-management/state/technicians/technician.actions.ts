@@ -142,3 +142,35 @@ export const rollbackTechnicianDelete = createAction(
   props<{ originalData: Technician }>()
 );
 
+// Deactivate Technician (soft-delete)
+export const deactivateTechnician = createAction(
+  '[Technician] Deactivate Technician',
+  props<{ id: string }>()
+);
+
+export const deactivateTechnicianSuccess = createAction(
+  '[Technician] Deactivate Technician Success',
+  props<{ technician: Technician }>()
+);
+
+export const deactivateTechnicianFailure = createAction(
+  '[Technician] Deactivate Technician Failure',
+  props<{ error: string }>()
+);
+
+// Reactivate Technician
+export const reactivateTechnician = createAction(
+  '[Technician] Reactivate Technician',
+  props<{ id: string }>()
+);
+
+export const reactivateTechnicianSuccess = createAction(
+  '[Technician] Reactivate Technician Success',
+  props<{ technician: Technician }>()
+);
+
+export const reactivateTechnicianFailure = createAction(
+  '[Technician] Reactivate Technician Failure',
+  props<{ error: string }>()
+);
+
