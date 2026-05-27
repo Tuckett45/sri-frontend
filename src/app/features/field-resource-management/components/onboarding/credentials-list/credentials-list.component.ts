@@ -1220,12 +1220,12 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
     this.updatePagination();
   }
 
-  navigateToDetail(technicianId: string): void {
-    this.router.navigate([technicianId], { relativeTo: this.route });
+  navigateToDetail(candidateId: string): void {
+    this.router.navigate([candidateId], { relativeTo: this.route });
   }
 
-  navigateToChecklist(technicianId: string): void {
-    this.router.navigate([technicianId, 'checklist'], { relativeTo: this.route });
+  navigateToChecklist(candidateId: string): void {
+    this.router.navigate([candidateId, 'checklist'], { relativeTo: this.route });
   }
 
   getYesNoClass(value: any): string {
