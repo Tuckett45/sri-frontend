@@ -579,19 +579,43 @@ export class CredentialDetailComponent implements OnInit, OnDestroy {
   }
 
   private loadAllData(isReload = false): void {
-    // For candidates, credential data comes from the candidate object's boolean fields
-    // We build credential display items from the candidate's onboarding fields
     if (!this.candidate) {
       this.isLoading = false;
       return;
     }
 
-    this.credentials = this.buildCredentialsFromCandidate(this.candidate);
+    // Fetch actual credential records from the API
+    const credSub = this.onboardingService.getCandidateCredentials(this.candidateId).subscribe({
+      next: (creds) => {
+        if (creds && creds.length > 0) {
+          // Use API-stored credentials
+          this.credentials = this.sortCredentials(
+            creds.map((cert: any) => ({
+              credential: cert,
+              computedStatus: cert.expirationDate ? computeCredentialStatus(new Date(cert.expirationDate)) : CertificationStatus.Active,
+              credentialType: cert.credentialType || undefined
+            }))
+          );
+        } else {
+          // Fallback: build from candidate boolean fields
+          this.credentials = this.buildCredentialsFromCandidate(this.candidate!);
+        }
+        this.isLoading = false;
+        this.reloadErrorMessage = '';
+      },
+      error: () => {
+        // Fallback: build from candidate boolean fields on error
+        this.credentials = this.buildCredentialsFromCandidate(this.candidate!);
+        this.isLoading = false;
+        this.reloadErrorMessage = '';
+      }
+    });
+
+    this.subscriptions.push(credSub);
+
     this.equipmentAssignments = this.buildEquipmentFromCandidate(this.candidate);
     this.competencies = [];
     this.prc = null;
-    this.isLoading = false;
-    this.reloadErrorMessage = '';
   }
 
   private loadRoleTemplate(
@@ -688,9 +712,19 @@ export class CredentialDetailComponent implements OnInit, OnDestroy {
       if (confirmed) {
         this.lastDeletedCredentialId = credentialId;
         this.deleteErrorMessage = '';
-        // Remove the credential from local state since candidates don't have a dedicated delete API
-        this.credentials = this.credentials.filter(c => c.credential.id !== credentialId);
-        this.toastr.success('Credential deleted successfully', 'Deleted');
+
+        const deleteSub = this.onboardingService.deleteCandidateCredential(this.candidateId, credentialId).subscribe({
+          next: () => {
+            this.credentials = this.credentials.filter(c => c.credential.id !== credentialId);
+            this.toastr.success('Credential deleted successfully', 'Deleted');
+          },
+          error: () => {
+            this.toastr.error('Failed to delete credential. Please try again.', 'Error');
+            this.deleteErrorMessage = 'Failed to delete credential. Please try again.';
+          }
+        });
+
+        this.subscriptions.push(deleteSub);
       }
     });
   }
@@ -698,8 +732,17 @@ export class CredentialDetailComponent implements OnInit, OnDestroy {
   retryDelete(): void {
     if (this.lastDeletedCredentialId) {
       this.deleteErrorMessage = '';
-      this.credentials = this.credentials.filter(c => c.credential.id !== this.lastDeletedCredentialId);
-      this.toastr.success('Credential deleted successfully', 'Deleted');
+      const deleteSub = this.onboardingService.deleteCandidateCredential(this.candidateId, this.lastDeletedCredentialId).subscribe({
+        next: () => {
+          this.credentials = this.credentials.filter(c => c.credential.id !== this.lastDeletedCredentialId);
+          this.toastr.success('Credential deleted successfully', 'Deleted');
+        },
+        error: () => {
+          this.deleteErrorMessage = 'Failed to delete credential. Please try again.';
+        }
+      });
+
+      this.subscriptions.push(deleteSub);
     }
   }
 
