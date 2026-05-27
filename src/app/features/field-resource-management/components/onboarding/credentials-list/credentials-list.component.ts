@@ -4,6 +4,8 @@ import { Store } from '@ngrx/store';
 import { Subject, Subscription, forkJoin, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, catchError, take } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
+import { OnboardingService } from '../../../services/onboarding.service';
+import { Candidate } from '../../../models/onboarding.models';
 import { TechnicianService } from '../../../services/technician.service';
 import { Technician, Certification, CertificationStatus } from '../../../models/technician.model';
 import { computeCredentialStatus } from '../../../utils/credential-status.util';
@@ -21,6 +23,7 @@ import * as TechnicianSelectors from '../../../state/technicians/technician.sele
 
 interface TechnicianCredentialSummary {
   technician: Technician;
+  candidateId?: string;
   activeCount: number;
   expiringSoonCount: number;
   expiredCount: number;
@@ -813,6 +816,7 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   constructor(
+    private onboardingService: OnboardingService,
     private technicianService: TechnicianService,
     private store: Store,
     private router: Router,
@@ -845,10 +849,10 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const sub = this.technicianService.getTechnicians({}).subscribe({
-      next: (technicians) => {
-        if (technicians && technicians.length > 0) {
-          this.loadAllDataForTechnicians(technicians);
+    const sub = this.onboardingService.getCandidates().subscribe({
+      next: (candidates) => {
+        if (candidates && candidates.length > 0) {
+          this.loadAllDataFromCandidates(candidates);
         } else {
           this.technicians = [];
           this.filteredTechnicians = [];
@@ -858,7 +862,7 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = 'Unable to load technicians. Please try again.';
+        this.errorMessage = 'Unable to load candidates. Please try again.';
       }
     });
 
@@ -902,6 +906,107 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
     this.technicians = dummyTechnicians;
     this.applyFilters();
     this.isLoading = false;
+  }
+
+  private loadAllDataFromCandidates(candidates: Candidate[]): void {
+    if (candidates.length === 0) {
+      this.technicians = [];
+      this.filteredTechnicians = [];
+      this.pagedTechnicians = [];
+      this.isLoading = false;
+      return;
+    }
+
+    // Map candidates to the TechnicianCredentialSummary shape for display
+    const summaries: TechnicianCredentialSummary[] = candidates.map(candidate => {
+      // Parse candidate name (techName is typically "First Last")
+      const nameParts = (candidate.techName || '').split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Map Candidate fields to Technician-like shape for the table display
+      const technicianView: Technician = {
+        id: candidate.candidateId,
+        firstName,
+        lastName,
+        email: candidate.techEmail || '',
+        phone: candidate.techPhone || '',
+        role: '' as any,
+        region: candidate.workSite || '',
+        isAvailable: true,
+        isActive: true,
+        // Core Qualifications - map from candidate fields
+        fiberExperience: undefined, // Candidates don't have this field
+        oshaCertified: candidate.oshaCertified || false,
+        scissorLiftCertified: candidate.scissorLiftCertified || false,
+        willingToTravel: undefined, // Candidates don't have this field
+        shiftAvailability: undefined, // Candidates don't have this field
+        backgroundCheckStatus: undefined, // Not directly on candidate
+        drugScreenStatus: candidate.drugTestComplete ? 'pass' : 'not_started',
+        isVeteran: undefined, // Candidates don't have this field
+        // Badges & Access
+        attBadge: candidate.attBadge ? true : false,
+        comcastBadge: undefined,
+        attSupplierTraining: candidate.attSupplierTraining ? true : false,
+        cienaBasicTraining: candidate.cienaBasicTraining ? true : false,
+        googleRedBadge: candidate.googleRedBadge ? true : false,
+        googleLdap: candidate.googleLdap ? true : false,
+        metaGreenListing: candidate.metaGreenListing ? true : false,
+        // Training & Certs
+        obsTraining: candidate.obsTraining ? true : false,
+        osha10: candidate.osha10 || false,
+        osha30: candidate.osha30 || false,
+        techHandTools: candidate.techHandTools ? true : false,
+        biisciCertified: candidate.biisciCertified || false,
+        // Equipment Kits
+        ciKitAssigned: candidate.ciKitAssigned || false,
+        fiberKitAssigned: candidate.fiberKitAssigned || false,
+        labelingKitAssigned: candidate.labelingKitAssigned || false,
+        powerKitAssigned: candidate.powerKitAssigned || false,
+        testingEqptAssigned: candidate.testingEqptAssigned || false,
+        createdAt: new Date(candidate.createdAt),
+        updatedAt: new Date(candidate.updatedAt)
+      };
+
+      return {
+        technician: technicianView,
+        candidateId: candidate.candidateId,
+        activeCount: 0,
+        expiringSoonCount: 0,
+        expiredCount: 0,
+        totalCount: 0,
+        onboardingCompletionPercentage: this.computeCandidateOnboardingPercentage(candidate),
+        prcIndicator: null,
+        checklistSummary: null
+      } as TechnicianCredentialSummary;
+    });
+
+    this.technicians = summaries;
+    this.applyFilters();
+    this.isLoading = false;
+  }
+
+  private computeCandidateOnboardingPercentage(candidate: Candidate): number {
+    // Count completed items out of total tracked items
+    const items = [
+      candidate.drugTestComplete,
+      candidate.oshaCertified,
+      candidate.scissorLiftCertified,
+      candidate.osha10,
+      candidate.osha30,
+      candidate.ciKitAssigned,
+      candidate.fiberKitAssigned,
+      candidate.labelingKitAssigned,
+      candidate.powerKitAssigned,
+      candidate.testingEqptAssigned,
+      !!candidate.attBadge,
+      !!candidate.attSupplierTraining,
+      !!candidate.cienaBasicTraining,
+      !!candidate.obsTraining,
+      !!candidate.techHandTools,
+    ];
+    const completed = items.filter(Boolean).length;
+    return Math.round((completed / items.length) * 100);
   }
 
   private loadAllDataForTechnicians(technicians: Technician[]): void {
@@ -1182,8 +1287,9 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // Update the technician with the new onboarding info
-        this.technicianService.updateTechnician(summary.technician.id, result).subscribe({
+        // Update the candidate record via the onboarding service
+        const candidateId = summary.candidateId || summary.technician.id;
+        this.onboardingService.updateCandidate(candidateId, result).subscribe({
           next: () => {
             // Update local data
             const idx = this.technicians.findIndex(t => t.technician.id === summary.technician.id);
