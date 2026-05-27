@@ -65,7 +65,7 @@ export const jobReducer = createReducer(
   })),
 
   on(JobActions.createJobSuccess, (state, { job }) =>
-    jobAdapter.addOne(job, {
+    jobAdapter.upsertOne(job, {
       ...state,
       loading: false,
       error: null

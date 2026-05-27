@@ -57,8 +57,8 @@ export class TechnicianEffects {
       switchMap(({ technician, tempId }) =>
         this.technicianService.createTechnician(technician as any).pipe(
           map((createdTechnician) => {
-            // Replace temp entity with real one
-            return TechnicianActions.createTechnicianSuccess({ technician: createdTechnician });
+            // Replace temp entity with real one — reducer handles removal of temp ID
+            return TechnicianActions.createTechnicianSuccess({ technician: createdTechnician, tempId });
           }),
           catchError((error) => {
             console.error('Optimistic create failed, rolling back:', error);
