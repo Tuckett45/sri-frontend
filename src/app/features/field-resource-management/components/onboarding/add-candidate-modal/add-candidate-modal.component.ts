@@ -67,12 +67,6 @@ import { Candidate } from '../../../models/onboarding.models';
                 <mat-label>Referred By</mat-label>
                 <input matInput formControlName="referredBy" placeholder="Referral source (optional)" />
               </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Work Site</mat-label>
-                <input matInput formControlName="workSite" required />
-                <mat-error *ngIf="basicInfoForm.get('workSite')?.hasError('required')">Work site is required</mat-error>
-              </mat-form-field>
             </div>
 
             <div class="form-row">
@@ -442,7 +436,6 @@ export class AddCandidateModalComponent {
       vestSize: [candidate?.vestSize || 'L'],
       homeAddress: [candidate?.homeAddress || '', Validators.required],
       referredBy: [candidate?.referredBy || ''],
-      workSite: [candidate?.workSite || '', Validators.required],
       startDate: [candidate?.startDate || '', Validators.required],
       offerStatus: [candidate?.offerStatus || 'needs_review']
     });

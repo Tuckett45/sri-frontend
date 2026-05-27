@@ -2,7 +2,7 @@ import { Injectable, inject, OnDestroy } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { ConfigurationService } from './configuration.service';
 import { User } from '../models/user.model';
@@ -261,10 +261,14 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   }
 
   /**
-   * Get authentication headers for HTTP requests
+   * Get authentication headers for HTTP requests.
+   * Uses take(1) to snapshot the current auth state so the returned observable
+   * completes after a single emission — preventing the BehaviorSubject from
+   * re-triggering HTTP requests via switchMap in interceptors.
    */
   getAuthHeaders(): Observable<HttpHeaders> {
     return this.authState$.pipe(
+      take(1),
       switchMap(async (state) => {
         if (!state.isAuthenticated) {
           return new HttpHeaders();
@@ -362,10 +366,12 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   }
 
   /**
-   * Check if user is authenticated (enhanced version)
+   * Check if user is authenticated (enhanced version).
+   * Uses take(1) to snapshot the current state and avoid re-triggering on state updates.
    */
   isAuthenticated(): Observable<boolean> {
     return this.authState$.pipe(
+      take(1),
       switchMap(async (state) => {
         if (!state.isAuthenticated) {
           return false;

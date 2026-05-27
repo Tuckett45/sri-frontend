@@ -62,7 +62,7 @@ export interface CreateCandidatePayload {
   techEmail: string;
   techPhone: string;
   vestSize: VestSize;
-  workSite: string;
+  workSite?: string;
   homeAddress: string;
   startDate: string;
   offerStatus: OfferStatus;
