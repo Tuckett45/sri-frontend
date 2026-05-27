@@ -309,9 +309,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   deleteTechnician(technician: Technician): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
-        title: 'Delete Technician',
-        message: `Are you sure you want to delete technician "${this.getFullName(technician)}"? This action cannot be undone.`,
-        confirmText: 'Delete',
+        title: 'Permanently Delete Technician',
+        message: `Are you sure you want to PERMANENTLY delete technician "${this.getFullName(technician)}"? This will remove all associated data and cannot be undone. Consider deactivating instead if you want to preserve historical records.`,
+        confirmText: 'Delete Permanently',
         cancelText: 'Cancel',
         variant: 'danger'
       }
@@ -320,9 +320,33 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.store.dispatch(TechnicianActions.deleteTechnician({ id: technician.id }));
-        this.snackBar.open('Technician deleted successfully', 'Close', { duration: 3000 });
+        this.snackBar.open('Technician permanently deleted', 'Close', { duration: 3000 });
       }
     });
+  }
+
+  deactivateTechnician(technician: Technician): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Deactivate Technician',
+        message: `Are you sure you want to deactivate technician "${this.getFullName(technician)}"? They will no longer appear in active lists or be available for assignments, but their records will be preserved.`,
+        confirmText: 'Deactivate',
+        cancelText: 'Cancel',
+        variant: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.store.dispatch(TechnicianActions.deactivateTechnician({ id: technician.id }));
+        this.snackBar.open('Technician deactivated', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  reactivateTechnician(technician: Technician): void {
+    this.store.dispatch(TechnicianActions.reactivateTechnician({ id: technician.id }));
+    this.snackBar.open('Technician reactivated', 'Close', { duration: 3000 });
   }
   
   getFullName(technician: Technician): string {

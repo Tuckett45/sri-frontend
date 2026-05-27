@@ -221,5 +221,53 @@ export const technicianReducer = createReducer(
       ...state,
       error: 'Delete failed - changes reverted'
     })
-  )
+  ),
+
+  // Deactivate Technician
+  on(TechnicianActions.deactivateTechnician, (state) => ({
+    ...state,
+    loading: true,
+    error: null
+  })),
+
+  on(TechnicianActions.deactivateTechnicianSuccess, (state, { technician }) =>
+    technicianAdapter.updateOne(
+      { id: technician.id, changes: technician },
+      {
+        ...state,
+        loading: false,
+        error: null
+      }
+    )
+  ),
+
+  on(TechnicianActions.deactivateTechnicianFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error
+  })),
+
+  // Reactivate Technician
+  on(TechnicianActions.reactivateTechnician, (state) => ({
+    ...state,
+    loading: true,
+    error: null
+  })),
+
+  on(TechnicianActions.reactivateTechnicianSuccess, (state, { technician }) =>
+    technicianAdapter.updateOne(
+      { id: technician.id, changes: technician },
+      {
+        ...state,
+        loading: false,
+        error: null
+      }
+    )
+  ),
+
+  on(TechnicianActions.reactivateTechnicianFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error
+  }))
 );

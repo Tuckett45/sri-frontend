@@ -193,9 +193,24 @@
           <button mat-icon-button [routerLink]="['./', technician.id, 'edit']" (click)="$event.stopPropagation()" aria-label="Edit">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button (click)="deleteTechnician(technician); $event.stopPropagation()" aria-label="Delete" class="delete-action">
-            <mat-icon>delete</mat-icon>
+          <button mat-icon-button [matMenuTriggerFor]="technicianActionsMenu" (click)="$event.stopPropagation()" aria-label="More actions">
+            <mat-icon>more_vert</mat-icon>
           </button>
+          <mat-menu #technicianActionsMenu="matMenu">
+            <button mat-menu-item *ngIf="technician.isActive" (click)="deactivateTechnician(technician)">
+              <mat-icon>person_off</mat-icon>
+              <span>Deactivate</span>
+            </button>
+            <button mat-menu-item *ngIf="!technician.isActive" (click)="reactivateTechnician(technician)">
+              <mat-icon>person_add</mat-icon>
+              <span>Reactivate</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item class="delete-action" (click)="deleteTechnician(technician)">
+              <mat-icon color="warn">delete_forever</mat-icon>
+              <span>Delete Permanently</span>
+            </button>
+          </mat-menu>
         </div>
       </div>
 
