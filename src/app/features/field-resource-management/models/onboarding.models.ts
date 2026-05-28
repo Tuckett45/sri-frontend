@@ -67,6 +67,31 @@ export interface CreateCandidatePayload {
   startDate: string;
   offerStatus: OfferStatus;
   referredBy?: string;
+  drugTestComplete?: boolean;
+  oshaCertified?: boolean;
+  scissorLiftCertified?: boolean;
+
+  // Badges & Access
+  attBadge?: boolean;
+  lumenBadge?: boolean;
+  attSupplierTraining?: boolean;
+  cienaBasicTraining?: boolean;
+  googleRedBadge?: boolean;
+  googleLdap?: boolean;
+  metaGreenListing?: boolean;
+
+  // Training & Certs
+  obsTraining?: boolean;
+  osha10?: boolean;
+  osha30?: boolean;
+  techHandTools?: boolean;
+
+  // Equipment Kits
+  ciKitAssigned?: boolean;
+  fiberKitAssigned?: boolean;
+  labelingKitAssigned?: boolean;
+  powerKitAssigned?: boolean;
+  testingEqptAssigned?: boolean;
 }
 
 export interface UpdateCandidatePayload {
@@ -83,6 +108,28 @@ export interface UpdateCandidatePayload {
   startDate?: string;
   offerStatus?: OfferStatus;
   referredBy?: string;
+
+  // Badges & Access
+  attBadge?: boolean;
+  lumenBadge?: boolean;
+  attSupplierTraining?: boolean;
+  cienaBasicTraining?: boolean;
+  googleRedBadge?: boolean;
+  googleLdap?: boolean;
+  metaGreenListing?: boolean;
+
+  // Training & Certs
+  obsTraining?: boolean;
+  osha10?: boolean;
+  osha30?: boolean;
+  techHandTools?: boolean;
+
+  // Equipment Kits
+  ciKitAssigned?: boolean;
+  fiberKitAssigned?: boolean;
+  labelingKitAssigned?: boolean;
+  powerKitAssigned?: boolean;
+  testingEqptAssigned?: boolean;
 }
 
 // --- Filters ---

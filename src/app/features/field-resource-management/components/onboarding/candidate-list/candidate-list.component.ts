@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { forkJoin, Observable } from 'rxjs';
 import { OnboardingService } from '../../../services/onboarding.service';
 import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
@@ -453,7 +454,7 @@ export class CandidateListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        const payload = {
+        const payload: UpdateCandidatePayload = {
           techName: `${result.basicInfo.firstName} ${result.basicInfo.lastName}`,
           middleName: result.basicInfo.middleName,
           techEmail: result.basicInfo.email,
@@ -465,10 +466,42 @@ export class CandidateListComponent implements OnInit {
           referredBy: result.basicInfo.referredBy || undefined,
           drugTestComplete: result.coreQualifications.backgroundDrugScreen,
           oshaCertified: result.coreQualifications.oshaCertification,
-          scissorLiftCertified: result.coreQualifications.liftCertification
+          scissorLiftCertified: result.coreQualifications.liftCertification,
+          attBadge: result.badgesAccess.attBadge,
+          lumenBadge: result.badgesAccess.lumenBadge,
+          attSupplierTraining: result.badgesAccess.attSupplierTraining,
+          cienaBasicTraining: result.badgesAccess.cienaBasicTraining,
+          googleRedBadge: result.badgesAccess.googleRedBadge,
+          googleLdap: result.badgesAccess.googleLdap,
+          metaGreenListing: result.badgesAccess.metaGreenListing,
+          obsTraining: result.trainingCerts.obsTraining,
+          osha10: result.trainingCerts.osha10,
+          osha30: result.trainingCerts.osha30,
+          techHandTools: result.trainingCerts.techHandTools,
+          ciKitAssigned: result.equipmentKits.ciKitAssigned,
+          fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
+          labelingKitAssigned: result.equipmentKits.labelingKitAssigned,
+          powerKitAssigned: result.equipmentKits.powerKitAssigned,
+          testingEqptAssigned: result.equipmentKits.testingEquipmentAssigned
         };
         this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
-          next: () => this.loadCandidates(),
+          next: () => {
+            const uploads: Observable<any>[] = [];
+            if (result.files?.resume) {
+              uploads.push(this.onboardingService.uploadResume(candidate.candidateId, result.files.resume));
+            }
+            if (result.files?.headshot) {
+              uploads.push(this.onboardingService.uploadHeadshot(candidate.candidateId, result.files.headshot));
+            }
+            if (uploads.length > 0) {
+              forkJoin(uploads).subscribe({
+                next: () => this.loadCandidates(),
+                error: () => this.loadCandidates()
+              });
+            } else {
+              this.loadCandidates();
+            }
+          },
           error: () => {
             this.errorMessage = 'Failed to update candidate. Please try again.';
             this.loadCandidates();
@@ -501,13 +534,46 @@ export class CandidateListComponent implements OnInit {
           workSite: result.basicInfo.workSite || undefined,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
-          referredBy: result.basicInfo.referredBy || undefined
+          referredBy: result.basicInfo.referredBy || undefined,
+          drugTestComplete: result.coreQualifications.backgroundDrugScreen,
+          oshaCertified: result.coreQualifications.oshaCertification,
+          scissorLiftCertified: result.coreQualifications.liftCertification,
+          attBadge: result.badgesAccess.attBadge,
+          lumenBadge: result.badgesAccess.lumenBadge,
+          attSupplierTraining: result.badgesAccess.attSupplierTraining,
+          cienaBasicTraining: result.badgesAccess.cienaBasicTraining,
+          googleRedBadge: result.badgesAccess.googleRedBadge,
+          googleLdap: result.badgesAccess.googleLdap,
+          metaGreenListing: result.badgesAccess.metaGreenListing,
+          obsTraining: result.trainingCerts.obsTraining,
+          osha10: result.trainingCerts.osha10,
+          osha30: result.trainingCerts.osha30,
+          techHandTools: result.trainingCerts.techHandTools,
+          ciKitAssigned: result.equipmentKits.ciKitAssigned,
+          fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
+          labelingKitAssigned: result.equipmentKits.labelingKitAssigned,
+          powerKitAssigned: result.equipmentKits.powerKitAssigned,
+          testingEqptAssigned: result.equipmentKits.testingEquipmentAssigned
         };
 
         this.onboardingService.createCandidate(payload).subscribe({
-          next: () => {
+          next: (createdCandidate) => {
             this.submitting = false;
-            this.loadCandidates();
+            const uploads: Observable<any>[] = [];
+            if (result.files?.resume) {
+              uploads.push(this.onboardingService.uploadResume(createdCandidate.candidateId, result.files.resume));
+            }
+            if (result.files?.headshot) {
+              uploads.push(this.onboardingService.uploadHeadshot(createdCandidate.candidateId, result.files.headshot));
+            }
+            if (uploads.length > 0) {
+              forkJoin(uploads).subscribe({
+                next: () => this.loadCandidates(),
+                error: () => this.loadCandidates()
+              });
+            } else {
+              this.loadCandidates();
+            }
           },
           error: () => {
             this.submitting = false;
