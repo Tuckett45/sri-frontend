@@ -50,6 +50,8 @@ export type SearchParams = {
 
 @Injectable({ providedIn: 'root' })
 export class PreliminaryPunchListService {
+  private pendingImageUploadIds = new Set<string>();
+
   private entriesCache$!: Observable<PagedResponse<PreliminaryPunchList>> | null;
   private entriesCacheData: PagedResponse<PreliminaryPunchList> | null = null;
 
@@ -484,21 +486,59 @@ export class PreliminaryPunchListService {
                          (resolutionImages && resolutionImages.length > 0);
 
     if (hasNewImages) {
-      // Two-step: create the punch list without images first so the parent row
-      // exists, then update with images to satisfy the FK constraint on PunchListImages.
-      const withoutImages = { ...punchList, issueImages: [], resolutionImages: [] };
-      return this.http.post(`${environment.apiUrl}/PunchList`, withoutImages, this.httpOptions)
-        .pipe(
-          switchMap(() => {
-            const withImages = { ...punchList, issueImages, resolutionImages };
-            return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions);
-          }),
-          catchError(this.handleError)
-        );
+      // Check if we already know the POST succeeded (from a previous failed attempt)
+      if (this.pendingImageUploadIds.has(punchList.id)) {
+        // Skip POST, go straight to PUT with images
+        const withImages = { ...punchList, issueImages, resolutionImages };
+        return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions)
+          .pipe(
+            tap(() => this.pendingImageUploadIds.delete(punchList.id)),
+            catchError((err) => this.handleError(err))
+          );
+      }
+
+      // Check if entry already exists (handles case where user retries after 409)
+      return this.http.get(`${environment.apiUrl}/PunchList/${punchList.id}`, this.httpOptions).pipe(
+        // Entry exists - just do the PUT
+        switchMap(() => {
+          const withImages = { ...punchList, issueImages, resolutionImages };
+          return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions);
+        }),
+        catchError((getError) => {
+          // Entry doesn't exist (404) or GET failed for another reason - do the full POST + PUT flow
+          return this.postThenPutWithImages(punchList, issueImages, resolutionImages);
+        })
+      );
     }
 
     return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions)
-      .pipe(catchError(this.handleError));
+      .pipe(catchError((err) => this.handleError(err)));
+  }
+
+  /**
+   * Shared helper for the two-step create flow: POST without images, then PUT with images.
+   * Tracks the punchlist ID in pendingImageUploadIds between the two steps so that
+   * a retry after PUT failure can skip the POST.
+   */
+  private postThenPutWithImages(
+    punchList: PreliminaryPunchList,
+    issueImages: any[],
+    resolutionImages: any[]
+  ): Observable<any> {
+    const withoutImages = { ...punchList, issueImages: [], resolutionImages: [] };
+    return this.http.post(`${environment.apiUrl}/PunchList`, withoutImages, this.httpOptions).pipe(
+      tap(() => this.pendingImageUploadIds.add(punchList.id)),
+      switchMap(() => {
+        const withImages = { ...punchList, issueImages, resolutionImages };
+        return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions).pipe(
+          tap(() => this.pendingImageUploadIds.delete(punchList.id))
+        );
+      }),
+      catchError((err) => {
+        // If PUT failed but POST succeeded, pendingImageUploadIds already has the id
+        return this.handleError(err);
+      })
+    );
   }
 
   updateEntry(punchList: PreliminaryPunchList): Observable<any> {
@@ -521,13 +561,13 @@ export class PreliminaryPunchListService {
 
     this.clearCaches();
     return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions)
-      .pipe(catchError(this.handleError));
+      .pipe(catchError((err) => this.handleError(err)));
   }
 
   removeEntry(id: string | undefined): Observable<any> {
     this.clearCaches();
     return this.http.delete<void>(`${environment.apiUrl}/PunchList/${id}`, this.httpOptions)
-      .pipe(catchError(this.handleError));
+      .pipe(catchError((err) => this.handleError(err)));
   }
 
   getCachedUnresolvedCount(user: User): number {

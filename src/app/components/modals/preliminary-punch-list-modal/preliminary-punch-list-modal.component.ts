@@ -24,6 +24,14 @@ import { ErrorCodes } from 'src/app/models/error-codes.model';
   standalone: false
 })
 export class PreliminaryPunchListModalComponent implements OnInit {
+  static readonly DRAFT_KEY_PREFIX = 'punchlist-draft-';
+
+  static clearDraft(id: string): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX + id);
+    }
+  }
+
   preliminaryPunchListForm!: FormGroup;
   isEditMode: boolean = false;
   isDisabled: boolean = false;
@@ -224,6 +232,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     if (this.isEditMode) {
       this.initializeImages(this.data.issueImages || [], 'issueImages');
       this.initializeImages(this.data.resolutionImages || [], 'resolutionImages');
+    }
+
+    if (!this.isEditMode) {
+      this.restoreDraftIfAvailable();
     }
 
     this.preliminaryPunchListForm.get('pmResolved')?.valueChanges.subscribe((pmResolved: boolean) => {
@@ -433,7 +445,9 @@ export class PreliminaryPunchListModalComponent implements OnInit {
         const img = new window.Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const maxWidth = 1000;
+          const existingImageCount = this.issueImagesFormArray.length + this.resolutionImagesFormArray.length;
+          const maxWidth = existingImageCount >= 2 ? 800 : 1000;
+          const quality = existingImageCount >= 2 ? 0.4 : 0.6;
           const scale = maxWidth / img.width;
           canvas.width = maxWidth;
           canvas.height = img.height * scale;
@@ -454,7 +468,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
             } else {
               this.toastr.error('Image compression failed');
             }
-          }, 'image/jpeg', 0.6); // 60% quality
+          }, 'image/jpeg', quality);
         };
         img.onerror = () => this.toastr.error('Invalid image file');
         img.src = reader.result as string;
@@ -534,6 +548,102 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     return '';
   }
 
+  private saveDraft(): boolean {
+    if (typeof localStorage === 'undefined') return false;
+    const formValue = this.preliminaryPunchListForm.getRawValue();
+    try {
+      localStorage.setItem(
+        PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX + formValue.id,
+        JSON.stringify(formValue)
+      );
+      return true;
+    } catch (e) {
+      // localStorage might be full, especially with base64 images
+      console.warn('Could not save punch list draft to localStorage', e);
+      return false;
+    }
+  }
+
+  private loadDraft(): any | null {
+    if (typeof localStorage === 'undefined') return null;
+    // Only load drafts for new entries (not edit mode)
+    const formId = this.preliminaryPunchListForm.get('id')?.value;
+    if (!formId) return null;
+    const key = PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX + formId;
+    const stored = localStorage.getItem(key);
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  }
+
+  private restoreDraftIfAvailable(): void {
+    if (typeof localStorage === 'undefined') return;
+    // Look for any draft
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX)) {
+        try {
+          const draft = JSON.parse(localStorage.getItem(key) || '');
+          if (draft && draft.id) {
+            // Restore the form with draft data
+            this.preliminaryPunchListForm.patchValue({
+              id: draft.id,
+              segmentId: draft.segmentId || '',
+              vendorName: draft.vendorName || '',
+              streetAddress: draft.streetAddress || '',
+              city: draft.city || '',
+              state: draft.state || '',
+              additionalConcerns: draft.additionalConcerns || '',
+              createdBy: draft.createdBy || null,
+              dateReported: draft.dateReported || new Date().toISOString(),
+              pmResolved: draft.pmResolved || false,
+              pmConcerns: draft.pmConcerns || '',
+              resolvedDate: draft.resolvedDate || null,
+              cmResolved: draft.cmResolved || false,
+              updatedBy: draft.updatedBy || null,
+              updatedDate: draft.updatedDate || null,
+              resolvedBy: draft.resolvedBy || null
+            });
+            // Restore images
+            if (draft.issueImages?.length) {
+              const fa = this.issueImagesFormArray;
+              fa.clear();
+              draft.issueImages.forEach((img: any) => fa.push(this.fb.control(img)));
+            }
+            if (draft.resolutionImages?.length) {
+              const fa = this.resolutionImagesFormArray;
+              fa.clear();
+              draft.resolutionImages.forEach((img: any) => fa.push(this.fb.control(img)));
+            }
+            // Restore issues
+            if (draft.issues?.length) {
+              const issuesArray = this.issueAreasFormArray;
+              issuesArray.clear();
+              draft.issues.forEach((issue: any) => {
+                issuesArray.push(this.fb.group({
+                  id: [issue.id],
+                  area: [issue.area || '', Validators.required],
+                  category: [issue.category || '', Validators.required],
+                  subCategory: [issue.subCategory || ''],
+                  preliminaryPunchListId: [issue.preliminaryPunchListId],
+                  errorCodeId: [issue.errorCodeId || '']
+                }));
+              });
+            }
+            this.toastr.info('Your previous form data has been restored.', 'Draft Restored');
+            break; // Only restore one draft
+          }
+        } catch {
+          // Invalid draft, remove it
+          localStorage.removeItem(key!);
+        }
+      }
+    }
+  }
+
   close(): void {
     this.dialogRef.close();
   }
@@ -597,7 +707,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       punchList.resolutionImages = (punchList.resolutionImages || []).map((img: any) =>
         typeof img === 'string' ? img : (img?.imageData ?? img?.image ?? '')
       ).filter((s: string) => s);
-  
+
+      // Save draft before closing so it can be recovered if submission fails
+      const draftSaved = this.saveDraft();
+      (punchList as any)._draftSaved = draftSaved;
       this.dialogRef.close(punchList);
     } else {
       this.preliminaryPunchListForm.markAllAsTouched();
