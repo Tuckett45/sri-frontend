@@ -156,6 +156,14 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       roles: [UserRole.Admin]
     },
     {
+      label: 'My Team',
+      icon: 'group',
+      route: '/field-resource-management/my-team',
+      resource: 'technicians',
+      action: 'read',
+      roles: [UserRole.Admin, UserRole.Manager, UserRole.CM, UserRole.PM, UserRole.DCOps, UserRole.OSPCoordinator, UserRole.EngineeringFieldSupport, UserRole.MaterialsManager]
+    },
+    {
       label: 'My Timecard',
       icon: 'schedule',
       route: '/field-resource-management/timecard',
