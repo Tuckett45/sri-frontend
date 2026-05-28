@@ -1,0 +1,103 @@
+<div class="my-team-page">
+  <div class="page-header">
+    <h1><mat-icon>group</mat-icon> My Team</h1>
+    <p class="subtitle">Your direct reports and their current status</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading team data...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Team Content -->
+  <ng-container *ngIf="!loading && !error && teamStatus">
+
+    <!-- Summary Cards -->
+    <div class="summary-row">
+      <div class="summary-card">
+        <mat-icon>people</mat-icon>
+        <div class="summary-value">{{ teamStatus.teamSize }}</div>
+        <div class="summary-label">Team Members</div>
+      </div>
+      <div class="summary-card clocked-in">
+        <mat-icon>login</mat-icon>
+        <div class="summary-value">{{ teamStatus.clockedInCount }}</div>
+        <div class="summary-label">Clocked In</div>
+      </div>
+      <div class="summary-card available">
+        <mat-icon>check_circle</mat-icon>
+        <div class="summary-value">{{ teamStatus.availableCount }}</div>
+        <div class="summary-label">Available</div>
+      </div>
+      <div class="summary-card pending" *ngIf="pendingTimecards.length > 0">
+        <mat-icon>pending_actions</mat-icon>
+        <div class="summary-value">{{ pendingTimecards.length }}</div>
+        <div class="summary-label">Pending Timecards</div>
+      </div>
+    </div>
+
+    <!-- Active Entries (Who's Working Now) -->
+    <section class="section" *ngIf="teamStatus.activeEntries.length > 0">
+      <h2><mat-icon>work</mat-icon> Currently Working</h2>
+      <div class="active-entries-grid">
+        <div *ngFor="let entry of teamStatus.activeEntries" class="active-entry-card" (click)="navigateToJob(entry.jobId)">
+          <div class="entry-tech-name">{{ entry.technicianName }}</div>
+          <div class="entry-job">{{ entry.jobTitle || 'Job' }}</div>
+          <div class="entry-time">
+            <mat-icon>schedule</mat-icon>
+            {{ getElapsedTime(entry.clockInTime) }}
+          </div>
+          <div class="entry-category">{{ entry.timeCategory || 'On Site' }}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team Members List -->
+    <section class="section">
+      <h2><mat-icon>badge</mat-icon> Team Members</h2>
+      <div class="team-members-list">
+        <div
+          *ngFor="let member of teamStatus.teamMembers"
+          class="member-row"
+          (click)="navigateToTechnician(member.id)">
+          <div class="member-info">
+            <div class="member-name">{{ member.firstName }} {{ member.lastName }}</div>
+            <div class="member-status" [ngClass]="getStatusClass(member)">
+              <span class="status-dot"></span>
+              {{ getStatusLabel(member) }}
+            </div>
+          </div>
+          <mat-icon class="chevron">chevron_right</mat-icon>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pending Timecards -->
+    <section class="section" *ngIf="pendingTimecards.length > 0">
+      <h2>
+        <mat-icon>receipt_long</mat-icon> Pending Timecards
+        <button mat-button color="primary" (click)="navigateToTimecard()">View All</button>
+      </h2>
+      <div class="timecards-list">
+        <div *ngFor="let tc of pendingTimecards" class="timecard-row">
+          <div class="tc-info">
+            <div class="tc-name">{{ tc.technicianName || 'Technician' }}</div>
+            <div class="tc-period">{{ formatPeriod(tc.periodStart, tc.periodEnd) }}</div>
+          </div>
+          <div class="tc-hours">
+            <span class="regular">{{ tc.totalRegularHours | number:'1.1-1' }}h</span>
+            <span class="overtime" *ngIf="tc.totalOvertimeHours > 0">+{{ tc.totalOvertimeHours | number:'1.1-1' }}h OT</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </ng-container>
+</div>

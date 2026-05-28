@@ -87,6 +87,9 @@ import { CmDashboardComponent } from './components/home/dashboards/cm-dashboard/
 import { HrPayrollDashboardComponent } from './components/home/dashboards/hr-payroll-dashboard/hr-payroll-dashboard.component';
 import { DefaultDashboardComponent } from './components/home/dashboards/default-dashboard/default-dashboard.component';
 
+// My Team Page
+import { MyTeamComponent } from './components/my-team/my-team.component';
+
 // Notification Components (needed for real-time updates)
 import { NotificationPanelComponent } from './components/notifications/notification-panel/notification-panel.component';
 
@@ -179,6 +182,9 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     CmDashboardComponent,
     HrPayrollDashboardComponent,
     DefaultDashboardComponent,
+
+    // My Team Page
+    MyTeamComponent,
     
     // Notification Components
     NotificationPanelComponent,
