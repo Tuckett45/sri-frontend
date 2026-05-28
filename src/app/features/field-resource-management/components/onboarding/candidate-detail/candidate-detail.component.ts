@@ -422,23 +422,11 @@ export class CandidateDetailComponent implements OnInit {
         };
         this.onboardingService.updateCandidate(this.candidateId, payload).subscribe({
           next: () => {
-            const uploads: Observable<any>[] = [];
-            if (result.files?.resume) {
-              uploads.push(this.onboardingService.uploadResume(this.candidateId, result.files.resume));
-            }
-            if (result.files?.headshot) {
-              uploads.push(this.onboardingService.uploadHeadshot(this.candidateId, result.files.headshot));
-            }
-            if (uploads.length > 0) {
-              forkJoin(uploads).subscribe({
-                next: () => this.loadCandidate(),
-                error: () => this.loadCandidate()
-              });
-            } else {
-              this.loadCandidate();
-            }
+            this.uploadCandidateFiles(this.candidateId, result.files, () => this.loadCandidate());
           },
-          error: () => {}
+          error: () => {
+            alert('Failed to update candidate. Please try again.');
+          }
         });
       }
     });
@@ -518,6 +506,27 @@ export class CandidateDetailComponent implements OnInit {
         alert('Failed to delete candidate. Please try again.');
       }
     });
+  }
+
+  private uploadCandidateFiles(candidateId: string, files: { resume?: File | null; headshot?: File | null }, reloadFn: () => void): void {
+    const uploads: Observable<any>[] = [];
+    if (files?.resume) {
+      uploads.push(this.onboardingService.uploadResume(candidateId, files.resume));
+    }
+    if (files?.headshot) {
+      uploads.push(this.onboardingService.uploadHeadshot(candidateId, files.headshot));
+    }
+    if (uploads.length > 0) {
+      forkJoin(uploads).subscribe({
+        next: () => reloadFn(),
+        error: () => {
+          alert('Candidate saved, but one or more file uploads failed. Please try re-uploading.');
+          reloadFn();
+        }
+      });
+    } else {
+      reloadFn();
+    }
   }
 
   private getDummyCandidate(): Candidate | null {

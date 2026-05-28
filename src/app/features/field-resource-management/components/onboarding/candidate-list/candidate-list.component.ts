@@ -486,21 +486,7 @@ export class CandidateListComponent implements OnInit {
         };
         this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
           next: () => {
-            const uploads: Observable<any>[] = [];
-            if (result.files?.resume) {
-              uploads.push(this.onboardingService.uploadResume(candidate.candidateId, result.files.resume));
-            }
-            if (result.files?.headshot) {
-              uploads.push(this.onboardingService.uploadHeadshot(candidate.candidateId, result.files.headshot));
-            }
-            if (uploads.length > 0) {
-              forkJoin(uploads).subscribe({
-                next: () => this.loadCandidates(),
-                error: () => this.loadCandidates()
-              });
-            } else {
-              this.loadCandidates();
-            }
+            this.uploadCandidateFiles(candidate.candidateId, result.files, () => this.loadCandidates());
           },
           error: () => {
             this.errorMessage = 'Failed to update candidate. Please try again.';
@@ -559,21 +545,7 @@ export class CandidateListComponent implements OnInit {
         this.onboardingService.createCandidate(payload).subscribe({
           next: (createdCandidate) => {
             this.submitting = false;
-            const uploads: Observable<any>[] = [];
-            if (result.files?.resume) {
-              uploads.push(this.onboardingService.uploadResume(createdCandidate.candidateId, result.files.resume));
-            }
-            if (result.files?.headshot) {
-              uploads.push(this.onboardingService.uploadHeadshot(createdCandidate.candidateId, result.files.headshot));
-            }
-            if (uploads.length > 0) {
-              forkJoin(uploads).subscribe({
-                next: () => this.loadCandidates(),
-                error: () => this.loadCandidates()
-              });
-            } else {
-              this.loadCandidates();
-            }
+            this.uploadCandidateFiles(createdCandidate.candidateId, result.files, () => this.loadCandidates());
           },
           error: () => {
             this.submitting = false;
@@ -693,5 +665,26 @@ export class CandidateListComponent implements OnInit {
     }
 
     this.filteredCandidates = result;
+  }
+
+  private uploadCandidateFiles(candidateId: string, files: { resume?: File | null; headshot?: File | null }, reloadFn: () => void): void {
+    const uploads: Observable<any>[] = [];
+    if (files?.resume) {
+      uploads.push(this.onboardingService.uploadResume(candidateId, files.resume));
+    }
+    if (files?.headshot) {
+      uploads.push(this.onboardingService.uploadHeadshot(candidateId, files.headshot));
+    }
+    if (uploads.length > 0) {
+      forkJoin(uploads).subscribe({
+        next: () => reloadFn(),
+        error: () => {
+          this.errorMessage = 'Candidate saved, but one or more file uploads failed. Please try re-uploading.';
+          reloadFn();
+        }
+      });
+    } else {
+      reloadFn();
+    }
   }
 }
