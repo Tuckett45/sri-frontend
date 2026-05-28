@@ -548,17 +548,19 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     return '';
   }
 
-  private saveDraft(): void {
-    if (typeof localStorage === 'undefined') return;
+  private saveDraft(): boolean {
+    if (typeof localStorage === 'undefined') return false;
     const formValue = this.preliminaryPunchListForm.getRawValue();
     try {
       localStorage.setItem(
         PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX + formValue.id,
         JSON.stringify(formValue)
       );
+      return true;
     } catch (e) {
-      // localStorage might be full, especially with base64 images - silently fail
+      // localStorage might be full, especially with base64 images
       console.warn('Could not save punch list draft to localStorage', e);
+      return false;
     }
   }
 
@@ -707,7 +709,8 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       ).filter((s: string) => s);
 
       // Save draft before closing so it can be recovered if submission fails
-      this.saveDraft();
+      const draftSaved = this.saveDraft();
+      (punchList as any)._draftSaved = draftSaved;
       this.dialogRef.close(punchList);
     } else {
       this.preliminaryPunchListForm.markAllAsTouched();

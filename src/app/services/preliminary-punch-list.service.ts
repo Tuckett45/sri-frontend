@@ -505,41 +505,40 @@ export class PreliminaryPunchListService {
           return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions);
         }),
         catchError((getError) => {
-          // Entry doesn't exist (404) or GET failed - do the full POST + PUT flow
-          if (getError.status === 404) {
-            const withoutImages = { ...punchList, issueImages: [], resolutionImages: [] };
-            return this.http.post(`${environment.apiUrl}/PunchList`, withoutImages, this.httpOptions).pipe(
-              tap(() => this.pendingImageUploadIds.add(punchList.id)),
-              switchMap(() => {
-                const withImages = { ...punchList, issueImages, resolutionImages };
-                return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions).pipe(
-                  tap(() => this.pendingImageUploadIds.delete(punchList.id))
-                );
-              }),
-              catchError((err) => {
-                // If PUT failed but POST succeeded, pendingImageUploadIds already has the id
-                return this.handleError(err);
-              })
-            );
-          }
-          // GET failed for some other reason (network etc.) - try the normal POST+PUT flow anyway
-          const withoutImages = { ...punchList, issueImages: [], resolutionImages: [] };
-          return this.http.post(`${environment.apiUrl}/PunchList`, withoutImages, this.httpOptions).pipe(
-            tap(() => this.pendingImageUploadIds.add(punchList.id)),
-            switchMap(() => {
-              const withImages = { ...punchList, issueImages, resolutionImages };
-              return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions).pipe(
-                tap(() => this.pendingImageUploadIds.delete(punchList.id))
-              );
-            }),
-            catchError((err) => this.handleError(err))
-          );
+          // Entry doesn't exist (404) or GET failed for another reason - do the full POST + PUT flow
+          return this.postThenPutWithImages(punchList, issueImages, resolutionImages);
         })
       );
     }
 
     return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions)
       .pipe(catchError((err) => this.handleError(err)));
+  }
+
+  /**
+   * Shared helper for the two-step create flow: POST without images, then PUT with images.
+   * Tracks the punchlist ID in pendingImageUploadIds between the two steps so that
+   * a retry after PUT failure can skip the POST.
+   */
+  private postThenPutWithImages(
+    punchList: PreliminaryPunchList,
+    issueImages: any[],
+    resolutionImages: any[]
+  ): Observable<any> {
+    const withoutImages = { ...punchList, issueImages: [], resolutionImages: [] };
+    return this.http.post(`${environment.apiUrl}/PunchList`, withoutImages, this.httpOptions).pipe(
+      tap(() => this.pendingImageUploadIds.add(punchList.id)),
+      switchMap(() => {
+        const withImages = { ...punchList, issueImages, resolutionImages };
+        return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions).pipe(
+          tap(() => this.pendingImageUploadIds.delete(punchList.id))
+        );
+      }),
+      catchError((err) => {
+        // If PUT failed but POST succeeded, pendingImageUploadIds already has the id
+        return this.handleError(err);
+      })
+    );
   }
 
   updateEntry(punchList: PreliminaryPunchList): Observable<any> {

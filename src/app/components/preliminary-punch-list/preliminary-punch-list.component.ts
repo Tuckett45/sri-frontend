@@ -405,6 +405,8 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
       if (!result) return;
 
       const punchList = result;
+      const draftSaved = (punchList as any)._draftSaved === true;
+      delete (punchList as any)._draftSaved;
       const action$ = punchList.updatedBy
         ? this.punchListService.updateEntry(punchList)
         : this.punchListService.addEntry(punchList);
@@ -426,7 +428,11 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
           const errorText = typeof raw === 'string' ? raw : (raw?.message || raw?.title || JSON.stringify(raw));
           const errorType = err?.errorType || '';
           if (errorType === 'upload_timeout' || errorText.includes('timed out') || errorText.includes('Timeout')) {
-            message += ' Your form data has been saved and will be restored when you reopen the form.';
+            if (draftSaved) {
+              message += ' Your form data has been saved and will be restored when you reopen the form.';
+            } else {
+              message += ' Please try again.';
+            }
           }
           this.toastr.error(message, 'Punch List cannot be saved', {
             timeOut: 10000,
