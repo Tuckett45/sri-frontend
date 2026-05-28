@@ -108,7 +108,7 @@ export class PendingTimecardsWidgetComponent implements OnInit, OnDestroy {
     return timecard.totalOvertimeHours > 0;
   }
 
-  private loadPendingTimecards(): void {
+  loadPendingTimecards(): void {
     this.loading = true;
     this.error = null;
     this.timecardApi.getPendingTimecards(undefined, 1, 10)
