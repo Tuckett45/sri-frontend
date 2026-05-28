@@ -67,6 +67,11 @@ import { Candidate } from '../../../models/onboarding.models';
                 <mat-label>Referred By</mat-label>
                 <input matInput formControlName="referredBy" placeholder="Referral source (optional)" />
               </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Work Site</mat-label>
+                <input matInput formControlName="workSite" placeholder="Assigned work site (optional)" />
+              </mat-form-field>
             </div>
 
             <div class="form-row">
@@ -435,6 +440,7 @@ export class AddCandidateModalComponent {
       phone: [candidate?.techPhone || '', Validators.required],
       vestSize: [candidate?.vestSize || 'L'],
       homeAddress: [candidate?.homeAddress || '', Validators.required],
+      workSite: [candidate?.workSite || ''],
       referredBy: [candidate?.referredBy || ''],
       startDate: [candidate?.startDate || '', Validators.required],
       offerStatus: [candidate?.offerStatus || 'needs_review']

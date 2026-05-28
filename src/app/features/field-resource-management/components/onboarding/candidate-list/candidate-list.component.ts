@@ -498,6 +498,7 @@ export class CandidateListComponent implements OnInit {
           techPhone: result.basicInfo.phone,
           vestSize: result.basicInfo.vestSize,
           homeAddress: result.basicInfo.homeAddress,
+          workSite: result.basicInfo.workSite || undefined,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
           referredBy: result.basicInfo.referredBy || undefined
@@ -589,7 +590,7 @@ export class CandidateListComponent implements OnInit {
         (c) =>
           c.techName.toLowerCase().includes(term) ||
           c.techEmail.toLowerCase().includes(term) ||
-          c.workSite.toLowerCase().includes(term)
+          (c.workSite || '').toLowerCase().includes(term)
       );
     }
 

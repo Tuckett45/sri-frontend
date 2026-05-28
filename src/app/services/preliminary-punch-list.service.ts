@@ -506,7 +506,7 @@ export class PreliminaryPunchListService {
         }),
         catchError((getError) => {
           // Entry doesn't exist (404) or GET failed for another reason - do the full POST + PUT flow
-          return this.postThenPutWithImages(punchList, issueImages, resolutionImages);
+          return this.postThenPutWithImages(punchList, issueImages ?? [], resolutionImages ?? []);
         })
       );
     }
