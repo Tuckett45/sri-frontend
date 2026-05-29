@@ -21,6 +21,17 @@ export interface PublicCandidateSubmissionPayload {
   workSite: string;
   referredBy?: string;
   startDate: string;
+  drugTestComplete: boolean;
+  oshaCertified: boolean;
+  scissorLiftCertified: boolean;
+  biisciCertified: boolean;
+  osha10: boolean;
+  osha30: boolean;
+  ciKitAssigned: boolean;
+  fiberKitAssigned: boolean;
+  labelingKitAssigned: boolean;
+  powerKitAssigned: boolean;
+  testingEqptAssigned: boolean;
 }
 
 @Injectable()

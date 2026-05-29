@@ -69,6 +69,17 @@ export class PublicOnboardingComponent implements OnInit {
       workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
+      drugTestComplete: false,
+      oshaCertified: false,
+      scissorLiftCertified: false,
+      biisciCertified: false,
+      osha10: false,
+      osha30: false,
+      ciKitAssigned: false,
+      fiberKitAssigned: false,
+      labelingKitAssigned: false,
+      powerKitAssigned: false,
+      testingEqptAssigned: false,
     };
 
     this.publicOnboardingService.submitCandidate(this.token, payload).subscribe({
