@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environments';
@@ -38,11 +38,17 @@ export interface PublicCandidateSubmissionPayload {
 export class PublicOnboardingService {
   private readonly baseUrl = `${environment.apiUrl}/public/onboarding`;
 
+  private readonly headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
+  });
+
   constructor(private http: HttpClient) {}
 
   validateToken(token: string): Observable<TokenValidationResponse> {
     return this.http
       .get<TokenValidationResponse>(`${this.baseUrl}/validate`, {
+        headers: this.headers,
         params: { token }
       })
       .pipe(catchError(this.handleError('validateToken')));
@@ -51,6 +57,7 @@ export class PublicOnboardingService {
   submitCandidate(token: string, payload: PublicCandidateSubmissionPayload): Observable<any> {
     return this.http
       .post(`${this.baseUrl}/submit`, payload, {
+        headers: this.headers,
         params: { token }
       })
       .pipe(catchError(this.handleError('submitCandidate')));
