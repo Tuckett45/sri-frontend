@@ -47,7 +47,15 @@ export class PublicOnboardingService {
 
   private handleError(operation: string) {
     return (err: any): Observable<never> => {
-      const message = err?.error?.message ?? err?.message ?? 'An unexpected error occurred.';
+      let message: string;
+      if (err?.status === 422 && err?.error?.errors) {
+        // Surface validation errors from the API
+        const errors = err.error.errors;
+        const errorMessages = Object.values(errors).flat();
+        message = (errorMessages as string[]).join(' ');
+      } else {
+        message = err?.error?.message ?? err?.error?.title ?? err?.message ?? 'An unexpected error occurred.';
+      }
       return throwError(() => ({ operation, message, statusCode: err?.status ?? 0 }));
     };
   }

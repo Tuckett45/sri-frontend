@@ -31,6 +31,11 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
       return next.handle(req);
     }
 
+    // Skip public endpoints (no auth required)
+    if (req.url.includes('/public/')) {
+      return next.handle(req);
+    }
+
     // Get access token and add ATLAS-specific headers
     return from(this.authService.getAccessToken()).pipe(
       switchMap(accessToken => {

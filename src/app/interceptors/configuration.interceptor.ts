@@ -22,6 +22,11 @@ export class ConfigurationInterceptor implements HttpInterceptor {
       return next.handle(req);
     }
 
+    // Skip interception for public endpoints (no auth required)
+    if (this.isPublicEndpoint(req.url)) {
+      return next.handle(req);
+    }
+
     // Get auth headers only (configuration headers will be added by services directly)
     return this.authService.getAuthHeaders().pipe(
       switchMap(authHeaders => {
@@ -103,6 +108,13 @@ export class ConfigurationInterceptor implements HttpInterceptor {
     ];
 
     return externalApis.some(api => url.includes(api));
+  }
+
+  /**
+   * Check if the request URL is for a public endpoint that doesn't require authentication
+   */
+  private isPublicEndpoint(url: string): boolean {
+    return url.includes('/public/');
   }
 
   /**

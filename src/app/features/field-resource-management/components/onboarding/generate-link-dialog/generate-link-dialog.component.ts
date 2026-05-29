@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { OnboardingLinkService, OnboardingLinkResponse } from '../../../services/onboarding-link.service';
+import { environment } from '../../../../../../environments/environments';
 
 @Component({
   selector: 'app-generate-link-dialog',
@@ -209,7 +210,7 @@ export class GenerateLinkDialogComponent implements OnInit {
     this.onboardingLinkService.generateLink(this.notes || undefined, this.expiresInHours).subscribe({
       next: (response) => {
         this.generating = false;
-        this.generatedUrl = `${window.location.origin}/onboarding/apply/${response.token}`;
+        this.generatedUrl = `${environment.appUrl}/onboarding/apply/${response.token}`;
         this.loadExistingLinks();
       },
       error: (err) => {

@@ -25,6 +25,7 @@ export class AppComponent {
   title = 'SRI Tools';
   isUserLoggedIn = false;
   showNavbar = false;
+  isPublicRoute = false;
   showConfigStatus = !environment.production; // Show config status in development
 
   private readonly configService = inject(ConfigurationService);
@@ -527,6 +528,7 @@ export class AppComponent {
   private updateNavbarVisibility(url: string): void {
     const currentUrl = url || '';
     const isAuthRoute = currentUrl.startsWith('/login') || currentUrl.startsWith('/reset-password');
-    this.showNavbar = this.isUserLoggedIn && !isAuthRoute;
+    this.isPublicRoute = currentUrl.startsWith('/onboarding');
+    this.showNavbar = this.isUserLoggedIn && !isAuthRoute && !this.isPublicRoute;
   }
 }

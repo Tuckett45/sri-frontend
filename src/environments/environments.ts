@@ -8,7 +8,8 @@ export const environment = {
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
   enableSignalR: true, // Enable SignalR real-time features
-  googleAnalyticsId: 'G-XXXXXXXXXX' // Replace with actual GA4 Measurement ID
+  googleAnalyticsId: 'G-XXXXXXXXXX', // Replace with actual GA4 Measurement ID
+  appUrl: 'https://ark-sri.com'
 };
 
 //Staging
@@ -21,7 +22,8 @@ export const staging_environment = {
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
   enableSignalR: true, // Enable SignalR real-time features
-  googleAnalyticsId: 'G-XXXXXXXXXX' // Replace with actual GA4 Measurement ID for staging
+  googleAnalyticsId: 'G-XXXXXXXXXX', // Replace with actual GA4 Measurement ID for staging
+  appUrl: 'https://ark-sri.com'
 };
 
 // Local server
@@ -34,6 +36,7 @@ export const local_environment = {
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
   enableSignalR: false, // Disable SignalR for local development without backend
-  googleAnalyticsId: undefined // Disable analytics in local development
+  googleAnalyticsId: undefined, // Disable analytics in local development
+  appUrl: 'http://localhost:4200'
 };
 
