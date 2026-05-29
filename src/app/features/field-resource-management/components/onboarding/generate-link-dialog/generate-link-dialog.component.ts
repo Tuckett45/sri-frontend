@@ -207,12 +207,12 @@ export class GenerateLinkDialogComponent implements OnInit {
     this.copied = false;
 
     this.onboardingLinkService.generateLink(this.notes || undefined, this.expiresInHours).subscribe({
-      next: (response) => {
+      next: (response: OnboardingLinkResponse) => {
         this.generating = false;
         this.generatedUrl = `${window.location.origin}/onboarding/apply/${response.token}`;
         this.loadExistingLinks();
       },
-      error: (err) => {
+      error: (err: any) => {
         this.generating = false;
         this.errorMessage = err?.message || 'Failed to generate link. Please try again.';
       }
@@ -231,7 +231,7 @@ export class GenerateLinkDialogComponent implements OnInit {
       next: () => {
         this.loadExistingLinks();
       },
-      error: (err) => {
+      error: (err: any) => {
         this.errorMessage = err?.message || 'Failed to revoke link.';
       }
     });
@@ -244,7 +244,7 @@ export class GenerateLinkDialogComponent implements OnInit {
   private loadExistingLinks(): void {
     this.loadingLinks = true;
     this.onboardingLinkService.getLinks().subscribe({
-      next: (links) => {
+      next: (links: OnboardingLinkResponse[]) => {
         this.existingLinks = links;
         this.loadingLinks = false;
       },
