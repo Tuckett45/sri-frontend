@@ -46,7 +46,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.authService.isAdmin()
     },
     {
-      label: 'Prelim Punch List',
+      label: 'QA/QC Punch List',
       route: '/preliminary-punch-list',
       shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM() || this.authService.isEngineeringFieldSupport() || this.authService.isMaterialsManager()
     },
