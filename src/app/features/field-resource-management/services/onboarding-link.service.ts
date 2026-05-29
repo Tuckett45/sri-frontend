@@ -8,11 +8,16 @@ import { environment } from '../../../../environments/environments';
 export interface OnboardingLinkResponse {
   id: string;
   token: string;
+  url: string;
+  createdByUserName: string;
+  createdBy: string;
+  status: 'active' | 'expired' | 'used' | 'revoked';
   notes?: string;
   expiresAt: string;
   createdAt: string;
-  createdBy: string;
-  status: 'active' | 'expired' | 'used' | 'revoked';
+  usedAt?: string;
+  isRevoked: boolean;
+  candidateId?: string;
 }
 
 @Injectable({ providedIn: 'root' })
