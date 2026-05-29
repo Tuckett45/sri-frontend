@@ -209,7 +209,7 @@ export class GenerateLinkDialogComponent implements OnInit {
     this.onboardingLinkService.generateLink(this.notes || undefined, this.expiresInHours).subscribe({
       next: (response: OnboardingLinkResponse) => {
         this.generating = false;
-        this.generatedUrl = `${window.location.origin}/onboarding/apply/${response.token}`;
+        this.generatedUrl = `https://www.ark-sri.com/onboarding/apply/${response.token}`;
         this.loadExistingLinks();
       },
       error: (err: any) => {

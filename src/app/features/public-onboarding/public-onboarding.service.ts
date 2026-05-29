@@ -36,7 +36,7 @@ export interface PublicCandidateSubmissionPayload {
 
 @Injectable()
 export class PublicOnboardingService {
-  private readonly baseUrl = `${environment.atlasApiUrl}/public/onboarding`;
+  private readonly baseUrl = `${environment.apiUrl}/public/onboarding`;
 
   constructor(private http: HttpClient) {}
 
