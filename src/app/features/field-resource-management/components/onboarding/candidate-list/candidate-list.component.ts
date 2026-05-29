@@ -3,8 +3,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin, Observable } from 'rxjs';
 import { OnboardingService } from '../../../services/onboarding.service';
+import { OnboardingLinkService } from '../../../services/onboarding-link.service';
 import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
+import { GenerateLinkDialogComponent } from '../generate-link-dialog/generate-link-dialog.component';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -26,9 +28,14 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     <div class="candidate-list-container">
       <div class="header-row">
         <h2>Candidates</h2>
-        <button type="button" class="add-candidate-btn" (click)="onAddCandidate()" aria-label="Add new candidate">
-          + Add Candidate
-        </button>
+        <div class="header-actions">
+          <button type="button" class="generate-link-btn" (click)="onGenerateLink()" aria-label="Generate onboarding link">
+            Generate Onboarding Link
+          </button>
+          <button type="button" class="add-candidate-btn" (click)="onAddCandidate()" aria-label="Add new candidate">
+            + Add Candidate
+          </button>
+        </div>
       </div>
 
       <!-- Error Banner -->
@@ -156,6 +163,33 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       align-items: center;
       justify-content: space-between;
       margin-bottom: 1.25rem;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .generate-link-btn {
+      padding: 0.5rem 1rem;
+      background-color: #7b1fa2;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .generate-link-btn:hover {
+      background-color: #6a1b9a;
+    }
+
+    .generate-link-btn:focus {
+      outline: 2px solid #7b1fa2;
+      outline-offset: 2px;
     }
 
     .add-candidate-btn {
@@ -388,7 +422,8 @@ export class CandidateListComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
-    private onboardingService: OnboardingService
+    private onboardingService: OnboardingService,
+    private onboardingLinkService: OnboardingLinkService
   ) {}
 
   ngOnInit(): void {
@@ -494,6 +529,13 @@ export class CandidateListComponent implements OnInit {
           }
         });
       }
+    });
+  }
+
+  onGenerateLink(): void {
+    this.dialog.open(GenerateLinkDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
     });
   }
 
