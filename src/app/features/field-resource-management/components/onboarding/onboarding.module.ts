@@ -27,6 +27,7 @@ import { EquipmentEditModalComponent } from './equipment-edit-modal/equipment-ed
 import { CompetencyEditModalComponent } from './competency-edit-modal/competency-edit-modal.component';
 import { GoalEditModalComponent } from './goal-edit-modal/goal-edit-modal.component';
 import { ConfirmDeleteModalComponent } from './confirm-delete-modal/confirm-delete-modal.component';
+import { GenerateLinkDialogComponent } from './generate-link-dialog/generate-link-dialog.component';
 
 @NgModule({
   declarations: [
@@ -50,7 +51,8 @@ import { ConfirmDeleteModalComponent } from './confirm-delete-modal/confirm-dele
     EquipmentEditModalComponent,
     CompetencyEditModalComponent,
     GoalEditModalComponent,
-    ConfirmDeleteModalComponent
+    ConfirmDeleteModalComponent,
+    GenerateLinkDialogComponent
   ],
   imports: [
     CommonModule,
