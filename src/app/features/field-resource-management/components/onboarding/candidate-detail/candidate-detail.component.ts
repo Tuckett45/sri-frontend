@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { forkJoin, Observable } from 'rxjs';
 import { OnboardingService } from '../../../services/onboarding.service';
 import { Candidate, OfferStatus } from '../../../models/onboarding.models';
 import { OnboardingInfoModalComponent } from '../onboarding-info-modal/onboarding-info-modal.component';
@@ -401,11 +402,31 @@ export class CandidateDetailComponent implements OnInit {
           referredBy: result.basicInfo.referredBy || undefined,
           drugTestComplete: result.coreQualifications.backgroundDrugScreen,
           oshaCertified: result.coreQualifications.oshaCertification,
-          scissorLiftCertified: result.coreQualifications.liftCertification
+          scissorLiftCertified: result.coreQualifications.liftCertification,
+          attBadge: result.badgesAccess.attBadge,
+          lumenBadge: result.badgesAccess.lumenBadge,
+          attSupplierTraining: result.badgesAccess.attSupplierTraining,
+          cienaBasicTraining: result.badgesAccess.cienaBasicTraining,
+          googleRedBadge: result.badgesAccess.googleRedBadge,
+          googleLdap: result.badgesAccess.googleLdap,
+          metaGreenListing: result.badgesAccess.metaGreenListing,
+          obsTraining: result.trainingCerts.obsTraining,
+          osha10: result.trainingCerts.osha10,
+          osha30: result.trainingCerts.osha30,
+          techHandTools: result.trainingCerts.techHandTools,
+          ciKitAssigned: result.equipmentKits.ciKitAssigned,
+          fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
+          labelingKitAssigned: result.equipmentKits.labelingKitAssigned,
+          powerKitAssigned: result.equipmentKits.powerKitAssigned,
+          testingEqptAssigned: result.equipmentKits.testingEquipmentAssigned
         };
         this.onboardingService.updateCandidate(this.candidateId, payload).subscribe({
-          next: () => this.loadCandidate(),
-          error: () => {}
+          next: () => {
+            this.uploadCandidateFiles(this.candidateId, result.files, () => this.loadCandidate());
+          },
+          error: () => {
+            alert('Failed to update candidate. Please try again.');
+          }
         });
       }
     });
@@ -485,6 +506,27 @@ export class CandidateDetailComponent implements OnInit {
         alert('Failed to delete candidate. Please try again.');
       }
     });
+  }
+
+  private uploadCandidateFiles(candidateId: string, files: { resume?: File | null; headshot?: File | null }, reloadFn: () => void): void {
+    const uploads: Observable<any>[] = [];
+    if (files?.resume) {
+      uploads.push(this.onboardingService.uploadResume(candidateId, files.resume));
+    }
+    if (files?.headshot) {
+      uploads.push(this.onboardingService.uploadHeadshot(candidateId, files.headshot));
+    }
+    if (uploads.length > 0) {
+      forkJoin(uploads).subscribe({
+        next: () => reloadFn(),
+        error: () => {
+          alert('Candidate saved, but one or more file uploads failed. Please try re-uploading.');
+          reloadFn();
+        }
+      });
+    } else {
+      reloadFn();
+    }
   }
 
   private getDummyCandidate(): Candidate | null {
