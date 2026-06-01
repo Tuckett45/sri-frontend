@@ -169,7 +169,7 @@ export class ExpenseExportService {
       header += `"Date Range: ${dateRange.start} to ${dateRange.end}"\n`;
     }
     header += '\n';
-    header += '"Date","Week Ending","Employee","Job","Category","Vendor","Amount","Notes","Details"\n';
+    header += '"Date","Week Ending","Employee","Job","Category","Vendor","Amount","Status","Paid","Notes","Details"\n';
     return header;
   }
 
@@ -185,10 +185,12 @@ export class ExpenseExportService {
       const category = (exp.category || '').replace(/"/g, '""');
       const vendor = (exp.vendor || '').replace(/"/g, '""');
       const amount = (exp.amount || 0).toFixed(2);
+      const status = (exp.status || '').replace(/"/g, '""');
+      const paid = exp.status === 'Paid' || exp.isPaid ? 'Yes' : 'No';
       const notes = (exp.descriptionNotes || '').replace(/"/g, '""');
       const details = this.buildDetails(exp).replace(/"/g, '""');
       
-      return `"${date}","${weekEnding}","${employee}","${job}","${category}","${vendor}",${amount},"${notes}","${details}"`;
+      return `"${date}","${weekEnding}","${employee}","${job}","${category}","${vendor}",${amount},"${status}","${paid}","${notes}","${details}"`;
     }).join('\n') + '\n';
   }
 

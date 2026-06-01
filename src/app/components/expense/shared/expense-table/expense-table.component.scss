@@ -114,6 +114,15 @@
     color: #f44336;
   }
 
+  .mark-paid-icon {
+    color: #1976d2;
+  }
+
+  .paid-check-icon {
+    color: $expense-success;
+    vertical-align: middle;
+  }
+
   .galleria-item {
     display: flex;
     justify-content: center;

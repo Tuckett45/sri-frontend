@@ -136,6 +136,7 @@
   [enableDelete]="false"
   [enableApproval]="true"
   [enableSelection]="true"
+  [enableMarkPaid]="true"
   [selectedExpenseIds]="selectedExpenseIds"
   [pendingStatusIds]="statusUpdatingIds"
   [emptyStateMessage]="'No expenses match the current filters.'"
@@ -148,5 +149,6 @@
   (edit)="openExpenseDetails($event)"
   (approve)="onApprove($event)"
   (reject)="onReject($event)"
+  (markPaid)="onMarkPaid($event)"
   (selectionChange)="onSelectionChange($event)">
 </app-expense-table>

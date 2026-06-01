@@ -189,6 +189,16 @@ export class ExpenseApiService {
     return this.http.delete<void>(`${this.baseUrl}/${id}`, this.authOnlyOptions);
   }
 
+  markPaid(id: string, paidBy?: string): Observable<Expense> {
+    const body = paidBy ? { paidBy } : {};
+    return this.http.patch<Expense>(`${this.baseUrl}/${id}/mark-paid`, body, this.jsonOptions);
+  }
+
+  bulkMarkPaid(expenseIds: string[], paidBy?: string): Observable<any[]> {
+    const body = { expenseIds, paidBy };
+    return this.http.patch<any[]>(`${this.baseUrl}/bulk-mark-paid`, body, this.jsonOptions);
+  }
+
   // --- images ----------------------------------------------------------------
   addImage(expenseId: string, file: File): Observable<ExpenseImage> {
     const fd = new FormData();

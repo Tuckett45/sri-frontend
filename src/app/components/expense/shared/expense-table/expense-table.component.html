@@ -97,6 +97,27 @@
         </td>
       </ng-container>
 
+      <ng-container matColumnDef="paid" *ngIf="enableMarkPaid">
+        <th mat-header-cell *matHeaderCellDef>Paid</th>
+        <td mat-cell *matCellDef="let expense">
+          <button
+            *ngIf="expense.status !== 'Paid'"
+            mat-icon-button
+            matTooltip="Mark as Paid"
+            type="button"
+            [disabled]="loading || isStatusPending(expense)"
+            (click)="onMarkPaid(expense)">
+            <mat-icon class="mark-paid-icon">payments</mat-icon>
+          </button>
+          <mat-icon
+            *ngIf="expense.status === 'Paid'"
+            class="paid-check-icon"
+            matTooltip="Paid{{ expense.paidBy ? ' by ' + expense.paidBy : '' }}{{ expense.paidDate ? ' on ' + (expense.paidDate | date:'shortDate') : '' }}">
+            check_circle
+          </mat-icon>
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="actions" *ngIf="hasActionColumn()">
         <th mat-header-cell *matHeaderCellDef>Actions</th>
         <td mat-cell class="actions-container" *matCellDef="let expense">
