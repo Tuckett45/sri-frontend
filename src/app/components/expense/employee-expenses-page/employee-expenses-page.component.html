@@ -71,7 +71,9 @@
 <app-expense-table
   [expenses]="expenses"
   [loading]="loading"
+  [enableMarkPaid]="isAdmin"
   [emptyStateMessage]="'No expenses match the current filters.'"
   (edit)="openEditExpense($event)"
-  (delete)="openDeleteConfirmationDialog($event)">
+  (delete)="openDeleteConfirmationDialog($event)"
+  (markPaid)="onMarkPaid($event)">
 </app-expense-table>

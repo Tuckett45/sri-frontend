@@ -31,6 +31,7 @@ export class EmployeeExpensesPageComponent implements OnInit {
   categoryOptions = Object.values(ExpenseCategory);
   loading = false;
   filtersOpen = false;
+  isAdmin = false;
   private filtersInitialized = false;
   private baseExpenses: DisplayExpense[] = [];
   private readonly userIdentifier: string | null;
@@ -54,6 +55,7 @@ export class EmployeeExpensesPageComponent implements OnInit {
   ) {
     const currentUser = this.authService.getUser();
     this.userIdentifier = currentUser?.id ?? null;
+    this.isAdmin = this.authService.isAdmin();
   }
 
   ngOnInit(): void {
@@ -385,6 +387,28 @@ export class EmployeeExpensesPageComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.deleteExpense(expense);
+      }
+    });
+  }
+
+  onMarkPaid(expense: Expense): void {
+    if (!expense.id) {
+      this.toastr.error('Expense is missing an identifier');
+      return;
+    }
+
+    const currentUser = this.authService.getUser();
+    const paidBy = currentUser?.id ?? currentUser?.name ?? 'unknown';
+
+    this.loading = true;
+    this.expenseApi.markPaid(expense.id, paidBy).subscribe({
+      next: () => {
+        this.toastr.success('Expense marked as paid');
+        this.loadExpenses();
+      },
+      error: () => {
+        this.toastr.error('Failed to mark expense as paid');
+        this.loading = false;
       }
     });
   }
