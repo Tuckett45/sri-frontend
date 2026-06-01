@@ -112,7 +112,7 @@ export class OnboardingService {
    */
   convertToTechnician(candidateId: string): Observable<{ technicianId: string }> {
     return this.http
-      .post<{ technicianId: string }>(`${this.baseUrl}/candidates/${candidateId}/convert-to-technician`, {})
+      .post<{ technicianId: string }>(`${this.baseUrl}/candidates/${candidateId}/promote`, this.withAudit({}))
       .pipe(catchError(this.mapError('convertToTechnician')));
   }
 
