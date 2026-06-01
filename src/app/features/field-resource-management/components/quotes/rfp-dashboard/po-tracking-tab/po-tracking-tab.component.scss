@@ -1,0 +1,26 @@
+.po-tracking-tab {
+  padding: 16px 0;
+}
+
+.mat-mdc-table {
+  width: 100%;
+}
+
+.inline-edit-cell {
+  cursor: pointer;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inline-edit-cell .edit-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+}
+
+.inline-edit-input {
+  max-width: 150px;
+}

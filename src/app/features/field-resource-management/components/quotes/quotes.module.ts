@@ -2,6 +2,8 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
 
 // Shared Material Module
 import { SharedMaterialModule } from '../../shared-material.module';
@@ -22,13 +24,25 @@ import { BomRejectionDialogComponent } from './bom-validation/bom-rejection-dial
 import { QuoteAssemblyComponent } from './quote-assembly/quote-assembly.component';
 import { QuoteDeliveryComponent } from './quote-delivery/quote-delivery.component';
 import { ConvertToJobComponent } from './convert-to-job/convert-to-job.component';
+
+// Dashboard Components
+import { RfpDashboardComponent } from './rfp-dashboard/rfp-dashboard.component';
+import { RfpTabComponent } from './rfp-dashboard/rfp-tab/rfp-tab.component';
+import { PoTrackingTabComponent } from './rfp-dashboard/po-tracking-tab/po-tracking-tab.component';
+import { ProjectTrackingTabComponent } from './rfp-dashboard/project-tracking-tab/project-tracking-tab.component';
+import { BomHistoryDialogComponent } from './rfp-dashboard/bom-history-dialog/bom-history-dialog.component';
+
+// Dashboard State
+import { dashboardReducer } from '../../state/quotes/dashboard.reducer';
+import { DashboardEffects } from '../../state/quotes/dashboard.effects';
+
 const routes: Routes = [
   {
     path: '',
-    component: QuoteListComponent,
+    component: RfpDashboardComponent,
     data: {
-      title: 'Quotes',
-      breadcrumb: 'Quotes'
+      title: 'RFP Dashboard',
+      breadcrumb: 'RFP Dashboard'
     }
   },
   {
@@ -50,16 +64,13 @@ const routes: Routes = [
  * Quotes Feature Module
  *
  * Lazy-loaded module for the Quote/RFP Workflow functionality.
- * Manages the full pipeline from RFP intake through labor estimation,
- * BOM creation, internal BOM validation, quote assembly, delivery,
- * and quote-to-job conversion.
+ * The default route now renders the RFP Dashboard with 3 tabs:
+ * New RFPs, PO Tracking, and Project Tracking.
  *
  * Routes:
- * - '' → QuoteListComponent (list all quotes)
- * - 'new' → RfpIntakeFormComponent (create new quote, guarded by QuoteCreateGuard)
- * - ':id' → QuoteWorkflowComponent (view/edit existing quote workflow)
- *
- * Requirements: 12.1–12.7
+ * - '' -> RfpDashboardComponent (3-tab dashboard)
+ * - 'new' -> redirect to dashboard
+ * - ':id' -> QuoteWorkflowComponent (view/edit existing quote workflow)
  */
 @NgModule({
   declarations: [
@@ -71,7 +82,12 @@ const routes: Routes = [
     BomRejectionDialogComponent,
     QuoteAssemblyComponent,
     QuoteDeliveryComponent,
-    ConvertToJobComponent
+    ConvertToJobComponent,
+    RfpDashboardComponent,
+    RfpTabComponent,
+    PoTrackingTabComponent,
+    ProjectTrackingTabComponent,
+    BomHistoryDialogComponent
   ],
   imports: [
     CommonModule,
@@ -80,6 +96,8 @@ const routes: Routes = [
     SharedMaterialModule,
     SharedComponentsModule,
     RfpIntakeFormModule,
+    StoreModule.forFeature('dashboard', dashboardReducer),
+    EffectsModule.forFeature([DashboardEffects]),
     RouterModule.forChild(routes)
   ],
 })

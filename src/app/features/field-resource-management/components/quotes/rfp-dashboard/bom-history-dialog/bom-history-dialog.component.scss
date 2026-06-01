@@ -1,0 +1,36 @@
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.no-entries {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.54);
+  margin: 16px 0;
+}
+
+.add-form {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+
+  h3 {
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+}
+
+.form-field-full {
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    flex: 1;
+    min-width: 200px;
+  }
+}

@@ -1,0 +1,60 @@
+<div class="rfp-dashboard">
+  <div class="dashboard-header">
+    <h2>RFP Dashboard</h2>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Customer</mat-label>
+      <input matInput
+             [(ngModel)]="filters.customer"
+             (ngModelChange)="onFilterChange()"
+             placeholder="Search customer...">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Date From</mat-label>
+      <input matInput [matDatepicker]="dateFromPicker" (dateChange)="onDateFromChange($event)">
+      <mat-datepicker-toggle matIconSuffix [for]="dateFromPicker"></mat-datepicker-toggle>
+      <mat-datepicker #dateFromPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Date To</mat-label>
+      <input matInput [matDatepicker]="dateToPicker" (dateChange)="onDateToChange($event)">
+      <mat-datepicker-toggle matIconSuffix [for]="dateToPicker"></mat-datepicker-toggle>
+      <mat-datepicker #dateToPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Assigned To</mat-label>
+      <mat-select [(ngModel)]="filters.assignedTo" (selectionChange)="onFilterChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let user of users$ | async" [value]="user.id">
+          {{ user.fullName }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-stroked-button color="warn" (click)="clearFilters()" class="clear-btn">
+      <mat-icon>clear</mat-icon> Clear Filters
+    </button>
+  </div>
+
+  <!-- Loading indicator -->
+  <mat-progress-bar *ngIf="loading$ | async" mode="indeterminate"></mat-progress-bar>
+
+  <!-- Tabs -->
+  <mat-tab-group animationDuration="200ms">
+    <mat-tab label="New RFPs">
+      <app-rfp-tab [records]="(rfpRecords$ | async) || []" [users]="(users$ | async) || []"></app-rfp-tab>
+    </mat-tab>
+    <mat-tab label="PO Tracking">
+      <app-po-tracking-tab [records]="(poTrackingRecords$ | async) || []"></app-po-tracking-tab>
+    </mat-tab>
+    <mat-tab label="Project Tracking">
+      <app-project-tracking-tab [records]="(projectTrackingRecords$ | async) || []"></app-project-tracking-tab>
+    </mat-tab>
+  </mat-tab-group>
+</div>

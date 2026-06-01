@@ -1,0 +1,87 @@
+<h2 mat-dialog-title>BOM Tracking History</h2>
+<mat-dialog-content>
+  <!-- BOM Tracking entries table -->
+  <table mat-table [dataSource]="bomTrackings" *ngIf="bomTrackings.length > 0" class="full-width">
+
+    <ng-container matColumnDef="bomDescription">
+      <th mat-header-cell *matHeaderCellDef>Description</th>
+      <td mat-cell *matCellDef="let entry">{{ entry.bomDescription }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="orderedDate">
+      <th mat-header-cell *matHeaderCellDef>Ordered Date</th>
+      <td mat-cell *matCellDef="let entry">{{ entry.orderedDate | date:'shortDate' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="receivedDate">
+      <th mat-header-cell *matHeaderCellDef>Received Date</th>
+      <td mat-cell *matCellDef="let entry">{{ entry.receivedDate | date:'shortDate' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="trackingNumber">
+      <th mat-header-cell *matHeaderCellDef>Tracking #</th>
+      <td mat-cell *matCellDef="let entry">{{ entry.trackingNumber || '-' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let entry">
+        <mat-chip>{{ entry.status }}</mat-chip>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <p *ngIf="bomTrackings.length === 0" class="no-entries">No BOM tracking entries yet.</p>
+
+  <!-- Add New BOM Entry Form -->
+  <div class="add-form">
+    <h3>Add New Entry</h3>
+    <form [formGroup]="addForm" (ngSubmit)="onAdd()">
+      <mat-form-field appearance="outline" class="form-field-full">
+        <mat-label>Description</mat-label>
+        <input matInput formControlName="bomDescription">
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Ordered Date</mat-label>
+          <input matInput [matDatepicker]="orderedPicker" formControlName="orderedDate">
+          <mat-datepicker-toggle matIconSuffix [for]="orderedPicker"></mat-datepicker-toggle>
+          <mat-datepicker #orderedPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Received Date</mat-label>
+          <input matInput [matDatepicker]="receivedPicker" formControlName="receivedDate">
+          <mat-datepicker-toggle matIconSuffix [for]="receivedPicker"></mat-datepicker-toggle>
+          <mat-datepicker #receivedPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Tracking Number</mat-label>
+          <input matInput formControlName="trackingNumber">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="Ordered">Ordered</mat-option>
+            <mat-option value="Shipped">Shipped</mat-option>
+            <mat-option value="Received">Received</mat-option>
+            <mat-option value="Backordered">Backordered</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </form>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onClose()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onAdd()" [disabled]="addForm.invalid">Add Entry</button>
+</mat-dialog-actions>

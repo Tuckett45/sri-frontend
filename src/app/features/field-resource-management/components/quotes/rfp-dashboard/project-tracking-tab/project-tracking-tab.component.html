@@ -1,0 +1,73 @@
+<div class="project-tracking-tab">
+  <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-on-table">
+
+    <!-- Customer Column -->
+    <ng-container matColumnDef="customer">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Customer</th>
+      <td mat-cell *matCellDef="let row">{{ row.customer }}</td>
+    </ng-container>
+
+    <!-- Description Column -->
+    <ng-container matColumnDef="description">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+      <td mat-cell *matCellDef="let row">{{ row.description }}</td>
+    </ng-container>
+
+    <!-- Quote Number Column -->
+    <ng-container matColumnDef="quoteNumber">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Quote Number</th>
+      <td mat-cell *matCellDef="let row">{{ row.quoteNumber }}</td>
+    </ng-container>
+
+    <!-- PO Number Column -->
+    <ng-container matColumnDef="poNumber">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>PO Number</th>
+      <td mat-cell *matCellDef="let row">{{ row.poNumber }}</td>
+    </ng-container>
+
+    <!-- Job Number Column -->
+    <ng-container matColumnDef="jobNumber">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Job Number</th>
+      <td mat-cell *matCellDef="let row">{{ row.jobNumber || '-' }}</td>
+    </ng-container>
+
+    <!-- BOM Column -->
+    <ng-container matColumnDef="bom">
+      <th mat-header-cell *matHeaderCellDef>BOM</th>
+      <td mat-cell *matCellDef="let row">
+        <mat-chip (click)="openBomHistory(row)" [class.bom-active]="row.bomTrackings?.length > 0">
+          {{ getLatestBomStatus(row) }}
+        </mat-chip>
+      </td>
+    </ng-container>
+
+    <!-- Customer Equipment Column -->
+    <ng-container matColumnDef="customerEquipment">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Customer Equipment</th>
+      <td mat-cell *matCellDef="let row">{{ row.customerEquipment || '-' }}</td>
+    </ng-container>
+
+    <!-- Job Start Column -->
+    <ng-container matColumnDef="jobStart">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Job Start</th>
+      <td mat-cell *matCellDef="let row">{{ row.jobStart | date:'shortDate' }}</td>
+    </ng-container>
+
+    <!-- Job Complete Column -->
+    <ng-container matColumnDef="jobComplete">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Job Complete</th>
+      <td mat-cell *matCellDef="let row">{{ row.jobComplete | date:'shortDate' }}</td>
+    </ng-container>
+
+    <!-- Invoice # Column -->
+    <ng-container matColumnDef="invoiceNumber">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Invoice #</th>
+      <td mat-cell *matCellDef="let row">{{ row.invoiceNumber || '-' }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+</div>
