@@ -52,6 +52,20 @@ export class BomHistoryDialogComponent {
         quoteId: this.quoteId,
         entry
       }));
+      // Optimistically add to local list so user sees feedback before closing
+      this.bomTrackings = [
+        {
+          id: '',
+          quoteId: this.quoteId,
+          bomDescription: entry.bomDescription,
+          orderedDate: entry.orderedDate || null,
+          receivedDate: entry.receivedDate || null,
+          trackingNumber: entry.trackingNumber || null,
+          status: entry.status
+        } as BomTracking,
+        ...this.bomTrackings
+      ];
+      this.addForm.reset({ status: 'Ordered' });
       this.dialogRef.close(true);
     }
   }
