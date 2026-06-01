@@ -1,4 +1,3 @@
-
 <div class="page-controls">
   <button
     mat-stroked-button
@@ -76,7 +75,7 @@
   (filtersChange)="onFiltersChange($event)">
 </app-expense-filters>
 
-<div class="bulk-actions" *ngIf="isAdmin">
+<div class="bulk-actions" *ngIf="isAdmin && hasSelection">
   <div class="selection-summary">
     <mat-icon>fact_check</mat-icon>
     <span>{{ selectedCount }} selected</span>
@@ -84,14 +83,14 @@
   <div class="bulk-buttons">
     <button
       mat-raised-button
-      class="bulk-btn primary"
+      class="bulk-btn paid"
       type="button"
       (click)="bulkMarkPaid()"
-      [disabled]="!hasSelection || loading || bulkUpdating">
+      [disabled]="loading || bulkUpdating">
       <mat-icon>payments</mat-icon>
       Mark Selected as Paid
     </button>
-    <button mat-button type="button" (click)="clearSelection()" [disabled]="!hasSelection">
+    <button mat-button type="button" (click)="clearSelection()">
       Clear
     </button>
   </div>

@@ -14,7 +14,6 @@
   <div class="export-buttons">
     <div class="export-range">
       <mat-checkbox style="color: black;" [(ngModel)]="exportUseRange">Export by date range</mat-checkbox>
-      <mat-checkbox style="color: black; margin-left: 16px;" [(ngModel)]="markPaidOnExport">Mark as Paid on Export</mat-checkbox>
       <div class="range-inputs" *ngIf="exportUseRange">
         <mat-form-field style="color: black;" appearance="outline">
           <mat-label>Start</mat-label>
@@ -30,6 +29,8 @@
         </mat-form-field>
       </div>
     </div>
+
+    <mat-checkbox style="color: black;" [(ngModel)]="markPaidOnExport">Mark as Paid on Export</mat-checkbox>
 
     <button mat-raised-button [matMenuTriggerFor]="pdfMenu" class="header-btn">
       <mat-icon>picture_as_pdf</mat-icon>
@@ -92,7 +93,7 @@
   (filtersChange)="onFiltersChange($event)">
 </app-expense-filters>
 
-<div class="bulk-actions">
+<div class="bulk-actions" *ngIf="hasSelection">
   <div class="selection-summary">
     <mat-icon>fact_check</mat-icon>
     <span>{{ selectedCount }} selected</span>
@@ -100,10 +101,19 @@
   <div class="bulk-buttons">
     <button
       mat-raised-button
+      class="bulk-btn paid"
+      type="button"
+      (click)="bulkUpdateStatus(expenseStatus.Paid)"
+      [disabled]="loading || bulkUpdating">
+      <mat-icon>payments</mat-icon>
+      Mark Selected as Paid
+    </button>
+    <button
+      mat-raised-button
       class="bulk-btn primary"
       type="button"
       (click)="bulkUpdateStatus(expenseStatus.Approved)"
-      [disabled]="!hasSelection || loading || bulkUpdating">
+      [disabled]="loading || bulkUpdating">
       Approve Selected
     </button>
     <button
@@ -111,18 +121,10 @@
       class="bulk-btn secondary"
       type="button"
       (click)="bulkUpdateStatus(expenseStatus.Rejected)"
-      [disabled]="!hasSelection || loading || bulkUpdating">
+      [disabled]="loading || bulkUpdating">
       Reject Selected
     </button>
-    <button
-      mat-raised-button
-      class="bulk-btn secondary"
-      type="button"
-      (click)="bulkUpdateStatus(expenseStatus.Paid)"
-      [disabled]="!hasSelection || loading || bulkUpdating">
-      Mark Paid
-    </button>
-    <button mat-button type="button" (click)="clearSelection()" [disabled]="!hasSelection">
+    <button mat-button type="button" (click)="clearSelection()">
       Clear
     </button>
   </div>
