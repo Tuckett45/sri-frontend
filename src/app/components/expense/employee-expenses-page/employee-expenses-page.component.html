@@ -1,4 +1,5 @@
-﻿<div class="page-controls">
+
+<div class="page-controls">
   <button
     mat-stroked-button
     type="button"
@@ -10,6 +11,13 @@
   </button>
 
   <div class="export-buttons">
+    <mat-checkbox
+      *ngIf="isAdmin"
+      style="color: black;"
+      [(ngModel)]="markPaidOnExport">
+      Mark as Paid on Export
+    </mat-checkbox>
+
     <button mat-raised-button [matMenuTriggerFor]="pdfMenu" class="header-btn">
       <mat-icon>picture_as_pdf</mat-icon>
       Export to PDF
@@ -68,12 +76,37 @@
   (filtersChange)="onFiltersChange($event)">
 </app-expense-filters>
 
+<div class="bulk-actions" *ngIf="isAdmin">
+  <div class="selection-summary">
+    <mat-icon>fact_check</mat-icon>
+    <span>{{ selectedCount }} selected</span>
+  </div>
+  <div class="bulk-buttons">
+    <button
+      mat-raised-button
+      class="bulk-btn primary"
+      type="button"
+      (click)="bulkMarkPaid()"
+      [disabled]="!hasSelection || loading || bulkUpdating">
+      <mat-icon>payments</mat-icon>
+      Mark Selected as Paid
+    </button>
+    <button mat-button type="button" (click)="clearSelection()" [disabled]="!hasSelection">
+      Clear
+    </button>
+  </div>
+</div>
+
 <app-expense-table
   [expenses]="expenses"
-  [loading]="loading"
+  [loading]="loading || statusUpdatingIds.size > 0 || bulkUpdating"
   [enableMarkPaid]="isAdmin"
+  [enableSelection]="isAdmin"
+  [selectedExpenseIds]="selectedExpenseIds"
+  [pendingStatusIds]="statusUpdatingIds"
   [emptyStateMessage]="'No expenses match the current filters.'"
   (edit)="openEditExpense($event)"
   (delete)="openDeleteConfirmationDialog($event)"
-  (markPaid)="onMarkPaid($event)">
+  (markPaid)="onMarkPaid($event)"
+  (selectionChange)="onSelectionChange($event)">
 </app-expense-table>

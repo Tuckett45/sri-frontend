@@ -9,8 +9,9 @@ import { ExpenseDialogResult, ExpenseReportModalComponent } from '../../modals/e
 import { DeleteConfirmationModalComponent } from '../../modals/delete-confirmation-modal/delete-confirmation-modal.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { ExpenseFilters } from '../shared/expense-filters/expense-filters.component';
-import { of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { ExpenseSelectionChange } from '../shared/expense-table/expense-table.component';
+import { of, forkJoin } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 
 type DisplayExpense = Expense & {
   job?: string | null;
@@ -29,12 +30,25 @@ export class EmployeeExpensesPageComponent implements OnInit {
   filteredExpenses: DisplayExpense[] = [];
   statusOptions = Object.values(ExpenseStatus);
   categoryOptions = Object.values(ExpenseCategory);
+  readonly expenseStatus = ExpenseStatus;
   loading = false;
   filtersOpen = false;
   isAdmin = false;
+  markPaidOnExport = false;
+  bulkUpdating = false;
+  selectedExpenseIds = new Set<string>();
+  readonly statusUpdatingIds = new Set<string>();
   private filtersInitialized = false;
   private baseExpenses: DisplayExpense[] = [];
   private readonly userIdentifier: string | null;
+
+  get hasSelection(): boolean {
+    return this.selectedExpenseIds.size > 0;
+  }
+
+  get selectedCount(): number {
+    return this.selectedExpenseIds.size;
+  }
 
   private currentFilters: ExpenseFilters = {
     startDate: null,
@@ -256,6 +270,10 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
     this.exportService.exportToCSV(this.filteredExpenses, options);
     this.toastr.success('CSV export downloaded');
+
+    if (this.isAdmin && this.markPaidOnExport) {
+      this.markExportedExpensesAsPaid(this.filteredExpenses);
+    }
   }
 
   exportPdf(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): void {
@@ -274,6 +292,35 @@ export class EmployeeExpensesPageComponent implements OnInit {
 
     this.exportService.exportToPDF(this.filteredExpenses, options);
     this.toastr.success('PDF export downloaded');
+
+    if (this.isAdmin && this.markPaidOnExport) {
+      this.markExportedExpensesAsPaid(this.filteredExpenses);
+    }
+  }
+
+  private markExportedExpensesAsPaid(expenses: DisplayExpense[]): void {
+    const unpaidIds = expenses
+      .filter(exp => exp.id && exp.status !== ExpenseStatus.Paid)
+      .map(exp => exp.id!)
+      .filter((id): id is string => !!id);
+
+    if (!unpaidIds.length) return;
+
+    const currentUser = this.authService.getUser();
+    const paidBy = currentUser?.id ?? currentUser?.name ?? 'unknown';
+
+    this.expenseApi.bulkMarkPaid(unpaidIds, paidBy).subscribe({
+      next: (results) => {
+        const successCount = results.filter((r: any) => r.success).length;
+        if (successCount > 0) {
+          this.toastr.success(`Marked ${successCount} exported expense${successCount === 1 ? '' : 's'} as paid.`);
+          this.loadExpenses();
+        }
+      },
+      error: () => {
+        this.toastr.error('Export succeeded but failed to mark expenses as paid.');
+      }
+    });
   }
 
   private getDateRangeFromFilters(): { start: string; end: string } | undefined {
@@ -400,15 +447,61 @@ export class EmployeeExpensesPageComponent implements OnInit {
     const currentUser = this.authService.getUser();
     const paidBy = currentUser?.id ?? currentUser?.name ?? 'unknown';
 
-    this.loading = true;
+    this.statusUpdatingIds.add(expense.id);
     this.expenseApi.markPaid(expense.id, paidBy).subscribe({
       next: () => {
         this.toastr.success('Expense marked as paid');
+        if (expense.id) this.statusUpdatingIds.delete(expense.id);
         this.loadExpenses();
       },
       error: () => {
         this.toastr.error('Failed to mark expense as paid');
-        this.loading = false;
+        if (expense.id) this.statusUpdatingIds.delete(expense.id);
+      }
+    });
+  }
+
+  onSelectionChange(change: ExpenseSelectionChange): void {
+    this.selectedExpenseIds = new Set(change.selectedIds);
+  }
+
+  clearSelection(): void {
+    if (!this.selectedExpenseIds.size) return;
+    this.selectedExpenseIds = new Set<string>();
+  }
+
+  bulkMarkPaid(): void {
+    const ids = Array.from(this.selectedExpenseIds);
+    if (!ids.length) {
+      this.toastr.info('Select at least one expense to mark as paid.');
+      return;
+    }
+
+    ids.forEach(id => this.statusUpdatingIds.add(id));
+    this.bulkUpdating = true;
+    this.loading = true;
+
+    const currentUser = this.authService.getUser();
+    const paidBy = currentUser?.id ?? currentUser?.name ?? 'unknown';
+
+    this.expenseApi.bulkMarkPaid(ids, paidBy).pipe(
+      finalize(() => {
+        ids.forEach(id => this.statusUpdatingIds.delete(id));
+        this.bulkUpdating = false;
+      })
+    ).subscribe({
+      next: (results) => {
+        const successCount = results.filter((r: any) => r.success).length;
+        if (successCount > 0) {
+          this.toastr.success(`Marked ${successCount} expense${successCount === 1 ? '' : 's'} as paid.`);
+        }
+        this.clearSelection();
+        this.loadExpenses();
+      },
+      error: () => {
+        this.toastr.error('Failed to mark expenses as paid');
+        this.clearSelection();
+        this.loadExpenses();
       }
     });
   }

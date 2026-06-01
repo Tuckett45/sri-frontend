@@ -43,6 +43,7 @@ export class HrExpensesPageComponent implements OnInit {
   exportUseRange = false;
   exportStartDate: Date | null = null;
   exportEndDate: Date | null = null;
+  markPaidOnExport = false;
   private filtersInitialized = false;
   private isUsingFilters = false;
   bulkUpdating = false;
@@ -382,6 +383,10 @@ export class HrExpensesPageComponent implements OnInit {
 
     this.exportService.exportToCSV(exportExpenses, options);
     this.toastr.success('CSV export downloaded');
+
+    if (this.markPaidOnExport) {
+      this.markExportedExpensesAsPaid(exportExpenses);
+    }
   }
 
   async exportPdf(groupBy: 'employee' | 'job' | 'category' | 'none' = 'none'): Promise<void> {
@@ -398,6 +403,35 @@ export class HrExpensesPageComponent implements OnInit {
 
     this.exportService.exportToPDF(exportExpenses, options);
     this.toastr.success('PDF export downloaded');
+
+    if (this.markPaidOnExport) {
+      this.markExportedExpensesAsPaid(exportExpenses);
+    }
+  }
+
+  private markExportedExpensesAsPaid(expenses: DisplayExpense[]): void {
+    const unpaidIds = expenses
+      .filter(exp => exp.id && exp.status !== ExpenseStatus.Paid)
+      .map(exp => exp.id!)
+      .filter((id): id is string => !!id);
+
+    if (!unpaidIds.length) return;
+
+    const user = this.authService.getUser();
+    const paidBy = user?.id ?? user?.name ?? 'unknown';
+
+    this.expenseApi.bulkMarkPaid(unpaidIds, paidBy).subscribe({
+      next: (results) => {
+        const successCount = results.filter((r: any) => r.success).length;
+        if (successCount > 0) {
+          this.toastr.success(`Marked ${successCount} exported expense${successCount === 1 ? '' : 's'} as paid.`);
+          this.loadExpenses(this.pageIndex, this.pageSize);
+        }
+      },
+      error: () => {
+        this.toastr.error('Export succeeded but failed to mark expenses as paid.');
+      }
+    });
   }
 
   private resolveExpensesForExport(
