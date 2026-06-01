@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 import { DashboardFilters, DashboardQuote, DashboardUser } from '../../../models/quote-workflow.model';
 import * as DashboardActions from '../../../state/quotes/dashboard.actions';
 import * as DashboardSelectors from '../../../state/quotes/dashboard.selectors';
@@ -26,6 +27,7 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
   };
 
   private destroy$ = new Subject<void>();
+  private customerFilter$ = new Subject<string>();
 
   constructor(private store: Store) {
     this.rfpRecords$ = this.store.select(DashboardSelectors.selectRfpRecords);
@@ -38,6 +40,13 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.store.dispatch(DashboardActions.loadDashboard({ filters: this.filters }));
     this.store.dispatch(DashboardActions.loadUsers());
+
+    this.customerFilter$.pipe(
+      debounceTime(400),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.dispatchFilterChange();
+    });
   }
 
   ngOnDestroy(): void {
@@ -45,9 +54,12 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  onCustomerInput(): void {
+    this.customerFilter$.next(this.filters.customer);
+  }
+
   onFilterChange(): void {
-    this.store.dispatch(DashboardActions.updateFilters({ filters: { ...this.filters } }));
-    this.store.dispatch(DashboardActions.loadDashboard({ filters: this.filters }));
+    this.dispatchFilterChange();
   }
 
   clearFilters(): void {
@@ -58,16 +70,21 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
       assignedTo: '',
       phase: ''
     };
-    this.onFilterChange();
+    this.dispatchFilterChange();
   }
 
   onDateFromChange(event: any): void {
     this.filters.dateFrom = event.value ? event.value.toISOString() : null;
-    this.onFilterChange();
+    this.dispatchFilterChange();
   }
 
   onDateToChange(event: any): void {
     this.filters.dateTo = event.value ? event.value.toISOString() : null;
-    this.onFilterChange();
+    this.dispatchFilterChange();
+  }
+
+  private dispatchFilterChange(): void {
+    this.store.dispatch(DashboardActions.updateFilters({ filters: { ...this.filters } }));
+    this.store.dispatch(DashboardActions.loadDashboard({ filters: this.filters }));
   }
 }
