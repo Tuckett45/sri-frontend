@@ -6,7 +6,7 @@ import { OnboardingStartComponent } from './onboarding-start.component';
 const routes: Routes = [
   { path: 'start', component: OnboardingStartComponent },
   { path: 'apply/:token', component: PublicOnboardingComponent },
-  { path: '', component: PublicOnboardingComponent }
+  { path: '', redirectTo: 'start', pathMatch: 'full' }
 ];
 
 @NgModule({

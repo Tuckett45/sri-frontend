@@ -13,7 +13,7 @@ import { PublicOnboardingService } from './public-onboarding.service';
 
       <div *ngIf="error" class="error-state">
         <p>Something went wrong. Please try again or contact your recruiter.</p>
-        <button (click)="startOnboarding()">Try Again</button>
+        <button (click)="startOnboarding()" [disabled]="retryDisabled">Try Again</button>
       </div>
     </div>
   `,
@@ -59,11 +59,16 @@ import { PublicOnboardingService } from './public-onboarding.service';
     .error-state button:hover {
       background-color: #1565c0;
     }
+    .error-state button:disabled {
+      background-color: #9e9e9e;
+      cursor: not-allowed;
+    }
   `]
 })
 export class OnboardingStartComponent implements OnInit {
   loading = false;
   error = false;
+  retryDisabled = false;
 
   constructor(
     private publicOnboardingService: PublicOnboardingService,
@@ -84,6 +89,10 @@ export class OnboardingStartComponent implements OnInit {
       error: () => {
         this.loading = false;
         this.error = true;
+        this.retryDisabled = true;
+        setTimeout(() => {
+          this.retryDisabled = false;
+        }, 3000);
       }
     });
   }
