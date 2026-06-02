@@ -57,7 +57,7 @@ export class TimeEntryEffects implements OnInitEffects {
         }
         return of();
       }),
-      filter((action): action is Action => !!action)
+      filter((action): action is ReturnType<typeof TimeEntryActions.loadActiveEntry> => !!action)
     )
   );
 
