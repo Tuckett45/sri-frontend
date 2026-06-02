@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 import {
   BomTracking,
   DashboardFilters,
@@ -17,9 +17,9 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class RfpDashboardService {
-  private readonly dashboardUrl = `${environment.atlasApiUrl}/quotes/dashboard`;
-  private readonly quotesUrl = `${environment.atlasApiUrl}/quotes`;
-  private readonly usersUrl = `${environment.apiUrl}/user-management/users`;
+  private readonly dashboardUrl = `${local_environment.apiUrl}/quotes/dashboard`;
+  private readonly quotesUrl = `${local_environment.apiUrl}/quotes`;
+  private readonly usersUrl = `${local_environment.apiUrl}/user-management/users`;
 
   constructor(private http: HttpClient) {}
 

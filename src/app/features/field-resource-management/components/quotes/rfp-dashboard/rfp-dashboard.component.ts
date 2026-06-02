@@ -83,6 +83,24 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
     this.dispatchFilterChange();
   }
 
+  getActiveFilterCount(): number {
+    let count = 0;
+    if (this.filters.customer) count++;
+    if (this.filters.dateFrom) count++;
+    if (this.filters.dateTo) count++;
+    if (this.filters.assignedTo) count++;
+    if (this.filters.phase) count++;
+    return count;
+  }
+
+  exportToCSV(): void {
+    // TODO: Implement CSV export
+  }
+
+  exportToPDF(): void {
+    // TODO: Implement PDF export
+  }
+
   private dispatchFilterChange(): void {
     this.store.dispatch(DashboardActions.updateFilters({ filters: { ...this.filters } }));
     this.store.dispatch(DashboardActions.loadDashboard({ filters: this.filters }));
