@@ -185,7 +185,9 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
       const distance = this.geolocationService.calculateDistance(location, siteLocation);
       this.proximityStatus = distance <= this.MILE_IN_METERS ? 'On Site' : 'En Route';
     } else {
-      this.proximityStatus = 'Unknown';
+      // No job site coordinates available — default to On Site since technician
+      // is actively clocking in (avoids incorrect "En Route" status)
+      this.proximityStatus = 'On Site';
     }
   }
 
