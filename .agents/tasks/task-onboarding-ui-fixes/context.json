@@ -1,0 +1,28 @@
+{
+  "project_type": "Angular frontend SPA (with mock interceptor for backend)",
+  "language": "TypeScript",
+  "build_system": "Angular CLI / npm",
+  "test_framework": "Angular testing (Karma/Jasmine) - minimal test coverage observed",
+  "build_command": "cd /projects/sandbox/sri-frontend && npx ng build --configuration=production 2>&1 | tail -50",
+  "test_command": "No existing tests observed for onboarding feature",
+  "verification_instructions": "Build the Angular project to validate no TypeScript compilation errors. Manually verify template correctness by reviewing inline templates.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "cd /projects/sandbox/sri-frontend && npm install",
+  "environment_constraints": "COMMON_DEPENDENCIES network mode - can install npm packages. No live backend - all data served by MockOnboardingInterceptor. Node.js v22 available.",
+  "contribution_requirements": "Inline templates and styles used in most components (not separate .html/.scss files for onboarding components).",
+  "key_patterns": "Components use inline template/styles. MockOnboardingInterceptor intercepts HTTP calls and returns mock data. Services use withAudit() to add metadata. Forms use Angular Reactive Forms with FormBuilder. Material Design components (MatDialog, mat-datepicker, mat-stepper) are used throughout.",
+  "relevant_files": [
+    "/projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/candidate-list/candidate-list.component.ts",
+    "/projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/candidate-detail/candidate-detail.component.ts",
+    "/projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/candidate-form/candidate-form.component.ts",
+    "/projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/add-candidate-modal/add-candidate-modal.component.ts",
+    "/projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/generate-link-dialog/generate-link-dialog.component.ts",
+    "/projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/pipeline-dashboard/pipeline-dashboard.component.ts",
+    "/projects/sandbox/sri-frontend/src/app/features/public-onboarding/public-onboarding.component.html",
+    "/projects/sandbox/sri-frontend/src/app/features/public-onboarding/public-onboarding.component.ts",
+    "/projects/sandbox/sri-frontend/src/app/features/field-resource-management/models/onboarding.models.ts",
+    "/projects/sandbox/sri-frontend/src/app/features/field-resource-management/services/onboarding.service.ts",
+    "/projects/sandbox/sri-frontend/src/app/features/field-resource-management/interceptors/mock-onboarding.interceptor.ts"
+  ],
+  "directory_structure": "sri-frontend/src/app/features/ contains feature modules. field-resource-management/components/onboarding/ has all internal onboarding components. public-onboarding/ has the public-facing form. Models in field-resource-management/models/, services in field-resource-management/services/, mock interceptor in field-resource-management/interceptors/."
+}

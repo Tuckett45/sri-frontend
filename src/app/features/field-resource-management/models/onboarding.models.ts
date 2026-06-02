@@ -19,6 +19,7 @@ export interface Candidate {
   biisciCertified?: boolean;
   workSite: string;
   homeAddress?: string;
+  homeState?: string;
   startDate: string;          // ISO date
   offerStatus: OfferStatus;
   resumeUrl?: string;

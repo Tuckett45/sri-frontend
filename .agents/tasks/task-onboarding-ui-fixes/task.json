@@ -1,0 +1,7 @@
+{
+  "task_id": "task-onboarding-ui-fixes",
+  "task_description": "Three changes to the onboarding/candidate feature: (1) Rename 'onboarding form' to 'Candidate Information Sheet' everywhere in the UI, (2) Replace the 'Work Site' (aka 'Site Assignment') column in the Candidate List with 'Home State', and (3) Fix the edit bug where changes are not being persisted.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}

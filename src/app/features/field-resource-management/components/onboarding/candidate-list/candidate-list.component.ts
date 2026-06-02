@@ -29,8 +29,8 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       <div class="header-row">
         <h2>Candidates</h2>
         <div class="header-actions">
-          <button type="button" class="generate-link-btn" (click)="onGenerateLink()" aria-label="Generate onboarding link">
-            Generate Onboarding Link
+          <button type="button" class="generate-link-btn" (click)="onGenerateLink()" aria-label="Generate candidate information sheet link">
+            Generate Info Sheet Link
           </button>
           <button type="button" class="add-candidate-btn" (click)="onAddCandidate()" aria-label="Add new candidate">
             + Add Candidate
@@ -52,7 +52,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
                  type="text"
                  [value]="searchText"
                  (input)="onSearchChange($event)"
-                 placeholder="Search by name, email, or work site" />
+                 placeholder="Search by name, email, or home state" />
         </div>
         <div class="filter-field">
           <label for="statusFilter">Offer Status</label>
@@ -93,8 +93,8 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('scissorLiftCertified')" class="sortable">
               Scissor Lift <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
             </th>
-            <th (click)="onSort('workSite')" class="sortable">
-              Work Site <span class="sort-icon">{{ getSortIcon('workSite') }}</span>
+            <th (click)="onSort('homeState')" class="sortable">
+              Home State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
             </th>
             <th (click)="onSort('startDate')" class="sortable">
               Start Date <span class="sort-icon">{{ getSortIcon('startDate') }}</span>
@@ -119,7 +119,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td class="bool-cell"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
             <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
             <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td>{{ candidate.workSite }}</td>
+            <td>{{ candidate.homeState }}</td>
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
             <td class="actions-cell">
@@ -670,7 +670,7 @@ export class CandidateListComponent implements OnInit {
         (c) =>
           c.techName.toLowerCase().includes(term) ||
           c.techEmail.toLowerCase().includes(term) ||
-          (c.workSite || '').toLowerCase().includes(term)
+          (c.homeState || '').toLowerCase().includes(term)
       );
     }
 

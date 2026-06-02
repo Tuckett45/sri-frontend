@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Fix the bug where edits to candidate information are not being saved/persisted. The root cause is in the AddCandidateModalComponent: when opened in edit mode, the startDate is passed as a string (e.g. '2026-06-01') but the mat-datepicker expects a Date object, causing the basicInfoForm to be invalid and preventing the user from navigating past step 1 in the linear stepper or submitting the form.",
+  "status": "pending",
+  "steps": [
+    "1. In /projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/add-candidate-modal/add-candidate-modal.component.ts: In the constructor where the form is built for edit mode, convert the candidate.startDate string to a Date object before setting it as the form control value. Change `startDate: [candidate?.startDate || '', Validators.required]` to something like `startDate: [candidate?.startDate ? new Date(candidate.startDate + 'T00:00:00') : '', Validators.required]`. The 'T00:00:00' suffix ensures the Date is created in local timezone rather than UTC.",
+    "2. Also in the same file: ensure the stepper does NOT block navigation in edit mode. Either remove the `linear` attribute when in edit mode, OR ensure all step controls are properly configured. The simplest fix is to ensure the startDate conversion makes basicInfoForm valid. But also verify that other fields (email format, etc.) are valid when pre-populated.",
+    "3. Verify that the onSubmit() method properly handles the Date-to-string conversion for startDate (this already exists: `startDateValue instanceof Date ? startDateValue.toISOString().split('T')[0] : startDateValue`). No change needed here.",
+    "4. In the candidate-list.component.ts onEditCandidate method: Add the missing 'workSite' field to the UpdateCandidatePayload. Currently the edit payload omits workSite, which means it could be lost on update. Add `workSite: result.basicInfo.workSite || undefined,` to the payload object after homeAddress.",
+    "5. In the candidate-list.component.ts onEditCandidate method: Also add the missing 'homeState' field (from FEAT-001's model addition) to the UpdateCandidatePayload if it exists in basicInfo. Add `homeState: result.basicInfo.homeState || undefined,` to the payload.",
+    "6. In /projects/sandbox/sri-frontend/src/app/features/field-resource-management/models/onboarding.models.ts: Add 'homeState?: string;' to the UpdateCandidatePayload interface."
+  ],
+  "acceptance_criteria": [
+    "Opening the Edit modal for an existing candidate properly populates the startDate field as a Date object that mat-datepicker can work with",
+    "The linear stepper allows navigation through all steps when editing an existing candidate",
+    "Clicking Submit/Update in the edit modal successfully closes the dialog and persists changes",
+    "The TypeScript compiles without errors"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/sri-frontend && npx ng build --configuration=production 2>&1 | tail -80"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
