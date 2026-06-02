@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Rename 'Onboarding Form' references to 'Candidate Information Sheet' in the public-facing form, replace the 'Work Site' column in the Candidate List with 'Home State', and add homeState to the data model/mock data.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. In /projects/sandbox/sri-frontend/src/app/features/public-onboarding/public-onboarding.component.html: Change the header subtitle 'Candidate Onboarding' to 'Candidate Information Sheet'. Change the heading 'Complete Your Onboarding Information' to 'Candidate Information Sheet'. Change 'Please fill out the information below to complete your onboarding application.' to 'Please fill out the information below to complete your Candidate Information Sheet. Fields marked with * are required.' (remove the separate 'Fields marked with *' sentence since it's merged). Change the submit button text from 'Submit Application' to 'Submit Information'. Change the success heading from 'Application Submitted' to 'Information Submitted'. Change the success message referencing 'onboarding information' and 'application' to use 'Candidate Information Sheet' terminology.",
     "2. In /projects/sandbox/sri-frontend/src/app/features/public-onboarding/public-onboarding.component.html: Remove the 'Work Site' form field entirely (the <div class='form-field'> block containing the workSite input). Candidates should not need to specify a work site since they don't have visibility to available sites.",
@@ -27,5 +27,5 @@
     "Run: cd /projects/sandbox/sri-frontend && npx ng build --configuration=production 2>&1 | tail -80"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Build succeeds (bundles generated). Font inlining fails due to network restriction (403 from Google Fonts CDN) which is an environment constraint, not a code issue. Pre-existing TS errors exist in unrelated spec/story files but do not affect the Angular production build. NODE_OPTIONS must be unset to avoid proxy-bootstrap.js error."
 }
