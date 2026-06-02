@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { forkJoin, Observable } from 'rxjs';
 import { OnboardingService } from '../../../services/onboarding.service';
 import { OnboardingLinkService } from '../../../services/onboarding-link.service';
@@ -106,7 +107,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let candidate of filteredCandidates"
+          <tr *ngFor="let candidate of paginatedCandidates"
               (click)="onRowClick(candidate)"
               class="candidate-row"
               tabindex="0"
@@ -130,6 +131,17 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
           </tr>
         </tbody>
       </table>
+
+      <!-- Paginator -->
+      <mat-paginator *ngIf="filteredCandidates.length > 0"
+                     [length]="filteredCandidates.length"
+                     [pageSize]="pageSize"
+                     [pageSizeOptions]="pageSizeOptions"
+                     [pageIndex]="pageIndex"
+                     (page)="onPageChange($event)"
+                     showFirstLastButtons
+                     aria-label="Select page of candidates">
+      </mat-paginator>
 
       <!-- Empty State -->
       <p *ngIf="!loading && filteredCandidates.length === 0 && !errorMessage" class="empty-state">
@@ -386,6 +398,34 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 
     .btn-delete:hover { background: #ffcdd2; }
 
+    :host ::ng-deep .mat-mdc-paginator {
+      border-top: 1px solid #e0e0e0;
+      background: #fafafa;
+      border-radius: 0 0 8px 8px;
+      color: #000000;
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-paginator-range-label,
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-select-value-text {
+      color: #000000;
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button {
+      color: #000000;
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button svg {
+      fill: #000000;
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button[disabled] {
+      color: rgba(0, 0, 0, 0.38);
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button[disabled] svg {
+      fill: rgba(0, 0, 0, 0.38);
+    }
+
     @media (max-width: 768px) {
       .candidate-list-container {
         margin: 1rem;
@@ -409,6 +449,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 export class CandidateListComponent implements OnInit {
   candidates: Candidate[] = [];
   filteredCandidates: Candidate[] = [];
+  paginatedCandidates: Candidate[] = [];
   loading = false;
   submitting = false;
   errorMessage = '';
@@ -417,6 +458,13 @@ export class CandidateListComponent implements OnInit {
   statusFilter = '';
   incompleteCertsFilter = false;
   sortState: SortState | null = null;
+
+  // Pagination
+  pageSize = 10;
+  pageIndex = 0;
+  pageSizeOptions = [5, 10, 25, 50];
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private route: ActivatedRoute,
@@ -444,11 +492,13 @@ export class CandidateListComponent implements OnInit {
 
   onSearchChange(event: Event): void {
     this.searchText = (event.target as HTMLInputElement).value;
+    this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
 
   onStatusFilterChange(event: Event): void {
     this.statusFilter = (event.target as HTMLSelectElement).value;
+    this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
 
@@ -471,6 +521,12 @@ export class CandidateListComponent implements OnInit {
 
   getStatusLabel(status: OfferStatus): string {
     return OFFER_STATUS_LABELS[status] ?? status;
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.updatePaginatedCandidates();
   }
 
   onRowClick(candidate: Candidate): void {
@@ -710,6 +766,13 @@ export class CandidateListComponent implements OnInit {
     }
 
     this.filteredCandidates = result;
+    this.updatePaginatedCandidates();
+  }
+
+  private updatePaginatedCandidates(): void {
+    const startIndex = this.pageIndex * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedCandidates = this.filteredCandidates.slice(startIndex, endIndex);
   }
 
   private uploadCandidateFiles(candidateId: string, files: { resume?: File | null; headshot?: File | null }, reloadFn: () => void): void {
