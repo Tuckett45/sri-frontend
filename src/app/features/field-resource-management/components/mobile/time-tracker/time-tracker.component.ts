@@ -387,15 +387,29 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get Google Maps directions URL
+   * Get Google Maps directions URL.
+   * Includes the user's current GPS coordinates as origin (when available)
+   * to prevent Google Maps from using IP-based geolocation which may resolve
+   * to incorrect locations (e.g., ISP data centers).
    */
   getDirectionsUrl(): string {
     const addr = this.job.siteAddress;
+    let destination: string;
+    
     if (addr?.latitude != null && addr?.longitude != null) {
-      return `https://www.google.com/maps/dir/?api=1&destination=${addr.latitude},${addr.longitude}`;
+      destination = `${addr.latitude},${addr.longitude}`;
+    } else {
+      destination = encodeURIComponent(`${addr.street}, ${addr.city}, ${addr.state} ${addr.zipCode}`);
     }
-    const dest = encodeURIComponent(`${addr.street}, ${addr.city}, ${addr.state} ${addr.zipCode}`);
-    return `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+
+    let url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+    
+    // Include current GPS location as origin to avoid IP-based geolocation fallback
+    if (this.currentLocation) {
+      url += `&origin=${this.currentLocation.latitude},${this.currentLocation.longitude}`;
+    }
+    
+    return url;
   }
 
   /**
@@ -510,12 +524,15 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
 
   /**
    * Determine and dispatch the correct job status based on proximity to the job site.
-   * ≤ 1 mile → OnSite, > 1 mile → EnRoute
+   * ≤ 1 mile → OnSite, > 1 mile → EnRoute.
+   * If distance cannot be determined (no job site coordinates), default to OnSite
+   * since the technician is actively clocking in.
    */
   private updateJobStatusByProximity(userLocation: GeoLocation): void {
     const distance = this.getDistanceToJobSite(userLocation);
 
-    if (distance !== null && distance <= 1) {
+    if (distance === null || distance <= 1) {
+      // No coordinates available or within 1 mile — assume on site
       this.store.dispatch(updateJobStatus({
         id: this.job.id,
         status: JobStatus.OnSite

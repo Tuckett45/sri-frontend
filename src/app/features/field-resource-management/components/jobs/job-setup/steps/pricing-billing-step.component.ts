@@ -46,6 +46,12 @@ const TWO_DECIMAL_PATTERN = /^\d+(\.\d{1,2})?$/;
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="step-container" [formGroup]="formGroup">
+      <!-- Section Description -->
+      <p class="section-description">
+        These fields define the billing rates that SRI will invoice the client for this job.
+        Enter the rates from your contract or work order.
+      </p>
+
       <!-- Bill Rates -->
       <h3 class="section-heading">Bill Rates</h3>
 
@@ -53,6 +59,7 @@ const TWO_DECIMAL_PATTERN = /^\d+(\.\d{1,2})?$/;
         <mat-form-field appearance="outline">
           <mat-label>Standard Bill Rate ($)</mat-label>
           <input matInput type="number" formControlName="standardBillRate" min="0.01" step="0.01" />
+          <mat-hint>The hourly rate SRI bills the client for standard (non-overtime) hours on this job.</mat-hint>
           <mat-error *ngIf="formGroup.get('standardBillRate')?.hasError('required')">Standard bill rate is required</mat-error>
           <mat-error *ngIf="formGroup.get('standardBillRate')?.hasError('min')">Must be at least $0.01</mat-error>
           <mat-error *ngIf="formGroup.get('standardBillRate')?.hasError('pattern')">Enter a valid amount (up to 2 decimal places)</mat-error>
@@ -61,6 +68,7 @@ const TWO_DECIMAL_PATTERN = /^\d+(\.\d{1,2})?$/;
         <mat-form-field appearance="outline">
           <mat-label>Overtime Bill Rate ($)</mat-label>
           <input matInput type="number" formControlName="overtimeBillRate" min="0.01" step="0.01" />
+          <mat-hint>The hourly rate SRI bills the client for overtime hours. Typically 1.5x the standard rate. For CA jobs, use the applicable OT multiplier from your work order.</mat-hint>
           <mat-error *ngIf="formGroup.get('overtimeBillRate')?.hasError('required')">Overtime bill rate is required</mat-error>
           <mat-error *ngIf="formGroup.get('overtimeBillRate')?.hasError('min')">Must be at least $0.01</mat-error>
           <mat-error *ngIf="formGroup.get('overtimeBillRate')?.hasError('pattern')">Enter a valid amount (up to 2 decimal places)</mat-error>
@@ -77,6 +85,7 @@ const TWO_DECIMAL_PATTERN = /^\d+(\.\d{1,2})?$/;
       <mat-form-field appearance="outline">
         <mat-label>Per Diem Amount ($)</mat-label>
         <input matInput type="number" formControlName="perDiem" min="0" step="0.01" />
+        <mat-hint>Daily lodging/meal allowance for technicians on this job. Based on 2.5–3 star hotel rates near the job site. Enter $0 if not applicable.</mat-hint>
         <mat-error *ngIf="formGroup.get('perDiem')?.hasError('required')">Per diem amount is required</mat-error>
         <mat-error *ngIf="formGroup.get('perDiem')?.hasError('min')">Must be $0.00 or greater</mat-error>
         <mat-error *ngIf="formGroup.get('perDiem')?.hasError('pattern')">Enter a valid amount (up to 2 decimal places)</mat-error>
@@ -90,6 +99,7 @@ const TWO_DECIMAL_PATTERN = /^\d+(\.\d{1,2})?$/;
         <mat-select formControlName="invoicingProcess">
           <mat-option *ngFor="let opt of invoicingOptions" [value]="opt.value">{{ opt.label }}</mat-option>
         </mat-select>
+        <mat-hint>How often SRI will invoice the client for this project (not your timesheet submission frequency).</mat-hint>
         <mat-error *ngIf="formGroup.get('invoicingProcess')?.hasError('required')">Invoicing process is required</mat-error>
       </mat-form-field>
 
@@ -123,6 +133,13 @@ const TWO_DECIMAL_PATTERN = /^\d+(\.\d{1,2})?$/;
       flex-direction: column;
       gap: 8px;
       padding: 16px 0;
+    }
+
+    .section-description {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+      margin: 0 0 16px 0;
+      line-height: 1.5;
     }
 
     .section-heading {

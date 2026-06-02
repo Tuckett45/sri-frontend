@@ -197,8 +197,8 @@ export class TimeTrackingService {
       id: raw.id || raw.Id || '',
       jobId: raw.jobId || raw.JobId || '',
       technicianId: raw.technicianId || raw.TechnicianId || '',
-      clockInTime: raw.clockInTime || raw.ClockInTime,
-      clockOutTime: raw.clockOutTime || raw.ClockOutTime || undefined,
+      clockInTime: this.ensureUtcDate(raw.clockInTime || raw.ClockInTime),
+      clockOutTime: this.ensureUtcDate(raw.clockOutTime || raw.ClockOutTime) || undefined,
       clockInLocation: (clockInLat != null && clockInLng != null)
         ? { latitude: clockInLat, longitude: clockInLng, accuracy: 0 }
         : undefined,
@@ -216,6 +216,25 @@ export class TimeTrackingService {
       payType: raw.payType || raw.PayType || PayType.Regular,
       syncStatus: raw.syncStatus || raw.SyncStatus || SyncStatus.Synced
     };
+  }
+
+  /**
+   * Ensures a date string from the API is treated as UTC.
+   * If the string lacks a timezone suffix (Z or +/-offset), append 'Z' so that
+   * `new Date()` interprets it correctly. This prevents the 7-hour offset bug
+   * where UTC times are mistakenly displayed as local times.
+   */
+  private ensureUtcDate(dateStr: string | null | undefined): any {
+    if (!dateStr) return dateStr;
+    if (typeof dateStr !== 'string') return dateStr;
+    
+    // Already has timezone info (Z, +HH:MM, -HH:MM)
+    if (/Z$|[+-]\d{2}:\d{2}$|[+-]\d{4}$/.test(dateStr)) {
+      return dateStr;
+    }
+    
+    // No timezone info — assume UTC and append Z
+    return dateStr + 'Z';
   }
 
   private handleError(error: any): Observable<never> {

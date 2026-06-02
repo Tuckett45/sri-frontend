@@ -5,7 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Job, JobStatus } from '../../../models/job.model';
 import { TimeEntry } from '../../../models/time-entry.model';
 import { updateJobStatus } from '../../../state/jobs/job.actions';
-import { clockIn, clockOut } from '../../../state/time-entries/time-entry.actions';
+import { clockIn, clockOut, loadActiveEntry } from '../../../state/time-entries/time-entry.actions';
 import { selectActiveTimeEntry } from '../../../state/time-entries/time-entry.selectors';
 import { AuthService } from '../../../../../services/auth.service';
 
@@ -56,6 +56,14 @@ export class JobCardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscribeToActiveTimeEntry();
     this.startElapsedTimeTimer();
+    
+    // Ensure the active entry is loaded from the API on component init.
+    // This handles the case where the user closed and reopened the browser —
+    // the API is the source of truth for active clock-ins.
+    const technicianId = this.authService.getUser()?.id;
+    if (technicianId) {
+      this.store.dispatch(loadActiveEntry({ technicianId }));
+    }
   }
 
   ngOnDestroy(): void {
