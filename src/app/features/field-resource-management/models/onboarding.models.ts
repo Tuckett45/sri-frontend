@@ -65,6 +65,7 @@ export interface CreateCandidatePayload {
   vestSize: VestSize;
   workSite?: string;
   homeAddress: string;
+  homeState?: string;
   startDate: string;
   offerStatus: OfferStatus;
   referredBy?: string;

@@ -75,6 +75,11 @@ import { Candidate } from '../../../models/onboarding.models';
 
             <div class="form-row">
               <mat-form-field appearance="outline">
+                <mat-label>Home State</mat-label>
+                <input matInput formControlName="homeState" placeholder="e.g. TX, CA, FL" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
                 <mat-label>Start Date</mat-label>
                 <input matInput [matDatepicker]="startDatePicker" formControlName="startDate" required />
                 <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
@@ -440,6 +445,7 @@ export class AddCandidateModalComponent {
       vestSize: [candidate?.vestSize || 'L'],
       homeAddress: [candidate?.homeAddress || '', Validators.required],
       workSite: [candidate?.workSite || ''],
+      homeState: [candidate?.homeState || ''],
       referredBy: [candidate?.referredBy || ''],
       startDate: [candidate?.startDate ? new Date(candidate.startDate + 'T00:00:00') : '', Validators.required],
       offerStatus: [candidate?.offerStatus || 'needs_review']
