@@ -55,8 +55,8 @@ import { ImageCacheService } from '../../../services/image-cache.service';
 })
 export class FileUploadComponent implements ControlValueAccessor {
   @Input() multiple = true;
-  @Input() allowedFileTypes = ['image/jpeg', 'image/png', 'image/heic'];
-  @Input() maxFileSize = 10 * 1024 * 1024; // 10 MB
+  @Input() allowedFileTypes = ['image/jpeg', 'image/png', 'image/heic', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+  @Input() maxFileSize = 50 * 1024 * 1024; // 50 MB
   @Input() label = 'Upload Files';
   @Input() disabled = false;
   
@@ -237,7 +237,9 @@ export class FileUploadComponent implements ControlValueAccessor {
       'image/heic': 'HEIC',
       'application/pdf': 'PDF',
       'application/msword': 'DOC',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX'
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+      'application/vnd.ms-excel': 'XLS',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX'
     };
     return this.allowedFileTypes
       .map(type => mimeLabels[type] || type.split('/')[1].toUpperCase())
