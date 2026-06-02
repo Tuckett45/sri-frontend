@@ -63,6 +63,14 @@ export class PublicOnboardingService {
       .pipe(catchError(this.handleError('submitCandidate')));
   }
 
+  startSession(): Observable<{ token: string }> {
+    return this.http
+      .post<{ token: string }>(`${this.baseUrl}/start`, {}, {
+        headers: this.headers
+      })
+      .pipe(catchError(this.handleError('startSession')));
+  }
+
   private handleError(operation: string) {
     return (err: any): Observable<never> => {
       const message = err?.error?.message ?? err?.message ?? 'An unexpected error occurred.';

@@ -74,7 +74,7 @@ const routes: Routes = [
     data: { preload: true }
   },
   {
-    path: 'onboarding/apply/:token',
+    path: 'onboarding',
     loadChildren: () => import('./features/public-onboarding/public-onboarding.module').then(m => m.PublicOnboardingModule)
   },
   { path: '**', redirectTo: '/login' }
