@@ -3,7 +3,7 @@
   <header class="public-header">
     <div class="header-content">
       <h1 class="brand-title">SRI</h1>
-      <span class="brand-subtitle">Candidate Onboarding</span>
+      <span class="brand-subtitle">Candidate Information Sheet</span>
     </div>
   </header>
 
@@ -24,18 +24,18 @@
     <!-- Success State (after submission) -->
     <div *ngIf="!validating && tokenValid && submitted" class="status-card success-card">
       <div class="status-icon success-icon">&#10003;</div>
-      <h2>Application Submitted</h2>
+      <h2>Information Submitted</h2>
       <p class="status-text">
-        Thank you! Your onboarding information has been submitted successfully.
-        Your recruiter will review your application and follow up with next steps.
+        Thank you! Your information has been submitted successfully.
+        Your recruiter will review your Candidate Information Sheet and follow up with next steps.
       </p>
     </div>
 
     <!-- Form State -->
     <div *ngIf="!validating && tokenValid && !submitted" class="form-card">
-      <h2>Complete Your Onboarding Information</h2>
+      <h2>Candidate Information Sheet</h2>
       <p class="form-description">
-        Please fill out the information below to complete your onboarding application.
+        Please fill out the information below to complete your Candidate Information Sheet.
         Fields marked with * are required.
       </p>
 
@@ -132,17 +132,7 @@
           </span>
         </div>
 
-        <!-- Work Site -->
-        <div class="form-field">
-          <label for="workSite">Work Site *</label>
-          <input id="workSite"
-                 formControlName="workSite"
-                 placeholder="Enter assigned work site"
-                 (blur)="markTouched('workSite')" />
-          <span class="field-error" *ngIf="showError('workSite')">
-            Work Site is required.
-          </span>
-        </div>
+
 
         <!-- Referred By -->
         <div class="form-field">
@@ -171,7 +161,7 @@
                   class="submit-btn">
             <span *ngIf="submitting" class="spinner" aria-hidden="true"></span>
             <span *ngIf="submitting">Submitting...</span>
-            <span *ngIf="!submitting">Submit Application</span>
+            <span *ngIf="!submitting">Submit Information</span>
           </button>
         </div>
       </form>

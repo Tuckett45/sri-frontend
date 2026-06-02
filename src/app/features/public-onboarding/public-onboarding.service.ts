@@ -18,7 +18,7 @@ export interface PublicCandidateSubmissionPayload {
   techPhone: string;
   vestSize: VestSize;
   homeAddress: string;
-  workSite: string;
+  workSite?: string;
   referredBy?: string;
   startDate: string;
   drugTestComplete: boolean;

@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Rename 'Onboarding Form' references to 'Candidate Information Sheet' in the public-facing form, replace the 'Work Site' column in the Candidate List with 'Home State', and add homeState to the data model/mock data.",
+  "status": "completed",
+  "steps": [
+    "1. In /projects/sandbox/sri-frontend/src/app/features/public-onboarding/public-onboarding.component.html: Change the header subtitle 'Candidate Onboarding' to 'Candidate Information Sheet'. Change the heading 'Complete Your Onboarding Information' to 'Candidate Information Sheet'. Change 'Please fill out the information below to complete your onboarding application.' to 'Please fill out the information below to complete your Candidate Information Sheet. Fields marked with * are required.' (remove the separate 'Fields marked with *' sentence since it's merged). Change the submit button text from 'Submit Application' to 'Submit Information'. Change the success heading from 'Application Submitted' to 'Information Submitted'. Change the success message referencing 'onboarding information' and 'application' to use 'Candidate Information Sheet' terminology.",
+    "2. In /projects/sandbox/sri-frontend/src/app/features/public-onboarding/public-onboarding.component.html: Remove the 'Work Site' form field entirely (the <div class='form-field'> block containing the workSite input). Candidates should not need to specify a work site since they don't have visibility to available sites.",
+    "3. In /projects/sandbox/sri-frontend/src/app/features/public-onboarding/public-onboarding.component.ts: Remove 'workSite' from the form group built in buildForm(). Remove the workSite Validators.required. Remove workSite from the payload object in onSubmit().",
+    "4. In /projects/sandbox/sri-frontend/src/app/features/public-onboarding/public-onboarding.service.ts: Remove 'workSite' from the PublicCandidateSubmissionPayload interface (make it optional or remove entirely).",
+    "5. In /projects/sandbox/sri-frontend/src/app/features/field-resource-management/models/onboarding.models.ts: Add 'homeState?: string;' field to the Candidate interface (after homeAddress). Keep 'workSite' as-is since it's used elsewhere.",
+    "6. In /projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/candidate-list/candidate-list.component.ts: Replace the 'Work Site' column header with 'Home State'. Change the sort from onSort('workSite') to onSort('homeState'). Change getSortIcon('workSite') to getSortIcon('homeState'). Change the table cell from {{ candidate.workSite }} to {{ candidate.homeState }}. Update the search placeholder from 'Search by name, email, or work site' to 'Search by name, email, or home state'. In the applyFiltersAndSort method, change the search filter from (c.workSite || '').toLowerCase().includes(term) to (c.homeState || '').toLowerCase().includes(term).",
+    "7. In /projects/sandbox/sri-frontend/src/app/features/field-resource-management/interceptors/mock-onboarding.interceptor.ts: In the buildMockCandidates() function, add a 'homeState' field to each mock candidate record. Use realistic US state abbreviations (TX, CA, FL, etc.) that correspond to the existing workSite locations. Also update the search filter in the GET /candidates handler to search homeState instead of (or in addition to) workSite.",
+    "8. In /projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/generate-link-dialog/generate-link-dialog.component.ts: Change the dialog title from 'Generate Onboarding Link' to 'Generate Candidate Information Sheet Link'. Change the mat-label from 'Onboarding Link' to 'Candidate Information Sheet Link'.",
+    "9. In /projects/sandbox/sri-frontend/src/app/features/field-resource-management/components/onboarding/candidate-list/candidate-list.component.ts: Change the 'Generate Onboarding Link' button text to 'Generate Info Sheet Link' and update the aria-label from 'Generate onboarding link' to 'Generate candidate information sheet link'."
+  ],
+  "acceptance_criteria": [
+    "The public-facing form page title/heading says 'Candidate Information Sheet' instead of any 'onboarding form/application' language",
+    "The public-facing form does NOT have a 'Work Site' field",
+    "The Candidate List table shows 'Home State' column instead of 'Work Site'",
+    "The Home State column displays state abbreviations from candidate data",
+    "Sorting and searching works on the Home State column",
+    "The generate link dialog title references 'Candidate Information Sheet' instead of 'Onboarding'",
+    "The TypeScript compiles without errors"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/sri-frontend && npx ng build --configuration=production 2>&1 | tail -80"
+  ],
+  "blocked_reason": null,
+  "findings": "Build succeeds (bundles generated). Font inlining fails due to network restriction (403 from Google Fonts CDN) which is an environment constraint, not a code issue. Pre-existing TS errors exist in unrelated spec/story files but do not affect the Angular production build. NODE_OPTIONS must be unset to avoid proxy-bootstrap.js error."
+}

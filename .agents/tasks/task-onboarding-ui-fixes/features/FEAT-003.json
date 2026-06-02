@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Address 4 review issues: (1) Add homeState form control to AddCandidateModal, (2) Fix sort coercion of undefined values, (3) Add homeState to fallback dummy data, (4) Vary homeState values across mock candidates for testability.",
+  "status": "completed",
+  "steps": [
+    "1. Add homeState form control to AddCandidateModalComponent's basicInfoForm and add a corresponding mat-form-field in the template.",
+    "2. Fix the sort comparison in candidate-list's applyFiltersAndSort() to use (aVal ?? '').toString() instead of String(aVal).",
+    "3. Add homeState to each object in getDummyCandidates() in candidate-list.component.ts.",
+    "4. Add homeState to each object in getDummyCandidate() in candidate-detail.component.ts.",
+    "5. Vary homeState values in mock-onboarding.interceptor.ts across mock candidates instead of all being 'TX'."
+  ],
+  "acceptance_criteria": [
+    "The add/edit candidate modal has a Home State text input field",
+    "Sorting on optional fields like homeState does not produce 'undefined' string comparisons",
+    "Fallback dummy data in candidate-list includes homeState values",
+    "Fallback dummy data in candidate-detail includes homeState values",
+    "Mock interceptor candidates have varied state abbreviations",
+    "TypeScript compiles without errors"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/sri-frontend && NODE_OPTIONS='--max-old-space-size=4096' npx tsc --noEmit --project tsconfig.json 2>&1 | grep -E \"candidate-list|add-candidate-modal|mock-onboarding|candidate-detail\" | head -20"
+  ],
+  "blocked_reason": null,
+  "findings": "All 4 review issues resolved. TypeScript compilation passes for all modified files. Pre-existing errors (270) in unrelated spec/story files remain unchanged. homeState field is now properly wired end-to-end: form input -> payload -> model -> display."
+}
