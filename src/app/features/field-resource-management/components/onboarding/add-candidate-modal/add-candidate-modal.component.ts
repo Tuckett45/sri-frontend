@@ -441,7 +441,7 @@ export class AddCandidateModalComponent {
       homeAddress: [candidate?.homeAddress || '', Validators.required],
       workSite: [candidate?.workSite || ''],
       referredBy: [candidate?.referredBy || ''],
-      startDate: [candidate?.startDate || '', Validators.required],
+      startDate: [candidate?.startDate ? new Date(candidate.startDate + 'T00:00:00') : '', Validators.required],
       offerStatus: [candidate?.offerStatus || 'needs_review']
     });
 

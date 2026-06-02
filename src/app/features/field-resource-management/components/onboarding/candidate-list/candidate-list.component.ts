@@ -496,6 +496,8 @@ export class CandidateListComponent implements OnInit {
           techPhone: result.basicInfo.phone,
           vestSize: result.basicInfo.vestSize,
           homeAddress: result.basicInfo.homeAddress,
+          workSite: result.basicInfo.workSite || undefined,
+          homeState: result.basicInfo.homeState || undefined,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
           referredBy: result.basicInfo.referredBy || undefined,

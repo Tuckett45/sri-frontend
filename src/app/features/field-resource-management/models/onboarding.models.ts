@@ -106,6 +106,7 @@ export interface UpdateCandidatePayload {
   scissorLiftCertified?: boolean;
   workSite?: string;
   homeAddress?: string;
+  homeState?: string;
   startDate?: string;
   offerStatus?: OfferStatus;
   referredBy?: string;
