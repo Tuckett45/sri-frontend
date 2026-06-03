@@ -738,6 +738,18 @@ export class JobFormComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Handle new skill created from the skill selector.
+   * Adds the new skill to the availableSkills list and shows a confirmation.
+   */
+  onSkillCreated(skill: Skill): void {
+    // Add to available skills list if not already present
+    if (!this.availableSkills.find(s => s.id === skill.id)) {
+      this.availableSkills = [...this.availableSkills, skill];
+    }
+    this.snackBar.open(`Skill "${skill.name}" created and added`, 'Close', { duration: 3000 });
+  }
+
+  /**
    * Get submit button text
    */
   get submitButtonText(): string {

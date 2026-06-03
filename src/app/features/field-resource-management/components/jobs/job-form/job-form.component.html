@@ -146,6 +146,7 @@
             [availableSkills]="availableSkills"
             formControlName="requiredSkills"
             label="Required Skills"
+            (skillCreated)="onSkillCreated($event)"
           ></frm-skill-selector>
         </div>
 
