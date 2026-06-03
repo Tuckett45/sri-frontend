@@ -241,7 +241,12 @@ export class TimeEntryEffects implements OnInitEffects {
     )
   );
 
-  // After successful clock-out, reset technician field status to Available
+  // After successful clock-out, reset technician field status to Available.
+  // This is intentional: clock-out means the technician is no longer actively
+  // working on an assignment and should be marked available for dispatch.
+  // We do not read the status from the API response because the backend always
+  // sets FieldStatus='Available' on clock-out, making 'Available' the correct
+  // and authoritative value here as well.
   updateStatusOnClockOut$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimeEntryActions.clockOutSuccess),
