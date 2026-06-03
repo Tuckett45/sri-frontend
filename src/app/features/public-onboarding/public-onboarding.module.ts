@@ -4,10 +4,11 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { PublicOnboardingRoutingModule } from './public-onboarding-routing.module';
 import { PublicOnboardingComponent } from './public-onboarding.component';
+import { OnboardingStartComponent } from './onboarding-start.component';
 import { PublicOnboardingService } from './public-onboarding.service';
 
 @NgModule({
-  declarations: [PublicOnboardingComponent],
+  declarations: [PublicOnboardingComponent, OnboardingStartComponent],
   imports: [
     CommonModule,
     ReactiveFormsModule,
