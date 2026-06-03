@@ -13,6 +13,7 @@ import { of } from 'rxjs';
 import { map, catchError, switchMap, take, filter } from 'rxjs/operators';
 import * as TimeEntryActions from './time-entry.actions';
 import * as AtlasSyncActions from '../atlas-sync/atlas-sync.actions';
+import * as TechnicianActions from '../technicians/technician.actions';
 import { selectTimeEntryById, selectActiveTimeEntry } from './time-entry.selectors';
 import { GeolocationService } from '../../services/geolocation.service';
 import { TimeTrackingService } from '../../services/time-tracking.service';
@@ -223,6 +224,31 @@ export class TimeEntryEffects implements OnInitEffects {
     this.actions$.pipe(
       ofType(TimeEntryActions.updateTimeEntrySuccess),
       map(({ timeEntry }) => AtlasSyncActions.syncToAtlas({ entry: timeEntry }))
+    )
+  );
+
+  // After successful clock-in, update technician field status
+  updateStatusOnClockIn$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimeEntryActions.clockInSuccess),
+      map(({ timeEntry }) => {
+        const fieldStatus = timeEntry.timeCategory === 'EnRoute' ? 'EnRoute' : 'OnSite';
+        return TechnicianActions.updateTechnicianFieldStatus({
+          technicianId: timeEntry.technicianId,
+          fieldStatus
+        });
+      })
+    )
+  );
+
+  // After successful clock-out, reset technician field status to Available
+  updateStatusOnClockOut$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TimeEntryActions.clockOutSuccess),
+      map(({ timeEntry }) => TechnicianActions.updateTechnicianFieldStatus({
+        technicianId: timeEntry.technicianId,
+        fieldStatus: 'Available'
+      }))
     )
   );
 

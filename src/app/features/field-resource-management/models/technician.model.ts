@@ -112,6 +112,10 @@ export interface Technician {
   skills?: Skill[];
   certifications?: Certification[];
   availability?: Availability[];
+
+  // Real-time field status determined by backend on clock-in/out
+  fieldStatus?: 'Available' | 'EnRoute' | 'OnSite' | 'ClockedOut';
+
   createdAt: Date;
   updatedAt: Date;
 }

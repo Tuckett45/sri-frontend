@@ -174,3 +174,9 @@ export const reactivateTechnicianFailure = createAction(
   props<{ error: string }>()
 );
 
+// Update Technician Field Status (from clock-in/out response)
+export const updateTechnicianFieldStatus = createAction(
+  '[Technician] Update Field Status',
+  props<{ technicianId: string; fieldStatus: string }>()
+);
+
