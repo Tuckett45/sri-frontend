@@ -55,6 +55,13 @@ export interface Availability {
   reason?: string; // PTO, Sick, Training
 }
 
+export enum TechnicianStatus {
+  Available = 'Available',
+  OnSite = 'OnSite',
+  EnRoute = 'EnRoute',
+  OffDuty = 'OffDuty'
+}
+
 export interface Technician {
   id: string;
   firstName: string;
@@ -65,6 +72,9 @@ export interface Technician {
   region: string;
   isAvailable: boolean;
   isActive: boolean;
+  currentStatus?: TechnicianStatus;
+  statusUpdatedAt?: string;
+  userId?: string; // Links to authenticated user account in SRI backend
   willingToTravel?: boolean;
   scissorLiftCertified?: boolean;
 

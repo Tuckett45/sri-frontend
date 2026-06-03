@@ -156,7 +156,11 @@
         tabindex="0">
         <div class="technician-card-header">
           <span class="technician-card-title">{{ getFullName(technician) }}</span>
-          <span class="status-badge" [class.active]="technician.isActive" [class.inactive]="!technician.isActive">
+          <span class="status-badge"
+            [class.active]="technician.isActive && (!technician.currentStatus || technician.currentStatus === 'Available')"
+            [class.inactive]="!technician.isActive"
+            [class.on-site]="technician.currentStatus === 'OnSite'"
+            [class.en-route]="technician.currentStatus === 'EnRoute'">
             {{ getCurrentStatus(technician) }}
           </span>
         </div>
@@ -176,6 +180,12 @@
           <div class="technician-card-row">
             <span class="technician-card-label">Current Job</span>
             <span class="technician-card-value">{{ technicianJobMap[technician.id] || '—' }}</span>
+          </div>
+          <div class="technician-card-row" *ngIf="getFieldStatus(technician) as fieldStatus">
+            <span class="technician-card-label">Field Status</span>
+            <span class="technician-card-value">
+              <span class="field-status-badge" [ngClass]="fieldStatus.cssClass">{{ fieldStatus.label }}</span>
+            </span>
           </div>
           <div class="technician-card-row" *ngIf="technician.email">
             <span class="technician-card-label">Email</span>

@@ -104,10 +104,12 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
         next: (location: GeoLocation) => {
           this.checkingLocation = false;
           this.updateProximity(location, job);
+          const proximityStatus = this.getProximityStatus(location, job);
           this.store.dispatch(TimeEntryActions.clockIn({
             jobId: job.id,
             technicianId: this.currentTechnicianId,
-            location
+            location,
+            proximityStatus
           }));
         },
         error: () => {
@@ -116,7 +118,8 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
           this.proximityStatus = 'Unknown';
           this.store.dispatch(TimeEntryActions.clockIn({
             jobId: job.id,
-            technicianId: this.currentTechnicianId
+            technicianId: this.currentTechnicianId,
+            proximityStatus: 'OnSite'
           }));
         }
       });
@@ -209,5 +212,18 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
+  }
+
+  private getProximityStatus(location: GeoLocation, job: Job): string {
+    if (job.siteAddress?.latitude != null && job.siteAddress?.longitude != null) {
+      const siteLocation: GeoLocation = {
+        latitude: job.siteAddress.latitude,
+        longitude: job.siteAddress.longitude,
+        accuracy: 0
+      };
+      const distance = this.geolocationService.calculateDistance(location, siteLocation);
+      return distance <= this.MILE_IN_METERS ? 'OnSite' : 'EnRoute';
+    }
+    return 'OnSite';
   }
 }
