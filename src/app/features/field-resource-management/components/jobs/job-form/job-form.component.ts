@@ -234,7 +234,7 @@ export class JobFormComponent implements OnInit, OnDestroy {
       scopeDescription: ['', [Validators.required, Validators.maxLength(2000)]],
       requiredSkills: [[]],
       requiredCrewSize: [1, [Validators.required, Validators.min(1), Validators.max(20)]],
-      estimatedLaborHours: [8, [Validators.required, Validators.min(0.5), Validators.max(200)]],
+      estimatedLaborHours: [8, [Validators.required, Validators.min(0.5), Validators.max(10000)]],
       scheduledStartDate: [null, Validators.required],
       scheduledEndDate: [null, Validators.required],
       customerPOC: this.fb.group({
@@ -293,7 +293,7 @@ export class JobFormComponent implements OnInit, OnDestroy {
         scopeDescription: ['', [Validators.required, Validators.maxLength(2000)]],
         requiredSkills: [[]],
         requiredCrewSize: [1, [Validators.required, Validators.min(1), Validators.max(20)]],
-        estimatedLaborHours: [8, [Validators.required, Validators.min(0.5), Validators.max(200)]],
+        estimatedLaborHours: [8, [Validators.required, Validators.min(0.5), Validators.max(10000)]],
         scheduledStartDate: [null, Validators.required],
         scheduledEndDate: [null, Validators.required],
         customerPOC: this.fb.group({

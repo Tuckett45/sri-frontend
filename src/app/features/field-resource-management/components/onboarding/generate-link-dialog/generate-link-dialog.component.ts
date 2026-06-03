@@ -5,7 +5,7 @@ import { OnboardingLinkService, OnboardingLinkResponse } from '../../../services
 @Component({
   selector: 'app-generate-link-dialog',
   template: `
-    <h2 mat-dialog-title>Generate Onboarding Link</h2>
+    <h2 mat-dialog-title>Generate Candidate Info Sheet Link</h2>
 
     <mat-dialog-content>
       <!-- Generate Form -->
@@ -33,7 +33,7 @@ import { OnboardingLinkService, OnboardingLinkResponse } from '../../../services
       <!-- Generated Link Display -->
       <div class="generated-link-section" *ngIf="generatedUrl">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Onboarding Link</mat-label>
+          <mat-label>Candidate Info Sheet Link</mat-label>
           <input matInput [value]="generatedUrl" readonly />
         </mat-form-field>
         <button mat-stroked-button color="accent" (click)="onCopyLink()">

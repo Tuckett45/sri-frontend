@@ -7,18 +7,60 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Actions, createEffect, ofType, OnInitEffects } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, take } from 'rxjs/operators';
+import { map, catchError, switchMap, take, filter } from 'rxjs/operators';
 import * as TimeEntryActions from './time-entry.actions';
 import * as AtlasSyncActions from '../atlas-sync/atlas-sync.actions';
 import { selectTimeEntryById, selectActiveTimeEntry } from './time-entry.selectors';
 import { GeolocationService } from '../../services/geolocation.service';
 import { TimeTrackingService } from '../../services/time-tracking.service';
+import { AuthTokenService } from '../../services/auth-token.service';
+import { Action } from '@ngrx/store';
 
 @Injectable()
-export class TimeEntryEffects {
+export class TimeEntryEffects implements OnInitEffects {
+
+  /**
+   * OnInitEffects: dispatch loadActiveEntry when effects are registered.
+   * This ensures the active clock-in entry is fetched from the API on app startup,
+   * so the user can always clock out even after closing and reopening the browser.
+   */
+  ngrxOnInitEffects(): Action {
+    return { type: '[Time Entry] Init Effects' };
+  }
+
+  /**
+   * Effect: On init, load active entry from the API for the current user.
+   * This ensures that even if localStorage state was lost or expired,
+   * the active clock-in is restored from the server.
+   */
+  initLoadActiveEntry$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType('[Time Entry] Init Effects'),
+      switchMap(() => {
+        // Get current user's technician ID from the auth token
+        const token = this.authTokenService.getToken();
+        if (!token) {
+          return of(); // Not logged in yet, skip
+        }
+        // Decode the JWT to get the user/technician ID
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const technicianId = payload.sub || payload.userId || payload.technicianId;
+          if (technicianId) {
+            return of(TimeEntryActions.loadActiveEntry({ technicianId }));
+          }
+        } catch (e) {
+          console.warn('[TimeEntryEffects] Could not decode token for init load:', e);
+        }
+        return of();
+      }),
+      filter((action): action is ReturnType<typeof TimeEntryActions.loadActiveEntry> => !!action)
+    )
+  );
+
   // Clock In Effect
   clockIn$ = createEffect(() =>
     this.actions$.pipe(
@@ -188,6 +230,7 @@ export class TimeEntryEffects {
     private actions$: Actions,
     private store: Store,
     private geolocationService: GeolocationService,
-    private timeTrackingService: TimeTrackingService
+    private timeTrackingService: TimeTrackingService,
+    private authTokenService: AuthTokenService
   ) {}
 }

@@ -66,7 +66,6 @@ export class PublicOnboardingComponent implements OnInit {
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
       homeAddress: formValue.homeAddress,
-      workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       drugTestComplete: false,
@@ -106,7 +105,6 @@ export class PublicOnboardingComponent implements OnInit {
       techPhone: ['', [Validators.required, PublicOnboardingComponent.phoneValidator]],
       vestSize: ['', Validators.required],
       homeAddress: ['', Validators.required],
-      workSite: ['', Validators.required],
       referredBy: [''],
       startDate: ['', Validators.required],
     });

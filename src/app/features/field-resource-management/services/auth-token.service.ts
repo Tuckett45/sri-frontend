@@ -4,10 +4,12 @@ import { Injectable } from '@angular/core';
  * Authentication Token Service
  * 
  * Manages JWT token storage and retrieval.
- * Provides secure token handling with sessionStorage.
+ * Uses localStorage so that the user's session persists across browser
+ * closures — critical for field technicians who may close the app and return
+ * later to clock out. Token expiration is still enforced via the JWT `exp` claim.
  * 
  * Note: HttpOnly cookies are preferred for production but require backend support.
- * This implementation uses sessionStorage as a fallback.
+ * This implementation uses localStorage with expiration checks as a fallback.
  * 
  * Requirements: 1.1-1.5
  */
@@ -22,8 +24,9 @@ export class AuthTokenService {
   constructor() {}
 
   /**
-   * Store authentication token securely
-   * Uses sessionStorage for security (cleared when browser closes)
+   * Store authentication token
+   * Uses localStorage so the session survives browser closure.
+   * Token expiration is enforced via the stored expiry time and JWT payload.
    * 
    * @param token - JWT access token
    * @param refreshToken - JWT refresh token (optional)
@@ -31,15 +34,15 @@ export class AuthTokenService {
    */
   setToken(token: string, refreshToken?: string, expiresIn?: number): void {
     try {
-      sessionStorage.setItem(this.TOKEN_KEY, token);
+      localStorage.setItem(this.TOKEN_KEY, token);
       
       if (refreshToken) {
-        sessionStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+        localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
       }
 
       if (expiresIn) {
         const expiryTime = Date.now() + (expiresIn * 1000);
-        sessionStorage.setItem(this.TOKEN_EXPIRY_KEY, expiryTime.toString());
+        localStorage.setItem(this.TOKEN_EXPIRY_KEY, expiryTime.toString());
       }
     } catch (error) {
       console.error('Failed to store token:', error);
@@ -53,7 +56,7 @@ export class AuthTokenService {
    */
   getToken(): string | null {
     try {
-      return sessionStorage.getItem(this.TOKEN_KEY);
+      return localStorage.getItem(this.TOKEN_KEY);
     } catch (error) {
       console.error('Failed to retrieve token:', error);
       return null;
@@ -67,7 +70,7 @@ export class AuthTokenService {
    */
   getRefreshToken(): string | null {
     try {
-      return sessionStorage.getItem(this.REFRESH_TOKEN_KEY);
+      return localStorage.getItem(this.REFRESH_TOKEN_KEY);
     } catch (error) {
       console.error('Failed to retrieve refresh token:', error);
       return null;
@@ -90,7 +93,7 @@ export class AuthTokenService {
    */
   isTokenExpired(): boolean {
     try {
-      const expiryTime = sessionStorage.getItem(this.TOKEN_EXPIRY_KEY);
+      const expiryTime = localStorage.getItem(this.TOKEN_EXPIRY_KEY);
       
       if (!expiryTime) {
         // If no expiry time stored, check token payload
@@ -161,7 +164,7 @@ export class AuthTokenService {
    */
   getTokenExpiry(): Date | null {
     try {
-      const expiryTime = sessionStorage.getItem(this.TOKEN_EXPIRY_KEY);
+      const expiryTime = localStorage.getItem(this.TOKEN_EXPIRY_KEY);
       
       if (expiryTime) {
         return new Date(parseInt(expiryTime, 10));
@@ -189,9 +192,9 @@ export class AuthTokenService {
    */
   clearTokens(): void {
     try {
-      sessionStorage.removeItem(this.TOKEN_KEY);
-      sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
-      sessionStorage.removeItem(this.TOKEN_EXPIRY_KEY);
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+      localStorage.removeItem(this.TOKEN_EXPIRY_KEY);
     } catch (error) {
       console.error('Failed to clear tokens:', error);
     }

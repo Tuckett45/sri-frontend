@@ -39,14 +39,14 @@
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  color: rgba(0, 0, 0, 0.87);
+  color: #f1f5f9;
   text-decoration: none;
   transition: background-color 0.2s ease, color 0.2s ease;
   cursor: pointer;
   border-left: 3px solid transparent;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: rgba(255, 255, 255, 0.08);
   }
 
   &:focus {
@@ -55,7 +55,7 @@
   }
 
   &.active {
-    background-color: rgba(225, 138, 37, 0.12);
+    background-color: rgba(225, 138, 37, 0.2);
     border-left-color: #ffffff;
     border-left-width: 3px;
     color: #e18a25;
@@ -75,7 +75,7 @@
   font-size: 24px;
   width: 24px;
   height: 24px;
-  color: rgba(0, 0, 0, 0.54);
+  color: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
 }
 
@@ -86,6 +86,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #f1f5f9;
 }
 
 .expand-icon {
@@ -93,7 +94,7 @@
   font-size: 20px;
   width: 20px;
   height: 20px;
-  color: rgba(0, 0, 0, 0.54);
+  color: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
@@ -107,7 +108,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(0, 0, 0, 0.15);
   animation: slideDown 0.2s ease;
 }
 
@@ -130,14 +131,14 @@
   display: flex;
   align-items: center;
   padding: 10px 16px 10px 52px;
-  color: rgba(0, 0, 0, 0.87);
+  color: #f1f5f9;
   text-decoration: none;
   transition: background-color 0.2s ease, color 0.2s ease;
   cursor: pointer;
   border-left: 3px solid transparent;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: rgba(255, 255, 255, 0.08);
   }
 
   &:focus {
@@ -146,7 +147,7 @@
   }
 
   &.active {
-    background-color: rgba(225, 138, 37, 0.12);
+    background-color: rgba(225, 138, 37, 0.2);
     border-left-color: #ffffff;
     border-left-width: 3px;
     color: #e18a25;
@@ -166,7 +167,7 @@
   font-size: 20px;
   width: 20px;
   height: 20px;
-  color: rgba(0, 0, 0, 0.54);
+  color: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
 }
 
@@ -176,6 +177,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #f1f5f9;
 }
 
 // Responsive styles
@@ -232,29 +234,10 @@
   }
 }
 
-// Dark mode support (if needed)
+// Dark mode support — sidebar is always dark-themed so no color changes needed.
+// This block is retained only for any future non-sidebar overrides.
 @media (prefers-color-scheme: dark) {
-  .menu-link,
-  .menu-parent,
-  .submenu-link {
-    color: rgba(255, 255, 255, 0.87);
-
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.08);
-    }
-
-    &.active {
-      background-color: rgba(225, 138, 37, 0.2);
-    }
-  }
-
-  .menu-icon,
-  .submenu-icon,
-  .expand-icon {
-    color: rgba(255, 255, 255, 0.7);
-  }
-
   .submenu {
-    background-color: rgba(255, 255, 255, 0.04);
+    background-color: rgba(0, 0, 0, 0.2);
   }
 }

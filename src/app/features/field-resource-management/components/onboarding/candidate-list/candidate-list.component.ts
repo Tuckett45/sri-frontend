@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { forkJoin, Observable } from 'rxjs';
 import { OnboardingService } from '../../../services/onboarding.service';
 import { OnboardingLinkService } from '../../../services/onboarding-link.service';
@@ -29,8 +30,8 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       <div class="header-row">
         <h2>Candidates</h2>
         <div class="header-actions">
-          <button type="button" class="generate-link-btn" (click)="onGenerateLink()" aria-label="Generate onboarding link">
-            Generate Onboarding Link
+          <button type="button" class="generate-link-btn" (click)="onGenerateLink()" aria-label="Generate candidate information sheet link">
+            Generate Info Sheet Link
           </button>
           <button type="button" class="add-candidate-btn" (click)="onAddCandidate()" aria-label="Add new candidate">
             + Add Candidate
@@ -52,7 +53,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
                  type="text"
                  [value]="searchText"
                  (input)="onSearchChange($event)"
-                 placeholder="Search by name, email, or work site" />
+                 placeholder="Search by name, email, or home state" />
         </div>
         <div class="filter-field">
           <label for="statusFilter">Offer Status</label>
@@ -93,8 +94,8 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('scissorLiftCertified')" class="sortable">
               Scissor Lift <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
             </th>
-            <th (click)="onSort('workSite')" class="sortable">
-              Work Site <span class="sort-icon">{{ getSortIcon('workSite') }}</span>
+            <th (click)="onSort('homeState')" class="sortable">
+              Home State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
             </th>
             <th (click)="onSort('startDate')" class="sortable">
               Start Date <span class="sort-icon">{{ getSortIcon('startDate') }}</span>
@@ -106,7 +107,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let candidate of filteredCandidates"
+          <tr *ngFor="let candidate of paginatedCandidates"
               (click)="onRowClick(candidate)"
               class="candidate-row"
               tabindex="0"
@@ -119,7 +120,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td class="bool-cell"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
             <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
             <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td>{{ candidate.workSite }}</td>
+            <td>{{ candidate.homeState }}</td>
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
             <td class="actions-cell">
@@ -130,6 +131,17 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
           </tr>
         </tbody>
       </table>
+
+      <!-- Paginator -->
+      <mat-paginator *ngIf="filteredCandidates.length > 0"
+                     [length]="filteredCandidates.length"
+                     [pageSize]="pageSize"
+                     [pageSizeOptions]="pageSizeOptions"
+                     [pageIndex]="pageIndex"
+                     (page)="onPageChange($event)"
+                     showFirstLastButtons
+                     aria-label="Select page of candidates">
+      </mat-paginator>
 
       <!-- Empty State -->
       <p *ngIf="!loading && filteredCandidates.length === 0 && !errorMessage" class="empty-state">
@@ -386,6 +398,34 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 
     .btn-delete:hover { background: #ffcdd2; }
 
+    :host ::ng-deep .mat-mdc-paginator {
+      border-top: 1px solid #e0e0e0;
+      background: #fafafa;
+      border-radius: 0 0 8px 8px;
+      color: #000000;
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-paginator-range-label,
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-select-value-text {
+      color: #000000;
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button {
+      color: #000000;
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button svg {
+      fill: #000000;
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button[disabled] {
+      color: rgba(0, 0, 0, 0.38);
+    }
+
+    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button[disabled] svg {
+      fill: rgba(0, 0, 0, 0.38);
+    }
+
     @media (max-width: 768px) {
       .candidate-list-container {
         margin: 1rem;
@@ -409,6 +449,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 export class CandidateListComponent implements OnInit {
   candidates: Candidate[] = [];
   filteredCandidates: Candidate[] = [];
+  paginatedCandidates: Candidate[] = [];
   loading = false;
   submitting = false;
   errorMessage = '';
@@ -417,6 +458,13 @@ export class CandidateListComponent implements OnInit {
   statusFilter = '';
   incompleteCertsFilter = false;
   sortState: SortState | null = null;
+
+  // Pagination
+  pageSize = 10;
+  pageIndex = 0;
+  pageSizeOptions = [5, 10, 25, 50];
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private route: ActivatedRoute,
@@ -444,11 +492,13 @@ export class CandidateListComponent implements OnInit {
 
   onSearchChange(event: Event): void {
     this.searchText = (event.target as HTMLInputElement).value;
+    this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
 
   onStatusFilterChange(event: Event): void {
     this.statusFilter = (event.target as HTMLSelectElement).value;
+    this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
 
@@ -471,6 +521,12 @@ export class CandidateListComponent implements OnInit {
 
   getStatusLabel(status: OfferStatus): string {
     return OFFER_STATUS_LABELS[status] ?? status;
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.updatePaginatedCandidates();
   }
 
   onRowClick(candidate: Candidate): void {
@@ -496,6 +552,8 @@ export class CandidateListComponent implements OnInit {
           techPhone: result.basicInfo.phone,
           vestSize: result.basicInfo.vestSize,
           homeAddress: result.basicInfo.homeAddress,
+          workSite: result.basicInfo.workSite || undefined,
+          homeState: result.basicInfo.homeState || undefined,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
           referredBy: result.basicInfo.referredBy || undefined,
@@ -560,6 +618,7 @@ export class CandidateListComponent implements OnInit {
           vestSize: result.basicInfo.vestSize,
           homeAddress: result.basicInfo.homeAddress,
           workSite: result.basicInfo.workSite || undefined,
+          homeState: result.basicInfo.homeState || undefined,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
           referredBy: result.basicInfo.referredBy || undefined,
@@ -651,12 +710,12 @@ export class CandidateListComponent implements OnInit {
     };
 
     return [
-      { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', startDate: dateOnly(5), offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: iso(-30), updatedBy: 'system', updatedAt: iso(-5) },
-      { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', startDate: dateOnly(10), offerStatus: 'offer_extended', createdBy: 'system', createdAt: iso(-25), updatedBy: 'system', updatedAt: iso(-3) },
-      { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', startDate: dateOnly(3), offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: iso(-20), updatedBy: 'system', updatedAt: iso(-2) },
-      { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', startDate: dateOnly(18), offerStatus: 'needs_review', createdBy: 'system', createdAt: iso(-15), updatedBy: 'system', updatedAt: iso(-1) },
-      { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', startDate: dateOnly(7), offerStatus: 'vetted_available', createdBy: 'system', createdAt: iso(-10), updatedBy: 'system', updatedAt: iso(-1) },
-      { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', startDate: dateOnly(12), offerStatus: 'needs_review', createdBy: 'system', createdAt: iso(-8), updatedBy: 'system', updatedAt: iso(-1) }
+      { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', homeState: 'TX', startDate: dateOnly(5), offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: iso(-30), updatedBy: 'system', updatedAt: iso(-5) },
+      { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', homeState: 'CA', startDate: dateOnly(10), offerStatus: 'offer_extended', createdBy: 'system', createdAt: iso(-25), updatedBy: 'system', updatedAt: iso(-3) },
+      { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', homeState: 'FL', startDate: dateOnly(3), offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: iso(-20), updatedBy: 'system', updatedAt: iso(-2) },
+      { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', homeState: 'NY', startDate: dateOnly(18), offerStatus: 'needs_review', createdBy: 'system', createdAt: iso(-15), updatedBy: 'system', updatedAt: iso(-1) },
+      { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', homeState: 'GA', startDate: dateOnly(7), offerStatus: 'vetted_available', createdBy: 'system', createdAt: iso(-10), updatedBy: 'system', updatedAt: iso(-1) },
+      { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', homeState: 'CO', startDate: dateOnly(12), offerStatus: 'needs_review', createdBy: 'system', createdAt: iso(-8), updatedBy: 'system', updatedAt: iso(-1) }
     ];
   }
 
@@ -670,7 +729,7 @@ export class CandidateListComponent implements OnInit {
         (c) =>
           c.techName.toLowerCase().includes(term) ||
           c.techEmail.toLowerCase().includes(term) ||
-          (c.workSite || '').toLowerCase().includes(term)
+          (c.homeState || '').toLowerCase().includes(term)
       );
     }
 
@@ -699,7 +758,7 @@ export class CandidateListComponent implements OnInit {
         } else if (typeof aVal === 'string' && typeof bVal === 'string') {
           comparison = aVal.localeCompare(bVal);
         } else {
-          comparison = String(aVal).localeCompare(String(bVal));
+          comparison = (aVal ?? '').toString().localeCompare((bVal ?? '').toString());
         }
 
         return direction === 'asc' ? comparison : -comparison;
@@ -707,6 +766,13 @@ export class CandidateListComponent implements OnInit {
     }
 
     this.filteredCandidates = result;
+    this.updatePaginatedCandidates();
+  }
+
+  private updatePaginatedCandidates(): void {
+    const startIndex = this.pageIndex * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedCandidates = this.filteredCandidates.slice(startIndex, endIndex);
   }
 
   private uploadCandidateFiles(candidateId: string, files: { resume?: File | null; headshot?: File | null }, reloadFn: () => void): void {

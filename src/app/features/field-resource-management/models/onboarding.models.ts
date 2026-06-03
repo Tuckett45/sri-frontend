@@ -19,6 +19,7 @@ export interface Candidate {
   biisciCertified?: boolean;
   workSite: string;
   homeAddress?: string;
+  homeState?: string;
   startDate: string;          // ISO date
   offerStatus: OfferStatus;
   resumeUrl?: string;
@@ -64,6 +65,7 @@ export interface CreateCandidatePayload {
   vestSize: VestSize;
   workSite?: string;
   homeAddress: string;
+  homeState?: string;
   startDate: string;
   offerStatus: OfferStatus;
   referredBy?: string;
@@ -105,6 +107,7 @@ export interface UpdateCandidatePayload {
   scissorLiftCertified?: boolean;
   workSite?: string;
   homeAddress?: string;
+  homeState?: string;
   startDate?: string;
   offerStatus?: OfferStatus;
   referredBy?: string;
