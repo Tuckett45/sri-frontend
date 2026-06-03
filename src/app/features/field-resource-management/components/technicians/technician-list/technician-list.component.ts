@@ -27,7 +27,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
   
-  displayedColumns: string[] = ['name', 'role', 'region', 'crew', 'travelStatus', 'status', 'currentJob', 'actions'];
+  displayedColumns: string[] = ['name', 'role', 'region', 'crew', 'travelStatus', 'status', 'currentJob', 'fieldStatus', 'actions'];
   
   // Expose UserRole enum for template
   UserRole = UserRole;
@@ -373,6 +373,34 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       willing: false,
       label: 'Not Willing'
     };
+  }
+
+  /**
+   * Get human-readable label for field status
+   */
+  getFieldStatusLabel(technician: Technician): string {
+    const status = technician.fieldStatus || 'Available';
+    switch (status) {
+      case 'OnSite': return 'On Site';
+      case 'EnRoute': return 'En Route';
+      case 'Available': return 'Available';
+      case 'ClockedOut': return 'Clocked Out';
+      default: return status;
+    }
+  }
+
+  /**
+   * Get CSS class for field status badge styling
+   */
+  getFieldStatusClass(technician: Technician): string {
+    const status = technician.fieldStatus || 'Available';
+    switch (status) {
+      case 'OnSite': return 'field-status-onsite';
+      case 'EnRoute': return 'field-status-enroute';
+      case 'Available': return 'field-status-available';
+      case 'ClockedOut': return 'field-status-clockedout';
+      default: return 'field-status-available';
+    }
   }
 
   /**
