@@ -44,6 +44,15 @@
           <span class="skill-option__category">{{ skill.category }}</span>
         </span>
       </mat-option>
+      <mat-option
+        *ngIf="showCreateOption"
+        [value]="CREATE_NEW_SKILL_TOKEN"
+        class="create-new-skill-option">
+        <span class="create-skill-option">
+          <mat-icon>add_circle</mat-icon>
+          <span>Create "{{ skillControl.value }}" as new skill</span>
+        </span>
+      </mat-option>
     </mat-autocomplete>
   </mat-form-field>
 
