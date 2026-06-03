@@ -93,7 +93,7 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
                     (keydown.enter)="navigateToCandidate(c.candidateId)">
                   <td>{{ c.techName }}</td>
                   <td>{{ c.workSite }}</td>
-                  <td>{{ c.startDate }}</td>
+                  <td>{{ c.startDate | date:'MMM d, yyyy' }}</td>
                   <td class="ready-cell">
                     <span *ngIf="isReady(c)" class="badge ready">Ready</span>
                     <span *ngIf="!isReady(c)" class="badge not-ready">Not Ready</span>
