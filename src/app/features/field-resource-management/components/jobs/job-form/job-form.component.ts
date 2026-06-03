@@ -19,6 +19,7 @@ import { selectAllCrews } from '../../../state/crews/crew.selectors';
 import { SanitizationService } from '../../../services/sanitization.service';
 import { AccessibilityService } from '../../../services/accessibility.service';
 import { AuthService } from '../../../../../services/auth.service';
+import { SkillService } from '../../../services/skill.service';
 
 export interface JobFormDialogData {
   jobId?: string;
@@ -103,14 +104,8 @@ export class JobFormComponent implements OnInit, OnDestroy {
   technicians: Technician[] = [];
   crews: Crew[] = [];
 
-  // Available skills for the skill selector
-  availableSkills: Skill[] = [
-    { id: 's1', name: 'Cat6', category: 'Cabling', level: SkillLevel.Intermediate },
-    { id: 's2', name: 'Fiber Splicing', category: 'Fiber', level: SkillLevel.Intermediate },
-    { id: 's3', name: 'OSHA10', category: 'Safety', level: SkillLevel.Intermediate },
-    { id: 's4', name: 'Ladder Safety', category: 'Safety', level: SkillLevel.Intermediate },
-    { id: 's5', name: 'Confined Space', category: 'Safety', level: SkillLevel.Intermediate }
-  ];
+  // Available skills for the skill selector (loaded from API)
+  availableSkills: Skill[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -122,6 +117,7 @@ export class JobFormComponent implements OnInit, OnDestroy {
     private sanitizationService: SanitizationService,
     private accessibilityService: AccessibilityService,
     private authService: AuthService,
+    private skillService: SkillService,
     @Optional() public dialogRef: MatDialogRef<JobFormComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) public data: JobFormDialogData
   ) {}
@@ -154,6 +150,7 @@ export class JobFormComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     try {
       this.initializeForm();
+      this.loadAvailableSkills();
       
       // Check if opened as dialog with data
       if (this.data) {
@@ -738,15 +735,48 @@ export class JobFormComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Load available skills from the master skills API.
+   */
+  private loadAvailableSkills(): void {
+    this.skillService.getSkills()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (skills) => {
+          this.availableSkills = skills;
+        },
+        error: (err) => {
+          console.error('Failed to load skills from API, using empty list', err);
+          this.availableSkills = [];
+        }
+      });
+  }
+
+  /**
    * Handle new skill created from the skill selector.
-   * Adds the new skill to the availableSkills list and shows a confirmation.
+   * Persists the new skill to the backend master catalog and updates the local list.
    */
   onSkillCreated(skill: Skill): void {
-    // Add to available skills list if not already present
+    // Add to local available skills list immediately (optimistic)
     if (!this.availableSkills.find(s => s.id === skill.id)) {
       this.availableSkills = [...this.availableSkills, skill];
     }
-    this.snackBar.open(`Skill "${skill.name}" created and added`, 'Close', { duration: 3000 });
+
+    // Persist to backend master catalog
+    this.skillService.createSkill(skill.name, skill.category)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (savedSkill) => {
+          // Update the local skill with the server-assigned ID
+          this.availableSkills = this.availableSkills.map(s =>
+            s.id === skill.id ? { ...s, id: savedSkill.id } : s
+          );
+          this.snackBar.open(`Skill "${skill.name}" created and saved`, 'Close', { duration: 3000 });
+        },
+        error: (err) => {
+          console.error('Failed to persist new skill to backend', err);
+          this.snackBar.open(`Skill "${skill.name}" added locally (save to server failed)`, 'Close', { duration: 4000 });
+        }
+      });
   }
 
   /**
