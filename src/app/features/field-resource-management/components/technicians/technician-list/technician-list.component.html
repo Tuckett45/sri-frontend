@@ -181,10 +181,12 @@
             <span class="technician-card-label">Current Job</span>
             <span class="technician-card-value">{{ technicianJobMap[technician.id] || '—' }}</span>
           </div>
-          <div class="technician-card-row" *ngIf="getFieldStatus(technician) as fieldStatus">
+          <div class="technician-card-row">
             <span class="technician-card-label">Field Status</span>
             <span class="technician-card-value">
-              <span class="field-status-badge" [ngClass]="fieldStatus.cssClass">{{ fieldStatus.label }}</span>
+              <span class="field-status-badge" [ngClass]="getFieldStatusClass(technician)">
+                {{ getFieldStatusLabel(technician) }}
+              </span>
             </span>
           </div>
           <div class="technician-card-row" *ngIf="technician.email">

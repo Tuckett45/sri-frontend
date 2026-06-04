@@ -828,21 +828,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       return 'off-duty';
     }
 
-    // Check real-time field status from backend
-    if (technician.currentStatus === 'OnSite' || technician.currentStatus === 'EnRoute') {
-      return 'on-job';
-    }
-
-    if (technician.currentStatus === 'OffDuty') {
-      return 'off-duty';
+    // Use fieldStatus from backend if available (set by clock-in/out)
+    if (technician.fieldStatus) {
+      switch (technician.fieldStatus) {
+        case 'OnSite':
+        case 'EnRoute':
+          return 'on-job';
+        case 'ClockedOut':
+          return 'unavailable';
+        case 'Available':
+          return 'available';
+      }
     }
 
     if (!technician.isAvailable) {
       return 'unavailable';
     }
 
-    // TODO: Check assignment data to determine if on-job
-    // For now, default to available
     return 'available';
   }
 

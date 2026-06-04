@@ -320,6 +320,34 @@ export class TechnicianScheduleComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get the technician's current field status label
+   */
+  getFieldStatusLabel(): string {
+    const status = this.technician?.fieldStatus || 'Available';
+    switch (status) {
+      case 'OnSite': return 'On Site';
+      case 'EnRoute': return 'En Route';
+      case 'Available': return 'Available';
+      case 'ClockedOut': return 'Clocked Out';
+      default: return status;
+    }
+  }
+
+  /**
+   * Get CSS class for the field status badge
+   */
+  getFieldStatusClass(): string {
+    const status = this.technician?.fieldStatus || 'Available';
+    switch (status) {
+      case 'OnSite': return 'field-status-onsite';
+      case 'EnRoute': return 'field-status-enroute';
+      case 'Available': return 'field-status-available';
+      case 'ClockedOut': return 'field-status-clockedout';
+      default: return 'field-status-available';
+    }
+  }
+
+  /**
    * Retry loading data
    */
   onRetry(): void {

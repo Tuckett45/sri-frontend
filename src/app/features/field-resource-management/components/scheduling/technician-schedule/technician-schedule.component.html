@@ -4,12 +4,12 @@
     <div class="technician-info" *ngIf="technician">
       <mat-icon class="technician-icon">person</mat-icon>
       <div class="technician-details">
-        <div class="technician-name-row">
-          <h2>{{ technician.firstName }} {{ technician.lastName }}</h2>
-          <span *ngIf="technician.currentStatus === 'OnSite'" class="schedule-status-badge status-on-site">On Site</span>
-          <span *ngIf="technician.currentStatus === 'EnRoute'" class="schedule-status-badge status-en-route">En Route</span>
-          <span *ngIf="technician.currentStatus === 'OffDuty'" class="schedule-status-badge status-off-duty">Off Duty</span>
-        </div>
+        <h2>
+          {{ technician.firstName }} {{ technician.lastName }}
+          <span class="field-status-badge" [ngClass]="getFieldStatusClass()">
+            {{ getFieldStatusLabel() }}
+          </span>
+        </h2>
         <p class="technician-role">{{ technician.role }} - {{ technician.region }}</p>
       </div>
     </div>

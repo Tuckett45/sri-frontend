@@ -575,3 +575,17 @@ export const selectTechnicianCrewMap = createSelector(
     return map;
   }
 );
+
+/**
+ * Select a map of technician ID -> field status for use in list/map/schedule views
+ */
+export const selectTechnicianFieldStatuses = createSelector(
+  selectAllTechnicians,
+  (technicians): Record<string, string> => {
+    const statusMap: Record<string, string> = {};
+    for (const tech of technicians) {
+      statusMap[tech.id] = tech.fieldStatus || 'Available';
+    }
+    return statusMap;
+  }
+);

@@ -85,6 +85,11 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
     this.activeTimeEntry$.pipe(takeUntil(this.destroy$)).subscribe(entry => {
       if (entry && !entry.clockOutTime) {
         this.startTimer(new Date(entry.clockInTime));
+        // Update proximity status from backend-determined timeCategory
+        if (entry.timeCategory === 'OnSite') {
+          this.proximityStatus = 'On Site';
+        } else if (entry.timeCategory === 'EnRoute') {
+          this.proximityStatus = 'En Route';
         // Start broadcasting location now that we're clocked in
         if (this.currentTechnicianId) {
           this.locationBroadcast.start(this.currentTechnicianId);
