@@ -125,7 +125,7 @@
           </div>
 
           <!-- Missing / Expired Certification Warnings -->
-          <div class="missing-skills-warning" *ngIf="techMatch.missingSkills?.length > 0">
+          <div class="missing-skills-warning" *ngIf="(techMatch.missingSkills?.length ?? 0) > 0">
             <mat-icon>warning</mat-icon>
             <div class="warning-content">
               <div class="warning-title">Missing Certifications:</div>
@@ -136,7 +136,7 @@
               </div>
             </div>
           </div>
-          <div class="missing-skills-warning cert-expired-warning" *ngIf="techMatch.expiredCertifications?.length > 0">
+          <div class="missing-skills-warning cert-expired-warning" *ngIf="(techMatch.expiredCertifications?.length ?? 0) > 0">
             <mat-icon>event_busy</mat-icon>
             <div class="warning-content">
               <div class="warning-title">Expired Certifications:</div>

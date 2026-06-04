@@ -90,6 +90,7 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
           this.proximityStatus = 'On Site';
         } else if (entry.timeCategory === 'EnRoute') {
           this.proximityStatus = 'En Route';
+        }
         // Start broadcasting location now that we're clocked in
         if (this.currentTechnicianId) {
           this.locationBroadcast.start(this.currentTechnicianId);

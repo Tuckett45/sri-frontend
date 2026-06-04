@@ -6,7 +6,7 @@ import { Assignment, AssignmentStatus } from '../models/assignment.model';
 import { Job, JobStatus } from '../models/job.model';
 import { Notification, NotificationType } from '../models/notification.model';
 import { GeoLocation } from '../models/time-entry.model';
-import { AuthService } from '../../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
 import * as JobActions from '../state/jobs/job.actions';
 import * as AssignmentActions from '../state/assignments/assignment.actions';
 import * as TechnicianActions from '../state/technicians/technician.actions';
@@ -236,7 +236,7 @@ export class FrmSignalRService {
         .withUrl(`${environment.atlasApiUrl}/hubs/field-resource-management`, {
           skipNegotiation: false,
           transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
-          accessTokenFactory: () => this.authService.getAccessToken().then(t => t ?? '')
+          accessTokenFactory: () => this.authService.getAccessToken().then((t: string | null) => t ?? '')
         })
         .withAutomaticReconnect({
           nextRetryDelayInMilliseconds: (retryContext) => {
