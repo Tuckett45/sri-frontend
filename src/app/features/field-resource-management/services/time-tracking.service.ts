@@ -39,7 +39,8 @@ export class TimeTrackingService {
     jobId: string,
     technicianId: string,
     location?: GeoLocation,
-    timeCategory: TimeCategory = TimeCategory.OnSite
+    timeCategory: TimeCategory = TimeCategory.OnSite,
+    proximityStatus?: string
   ): Observable<TimeEntry> {
     const payload: any = {
       jobId,
@@ -54,6 +55,10 @@ export class TimeTrackingService {
         longitude: location.longitude,
         accuracy: location.accuracy ?? null
       };
+    }
+
+    if (proximityStatus) {
+      payload.proximityStatus = proximityStatus;
     }
 
     return this.http.post<any>(`${this.apiUrl}/clock-in`, payload).pipe(
@@ -214,7 +219,8 @@ export class TimeTrackingService {
       updatedAt: raw.updatedAt || raw.UpdatedAt || new Date(),
       timeCategory: raw.timeCategory || raw.TimeCategory || TimeCategory.OnSite,
       payType: raw.payType || raw.PayType || PayType.Regular,
-      syncStatus: raw.syncStatus || raw.SyncStatus || SyncStatus.Synced
+      syncStatus: raw.syncStatus || raw.SyncStatus || SyncStatus.Synced,
+      proximityStatus: raw.proximityStatus || raw.ProximityStatus || undefined
     };
   }
 

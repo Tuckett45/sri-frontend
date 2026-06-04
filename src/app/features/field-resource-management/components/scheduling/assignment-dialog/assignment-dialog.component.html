@@ -124,14 +124,25 @@
             </div>
           </div>
 
-          <!-- Missing Skills Warning -->
-          <div class="missing-skills-warning" *ngIf="techMatch.missingSkills.length > 0">
+          <!-- Missing / Expired Certification Warnings -->
+          <div class="missing-skills-warning" *ngIf="techMatch.missingSkills?.length > 0">
             <mat-icon>warning</mat-icon>
             <div class="warning-content">
-              <div class="warning-title">Missing Skills:</div>
+              <div class="warning-title">Missing Certifications:</div>
               <div class="missing-skills-list">
                 <span *ngFor="let skill of techMatch.missingSkills; let last = last">
-                  {{ skill.name }}<span *ngIf="!last">, </span>
+                  {{ skill }}<span *ngIf="!last">, </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="missing-skills-warning cert-expired-warning" *ngIf="techMatch.expiredCertifications?.length > 0">
+            <mat-icon>event_busy</mat-icon>
+            <div class="warning-content">
+              <div class="warning-title">Expired Certifications:</div>
+              <div class="missing-skills-list">
+                <span *ngFor="let cert of techMatch.expiredCertifications; let last = last">
+                  {{ cert }}<span *ngIf="!last">, </span>
                 </span>
               </div>
             </div>
@@ -206,7 +217,7 @@
     <!-- Override Section -->
     <div class="override-section" *ngIf="requiresOverride() && selectedTechnician">
       <mat-divider></mat-divider>
-      
+
       <form [formGroup]="assignmentForm">
         <div class="override-warning">
           <mat-icon>warning</mat-icon>
@@ -227,8 +238,8 @@
 
         <mat-form-field appearance="outline" class="full-width" *ngIf="assignmentForm.get('override')?.value">
           <mat-label>Justification (Required)</mat-label>
-          <textarea 
-            matInput 
+          <textarea
+            matInput
             formControlName="justification"
             rows="3"
             placeholder="Explain why this override is necessary..."
@@ -241,6 +252,31 @@
           </mat-error>
         </mat-form-field>
       </form>
+    </div>
+
+    <!-- Certification Gate Conflict -->
+    <div class="cert-conflict-section" *ngIf="hasCertConflict()">
+      <mat-divider></mat-divider>
+      <div class="cert-conflict-warning">
+        <mat-icon color="warn">verified_user</mat-icon>
+        <div class="cert-warning-content">
+          <strong>Certification Requirements Not Met</strong>
+          <p>This technician is missing or has expired certifications required for this job:</p>
+          <ul class="cert-issues-list">
+            <li *ngFor="let issue of getCertIssues()" class="cert-issue-item">
+              <mat-icon class="cert-issue-icon" [class.cert-missing]="issue.issue === 'Missing certification'" [class.cert-expired]="issue.issue === 'Certification expired'">
+                {{ issue.issue === 'Missing certification' ? 'cancel' : 'event_busy' }}
+              </mat-icon>
+              <span><strong>{{ issue.skill }}</strong> — {{ issue.issue }}<span *ngIf="issue.expiredAt"> (expired {{ issue.expiredAt | date:'shortDate' }})</span></span>
+            </li>
+          </ul>
+          <form [formGroup]="assignmentForm" class="cert-override-form">
+            <mat-checkbox formControlName="overrideCertifications" color="warn">
+              I acknowledge this technician lacks required certifications and authorize this assignment anyway
+            </mat-checkbox>
+          </form>
+        </div>
+      </div>
     </div>
   </mat-dialog-content>
 

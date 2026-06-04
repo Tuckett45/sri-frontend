@@ -6,6 +6,7 @@ import { Assignment, AssignmentStatus } from '../models/assignment.model';
 import { Job, JobStatus } from '../models/job.model';
 import { Notification, NotificationType } from '../models/notification.model';
 import { GeoLocation } from '../models/time-entry.model';
+import { AuthService } from '../../../../services/auth.service';
 import * as JobActions from '../state/jobs/job.actions';
 import * as AssignmentActions from '../state/assignments/assignment.actions';
 import * as TechnicianActions from '../state/technicians/technician.actions';
@@ -140,7 +141,7 @@ export class FrmSignalRService {
    */
   public quoteUpdated$: Observable<{ quoteId: string; quote: QuoteWorkflow } | null> = this.quoteUpdatedSubject.asObservable();
 
-  constructor(private store: Store) {}
+  constructor(private store: Store, private authService: AuthService) {}
 
   /**
    * Triggers a full state synchronization after reconnection
@@ -234,7 +235,8 @@ export class FrmSignalRService {
       this.hubConnection = new signalR.HubConnectionBuilder()
         .withUrl(`${environment.atlasApiUrl}/hubs/field-resource-management`, {
           skipNegotiation: false,
-          transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents
+          transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
+          accessTokenFactory: () => this.authService.getAccessToken().then(t => t ?? '')
         })
         .withAutomaticReconnect({
           nextRetryDelayInMilliseconds: (retryContext) => {

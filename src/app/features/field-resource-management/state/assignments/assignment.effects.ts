@@ -113,19 +113,22 @@ export class AssignmentEffects {
   assignTechnician$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AssignmentActions.assignTechnician),
-      switchMap(({ jobId, technicianId, override, justification }) =>
-        this.schedulingService.assignTechnician(
+      switchMap(({ jobId, technicianId, override, justification, overrideCertifications }) =>
+        this.schedulingService.assignTechnicianToJob(
           jobId,
           technicianId,
-          override,
-          justification
+          'current-user',
+          override ?? false,
+          justification,
+          overrideCertifications ?? false
         ).pipe(
           map((assignment) =>
             AssignmentActions.assignTechnicianSuccess({ assignment })
           ),
           catchError((error) =>
-            of(AssignmentActions.assignTechnicianFailure({ 
-              error: error.message || 'Failed to assign technician' 
+            of(AssignmentActions.assignTechnicianFailure({
+              error: error.message || 'Failed to assign technician',
+              certConflict: error.certConflict
             }))
           )
         )
