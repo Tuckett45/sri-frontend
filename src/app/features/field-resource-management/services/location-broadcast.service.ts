@@ -17,9 +17,14 @@ import { environment } from '../../../../environments/environments';
  */
 @Injectable({ providedIn: 'root' })
 export class LocationBroadcastService implements OnDestroy {
+  private readonly MIN_DISTANCE_METERS = 30;  // only broadcast if moved >30 m
+  private readonly MIN_INTERVAL_MS = 15_000;  // or at least 15 s have passed
+
   private watchId: number | null = null;
   private active = false;
   private technicianId: string | null = null;
+  private lastBroadcast: GeoLocation | null = null;
+  private lastBroadcastTime = 0;
 
   constructor(
     private geolocationService: GeolocationService,
@@ -36,9 +41,11 @@ export class LocationBroadcastService implements OnDestroy {
     if (this.active) return;
     this.active = true;
     this.technicianId = technicianId;
+    this.lastBroadcast = null;
+    this.lastBroadcastTime = 0;
 
     this.watchId = this.geolocationService.watchPosition(
-      (location) => this.broadcast(location),
+      (location) => this.throttledBroadcast(location),
       (error) => console.warn('[LocationBroadcast] GPS error:', error),
       true
     );
@@ -52,6 +59,23 @@ export class LocationBroadcastService implements OnDestroy {
     }
     this.active = false;
     this.technicianId = null;
+    this.lastBroadcast = null;
+  }
+
+  private throttledBroadcast(location: GeoLocation): void {
+    const now = Date.now();
+    const timeSinceLast = now - this.lastBroadcastTime;
+    const moved = this.lastBroadcast
+      ? this.geolocationService.calculateDistance(this.lastBroadcast, location)
+      : Infinity;
+
+    if (timeSinceLast < this.MIN_INTERVAL_MS && moved < this.MIN_DISTANCE_METERS) {
+      return; // not enough movement or time — skip this fix
+    }
+
+    this.lastBroadcast = location;
+    this.lastBroadcastTime = now;
+    this.broadcast(location);
   }
 
   private broadcast(location: GeoLocation): void {

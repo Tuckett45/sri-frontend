@@ -350,6 +350,7 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
       technician: tech,
       matchPercentage: 100,
       missingSkills: [],
+      expiredCertifications: [],
       currentWorkload: 0,
       hasConflicts: false,
       conflicts: []

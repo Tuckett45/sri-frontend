@@ -124,14 +124,25 @@
             </div>
           </div>
 
-          <!-- Missing Skills Warning -->
-          <div class="missing-skills-warning" *ngIf="techMatch.missingSkills.length > 0">
+          <!-- Missing / Expired Certification Warnings -->
+          <div class="missing-skills-warning" *ngIf="techMatch.missingSkills?.length > 0">
             <mat-icon>warning</mat-icon>
             <div class="warning-content">
-              <div class="warning-title">Missing Skills:</div>
+              <div class="warning-title">Missing Certifications:</div>
               <div class="missing-skills-list">
                 <span *ngFor="let skill of techMatch.missingSkills; let last = last">
-                  {{ skill.name }}<span *ngIf="!last">, </span>
+                  {{ skill }}<span *ngIf="!last">, </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="missing-skills-warning cert-expired-warning" *ngIf="techMatch.expiredCertifications?.length > 0">
+            <mat-icon>event_busy</mat-icon>
+            <div class="warning-content">
+              <div class="warning-title">Expired Certifications:</div>
+              <div class="missing-skills-list">
+                <span *ngFor="let cert of techMatch.expiredCertifications; let last = last">
+                  {{ cert }}<span *ngIf="!last">, </span>
                 </span>
               </div>
             </div>

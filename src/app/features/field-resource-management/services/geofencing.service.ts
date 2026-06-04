@@ -18,10 +18,12 @@ export interface GeofenceEvent {
 @Injectable({ providedIn: 'root' })
 export class GeofencingService implements OnDestroy {
   private readonly GEOFENCE_RADIUS_METERS = 1609.34; // 1 mile
+  private readonly EVENT_COOLDOWN_MS = 60_000; // 60 s between repeated enter/exit events
 
   private watchId: number | null = null;
   private monitoredJob: Job | null = null;
   private insideGeofence = false;
+  private lastEventTime = 0;
 
   private readonly enteredSubject = new Subject<GeofenceEvent>();
   private readonly exitedSubject = new Subject<GeofenceEvent>();
@@ -48,6 +50,7 @@ export class GeofencingService implements OnDestroy {
 
     this.monitoredJob = job;
     this.insideGeofence = false;
+    this.lastEventTime = 0;
 
     this.watchId = this.geolocationService.watchPosition(
       (location) => this.evaluatePosition(location),
@@ -83,13 +86,20 @@ export class GeofencingService implements OnDestroy {
     const isInside = distance <= this.GEOFENCE_RADIUS_METERS;
 
     const event: GeofenceEvent = { job: this.monitoredJob, location, distanceMeters: distance };
+    const now = Date.now();
 
     if (isInside && !this.insideGeofence) {
       this.insideGeofence = true;
-      this.enteredSubject.next(event);
+      if (now - this.lastEventTime > this.EVENT_COOLDOWN_MS) {
+        this.lastEventTime = now;
+        this.enteredSubject.next(event);
+      }
     } else if (!isInside && this.insideGeofence) {
       this.insideGeofence = false;
-      this.exitedSubject.next(event);
+      if (now - this.lastEventTime > this.EVENT_COOLDOWN_MS) {
+        this.lastEventTime = now;
+        this.exitedSubject.next(event);
+      }
     }
   }
 }
