@@ -138,7 +138,7 @@ export class PtoRequestListComponent implements OnInit {
    * Whether the current user can cancel this request (employee can cancel pending requests).
    */
   canCancel(request: PtoRequest): boolean {
-    const isPending = request.status === 'Pending' ||
+    const isPending =
       request.status === RequestStatus.Pending_Manager_Approval ||
       request.status === RequestStatus.Pending_Backoffice_Approval;
     return isPending;
@@ -150,7 +150,7 @@ export class PtoRequestListComponent implements OnInit {
   canApprove(request: PtoRequest): boolean {
     const user = this.authService.getUser();
     const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'CM';
-    const isPending = request.status === 'Pending' ||
+    const isPending =
       request.status === RequestStatus.Pending_Manager_Approval ||
       request.status === RequestStatus.Pending_Backoffice_Approval;
     return isManagerOrAdmin && isPending;
@@ -222,21 +222,20 @@ export class PtoRequestListComponent implements OnInit {
         return requests;
       case 'Pending':
         return requests.filter(
-          r => r.status === 'Pending' ||
-               r.status === RequestStatus.Pending_Manager_Approval ||
+          r => r.status === RequestStatus.Pending_Manager_Approval ||
                r.status === RequestStatus.Pending_Backoffice_Approval
         );
       case 'Approved':
         return requests.filter(
-          r => r.status === 'Approved' || r.status === RequestStatus.Approved
+          r => r.status === RequestStatus.Approved
         );
       case 'Rejected':
         return requests.filter(
-          r => r.status === 'Rejected' || r.status === RequestStatus.Rejected
+          r => r.status === RequestStatus.Rejected
         );
       case 'Cancelled':
         return requests.filter(
-          r => r.status === 'Cancelled' || r.status === RequestStatus.Cancelled
+          r => r.status === RequestStatus.Cancelled
         );
       default:
         return requests;
