@@ -66,8 +66,8 @@ export class TimeEntryEffects implements OnInitEffects {
   clockIn$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TimeEntryActions.clockIn),
-      switchMap(({ jobId, technicianId, location }) =>
-        this.timeTrackingService.clockIn(jobId, technicianId, location).pipe(
+      switchMap(({ jobId, technicianId, location, proximityStatus }) =>
+        this.timeTrackingService.clockIn(jobId, technicianId, location, undefined, proximityStatus).pipe(
           map((timeEntry) =>
             TimeEntryActions.clockInSuccess({ timeEntry })
           ),
