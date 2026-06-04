@@ -5,7 +5,8 @@ import {
 } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, combineLatest } from 'rxjs';
-import { map, takeUntil, filter } from 'rxjs/operators';
+import { map, takeUntil, filter, distinctUntilChanged } from 'rxjs/operators';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { selectAllAssignments } from '../../../../state/assignments/assignment.selectors';
 import { selectJobEntities } from '../../../../state/jobs/job.selectors';
 import {
@@ -19,6 +20,8 @@ import { Assignment, AssignmentStatus } from '../../../../models/assignment.mode
 import { Job } from '../../../../models/job.model';
 import { TimeEntry, GeoLocation } from '../../../../models/time-entry.model';
 import { GeolocationService } from '../../../../services/geolocation.service';
+import { GeofencingService } from '../../../../services/geofencing.service';
+import { LocationBroadcastService } from '../../../../services/location-broadcast.service';
 import { AuthService } from '../../../../../../services/auth.service';
 
 export type ProximityStatus = 'On Site' | 'En Route' | 'Unknown';
@@ -50,6 +53,9 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store,
     private geolocationService: GeolocationService,
+    private geofencingService: GeofencingService,
+    private locationBroadcast: LocationBroadcastService,
+    private snackBar: MatSnackBar,
     private authService: AuthService
   ) {
     this.currentTechnicianId = this.authService.getUser()?.id || '';
@@ -79,19 +85,65 @@ export class ClockInWidgetComponent implements OnInit, OnDestroy {
     this.activeTimeEntry$.pipe(takeUntil(this.destroy$)).subscribe(entry => {
       if (entry && !entry.clockOutTime) {
         this.startTimer(new Date(entry.clockInTime));
+        // Start broadcasting location now that we're clocked in
+        if (this.currentTechnicianId) {
+          this.locationBroadcast.start(this.currentTechnicianId);
+        }
       } else {
         this.stopTimer();
         this.elapsedTime = '';
         this.proximityStatus = 'Unknown';
         this.showClockOutOptions = false;
+        this.locationBroadcast.stop();
+        this.geofencingService.stopMonitoring();
       }
     });
+
+    // Geofencing: monitor the active assigned job for automatic clock-in/out prompts
+    this.activeJob$
+      .pipe(takeUntil(this.destroy$), distinctUntilChanged((a, b) => a?.job.id === b?.job.id))
+      .subscribe(activeJob => {
+        if (activeJob?.job) {
+          this.geofencingService.monitorJob(activeJob.job);
+        } else {
+          this.geofencingService.stopMonitoring();
+        }
+      });
+
+    // Prompt when technician arrives at job site while not yet clocked in
+    this.geofencingService.geofenceEntered$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(event => {
+        this.isClockedIn$.pipe(filter(clocked => !clocked)).subscribe(clocked => {
+          const ref = this.snackBar.open(
+            `You've arrived at ${event.job.title || 'the job site'} — clock in?`,
+            'Clock In',
+            { duration: 15000, panelClass: ['geofence-snackbar'] }
+          );
+          ref.onAction().subscribe(() => this.clockIn(event.job));
+        }).unsubscribe();
+      });
+
+    // Prompt when technician leaves the job site while still clocked in
+    this.geofencingService.geofenceExited$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.isClockedIn$.pipe(filter(clocked => clocked)).subscribe(() => {
+          this.snackBar.open(
+            'You\'ve left the job site. Don\'t forget to clock out.',
+            'Clock Out',
+            { duration: 15000, panelClass: ['geofence-snackbar'] }
+          ).onAction().subscribe(() => this.toggleClockOutOptions());
+        }).unsubscribe();
+      });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     this.stopTimer();
+    this.locationBroadcast.stop();
+    this.geofencingService.stopMonitoring();
   }
 
   clockIn(job: Job): void {

@@ -699,3 +699,59 @@ mat-dialog-actions {
     }
   }
 }
+
+// Certification Gate Conflict Panel
+.cert-conflict-section {
+  padding: 1rem 1.5rem 0;
+}
+
+.cert-conflict-warning {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fff3e0;
+  border: 1px solid #ff9800;
+  border-radius: 8px;
+  margin-top: 1rem;
+
+  > mat-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #e65100;
+  }
+
+  .cert-warning-content {
+    flex: 1;
+
+    strong { color: #bf360c; }
+    p { margin: 0.25rem 0 0.5rem; font-size: 0.875rem; }
+  }
+
+  .cert-issues-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .cert-issue-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.875rem;
+
+      .cert-issue-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        &.cert-missing { color: #c62828; }
+        &.cert-expired { color: #e65100; }
+      }
+    }
+  }
+
+  .cert-override-form {
+    margin-top: 0.5rem;
+  }
+}

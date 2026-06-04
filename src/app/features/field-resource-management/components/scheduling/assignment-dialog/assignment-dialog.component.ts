@@ -1,23 +1,24 @@
 import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Store } from '@ngrx/store';
+import { Store, ActionsSubject } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, filter } from 'rxjs/operators';
 
 import { Job } from '../../../models/job.model';
 import { Technician } from '../../../models/technician.model';
 import { TechnicianMatch, Conflict } from '../../../models/assignment.model';
 import { TechnicianDistance, PerDiemConfig } from '../../../models/travel.model';
+import { CertGateConflict, CertificationIssue } from '../../../models/dtos';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 import * as TravelActions from '../../../state/travel/travel.actions';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import { selectQualifiedTechnicians, selectAssignmentConflicts } from '../../../state/assignments/assignment.selectors';
 import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
-import { 
-  selectTechniciansSortedByDistance, 
+import {
+  selectTechniciansSortedByDistance,
   selectPerDiemConfig,
-  selectDistanceCalculationLoading 
+  selectDistanceCalculationLoading
 } from '../../../state/travel/travel.selectors';
 
 /**
@@ -59,7 +60,10 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   selectedTechnician: TechnicianMatch | null = null;
   assignmentForm: FormGroup;
   searchText = '';
-  
+
+  /** Cert-gate conflict returned by the 422 response — shown as a blocking warning */
+  certConflict: CertGateConflict | null = null;
+
   // Distance map for quick lookup by technician ID
   distanceMap: Map<string, TechnicianDistance> = new Map();
 
@@ -74,7 +78,8 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: { job: Job },
     private dialogRef: MatDialogRef<AssignmentDialogComponent>,
     private fb: FormBuilder,
-    private store: Store
+    private store: Store,
+    private actions$: ActionsSubject
   ) {
     this.job = data.job;
     this.qualifiedTechnicians$ = this.store.select(selectQualifiedTechnicians);
@@ -84,7 +89,8 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
     this.assignmentForm = this.fb.group({
       technicianId: ['', Validators.required],
       override: [false],
-      justification: ['']
+      justification: [''],
+      overrideCertifications: [false]
     });
   }
 
@@ -151,6 +157,16 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
         }
         justificationControl?.updateValueAndValidity();
       });
+
+    // Listen for cert-gate failures so the dialog can surface the conflict inline
+    this.actions$.pipe(
+      filter((action: any) =>
+        action.type === '[Assignment] Assign Technician Failure' && !!action.certConflict
+      ),
+      takeUntil(this.destroy$)
+    ).subscribe((action: any) => {
+      this.certConflict = action.certConflict;
+    });
   }
 
   ngOnDestroy(): void {
@@ -161,15 +177,16 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Select a technician
+   * Select a technician — clears any prior cert conflict from a previous selection.
    */
   onSelectTechnician(technician: TechnicianMatch): void {
     this.selectedTechnician = technician;
+    this.certConflict = null;
     this.assignmentForm.patchValue({
-      technicianId: technician.technician.id
+      technicianId: technician.technician.id,
+      overrideCertifications: false
     });
 
-    // Check if conflicts exist and require override
     if (technician.hasConflicts) {
       this.assignmentForm.patchValue({ override: true });
     }
@@ -261,43 +278,45 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if form is valid for submission
+   * Check if form is valid for submission.
+   * Cert conflicts block submission unless overrideCertifications is checked.
    */
   canAssign(): boolean {
-    if (!this.selectedTechnician) {
-      return false;
-    }
-
-    if (this.requiresOverride() && !this.assignmentForm.get('override')?.value) {
-      return false;
-    }
-
+    if (!this.selectedTechnician) return false;
+    if (this.requiresOverride() && !this.assignmentForm.get('override')?.value) return false;
+    if (this.certConflict && !this.assignmentForm.get('overrideCertifications')?.value) return false;
     return this.assignmentForm.valid;
   }
 
+  /** True when there is a pending cert-gate conflict that needs to be acknowledged. */
+  hasCertConflict(): boolean {
+    return this.certConflict !== null;
+  }
+
+  /** Shortcut for template: list of cert issues in the current conflict. */
+  getCertIssues(): CertificationIssue[] {
+    return this.certConflict?.missingCertifications ?? [];
+  }
+
   /**
-   * Assign technician to job
+   * Assign technician to job.
+   * When a previous 422 was received and the user checked overrideCertifications,
+   * the flag is forwarded so the backend skips the cert gate this time.
    */
   onAssign(): void {
-    if (!this.canAssign() || !this.selectedTechnician) {
-      return;
-    }
+    if (!this.canAssign() || !this.selectedTechnician) return;
 
     const formValue = this.assignmentForm.value;
 
-    // Dispatch assignment action
     this.store.dispatch(AssignmentActions.assignTechnician({
       jobId: this.job.id,
       technicianId: formValue.technicianId,
       override: formValue.override,
-      justification: formValue.justification
+      justification: formValue.justification,
+      overrideCertifications: formValue.overrideCertifications ?? false
     }));
 
-    // Close dialog
-    this.dialogRef.close({
-      assigned: true,
-      technicianId: formValue.technicianId
-    });
+    this.dialogRef.close({ assigned: true, technicianId: formValue.technicianId });
   }
 
   /**
