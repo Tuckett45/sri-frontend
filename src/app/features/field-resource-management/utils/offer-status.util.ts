@@ -7,13 +7,15 @@ import { OfferStatus } from '../models/onboarding.models';
  *   needs_review → vetted_available
  *   vetted_available → offer_extended | needs_review
  *   offer_extended → offer_accepted_onboarding | vetted_available
- *   offer_accepted_onboarding → vetted_available (for reassignment)
+ *   offer_accepted_onboarding → hired_assigned | vetted_available (for reassignment)
+ *   hired_assigned → vetted_available (for reassignment)
  */
 export const OFFER_TRANSITIONS: Record<OfferStatus, OfferStatus[]> = {
   needs_review: ['vetted_available'],
   vetted_available: ['offer_extended', 'needs_review'],
   offer_extended: ['offer_accepted_onboarding', 'vetted_available'],
-  offer_accepted_onboarding: ['vetted_available'],
+  offer_accepted_onboarding: ['hired_assigned', 'vetted_available'],
+  hired_assigned: ['vetted_available'],
 };
 
 /**

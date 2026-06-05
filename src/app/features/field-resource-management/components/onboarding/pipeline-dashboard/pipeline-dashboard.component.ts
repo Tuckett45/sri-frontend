@@ -50,6 +50,13 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
             <span class="card-label">Accepted/Onboarding</span>
           </div>
           <div class="card clickable" tabindex="0" role="button"
+               aria-label="View Hired/Assigned candidates"
+               (click)="navigateToStatus('hired_assigned')"
+               (keydown.enter)="navigateToStatus('hired_assigned')">
+            <span class="card-count">{{ hiredAssignedCount }}</span>
+            <span class="card-label">Hired/Assigned</span>
+          </div>
+          <div class="card clickable" tabindex="0" role="button"
                aria-label="View candidates with incomplete certifications"
                (click)="navigateToIncompleteCerts()"
                (keydown.enter)="navigateToIncompleteCerts()">
@@ -161,6 +168,7 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
     .stage-vetted-available { background: #66bb6a; }
     .stage-offer-extended { background: #ffa726; }
     .stage-accepted { background: #7b1fa2; }
+    .stage-hired-assigned { background: #2e7d32; }
     .funnel-label { white-space: nowrap; }
     .funnel-value { font-weight: 700; }
 
@@ -195,6 +203,7 @@ export class PipelineDashboardComponent implements OnInit {
   vettedAvailableCount = 0;
   offerExtendedCount = 0;
   offerAcceptedOnboardingCount = 0;
+  hiredAssignedCount = 0;
   incompleteCertsCount = 0;
   incompleteDrugTestCount = 0;
   startingWithin14DaysCount = 0;
@@ -208,6 +217,7 @@ export class PipelineDashboardComponent implements OnInit {
     vetted_available: 'Vetted/Available',
     offer_extended: 'Offer Extended',
     offer_accepted_onboarding: 'Accepted/Onboarding',
+    hired_assigned: 'Hired/Assigned',
   };
 
   constructor(
@@ -298,6 +308,7 @@ export class PipelineDashboardComponent implements OnInit {
     this.vettedAvailableCount = candidates.filter(c => c.offerStatus === 'vetted_available').length;
     this.offerExtendedCount = candidates.filter(c => c.offerStatus === 'offer_extended').length;
     this.offerAcceptedOnboardingCount = candidates.filter(c => c.offerStatus === 'offer_accepted_onboarding').length;
+    this.hiredAssignedCount = candidates.filter(c => c.offerStatus === 'hired_assigned').length;
     this.incompleteCertsCount = candidates.filter(c => !c.oshaCertified || !c.scissorLiftCertified).length;
     this.incompleteDrugTestCount = candidates.filter(c => !c.drugTestComplete).length;
 
@@ -310,13 +321,14 @@ export class PipelineDashboardComponent implements OnInit {
   }
 
   private buildFunnel(): void {
-    const total = this.needsReviewCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount;
-    const pct = (n: number) => total > 0 ? Math.max(20, Math.round((n / total) * 100)) : 25;
+    const total = this.needsReviewCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount;
+    const pct = (n: number) => total > 0 ? Math.max(20, Math.round((n / total) * 100)) : 20;
     this.funnelStages = [
       { label: 'Needs Review', count: this.needsReviewCount, pct: pct(this.needsReviewCount), cls: 'stage-needs-review' },
       { label: 'Vetted/Available', count: this.vettedAvailableCount, pct: pct(this.vettedAvailableCount), cls: 'stage-vetted-available' },
       { label: 'Offer Extended', count: this.offerExtendedCount, pct: pct(this.offerExtendedCount), cls: 'stage-offer-extended' },
       { label: 'Accepted/Onboarding', count: this.offerAcceptedOnboardingCount, pct: pct(this.offerAcceptedOnboardingCount), cls: 'stage-accepted' },
+      { label: 'Hired/Assigned', count: this.hiredAssignedCount, pct: pct(this.hiredAssignedCount), cls: 'stage-hired-assigned' },
     ];
   }
 

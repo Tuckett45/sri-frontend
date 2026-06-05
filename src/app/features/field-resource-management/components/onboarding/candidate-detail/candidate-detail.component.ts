@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
   vetted_available: 'Vetted/Available',
   offer_extended: 'Offer Extended',
   offer_accepted_onboarding: 'Offer Accepted/Onboarding',
+  hired_assigned: 'Hired/Assigned',
 };
 
 @Component({
@@ -30,7 +31,7 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
           <button class="btn-back" (click)="goBack()">&larr; Back to Candidates</button>
           <div class="header-actions">
             <button class="btn-edit" (click)="editCandidate()">Edit</button>
-            <button class="btn-advance" *ngIf="candidate.offerStatus !== 'offer_accepted_onboarding'" (click)="advanceStatus()">
+            <button class="btn-advance" *ngIf="candidate.offerStatus !== 'hired_assigned'" (click)="advanceStatus()">
               Advance Status
             </button>
             <button class="btn-convert" *ngIf="canConvert(candidate)" (click)="convertToTechnician()" [disabled]="isConverting">
@@ -437,7 +438,8 @@ export class CandidateDetailComponent implements OnInit {
     const nextStatus: Record<string, OfferStatus> = {
       'needs_review': 'vetted_available',
       'vetted_available': 'offer_extended',
-      'offer_extended': 'offer_accepted_onboarding'
+      'offer_extended': 'offer_accepted_onboarding',
+      'offer_accepted_onboarding': 'hired_assigned'
     };
     const next = nextStatus[this.candidate.offerStatus];
     if (next) {
@@ -458,12 +460,13 @@ export class CandidateDetailComponent implements OnInit {
       case 'vetted_available': return 'status-vetted-available';
       case 'offer_extended': return 'status-offer-extended';
       case 'offer_accepted_onboarding': return 'status-offer-accepted';
+      case 'hired_assigned': return 'status-hired-assigned';
       default: return '';
     }
   }
 
   canConvert(candidate: Candidate): boolean {
-    return candidate.offerStatus === 'offer_accepted_onboarding' &&
+    return (candidate.offerStatus === 'offer_accepted_onboarding' || candidate.offerStatus === 'hired_assigned') &&
            candidate.drugTestComplete &&
            candidate.oshaCertified;
   }

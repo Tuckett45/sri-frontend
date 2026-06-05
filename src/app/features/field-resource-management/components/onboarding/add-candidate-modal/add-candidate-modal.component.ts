@@ -94,6 +94,7 @@ import { Candidate } from '../../../models/onboarding.models';
                   <mat-option value="vetted_available">Vetted/Available</mat-option>
                   <mat-option value="offer_extended">Offer Extended</mat-option>
                   <mat-option value="offer_accepted_onboarding">Offer Accepted/Onboarding</mat-option>
+                  <mat-option value="hired_assigned">Hired/Assigned</mat-option>
                 </mat-select>
               </mat-form-field>
             </div>

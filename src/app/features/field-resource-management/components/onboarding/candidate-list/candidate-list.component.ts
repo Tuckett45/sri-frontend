@@ -21,6 +21,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   vetted_available: 'Vetted/Available',
   offer_extended: 'Offer Extended',
   offer_accepted_onboarding: 'Offer Accepted/Onboarding',
+  hired_assigned: 'Hired/Assigned',
 };
 
 @Component({
@@ -65,6 +66,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <option value="vetted_available">Vetted/Available</option>
             <option value="offer_extended">Offer Extended</option>
             <option value="offer_accepted_onboarding">Offer Accepted/Onboarding</option>
+            <option value="hired_assigned">Hired/Assigned</option>
           </select>
         </div>
       </div>
