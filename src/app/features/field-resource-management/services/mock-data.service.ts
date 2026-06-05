@@ -4,6 +4,7 @@ import { Technician, TechnicianRole, EmploymentType, SkillLevel, CertificationSt
 import { Job, JobType, Priority, JobStatus, Address, ContactInfo, JobNote, Attachment } from '../models/job.model';
 import { Crew, CrewStatus } from '../models/crew.model';
 import { TimeEntry, GeoLocation } from '../models/time-entry.model';
+import { TimeCategory, PayType, SyncStatus } from '../../../models/time-payroll.enum';
 import { Assignment, AssignmentStatus } from '../models/assignment.model';
 import { DashboardMetrics, KPI, Trend, KPIStatus, ActivityItem, TechnicianUtilization, UtilizationReport, TechnicianPerformance, PerformanceReport } from '../models/reporting.model';
 import { loadTechniciansSuccess } from '../state/technicians/technician.actions';
@@ -205,30 +206,24 @@ export class MockDataService {
 
       technicians.push({
         id: techId,
-        technicianId: `T${1000 + i}`,
         firstName,
         lastName,
         email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@company.com`,
         phone: `214-555-${String(1000 + i).padStart(4, '0')}`,
         role: roles[i % roles.length],
-        employmentType: i % 3 === 0 ? EmploymentType.Contractor1099 : EmploymentType.W2,
-        homeBase: i < 5 ? 'Dallas' : i < 10 ? 'Irving' : 'Fort Worth',
         region: i < 5 ? 'North Dallas' : i < 10 ? 'South Dallas' : 'Fort Worth',
         skills,
         certifications,
         availability,
-        hourlyCostRate: 45 + (i % 5) * 5,
+        isAvailable: i % 3 !== 0,
         isActive: i % 10 !== 9,
-        canTravel: i % 3 !== 0,
-        currentLocation: {
-          latitude: location.latitude + (Math.random() - 0.5) * 0.1,
-          longitude: location.longitude + (Math.random() - 0.5) * 0.1,
-          accuracy: 10,
-          timestamp: new Date()
-        },
+        willingToTravel: i % 3 !== 0,
+        lastKnownLatitude: location.latitude + (Math.random() - 0.5) * 0.1,
+        lastKnownLongitude: location.longitude + (Math.random() - 0.5) * 0.1,
+        locationUpdatedAt: new Date(),
         createdAt: new Date(2020 + (i % 4), i % 12, 1),
         updatedAt: new Date()
-      });
+      } as Technician);
     }
 
     return technicians;
@@ -334,7 +329,12 @@ export class MockDataService {
         market: 'Dallas-Fort Worth',
         company: 'SRI',
         status: i % 3 === 0 ? CrewStatus.Available : i % 3 === 1 ? CrewStatus.OnJob : CrewStatus.Unavailable,
-        currentLocation: leadTech.currentLocation,
+        currentLocation: leadTech.lastKnownLatitude ? {
+          latitude: leadTech.lastKnownLatitude,
+          longitude: leadTech.lastKnownLongitude!,
+          accuracy: 10,
+          timestamp: new Date()
+        } : undefined,
         activeJobId: i % 3 === 1 ? `job-${i + 1}` : undefined,
         createdAt: new Date(2023, i, 1),
         updatedAt: new Date()
@@ -397,6 +397,9 @@ export class MockDataService {
           breakMinutes: 0,
           isManuallyAdjusted: false,
           isLocked: dayOffset > 7, // Lock entries older than 7 days
+          timeCategory: TimeCategory.OnSite,
+          payType: PayType.Regular,
+          syncStatus: SyncStatus.Synced,
           createdAt: clockInTime,
           updatedAt: clockOutTime
         });
@@ -433,6 +436,9 @@ export class MockDataService {
             breakMinutes: 0,
             isManuallyAdjusted: false,
             isLocked: dayOffset > 7, // Lock entries older than 7 days
+            timeCategory: TimeCategory.OnSite,
+            payType: PayType.Regular,
+            syncStatus: SyncStatus.Synced,
             createdAt: lunchEnd,
             updatedAt: dayEnd
           });
@@ -942,6 +948,8 @@ export class MockDataService {
         geocodingStatus: status,
         geocodingError: status === GeocodingStatus.Failed ? 'Address not found' : null,
         lastGeocodedAt: geocoded ? new Date(Date.now() - (i + 1) * 86400000) : null,
+        preferences: null,
+        travelHistory: [],
         updatedAt: new Date()
       };
     });

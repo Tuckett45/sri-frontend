@@ -42,8 +42,8 @@ export const selectBudgetByJobId = (jobId: string) => createSelector(
   (entities) => entities[jobId] || null
 );
 
-// Select selected job ID
-export const selectSelectedJobId = createSelector(
+// Select selected job ID for budget context
+export const selectBudgetSelectedJobId = createSelector(
   selectBudgetState,
   (state) => state.selectedJobId
 );
@@ -51,7 +51,7 @@ export const selectSelectedJobId = createSelector(
 // Select selected budget
 export const selectSelectedBudget = createSelector(
   selectBudgetEntities,
-  selectSelectedJobId,
+  selectBudgetSelectedJobId,
   (entities, selectedJobId) => selectedJobId ? entities[selectedJobId] || null : null
 );
 

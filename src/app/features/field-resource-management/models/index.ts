@@ -13,10 +13,17 @@ export * from './notification.model';
 
 // Job Budget and Tracking Enhancement models
 export * from './budget.model';
-export * from './timecard.model';
-export * from './travel.model';
+// Re-export timecard.model excluding TimecardStatus (already exported from time-entry.model)
+export { RoundingMethod } from './timecard.model';
+export type { TimecardEntry, RoundingConfig } from './timecard.model';
+// Re-export travel.model excluding Address (already exported from job.model)
+export { GeocodingStatus, TransportationMode } from './travel.model';
+export type { Coordinates, TravelPreferences, TravelHistoryEntry, TravelProfile, TechnicianDistance, PerDiemConfig } from './travel.model';
+export { Address as TravelAddress } from './travel.model';
 export * from './inventory.model';
-export * from './material.model';
+// Re-export material.model excluding DTO interfaces (already exported from dtos/material.dto)
+export { MaterialCategory, TransactionType, PurchaseOrderStatus, ReorderUrgency } from './material.model';
+export type { Material, MaterialTransaction, Supplier, PurchaseOrder, PurchaseOrderItem, ReorderRecommendation } from './material.model';
 
 // Payroll models
 export * from './payroll.models';

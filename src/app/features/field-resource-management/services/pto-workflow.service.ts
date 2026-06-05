@@ -64,7 +64,7 @@ export class PtoWorkflowService {
       startDate: dto.startDate,
       endDate: dto.endDate,
       requestType: dto.requestType,
-      notes: dto.reason || null,
+      reason: dto.reason || null,
       status: RequestStatus.Pending_Manager_Approval,
       approvalHistory: [initialEntry],
       createdAt: now,
@@ -106,7 +106,7 @@ export class PtoWorkflowService {
     const updatedRequest: PtoRequest = {
       ...request,
       status: RequestStatus.Cancelled,
-      approvalHistory: [...request.approvalHistory, entry],
+      approvalHistory: [...(request.approvalHistory || []), entry],
       updatedAt: now
     };
 
@@ -146,7 +146,7 @@ export class PtoWorkflowService {
     const updatedRequest: PtoRequest = {
       ...request,
       status: RequestStatus.Pending_Backoffice_Approval,
-      approvalHistory: [...request.approvalHistory, entry],
+      approvalHistory: [...(request.approvalHistory || []), entry],
       updatedAt: now
     };
 
@@ -194,7 +194,7 @@ export class PtoWorkflowService {
     const updatedRequest: PtoRequest = {
       ...request,
       status: RequestStatus.Rejected,
-      approvalHistory: [...request.approvalHistory, entry],
+      approvalHistory: [...(request.approvalHistory || []), entry],
       updatedAt: now
     };
 
@@ -234,7 +234,7 @@ export class PtoWorkflowService {
     const updatedRequest: PtoRequest = {
       ...request,
       status: RequestStatus.Approved,
-      approvalHistory: [...request.approvalHistory, entry],
+      approvalHistory: [...(request.approvalHistory || []), entry],
       updatedAt: now
     };
 
@@ -282,7 +282,7 @@ export class PtoWorkflowService {
     const updatedRequest: PtoRequest = {
       ...request,
       status: RequestStatus.Rejected,
-      approvalHistory: [...request.approvalHistory, entry],
+      approvalHistory: [...(request.approvalHistory || []), entry],
       updatedAt: now
     };
 
