@@ -1,0 +1,40 @@
+<div class="live-activity-feed-widget">
+  <div class="widget-header">
+    <div class="header-left">
+      <mat-icon>stream</mat-icon>
+      <h3>Live Activity</h3>
+      <span class="connection-indicator" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+        <span class="dot"></span>
+        {{isConnected ? 'Live' : 'Offline'}}
+      </span>
+    </div>
+  </div>
+
+  <div class="widget-body">
+    <div *ngIf="activityEvents.length === 0" class="empty-state">
+      <mat-icon>hourglass_empty</mat-icon>
+      <span>Waiting for activity...</span>
+      <small>Real-time events will appear here as technicians clock in, update jobs, and submit timecards.</small>
+    </div>
+
+    <div class="activity-list" *ngIf="activityEvents.length > 0">
+      <div
+        *ngFor="let event of activityEvents; trackBy: trackEvent"
+        class="activity-item"
+        [ngClass]="'type-' + event.type">
+        <div class="activity-icon">
+          <mat-icon>{{event.icon}}</mat-icon>
+        </div>
+        <div class="activity-content">
+          <div class="activity-title">{{event.title}}</div>
+          <div class="activity-description" *ngIf="event.description !== event.title">
+            {{event.description}}
+          </div>
+        </div>
+        <div class="activity-time">
+          {{getTimeAgo(event.timestamp)}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

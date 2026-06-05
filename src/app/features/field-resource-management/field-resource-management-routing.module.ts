@@ -29,6 +29,9 @@ import { AdminDashboardComponent } from './components/reporting/admin-dashboard/
 // Layout Components
 import { FrmLayoutComponent } from './components/layout/frm-layout/frm-layout.component';
 
+// My Team
+import { MyTeamComponent } from './components/my-team/my-team.component';
+
 /**
  * Field Resource Management Routing Module
  * 
@@ -95,6 +98,17 @@ const routes: Routes = [
           roleGuard: {
             allowedRoles: [UserRole.Admin]
           }
+        }
+      },
+
+      // My Team - Manager view of direct reports
+      {
+        path: 'my-team',
+        component: MyTeamComponent,
+        canActivate: [ManagerGuard],
+        data: {
+          title: 'My Team',
+          breadcrumb: 'My Team'
         }
       },
 

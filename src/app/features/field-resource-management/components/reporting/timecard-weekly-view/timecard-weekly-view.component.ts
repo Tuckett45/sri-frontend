@@ -14,6 +14,7 @@ import {
 } from '../../../models/time-entry.model';
 import { Job } from '../../../models/job.model';
 import { TimecardService } from '../../../services/timecard.service';
+import { TimecardApiService } from '../../../services/timecard-api.service';
 import { AccessibilityService } from '../../../services/accessibility.service';
 import { TimeEntryDialogComponent, TimeEntryDialogData } from '../time-entry-dialog/time-entry-dialog.component';
 import { AuthService } from '../../../../../services/auth.service';
@@ -82,6 +83,7 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store,
     public timecardService: TimecardService,
+    private timecardApiService: TimecardApiService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private accessibilityService: AccessibilityService,
@@ -431,11 +433,42 @@ export class TimecardWeeklyViewComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Submit timecard for approval
+   * Submit timecard for approval.
+   * Calls the /v1/timecards/submit endpoint which aggregates time entries,
+   * calculates hours, moves to 'submitted' status, and notifies payroll via SignalR.
    */
   submitTimecard(): void {
-    // TODO: Implement submit workflow
-    this.snackBar.open('Submit timecard - Coming soon', 'Close', { duration: 3000 });
+    if (!this.currentTechnicianId) {
+      this.snackBar.open('Unable to submit: user ID not available', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const periodStart = this.currentWeekStart.toISOString();
+    const periodEnd = this.currentWeekEnd.toISOString();
+
+    // Dispatch the NgRx action which triggers the timecard effects
+    this.store.dispatch(TimecardActions.submitTimecard({ 
+      periodId: `${this.currentTechnicianId}_${periodStart}_${periodEnd}` 
+    }));
+
+    // Also call the new timecard API directly for the approval workflow
+    this.timecardApiService.submitTimecard(this.currentTechnicianId, periodStart, periodEnd)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.snackBar.open(
+            `Timecard submitted for ${result.totalRegularHours}h regular + ${result.totalOvertimeHours}h OT`,
+            'OK',
+            { duration: 5000, panelClass: ['success-snackbar'] }
+          );
+          this.accessibilityService.announce('Timecard submitted successfully');
+        },
+        error: (err) => {
+          const message = err?.error?.message || 'Failed to submit timecard. Please try again.';
+          this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+          this.accessibilityService.announce('Timecard submission failed');
+        }
+      });
   }
   
   /**

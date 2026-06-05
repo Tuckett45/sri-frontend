@@ -31,6 +31,8 @@ export interface RecentJobWithTechnicians extends Job {
 })
 export class RecentJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
   @Input() marketFilter: string | null = null;
+  /** Optional: when provided, only show jobs assigned to these technician IDs */
+  @Input() technicianIds: string[] | null = null;
   @Input() limit: number = 10;
   @Output() jobSelected = new EventEmitter<string>();
 
@@ -39,6 +41,7 @@ export class RecentJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
   error: string | null = null;
 
   private marketFilter$ = new BehaviorSubject<string | null>(null);
+  private technicianIds$ = new BehaviorSubject<string[] | null>(null);
   private destroy$ = new Subject<void>();
 
   constructor(private store: Store) {}
@@ -55,12 +58,22 @@ export class RecentJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
       this.store.select(selectActiveAssignments),
       this.store.select(selectTechnicianEntities),
       this.store.select(selectCrewEntities),
-      this.marketFilter$
+      this.marketFilter$,
+      this.technicianIds$
     ]).pipe(
-      map(([jobs, activeAssignments, techEntities, crewEntities, market]) => {
+      map(([jobs, activeAssignments, techEntities, crewEntities, market, teamIds]) => {
         let filtered = [...jobs];
         if (market != null && market !== '') {
           filtered = filtered.filter(job => job.market === market);
+        }
+        // Filter to jobs assigned to team members only
+        if (teamIds && teamIds.length > 0) {
+          const teamSet = new Set(teamIds);
+          filtered = filtered.filter(job => {
+            if (job.technicianId && teamSet.has(job.technicianId)) return true;
+            const jobAssignments = activeAssignments.filter(a => a.jobId === job.id);
+            return jobAssignments.some(a => teamSet.has(a.technicianId));
+          });
         }
         filtered.sort((a, b) =>
           new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -80,6 +93,9 @@ export class RecentJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['marketFilter']) {
       this.marketFilter$.next(this.marketFilter);
+    }
+    if (changes['technicianIds']) {
+      this.technicianIds$.next(this.technicianIds);
     }
   }
 
