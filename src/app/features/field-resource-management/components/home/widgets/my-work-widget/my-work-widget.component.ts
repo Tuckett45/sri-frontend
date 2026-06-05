@@ -17,6 +17,27 @@ export class MyWorkWidgetComponent implements OnInit, OnDestroy {
   workItems: WorkItem[] = [];
   role = '';
 
+  // Pagination
+  pageSize = 5;
+  currentPage = 0;
+
+  get totalPages(): number {
+    return Math.ceil(this.workItems.length / this.pageSize);
+  }
+
+  get paginatedItems(): WorkItem[] {
+    const start = this.currentPage * this.pageSize;
+    return this.workItems.slice(start, start + this.pageSize);
+  }
+
+  get showingStart(): number {
+    return this.currentPage * this.pageSize + 1;
+  }
+
+  get showingEnd(): number {
+    return Math.min((this.currentPage + 1) * this.pageSize, this.workItems.length);
+  }
+
   constructor(private myWorkService: MyWorkService, private router: Router) {}
 
   ngOnInit(): void {
@@ -74,6 +95,18 @@ export class MyWorkWidgetComponent implements OnInit, OnDestroy {
         break;
       default:
         this.router.navigate(['/field-resource-management']);
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.currentPage++;
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
     }
   }
 

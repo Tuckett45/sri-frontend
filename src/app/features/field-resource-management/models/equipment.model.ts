@@ -3,7 +3,7 @@
  * assigned to technicians during the onboarding process.
  */
 
-export type EquipmentAssetType = 'badge' | 'laptop' | 'other';
+export type EquipmentAssetType = 'badge' | 'laptop' | 'kit' | 'other';
 export type EquipmentStatus = 'assigned' | 'returned' | 'lost';
 
 export interface EquipmentAssignment {
