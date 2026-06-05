@@ -16,6 +16,7 @@ import { catchError, retryWhen, mergeMap } from 'rxjs/operators';
  * 
  * Features:
  * - Exponential backoff retry for GET requests (up to 3 retries)
+ * - Exponential backoff retry for POST/PUT requests (up to 2 retries) on network/5xx errors
  * - User-friendly error messages for different error types
  * - Network error detection and handling
  * - Validation error handling
@@ -30,6 +31,11 @@ export class ErrorHandlingInterceptor implements HttpInterceptor {
    * Maximum number of retry attempts for GET requests
    */
   private readonly MAX_RETRIES = 3;
+
+  /**
+   * Maximum number of retry attempts for POST/PUT requests
+   */
+  private readonly WRITE_MAX_RETRIES = 2;
 
   /**
    * Base delay for exponential backoff (in milliseconds)
@@ -52,10 +58,11 @@ export class ErrorHandlingInterceptor implements HttpInterceptor {
       retryWhen(errors =>
         errors.pipe(
           mergeMap((error: HttpErrorResponse, retryCount: number) => {
-            // Only retry on network errors or 5xx server errors for GET requests
-            if (this.isRetryableError(error) && this.shouldRetry(req) && retryCount < this.MAX_RETRIES) {
+            const maxRetries = (req.method === 'POST' || req.method === 'PUT') ? this.WRITE_MAX_RETRIES : this.MAX_RETRIES;
+            // Only retry on network errors or 5xx server errors for retryable requests
+            if (this.isRetryableError(error) && this.shouldRetry(req) && retryCount < maxRetries) {
               const delay = this.calculateExponentialBackoff(retryCount);
-              console.log(`🔄 Retrying request (attempt ${retryCount + 1}/${this.MAX_RETRIES}) after ${delay}ms: ${req.method} ${req.url}`);
+              console.log(`🔄 Retrying request (attempt ${retryCount + 1}/${maxRetries}) after ${delay}ms: ${req.method} ${req.url}`);
               return timer(delay);
             }
             // Don't retry - throw the error
@@ -74,17 +81,17 @@ export class ErrorHandlingInterceptor implements HttpInterceptor {
    * @returns true if retry should be attempted, false otherwise
    */
   private shouldRetry(req: HttpRequest<any>): boolean {
-    // Only retry GET requests
-    if (req.method !== 'GET') {
-      return false;
-    }
-
     // Don't retry authentication endpoints
     if (this.NO_RETRY_ENDPOINTS.some(endpoint => req.url.includes(endpoint))) {
       return false;
     }
 
-    return true;
+    // Retry GET, POST, and PUT requests
+    if (req.method === 'GET' || req.method === 'POST' || req.method === 'PUT') {
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -101,16 +108,6 @@ export class ErrorHandlingInterceptor implements HttpInterceptor {
 
     // Server errors (5xx)
     if (error.status >= 500 && error.status < 600) {
-      return true;
-    }
-
-    // Service unavailable
-    if (error.status === 503) {
-      return true;
-    }
-
-    // Gateway timeout
-    if (error.status === 504) {
       return true;
     }
 
@@ -140,8 +137,13 @@ export class ErrorHandlingInterceptor implements HttpInterceptor {
     let userFriendlyMessage: string;
     let errorType: string;
 
+    // Upload timeout for POST/PUT network errors
+    if (error.status === 0 && (req.method === 'POST' || req.method === 'PUT')) {
+      errorType = 'upload_timeout';
+      userFriendlyMessage = 'The upload timed out or the connection was lost. Your data has been saved locally and you can try again.';
+    }
     // Network errors
-    if (error.status === 0) {
+    else if (error.status === 0) {
       errorType = 'network';
       userFriendlyMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
     }
@@ -159,6 +161,11 @@ export class ErrorHandlingInterceptor implements HttpInterceptor {
     else if (error.status === 404) {
       errorType = 'not_found';
       userFriendlyMessage = 'The requested resource was not found.';
+    }
+    // Conflict errors (409)
+    else if (error.status === 409) {
+      errorType = 'conflict';
+      userFriendlyMessage = 'This item was already saved. Please refresh the page to see it.';
     }
     // Service unavailable (503)
     else if (error.status === 503) {

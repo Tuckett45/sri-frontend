@@ -251,4 +251,128 @@ describe('PreliminaryPunchListService – URL routing by role and market', () =>
     );
     req.flush({ total: 0, page: 0, pageSize: 25, items: [] });
   });
+
+  // ── addEntry – partial failure handling ─────────────────────────────────
+
+  describe('addEntry – partial failure handling', () => {
+    it('should skip POST and do PUT when entry already exists (GET returns 200)', (done) => {
+      const punchList = {
+        id: 'test-id-1',
+        segmentId: 'SEG001',
+        vendorName: 'TestVendor',
+        streetAddress: '123 Test St',
+        city: 'TestCity',
+        state: 'AZ',
+        issues: [],
+        additionalConcerns: '',
+        dateReported: new Date(),
+        pmResolved: false,
+        cmResolved: false,
+        issueImages: ['data:image/jpeg;base64,abc123'],
+        resolutionImages: []
+      } as any;
+
+      service.addEntry(punchList).subscribe({
+        next: () => done(),
+        error: () => fail('Should not error')
+      });
+
+      // GET check returns 200 (entry exists)
+      const getReq = http.expectOne(`${API_BASE}/PunchList/test-id-1`);
+      expect(getReq.request.method).toBe('GET');
+      getReq.flush(punchList);
+
+      // Should go straight to PUT (no POST)
+      const putReq = http.expectOne(`${API_BASE}/PunchList/test-id-1`);
+      expect(putReq.request.method).toBe('PUT');
+      putReq.flush({});
+    });
+
+    it('should do POST then PUT when entry does not exist (GET returns 404)', (done) => {
+      const punchList = {
+        id: 'test-id-2',
+        segmentId: 'SEG002',
+        vendorName: 'TestVendor',
+        streetAddress: '456 Test St',
+        city: 'TestCity',
+        state: 'CO',
+        issues: [],
+        additionalConcerns: '',
+        dateReported: new Date(),
+        pmResolved: false,
+        cmResolved: false,
+        issueImages: ['data:image/jpeg;base64,xyz789'],
+        resolutionImages: []
+      } as any;
+
+      service.addEntry(punchList).subscribe({
+        next: () => done(),
+        error: () => fail('Should not error')
+      });
+
+      // GET check returns 404 (entry does not exist)
+      const getReq = http.expectOne(`${API_BASE}/PunchList/test-id-2`);
+      expect(getReq.request.method).toBe('GET');
+      getReq.flush(null, { status: 404, statusText: 'Not Found' });
+
+      // Should POST without images
+      const postReq = http.expectOne(`${API_BASE}/PunchList`);
+      expect(postReq.request.method).toBe('POST');
+      expect(postReq.request.body.issueImages).toEqual([]);
+      postReq.flush({});
+
+      // Then PUT with images
+      const putReq = http.expectOne(`${API_BASE}/PunchList/test-id-2`);
+      expect(putReq.request.method).toBe('PUT');
+      expect(putReq.request.body.issueImages).toEqual(['data:image/jpeg;base64,xyz789']);
+      putReq.flush({});
+    });
+
+    it('should skip POST on retry when id is in pendingImageUploadIds', (done) => {
+      const punchList = {
+        id: 'test-id-3',
+        segmentId: 'SEG003',
+        vendorName: 'TestVendor',
+        streetAddress: '789 Test St',
+        city: 'TestCity',
+        state: 'NV',
+        issues: [],
+        additionalConcerns: '',
+        dateReported: new Date(),
+        pmResolved: false,
+        cmResolved: false,
+        issueImages: ['data:image/jpeg;base64,def456'],
+        resolutionImages: []
+      } as any;
+
+      // First call - simulate POST success, PUT failure
+      service.addEntry(punchList).subscribe({
+        next: () => fail('Should have failed'),
+        error: () => {
+          // Second call - should skip POST entirely
+          service.addEntry(punchList).subscribe({
+            next: () => done(),
+            error: () => fail('Second call should succeed')
+          });
+
+          // Should go straight to PUT (no GET, no POST)
+          const putReq = http.expectOne(`${API_BASE}/PunchList/test-id-3`);
+          expect(putReq.request.method).toBe('PUT');
+          putReq.flush({});
+        }
+      });
+
+      // First call: GET returns 404
+      const getReq = http.expectOne(`${API_BASE}/PunchList/test-id-3`);
+      getReq.flush(null, { status: 404, statusText: 'Not Found' });
+
+      // First call: POST succeeds
+      const postReq = http.expectOne(`${API_BASE}/PunchList`);
+      postReq.flush({});
+
+      // First call: PUT fails
+      const putReq = http.expectOne(`${API_BASE}/PunchList/test-id-3`);
+      putReq.flush(null, { status: 0, statusText: 'Network Error' });
+    });
+  });
 });

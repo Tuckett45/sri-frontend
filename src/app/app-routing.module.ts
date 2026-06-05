@@ -73,6 +73,10 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     data: { preload: true }
   },
+  {
+    path: 'onboarding',
+    loadChildren: () => import('./features/public-onboarding/public-onboarding.module').then(m => m.PublicOnboardingModule)
+  },
   { path: '**', redirectTo: '/login' }
 ];
 

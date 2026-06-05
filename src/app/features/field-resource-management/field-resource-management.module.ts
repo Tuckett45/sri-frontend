@@ -66,6 +66,7 @@ import { QuickActionsWidgetComponent } from './components/home/widgets/quick-act
 import { ActiveJobsWidgetComponent } from './components/home/widgets/active-jobs-widget/active-jobs-widget.component';
 import { RecentJobsWidgetComponent } from './components/home/widgets/recent-jobs-widget/recent-jobs-widget.component';
 import { AssignmentsWidgetComponent } from './components/home/widgets/assignments-widget/assignments-widget.component';
+import { MyWorkWidgetComponent } from './components/home/widgets/my-work-widget/my-work-widget.component';
 import { TimecardWidgetComponent } from './components/home/widgets/timecard-widget/timecard-widget.component';
 import { ScheduleWidgetComponent } from './components/home/widgets/schedule-widget/schedule-widget.component';
 import { CurrentJobStatusWidgetComponent } from './components/home/widgets/current-job-status-widget/current-job-status-widget.component';
@@ -162,6 +163,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     ActiveJobsWidgetComponent,
     RecentJobsWidgetComponent,
     AssignmentsWidgetComponent,
+    MyWorkWidgetComponent,
     TimecardWidgetComponent,
     ScheduleWidgetComponent,
     CurrentJobStatusWidgetComponent,

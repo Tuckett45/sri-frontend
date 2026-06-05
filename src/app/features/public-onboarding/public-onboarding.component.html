@@ -1,0 +1,170 @@
+<div class="public-onboarding-page">
+  <!-- Header -->
+  <header class="public-header">
+    <div class="header-content">
+      <h1 class="brand-title">SRI</h1>
+      <span class="brand-subtitle">Candidate Information Sheet</span>
+    </div>
+  </header>
+
+  <main class="public-main">
+    <!-- Loading State -->
+    <div *ngIf="validating" class="status-card">
+      <div class="loading-spinner"></div>
+      <p class="status-text">Validating your onboarding link...</p>
+    </div>
+
+    <!-- Invalid Token State -->
+    <div *ngIf="!validating && !tokenValid" class="status-card error-card">
+      <div class="status-icon error-icon">&#10005;</div>
+      <h2>Link Invalid</h2>
+      <p class="status-text">{{ tokenErrorMessage }}</p>
+    </div>
+
+    <!-- Success State (after submission) -->
+    <div *ngIf="!validating && tokenValid && submitted" class="status-card success-card">
+      <div class="status-icon success-icon">&#10003;</div>
+      <h2>Information Submitted</h2>
+      <p class="status-text">
+        Thank you! Your information has been submitted successfully.
+        Your recruiter will review your Candidate Information Sheet and follow up with next steps.
+      </p>
+    </div>
+
+    <!-- Form State -->
+    <div *ngIf="!validating && tokenValid && !submitted" class="form-card">
+      <h2>Candidate Information Sheet</h2>
+      <p class="form-description">
+        Please fill out the information below to complete your Candidate Information Sheet.
+        Fields marked with * are required.
+      </p>
+
+      <!-- Submit Error -->
+      <div class="error-banner" *ngIf="submitError" role="alert">
+        <span>{{ submitError }}</span>
+        <button type="button" (click)="submitError = ''" aria-label="Dismiss error">Dismiss</button>
+      </div>
+
+      <form [formGroup]="candidateForm"
+            (ngSubmit)="onSubmit()"
+            class="candidate-form"
+            novalidate>
+
+        <!-- Tech Name -->
+        <div class="form-field">
+          <label for="techName">Full Name *</label>
+          <input id="techName"
+                 formControlName="techName"
+                 placeholder="Enter your full name"
+                 (blur)="markTouched('techName')" />
+          <span class="field-error" *ngIf="showError('techName')">
+            Full Name is required.
+          </span>
+        </div>
+
+        <!-- Middle Name -->
+        <div class="form-field">
+          <label for="middleName">Middle Name</label>
+          <input id="middleName"
+                 formControlName="middleName"
+                 placeholder="Enter middle name (optional)"
+                 (blur)="markTouched('middleName')" />
+        </div>
+
+        <!-- Tech Email -->
+        <div class="form-field">
+          <label for="techEmail">Email Address *</label>
+          <input id="techEmail"
+                 type="email"
+                 formControlName="techEmail"
+                 placeholder="Enter your email address"
+                 (blur)="markTouched('techEmail')" />
+          <span class="field-error" *ngIf="showError('techEmail')">
+            <ng-container *ngIf="candidateForm.get('techEmail')?.hasError('required')">
+              Email Address is required.
+            </ng-container>
+            <ng-container *ngIf="!candidateForm.get('techEmail')?.hasError('required') && candidateForm.get('techEmail')?.hasError('email')">
+              Please enter a valid email address.
+            </ng-container>
+          </span>
+        </div>
+
+        <!-- Tech Phone -->
+        <div class="form-field">
+          <label for="techPhone">Phone Number *</label>
+          <input id="techPhone"
+                 formControlName="techPhone"
+                 placeholder="Enter your phone number"
+                 (blur)="markTouched('techPhone')" />
+          <span class="field-error" *ngIf="showError('techPhone')">
+            <ng-container *ngIf="candidateForm.get('techPhone')?.hasError('required')">
+              Phone Number is required.
+            </ng-container>
+            <ng-container *ngIf="!candidateForm.get('techPhone')?.hasError('required') && candidateForm.get('techPhone')?.hasError('invalidPhone')">
+              Phone must contain only digits, spaces, hyphens, parentheses, and + with at least 10 digits.
+            </ng-container>
+          </span>
+        </div>
+
+        <!-- Vest Size -->
+        <div class="form-field">
+          <label for="vestSize">Vest Size *</label>
+          <select id="vestSize"
+                  formControlName="vestSize"
+                  (blur)="markTouched('vestSize')">
+            <option value="" disabled>Select vest size</option>
+            <option *ngFor="let size of vestSizes" [value]="size">{{ size }}</option>
+          </select>
+          <span class="field-error" *ngIf="showError('vestSize')">
+            Vest Size is required.
+          </span>
+        </div>
+
+        <!-- Home Address -->
+        <div class="form-field">
+          <label for="homeAddress">Home Address *</label>
+          <input id="homeAddress"
+                 formControlName="homeAddress"
+                 placeholder="Enter your home address"
+                 (blur)="markTouched('homeAddress')" />
+          <span class="field-error" *ngIf="showError('homeAddress')">
+            Home Address is required.
+          </span>
+        </div>
+
+
+
+        <!-- Referred By -->
+        <div class="form-field">
+          <label for="referredBy">Referred By</label>
+          <input id="referredBy"
+                 formControlName="referredBy"
+                 placeholder="Who referred you? (optional)" />
+        </div>
+
+        <!-- Start Date -->
+        <div class="form-field">
+          <label for="startDate">Start Date *</label>
+          <input id="startDate"
+                 type="date"
+                 formControlName="startDate"
+                 (blur)="markTouched('startDate')" />
+          <span class="field-error" *ngIf="showError('startDate')">
+            Start Date is required.
+          </span>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <button type="submit"
+                  [disabled]="submitting"
+                  class="submit-btn">
+            <span *ngIf="submitting" class="spinner" aria-hidden="true"></span>
+            <span *ngIf="submitting">Submitting...</span>
+            <span *ngIf="!submitting">Submit Information</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>

@@ -405,6 +405,8 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
       if (!result) return;
 
       const punchList = result;
+      const draftSaved = (punchList as any)._draftSaved === true;
+      delete (punchList as any)._draftSaved;
       const action$ = punchList.updatedBy
         ? this.punchListService.updateEntry(punchList)
         : this.punchListService.addEntry(punchList);
@@ -412,6 +414,7 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
       action$.subscribe({
         next: () => {
           this.toastr.success('Punch List saved');
+          PreliminaryPunchListModalComponent.clearDraft(punchList.id);
           // refresh children (they fetch their own pages)
           this.resolvedPunchListComponent.refreshPunchLists();
           this.unresolvedPunchListComponent.refreshPunchLists();
@@ -420,7 +423,17 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
           this.loadFacetsForActiveTab();
         },
         error: (err: any) => {
-          const message = this.getPunchListSaveErrorMessage(err);
+          let message = this.getPunchListSaveErrorMessage(err);
+          const raw = typeof err === 'string' ? err : (err?.error || err?.message || '');
+          const errorText = typeof raw === 'string' ? raw : (raw?.message || raw?.title || JSON.stringify(raw));
+          const errorType = err?.errorType || '';
+          if (errorType === 'upload_timeout' || errorText.includes('timed out') || errorText.includes('Timeout')) {
+            if (draftSaved) {
+              message += ' Your form data has been saved and will be restored when you reopen the form.';
+            } else {
+              message += ' Please try again.';
+            }
+          }
           this.toastr.error(message, 'Punch List cannot be saved', {
             timeOut: 10000,
             closeButton: true

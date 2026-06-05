@@ -278,7 +278,7 @@ export class OnboardingChecklistComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.technicianId = this.route.snapshot.paramMap.get('technicianId') || '';
+    this.technicianId = this.route.snapshot.paramMap.get('candidateId') || '';
     this.loadData();
   }
 

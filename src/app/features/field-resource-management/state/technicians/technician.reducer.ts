@@ -286,5 +286,13 @@ export const technicianReducer = createReducer(
     ...state,
     loading: false,
     error
-  }))
+  })),
+
+  // Update Technician Field Status
+  on(TechnicianActions.updateTechnicianFieldStatus, (state, { technicianId, fieldStatus }) =>
+    technicianAdapter.updateOne(
+      { id: technicianId, changes: { fieldStatus: fieldStatus as any } },
+      state
+    )
+  )
 );

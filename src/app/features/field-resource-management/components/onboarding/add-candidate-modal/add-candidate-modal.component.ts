@@ -21,8 +21,7 @@ import { Candidate } from '../../../models/onboarding.models';
 
               <mat-form-field appearance="outline">
                 <mat-label>Middle Name</mat-label>
-                <input matInput formControlName="middleName" required placeholder="Enter middle name or N/A" />
-                <mat-error *ngIf="basicInfoForm.get('middleName')?.hasError('required')">Middle name is required (use N/A if not applicable)</mat-error>
+                <input matInput formControlName="middleName" placeholder="Enter middle name (optional)" />
               </mat-form-field>
 
               <mat-form-field appearance="outline">
@@ -70,12 +69,16 @@ import { Candidate } from '../../../models/onboarding.models';
 
               <mat-form-field appearance="outline">
                 <mat-label>Work Site</mat-label>
-                <input matInput formControlName="workSite" required />
-                <mat-error *ngIf="basicInfoForm.get('workSite')?.hasError('required')">Work site is required</mat-error>
+                <input matInput formControlName="workSite" placeholder="Assigned work site (optional)" />
               </mat-form-field>
             </div>
 
             <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Home State</mat-label>
+                <input matInput formControlName="homeState" placeholder="e.g. TX, CA, FL" />
+              </mat-form-field>
+
               <mat-form-field appearance="outline">
                 <mat-label>Start Date</mat-label>
                 <input matInput [matDatepicker]="startDatePicker" formControlName="startDate" required />
@@ -435,15 +438,16 @@ export class AddCandidateModalComponent {
 
     this.basicInfoForm = this.fb.group({
       firstName: [firstName || '', Validators.required],
-      middleName: [candidate?.middleName || '', Validators.required],
+      middleName: [candidate?.middleName || ''],
       lastName: [lastName || '', Validators.required],
       email: [candidate?.techEmail || '', [Validators.required, Validators.email]],
       phone: [candidate?.techPhone || '', Validators.required],
       vestSize: [candidate?.vestSize || 'L'],
       homeAddress: [candidate?.homeAddress || '', Validators.required],
+      workSite: [candidate?.workSite || ''],
+      homeState: [candidate?.homeState || ''],
       referredBy: [candidate?.referredBy || ''],
-      workSite: [candidate?.workSite || '', Validators.required],
-      startDate: [candidate?.startDate || '', Validators.required],
+      startDate: [candidate?.startDate ? new Date(candidate.startDate + 'T00:00:00') : '', Validators.required],
       offerStatus: [candidate?.offerStatus || 'needs_review']
     });
 

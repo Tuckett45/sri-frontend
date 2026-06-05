@@ -39,6 +39,7 @@
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     position: relative;
+    padding-bottom: 16px;
 
     // Always-visible scrollbar so users know it scrolls
     scrollbar-width: thin;
@@ -65,18 +66,8 @@
     }
   }
 
-  // Bottom fade gradient to hint there's more content below
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 40px;
-    background: linear-gradient(to bottom, transparent, #1e293b);
-    pointer-events: none;
-    z-index: 1;
-  }
+  // Bottom fade gradient removed — no longer needed since nav is scrollable
+  // and fade was causing last item to appear greyed out
 
   @media (max-width: 768px) {
     position: fixed;

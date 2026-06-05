@@ -11,7 +11,7 @@ import { TimeCategory, PayType } from '../../../../models/time-payroll.enum';
 // Clock In
 export const clockIn = createAction(
   '[Time Entry] Clock In',
-  props<{ jobId: string; technicianId: string; location?: GeoLocation; mileage?: number }>()
+  props<{ jobId: string; technicianId: string; location?: GeoLocation; mileage?: number; proximityStatus?: string }>()
 );
 
 export const clockInSuccess = createAction(

@@ -63,15 +63,11 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
 
         <!-- Middle Name -->
         <div class="form-field">
-          <label for="middleName">Middle Name *</label>
+          <label for="middleName">Middle Name</label>
           <input id="middleName"
                  formControlName="middleName"
-                 placeholder="Enter middle name or N/A"
+                 placeholder="Enter middle name (optional)"
                  (blur)="markTouched('middleName')" />
-          <span class="field-error"
-                *ngIf="showError('middleName')">
-            Middle Name is required (use N/A if not applicable).
-          </span>
         </div>
 
         <!-- Tech Email -->
@@ -475,7 +471,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
   private buildForm(): void {
     this.candidateForm = this.fb.group({
       techName: ['', Validators.required],
-      middleName: ['', Validators.required],
+      middleName: [''],
       techEmail: ['', [Validators.required, Validators.email]],
       techPhone: ['', [Validators.required, CandidateFormComponent.phoneValidator]],
       vestSize: ['', Validators.required],

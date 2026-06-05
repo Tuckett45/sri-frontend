@@ -11,6 +11,7 @@ import {
   UpdateCandidatePayload,
   OnboardingServiceError,
 } from '../models/onboarding.models';
+import { Certification } from '../models/technician.model';
 import { AuditMetadata } from '../models/payroll.models';
 
 @Injectable({ providedIn: 'root' })
@@ -152,5 +153,66 @@ export class OnboardingService {
       .post<{ url: string; originalFileName: string; fileSizeBytes: number }>(
         `${this.baseUrl}/candidates/${candidateId}/headshot`, formData)
       .pipe(catchError(this.mapError('uploadHeadshot')));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Candidate Credentials
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Retrieves all credentials for a candidate.
+   * @param candidateId The candidate's ID
+   * @returns Observable of credential array
+   */
+  getCandidateCredentials(candidateId: string): Observable<Certification[]> {
+    return this.http
+      .get<Certification[]>(`${this.baseUrl}/candidates/${candidateId}/credentials`)
+      .pipe(
+        map(response => {
+          if (Array.isArray(response)) return response;
+          if (response && Array.isArray((response as any).items)) return (response as any).items;
+          return [];
+        }),
+        catchError(this.mapError('getCandidateCredentials'))
+      );
+  }
+
+  /**
+   * Adds a new credential to a candidate.
+   * @param candidateId The candidate's ID
+   * @param credential The credential data (without id)
+   * @returns Observable of the created credential
+   */
+  addCandidateCredential(candidateId: string, credential: Omit<Certification, 'id'>): Observable<Certification> {
+    const body = this.withAudit(credential as any);
+    return this.http
+      .post<Certification>(`${this.baseUrl}/candidates/${candidateId}/credentials`, body)
+      .pipe(catchError(this.mapError('addCandidateCredential')));
+  }
+
+  /**
+   * Updates an existing credential for a candidate.
+   * @param candidateId The candidate's ID
+   * @param credentialId The credential ID to update
+   * @param credential Partial credential data to update
+   * @returns Observable of the updated credential
+   */
+  updateCandidateCredential(candidateId: string, credentialId: string, credential: Partial<Certification>): Observable<Certification> {
+    const body = this.withAudit(credential as any);
+    return this.http
+      .put<Certification>(`${this.baseUrl}/candidates/${candidateId}/credentials/${credentialId}`, body)
+      .pipe(catchError(this.mapError('updateCandidateCredential')));
+  }
+
+  /**
+   * Deletes a credential from a candidate.
+   * @param candidateId The candidate's ID
+   * @param credentialId The credential ID to delete
+   * @returns Observable of void
+   */
+  deleteCandidateCredential(candidateId: string, credentialId: string): Observable<void> {
+    return this.http
+      .delete<void>(`${this.baseUrl}/candidates/${candidateId}/credentials/${credentialId}`)
+      .pipe(catchError(this.mapError('deleteCandidateCredential')));
   }
 }

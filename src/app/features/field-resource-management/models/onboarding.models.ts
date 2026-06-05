@@ -19,6 +19,7 @@ export interface Candidate {
   biisciCertified?: boolean;
   workSite: string;
   homeAddress?: string;
+  homeState?: string;
   startDate: string;          // ISO date
   offerStatus: OfferStatus;
   resumeUrl?: string;
@@ -62,11 +63,37 @@ export interface CreateCandidatePayload {
   techEmail: string;
   techPhone: string;
   vestSize: VestSize;
-  workSite: string;
+  workSite?: string;
   homeAddress: string;
+  homeState?: string;
   startDate: string;
   offerStatus: OfferStatus;
   referredBy?: string;
+  drugTestComplete?: boolean;
+  oshaCertified?: boolean;
+  scissorLiftCertified?: boolean;
+
+  // Badges & Access
+  attBadge?: boolean;
+  lumenBadge?: boolean;
+  attSupplierTraining?: boolean;
+  cienaBasicTraining?: boolean;
+  googleRedBadge?: boolean;
+  googleLdap?: boolean;
+  metaGreenListing?: boolean;
+
+  // Training & Certs
+  obsTraining?: boolean;
+  osha10?: boolean;
+  osha30?: boolean;
+  techHandTools?: boolean;
+
+  // Equipment Kits
+  ciKitAssigned?: boolean;
+  fiberKitAssigned?: boolean;
+  labelingKitAssigned?: boolean;
+  powerKitAssigned?: boolean;
+  testingEqptAssigned?: boolean;
 }
 
 export interface UpdateCandidatePayload {
@@ -80,9 +107,32 @@ export interface UpdateCandidatePayload {
   scissorLiftCertified?: boolean;
   workSite?: string;
   homeAddress?: string;
+  homeState?: string;
   startDate?: string;
   offerStatus?: OfferStatus;
   referredBy?: string;
+
+  // Badges & Access
+  attBadge?: boolean;
+  lumenBadge?: boolean;
+  attSupplierTraining?: boolean;
+  cienaBasicTraining?: boolean;
+  googleRedBadge?: boolean;
+  googleLdap?: boolean;
+  metaGreenListing?: boolean;
+
+  // Training & Certs
+  obsTraining?: boolean;
+  osha10?: boolean;
+  osha30?: boolean;
+  techHandTools?: boolean;
+
+  // Equipment Kits
+  ciKitAssigned?: boolean;
+  fiberKitAssigned?: boolean;
+  labelingKitAssigned?: boolean;
+  powerKitAssigned?: boolean;
+  testingEqptAssigned?: boolean;
 }
 
 // --- Filters ---

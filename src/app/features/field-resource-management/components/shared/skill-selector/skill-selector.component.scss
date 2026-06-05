@@ -14,13 +14,28 @@
 
   &__name {
     font-weight: 500;
-    color: #212121;
+    color: #ffffff;
   }
 
   &__category {
     font-size: 0.875rem;
-    color: rgba(0, 0, 0, 0.6);
+    color: rgba(255, 255, 255, 0.7);
     margin-left: 8px;
+  }
+}
+
+.create-skill-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #4caf50;
   }
 }
 
@@ -158,5 +173,34 @@
       outline: 2px solid #1976d2;
       outline-offset: 2px;
     }
+  }
+}
+
+// Autocomplete panel dropdown styling - fix dark background with unreadable text
+::ng-deep .mat-mdc-autocomplete-panel {
+  .mat-mdc-option {
+    color: #ffffff !important;
+
+    .mdc-list-item__primary-text {
+      color: #ffffff !important;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    &.mat-mdc-option-active {
+      background-color: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    &.mdc-list-item--selected {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+  }
+
+  // Create new skill option styling
+  .mat-mdc-option.create-new-skill-option {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff !important;
   }
 }

@@ -146,6 +146,7 @@
             [availableSkills]="availableSkills"
             formControlName="requiredSkills"
             label="Required Skills"
+            (skillCreated)="onSkillCreated($event)"
           ></frm-skill-selector>
         </div>
 
@@ -437,8 +438,8 @@
       <mat-card-content>
         <frm-file-upload
           [multiple]="true"
-          [maxFileSize]="10485760"
-          [allowedFileTypes]="['image/jpeg', 'image/png', 'image/heic', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']"
+          [maxFileSize]="52428800"
+          [allowedFileTypes]="['image/jpeg', 'image/png', 'image/heic', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']"
           (filesSelected)="onFilesSelected($event)"
         ></frm-file-upload>
       </mat-card-content>

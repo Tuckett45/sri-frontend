@@ -27,17 +27,20 @@ function loadFromStorage(): any {
 
     const parsed = JSON.parse(stored);
     
-    // Check if stored state is not too old (24 hours)
-    const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-    if (Date.now() - parsed.timestamp > maxAge) {
-      console.warn('Stored state is too old, clearing...');
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
+    // If there's an active entry (user is clocked in), always restore regardless of age.
+    // Only expire stored state if there is NO active entry (stale completed entries).
+    if (!parsed.timeEntries?.activeEntry) {
+      const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      if (Date.now() - parsed.timestamp > maxAge) {
+        console.warn('[StorageSync] Stored state is too old and has no active entry, clearing...');
+        localStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
     }
 
     return parsed;
   } catch (error) {
-    console.error('Failed to load state from localStorage:', error);
+    console.error('[StorageSync] Failed to load state from localStorage:', error);
     return null;
   }
 }

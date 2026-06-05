@@ -786,7 +786,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
    */
   private getMarkerIcon(technician: Technician): L.Icon {
     const status = this.getTechnicianStatus(technician);
-    const color = this.getStatusColor(status);
+    const color = this.getStatusColor(status, technician);
     
     // Create cache key based on status/color
     const cacheKey = `tech-${status}-${color}`;
@@ -828,12 +828,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       return 'off-duty';
     }
 
+    // Use fieldStatus from backend if available (set by clock-in/out)
+    if (technician.fieldStatus) {
+      switch (technician.fieldStatus) {
+        case 'OnSite':
+        case 'EnRoute':
+          return 'on-job';
+        case 'ClockedOut':
+          return 'unavailable';
+        case 'Available':
+          return 'available';
+      }
+    }
+
     if (!technician.isAvailable) {
       return 'unavailable';
     }
 
-    // TODO: Check assignment data to determine if on-job
-    // For now, default to available
     return 'available';
   }
 
@@ -842,12 +853,19 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
    * @param status - Technician status
    * @returns Hex color code
    */
-  private getStatusColor(status: string): string {
+  private getStatusColor(status: string, technician?: Technician): string {
     switch (status) {
       case 'available':
         return '#10b981'; // Green
       case 'on-job':
-        return '#3b82f6'; // Blue
+        // Distinguish OnSite (green) vs EnRoute (orange) using currentStatus
+        if (technician?.currentStatus === 'OnSite') {
+          return '#4caf50'; // Green — on site
+        }
+        if (technician?.currentStatus === 'EnRoute') {
+          return '#ff9800'; // Orange — en route
+        }
+        return '#3b82f6'; // Blue — generic on-job
       case 'unavailable':
         return '#f59e0b'; // Orange
       case 'off-duty':
@@ -945,7 +963,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
    */
   private createPopupContent(technician: Technician): string {
     const status = this.getTechnicianStatus(technician);
-    const statusColor = this.getStatusColor(status);
+    const statusColor = this.getStatusColor(status, technician);
     const statusLabel = status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
     const skills = 'No skills data';

@@ -1,9 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { ToastrService } from 'ngx-toastr';
+import { Store } from '@ngrx/store';
 import { DeploymentPushNotificationService } from './deployment-push-notification.service';
 import { environment, local_environment } from 'src/environments/environments';
 import { FeatureFlagService } from 'src/app/services/feature-flag.service';
+import * as NotificationActions from '../../field-resource-management/state/notifications/notification.actions';
 
 export interface DeploymentNotification {
   type: 'assigned' | 'ready_for_signoff' | 'signoff_recorded' | 'issues' | 'issue_created' | 
@@ -23,6 +25,7 @@ export interface DeploymentNotification {
 })
 export class DeploymentSignalRService {
   private readonly toastr = inject(ToastrService);
+  private readonly store = inject(Store);
   private readonly featureFlags = inject(FeatureFlagService);
   private readonly deploymentNotificationsFlag = this.featureFlags.flagEnabled('deploymentNotifications');
   private readonly pushNotifications = inject(DeploymentPushNotificationService);
@@ -411,7 +414,27 @@ export class DeploymentSignalRService {
     // Add to notification list
     this.notifications.update(current => [notification, ...current].slice(0, 50)); // Keep last 50
 
-      if (!this.notificationsEnabled()) {
+    // Bridge assignment/sign-off/completion events into the shared NgRx notification store
+    // so they appear in the persistent notification bell alongside FRM notifications.
+    if (notification.type === 'assigned' || notification.type === 'ready_for_signoff' || notification.type === 'completed') {
+      this.store.dispatch(NotificationActions.addNotification({
+        notification: {
+          id: `deployment-${notification.deploymentId}-${notification.type}-${Date.now()}`,
+          type: `deployment_${notification.type}`,
+          message: notification.message,
+          isRead: false,
+          createdAt: notification.timestamp,
+          timestamp: notification.timestamp,
+          userId: notification.userId ?? '',
+          link: `/deployments/${notification.deploymentId}`,
+          relatedEntityType: 'assignment',
+          relatedEntityId: notification.deploymentId,
+          data: notification.data
+        }
+      }));
+    }
+
+    if (!this.notificationsEnabled()) {
       return;
     }
 

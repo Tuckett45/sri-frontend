@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl } from '@angular/forms';
 import { Observable, of } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
@@ -42,6 +42,10 @@ export class SkillSelectorComponent implements ControlValueAccessor, OnInit {
   @Input() placeholder: string = 'Select skills';
   @Input() label: string = 'Skills';
   @Input() showLevelSelector: boolean = true;
+  @Output() skillCreated = new EventEmitter<Skill>();
+
+  /** Token used to identify the "Create new skill" option in the autocomplete */
+  readonly CREATE_NEW_SKILL_TOKEN = '__CREATE_NEW__';
 
   selectedSkills: Skill[] = [];
   skillControl = new FormControl('');
@@ -54,6 +58,23 @@ export class SkillSelectorComponent implements ControlValueAccessor, OnInit {
   private onChange: (value: Skill[]) => void = () => {};
   onTouched: () => void = () => {};
   disabled = false;
+
+  /**
+   * Show the "Create new skill" option when the user has typed text
+   * that doesn't exactly match any existing available skill name.
+   */
+  get showCreateOption(): boolean {
+    const value = this.skillControl.value;
+    if (!value || typeof value !== 'string' || value.trim().length === 0) {
+      return false;
+    }
+    const trimmed = value.trim().toLowerCase();
+    // Don't show if it exactly matches an existing skill name
+    const exactMatch = this.availableSkills.some(
+      s => s.name.toLowerCase() === trimmed
+    );
+    return !exactMatch;
+  }
 
   ngOnInit(): void {
     this.filteredSkills$ = this.skillControl.valueChanges.pipe(
@@ -118,15 +139,45 @@ export class SkillSelectorComponent implements ControlValueAccessor, OnInit {
   /**
    * Display function for autocomplete
    */
-  displayFn(skill: Skill | null): string {
-    return skill ? skill.name : '';
+  displayFn(skill: Skill | string | null): string {
+    if (!skill) return '';
+    if (typeof skill === 'string') return '';
+    return skill.name;
   }
 
   /**
    * Handle option selection from autocomplete
    */
-  onOptionSelected(skill: Skill): void {
-    this.addSkill(skill);
+  onOptionSelected(skill: Skill | string): void {
+    if (skill === this.CREATE_NEW_SKILL_TOKEN) {
+      this.createNewSkill();
+    } else {
+      this.addSkill(skill as Skill);
+    }
+  }
+
+  /**
+   * Create a new skill from the current input text and add it to the selection
+   */
+  private createNewSkill(): void {
+    const name = (this.skillControl.value as string || '').trim();
+    if (!name) return;
+
+    const newSkill: Skill = {
+      id: `custom-${Date.now()}`,
+      name: name,
+      category: 'Custom',
+      level: SkillLevel.Beginner
+    };
+
+    // Add to available skills so it shows up if the user removes and re-adds
+    this.availableSkills = [...this.availableSkills, newSkill];
+
+    // Add to selection
+    this.addSkill(newSkill);
+
+    // Emit event so parent components can persist the new skill
+    this.skillCreated.emit(newSkill);
   }
 
   /**
