@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, FormControl, Validators, AbstractControl, Valid
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { TechnicianService } from '../../../services/technician.service';
 import { OnboardingService } from '../../../services/onboarding.service';
 import { Technician, CertificationStatus } from '../../../models/technician.model';
 import { CredentialType } from '../../../models/credential-types.model';
@@ -224,7 +223,6 @@ export class CredentialFormModalComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private technicianService: TechnicianService,
     private onboardingService: OnboardingService,
     private dialogRef: MatDialogRef<CredentialFormModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CredentialFormModalData
@@ -303,8 +301,12 @@ export class CredentialFormModalComponent implements OnInit, OnDestroy {
       certificationData.status = CertificationStatus.Active;
     }
 
-    this.technicianService.addTechnicianCertification(this.data.technicianId, certificationData)
-      .subscribe({
+    const isEdit = !!this.data.credential;
+    const save$ = isEdit
+      ? this.onboardingService.updateCandidateCredential(this.data.technicianId, this.data.credential.id, certificationData)
+      : this.onboardingService.addCandidateCredential(this.data.technicianId, certificationData);
+
+    save$.subscribe({
         next: () => {
           this.updateLegacyBooleanFields(selectedType);
           this.dialogRef.close(true);
