@@ -61,6 +61,14 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
                 <a [href]="'tel:' + candidate.techPhone">{{ candidate.techPhone }}</a>
               </div>
               <div class="detail-row">
+                <span class="label">Home Address</span>
+                <span>{{ candidate.homeAddress || '—' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Home State</span>
+                <span>{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</span>
+              </div>
+              <div class="detail-row">
                 <span class="label">Work Site</span>
                 <span>{{ candidate.workSite }}</span>
               </div>
@@ -68,6 +76,10 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
 
             <div class="detail-section">
               <h3>Onboarding Details</h3>
+              <div class="detail-row">
+                <span class="label">Referred By</span>
+                <span>{{ candidate.referredBy || '—' }}</span>
+              </div>
               <div class="detail-row">
                 <span class="label">Start Date</span>
                 <span>{{ candidate.startDate | date:'mediumDate' }}</span>
@@ -463,6 +475,12 @@ export class CandidateDetailComponent implements OnInit {
       case 'hired_assigned': return 'status-hired-assigned';
       default: return '';
     }
+  }
+
+  extractState(address: string | undefined): string {
+    if (!address) return '';
+    const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
+    return match ? match[1] : '';
   }
 
   canConvert(candidate: Candidate): boolean {

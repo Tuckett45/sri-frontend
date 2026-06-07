@@ -99,6 +99,9 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('homeState')" class="sortable">
               Home State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
             </th>
+            <th (click)="onSort('referredBy')" class="sortable">
+              Referred By <span class="sort-icon">{{ getSortIcon('referredBy') }}</span>
+            </th>
             <th (click)="onSort('startDate')" class="sortable">
               Start Date <span class="sort-icon">{{ getSortIcon('startDate') }}</span>
             </th>
@@ -122,7 +125,8 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td class="bool-cell"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
             <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
             <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td>{{ candidate.homeState }}</td>
+            <td>{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
+            <td>{{ candidate.referredBy || '—' }}</td>
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
             <td class="actions-cell">
@@ -525,6 +529,12 @@ export class CandidateListComponent implements OnInit {
     return OFFER_STATUS_LABELS[status] ?? status;
   }
 
+  extractState(address: string | undefined): string {
+    if (!address) return '';
+    const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
+    return match ? match[1] : '';
+  }
+
   onPageChange(event: PageEvent): void {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
@@ -731,7 +741,7 @@ export class CandidateListComponent implements OnInit {
         (c) =>
           c.techName.toLowerCase().includes(term) ||
           c.techEmail.toLowerCase().includes(term) ||
-          (c.homeState || '').toLowerCase().includes(term)
+          (c.homeState || this.extractState(c.homeAddress) || '').toLowerCase().includes(term)
       );
     }
 

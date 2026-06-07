@@ -487,6 +487,17 @@ export class AddCandidateModalComponent {
       powerKitAssigned: [candidate?.powerKitAssigned || false],
       testingEquipmentAssigned: [candidate?.testingEqptAssigned || false]
     });
+
+    // Auto-populate homeState from homeAddress when the user hasn't manually set it
+    this.basicInfoForm.get('homeAddress')?.valueChanges.subscribe((address: string) => {
+      const homeStateCtrl = this.basicInfoForm.get('homeState');
+      if (homeStateCtrl && !homeStateCtrl.value) {
+        const extracted = this.extractStateFromAddress(address);
+        if (extracted) {
+          homeStateCtrl.setValue(extracted, { emitEvent: false });
+        }
+      }
+    });
   }
 
   onResumeSelected(event: Event): void {
@@ -494,6 +505,12 @@ export class AddCandidateModalComponent {
     if (input.files && input.files.length > 0) {
       this.resumeFile = input.files[0];
     }
+  }
+
+  private extractStateFromAddress(address: string): string {
+    if (!address) return '';
+    const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
+    return match ? match[1] : '';
   }
 
   onHeadshotSelected(event: Event): void {
