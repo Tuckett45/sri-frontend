@@ -132,7 +132,19 @@
           </span>
         </div>
 
-
+        <!-- Home State -->
+        <div class="form-field">
+          <label for="homeState">Home State *</label>
+          <select id="homeState"
+                  formControlName="homeState"
+                  (blur)="markTouched('homeState')">
+            <option value="" disabled>Select state</option>
+            <option *ngFor="let state of usStates" [value]="state.abbreviation">{{ state.name }}</option>
+          </select>
+          <span class="field-error" *ngIf="showError('homeState')">
+            Home State is required.
+          </span>
+        </div>
 
         <!-- Referred By -->
         <div class="form-field">

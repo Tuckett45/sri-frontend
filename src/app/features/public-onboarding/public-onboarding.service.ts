@@ -18,6 +18,7 @@ export interface PublicCandidateSubmissionPayload {
   techPhone: string;
   vestSize: VestSize;
   homeAddress: string;
+  homeState: string;
   workSite?: string;
   referredBy?: string;
   startDate: string;
