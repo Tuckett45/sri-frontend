@@ -69,6 +69,24 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <option value="hired_assigned">Hired/Assigned</option>
           </select>
         </div>
+        <div class="filter-field">
+          <label for="homeStateFilter">Home State</label>
+          <select id="homeStateFilter"
+                  [(ngModel)]="homeStateFilter"
+                  (ngModelChange)="onHomeStateFilterChange()">
+            <option value="">All States</option>
+            <option *ngFor="let state of availableStates" [value]="state">{{ state }}</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="referredByFilter">Referred By</label>
+          <select id="referredByFilter"
+                  [(ngModel)]="referredByFilter"
+                  (ngModelChange)="onReferredByFilterChange()">
+            <option value="">All Referrers</option>
+            <option *ngFor="let referrer of availableReferrers" [value]="referrer">{{ referrer }}</option>
+          </select>
+        </div>
       </div>
 
       <!-- Candidate Table -->
@@ -462,8 +480,12 @@ export class CandidateListComponent implements OnInit {
 
   searchText = '';
   statusFilter = '';
+  homeStateFilter = '';
+  referredByFilter = '';
   incompleteCertsFilter = false;
   sortState: SortState | null = null;
+  availableStates: string[] = [];
+  availableReferrers: string[] = [];
 
   // Pagination
   pageSize = 10;
@@ -504,6 +526,16 @@ export class CandidateListComponent implements OnInit {
 
   onStatusFilterChange(event: Event): void {
     this.statusFilter = (event.target as HTMLSelectElement).value;
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
+  onHomeStateFilterChange(): void {
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
+  onReferredByFilterChange(): void {
     this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
@@ -698,6 +730,7 @@ export class CandidateListComponent implements OnInit {
       next: (candidates) => {
         this.candidates = candidates;
         this.loading = false;
+        this.updateAvailableStates();
         this.applyFiltersAndSort();
       },
       error: (err) => {
@@ -731,6 +764,18 @@ export class CandidateListComponent implements OnInit {
     ];
   }
 
+  private updateAvailableStates(): void {
+    const states = this.candidates
+      .map(c => c.homeState || this.extractState(c.homeAddress) || '')
+      .filter(s => s.length > 0);
+    this.availableStates = [...new Set(states)].sort();
+
+    const referrers = this.candidates
+      .map(c => c.referredBy || '')
+      .filter(r => r.length > 0);
+    this.availableReferrers = [...new Set(referrers)].sort();
+  }
+
   private applyFiltersAndSort(): void {
     let result = [...this.candidates];
 
@@ -750,6 +795,18 @@ export class CandidateListComponent implements OnInit {
       result = result.filter((c) => c.offerStatus === this.statusFilter);
     }
 
+    // Home state filter
+    if (this.homeStateFilter) {
+      result = result.filter(
+        (c) => (c.homeState || this.extractState(c.homeAddress) || '') === this.homeStateFilter
+      );
+    }
+
+    // Referred by filter
+    if (this.referredByFilter) {
+      result = result.filter((c) => c.referredBy === this.referredByFilter);
+    }
+
     // Incomplete certifications filter
     if (this.incompleteCertsFilter) {
       result = result.filter(
@@ -761,8 +818,14 @@ export class CandidateListComponent implements OnInit {
     if (this.sortState) {
       const { column, direction } = this.sortState;
       result.sort((a, b) => {
-        const aVal = a[column];
-        const bVal = b[column];
+        let aVal = a[column];
+        let bVal = b[column];
+
+        // For homeState, fall back to extracted state from address
+        if (column === 'homeState') {
+          aVal = (aVal as string) || this.extractState(a.homeAddress) || '';
+          bVal = (bVal as string) || this.extractState(b.homeAddress) || '';
+        }
 
         let comparison = 0;
         if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {

@@ -103,6 +103,7 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
         scissorLiftCertified: false,
         workSite: body.workSite || '',
         homeAddress: body.homeAddress || '',
+        homeState: body.homeState || '',
         startDate: body.startDate,
         offerStatus: body.offerStatus ?? 'needs_review',
         referredBy: body.referredBy,
