@@ -57,6 +57,15 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
                  placeholder="Search by name, email, or home state" />
         </div>
         <div class="filter-field">
+          <label for="stateFilter">Home State</label>
+          <select id="stateFilter"
+                  [value]="stateFilter"
+                  (change)="onStateFilterChange($event)">
+            <option value="">All States</option>
+            <option *ngFor="let state of availableStates" [value]="state">{{ state }}</option>
+          </select>
+        </div>
+        <div class="filter-field">
           <label for="statusFilter">Offer Status</label>
           <select id="statusFilter"
                   [value]="statusFilter"
@@ -462,8 +471,10 @@ export class CandidateListComponent implements OnInit {
 
   searchText = '';
   statusFilter = '';
+  stateFilter = '';
   incompleteCertsFilter = false;
   sortState: SortState | null = null;
+  availableStates: string[] = [];
 
   // Pagination
   pageSize = 10;
@@ -504,6 +515,12 @@ export class CandidateListComponent implements OnInit {
 
   onStatusFilterChange(event: Event): void {
     this.statusFilter = (event.target as HTMLSelectElement).value;
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
+  onStateFilterChange(event: Event): void {
+    this.stateFilter = (event.target as HTMLSelectElement).value;
     this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
@@ -698,6 +715,7 @@ export class CandidateListComponent implements OnInit {
       next: (candidates) => {
         this.candidates = candidates;
         this.loading = false;
+        this.computeAvailableStates();
         this.applyFiltersAndSort();
       },
       error: (err) => {
@@ -731,6 +749,17 @@ export class CandidateListComponent implements OnInit {
     ];
   }
 
+  private computeAvailableStates(): void {
+    const stateSet = new Set<string>();
+    for (const c of this.candidates) {
+      const state = c.homeState || this.extractState(c.homeAddress) || '';
+      if (state) {
+        stateSet.add(state.toUpperCase());
+      }
+    }
+    this.availableStates = Array.from(stateSet).sort();
+  }
+
   private applyFiltersAndSort(): void {
     let result = [...this.candidates];
 
@@ -750,6 +779,14 @@ export class CandidateListComponent implements OnInit {
       result = result.filter((c) => c.offerStatus === this.statusFilter);
     }
 
+    // Home state filter
+    if (this.stateFilter) {
+      result = result.filter((c) => {
+        const resolvedState = (c.homeState || this.extractState(c.homeAddress) || '').toUpperCase();
+        return resolvedState === this.stateFilter.toUpperCase();
+      });
+    }
+
     // Incomplete certifications filter
     if (this.incompleteCertsFilter) {
       result = result.filter(
@@ -761,8 +798,14 @@ export class CandidateListComponent implements OnInit {
     if (this.sortState) {
       const { column, direction } = this.sortState;
       result.sort((a, b) => {
-        const aVal = a[column];
-        const bVal = b[column];
+        let aVal = a[column];
+        let bVal = b[column];
+
+        // For homeState, use the resolved value (with fallback to extracted state from address)
+        if (column === 'homeState') {
+          aVal = (a.homeState || this.extractState(a.homeAddress) || '') as any;
+          bVal = (b.homeState || this.extractState(b.homeAddress) || '') as any;
+        }
 
         let comparison = 0;
         if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
