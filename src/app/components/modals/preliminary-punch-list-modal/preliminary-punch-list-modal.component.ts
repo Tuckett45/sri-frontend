@@ -588,24 +588,31 @@ export class PreliminaryPunchListModalComponent implements OnInit {
         try {
           const draft = JSON.parse(localStorage.getItem(key) || '');
           if (draft && draft.id) {
-            // Restore the form with draft data
+            // Remove the old draft from localStorage since we're consuming it
+            localStorage.removeItem(key);
+
+            // Generate a new UUID so we don't collide with the previously-submitted entry
+            const newId = uuidv4();
+            const oldId = draft.id;
+
+            // Restore the form with draft data but a fresh ID
             this.preliminaryPunchListForm.patchValue({
-              id: draft.id,
+              id: newId,
               segmentId: draft.segmentId || '',
               vendorName: draft.vendorName || '',
               streetAddress: draft.streetAddress || '',
               city: draft.city || '',
               state: draft.state || '',
               additionalConcerns: draft.additionalConcerns || '',
-              createdBy: draft.createdBy || null,
-              dateReported: draft.dateReported || new Date().toISOString(),
+              createdBy: null,
+              dateReported: new Date().toISOString(),
               pmResolved: draft.pmResolved || false,
               pmConcerns: draft.pmConcerns || '',
               resolvedDate: draft.resolvedDate || null,
               cmResolved: draft.cmResolved || false,
-              updatedBy: draft.updatedBy || null,
-              updatedDate: draft.updatedDate || null,
-              resolvedBy: draft.resolvedBy || null
+              updatedBy: null,
+              updatedDate: null,
+              resolvedBy: null
             });
             // Restore images
             if (draft.issueImages?.length) {
@@ -618,17 +625,17 @@ export class PreliminaryPunchListModalComponent implements OnInit {
               fa.clear();
               draft.resolutionImages.forEach((img: any) => fa.push(this.fb.control(img)));
             }
-            // Restore issues
+            // Restore issues with updated punch list ID references
             if (draft.issues?.length) {
               const issuesArray = this.issueAreasFormArray;
               issuesArray.clear();
               draft.issues.forEach((issue: any) => {
                 issuesArray.push(this.fb.group({
-                  id: [issue.id],
+                  id: [uuidv4()],
                   area: [issue.area || '', Validators.required],
                   category: [issue.category || '', Validators.required],
                   subCategory: [issue.subCategory || ''],
-                  preliminaryPunchListId: [issue.preliminaryPunchListId],
+                  preliminaryPunchListId: [newId],
                   errorCodeId: [issue.errorCodeId || '']
                 }));
               });
@@ -708,9 +715,6 @@ export class PreliminaryPunchListModalComponent implements OnInit {
         typeof img === 'string' ? img : (img?.imageData ?? img?.image ?? '')
       ).filter((s: string) => s);
 
-      // Save draft before closing so it can be recovered if submission fails
-      const draftSaved = this.saveDraft();
-      (punchList as any)._draftSaved = draftSaved;
       this.dialogRef.close(punchList);
     } else {
       this.preliminaryPunchListForm.markAllAsTouched();

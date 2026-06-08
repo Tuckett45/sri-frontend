@@ -321,8 +321,18 @@ export class PreliminaryPunchListUnresolvedComponent implements OnInit, AfterVie
       }
 
       action$.subscribe({
-        next: () => {
+        next: (response: any) => {
+          if (response?.queued) {
+            this.toastr.info(
+              'You\'re offline. Punch list queued and will submit when connectivity returns.',
+              'Saved Offline',
+              { timeOut: 8000, closeButton: true }
+            );
+            PreliminaryPunchListModalComponent.clearDraft(punchList.id);
+            return;
+          }
           this.toastr.success('Punch List saved');
+          PreliminaryPunchListModalComponent.clearDraft(punchList.id);
           this.punchListService.triggerRefresh();
         },
         error: (err: any) => {
