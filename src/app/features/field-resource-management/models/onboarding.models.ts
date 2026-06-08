@@ -111,6 +111,7 @@ export interface UpdateCandidatePayload {
   startDate?: string;
   offerStatus?: OfferStatus;
   referredBy?: string;
+  notes?: string;
 
   // Badges & Access
   attBadge?: boolean;

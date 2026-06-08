@@ -109,6 +109,53 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
             </div>
           </div>
 
+          <!-- Resume & Headshot Section -->
+          <div class="files-section">
+            <h3>Resume & Headshot</h3>
+            <div class="files-grid">
+              <div class="file-item">
+                <span class="file-label">Resume</span>
+                <a *ngIf="candidate.resumeUrl" [href]="candidate.resumeUrl" target="_blank" class="file-link">
+                  <span class="file-icon">&#128196;</span> Download Resume
+                </a>
+                <span *ngIf="!candidate.resumeUrl" class="file-empty">No resume uploaded</span>
+              </div>
+              <div class="file-item headshot-item">
+                <span class="file-label">Headshot</span>
+                <img *ngIf="candidate.headshotUrl" [src]="candidate.headshotUrl" alt="Candidate headshot" class="headshot-thumbnail" />
+                <span *ngIf="!candidate.headshotUrl" class="file-empty">No headshot uploaded</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes Section (inline editable) -->
+          <div class="notes-section">
+            <div class="notes-header">
+              <h3>Notes</h3>
+              <button *ngIf="!isEditingNotes" class="btn-notes-action" (click)="startEditingNotes()">
+                {{ candidate.notes ? 'Edit' : 'Add Note' }}
+              </button>
+            </div>
+            <div *ngIf="!isEditingNotes" class="notes-display">
+              <p *ngIf="candidate.notes" class="notes-text">{{ candidate.notes }}</p>
+              <p *ngIf="!candidate.notes" class="notes-empty">No notes added yet. Click "Add Note" to get started.</p>
+            </div>
+            <div *ngIf="isEditingNotes" class="notes-edit">
+              <textarea
+                class="notes-textarea"
+                [(ngModel)]="editedNotes"
+                placeholder="Enter notes about this candidate..."
+                rows="4"
+              ></textarea>
+              <div class="notes-actions">
+                <button class="btn-notes-save" (click)="saveNotes()" [disabled]="isSavingNotes">
+                  {{ isSavingNotes ? 'Saving...' : 'Save' }}
+                </button>
+                <button class="btn-notes-cancel" (click)="cancelEditingNotes()" [disabled]="isSavingNotes">Cancel</button>
+              </div>
+            </div>
+          </div>
+
           <div class="meta-section">
             <span class="meta-item">Created: {{ candidate.createdAt | date:'medium' }}</span>
             <span class="meta-item">Updated: {{ candidate.updatedAt | date:'medium' }}</span>
@@ -350,9 +397,200 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
       color: #9e9e9e;
     }
 
+    /* --- Files (Resume & Headshot) Section --- */
+
+    .files-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .files-section h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #616161;
+      letter-spacing: 0.5px;
+      margin: 0 0 0.75rem;
+    }
+
+    .files-grid {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .file-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .file-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #424242;
+    }
+
+    .file-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: #1976d2;
+      text-decoration: none;
+      font-size: 0.875rem;
+      padding: 0.375rem 0.75rem;
+      border: 1px solid #bbdefb;
+      border-radius: 4px;
+      background: #e3f2fd;
+      transition: background 0.15s;
+    }
+
+    .file-link:hover {
+      background: #bbdefb;
+      text-decoration: none;
+    }
+
+    .file-icon {
+      font-size: 1rem;
+    }
+
+    .file-empty {
+      font-size: 0.8125rem;
+      color: #9e9e9e;
+      font-style: italic;
+    }
+
+    .headshot-thumbnail {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid #e0e0e0;
+    }
+
+    /* --- Notes Section --- */
+
+    .notes-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .notes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .notes-header h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #616161;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    .btn-notes-action {
+      padding: 0.25rem 0.75rem;
+      background: transparent;
+      color: #1976d2;
+      border: 1px solid #1976d2;
+      border-radius: 4px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-notes-action:hover {
+      background: rgba(25, 118, 210, 0.04);
+    }
+
+    .notes-display {
+      padding: 0.75rem;
+      background: #fafafa;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      min-height: 3rem;
+    }
+
+    .notes-text {
+      margin: 0;
+      font-size: 0.875rem;
+      color: #212121;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .notes-empty {
+      margin: 0;
+      font-size: 0.8125rem;
+      color: #9e9e9e;
+      font-style: italic;
+    }
+
+    .notes-edit {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .notes-textarea {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      border: 1px solid #1976d2;
+      border-radius: 4px;
+      resize: vertical;
+      min-height: 100px;
+      outline: none;
+      box-sizing: border-box;
+      line-height: 1.5;
+    }
+
+    .notes-textarea:focus {
+      border-color: #1565c0;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.15);
+    }
+
+    .notes-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .btn-notes-save {
+      padding: 0.375rem 1rem;
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-notes-save:hover:not(:disabled) { background: #1565c0; }
+    .btn-notes-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-notes-cancel {
+      padding: 0.375rem 1rem;
+      background: transparent;
+      color: #616161;
+      border: 1px solid #bdbdbd;
+      border-radius: 4px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-notes-cancel:hover:not(:disabled) { background: #f5f5f5; }
+    .btn-notes-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
+
     @media (max-width: 768px) {
       .detail-grid { grid-template-columns: 1fr; }
       .detail-header { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
+      .files-grid { flex-direction: column; }
     }
   `]
 })
@@ -361,6 +599,11 @@ export class CandidateDetailComponent implements OnInit {
   loading = false;
   isConverting = false;
   candidateId = '';
+
+  // Notes inline editing state
+  isEditingNotes = false;
+  isSavingNotes = false;
+  editedNotes = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -525,6 +768,37 @@ export class CandidateDetailComponent implements OnInit {
       },
       error: () => {
         alert('Failed to delete candidate. Please try again.');
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Notes inline editing
+  // ---------------------------------------------------------------------------
+
+  startEditingNotes(): void {
+    this.editedNotes = this.candidate?.notes || '';
+    this.isEditingNotes = true;
+  }
+
+  cancelEditingNotes(): void {
+    this.isEditingNotes = false;
+    this.editedNotes = '';
+  }
+
+  saveNotes(): void {
+    if (this.isSavingNotes) return;
+    this.isSavingNotes = true;
+
+    this.onboardingService.updateCandidate(this.candidateId, { notes: this.editedNotes }).subscribe({
+      next: () => {
+        this.isSavingNotes = false;
+        this.isEditingNotes = false;
+        this.loadCandidate();
+      },
+      error: () => {
+        this.isSavingNotes = false;
+        alert('Failed to save notes. Please try again.');
       }
     });
   }
