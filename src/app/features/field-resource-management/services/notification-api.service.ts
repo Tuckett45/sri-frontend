@@ -68,14 +68,12 @@ export class NotificationApiService {
     page?: number;
     pageSize?: number;
   }): Observable<{ items: NotificationDto[], totalCount: number, unreadCount: number }> {
-    let params = new HttpParams().set('userId', userId);
-    if (options?.type) params = params.set('type', options.type);
-    if (options?.priority) params = params.set('priority', options.priority);
+    let params = new HttpParams();
     if (options?.unreadOnly) params = params.set('unreadOnly', 'true');
     if (options?.page) params = params.set('page', options.page.toString());
     if (options?.pageSize) params = params.set('pageSize', options.pageSize.toString());
     return this.http.get<{ items: NotificationDto[], totalCount: number, unreadCount: number }>(
-      `${this.baseUrl}/my`, { params }
+      `${this.baseUrl}/user/${userId}`, { params }
     );
   }
 
@@ -99,8 +97,8 @@ export class NotificationApiService {
    * Mark all notifications as read for a user.
    */
   markAllAsRead(userId: string): Observable<{ markedCount: number, markedAt: string }> {
-    return this.http.post<{ markedCount: number, markedAt: string }>(
-      `${this.baseUrl}/mark-all-read`, { userId }
+    return this.http.patch<{ markedCount: number, markedAt: string }>(
+      `${this.baseUrl}/user/${userId}/read-all`, {}
     );
   }
 
