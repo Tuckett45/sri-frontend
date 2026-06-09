@@ -448,7 +448,7 @@ export class AddCandidateModalComponent {
       workSite: [candidate?.workSite || ''],
       homeState: [candidate?.homeState || ''],
       referredBy: [candidate?.referredBy || ''],
-      startDate: [candidate?.startDate ? new Date(candidate.startDate + 'T00:00:00') : '', Validators.required],
+      startDate: [this.parseStartDate(candidate?.startDate), Validators.required],
       offerStatus: [candidate?.offerStatus || 'needs_review']
     });
 
@@ -511,6 +511,18 @@ export class AddCandidateModalComponent {
     if (!address) return '';
     const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
     return match ? match[1] : '';
+  }
+
+  private parseStartDate(dateStr: string | undefined): Date | string {
+    if (!dateStr) return '';
+    // Handle YYYY-MM-DD format (date-only strings)
+    const dateOnlyMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+      return new Date(+dateOnlyMatch[1], +dateOnlyMatch[2] - 1, +dateOnlyMatch[3]);
+    }
+    // Handle full ISO datetime strings
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? '' : parsed;
   }
 
   onHeadshotSelected(event: Event): void {
