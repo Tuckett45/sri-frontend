@@ -64,6 +64,21 @@ export class PublicOnboardingService {
       .pipe(catchError(this.handleError('submitCandidate')));
   }
 
+  uploadCandidateFile(token: string, candidateId: string, fileType: 'resume' | 'headshot', file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    // Do not set Content-Type header for multipart; browser handles boundary
+    const headers = new HttpHeaders({
+      'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
+    });
+    return this.http
+      .post<{ url: string }>(`${this.baseUrl}/candidates/${candidateId}/${fileType}`, formData, {
+        headers,
+        params: { token }
+      })
+      .pipe(catchError(this.handleError(`upload${fileType}`)));
+  }
+
   startSession(): Observable<{ token: string }> {
     return this.http
       .post<{ token: string }>(`${this.baseUrl}/start`, {}, {

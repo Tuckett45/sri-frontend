@@ -233,3 +233,35 @@
     padding: 1rem;
   }
 }
+
+.file-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.file-input {
+  padding: 0.5rem;
+  border: 1px solid #bdbdbd;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background: #ffffff;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+  }
+}
+
+.file-hint {
+  font-size: 0.75rem;
+  color: #757575;
+}
+
+.file-name {
+  font-size: 0.8125rem;
+  color: #2e7d32;
+  margin-top: 0.25rem;
+}

@@ -8,6 +8,7 @@ import { OnboardingLinkService } from '../../../services/onboarding-link.service
 import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
 import { GenerateLinkDialogComponent } from '../generate-link-dialog/generate-link-dialog.component';
+import { CandidateNotesDialogComponent } from '../candidate-notes-dialog/candidate-notes-dialog.component';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -148,6 +149,21 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
             <td class="actions-cell">
+              <button class="icon-btn icon-resume"
+                      [class.has-file]="candidate.resumeUrl"
+                      [disabled]="!candidate.resumeUrl"
+                      (click)="onViewResume(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="candidate.resumeUrl ? 'View resume for ' + candidate.techName : 'No resume uploaded'"
+                      [title]="candidate.resumeUrl ? 'View Resume' : 'No resume uploaded'">
+                &#128196;
+              </button>
+              <button class="icon-btn icon-notes"
+                      [class.has-notes]="candidate.notes"
+                      (click)="onViewNotes(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="'Notes for ' + candidate.techName"
+                      [title]="candidate.notes ? 'View/Edit Notes' : 'Add Notes'">
+                &#128221;
+              </button>
               <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
               <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
               <button class="action-btn btn-delete" (click)="onDeleteCandidate(candidate); $event.stopPropagation()">Delete</button>
@@ -421,6 +437,47 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     }
 
     .btn-delete:hover { background: #ffcdd2; }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      background: none;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-right: 4px;
+      transition: background-color 0.15s, opacity 0.15s;
+      vertical-align: middle;
+      opacity: 0.5;
+    }
+
+    .icon-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.25;
+    }
+
+    .icon-btn.has-file,
+    .icon-btn.has-notes {
+      opacity: 1;
+    }
+
+    .icon-btn.icon-resume:not(:disabled):hover {
+      background: #e3f2fd;
+      border-color: #90caf9;
+    }
+
+    .icon-btn.icon-notes:hover {
+      background: #fff3e0;
+      border-color: #ffcc80;
+    }
+
+    .icon-btn.has-notes {
+      color: #e65100;
+    }
 
     :host ::ng-deep .mat-mdc-paginator {
       border-top: 1px solid #e0e0e0;
@@ -714,6 +771,26 @@ export class CandidateListComponent implements OnInit {
       },
       error: () => {
         this.errorMessage = 'Failed to delete candidate. Please try again.';
+      }
+    });
+  }
+
+  onViewResume(candidate: Candidate): void {
+    if (candidate.resumeUrl) {
+      window.open(candidate.resumeUrl, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  onViewNotes(candidate: Candidate): void {
+    const dialogRef = this.dialog.open(CandidateNotesDialogComponent, {
+      width: '480px',
+      maxWidth: '90vw',
+      data: { candidate },
+    });
+
+    dialogRef.afterClosed().subscribe((notesChanged: boolean) => {
+      if (notesChanged) {
+        this.loadCandidates();
       }
     });
   }

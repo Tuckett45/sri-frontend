@@ -77,6 +77,12 @@ export class PublicOnboardingComponent implements OnInit {
   submitError = '';
   formSubmitted = false;
 
+  // File uploads
+  resumeFile: File | null = null;
+  headshotFile: File | null = null;
+  resumeError = '';
+  headshotError = '';
+
   vestSizes = VEST_SIZES;
   usStates = US_STATES;
 
@@ -106,7 +112,11 @@ export class PublicOnboardingComponent implements OnInit {
     this.formSubmitted = true;
     this.candidateForm.markAllAsTouched();
 
-    if (this.candidateForm.invalid) {
+    // Validate file uploads
+    this.resumeError = !this.resumeFile ? 'Resume is required.' : '';
+    this.headshotError = !this.headshotFile ? 'Headshot is required.' : '';
+
+    if (this.candidateForm.invalid || !this.resumeFile || !this.headshotFile) {
       return;
     }
 
@@ -138,13 +148,90 @@ export class PublicOnboardingComponent implements OnInit {
     };
 
     this.publicOnboardingService.submitCandidate(this.token, payload).subscribe({
-      next: () => {
-        this.submitting = false;
-        this.submitted = true;
+      next: (response) => {
+        const candidateId = response?.candidateId || response?.id;
+        if (candidateId && this.resumeFile && this.headshotFile) {
+          this.uploadFiles(candidateId);
+        } else {
+          this.submitting = false;
+          this.submitted = true;
+        }
       },
       error: (err) => {
         this.submitting = false;
         this.submitError = err?.message || 'Failed to submit your application. Please try again.';
+      }
+    });
+  }
+
+  onResumeSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+    if (file) {
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        this.resumeError = 'Resume must be a PDF, DOC, or DOCX file.';
+        this.resumeFile = null;
+        input.value = '';
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        this.resumeError = 'Resume must be less than 10MB.';
+        this.resumeFile = null;
+        input.value = '';
+        return;
+      }
+      this.resumeFile = file;
+      this.resumeError = '';
+    }
+  }
+
+  onHeadshotSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        this.headshotError = 'Headshot must be a JPG or PNG image.';
+        this.headshotFile = null;
+        input.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        this.headshotError = 'Headshot must be less than 5MB.';
+        this.headshotFile = null;
+        input.value = '';
+        return;
+      }
+      this.headshotFile = file;
+      this.headshotError = '';
+    }
+  }
+
+  private uploadFiles(candidateId: string): void {
+    import('rxjs').then(({ forkJoin }) => {
+      const uploads = [];
+      if (this.resumeFile) {
+        uploads.push(this.publicOnboardingService.uploadCandidateFile(this.token, candidateId, 'resume', this.resumeFile));
+      }
+      if (this.headshotFile) {
+        uploads.push(this.publicOnboardingService.uploadCandidateFile(this.token, candidateId, 'headshot', this.headshotFile));
+      }
+      if (uploads.length > 0) {
+        forkJoin(uploads).subscribe({
+          next: () => {
+            this.submitting = false;
+            this.submitted = true;
+          },
+          error: () => {
+            // Candidate was created but file upload failed
+            this.submitting = false;
+            this.submitted = true;
+          }
+        });
+      } else {
+        this.submitting = false;
+        this.submitted = true;
       }
     });
   }

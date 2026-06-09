@@ -22,7 +22,8 @@ import { RfpIntakeFormComponent } from '../../../quotes/rfp-intake/rfp-intake-fo
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   quickActions: QuickAction[] = [
-    { label: 'Create Job', icon: 'work', action: 'createJob', color: 'orange', visible: true },
+    { label: 'New Job', icon: 'add_circle', action: 'newJob', color: 'orange', visible: true },
+    { label: 'Create Job from Quote', icon: 'work', action: 'createJob', color: 'orange', visible: true },
     { label: 'Create Quote', icon: 'request_quote', action: 'createQuote', color: 'green', visible: true },
     { label: 'View All Jobs', icon: 'work', route: '/field-resource-management/jobs', color: 'primary', visible: true },
     { label: 'Manage Technicians', icon: 'engineering', route: '/field-resource-management/technicians', color: 'primary', visible: true },
@@ -85,7 +86,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   onQuickAction(actionName: string): void {
-    if (actionName === 'createJob') {
+    if (actionName === 'newJob') {
+      this.router.navigate(['/field-resource-management/jobs'], { queryParams: { action: 'create' } });
+    } else if (actionName === 'createJob') {
       this.dialog.open(CreateJobFromQuoteDialogComponent, {
         width: '520px',
         maxHeight: '80vh'

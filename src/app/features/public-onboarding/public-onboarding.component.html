@@ -166,6 +166,40 @@
           </span>
         </div>
 
+        <!-- Resume Upload -->
+        <div class="form-field">
+          <label for="resume">Resume *</label>
+          <div class="file-upload-wrapper">
+            <input id="resume"
+                   type="file"
+                   accept=".pdf,.doc,.docx"
+                   (change)="onResumeSelected($event)"
+                   class="file-input" />
+            <span class="file-hint">Accepted formats: PDF, DOC, DOCX (max 10MB)</span>
+          </div>
+          <span class="file-name" *ngIf="resumeFile">{{ resumeFile.name }}</span>
+          <span class="field-error" *ngIf="resumeError && formSubmitted">
+            {{ resumeError }}
+          </span>
+        </div>
+
+        <!-- Headshot Upload -->
+        <div class="form-field">
+          <label for="headshot">Headshot *</label>
+          <div class="file-upload-wrapper">
+            <input id="headshot"
+                   type="file"
+                   accept=".jpg,.jpeg,.png"
+                   (change)="onHeadshotSelected($event)"
+                   class="file-input" />
+            <span class="file-hint">Accepted formats: JPG, PNG (max 5MB)</span>
+          </div>
+          <span class="file-name" *ngIf="headshotFile">{{ headshotFile.name }}</span>
+          <span class="field-error" *ngIf="headshotError && formSubmitted">
+            {{ headshotError }}
+          </span>
+        </div>
+
         <!-- Submit Button -->
         <div class="form-actions">
           <button type="submit"

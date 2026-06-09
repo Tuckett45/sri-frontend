@@ -186,6 +186,16 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
       if (params['pageSize']) {
         this.pageSize = parseInt(params['pageSize'], 10);
       }
+      // Auto-open create job dialog when navigated with action=create
+      if (params['action'] === 'create') {
+        this.createJob();
+        // Clear the action param so it doesn't re-trigger
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { action: null },
+          queryParamsHandling: 'merge'
+        });
+      }
     });
 
     // Load jobs on init
