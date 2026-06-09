@@ -19,6 +19,8 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { TimelineItem } from 'src/app/models/timeline-item.model';
 import { DailyReportService } from 'src/app/services/daily-report.service';
 import { DailyReport, DailyReportSubmissionStatus } from 'src/app/models/daily-report.model';
+import { OfflineQueueService } from 'src/app/services/offline-queue.service';
+import { OfflineCacheService } from 'src/app/services/offline-cache.service';
 
 // Child expects a searchParams bag; define a local type (no import needed)
 type ChildSearchParams = {
@@ -134,6 +136,8 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
     public authService: AuthService,
     public datePipe: DatePipe,
     private dailyReportService: DailyReportService,
+    public offlineQueue: OfflineQueueService,
+    public offlineCache: OfflineCacheService,
   ) {}
 
   ngOnInit(): void {
@@ -405,14 +409,23 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
       if (!result) return;
 
       const punchList = result;
-      const draftSaved = (punchList as any)._draftSaved === true;
-      delete (punchList as any)._draftSaved;
       const action$ = punchList.updatedBy
         ? this.punchListService.updateEntry(punchList)
         : this.punchListService.addEntry(punchList);
 
       action$.subscribe({
-        next: () => {
+        next: (response: any) => {
+          // Check if the item was queued for offline submission
+          if (response?.queued) {
+            this.toastr.info(
+              'You\'re currently offline. Your punch list has been queued and will be submitted automatically when connectivity returns.',
+              'Saved Offline',
+              { timeOut: 8000, closeButton: true }
+            );
+            PreliminaryPunchListModalComponent.clearDraft(punchList.id);
+            return;
+          }
+
           this.toastr.success('Punch List saved');
           PreliminaryPunchListModalComponent.clearDraft(punchList.id);
           // refresh children (they fetch their own pages)
@@ -423,16 +436,15 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
           this.loadFacetsForActiveTab();
         },
         error: (err: any) => {
+          // Save draft on failure so user can recover their work
+          this.savePunchListDraft(punchList);
+
           let message = this.getPunchListSaveErrorMessage(err);
           const raw = typeof err === 'string' ? err : (err?.error || err?.message || '');
           const errorText = typeof raw === 'string' ? raw : (raw?.message || raw?.title || JSON.stringify(raw));
           const errorType = err?.errorType || '';
           if (errorType === 'upload_timeout' || errorText.includes('timed out') || errorText.includes('Timeout')) {
-            if (draftSaved) {
-              message += ' Your form data has been saved and will be restored when you reopen the form.';
-            } else {
-              message += ' Please try again.';
-            }
+            message += ' Your form data has been saved and will be restored when you reopen the form.';
           }
           this.toastr.error(message, 'Punch List cannot be saved', {
             timeOut: 10000,
@@ -441,6 +453,15 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
         }
       });
     });
+  }
+
+  private savePunchListDraft(punchList: PreliminaryPunchList): void {
+    try {
+      const key = 'punchlist-draft-' + punchList.id;
+      localStorage.setItem(key, JSON.stringify(punchList));
+    } catch (e) {
+      console.warn('Could not save punch list draft to localStorage', e);
+    }
   }
 
   private getPunchListSaveErrorMessage(err: any): string {

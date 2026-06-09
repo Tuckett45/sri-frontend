@@ -1,11 +1,12 @@
 import { Injectable, effect } from '@angular/core';
-import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, from, throwError, of } from 'rxjs';
 import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
 import { environment, local_environment } from '../../environments/environments';
 import { User } from '../models/user.model';
 import { OfflineCacheService } from './offline-cache.service';
+import { OfflineQueueService } from './offline-queue.service';
 import { RoleBasedDataService } from './role-based-data.service';
 import { AuthService } from './auth.service';
 
@@ -74,6 +75,7 @@ export class PreliminaryPunchListService {
   constructor(
     private http: HttpClient, 
     private offlineCache: OfflineCacheService,
+    private offlineQueue: OfflineQueueService,
     private roleBasedDataService: RoleBasedDataService,
     private authService: AuthService
   ) {
@@ -478,6 +480,13 @@ export class PreliminaryPunchListService {
       }
     }
 
+    // If offline, queue the submission for later
+    if (this.offlineQueue.isOffline()) {
+      return from(this.offlineQueue.enqueue(punchList, 'create')).pipe(
+        map(() => ({ queued: true, id: punchList.id }))
+      );
+    }
+
     this.clearCaches();
 
     const issueImages = punchList.issueImages;
@@ -557,6 +566,13 @@ export class PreliminaryPunchListService {
           `Only administrators, regional users, or users assigned to that market can make changes.`
         ));
       }
+    }
+
+    // If offline, queue the update for later
+    if (this.offlineQueue.isOffline()) {
+      return from(this.offlineQueue.enqueue(punchList, 'update')).pipe(
+        map(() => ({ queued: true, id: punchList.id }))
+      );
     }
 
     this.clearCaches();
