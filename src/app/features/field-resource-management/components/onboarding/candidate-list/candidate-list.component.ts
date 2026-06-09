@@ -155,14 +155,14 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
                       (click)="onViewResume(candidate); $event.stopPropagation()"
                       [attr.aria-label]="candidate.resumeUrl ? 'View resume for ' + candidate.techName : 'No resume uploaded'"
                       [title]="candidate.resumeUrl ? 'View Resume' : 'No resume uploaded'">
-                &#128196;
+                <mat-icon class="action-icon">description</mat-icon>
               </button>
               <button class="icon-btn icon-notes"
                       [class.has-notes]="candidate.notes"
                       (click)="onViewNotes(candidate); $event.stopPropagation()"
                       [attr.aria-label]="'Notes for ' + candidate.techName"
                       [title]="candidate.notes ? 'View/Edit Notes' : 'Add Notes'">
-                &#128221;
+                <mat-icon class="action-icon">sticky_note_2</mat-icon>
               </button>
               <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
               <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
@@ -442,41 +442,53 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       border-radius: 4px;
       border: 1px solid transparent;
       background: none;
       cursor: pointer;
-      font-size: 1rem;
       margin-right: 4px;
-      transition: background-color 0.15s, opacity 0.15s;
+      transition: background-color 0.15s, opacity 0.15s, color 0.15s;
       vertical-align: middle;
-      opacity: 0.5;
+      opacity: 0.4;
+      color: #757575;
+      padding: 0;
+    }
+
+    .icon-btn .action-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
     }
 
     .icon-btn:disabled {
       cursor: not-allowed;
-      opacity: 0.25;
+      opacity: 0.2;
     }
 
-    .icon-btn.has-file,
+    .icon-btn.has-file {
+      opacity: 1;
+      color: #1565c0;
+    }
+
     .icon-btn.has-notes {
       opacity: 1;
+      color: #e65100;
     }
 
     .icon-btn.icon-resume:not(:disabled):hover {
       background: #e3f2fd;
       border-color: #90caf9;
+      color: #1565c0;
+      opacity: 1;
     }
 
     .icon-btn.icon-notes:hover {
       background: #fff3e0;
       border-color: #ffcc80;
-    }
-
-    .icon-btn.has-notes {
       color: #e65100;
+      opacity: 1;
     }
 
     :host ::ng-deep .mat-mdc-paginator {
