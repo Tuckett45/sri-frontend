@@ -261,7 +261,20 @@ export class PreliminaryPunchListResolvedComponent implements OnInit, AfterViewI
         : this.punchListService.addEntry(result);
 
       action$.subscribe({
-        next: () => { this.toastr.success('Punch List saved'); this.punchListService.triggerRefresh(); },
+        next: (response: any) => {
+          if (response?.queued) {
+            this.toastr.info(
+              'You\'re offline. Punch list queued and will submit when connectivity returns.',
+              'Saved Offline',
+              { timeOut: 8000, closeButton: true }
+            );
+            PreliminaryPunchListModalComponent.clearDraft(result.id);
+            return;
+          }
+          this.toastr.success('Punch List saved');
+          PreliminaryPunchListModalComponent.clearDraft(result.id);
+          this.punchListService.triggerRefresh();
+        },
         error: (err: any) => {
           const message = this.getPunchListSaveErrorMessage(err);
           this.toastr.error(message, 'Punch List cannot be saved', {
