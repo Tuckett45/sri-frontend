@@ -64,6 +64,20 @@ export class PublicOnboardingService {
       .pipe(catchError(this.handleError('submitCandidate')));
   }
 
+  submitCandidateWithFiles(token: string, formData: FormData): Observable<any> {
+    // Do NOT set Content-Type header — the browser sets it with the multipart boundary automatically
+    const fileHeaders = new HttpHeaders({
+      'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
+    });
+
+    return this.http
+      .post(`${this.baseUrl}/submit`, formData, {
+        headers: fileHeaders,
+        params: { token }
+      })
+      .pipe(catchError(this.handleError('submitCandidateWithFiles')));
+  }
+
   startSession(): Observable<{ token: string }> {
     return this.http
       .post<{ token: string }>(`${this.baseUrl}/start`, {}, {

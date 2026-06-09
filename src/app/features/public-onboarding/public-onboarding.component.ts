@@ -77,6 +77,17 @@ export class PublicOnboardingComponent implements OnInit {
   submitError = '';
   formSubmitted = false;
 
+  // File upload state
+  resumeFile: File | null = null;
+  headshotFile: File | null = null;
+  resumeError = '';
+  headshotError = '';
+
+  private readonly MAX_RESUME_SIZE = 10 * 1024 * 1024; // 10 MB
+  private readonly MAX_HEADSHOT_SIZE = 5 * 1024 * 1024; // 5 MB
+  private readonly ALLOWED_RESUME_EXTENSIONS = ['.pdf', '.doc', '.docx'];
+  private readonly ALLOWED_HEADSHOT_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+
   vestSizes = VEST_SIZES;
   usStates = US_STATES;
 
@@ -106,7 +117,10 @@ export class PublicOnboardingComponent implements OnInit {
     this.formSubmitted = true;
     this.candidateForm.markAllAsTouched();
 
-    if (this.candidateForm.invalid) {
+    // Check form validity AND required files
+    const filesValid = this.validateRequiredFiles();
+
+    if (this.candidateForm.invalid || !filesValid) {
       return;
     }
 
@@ -114,30 +128,34 @@ export class PublicOnboardingComponent implements OnInit {
     this.submitError = '';
 
     const formValue = this.candidateForm.value;
-    const payload = {
-      techName: formValue.techName,
-      middleName: formValue.middleName || undefined,
-      techEmail: formValue.techEmail,
-      techPhone: formValue.techPhone,
-      vestSize: formValue.vestSize,
-      homeAddress: formValue.homeAddress,
-      homeState: formValue.homeState,
-      referredBy: formValue.referredBy || undefined,
-      startDate: formValue.startDate,
-      drugTestComplete: false,
-      oshaCertified: false,
-      scissorLiftCertified: false,
-      biisciCertified: false,
-      osha10: false,
-      osha30: false,
-      ciKitAssigned: false,
-      fiberKitAssigned: false,
-      labelingKitAssigned: false,
-      powerKitAssigned: false,
-      testingEqptAssigned: false,
-    };
 
-    this.publicOnboardingService.submitCandidate(this.token, payload).subscribe({
+    const formData = new FormData();
+    formData.append('techName', formValue.techName);
+    if (formValue.middleName) formData.append('middleName', formValue.middleName);
+    formData.append('techEmail', formValue.techEmail);
+    formData.append('techPhone', formValue.techPhone);
+    formData.append('vestSize', formValue.vestSize);
+    formData.append('homeAddress', formValue.homeAddress);
+    formData.append('homeState', formValue.homeState);
+    if (formValue.referredBy) formData.append('referredBy', formValue.referredBy);
+    formData.append('startDate', formValue.startDate);
+    formData.append('drugTestComplete', 'false');
+    formData.append('oshaCertified', 'false');
+    formData.append('scissorLiftCertified', 'false');
+    formData.append('biisciCertified', 'false');
+    formData.append('osha10', 'false');
+    formData.append('osha30', 'false');
+    formData.append('ciKitAssigned', 'false');
+    formData.append('fiberKitAssigned', 'false');
+    formData.append('labelingKitAssigned', 'false');
+    formData.append('powerKitAssigned', 'false');
+    formData.append('testingEqptAssigned', 'false');
+
+    // Append required files
+    formData.append('resume', this.resumeFile!, this.resumeFile!.name);
+    formData.append('headshot', this.headshotFile!, this.headshotFile!.name);
+
+    this.publicOnboardingService.submitCandidateWithFiles(this.token, formData).subscribe({
       next: () => {
         this.submitting = false;
         this.submitted = true;
@@ -149,9 +167,74 @@ export class PublicOnboardingComponent implements OnInit {
     });
   }
 
+  onResumeSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    this.resumeError = '';
+    this.resumeFile = null;
+
+    if (!file) return;
+
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!this.ALLOWED_RESUME_EXTENSIONS.includes(ext)) {
+      this.resumeError = 'Invalid file type. Please upload a PDF, DOC, or DOCX file.';
+      input.value = '';
+      return;
+    }
+
+    if (file.size > this.MAX_RESUME_SIZE) {
+      this.resumeError = 'File is too large. Maximum size is 10MB.';
+      input.value = '';
+      return;
+    }
+
+    this.resumeFile = file;
+  }
+
+  onHeadshotSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    this.headshotError = '';
+    this.headshotFile = null;
+
+    if (!file) return;
+
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!this.ALLOWED_HEADSHOT_EXTENSIONS.includes(ext)) {
+      this.headshotError = 'Invalid file type. Please upload a JPG or PNG file.';
+      input.value = '';
+      return;
+    }
+
+    if (file.size > this.MAX_HEADSHOT_SIZE) {
+      this.headshotError = 'File is too large. Maximum size is 5MB.';
+      input.value = '';
+      return;
+    }
+
+    this.headshotFile = file;
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
+
+  private validateRequiredFiles(): boolean {
+    let valid = true;
+    if (!this.resumeFile) {
+      valid = false;
+    }
+    if (!this.headshotFile) {
+      valid = false;
+    }
+    return valid;
+  }
 
   private buildForm(): void {
     this.candidateForm = this.fb.group({
