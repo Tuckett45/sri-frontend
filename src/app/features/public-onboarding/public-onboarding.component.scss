@@ -185,6 +185,63 @@
   font-size: 0.75rem;
 }
 
+.file-upload-section {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #212121;
+    margin: 0 0 1rem;
+  }
+}
+
+.upload-field {
+  .file-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .file-select-btn {
+    padding: 0.5rem 1rem;
+    background: #f5f5f5;
+    border: 1px solid #bdbdbd;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #424242;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s;
+
+    &:hover {
+      background: #eeeeee;
+      border-color: #9e9e9e;
+    }
+  }
+
+  .file-name {
+    font-size: 0.8125rem;
+    color: #9e9e9e;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.selected {
+      color: #424242;
+    }
+  }
+
+  .upload-hint {
+    font-size: 0.75rem;
+    color: #9e9e9e;
+    margin-top: 0.25rem;
+  }
+}
+
 .form-actions {
   margin-top: 0.5rem;
 }

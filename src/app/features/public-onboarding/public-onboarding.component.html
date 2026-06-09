@@ -166,6 +166,61 @@
           </span>
         </div>
 
+        <!-- File Uploads Section -->
+        <div class="file-upload-section">
+          <h3 class="section-title">Required Documents</h3>
+
+          <!-- Resume Upload -->
+          <div class="form-field upload-field">
+            <label for="resume">Resume (PDF, DOC, DOCX) *</label>
+            <div class="file-input-wrapper">
+              <button type="button" class="file-select-btn" (click)="resumeInput.click()">
+                Choose File
+              </button>
+              <span class="file-name" *ngIf="!resumeFile">No file selected</span>
+              <span class="file-name selected" *ngIf="resumeFile">{{ resumeFile.name }} ({{ formatFileSize(resumeFile.size) }})</span>
+              <input #resumeInput
+                     id="resume"
+                     type="file"
+                     accept=".pdf,.doc,.docx"
+                     (change)="onResumeSelected($event)"
+                     hidden />
+            </div>
+            <span class="upload-hint">Max 10MB</span>
+            <span class="field-error" *ngIf="resumeError">
+              {{ resumeError }}
+            </span>
+            <span class="field-error" *ngIf="!resumeError && formSubmitted && !resumeFile">
+              Resume is required.
+            </span>
+          </div>
+
+          <!-- Headshot Upload -->
+          <div class="form-field upload-field">
+            <label for="headshot">Headshot Photo (JPG, PNG) *</label>
+            <div class="file-input-wrapper">
+              <button type="button" class="file-select-btn" (click)="headshotInput.click()">
+                Choose File
+              </button>
+              <span class="file-name" *ngIf="!headshotFile">No file selected</span>
+              <span class="file-name selected" *ngIf="headshotFile">{{ headshotFile.name }} ({{ formatFileSize(headshotFile.size) }})</span>
+              <input #headshotInput
+                     id="headshot"
+                     type="file"
+                     accept=".jpg,.jpeg,.png"
+                     (change)="onHeadshotSelected($event)"
+                     hidden />
+            </div>
+            <span class="upload-hint">Max 5MB</span>
+            <span class="field-error" *ngIf="headshotError">
+              {{ headshotError }}
+            </span>
+            <span class="field-error" *ngIf="!headshotError && formSubmitted && !headshotFile">
+              Headshot photo is required.
+            </span>
+          </div>
+        </div>
+
         <!-- Submit Button -->
         <div class="form-actions">
           <button type="submit"
