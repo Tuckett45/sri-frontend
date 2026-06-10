@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin, Observable } from 'rxjs';
@@ -6,6 +6,7 @@ import { OnboardingService } from '../../../services/onboarding.service';
 import { Candidate, OfferStatus } from '../../../models/onboarding.models';
 import { OnboardingInfoModalComponent } from '../onboarding-info-modal/onboarding-info-modal.component';
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
+import { getValidTransitions } from '../../../utils/offer-status.util';
 
 const STATUS_LABELS: Record<OfferStatus, string> = {
   needs_review: 'Needs Review',
@@ -13,6 +14,8 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
   offer_extended: 'Offer Extended',
   offer_accepted_onboarding: 'Offer Accepted/Onboarding',
   hired_assigned: 'Hired/Assigned',
+  do_not_hire: 'Do Not Hire',
+  turned_down_hold: 'Turned Down/Hold for Later',
 };
 
 @Component({
@@ -31,9 +34,22 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
           <button class="btn-back" (click)="goBack()">&larr; Back to Candidates</button>
           <div class="header-actions">
             <button class="btn-edit" (click)="editCandidate()">Edit</button>
-            <button class="btn-advance" *ngIf="candidate.offerStatus !== 'hired_assigned'" (click)="advanceStatus()">
-              Advance Status
-            </button>
+            <div class="advance-status-wrapper">
+              <button class="btn-advance" (click)="toggleStatusMenu()">
+                Change Status &#9662;
+              </button>
+              <div class="status-dropdown" *ngIf="showStatusMenu">
+                <button *ngFor="let status of allStatuses"
+                        class="status-option"
+                        [ngClass]="getStatusOptionClass(status)"
+                        [class.active-status]="status === candidate.offerStatus"
+                        [disabled]="status === candidate.offerStatus"
+                        (click)="advanceToStatus(status)">
+                  {{ getStatusLabel(status) }}
+                  <span *ngIf="status === candidate.offerStatus" class="current-badge">current</span>
+                </button>
+              </div>
+            </div>
             <button class="btn-convert" *ngIf="canConvert(candidate)" (click)="convertToTechnician()" [disabled]="isConverting">
               {{ isConverting ? 'Converting...' : 'Convert to Technician' }}
             </button>
@@ -228,6 +244,58 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
 
     .btn-advance:hover { background: #2e7d32; }
 
+    .advance-status-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .status-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 100;
+      margin-top: 4px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      min-width: 200px;
+      overflow: hidden;
+    }
+
+    .status-option {
+      display: block;
+      width: 100%;
+      padding: 0.625rem 1rem;
+      background: none;
+      border: none;
+      border-bottom: 1px solid #f5f5f5;
+      text-align: left;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .status-option:last-child { border-bottom: none; }
+    .status-option:hover:not(:disabled) { background: #f5f5f5; }
+    .status-option:disabled { cursor: default; opacity: 0.7; }
+    .status-option.active-status { background: #f5f5f5; font-weight: 600; }
+    .status-option.no-transitions { color: #9e9e9e; cursor: default; font-style: italic; }
+    .status-option.no-transitions:hover { background: none; }
+    .status-option.option-do-not-hire { color: #c62828; }
+    .status-option.option-do-not-hire:hover { background: #ffebee; }
+    .status-option.option-turned-down-hold { color: #6d4c41; }
+    .status-option.option-turned-down-hold:hover { background: #efebe9; }
+
+    .current-badge {
+      margin-left: 0.5rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #9e9e9e;
+      text-transform: uppercase;
+    }
+
     .btn-convert {
       padding: 0.5rem 1.25rem;
       background: #7b1fa2;
@@ -290,6 +358,9 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
     .status-chip.status-vetted-available { background: #e8f5e9; color: #2e7d32; }
     .status-chip.status-offer-extended { background: #fff3e0; color: #e65100; }
     .status-chip.status-offer-accepted { background: #f3e5f5; color: #6a1b9a; }
+    .status-chip.status-hired-assigned { background: #e8f5e9; color: #1b5e20; }
+    .status-chip.status-do-not-hire { background: #ffebee; color: #c62828; }
+    .status-chip.status-turned-down-hold { background: #efebe9; color: #4e342e; }
 
     .detail-grid {
       display: grid;
@@ -599,6 +670,13 @@ export class CandidateDetailComponent implements OnInit {
   loading = false;
   isConverting = false;
   candidateId = '';
+  showStatusMenu = false;
+
+  allStatuses: OfferStatus[] = [
+    'needs_review', 'vetted_available', 'offer_extended',
+    'offer_accepted_onboarding', 'hired_assigned',
+    'do_not_hire', 'turned_down_hold'
+  ];
 
   // Notes inline editing state
   isEditingNotes = false;
@@ -611,6 +689,14 @@ export class CandidateDetailComponent implements OnInit {
     private dialog: MatDialog,
     private onboardingService: OnboardingService
   ) {}
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.advance-status-wrapper')) {
+      this.showStatusMenu = false;
+    }
+  }
 
   ngOnInit(): void {
     this.candidateId = this.route.snapshot.paramMap.get('candidateId') || '';
@@ -688,20 +774,31 @@ export class CandidateDetailComponent implements OnInit {
     });
   }
 
-  advanceStatus(): void {
+  advanceToStatus(status: OfferStatus): void {
     if (!this.candidate) return;
-    const nextStatus: Record<string, OfferStatus> = {
-      'needs_review': 'vetted_available',
-      'vetted_available': 'offer_extended',
-      'offer_extended': 'offer_accepted_onboarding',
-      'offer_accepted_onboarding': 'hired_assigned'
-    };
-    const next = nextStatus[this.candidate.offerStatus];
-    if (next) {
-      this.onboardingService.updateCandidate(this.candidateId, { offerStatus: next }).subscribe({
-        next: () => this.loadCandidate(),
-        error: () => {}
-      });
+    this.showStatusMenu = false;
+    this.onboardingService.updateCandidate(this.candidateId, { offerStatus: status }).subscribe({
+      next: () => this.loadCandidate(),
+      error: () => {
+        alert('Failed to update status. Please try again.');
+      }
+    });
+  }
+
+  toggleStatusMenu(): void {
+    this.showStatusMenu = !this.showStatusMenu;
+  }
+
+  getAvailableTransitions(): OfferStatus[] {
+    if (!this.candidate) return [];
+    return getValidTransitions(this.candidate.offerStatus);
+  }
+
+  getStatusOptionClass(status: OfferStatus): string {
+    switch (status) {
+      case 'do_not_hire': return 'option-do-not-hire';
+      case 'turned_down_hold': return 'option-turned-down-hold';
+      default: return '';
     }
   }
 
@@ -716,6 +813,8 @@ export class CandidateDetailComponent implements OnInit {
       case 'offer_extended': return 'status-offer-extended';
       case 'offer_accepted_onboarding': return 'status-offer-accepted';
       case 'hired_assigned': return 'status-hired-assigned';
+      case 'do_not_hire': return 'status-do-not-hire';
+      case 'turned_down_hold': return 'status-turned-down-hold';
       default: return '';
     }
   }

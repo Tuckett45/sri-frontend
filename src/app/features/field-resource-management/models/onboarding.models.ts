@@ -1,6 +1,6 @@
 // --- Type Aliases ---
 
-export type OfferStatus = 'needs_review' | 'vetted_available' | 'offer_extended' | 'offer_accepted_onboarding' | 'hired_assigned';
+export type OfferStatus = 'needs_review' | 'vetted_available' | 'offer_extended' | 'offer_accepted_onboarding' | 'hired_assigned' | 'do_not_hire' | 'turned_down_hold';
 
 export type VestSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
 

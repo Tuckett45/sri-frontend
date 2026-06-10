@@ -57,6 +57,20 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
             <span class="card-label">Hired/Assigned</span>
           </div>
           <div class="card clickable" tabindex="0" role="button"
+               aria-label="View Do Not Hire candidates"
+               (click)="navigateToStatus('do_not_hire')"
+               (keydown.enter)="navigateToStatus('do_not_hire')">
+            <span class="card-count warn">{{ doNotHireCount }}</span>
+            <span class="card-label">Do Not Hire</span>
+          </div>
+          <div class="card clickable" tabindex="0" role="button"
+               aria-label="View Turned Down/Hold for Later candidates"
+               (click)="navigateToStatus('turned_down_hold')"
+               (keydown.enter)="navigateToStatus('turned_down_hold')">
+            <span class="card-count warn">{{ turnedDownHoldCount }}</span>
+            <span class="card-label">Turned Down/Hold</span>
+          </div>
+          <div class="card clickable" tabindex="0" role="button"
                aria-label="View candidates with incomplete certifications"
                (click)="navigateToIncompleteCerts()"
                (keydown.enter)="navigateToIncompleteCerts()">
@@ -169,6 +183,8 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
     .stage-offer-extended { background: #ffa726; }
     .stage-accepted { background: #7b1fa2; }
     .stage-hired-assigned { background: #2e7d32; }
+    .stage-do-not-hire { background: #c62828; }
+    .stage-turned-down-hold { background: #6d4c41; }
     .funnel-label { white-space: nowrap; }
     .funnel-value { font-weight: 700; }
 
@@ -204,6 +220,8 @@ export class PipelineDashboardComponent implements OnInit {
   offerExtendedCount = 0;
   offerAcceptedOnboardingCount = 0;
   hiredAssignedCount = 0;
+  doNotHireCount = 0;
+  turnedDownHoldCount = 0;
   incompleteCertsCount = 0;
   incompleteDrugTestCount = 0;
   startingWithin14DaysCount = 0;
@@ -218,6 +236,8 @@ export class PipelineDashboardComponent implements OnInit {
     offer_extended: 'Offer Extended',
     offer_accepted_onboarding: 'Accepted/Onboarding',
     hired_assigned: 'Hired/Assigned',
+    do_not_hire: 'Do Not Hire',
+    turned_down_hold: 'Turned Down/Hold for Later',
   };
 
   constructor(
@@ -309,6 +329,8 @@ export class PipelineDashboardComponent implements OnInit {
     this.offerExtendedCount = candidates.filter(c => c.offerStatus === 'offer_extended').length;
     this.offerAcceptedOnboardingCount = candidates.filter(c => c.offerStatus === 'offer_accepted_onboarding').length;
     this.hiredAssignedCount = candidates.filter(c => c.offerStatus === 'hired_assigned').length;
+    this.doNotHireCount = candidates.filter(c => c.offerStatus === 'do_not_hire').length;
+    this.turnedDownHoldCount = candidates.filter(c => c.offerStatus === 'turned_down_hold').length;
     this.incompleteCertsCount = candidates.filter(c => !c.oshaCertified || !c.scissorLiftCertified).length;
     this.incompleteDrugTestCount = candidates.filter(c => !c.drugTestComplete).length;
 
@@ -321,7 +343,7 @@ export class PipelineDashboardComponent implements OnInit {
   }
 
   private buildFunnel(): void {
-    const total = this.needsReviewCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount;
+    const total = this.needsReviewCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount + this.doNotHireCount + this.turnedDownHoldCount;
     const pct = (n: number) => total > 0 ? Math.max(20, Math.round((n / total) * 100)) : 20;
     this.funnelStages = [
       { label: 'Needs Review', count: this.needsReviewCount, pct: pct(this.needsReviewCount), cls: 'stage-needs-review' },
@@ -329,6 +351,8 @@ export class PipelineDashboardComponent implements OnInit {
       { label: 'Offer Extended', count: this.offerExtendedCount, pct: pct(this.offerExtendedCount), cls: 'stage-offer-extended' },
       { label: 'Accepted/Onboarding', count: this.offerAcceptedOnboardingCount, pct: pct(this.offerAcceptedOnboardingCount), cls: 'stage-accepted' },
       { label: 'Hired/Assigned', count: this.hiredAssignedCount, pct: pct(this.hiredAssignedCount), cls: 'stage-hired-assigned' },
+      { label: 'Do Not Hire', count: this.doNotHireCount, pct: pct(this.doNotHireCount), cls: 'stage-do-not-hire' },
+      { label: 'Turned Down/Hold', count: this.turnedDownHoldCount, pct: pct(this.turnedDownHoldCount), cls: 'stage-turned-down-hold' },
     ];
   }
 
