@@ -26,12 +26,14 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { JobType, Priority } from '../../../models/job.model';
 import {
   ClientConfiguration,
+  DashboardUser,
   RfpRecord
 } from '../../../models/quote-workflow.model';
 import { CustomValidators } from '../../../validators/custom-validators';
 import { QuoteWorkflowService } from '../../../services/quote-workflow.service';
 import { ClientConfigurationService } from '../../../services/client-configuration.service';
 import * as QuoteActions from '../../../state/quotes/quote.actions';
+import * as DashboardSelectors from '../../../state/quotes/dashboard.selectors';
 
 /**
  * RFP Intake Form Component
@@ -59,6 +61,7 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
   draftRestored = false;
 
   filteredClients$!: Observable<string[]>;
+  users$: Observable<DashboardUser[]> = new Observable<DashboardUser[]>();
   clientConfiguration: ClientConfiguration | null = null;
 
   jobTypeOptions = Object.values(JobType);
@@ -103,6 +106,7 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
     this.setupClientAutocomplete();
     this.restoreDraft();
     this.setupDraftAutoSave();
+    this.users$ = this.store.select(DashboardSelectors.selectDashboardUsers);
 
     if (!this.canEdit) {
       this.rfpForm.disable();
@@ -118,26 +122,28 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
     this.rfpForm = this.fb.group({
       clientName: ['', [Validators.required, Validators.maxLength(200)]],
       projectName: ['', [Validators.required, Validators.maxLength(200)]],
-      siteName: ['', [Validators.required, Validators.maxLength(200)]],
+      requestorName: ['', [Validators.maxLength(200)]],
+      assignedToQuote: [''],
+      siteName: ['', [Validators.maxLength(200)]],
       siteAddress: this.fb.group({
-        street: ['', [Validators.required, Validators.maxLength(500)]],
-        city: ['', [Validators.required, Validators.maxLength(200)]],
-        state: ['', [Validators.required]],
-        zipCode: ['', [Validators.required, CustomValidators.zipCode()]]
+        street: ['', [Validators.maxLength(500)]],
+        city: ['', [Validators.maxLength(200)]],
+        state: [''],
+        zipCode: ['']
       }),
       customerContact: this.fb.group({
-        name: ['', [Validators.required, Validators.maxLength(200)]],
-        phone: ['', [Validators.required, CustomValidators.phoneNumber()]],
-        email: ['', [Validators.required, Validators.email]]
+        name: ['', [Validators.maxLength(200)]],
+        phone: [''],
+        email: ['']
       }),
-      scopeOfWork: ['', [Validators.required, Validators.maxLength(5000)]],
+      scopeOfWork: ['', [Validators.maxLength(5000)]],
       materialSpecifications: ['', [Validators.maxLength(5000)]],
       dates: this.fb.group({
         rfpReceivedDate: [null, [Validators.required]],
         requestedCompletionDate: [null]
       }, { validators: CustomValidators.dateRange('rfpReceivedDate', 'requestedCompletionDate') }),
-      jobType: [JobType.Install, [Validators.required]],
-      priority: [Priority.Normal, [Validators.required]]
+      jobType: [JobType.Install],
+      priority: [Priority.Normal]
     });
   }
 

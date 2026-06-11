@@ -68,12 +68,11 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
     this.loading$ = this.store.select(QuoteSelectors.selectQuoteLoading);
     this.error$ = this.store.select(QuoteSelectors.selectQuoteError);
 
-    // Build the six pipeline categories from NgRx selectors
+    // Build the pipeline categories from NgRx selectors
     const rfpsReceived$ = this.store.select(QuoteSelectors.selectRfpsReceived);
-    const bomsNotReady$ = this.store.select(QuoteSelectors.selectBomsNotReady);
-    const bomsReady$ = this.store.select(QuoteSelectors.selectBomsReady);
-    const quotesReadyForCustomer$ = this.store.select(QuoteSelectors.selectQuotesReadyForCustomer);
+    const quotesInProgress$ = this.store.select(QuoteSelectors.selectQuotesInProgress);
     const quotesDelivered$ = this.store.select(QuoteSelectors.selectQuotesDelivered);
+    const poNeeded$ = this.store.select(QuoteSelectors.selectPoNeeded);
     const quotesConverted$ = this.store.select(QuoteSelectors.selectQuotesConverted);
 
     this.categories = [
@@ -87,31 +86,13 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
         statuses: [WorkflowStatus.Draft, WorkflowStatus.Job_Summary_In_Progress]
       },
       {
-        key: 'bomsNotReady',
-        label: 'BOMs Not Ready',
-        icon: 'warning',
-        colorClass: 'category-boms-not-ready',
-        quotes$: bomsNotReady$,
-        count$: bomsNotReady$.pipe(map(q => q.length)),
-        statuses: [WorkflowStatus.BOM_In_Progress, WorkflowStatus.Validation_Rejected]
-      },
-      {
-        key: 'bomsReady',
-        label: 'BOMs Ready',
-        icon: 'check_circle',
-        colorClass: 'category-boms-ready',
-        quotes$: bomsReady$,
-        count$: bomsReady$.pipe(map(q => q.length)),
-        statuses: [WorkflowStatus.Pending_Validation, WorkflowStatus.Validation_Approved]
-      },
-      {
-        key: 'quotesReadyForCustomer',
-        label: 'Quotes Ready for Customer',
-        icon: 'description',
-        colorClass: 'category-quotes-ready',
-        quotes$: quotesReadyForCustomer$,
-        count$: quotesReadyForCustomer$.pipe(map(q => q.length)),
-        statuses: [WorkflowStatus.Quote_Assembled]
+        key: 'quotesInProgress',
+        label: 'Quotes In Progress',
+        icon: 'build',
+        colorClass: 'category-quotes-in-progress',
+        quotes$: quotesInProgress$,
+        count$: quotesInProgress$.pipe(map(q => q.length)),
+        statuses: [WorkflowStatus.BOM_In_Progress, WorkflowStatus.Pending_Validation, WorkflowStatus.Validation_Rejected, WorkflowStatus.Validation_Approved]
       },
       {
         key: 'quotesDelivered',
@@ -120,6 +101,15 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
         colorClass: 'category-delivered',
         quotes$: quotesDelivered$,
         count$: quotesDelivered$.pipe(map(q => q.length)),
+        statuses: [WorkflowStatus.Quote_Assembled, WorkflowStatus.Quote_Delivered]
+      },
+      {
+        key: 'poNeeded',
+        label: 'PO Needed',
+        icon: 'receipt_long',
+        colorClass: 'category-po-needed',
+        quotes$: poNeeded$,
+        count$: poNeeded$.pipe(map(q => q.length)),
         statuses: [WorkflowStatus.Quote_Delivered]
       },
       {
@@ -182,6 +172,46 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
   // ---------------------------------------------------------------------------
   // Template Helpers
   // ---------------------------------------------------------------------------
+
+  /**
+   * Returns the oldest RFP received date from a set of quotes.
+   */
+  getOldestDate(quotes: QuoteWorkflow[]): string | null {
+    if (!quotes.length) return null;
+    const dates = quotes
+      .map(q => q.rfpRecord.rfpReceivedDate)
+      .filter(d => !!d)
+      .sort();
+    return dates.length > 0 ? dates[0] : null;
+  }
+
+  /**
+   * Returns the total PO value for quotes that have a PO amount.
+   */
+  getCategoryTotal(quotes: QuoteWorkflow[]): number | null {
+    const total = quotes.reduce((sum, q) => sum + (q.poNumber ? 1 : 0), 0);
+    // Only show if there are PO-related quotes with amounts
+    return null; // PO amounts are on dashboard records, not workflow objects
+  }
+
+  /**
+   * Navigate to the relevant tab and highlight the specific quote row.
+   */
+  navigateToTab(category: PipelineCategory, quote: QuoteWorkflow): void {
+    // Map category to the appropriate tab index
+    let tabParam = 'pipeline';
+    if (category.key === 'rfpsReceived') {
+      tabParam = 'rfps';
+    } else if (category.key === 'quotesDelivered' || category.key === 'poNeeded') {
+      tabParam = 'po';
+    } else if (category.key === 'quotesConverted') {
+      tabParam = 'projects';
+    }
+
+    this.router.navigate(['/field-resource-management/quotes'], {
+      queryParams: { tab: tabParam, highlight: quote.id }
+    });
+  }
 
   /**
    * Returns a display label for the workflow status.
