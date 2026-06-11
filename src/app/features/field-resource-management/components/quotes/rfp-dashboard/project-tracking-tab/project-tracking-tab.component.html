@@ -31,13 +31,25 @@
       <td mat-cell *matCellDef="let row">{{ row.jobNumber || '-' }}</td>
     </ng-container>
 
-    <!-- BOM Column -->
-    <ng-container matColumnDef="bom">
-      <th mat-header-cell *matHeaderCellDef>BOM</th>
+    <!-- Materials Ordered Column -->
+    <ng-container matColumnDef="materialsOrdered">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Materials Ordered</th>
       <td mat-cell *matCellDef="let row">
-        <mat-chip (click)="openBomHistory(row)" [class.bom-active]="row.bomTrackings?.length > 0">
-          {{ getLatestBomStatus(row) }}
-        </mat-chip>
+        <span class="materials-status" [ngClass]="'status-' + getMaterialsStatus(row).toLowerCase().replace(' ', '-')">
+          {{ getMaterialsStatus(row) }}
+        </span>
+        <span *ngIf="getMaterialsOrderedDate(row)" class="date-sub">
+          {{ getMaterialsOrderedDate(row) | date:'shortDate' }}
+        </span>
+      </td>
+    </ng-container>
+
+    <!-- Materials ETA Column -->
+    <ng-container matColumnDef="materialsEta">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Materials ETA</th>
+      <td mat-cell *matCellDef="let row">
+        <span *ngIf="getMaterialsEta(row)">{{ getMaterialsEta(row) | date:'shortDate' }}</span>
+        <span *ngIf="!getMaterialsEta(row)">-</span>
       </td>
     </ng-container>
 
@@ -63,6 +75,16 @@
     <ng-container matColumnDef="invoiceNumber">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Invoice #</th>
       <td mat-cell *matCellDef="let row">{{ row.invoiceNumber || '-' }}</td>
+    </ng-container>
+
+    <!-- Closeout Column -->
+    <ng-container matColumnDef="closeout">
+      <th mat-header-cell *matHeaderCellDef>Closeout</th>
+      <td mat-cell *matCellDef="let row">
+        <mat-icon *ngIf="row.jobComplete && row.invoiceNumber" class="closeout-complete" matTooltip="Closeout complete">check_circle</mat-icon>
+        <mat-icon *ngIf="row.jobComplete && !row.invoiceNumber" class="closeout-pending" matTooltip="Pending closeout - needs invoice">pending</mat-icon>
+        <span *ngIf="!row.jobComplete">-</span>
+      </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

@@ -90,8 +90,8 @@ import { NotificationPanelComponent } from './components/notifications/notificat
 // Directives
 import { FrmHasPermissionDirective } from './directives/frm-has-permission.directive';
 
-// Quote Pipeline Dashboard Widget (declared here for use on eagerly-loaded home dashboard)
-import { QuotePipelineDashboardComponent } from './components/quotes/pipeline-dashboard/quote-pipeline-dashboard.component';
+// Quote Pipeline Dashboard Widget (shared module, imported for use on eagerly-loaded home dashboard)
+import { QuotePipelineDashboardModule } from './components/quotes/pipeline-dashboard/quote-pipeline-dashboard.module';
 
 // Create Job from Quote Dialog (declared here for use on eagerly-loaded admin dashboard)
 import { CreateJobFromQuoteDialogComponent } from './components/quotes/create-job-from-quote-dialog/create-job-from-quote-dialog.component';
@@ -180,9 +180,6 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     // Directives
     FrmHasPermissionDirective,
 
-    // Quote Pipeline Dashboard Widget (eagerly loaded for home dashboard)
-    QuotePipelineDashboardComponent,
-
     // Create Job from Quote Dialog (eagerly loaded for admin dashboard)
     CreateJobFromQuoteDialogComponent
     
@@ -206,6 +203,9 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
 
     // RFP Intake Form (shared module for dialog use from dashboards)
     RfpIntakeFormModule,
+
+    // Quote Pipeline Dashboard (shared module for use in home dashboard and quotes tabs)
+    QuotePipelineDashboardModule,
     
     // NgRx State Management
     StoreModule.forFeature('technicians', technicianReducer),

@@ -19,7 +19,7 @@ export class ProjectTrackingTabComponent implements OnChanges {
 
   displayedColumns: string[] = [
     'customer', 'description', 'quoteNumber', 'poNumber', 'jobNumber',
-    'bom', 'customerEquipment', 'jobStart', 'jobComplete', 'invoiceNumber'
+    'materialsOrdered', 'materialsEta', 'customerEquipment', 'jobStart', 'jobComplete', 'invoiceNumber', 'closeout'
   ];
 
   dataSource = new MatTableDataSource<DashboardQuote>([]);
@@ -41,6 +41,27 @@ export class ProjectTrackingTabComponent implements OnChanges {
       return 'None';
     }
     return row.bomTrackings[row.bomTrackings.length - 1].status;
+  }
+
+  getMaterialsOrderedDate(row: DashboardQuote): string | null {
+    if (!row.bomTrackings || row.bomTrackings.length === 0) return null;
+    const ordered = row.bomTrackings.find(b => b.orderedDate);
+    return ordered?.orderedDate ?? null;
+  }
+
+  getMaterialsEta(row: DashboardQuote): string | null {
+    if (!row.bomTrackings || row.bomTrackings.length === 0) return null;
+    // Use the latest tracking entry's received date as ETA indicator
+    const latest = row.bomTrackings[row.bomTrackings.length - 1];
+    return latest.receivedDate ?? null;
+  }
+
+  getMaterialsStatus(row: DashboardQuote): string {
+    if (!row.bomTrackings || row.bomTrackings.length === 0) return 'Not Ordered';
+    const latest = row.bomTrackings[row.bomTrackings.length - 1];
+    if (latest.receivedDate) return 'Received';
+    if (latest.orderedDate) return 'On the Way';
+    return 'Pending';
   }
 
   openBomHistory(row: DashboardQuote): void {

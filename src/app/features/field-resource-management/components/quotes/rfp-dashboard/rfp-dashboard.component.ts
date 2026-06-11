@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { MatDialog } from '@angular/material/dialog';
 import { Observable, Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import { DashboardFilters, DashboardQuote, DashboardUser } from '../../../models/quote-workflow.model';
+import { RfpIntakeFormComponent } from '../rfp-intake/rfp-intake-form.component';
 import * as DashboardActions from '../../../state/quotes/dashboard.actions';
 import * as DashboardSelectors from '../../../state/quotes/dashboard.selectors';
 
@@ -29,7 +31,7 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private customerFilter$ = new Subject<string>();
 
-  constructor(private store: Store) {
+  constructor(private store: Store, private dialog: MatDialog) {
     this.rfpRecords$ = this.store.select(DashboardSelectors.selectRfpRecords);
     this.poTrackingRecords$ = this.store.select(DashboardSelectors.selectPoTrackingRecords);
     this.projectTrackingRecords$ = this.store.select(DashboardSelectors.selectProjectTrackingRecords);
@@ -99,6 +101,38 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
 
   exportToPDF(): void {
     // TODO: Implement PDF export
+  }
+
+  openNewRfp(): void {
+    this.dialog.open(RfpIntakeFormComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      disableClose: true
+    });
+  }
+
+  getPoTotal(): number {
+    let total = 0;
+    this.poTrackingRecords$.subscribe(records => {
+      total = records.reduce((sum, r) => sum + (r.poAmount || 0), 0);
+    }).unsubscribe();
+    return total;
+  }
+
+  getInvoicedCount(): number {
+    let count = 0;
+    this.projectTrackingRecords$.subscribe(records => {
+      count = records.filter(r => !!r.invoiceNumber).length;
+    }).unsubscribe();
+    return count;
+  }
+
+  getCloseoutPendingCount(): number {
+    let count = 0;
+    this.projectTrackingRecords$.subscribe(records => {
+      count = records.filter(r => r.jobComplete && !r.invoiceNumber).length;
+    }).unsubscribe();
+    return count;
   }
 
   private dispatchFilterChange(): void {

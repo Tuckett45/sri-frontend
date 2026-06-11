@@ -11,6 +11,9 @@ import { SharedMaterialModule } from '../../shared-material.module';
 // Shared Components Module
 import { SharedComponentsModule } from '../shared/shared-components.module';
 
+// Quote Pipeline Dashboard shared module
+import { QuotePipelineDashboardModule } from './pipeline-dashboard/quote-pipeline-dashboard.module';
+
 // RFP Intake Form shared module
 import { RfpIntakeFormModule } from './rfp-intake/rfp-intake-form.module';
 
@@ -95,6 +98,7 @@ const routes: Routes = [
     ReactiveFormsModule,
     SharedMaterialModule,
     SharedComponentsModule,
+    QuotePipelineDashboardModule,
     RfpIntakeFormModule,
     StoreModule.forFeature('dashboard', dashboardReducer),
     EffectsModule.forFeature([DashboardEffects]),

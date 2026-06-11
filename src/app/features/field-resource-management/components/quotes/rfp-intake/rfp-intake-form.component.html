@@ -57,11 +57,11 @@
       <mat-card-content>
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Client Name</mat-label>
+            <mat-label>Customer</mat-label>
             <input
               matInput
               formControlName="clientName"
-              placeholder="Enter client name"
+              placeholder="Enter customer name"
               [matAutocomplete]="clientAuto"
               maxlength="200"
             />
@@ -73,179 +73,46 @@
                 {{ client }}
               </mat-option>
             </mat-autocomplete>
-            <mat-hint align="end">
-              {{ getControl('clientName')?.value?.length || 0 }}/200
-            </mat-hint>
             <mat-error *ngIf="hasError('clientName', 'required')">
               This field is required
             </mat-error>
-            <mat-error *ngIf="hasError('clientName', 'maxlength')">
-              {{ getErrorMessage('clientName') }}
-            </mat-error>
           </mat-form-field>
         </div>
 
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Project Name</mat-label>
+            <mat-label>Description</mat-label>
             <input
               matInput
               formControlName="projectName"
-              placeholder="Enter project name"
+              placeholder="Enter project description"
               maxlength="200"
             />
-            <mat-hint align="end">
-              {{ getControl('projectName')?.value?.length || 0 }}/200
-            </mat-hint>
             <mat-error *ngIf="hasError('projectName', 'required')">
               This field is required
             </mat-error>
-            <mat-error *ngIf="hasError('projectName', 'maxlength')">
-              {{ getErrorMessage('projectName') }}
-            </mat-error>
-          </mat-form-field>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Site Information Section -->
-    <mat-card class="form-section">
-      <mat-card-header>
-        <mat-card-title>Site Information</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Site Name</mat-label>
-            <input matInput formControlName="siteName" placeholder="Enter site name" maxlength="200" />
-            <mat-error *ngIf="hasError('siteName', 'required')">
-              This field is required
-            </mat-error>
-          </mat-form-field>
-        </div>
-
-        <div formGroupName="siteAddress">
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Street Address</mat-label>
-              <input matInput formControlName="street" placeholder="Enter street address" maxlength="500" />
-              <mat-error>{{ getErrorMessage('siteAddress.street') }}</mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-row three-columns">
-            <mat-form-field appearance="outline">
-              <mat-label>City</mat-label>
-              <input matInput formControlName="city" placeholder="Enter city" maxlength="200" />
-              <mat-error>{{ getErrorMessage('siteAddress.city') }}</mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>State</mat-label>
-              <mat-select formControlName="state">
-                <mat-option *ngFor="let state of states" [value]="state">
-                  {{ state }}
-                </mat-option>
-              </mat-select>
-              <mat-error>{{ getErrorMessage('siteAddress.state') }}</mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>ZIP Code</mat-label>
-              <input matInput formControlName="zipCode" placeholder="12345" maxlength="10" />
-              <mat-error>{{ getErrorMessage('siteAddress.zipCode') }}</mat-error>
-            </mat-form-field>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Customer Contact Section -->
-    <mat-card class="form-section">
-      <mat-card-header>
-        <mat-card-title>Customer Contact</mat-card-title>
-      </mat-card-header>
-      <mat-card-content formGroupName="customerContact">
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Contact Name</mat-label>
-            <input matInput formControlName="name" placeholder="Enter contact name" maxlength="200" />
-            <mat-error>{{ getErrorMessage('customerContact.name') }}</mat-error>
           </mat-form-field>
         </div>
 
         <div class="form-row two-columns">
           <mat-form-field appearance="outline">
-            <mat-label>Phone</mat-label>
+            <mat-label>Requestor Name</mat-label>
             <input
               matInput
-              formControlName="phone"
-              placeholder="555-123-4567"
-              type="tel"
-              maxlength="20"
+              formControlName="requestorName"
+              placeholder="Enter requestor name"
+              maxlength="200"
             />
-            <mat-error>{{ getErrorMessage('customerContact.phone') }}</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Email</mat-label>
-            <input
-              matInput
-              formControlName="email"
-              placeholder="contact@example.com"
-              type="email"
-              maxlength="254"
-            />
-            <mat-error>{{ getErrorMessage('customerContact.email') }}</mat-error>
-          </mat-form-field>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Scope & Materials Section -->
-    <mat-card class="form-section">
-      <mat-card-header>
-        <mat-card-title>Scope &amp; Materials</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Scope of Work</mat-label>
-            <textarea
-              matInput
-              formControlName="scopeOfWork"
-              rows="5"
-              placeholder="Describe the scope of work"
-              maxlength="5000"
-            ></textarea>
-            <mat-hint align="end">
-              {{ getControl('scopeOfWork')?.value?.length || 0 }}/5000
-            </mat-hint>
-            <mat-error *ngIf="hasError('scopeOfWork', 'required')">
-              This field is required
-            </mat-error>
-            <mat-error *ngIf="hasError('scopeOfWork', 'maxlength')">
-              {{ getErrorMessage('scopeOfWork') }}
-            </mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Material Specifications</mat-label>
-            <textarea
-              matInput
-              formControlName="materialSpecifications"
-              rows="5"
-              placeholder="Enter material specifications (optional)"
-              maxlength="5000"
-            ></textarea>
-            <mat-hint align="end">
-              {{ getControl('materialSpecifications')?.value?.length || 0 }}/5000
-            </mat-hint>
-            <mat-error *ngIf="hasError('materialSpecifications', 'maxlength')">
-              {{ getErrorMessage('materialSpecifications') }}
-            </mat-error>
+            <mat-label>Assigned to Quote</mat-label>
+            <mat-select formControlName="assignedToQuote">
+              <mat-option value="">Unassigned</mat-option>
+              <mat-option *ngFor="let user of users$ | async" [value]="user.id">
+                {{ user.fullName }}
+              </mat-option>
+            </mat-select>
           </mat-form-field>
         </div>
       </mat-card-content>
@@ -271,7 +138,7 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Requested Completion Date</mat-label>
+            <mat-label>Quote Due Date</mat-label>
             <input
               matInput
               [matDatepicker]="completionPicker"
@@ -285,37 +152,7 @@
 
         <div class="form-error" *ngIf="hasDateRangeError">
           <mat-icon>error</mat-icon>
-          <span>Requested completion date must be on or after the RFP received date</span>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Classification Section -->
-    <mat-card class="form-section">
-      <mat-card-header>
-        <mat-card-title>Classification</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="form-row two-columns">
-          <mat-form-field appearance="outline">
-            <mat-label>Job Type</mat-label>
-            <mat-select formControlName="jobType">
-              <mat-option *ngFor="let type of jobTypeOptions" [value]="type">
-                {{ type }}
-              </mat-option>
-            </mat-select>
-            <mat-error>{{ getErrorMessage('jobType') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Priority</mat-label>
-            <mat-select formControlName="priority">
-              <mat-option *ngFor="let p of priorityOptions" [value]="p">
-                {{ p }}
-              </mat-option>
-            </mat-select>
-            <mat-error>{{ getErrorMessage('priority') }}</mat-error>
-          </mat-form-field>
+          <span>Quote due date must be on or after the RFP received date</span>
         </div>
       </mat-card-content>
     </mat-card>

@@ -253,10 +253,9 @@ export interface QuoteEmailData {
 
 export const PIPELINE_CATEGORIES: Record<string, WorkflowStatus[]> = {
   rfpsReceived: [WorkflowStatus.Draft, WorkflowStatus.Job_Summary_In_Progress],
-  bomsNotReady: [WorkflowStatus.BOM_In_Progress, WorkflowStatus.Validation_Rejected],
-  bomsReady: [WorkflowStatus.Pending_Validation, WorkflowStatus.Validation_Approved],
-  quotesReadyForCustomer: [WorkflowStatus.Quote_Assembled],
-  quotesDelivered: [WorkflowStatus.Quote_Delivered],
+  quotesInProgress: [WorkflowStatus.BOM_In_Progress, WorkflowStatus.Pending_Validation, WorkflowStatus.Validation_Rejected, WorkflowStatus.Validation_Approved],
+  quotesDelivered: [WorkflowStatus.Quote_Assembled, WorkflowStatus.Quote_Delivered],
+  poNeeded: [WorkflowStatus.Quote_Delivered],
   quotesConverted: [WorkflowStatus.Quote_Converted]
 };
 
