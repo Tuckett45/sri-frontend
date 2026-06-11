@@ -111,6 +111,12 @@ export const updateTechnicianLocationFailure = createAction(
   props<{ error: string }>()
 );
 
+// Update Technician Availability (Real-time clock-in/out)
+export const updateTechnicianAvailability = createAction(
+  '[Technician] Update Technician Availability',
+  props<{ technicianId: string; isAvailable: boolean }>()
+);
+
 // Optimistic Update Actions
 export const updateTechnicianOptimistic = createAction(
   '[Technician] Update Technician Optimistic',
@@ -172,5 +178,11 @@ export const reactivateTechnicianSuccess = createAction(
 export const reactivateTechnicianFailure = createAction(
   '[Technician] Reactivate Technician Failure',
   props<{ error: string }>()
+);
+
+// Update Technician Field Status (from clock-in/out response)
+export const updateTechnicianFieldStatus = createAction(
+  '[Technician] Update Field Status',
+  props<{ technicianId: string; fieldStatus: string }>()
 );
 

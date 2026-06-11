@@ -49,7 +49,10 @@ export interface Conflict {
 export interface TechnicianMatch {
   technician: Technician;
   matchPercentage: number;
-  missingSkills: Skill[];
+  /** Skill names (plain strings) returned by the backend cert-matching endpoint */
+  missingSkills: string[];
+  /** Cert names that exist but are past their expiry date */
+  expiredCertifications: string[];
   currentWorkload: number;
   hasConflicts: boolean;
   conflicts: Conflict[];

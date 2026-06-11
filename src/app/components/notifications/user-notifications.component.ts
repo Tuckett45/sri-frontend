@@ -1,5 +1,7 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import {
   DeploymentNotification,
   DeploymentSignalRService
@@ -10,9 +12,11 @@ import { Magic8BallService, Magic8BallResponse } from 'src/app/services/magic-8-
 import { NotificationPreferencesService } from 'src/app/services/notification-preferences.service';
 import { NotificationIntegratorService } from 'src/app/services/notification-integrator.service';
 import { DeploymentPushNotificationService } from 'src/app/features/deployment/services/deployment-push-notification.service';
+import { NotificationApiService, NotificationDto } from 'src/app/features/field-resource-management/services/notification-api.service';
+import { FrmSignalRService } from 'src/app/features/field-resource-management/services/frm-signalr.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
-type NotificationCategory = 'assignment' | 'signoff' | 'issue' | 'status' | 'general';
+type NotificationCategory = 'assignment' | 'signoff' | 'issue' | 'status' | 'general' | 'workforce' | 'timecard';
 
 interface NotificationAction {
   readonly label: string;
@@ -49,7 +53,7 @@ interface NotificationViewModel {
   styleUrls: ['./user-notifications.component.scss'],
   standalone: false
 })
-export class UserNotificationsComponent implements OnInit {
+export class UserNotificationsComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly featureFlags = inject(FeatureFlagService);
@@ -58,8 +62,11 @@ export class UserNotificationsComponent implements OnInit {
   private readonly notificationPreferences = inject(NotificationPreferencesService);
   private readonly notificationIntegrator = inject(NotificationIntegratorService);
   private readonly pushService = inject(DeploymentPushNotificationService);
+  private readonly notificationApi = inject(NotificationApiService);
+  private readonly frmSignalR = inject(FrmSignalRService);
   private readonly fb = inject(FormBuilder);
   private readonly READ_STORAGE_KEY = 'sri-notifications-read-ids';
+  private readonly destroy$ = new Subject<void>();
 
   private readonly readIds = signal<Set<string>>(this.loadReadState());
 
@@ -74,8 +81,14 @@ export class UserNotificationsComponent implements OnInit {
   protected readonly showPermissionEducation = signal(false);
   protected readonly isRequestingPermission = signal(false);
 
+  // Deployment notifications (existing)
   protected readonly notifications = this.signalRService.getNotifications();
   protected readonly notificationsEnabled = this.featureFlags.flagEnabled('notifications');
+
+  // Workforce notifications (NEW - from /v1/notifications API)
+  protected readonly workforceNotifications = signal<NotificationDto[]>([]);
+  protected readonly workforceLoading = signal(false);
+  protected readonly workforceUnreadCount = signal(0);
 
   private readonly viewModels = computed<NotificationViewModel[]>(() =>
     this.notifications().map((notification) => this.toViewModel(notification))
@@ -133,9 +146,141 @@ export class UserNotificationsComponent implements OnInit {
       console.log('✅ SignalR notifications initialized');
     } catch (error) {
       console.warn('⚠️ SignalR connection failed - continuing without real-time notifications:', error);
-      // Don't show error to user - fail silently
-      // The app will continue to work, just without real-time push notifications
     }
+
+    // Load workforce notifications from the API
+    this.loadWorkforceNotifications(userId);
+
+    // Subscribe to real-time FRM notifications
+    this.frmSignalR.notification$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(notification => {
+        if (notification) {
+          // Convert FRM notification to NotificationDto and prepend
+          const dto: NotificationDto = {
+            id: notification.id || crypto.randomUUID(),
+            userId: userId,
+            title: notification.message,
+            message: notification.message,
+            type: notification.type?.toString() || 'general',
+            priority: 'normal',
+            channels: 'in-app',
+            status: 'sent',
+            createdAt: new Date(notification.createdAt || Date.now()).toISOString(),
+            relatedEntityType: notification.relatedEntityType,
+            relatedEntityId: notification.relatedEntityId
+          };
+          const current = this.workforceNotifications();
+          this.workforceNotifications.set([dto, ...current.slice(0, 49)]);
+          this.workforceUnreadCount.update(c => c + 1);
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Load workforce notifications from the /v1/notifications/my endpoint
+   */
+  private loadWorkforceNotifications(userId: string): void {
+    this.workforceLoading.set(true);
+    this.notificationApi.getMyNotifications(userId, { pageSize: 50 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.workforceNotifications.set(result.items);
+          this.workforceUnreadCount.set(result.unreadCount);
+          this.workforceLoading.set(false);
+        },
+        error: (err) => {
+          console.warn('Failed to load workforce notifications:', err);
+          this.workforceLoading.set(false);
+        }
+      });
+  }
+
+  /**
+   * Mark a workforce notification as read via the API
+   */
+  protected markWorkforceAsRead(notification: NotificationDto): void {
+    if (notification.readAt) return;
+    this.notificationApi.markAsRead(notification.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        const updated = this.workforceNotifications().map(n =>
+          n.id === notification.id ? { ...n, readAt: new Date().toISOString(), status: 'read' as const } : n
+        );
+        this.workforceNotifications.set(updated);
+        this.workforceUnreadCount.update(c => Math.max(0, c - 1));
+      });
+  }
+
+  /**
+   * Mark all workforce notifications as read
+   */
+  protected markAllWorkforceAsRead(): void {
+    const userId = this.getCurrentUserId();
+    if (!userId) return;
+    this.notificationApi.markAllAsRead(userId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        const now = new Date().toISOString();
+        const updated = this.workforceNotifications().map(n => ({ ...n, readAt: now, status: 'read' as const }));
+        this.workforceNotifications.set(updated);
+        this.workforceUnreadCount.set(0);
+      });
+  }
+
+  /**
+   * Navigate to the related entity from a workforce notification
+   */
+  protected goToWorkforceAction(notification: NotificationDto): void {
+    this.markWorkforceAsRead(notification);
+    if (notification.actionUrl) {
+      this.router.navigateByUrl(notification.actionUrl);
+    } else if (notification.relatedEntityType === 'job' && notification.relatedEntityId) {
+      this.router.navigate(['/field-resource-management/jobs', notification.relatedEntityId]);
+    } else if (notification.relatedEntityType === 'timeEntry' && notification.relatedEntityId) {
+      this.router.navigate(['/field-resource-management/timecard']);
+    }
+  }
+
+  /**
+   * Get icon for workforce notification type
+   */
+  protected getWorkforceIcon(type: string): string {
+    const icons: Record<string, string> = {
+      'job_assignment': 'work',
+      'job_status_change': 'update',
+      'timecard_approved': 'check_circle',
+      'timecard_rejected': 'cancel',
+      'timecard_correction_requested': 'edit_note',
+      'clock_in': 'login',
+      'clock_out': 'logout',
+      'broadcast': 'campaign',
+      'system_alert': 'warning'
+    };
+    return icons[type] || 'notifications';
+  }
+
+  /**
+   * Get category for workforce notification (for tag styling)
+   */
+  protected getWorkforceCategory(type: string): NotificationCategory {
+    if (type.includes('timecard')) return 'timecard';
+    if (type.includes('job') || type.includes('clock')) return 'workforce';
+    if (type.includes('assignment')) return 'assignment';
+    return 'general';
+  }
+
+  /**
+   * Combined total unread count across both notification sources
+   */
+  protected totalUnreadCount(): number {
+    return this.unreadCount() + this.workforceUnreadCount();
   }
 
   protected unreadCount(): number {
@@ -182,9 +327,17 @@ export class UserNotificationsComponent implements OnInit {
         return 'danger';
       case 'status':
         return 'success';
+      case 'workforce':
+        return 'info';
+      case 'timecard':
+        return 'warn';
       default:
         return 'contrast';
     }
+  }
+
+  protected trackByWorkforceId(_: number, notification: NotificationDto): string {
+    return notification.id;
   }
 
   protected notificationsAvailable(): boolean {

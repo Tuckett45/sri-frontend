@@ -1,6 +1,6 @@
 // --- Type Aliases ---
 
-export type OfferStatus = 'needs_review' | 'vetted_available' | 'offer_extended' | 'offer_accepted_onboarding';
+export type OfferStatus = 'needs_review' | 'vetted_available' | 'offer_extended' | 'offer_accepted_onboarding' | 'hired_assigned' | 'do_not_hire' | 'turned_down_hold';
 
 export type VestSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
 
@@ -111,6 +111,7 @@ export interface UpdateCandidatePayload {
   startDate?: string;
   offerStatus?: OfferStatus;
   referredBy?: string;
+  notes?: string;
 
   // Badges & Access
   attBadge?: boolean;

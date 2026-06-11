@@ -174,6 +174,23 @@ export const technicianReducer = createReducer(
     error
   })),
 
+  // Real-time availability update (clock-in/out)
+  on(TechnicianActions.updateTechnicianAvailability, (state, { technicianId, isAvailable }) =>
+    technicianAdapter.updateOne(
+      {
+        id: technicianId,
+        changes: {
+          isAvailable,
+          updatedAt: new Date()
+        }
+      },
+      {
+        ...state,
+        error: null
+      }
+    )
+  ),
+
   // Optimistic Update Handlers
   on(TechnicianActions.updateTechnicianOptimistic, (state, { id, changes }) =>
     technicianAdapter.updateOne(
@@ -269,5 +286,13 @@ export const technicianReducer = createReducer(
     ...state,
     loading: false,
     error
-  }))
+  })),
+
+  // Update Technician Field Status
+  on(TechnicianActions.updateTechnicianFieldStatus, (state, { technicianId, fieldStatus }) =>
+    technicianAdapter.updateOne(
+      { id: technicianId, changes: { fieldStatus: fieldStatus as any } },
+      state
+    )
+  )
 );

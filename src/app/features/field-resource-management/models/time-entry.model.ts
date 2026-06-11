@@ -40,6 +40,7 @@ export interface TimeEntry {
   lastSyncAttempt?: Date;
   syncRetryCount?: number;
   syncConflictDetails?: string;
+  proximityStatus?: string;
 }
 
 export enum TimecardStatus {

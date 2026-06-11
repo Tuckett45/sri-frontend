@@ -7,7 +7,7 @@ import { FormControl } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { Technician, TechnicianRole } from '../../../models/technician.model';
+import { Technician, TechnicianRole, TechnicianStatus } from '../../../models/technician.model';
 import { TechnicianFilters } from '../../../models/dtos/filters.dto';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
@@ -27,7 +27,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
   
-  displayedColumns: string[] = ['name', 'role', 'region', 'crew', 'travelStatus', 'status', 'currentJob', 'actions'];
+  displayedColumns: string[] = ['name', 'role', 'region', 'crew', 'travelStatus', 'status', 'currentJob', 'fieldStatus', 'actions'];
   
   // Expose UserRole enum for template
   UserRole = UserRole;
@@ -362,7 +362,25 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   }
   
   getCurrentStatus(technician: Technician): string {
+    if (technician.currentStatus && technician.currentStatus !== 'Available') {
+      const statusMap: Record<string, string> = {
+        OnSite: 'On Site',
+        EnRoute: 'En Route',
+        OffDuty: 'Off Duty'
+      };
+      return statusMap[technician.currentStatus] || technician.currentStatus;
+    }
     return technician.isActive ? 'Active' : 'Inactive';
+  }
+
+  getFieldStatus(technician: Technician): { label: string; cssClass: string } | null {
+    if (!technician.currentStatus || technician.currentStatus === 'Available') return null;
+    const statusMap: Record<string, { label: string; cssClass: string }> = {
+      OnSite: { label: 'On Site', cssClass: 'status-on-site' },
+      EnRoute: { label: 'En Route', cssClass: 'status-en-route' },
+      OffDuty: { label: 'Off Duty', cssClass: 'status-off-duty' }
+    };
+    return statusMap[technician.currentStatus] || null;
   }
 
   /**
@@ -373,6 +391,34 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       willing: false,
       label: 'Not Willing'
     };
+  }
+
+  /**
+   * Get human-readable label for field status
+   */
+  getFieldStatusLabel(technician: Technician): string {
+    const status = technician.fieldStatus || 'Available';
+    switch (status) {
+      case 'OnSite': return 'On Site';
+      case 'EnRoute': return 'En Route';
+      case 'Available': return 'Available';
+      case 'ClockedOut': return 'Clocked Out';
+      default: return status;
+    }
+  }
+
+  /**
+   * Get CSS class for field status badge styling
+   */
+  getFieldStatusClass(technician: Technician): string {
+    const status = technician.fieldStatus || 'Available';
+    switch (status) {
+      case 'OnSite': return 'field-status-onsite';
+      case 'EnRoute': return 'field-status-enroute';
+      case 'Available': return 'field-status-available';
+      case 'ClockedOut': return 'field-status-clockedout';
+      default: return 'field-status-available';
+    }
   }
 
   /**

@@ -40,9 +40,100 @@ export * from './notifications/notification.effects';
 
 // UI State
 export * from './ui/ui.state';
-export * from './ui/ui.actions';
+export {
+  setCalendarView,
+  setScheduleViewMode,
+  setSelectedDate,
+  toggleSidebar,
+  openSidebar,
+  closeSidebar,
+  toggleMobileMenu,
+  openMobileMenu,
+  closeMobileMenu,
+  setFilters,
+  clearFilters,
+  setMapView,
+  showNotification,
+  showNotifications,
+  dismissNotification,
+  markNotificationAsRead,
+  updateConnectionStatus,
+  connectionEstablished,
+  connectionLost,
+  reconnecting,
+  resetUIState
+} from './ui/ui.actions';
+export { clearAllNotifications as clearAllUINotifications } from './ui/ui.actions';
 export { uiReducer, initialState as uiInitialState } from './ui/ui.reducer';
-export * from './ui/ui.selectors';
+export {
+  selectUIState,
+  selectCalendarView,
+  selectSelectedDate,
+  selectIsCalendarDayView,
+  selectIsCalendarWeekView,
+  selectScheduleViewMode,
+  selectSidebarOpen,
+  selectMobileMenuOpen,
+  selectMapView,
+  selectMapCenter,
+  selectMapZoom,
+  selectShowTechniciansOnMap,
+  selectShowCrewsOnMap,
+  selectShowJobsOnMap,
+  selectMapClusteringEnabled,
+  selectMapVisibilitySettings,
+  selectSelectedFilters,
+  selectTechnicianFilters,
+  selectAssignmentFilters,
+  selectCrewFilters,
+  selectHasActiveFilters,
+  selectActiveFilterCount,
+  selectUnreadNotifications,
+  selectReadNotifications,
+  selectUnreadNotificationCount,
+  selectTotalNotificationCount,
+  selectUnreadNotificationsByType,
+  selectRecentNotifications,
+  selectRecentUnreadNotifications,
+  selectNotificationsGroupedByType,
+  selectNotificationCountByType,
+  selectUnreadNotificationCountByType,
+  selectNotificationsForEntity,
+  selectJobAssignmentNotifications,
+  selectJobStatusChangeNotifications,
+  selectCertificationExpiringNotifications,
+  selectConflictDetectedNotifications,
+  selectSystemAlertNotifications,
+  selectNotificationStatistics,
+  selectUIViewModel,
+  selectNotificationPanelViewModel,
+  selectMapConfigViewModel,
+  selectFilterSummaryViewModel,
+  selectShouldShowSidebar,
+  selectShouldShowMobileMenu,
+  selectIsUILoading,
+  selectIsMobileMode,
+  selectConnectionState,
+  selectConnectionStatus,
+  selectIsConnected,
+  selectIsDisconnected,
+  selectIsReconnecting,
+  selectReconnectAttempts,
+  selectLastConnected,
+  selectLastDisconnected,
+  selectLastConnectionError,
+  selectIsConnectionHealthy,
+  selectConnectionStatusDisplay,
+  selectShouldShowOfflineIndicator,
+  selectConnectionUptime,
+  selectConnectionDowntime
+} from './ui/ui.selectors';
+// Re-export conflicting UI selectors under aliased names
+export { selectJobFilters as selectUIJobFilters } from './ui/ui.selectors';
+export { selectAllNotifications as selectUIAllNotifications } from './ui/ui.selectors';
+export { selectHasUnreadNotifications as selectUIHasUnreadNotifications } from './ui/ui.selectors';
+export { selectNotificationById as selectUINotificationById } from './ui/ui.selectors';
+export { selectNotificationsByType as selectUINotificationsByType } from './ui/ui.selectors';
 
 // Reporting State
 export * from './reporting/reporting.state';

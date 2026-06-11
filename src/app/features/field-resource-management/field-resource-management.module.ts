@@ -66,6 +66,7 @@ import { QuickActionsWidgetComponent } from './components/home/widgets/quick-act
 import { ActiveJobsWidgetComponent } from './components/home/widgets/active-jobs-widget/active-jobs-widget.component';
 import { RecentJobsWidgetComponent } from './components/home/widgets/recent-jobs-widget/recent-jobs-widget.component';
 import { AssignmentsWidgetComponent } from './components/home/widgets/assignments-widget/assignments-widget.component';
+import { MyWorkWidgetComponent } from './components/home/widgets/my-work-widget/my-work-widget.component';
 import { TimecardWidgetComponent } from './components/home/widgets/timecard-widget/timecard-widget.component';
 import { ScheduleWidgetComponent } from './components/home/widgets/schedule-widget/schedule-widget.component';
 import { CurrentJobStatusWidgetComponent } from './components/home/widgets/current-job-status-widget/current-job-status-widget.component';
@@ -76,6 +77,9 @@ import { TimecardReviewWidgetComponent } from './components/home/widgets/timecar
 import { ExpensesWidgetComponent } from './components/home/widgets/expenses-widget/expenses-widget.component';
 import { TravelBreakPtoWidgetComponent } from './components/home/widgets/travel-break-pto-widget/travel-break-pto-widget.component';
 import { ClockInWidgetComponent } from './components/home/widgets/clock-in-widget/clock-in-widget.component';
+import { NotificationFeedWidgetComponent } from './components/home/widgets/notification-feed-widget/notification-feed-widget.component';
+import { LiveActivityFeedWidgetComponent } from './components/home/widgets/live-activity-feed-widget/live-activity-feed-widget.component';
+import { PendingTimecardsWidgetComponent } from './components/home/widgets/pending-timecards-widget/pending-timecards-widget.component';
 
 // Role-Specific Dashboard Components
 import { TechnicianDashboardComponent } from './components/home/dashboards/technician-dashboard/technician-dashboard.component';
@@ -83,6 +87,9 @@ import { AdminDashboardComponent } from './components/home/dashboards/admin-dash
 import { CmDashboardComponent } from './components/home/dashboards/cm-dashboard/cm-dashboard.component';
 import { HrPayrollDashboardComponent } from './components/home/dashboards/hr-payroll-dashboard/hr-payroll-dashboard.component';
 import { DefaultDashboardComponent } from './components/home/dashboards/default-dashboard/default-dashboard.component';
+
+// My Team Page
+import { MyTeamComponent } from './components/my-team/my-team.component';
 
 // Notification Components (needed for real-time updates)
 import { NotificationPanelComponent } from './components/notifications/notification-panel/notification-panel.component';
@@ -156,6 +163,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     ActiveJobsWidgetComponent,
     RecentJobsWidgetComponent,
     AssignmentsWidgetComponent,
+    MyWorkWidgetComponent,
     TimecardWidgetComponent,
     ScheduleWidgetComponent,
     CurrentJobStatusWidgetComponent,
@@ -166,6 +174,9 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     ExpensesWidgetComponent,
     TravelBreakPtoWidgetComponent,
     ClockInWidgetComponent,
+    NotificationFeedWidgetComponent,
+    LiveActivityFeedWidgetComponent,
+    PendingTimecardsWidgetComponent,
 
     // Role-Specific Dashboard Components
     TechnicianDashboardComponent,
@@ -173,6 +184,9 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     CmDashboardComponent,
     HrPayrollDashboardComponent,
     DefaultDashboardComponent,
+
+    // My Team Page
+    MyTeamComponent,
     
     // Notification Components
     NotificationPanelComponent,

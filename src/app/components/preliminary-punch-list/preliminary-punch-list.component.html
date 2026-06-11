@@ -1,4 +1,21 @@
 <div class="preliminary-punch-list-page surface-card shadow-4 p-3 border-round">
+  <!-- Offline Status Banner -->
+  <div class="offline-banner" *ngIf="!offlineCache.isOnline()">
+    <mat-icon>cloud_off</mat-icon>
+    <span>You're currently offline. Punch lists will be saved locally and submitted when your connection is restored.</span>
+  </div>
+
+  <!-- Pending Queue Indicator -->
+  <div class="queue-banner" *ngIf="offlineQueue.queueCount() > 0">
+    <mat-icon *ngIf="!offlineQueue.isSyncing()">cloud_queue</mat-icon>
+    <mat-icon *ngIf="offlineQueue.isSyncing()" class="syncing-icon">cloud_sync</mat-icon>
+    <span *ngIf="!offlineQueue.isSyncing()">
+      {{ offlineQueue.queueCount() }} punch list{{ offlineQueue.queueCount() > 1 ? 's' : '' }} pending upload.
+      <a class="sync-link" *ngIf="offlineCache.isOnline()" (click)="offlineQueue.triggerSync()">Sync now</a>
+    </span>
+    <span *ngIf="offlineQueue.isSyncing()">Syncing queued punch lists...</span>
+  </div>
+
   <div class="header-section">
     <h2>QA/QC Punch List</h2>
     <div class="header-btns">

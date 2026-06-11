@@ -103,6 +103,7 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
         scissorLiftCertified: false,
         workSite: body.workSite || '',
         homeAddress: body.homeAddress || '',
+        homeState: body.homeState || '',
         startDate: body.startDate,
         offerStatus: body.offerStatus ?? 'needs_review',
         referredBy: body.referredBy,
@@ -595,7 +596,7 @@ function buildMockCandidates(): Candidate[] {
   const dateOnly = (daysOffset: number) => iso(daysOffset).split('T')[0];
 
   const vestSizes: VestSize[] = ['S', 'M', 'L', 'XL', '2XL'];
-  const statuses: OfferStatus[] = ['needs_review', 'vetted_available', 'offer_extended', 'offer_accepted_onboarding'];
+  const statuses: OfferStatus[] = ['needs_review', 'vetted_available', 'offer_extended', 'offer_accepted_onboarding', 'hired_assigned', 'do_not_hire', 'turned_down_hold'];
 
   const raw: Array<{
     name: string; email: string; phone: string; vest: VestSize;

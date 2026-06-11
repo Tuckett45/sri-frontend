@@ -16,3 +16,67 @@
     margin-top: 16px;
   }
 }
+
+
+/* My Team Filter Bar */
+.team-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--surface-card, #fff);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  margin-bottom: 12px;
+
+  .team-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .team-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-color-secondary, #616161);
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      &.clocked-in {
+        color: #2e7d32;
+        font-weight: 500;
+      }
+      &.available {
+        color: #1565c0;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .team-filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+
+    .team-summary {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+  }
+}

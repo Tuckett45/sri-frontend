@@ -61,23 +61,23 @@ const routes: Routes = [
         data: { title: 'Tech Credentials', breadcrumb: 'Credentials' }
       },
       {
-        path: 'credentials/:technicianId',
+        path: 'credentials/:candidateId',
         component: CredentialDetailComponent,
         data: { title: 'Credential Detail', breadcrumb: 'Credential Detail' }
       },
       {
-        path: 'credentials/:technicianId/checklist',
+        path: 'credentials/:candidateId/checklist',
         component: OnboardingChecklistComponent,
         data: { title: 'Onboarding Checklist', breadcrumb: 'Checklist' }
       },
       {
-        path: 'credentials/:technicianId/new',
+        path: 'credentials/:candidateId/new',
         component: CredentialFormComponent,
         canDeactivate: [UnsavedChangesGuard],
         data: { title: 'Add Credential', breadcrumb: 'New Credential' }
       },
       {
-        path: 'credentials/:technicianId/edit/:credentialId',
+        path: 'credentials/:candidateId/edit/:credentialId',
         component: CredentialFormComponent,
         canDeactivate: [UnsavedChangesGuard],
         data: { title: 'Edit Credential', breadcrumb: 'Edit Credential' }

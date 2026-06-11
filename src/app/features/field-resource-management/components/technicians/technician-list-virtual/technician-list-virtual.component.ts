@@ -97,7 +97,7 @@ export class TechnicianListVirtualComponent implements OnInit, OnDestroy {
    * Get skill names
    */
   getSkillNames(technician: Technician): string[] {
-    return technician.skills.map(skill => skill.name);
+    return (technician.skills ?? []).map(skill => skill.name);
   }
 
   /**

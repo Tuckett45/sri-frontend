@@ -8,6 +8,7 @@ import { OnboardingLinkService } from '../../../services/onboarding-link.service
 import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
 import { GenerateLinkDialogComponent } from '../generate-link-dialog/generate-link-dialog.component';
+import { CandidateNotesDialogComponent } from '../candidate-notes-dialog/candidate-notes-dialog.component';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -21,6 +22,9 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   vetted_available: 'Vetted/Available',
   offer_extended: 'Offer Extended',
   offer_accepted_onboarding: 'Offer Accepted/Onboarding',
+  hired_assigned: 'Hired/Assigned',
+  do_not_hire: 'Do Not Hire',
+  turned_down_hold: 'Turned Down/Hold for Later',
 };
 
 @Component({
@@ -65,6 +69,27 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <option value="vetted_available">Vetted/Available</option>
             <option value="offer_extended">Offer Extended</option>
             <option value="offer_accepted_onboarding">Offer Accepted/Onboarding</option>
+            <option value="hired_assigned">Hired/Assigned</option>
+            <option value="do_not_hire">Do Not Hire</option>
+            <option value="turned_down_hold">Turned Down/Hold for Later</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="homeStateFilter">Home State</label>
+          <select id="homeStateFilter"
+                  [(ngModel)]="homeStateFilter"
+                  (ngModelChange)="onHomeStateFilterChange()">
+            <option value="">All States</option>
+            <option *ngFor="let state of availableStates" [value]="state">{{ state }}</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="referredByFilter">Referred By</label>
+          <select id="referredByFilter"
+                  [(ngModel)]="referredByFilter"
+                  (ngModelChange)="onReferredByFilterChange()">
+            <option value="">All Referrers</option>
+            <option *ngFor="let referrer of availableReferrers" [value]="referrer">{{ referrer }}</option>
           </select>
         </div>
       </div>
@@ -97,6 +122,9 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('homeState')" class="sortable">
               Home State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
             </th>
+            <th (click)="onSort('referredBy')" class="sortable">
+              Referred By <span class="sort-icon">{{ getSortIcon('referredBy') }}</span>
+            </th>
             <th (click)="onSort('startDate')" class="sortable">
               Start Date <span class="sort-icon">{{ getSortIcon('startDate') }}</span>
             </th>
@@ -120,10 +148,26 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td class="bool-cell"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
             <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
             <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td>{{ candidate.homeState }}</td>
+            <td>{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
+            <td>{{ candidate.referredBy || '—' }}</td>
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
             <td class="actions-cell">
+              <button class="icon-btn icon-resume"
+                      [class.has-file]="candidate.resumeUrl"
+                      [disabled]="!candidate.resumeUrl"
+                      (click)="onViewResume(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="candidate.resumeUrl ? 'View resume for ' + candidate.techName : 'No resume uploaded'"
+                      [title]="candidate.resumeUrl ? 'View Resume' : 'No resume uploaded'">
+                <mat-icon class="action-icon">description</mat-icon>
+              </button>
+              <button class="icon-btn icon-notes"
+                      [class.has-notes]="candidate.notes"
+                      (click)="onViewNotes(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="'Notes for ' + candidate.techName"
+                      [title]="candidate.notes ? 'View/Edit Notes' : 'Add Notes'">
+                <mat-icon class="action-icon">sticky_note_2</mat-icon>
+              </button>
               <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
               <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
               <button class="action-btn btn-delete" (click)="onDeleteCandidate(candidate); $event.stopPropagation()">Delete</button>
@@ -398,6 +442,59 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 
     .btn-delete:hover { background: #ffcdd2; }
 
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      background: none;
+      cursor: pointer;
+      margin-right: 4px;
+      transition: background-color 0.15s, opacity 0.15s, color 0.15s;
+      vertical-align: middle;
+      opacity: 0.4;
+      color: #757575;
+      padding: 0;
+    }
+
+    .icon-btn .action-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .icon-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.2;
+    }
+
+    .icon-btn.has-file {
+      opacity: 1;
+      color: #1565c0;
+    }
+
+    .icon-btn.has-notes {
+      opacity: 1;
+      color: #e65100;
+    }
+
+    .icon-btn.icon-resume:not(:disabled):hover {
+      background: #e3f2fd;
+      border-color: #90caf9;
+      color: #1565c0;
+      opacity: 1;
+    }
+
+    .icon-btn.icon-notes:hover {
+      background: #fff3e0;
+      border-color: #ffcc80;
+      color: #e65100;
+      opacity: 1;
+    }
+
     :host ::ng-deep .mat-mdc-paginator {
       border-top: 1px solid #e0e0e0;
       background: #fafafa;
@@ -456,8 +553,12 @@ export class CandidateListComponent implements OnInit {
 
   searchText = '';
   statusFilter = '';
+  homeStateFilter = '';
+  referredByFilter = '';
   incompleteCertsFilter = false;
   sortState: SortState | null = null;
+  availableStates: string[] = [];
+  availableReferrers: string[] = [];
 
   // Pagination
   pageSize = 10;
@@ -502,6 +603,16 @@ export class CandidateListComponent implements OnInit {
     this.applyFiltersAndSort();
   }
 
+  onHomeStateFilterChange(): void {
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
+  onReferredByFilterChange(): void {
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
   onSort(column: keyof Candidate): void {
     if (this.sortState?.column === column) {
       this.sortState = {
@@ -521,6 +632,12 @@ export class CandidateListComponent implements OnInit {
 
   getStatusLabel(status: OfferStatus): string {
     return OFFER_STATUS_LABELS[status] ?? status;
+  }
+
+  extractState(address: string | undefined): string {
+    if (!address) return '';
+    const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
+    return match ? match[1] : '';
   }
 
   onPageChange(event: PageEvent): void {
@@ -674,6 +791,26 @@ export class CandidateListComponent implements OnInit {
     });
   }
 
+  onViewResume(candidate: Candidate): void {
+    if (candidate.resumeUrl) {
+      window.open(candidate.resumeUrl, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  onViewNotes(candidate: Candidate): void {
+    const dialogRef = this.dialog.open(CandidateNotesDialogComponent, {
+      width: '480px',
+      maxWidth: '90vw',
+      data: { candidate },
+    });
+
+    dialogRef.afterClosed().subscribe((notesChanged: boolean) => {
+      if (notesChanged) {
+        this.loadCandidates();
+      }
+    });
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
@@ -686,6 +823,7 @@ export class CandidateListComponent implements OnInit {
       next: (candidates) => {
         this.candidates = candidates;
         this.loading = false;
+        this.updateAvailableStates();
         this.applyFiltersAndSort();
       },
       error: (err) => {
@@ -719,6 +857,18 @@ export class CandidateListComponent implements OnInit {
     ];
   }
 
+  private updateAvailableStates(): void {
+    const states = this.candidates
+      .map(c => c.homeState || this.extractState(c.homeAddress) || '')
+      .filter(s => s.length > 0);
+    this.availableStates = [...new Set(states)].sort();
+
+    const referrers = this.candidates
+      .map(c => c.referredBy || '')
+      .filter(r => r.length > 0);
+    this.availableReferrers = [...new Set(referrers)].sort();
+  }
+
   private applyFiltersAndSort(): void {
     let result = [...this.candidates];
 
@@ -729,13 +879,25 @@ export class CandidateListComponent implements OnInit {
         (c) =>
           c.techName.toLowerCase().includes(term) ||
           c.techEmail.toLowerCase().includes(term) ||
-          (c.homeState || '').toLowerCase().includes(term)
+          (c.homeState || this.extractState(c.homeAddress) || '').toLowerCase().includes(term)
       );
     }
 
     // Offer status filter
     if (this.statusFilter) {
       result = result.filter((c) => c.offerStatus === this.statusFilter);
+    }
+
+    // Home state filter
+    if (this.homeStateFilter) {
+      result = result.filter(
+        (c) => (c.homeState || this.extractState(c.homeAddress) || '') === this.homeStateFilter
+      );
+    }
+
+    // Referred by filter
+    if (this.referredByFilter) {
+      result = result.filter((c) => c.referredBy === this.referredByFilter);
     }
 
     // Incomplete certifications filter
@@ -749,8 +911,14 @@ export class CandidateListComponent implements OnInit {
     if (this.sortState) {
       const { column, direction } = this.sortState;
       result.sort((a, b) => {
-        const aVal = a[column];
-        const bVal = b[column];
+        let aVal = a[column];
+        let bVal = b[column];
+
+        // For homeState, fall back to extracted state from address
+        if (column === 'homeState') {
+          aVal = (aVal as string) || this.extractState(a.homeAddress) || '';
+          bVal = (bVal as string) || this.extractState(b.homeAddress) || '';
+        }
 
         let comparison = 0;
         if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {

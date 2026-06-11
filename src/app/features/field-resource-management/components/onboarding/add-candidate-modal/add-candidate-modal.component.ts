@@ -94,6 +94,9 @@ import { Candidate } from '../../../models/onboarding.models';
                   <mat-option value="vetted_available">Vetted/Available</mat-option>
                   <mat-option value="offer_extended">Offer Extended</mat-option>
                   <mat-option value="offer_accepted_onboarding">Offer Accepted/Onboarding</mat-option>
+                  <mat-option value="hired_assigned">Hired/Assigned</mat-option>
+                  <mat-option value="do_not_hire">Do Not Hire</mat-option>
+                  <mat-option value="turned_down_hold">Turned Down/Hold for Later</mat-option>
                 </mat-select>
               </mat-form-field>
             </div>
@@ -447,7 +450,7 @@ export class AddCandidateModalComponent {
       workSite: [candidate?.workSite || ''],
       homeState: [candidate?.homeState || ''],
       referredBy: [candidate?.referredBy || ''],
-      startDate: [candidate?.startDate ? new Date(candidate.startDate + 'T00:00:00') : '', Validators.required],
+      startDate: [this.parseStartDate(candidate?.startDate), Validators.required],
       offerStatus: [candidate?.offerStatus || 'needs_review']
     });
 
@@ -486,6 +489,17 @@ export class AddCandidateModalComponent {
       powerKitAssigned: [candidate?.powerKitAssigned || false],
       testingEquipmentAssigned: [candidate?.testingEqptAssigned || false]
     });
+
+    // Auto-populate homeState from homeAddress when the user hasn't manually set it
+    this.basicInfoForm.get('homeAddress')?.valueChanges.subscribe((address: string) => {
+      const homeStateCtrl = this.basicInfoForm.get('homeState');
+      if (homeStateCtrl && !homeStateCtrl.value) {
+        const extracted = this.extractStateFromAddress(address);
+        if (extracted) {
+          homeStateCtrl.setValue(extracted, { emitEvent: false });
+        }
+      }
+    });
   }
 
   onResumeSelected(event: Event): void {
@@ -493,6 +507,24 @@ export class AddCandidateModalComponent {
     if (input.files && input.files.length > 0) {
       this.resumeFile = input.files[0];
     }
+  }
+
+  private extractStateFromAddress(address: string): string {
+    if (!address) return '';
+    const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
+    return match ? match[1] : '';
+  }
+
+  private parseStartDate(dateStr: string | undefined): Date | string {
+    if (!dateStr) return '';
+    // Handle YYYY-MM-DD format (date-only strings)
+    const dateOnlyMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+      return new Date(+dateOnlyMatch[1], +dateOnlyMatch[2] - 1, +dateOnlyMatch[3]);
+    }
+    // Handle full ISO datetime strings
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? '' : parsed;
   }
 
   onHeadshotSelected(event: Event): void {

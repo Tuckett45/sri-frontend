@@ -6,6 +6,7 @@ import { Assignment, AssignmentStatus } from '../models/assignment.model';
 import { Job, JobStatus } from '../models/job.model';
 import { Notification, NotificationType } from '../models/notification.model';
 import { GeoLocation } from '../models/time-entry.model';
+import { AuthService } from '../../../services/auth.service';
 import * as JobActions from '../state/jobs/job.actions';
 import * as AssignmentActions from '../state/assignments/assignment.actions';
 import * as TechnicianActions from '../state/technicians/technician.actions';
@@ -140,7 +141,7 @@ export class FrmSignalRService {
    */
   public quoteUpdated$: Observable<{ quoteId: string; quote: QuoteWorkflow } | null> = this.quoteUpdatedSubject.asObservable();
 
-  constructor(private store: Store) {}
+  constructor(private store: Store, private authService: AuthService) {}
 
   /**
    * Triggers a full state synchronization after reconnection
@@ -234,7 +235,8 @@ export class FrmSignalRService {
       this.hubConnection = new signalR.HubConnectionBuilder()
         .withUrl(`${environment.atlasApiUrl}/hubs/field-resource-management`, {
           skipNegotiation: false,
-          transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents
+          transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
+          accessTokenFactory: () => this.authService.getAccessToken().then((t: string | null) => t ?? '')
         })
         .withAutomaticReconnect({
           nextRetryDelayInMilliseconds: (retryContext) => {
@@ -1037,6 +1039,187 @@ export class FrmSignalRService {
 
       console.log(`Quote updated: ${update.quoteId}`);
     });
+
+    // ─── Real-Time Workforce Events (from FieldResourceHub) ─────────────
+
+    // Technician clocked in event (broadcast by TimeEntriesController)
+    this.hubConnection.on('TechnicianClockedIn', (payload: any) => {
+      console.log('TechnicianClockedIn event received', payload);
+
+      if (!payload || !payload.technicianId) {
+        console.error('Invalid TechnicianClockedIn payload', payload);
+        return;
+      }
+
+      this.updateLastEventTimestamp(payload.timestamp);
+
+      // Emit as a notification so widgets can pick it up
+      const notification: Notification = {
+        id: `clockin-${payload.timeEntryId || Date.now()}`,
+        type: NotificationType.JobStatusChange,
+        message: `${payload.technicianName || 'Technician'} clocked in to ${payload.jobTitle || 'a job'}`,
+        isRead: false,
+        createdAt: new Date(payload.timestamp || Date.now()),
+        timestamp: new Date(payload.timestamp || Date.now()),
+        userId: payload.technicianId,
+        relatedEntityId: payload.jobId,
+        relatedEntityType: 'job',
+        metadata: { type: 'clock_in', ...payload }
+      };
+      this.notificationSubject.next(notification);
+      this.store.dispatch(NotificationActions.addNotification({ notification }));
+
+      // Update technician availability status in store
+      this.store.dispatch(TechnicianActions.updateTechnicianAvailability({
+        technicianId: payload.technicianId,
+        isAvailable: false
+      }));
+
+      // If location provided, update technician location
+      if (payload.location) {
+        this.store.dispatch(TechnicianActions.updateTechnicianLocationSuccess({
+          technicianId: payload.technicianId,
+          location: {
+            latitude: payload.location.latitude,
+            longitude: payload.location.longitude,
+            accuracy: 0,
+            timestamp: new Date(payload.timestamp)
+          }
+        }));
+      }
+    });
+
+    // Technician clocked out event (broadcast by TimeEntriesController)
+    this.hubConnection.on('TechnicianClockedOut', (payload: any) => {
+      console.log('TechnicianClockedOut event received', payload);
+
+      if (!payload || !payload.technicianId) {
+        console.error('Invalid TechnicianClockedOut payload', payload);
+        return;
+      }
+
+      this.updateLastEventTimestamp(payload.timestamp);
+
+      const notification: Notification = {
+        id: `clockout-${payload.timeEntryId || Date.now()}`,
+        type: NotificationType.JobStatusChange,
+        message: `${payload.technicianName || 'Technician'} clocked out of ${payload.jobTitle || 'a job'} (${payload.hoursWorked}h)`,
+        isRead: false,
+        createdAt: new Date(payload.timestamp || Date.now()),
+        timestamp: new Date(payload.timestamp || Date.now()),
+        userId: payload.technicianId,
+        relatedEntityId: payload.jobId,
+        relatedEntityType: 'job',
+        metadata: { type: 'clock_out', ...payload }
+      };
+      this.notificationSubject.next(notification);
+      this.store.dispatch(NotificationActions.addNotification({ notification }));
+
+      // Mark technician as available again
+      this.store.dispatch(TechnicianActions.updateTechnicianAvailability({
+        technicianId: payload.technicianId,
+        isAvailable: true
+      }));
+    });
+
+    // Timecard submitted event (broadcast by TimecardsController)
+    this.hubConnection.on('TimecardSubmitted', (payload: any) => {
+      console.log('TimecardSubmitted event received', payload);
+
+      if (!payload || !payload.timecardId) {
+        console.error('Invalid TimecardSubmitted payload', payload);
+        return;
+      }
+
+      this.updateLastEventTimestamp(payload.submittedAt);
+
+      const notification: Notification = {
+        id: `timecard-submitted-${payload.timecardId}`,
+        type: NotificationType.TimeEntryReminder,
+        message: `${payload.technicianName || 'Technician'} submitted timecard (${payload.totalHours}h, ${payload.overtimeHours}h OT)`,
+        isRead: false,
+        createdAt: new Date(payload.submittedAt || Date.now()),
+        timestamp: new Date(payload.submittedAt || Date.now()),
+        userId: payload.technicianId,
+        relatedEntityId: payload.timecardId,
+        relatedEntityType: 'timeEntry',
+        metadata: { type: 'TimecardSubmitted', ...payload }
+      };
+      this.notificationSubject.next(notification);
+      this.store.dispatch(NotificationActions.addNotification({ notification }));
+    });
+
+    // Timecard approved event (broadcast by TimecardsController)
+    this.hubConnection.on('TimecardApproved', (payload: any) => {
+      console.log('TimecardApproved event received', payload);
+
+      if (!payload || !payload.timecardId) return;
+
+      this.updateLastEventTimestamp(payload.approvedAt);
+
+      const notification: Notification = {
+        id: `timecard-approved-${payload.timecardId}`,
+        type: NotificationType.TimeEntryReminder,
+        message: `Your timecard has been approved`,
+        isRead: false,
+        createdAt: new Date(payload.approvedAt || Date.now()),
+        timestamp: new Date(payload.approvedAt || Date.now()),
+        userId: '',
+        relatedEntityId: payload.timecardId,
+        relatedEntityType: 'timeEntry',
+        metadata: { type: 'timecard_approved', ...payload }
+      };
+      this.notificationSubject.next(notification);
+      this.store.dispatch(NotificationActions.addNotification({ notification }));
+    });
+
+    // Timecard rejected event (broadcast by TimecardsController)
+    this.hubConnection.on('TimecardRejected', (payload: any) => {
+      console.log('TimecardRejected event received', payload);
+
+      if (!payload || !payload.timecardId) return;
+
+      this.updateLastEventTimestamp(payload.rejectedAt);
+
+      const notification: Notification = {
+        id: `timecard-rejected-${payload.timecardId}`,
+        type: NotificationType.TimeEntryReminder,
+        message: `Your timecard was rejected: ${payload.reason || 'No reason provided'}`,
+        isRead: false,
+        createdAt: new Date(payload.rejectedAt || Date.now()),
+        timestamp: new Date(payload.rejectedAt || Date.now()),
+        userId: '',
+        relatedEntityId: payload.timecardId,
+        relatedEntityType: 'timeEntry',
+        metadata: { type: 'timecard_rejected', ...payload }
+      };
+      this.notificationSubject.next(notification);
+      this.store.dispatch(NotificationActions.addNotification({ notification }));
+    });
+
+    // Timecard correction requested event
+    this.hubConnection.on('TimecardCorrectionRequested', (payload: any) => {
+      console.log('TimecardCorrectionRequested event received', payload);
+
+      if (!payload || !payload.timecardId) return;
+
+      this.updateLastEventTimestamp(payload.requestedAt);
+
+      const notification: Notification = {
+        id: `timecard-correction-${payload.timecardId}`,
+        type: NotificationType.TimeEntryReminder,
+        message: `Timecard correction requested: ${payload.reason || 'Please review'}`,
+        isRead: false,
+        createdAt: new Date(payload.requestedAt || Date.now()),
+        timestamp: new Date(payload.requestedAt || Date.now()),
+        userId: '',
+        relatedEntityId: payload.timecardId,
+        relatedEntityType: 'timeEntry',
+        metadata: { type: 'timecard_correction_requested', ...payload }
+      };
+      this.notificationSubject.next(notification);
+      this.store.dispatch(NotificationActions.addNotification({ notification }));
+    });
   }
 
   /**
@@ -1132,6 +1315,48 @@ export class FrmSignalRService {
           this.updateLastEventTimestamp(event.timestamp);
           this.store.dispatch(QuoteActions.quoteUpdatedRemotely({
             quote: event.data.quote
+          }));
+        }
+        break;
+
+      case 'TechnicianClockedIn':
+        if (event.data && event.data.technicianId) {
+          this.updateLastEventTimestamp(event.timestamp);
+          this.store.dispatch(TechnicianActions.updateTechnicianAvailability({
+            technicianId: event.data.technicianId,
+            isAvailable: false
+          }));
+        }
+        break;
+
+      case 'TechnicianClockedOut':
+        if (event.data && event.data.technicianId) {
+          this.updateLastEventTimestamp(event.timestamp);
+          this.store.dispatch(TechnicianActions.updateTechnicianAvailability({
+            technicianId: event.data.technicianId,
+            isAvailable: true
+          }));
+        }
+        break;
+
+      case 'TimecardSubmitted':
+      case 'TimecardApproved':
+      case 'TimecardRejected':
+      case 'TimecardCorrectionRequested':
+        if (event.data) {
+          this.updateLastEventTimestamp(event.timestamp);
+          this.store.dispatch(NotificationActions.addNotification({
+            notification: {
+              id: `missed-${event.type}-${Date.now()}`,
+              type: NotificationType.TimeEntryReminder,
+              message: event.data.message || `Timecard ${event.type.replace('Timecard', '').toLowerCase()}`,
+              isRead: false,
+              createdAt: new Date(event.timestamp || Date.now()),
+              timestamp: new Date(event.timestamp || Date.now()),
+              userId: event.data.technicianId || '',
+              relatedEntityId: event.data.timecardId,
+              relatedEntityType: 'timeEntry'
+            }
           }));
         }
         break;

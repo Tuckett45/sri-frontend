@@ -28,6 +28,7 @@ import { CompetencyEditModalComponent } from './competency-edit-modal/competency
 import { GoalEditModalComponent } from './goal-edit-modal/goal-edit-modal.component';
 import { ConfirmDeleteModalComponent } from './confirm-delete-modal/confirm-delete-modal.component';
 import { GenerateLinkDialogComponent } from './generate-link-dialog/generate-link-dialog.component';
+import { CandidateNotesDialogComponent } from './candidate-notes-dialog/candidate-notes-dialog.component';
 
 @NgModule({
   declarations: [
@@ -52,7 +53,8 @@ import { GenerateLinkDialogComponent } from './generate-link-dialog/generate-lin
     CompetencyEditModalComponent,
     GoalEditModalComponent,
     ConfirmDeleteModalComponent,
-    GenerateLinkDialogComponent
+    GenerateLinkDialogComponent,
+    CandidateNotesDialogComponent
   ],
   imports: [
     CommonModule,

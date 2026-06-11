@@ -797,6 +797,26 @@ export class TechnicianService {
   }
 
   /**
+   * Retrieves technician field statuses from the dedicated endpoint
+   * Used by admin/manager views to see real-time technician status
+   * @param filters Optional status and region filters
+   * @returns Observable of technician field status data
+   */
+  getFieldStatuses(filters?: { status?: string; region?: string }): Observable<any[]> {
+    let params = new HttpParams();
+    if (filters?.status) {
+      params = params.set('status', filters.status);
+    }
+    if (filters?.region) {
+      params = params.set('region', filters.region);
+    }
+
+    return this.http.get<any[]>(`${this.apiUrl}/field-status`, { params }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Handles HTTP errors
    * @param error HTTP error response
    * @returns Observable error

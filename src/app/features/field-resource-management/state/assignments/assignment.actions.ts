@@ -5,7 +5,7 @@
 
 import { createAction, props } from '@ngrx/store';
 import { Assignment, Conflict, TechnicianMatch } from '../../models/assignment.model';
-import { AssignmentDto, AssignmentFilters } from '../../models/dtos';
+import { AssignmentDto, AssignmentFilters, CertGateConflict } from '../../models/dtos';
 
 // Load Assignments
 export const loadAssignments = createAction(
@@ -90,7 +90,7 @@ export const rejectAssignmentFailure = createAction(
 // Assign Technician
 export const assignTechnician = createAction(
   '[Assignment] Assign Technician',
-  props<{ jobId: string; technicianId: string; override?: boolean; justification?: string }>()
+  props<{ jobId: string; technicianId: string; override?: boolean; justification?: string; overrideCertifications?: boolean }>()
 );
 
 export const assignTechnicianSuccess = createAction(
@@ -100,7 +100,7 @@ export const assignTechnicianSuccess = createAction(
 
 export const assignTechnicianFailure = createAction(
   '[Assignment] Assign Technician Failure',
-  props<{ error: string }>()
+  props<{ error: string; certConflict?: CertGateConflict }>()
 );
 
 // Unassign Technician

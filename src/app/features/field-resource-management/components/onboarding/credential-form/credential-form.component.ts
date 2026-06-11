@@ -386,7 +386,7 @@ export class CredentialFormComponent implements OnInit, OnDestroy, HasUnsavedCha
   ) {}
 
   ngOnInit(): void {
-    this.technicianId = this.route.snapshot.paramMap.get('technicianId') || '';
+    this.technicianId = this.route.snapshot.paramMap.get('candidateId') || '';
     this.credentialId = this.route.snapshot.paramMap.get('credentialId') || '';
     this.isEditMode = !!this.credentialId;
 

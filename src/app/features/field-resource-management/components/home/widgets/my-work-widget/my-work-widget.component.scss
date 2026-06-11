@@ -1,0 +1,178 @@
+.my-work-widget {
+  height: 100%;
+  background-color: #ffffff !important;
+  border-radius: 12px;
+  color: #424242;
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      color: #212121;
+
+      mat-icon {
+        color: #144f80;
+        vertical-align: middle;
+      }
+    }
+
+    mat-card-subtitle {
+      color: #666;
+      margin-top: 4px;
+    }
+  }
+
+  .loading-state, .error-state, .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    gap: 12px;
+    color: #666;
+
+    mat-icon { font-size: 40px; width: 40px; height: 40px; }
+  }
+
+  .error-state { flex-direction: row; color: #c62828; }
+
+  mat-list {
+    overflow: visible !important;
+  }
+
+  .work-item {
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    padding-bottom: 8px;
+    transition: background 0.15s;
+    color: #424242;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 56px;
+
+    &:hover { background: rgba(0, 0, 0, 0.04); }
+
+    .mdc-list-item__content {
+      display: flex;
+      align-items: center;
+    }
+
+    .mdc-list-item__end {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .item-title {
+    font-weight: 500;
+    color: #212121;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  .item-meta {
+    font-size: 12px;
+    color: #666;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    .meta-detail { margin-right: 4px; }
+  }
+
+  // Icon styling - blue for calendar/list icons
+  .work-item {
+    mat-icon {
+      color: #144f80 !important;
+    }
+  }
+
+  // Status chip - orange text on white background with blue border
+  mat-chip-set {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+
+    mat-chip {
+      background-color: #ffffff !important;
+      border: 1px solid #144f80 !important;
+      overflow: visible !important;
+      --mdc-chip-label-text-color: #e18a25 !important;
+
+      .mdc-evolution-chip__text-label {
+        color: #e18a25 !important;
+      }
+    }
+  }
+
+  // Pagination controls
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-top: 1px solid #e0e0e0;
+
+    .pagination-info {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .pagination-buttons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      button {
+        color: #144f80;
+
+        &:disabled {
+          color: #ccc;
+        }
+      }
+    }
+  }
+
+  // Mobile responsive
+  @media (max-width: 576px) {
+    border-radius: 8px;
+    margin-top: 12px;
+
+    mat-card-header {
+      mat-card-title {
+        font-size: 16px;
+      }
+    }
+
+    .work-item {
+      flex-wrap: wrap;
+      padding: 8px 12px !important;
+      min-height: unset;
+      gap: 4px;
+
+      .mdc-list-item__content {
+        flex: 1 1 100%;
+        min-width: 0;
+      }
+
+      .mdc-list-item__end {
+        margin-left: auto;
+      }
+    }
+
+    .item-title {
+      font-size: 14px;
+    }
+
+    mat-chip-set {
+      mat-chip {
+        font-size: 12px;
+        min-height: 26px;
+        padding: 0 8px;
+      }
+    }
+  }
+}

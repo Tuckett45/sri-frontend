@@ -75,7 +75,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.totalActiveJobs$ = this.store.select(ReportingSelectors.selectTotalActiveJobs);
     this.totalAvailableTechnicians$ = this.store.select(ReportingSelectors.selectTotalAvailableTechnicians);
     this.averageUtilization$ = this.store.select(ReportingSelectors.selectAverageUtilization);
-    this.jobsByStatus$ = this.store.select(ReportingSelectors.selectJobsByStatus);
+    this.jobsByStatus$ = this.store.select(ReportingSelectors.selectReportingJobsByStatus);
     this.jobsRequiringAttention$ = this.store.select(ReportingSelectors.selectJobsRequiringAttention);
     this.recentActivity$ = this.store.select(ReportingSelectors.selectRecentActivity);
     this.kpis$ = this.store.select(ReportingSelectors.selectDashboardKPIs);

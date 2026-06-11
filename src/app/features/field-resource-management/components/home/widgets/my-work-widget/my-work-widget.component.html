@@ -1,0 +1,76 @@
+<mat-card class="my-work-widget">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>assignment_turned_in</mat-icon>
+      My Work
+    </mat-card-title>
+    <mat-card-subtitle *ngIf="!loading && !error">
+      {{ workItems.length }} item{{ workItems.length !== 1 ? 's' : '' }} on your plate
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <mat-spinner diameter="36"></mat-spinner>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading" class="error-state">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && !error && workItems.length === 0" class="empty-state">
+      <mat-icon>check_circle_outline</mat-icon>
+      <p>You're all caught up!</p>
+    </div>
+
+    <!-- Work items list -->
+    <mat-list *ngIf="!loading && !error && workItems.length > 0">
+      <mat-list-item
+        *ngFor="let item of paginatedItems; trackBy: trackById"
+        class="work-item"
+        (click)="navigateTo(item)">
+
+        <mat-icon matListItemIcon [color]="item.status === 'Pending' ? 'warn' : 'primary'">
+          {{ getIcon(item.type) }}
+        </mat-icon>
+
+        <div matListItemTitle class="item-title">{{ item.title }}</div>
+
+        <div matListItemLine class="item-meta">
+          <span *ngIf="item.scheduledStart" class="meta-detail">
+            {{ item.scheduledStart | date:'MMM d, h:mm a' }}
+            <ng-container *ngIf="item.site"> · {{ item.site }}</ng-container>
+          </span>
+          <span *ngIf="item.client" class="meta-detail">{{ item.client }}</span>
+          <span *ngIf="item.startDate" class="meta-detail">
+            {{ item.startDate | date:'MMM d' }} – {{ item.endDate | date:'MMM d' }}
+          </span>
+          <span *ngIf="item.clockIn && !item.scheduledStart" class="meta-detail">
+            {{ item.clockIn | date:'MMM d, h:mm a' }}
+          </span>
+        </div>
+
+        <mat-chip-set matListItemMeta>
+          <mat-chip [color]="getChipColor(item.status)" selected>{{ item.status }}</mat-chip>
+        </mat-chip-set>
+      </mat-list-item>
+    </mat-list>
+
+    <!-- Pagination controls -->
+    <div *ngIf="!loading && !error && workItems.length > pageSize" class="pagination-controls">
+      <span class="pagination-info">{{ showingStart }}–{{ showingEnd }} of {{ workItems.length }}</span>
+      <div class="pagination-buttons">
+        <button mat-icon-button [disabled]="currentPage === 0" (click)="prevPage()">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button mat-icon-button [disabled]="currentPage >= totalPages - 1" (click)="nextPage()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

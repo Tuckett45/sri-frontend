@@ -4,15 +4,55 @@
     (actionClicked)="onQuickAction($event)">
   </app-quick-actions-widget>
 
+  <!-- My Team Toggle -->
+  <div class="team-filter-bar">
+    <button
+      mat-raised-button
+      [color]="myTeamEnabled ? 'primary' : ''"
+      (click)="toggleMyTeam()"
+      class="team-toggle-btn">
+      <mat-icon>{{ myTeamEnabled ? 'group' : 'groups' }}</mat-icon>
+      {{ myTeamEnabled ? 'My Team' : 'All Market' }}
+    </button>
+
+    <div class="team-summary" *ngIf="myTeamEnabled && teamStatus">
+      <span class="stat">
+        <mat-icon>people</mat-icon>
+        {{ teamStatus.teamSize }} total
+      </span>
+      <span class="stat clocked-in">
+        <mat-icon>login</mat-icon>
+        {{ teamStatus.clockedInCount }} clocked in
+      </span>
+      <span class="stat available">
+        <mat-icon>check_circle</mat-icon>
+        {{ teamStatus.availableCount }} available
+      </span>
+    </div>
+  </div>
+
   <div class="dashboard-grid">
+    <app-live-activity-feed-widget
+      [marketFilter]="myTeamEnabled ? null : marketFilter">
+    </app-live-activity-feed-widget>
+
+    <app-available-technicians-widget
+      [technicianIds]="myTeamEnabled ? teamTechnicianIds : null"
+      (technicianSelected)="onTechnicianSelected($event)">
+    </app-available-technicians-widget>
+
     <app-active-jobs-widget
-      [marketFilter]="marketFilter"
+      [marketFilter]="myTeamEnabled ? null : marketFilter"
+      [technicianIds]="myTeamEnabled ? teamTechnicianIds : null"
       (jobSelected)="onJobSelected($event)">
     </app-active-jobs-widget>
 
     <app-recent-jobs-widget
-      [marketFilter]="marketFilter"
+      [marketFilter]="myTeamEnabled ? null : marketFilter"
+      [technicianIds]="myTeamEnabled ? teamTechnicianIds : null"
       (jobSelected)="onJobSelected($event)">
     </app-recent-jobs-widget>
+
+    <app-notification-feed-widget></app-notification-feed-widget>
   </div>
 </div>
