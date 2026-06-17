@@ -148,6 +148,15 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
           </span>
         </div>
 
+        <!-- Home State -->
+        <div class="form-field">
+          <label for="homeState">Home State</label>
+          <input id="homeState"
+                 formControlName="homeState"
+                 placeholder="e.g. TX, CA, FL"
+                 (blur)="markTouched('homeState')" />
+        </div>
+
         <!-- Referred By -->
         <div class="form-field">
           <label for="referredBy">Referred By</label>
@@ -476,6 +485,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techPhone: ['', [Validators.required, CandidateFormComponent.phoneValidator]],
       vestSize: ['', Validators.required],
       homeAddress: ['', Validators.required],
+      homeState: [''],
       workSite: ['', Validators.required],
       referredBy: [''],
       startDate: ['', Validators.required],
@@ -529,6 +539,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techPhone: candidate.techPhone,
       vestSize: candidate.vestSize,
       homeAddress: candidate.homeAddress || '',
+      homeState: candidate.homeState || '',
       workSite: candidate.workSite,
       referredBy: candidate.referredBy || '',
       startDate: candidate.startDate,
@@ -559,6 +570,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
       homeAddress: formValue.homeAddress,
+      homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
@@ -590,6 +602,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
       homeAddress: formValue.homeAddress,
+      homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
