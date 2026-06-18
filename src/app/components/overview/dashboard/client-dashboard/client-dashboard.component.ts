@@ -172,6 +172,46 @@ export class ClientDashboardComponent implements OnInit {
                 backgroundColor: '#FFD700',
                 borderColor: '#000000',
                 borderWidth: 1
+              },
+              {
+                type: 'bar',
+                label: 'MasTec',
+                data: data.totalVendorIssueStats.map(stat => stat.masTecIssues),
+                backgroundColor: '#9C27B0',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                type: 'bar',
+                label: 'Bcomm',
+                data: data.totalVendorIssueStats.map(stat => stat.bcommIssues),
+                backgroundColor: '#FF9800',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                type: 'bar',
+                label: 'M&J Enterprises',
+                data: data.totalVendorIssueStats.map(stat => stat.mjEnterprisesIssues),
+                backgroundColor: '#00BCD4',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                type: 'bar',
+                label: 'PacNet',
+                data: data.totalVendorIssueStats.map(stat => stat.pacNetIssues),
+                backgroundColor: '#795548',
+                borderColor: '#000000',
+                borderWidth: 1
+              },
+              {
+                type: 'bar',
+                label: 'Utilities One',
+                data: data.totalVendorIssueStats.map(stat => stat.utilitiesOneIssues),
+                backgroundColor: '#607D8B',
+                borderColor: '#000000',
+                borderWidth: 1
               }
             ]
           };
@@ -515,6 +555,11 @@ export class ClientDashboardComponent implements OnInit {
       congruexIssues: number;
       ervinIssues: number;
       northStarIssues: number;
+      masTecIssues: number;
+      bcommIssues: number;
+      mjEnterprisesIssues: number;
+      pacNetIssues: number;
+      utilitiesOneIssues: number;
     }>();
   
     filtered.forEach(item => {
@@ -524,7 +569,12 @@ export class ClientDashboardComponent implements OnInit {
           blueEdgeIssues: 0,
           congruexIssues: 0,
           ervinIssues: 0,
-          northStarIssues: 0
+          northStarIssues: 0,
+          masTecIssues: 0,
+          bcommIssues: 0,
+          mjEnterprisesIssues: 0,
+          pacNetIssues: 0,
+          utilitiesOneIssues: 0
         });
       }
   
@@ -535,6 +585,11 @@ export class ClientDashboardComponent implements OnInit {
         case 'Congruex (SCI)': entry.congruexIssues++; break;
         case 'Ervin (ECC)': entry.ervinIssues++; break;
         case 'North Star': entry.northStarIssues++; break;
+        case 'MasTec': entry.masTecIssues++; break;
+        case 'Bcomm': entry.bcommIssues++; break;
+        case 'M&J Enterprises Construction': entry.mjEnterprisesIssues++; break;
+        case 'PacNet': entry.pacNetIssues++; break;
+        case 'Utilities One': entry.utilitiesOneIssues++; break;
       }
     });
   
@@ -573,6 +628,46 @@ export class ClientDashboardComponent implements OnInit {
           label: 'North Star',
           data: values.map(v => v.northStarIssues),
           backgroundColor: '#FFD700',
+          borderColor: '#000000',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'MasTec',
+          data: values.map(v => v.masTecIssues),
+          backgroundColor: '#9C27B0',
+          borderColor: '#000000',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'Bcomm',
+          data: values.map(v => v.bcommIssues),
+          backgroundColor: '#FF9800',
+          borderColor: '#000000',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'M&J Enterprises',
+          data: values.map(v => v.mjEnterprisesIssues),
+          backgroundColor: '#00BCD4',
+          borderColor: '#000000',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'PacNet',
+          data: values.map(v => v.pacNetIssues),
+          backgroundColor: '#795548',
+          borderColor: '#000000',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'Utilities One',
+          data: values.map(v => v.utilitiesOneIssues),
+          backgroundColor: '#607D8B',
           borderColor: '#000000',
           borderWidth: 1
         }
@@ -702,6 +797,11 @@ export class ClientDashboardComponent implements OnInit {
       congruexIssues: number;
       ervinIssues: number;
       northStarIssues: number;
+      masTecIssues: number;
+      bcommIssues: number;
+      mjEnterprisesIssues: number;
+      pacNetIssues: number;
+      utilitiesOneIssues: number;
     }>();
   
     filtered.forEach(item => {
@@ -711,7 +811,12 @@ export class ClientDashboardComponent implements OnInit {
           blueEdgeIssues: 0,
           congruexIssues: 0,
           ervinIssues: 0,
-          northStarIssues: 0
+          northStarIssues: 0,
+          masTecIssues: 0,
+          bcommIssues: 0,
+          mjEnterprisesIssues: 0,
+          pacNetIssues: 0,
+          utilitiesOneIssues: 0
         });
       }
   
@@ -722,6 +827,11 @@ export class ClientDashboardComponent implements OnInit {
         case 'Congruex (SCI)': entry.congruexIssues++; break;
         case 'Ervin (ECC)': entry.ervinIssues++; break;
         case 'North Star': entry.northStarIssues++; break;
+        case 'MasTec': entry.masTecIssues++; break;
+        case 'Bcomm': entry.bcommIssues++; break;
+        case 'M&J Enterprises Construction': entry.mjEnterprisesIssues++; break;
+        case 'PacNet': entry.pacNetIssues++; break;
+        case 'Utilities One': entry.utilitiesOneIssues++; break;
       }
     });
   
@@ -762,6 +872,46 @@ export class ClientDashboardComponent implements OnInit {
           backgroundColor: '#FFD700',
           borderColor: '#000000',
           borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'MasTec',
+          data: values.map(v => v.masTecIssues),
+          backgroundColor: '#9C27B0',
+          borderColor: '#000000',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'Bcomm',
+          data: values.map(v => v.bcommIssues),
+          backgroundColor: '#FF9800',
+          borderColor: '#000000',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'M&J Enterprises',
+          data: values.map(v => v.mjEnterprisesIssues),
+          backgroundColor: '#00BCD4',
+          borderColor: '#000000',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'PacNet',
+          data: values.map(v => v.pacNetIssues),
+          backgroundColor: '#795548',
+          borderColor: '#000000',
+          borderWidth: 1
+        },
+        {
+          type: 'bar',
+          label: 'Utilities One',
+          data: values.map(v => v.utilitiesOneIssues),
+          backgroundColor: '#607D8B',
+          borderColor: '#000000',
+          borderWidth: 1
         }
       ]
     };
@@ -774,6 +924,11 @@ export class ClientDashboardComponent implements OnInit {
       case 'Ervin (ECC)': return '#FF2D2D';
       case 'Blue Edge (BE)': return '#207bc5';
       case 'North Star': return '#FFD700';
+      case 'MasTec': return '#9C27B0';
+      case 'Bcomm': return '#FF9800';
+      case 'M&J Enterprises Construction': return '#00BCD4';
+      case 'PacNet': return '#795548';
+      case 'Utilities One': return '#607D8B';
       default: return '#888888';
     }
   }
