@@ -114,6 +114,91 @@ export class VendorDashboardComponent implements OnInit {
               ]
             };
           }
+          else if(this.user.company === 'MasTec'){
+
+            this.totalVendorIssueChartData = {
+              
+              labels: data.totalVendorIssueStats.map(stat => stat.area),
+              datasets: [
+                {
+                  type: 'bar',
+                  label: this.user.company,
+                  data: data.totalVendorIssueStats.map(stat => stat.masTecIssues),
+                  backgroundColor: '#4CAF50',
+                  borderColor: '#000000',
+                  borderWidth: 1
+                }
+              ]
+            };
+          }
+          else if(this.user.company === 'Bcomm'){
+
+            this.totalVendorIssueChartData = {
+              
+              labels: data.totalVendorIssueStats.map(stat => stat.area),
+              datasets: [
+                {
+                  type: 'bar',
+                  label: this.user.company,
+                  data: data.totalVendorIssueStats.map(stat => stat.bcommIssues),
+                  backgroundColor: '#4CAF50',
+                  borderColor: '#000000',
+                  borderWidth: 1
+                }
+              ]
+            };
+          }
+          else if(this.user.company === 'M&J Enterprises Construction'){
+
+            this.totalVendorIssueChartData = {
+              
+              labels: data.totalVendorIssueStats.map(stat => stat.area),
+              datasets: [
+                {
+                  type: 'bar',
+                  label: this.user.company,
+                  data: data.totalVendorIssueStats.map(stat => stat.mjEnterprisesIssues),
+                  backgroundColor: '#4CAF50',
+                  borderColor: '#000000',
+                  borderWidth: 1
+                }
+              ]
+            };
+          }
+          else if(this.user.company === 'PacNet'){
+
+            this.totalVendorIssueChartData = {
+              
+              labels: data.totalVendorIssueStats.map(stat => stat.area),
+              datasets: [
+                {
+                  type: 'bar',
+                  label: this.user.company,
+                  data: data.totalVendorIssueStats.map(stat => stat.pacNetIssues),
+                  backgroundColor: '#4CAF50',
+                  borderColor: '#000000',
+                  borderWidth: 1
+                }
+              ]
+            };
+          }
+          else if(this.user.company === 'Utilities One'){
+
+            this.totalVendorIssueChartData = {
+              
+              labels: data.totalVendorIssueStats.map(stat => stat.area),
+              datasets: [
+                {
+                  type: 'bar',
+                  label: this.user.company,
+                  data: data.totalVendorIssueStats.map(stat => stat.utilitiesOneIssues),
+                  backgroundColor: '#4CAF50',
+                  borderColor: '#000000',
+                  borderWidth: 1
+                }
+              ]
+            };
+          }
   
           this.vendorPunchListChartData = {
             labels: data.vendorPunchListStats.map(stat => stat.vendorName),
