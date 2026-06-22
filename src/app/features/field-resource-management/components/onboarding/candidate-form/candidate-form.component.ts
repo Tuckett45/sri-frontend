@@ -199,6 +199,13 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
         <ng-container *ngIf="isEditMode">
           <div class="form-field checkbox-field">
             <label>
+              <input type="checkbox" formControlName="backgroundCheckComplete" />
+              Background Check Complete
+            </label>
+          </div>
+
+          <div class="form-field checkbox-field">
+            <label>
               <input type="checkbox" formControlName="drugTestComplete" />
               Drug Test Complete
             </label>
@@ -491,6 +498,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       startDate: ['', Validators.required],
       offerStatus: ['', Validators.required],
       drugTestComplete: [false],
+      backgroundCheckComplete: [false],
       oshaCertified: [false],
       scissorLiftCertified: [false],
     });
@@ -545,6 +553,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       startDate: candidate.startDate,
       offerStatus: candidate.offerStatus,
       drugTestComplete: candidate.drugTestComplete,
+      backgroundCheckComplete: candidate.backgroundCheckComplete,
       oshaCertified: candidate.oshaCertified,
       scissorLiftCertified: candidate.scissorLiftCertified,
     });
@@ -608,6 +617,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
       drugTestComplete: formValue.drugTestComplete,
+      backgroundCheckComplete: formValue.backgroundCheckComplete,
       oshaCertified: formValue.oshaCertified,
       scissorLiftCertified: formValue.scissorLiftCertified,
     };
