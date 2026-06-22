@@ -13,6 +13,7 @@ export interface Candidate {
   techEmail: string;
   techPhone: string;
   vestSize: VestSize;
+  backgroundCheckComplete: boolean;
   drugTestComplete: boolean;
   oshaCertified: boolean;
   scissorLiftCertified: boolean;
@@ -69,6 +70,7 @@ export interface CreateCandidatePayload {
   startDate: string;
   offerStatus: OfferStatus;
   referredBy?: string;
+  backgroundCheckComplete?: boolean;
   drugTestComplete?: boolean;
   oshaCertified?: boolean;
   scissorLiftCertified?: boolean;
@@ -102,6 +104,7 @@ export interface UpdateCandidatePayload {
   techEmail?: string;
   techPhone?: string;
   vestSize?: VestSize;
+  backgroundCheckComplete?: boolean;
   drugTestComplete?: boolean;
   oshaCertified?: boolean;
   scissorLiftCertified?: boolean;

@@ -44,8 +44,12 @@ export interface OnboardingInfoDialogData {
             </mat-select>
           </div>
           <div class="toggle-row">
-            <span class="toggle-label">Background / Drug Screen</span>
-            <mat-slide-toggle formControlName="backgroundDrugComplete" color="primary"></mat-slide-toggle>
+            <span class="toggle-label">Background Check</span>
+            <mat-slide-toggle formControlName="backgroundCheckComplete" color="primary"></mat-slide-toggle>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Drug Screen</span>
+            <mat-slide-toggle formControlName="drugScreenComplete" color="primary"></mat-slide-toggle>
           </div>
           <div class="toggle-row">
             <span class="toggle-label">Military Background</span>
@@ -230,7 +234,8 @@ export class OnboardingInfoModalComponent implements OnInit {
       liftCertified: [tech.scissorLiftCertified || false],
       willingToTravel: [tech.willingToTravel || false],
       shiftAvailable: [this.getShiftValue(tech.shiftAvailability)],
-      backgroundDrugComplete: [tech.backgroundCheckStatus === 'pass' && tech.drugScreenStatus === 'pass'],
+      backgroundCheckComplete: [tech.backgroundCheckStatus === 'pass'],
+      drugScreenComplete: [tech.drugScreenStatus === 'pass'],
       isVeteran: [tech.isVeteran || false],
 
       // Badges & Access
@@ -276,8 +281,8 @@ export class OnboardingInfoModalComponent implements OnInit {
       liftCertifications: v.liftCertified ? ['scissor_lift'] : [],
       willingToTravel: v.willingToTravel,
       shiftAvailability: this.buildShiftArray(v.shiftAvailable),
-      backgroundCheckStatus: v.backgroundDrugComplete ? 'pass' : 'not_started',
-      drugScreenStatus: v.backgroundDrugComplete ? 'pass' : 'not_started',
+      backgroundCheckStatus: v.backgroundCheckComplete ? 'pass' : 'not_started',
+      drugScreenStatus: v.drugScreenComplete ? 'pass' : 'not_started',
       isVeteran: v.isVeteran,
 
       // Badges & Access
