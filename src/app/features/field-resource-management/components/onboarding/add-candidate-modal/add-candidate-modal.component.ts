@@ -152,8 +152,12 @@ import { Candidate } from '../../../models/onboarding.models';
                 <mat-slide-toggle formControlName="shiftAvailability"></mat-slide-toggle>
               </div>
               <div class="toggle-item">
-                <span>Background/Drug Screen Complete</span>
-                <mat-slide-toggle formControlName="backgroundDrugScreen"></mat-slide-toggle>
+                <span>Background Check Complete</span>
+                <mat-slide-toggle formControlName="backgroundCheckComplete"></mat-slide-toggle>
+              </div>
+              <div class="toggle-item">
+                <span>Drug Screen Complete</span>
+                <mat-slide-toggle formControlName="drugScreenComplete"></mat-slide-toggle>
               </div>
               <div class="toggle-item">
                 <span>Military Background</span>
@@ -460,7 +464,8 @@ export class AddCandidateModalComponent {
       liftCertification: [candidate?.scissorLiftCertified || false],
       travelAvailability: [false],
       shiftAvailability: [false],
-      backgroundDrugScreen: [candidate?.drugTestComplete || false],
+      backgroundCheckComplete: [candidate?.backgroundCheckComplete || false],
+      drugScreenComplete: [candidate?.drugTestComplete || false],
       militaryBackground: [false]
     });
 
