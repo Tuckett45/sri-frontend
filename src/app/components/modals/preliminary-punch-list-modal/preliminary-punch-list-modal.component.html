@@ -158,7 +158,7 @@
       <!-- Add Issue Image Button -->
       <mat-grid-tile colspan="4" class="half-width">
         <div>
-          <button mat-raised-button [disabled]="this.isDisabled" class="upload-btn" (click)="triggerImageUpload('issueImages')">
+          <button mat-raised-button [disabled]="this.isImageUploadDisabled" class="upload-btn" (click)="triggerImageUpload('issueImages')">
             Add Issue Image
             <mat-icon>add_a_photo</mat-icon>
           </button>
