@@ -35,6 +35,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   preliminaryPunchListForm!: FormGroup;
   isEditMode: boolean = false;
   isDisabled: boolean = false;
+  isImageUploadDisabled: boolean = false;
   displayModal: boolean = false;
   currentImage: string = '';
   currentImageIndex: number = 0;
@@ -253,9 +254,14 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   isModalDisabled() {
     if(this.userData.role === 'PM' || this.userData.role === 'Client'){
-      return this.isDisabled = true;
+      this.isDisabled = true;
+      // PM users can still upload images; only Clients are fully restricted
+      this.isImageUploadDisabled = this.userData.role === 'Client';
+      return true;
     }else{
-      return this.isDisabled = false;
+      this.isDisabled = false;
+      this.isImageUploadDisabled = false;
+      return false;
     }
   }
 
