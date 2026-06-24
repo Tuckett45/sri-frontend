@@ -459,40 +459,40 @@ export class AddCandidateModalComponent {
     });
 
     this.coreQualificationsForm = this.fb.group({
-      fiberExperience: [false],
-      oshaCertification: [candidate?.oshaCertified || false],
-      liftCertification: [candidate?.scissorLiftCertified || false],
+      fiberExperience: [this.toBool(candidate?.biisciCertified)],
+      oshaCertification: [this.toBool(candidate?.oshaCertified)],
+      liftCertification: [this.toBool(candidate?.scissorLiftCertified)],
       travelAvailability: [false],
       shiftAvailability: [false],
-      backgroundCheckComplete: [candidate?.backgroundCheckComplete || false],
-      drugScreenComplete: [candidate?.drugTestComplete || false],
+      backgroundCheckComplete: [this.toBool(candidate?.backgroundCheckComplete)],
+      drugScreenComplete: [this.toBool(candidate?.drugTestComplete)],
       militaryBackground: [false]
     });
 
     this.badgesAccessForm = this.fb.group({
-      attBadge: [candidate?.attBadge || false],
-      lumenBadge: [candidate?.lumenBadge || false],
-      attSupplierTraining: [candidate?.attSupplierTraining || false],
-      cienaBasicTraining: [candidate?.cienaBasicTraining || false],
-      googleRedBadge: [candidate?.googleRedBadge || false],
-      googleLdap: [candidate?.googleLdap || false],
-      metaGreenListing: [candidate?.metaGreenListing || false]
+      attBadge: [this.toBool(candidate?.attBadge)],
+      lumenBadge: [this.toBool(candidate?.lumenBadge)],
+      attSupplierTraining: [this.toBool(candidate?.attSupplierTraining)],
+      cienaBasicTraining: [this.toBool(candidate?.cienaBasicTraining)],
+      googleRedBadge: [this.toBool(candidate?.googleRedBadge)],
+      googleLdap: [this.toBool(candidate?.googleLdap)],
+      metaGreenListing: [this.toBool(candidate?.metaGreenListing)]
     });
 
     this.trainingCertsForm = this.fb.group({
-      obsTraining: [candidate?.obsTraining || false],
-      scissorLift: [candidate?.scissorLiftCertified || false],
-      osha10: [candidate?.osha10 || false],
-      osha30: [candidate?.osha30 || false],
-      techHandTools: [candidate?.techHandTools || false]
+      obsTraining: [this.toBool(candidate?.obsTraining)],
+      scissorLift: [this.toBool(candidate?.scissorLiftCertified)],
+      osha10: [this.toBool(candidate?.osha10)],
+      osha30: [this.toBool(candidate?.osha30)],
+      techHandTools: [this.toBool(candidate?.techHandTools)]
     });
 
     this.equipmentKitsForm = this.fb.group({
-      ciKitAssigned: [candidate?.ciKitAssigned || false],
-      fiberKitAssigned: [candidate?.fiberKitAssigned || false],
-      labelingKitAssigned: [candidate?.labelingKitAssigned || false],
-      powerKitAssigned: [candidate?.powerKitAssigned || false],
-      testingEquipmentAssigned: [candidate?.testingEqptAssigned || false]
+      ciKitAssigned: [this.toBool(candidate?.ciKitAssigned)],
+      fiberKitAssigned: [this.toBool(candidate?.fiberKitAssigned)],
+      labelingKitAssigned: [this.toBool(candidate?.labelingKitAssigned)],
+      powerKitAssigned: [this.toBool(candidate?.powerKitAssigned)],
+      testingEquipmentAssigned: [this.toBool(candidate?.testingEqptAssigned)]
     });
 
     // Auto-populate homeState from homeAddress when the user hasn't manually set it
@@ -518,6 +518,17 @@ export class AddCandidateModalComponent {
     if (!address) return '';
     const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
     return match ? match[1] : '';
+  }
+
+  /**
+   * Safely converts a value that may be a boolean, string ("true"/"false"/""), null, or undefined
+   * into an actual boolean. The API returns some fields as strings rather than booleans.
+   */
+  private toBool(value: any): boolean {
+    if (value === true) return true;
+    if (value === false) return false;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    return false;
   }
 
   private parseStartDate(dateStr: string | undefined): Date | string {
