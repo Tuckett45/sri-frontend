@@ -15,15 +15,15 @@ import { ToastrService } from 'ngx-toastr';
 export class RegisterModalComponent {
   registerForm!: FormGroup;
   roles: string[] = [
-    'User',
+    // 'User',
     'Technician',
-    'DeploymentEngineer',
+    // 'DeploymentEngineer',
     'PM',
     'CM',
     'Admin',
-    'DCOps',
-    'VendorRep',
-    'SRITech',
+    // 'DCOps',
+    // 'VendorRep',
+    // 'SRITech',
     'HR',
     'Client',
     'OSP Coordinator',
