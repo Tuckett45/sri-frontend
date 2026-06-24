@@ -459,40 +459,40 @@ export class AddCandidateModalComponent {
     });
 
     this.coreQualificationsForm = this.fb.group({
-      fiberExperience: [false],
-      oshaCertification: [candidate?.oshaCertified || false],
-      liftCertification: [candidate?.scissorLiftCertified || false],
+      fiberExperience: [candidate?.biisciCertified ?? false],
+      oshaCertification: [candidate?.oshaCertified ?? false],
+      liftCertification: [candidate?.scissorLiftCertified ?? false],
       travelAvailability: [false],
       shiftAvailability: [false],
-      backgroundCheckComplete: [candidate?.backgroundCheckComplete || false],
-      drugScreenComplete: [candidate?.drugTestComplete || false],
+      backgroundCheckComplete: [candidate?.backgroundCheckComplete ?? false],
+      drugScreenComplete: [candidate?.drugTestComplete ?? false],
       militaryBackground: [false]
     });
 
     this.badgesAccessForm = this.fb.group({
-      attBadge: [candidate?.attBadge || false],
-      lumenBadge: [candidate?.lumenBadge || false],
-      attSupplierTraining: [candidate?.attSupplierTraining || false],
-      cienaBasicTraining: [candidate?.cienaBasicTraining || false],
-      googleRedBadge: [candidate?.googleRedBadge || false],
-      googleLdap: [candidate?.googleLdap || false],
-      metaGreenListing: [candidate?.metaGreenListing || false]
+      attBadge: [candidate?.attBadge ?? false],
+      lumenBadge: [candidate?.lumenBadge ?? false],
+      attSupplierTraining: [candidate?.attSupplierTraining ?? false],
+      cienaBasicTraining: [candidate?.cienaBasicTraining ?? false],
+      googleRedBadge: [candidate?.googleRedBadge ?? false],
+      googleLdap: [candidate?.googleLdap ?? false],
+      metaGreenListing: [candidate?.metaGreenListing ?? false]
     });
 
     this.trainingCertsForm = this.fb.group({
-      obsTraining: [candidate?.obsTraining || false],
-      scissorLift: [candidate?.scissorLiftCertified || false],
-      osha10: [candidate?.osha10 || false],
-      osha30: [candidate?.osha30 || false],
-      techHandTools: [candidate?.techHandTools || false]
+      obsTraining: [candidate?.obsTraining ?? false],
+      scissorLift: [candidate?.scissorLiftCertified ?? false],
+      osha10: [candidate?.osha10 ?? false],
+      osha30: [candidate?.osha30 ?? false],
+      techHandTools: [candidate?.techHandTools ?? false]
     });
 
     this.equipmentKitsForm = this.fb.group({
-      ciKitAssigned: [candidate?.ciKitAssigned || false],
-      fiberKitAssigned: [candidate?.fiberKitAssigned || false],
-      labelingKitAssigned: [candidate?.labelingKitAssigned || false],
-      powerKitAssigned: [candidate?.powerKitAssigned || false],
-      testingEquipmentAssigned: [candidate?.testingEqptAssigned || false]
+      ciKitAssigned: [candidate?.ciKitAssigned ?? false],
+      fiberKitAssigned: [candidate?.fiberKitAssigned ?? false],
+      labelingKitAssigned: [candidate?.labelingKitAssigned ?? false],
+      powerKitAssigned: [candidate?.powerKitAssigned ?? false],
+      testingEquipmentAssigned: [candidate?.testingEqptAssigned ?? false]
     });
 
     // Auto-populate homeState from homeAddress when the user hasn't manually set it
