@@ -74,6 +74,7 @@ export interface CreateCandidatePayload {
   drugTestComplete?: boolean;
   oshaCertified?: boolean;
   scissorLiftCertified?: boolean;
+  biisciCertified?: boolean;
 
   // Badges & Access
   attBadge?: boolean;
@@ -108,6 +109,7 @@ export interface UpdateCandidatePayload {
   drugTestComplete?: boolean;
   oshaCertified?: boolean;
   scissorLiftCertified?: boolean;
+  biisciCertified?: boolean;
   workSite?: string;
   homeAddress?: string;
   homeState?: string;
