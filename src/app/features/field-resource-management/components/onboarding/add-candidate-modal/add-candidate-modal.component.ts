@@ -1,7 +1,10 @@
 import { Component, Inject, Optional } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { catchError, of } from 'rxjs';
 import { Candidate } from '../../../models/onboarding.models';
+import { GeocodingService } from 'src/app/services/geocoding.service';
+import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 
 @Component({
   selector: 'app-add-candidate-modal',
@@ -15,18 +18,18 @@ import { Candidate } from '../../../models/onboarding.models';
             <div class="form-row">
               <mat-form-field appearance="outline">
                 <mat-label>First Name</mat-label>
-                <input matInput formControlName="firstName" required />
+                <input matInput formControlName="firstName" appNameCapitalize required />
                 <mat-error *ngIf="basicInfoForm.get('firstName')?.hasError('required')">First name is required</mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Middle Name</mat-label>
-                <input matInput formControlName="middleName" placeholder="Enter middle name (optional)" />
+                <input matInput formControlName="middleName" appNameCapitalize placeholder="Enter middle name (optional)" />
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Last Name</mat-label>
-                <input matInput formControlName="lastName" required />
+                <input matInput formControlName="lastName" appNameCapitalize required />
                 <mat-error *ngIf="basicInfoForm.get('lastName')?.hasError('required')">Last name is required</mat-error>
               </mat-form-field>
             </div>
@@ -41,7 +44,7 @@ import { Candidate } from '../../../models/onboarding.models';
 
               <mat-form-field appearance="outline">
                 <mat-label>Phone</mat-label>
-                <input matInput formControlName="phone" required />
+                <input matInput formControlName="phone" appPhoneMask placeholder="(555) 555-5555" required />
                 <mat-error *ngIf="basicInfoForm.get('phone')?.hasError('required')">Phone is required</mat-error>
               </mat-form-field>
             </div>
@@ -56,7 +59,16 @@ import { Candidate } from '../../../models/onboarding.models';
 
               <mat-form-field appearance="outline">
                 <mat-label>Home Address</mat-label>
-                <input matInput formControlName="homeAddress" required placeholder="Candidate's home address" />
+                <input matInput formControlName="homeAddress" required
+                       placeholder="Start typing an address..."
+                       [matAutocomplete]="addressAuto"
+                       (input)="onAddressInput($event)" />
+                <mat-spinner *ngIf="isAddressLoading" matSuffix diameter="20"></mat-spinner>
+                <mat-autocomplete #addressAuto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)">
+                  <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
+                    {{ suggestion.formattedAddress }}
+                  </mat-option>
+                </mat-autocomplete>
                 <mat-error *ngIf="basicInfoForm.get('homeAddress')?.hasError('required')">Home address is required</mat-error>
               </mat-form-field>
             </div>
@@ -421,6 +433,10 @@ export class AddCandidateModalComponent {
   resumeFile: File | null = null;
   headshotFile: File | null = null;
 
+  // Address autocomplete
+  filteredAddresses: any[] = [];
+  isAddressLoading = false;
+
   basicInfoForm: FormGroup;
   coreQualificationsForm: FormGroup;
   badgesAccessForm: FormGroup;
@@ -430,6 +446,7 @@ export class AddCandidateModalComponent {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<AddCandidateModalComponent>,
+    private geocodingService: GeocodingService,
     @Optional() @Inject(MAT_DIALOG_DATA) public data: { candidate?: Candidate } | null
   ) {
     const candidate = data?.candidate;
@@ -512,6 +529,53 @@ export class AddCandidateModalComponent {
     if (input.files && input.files.length > 0) {
       this.resumeFile = input.files[0];
     }
+  }
+
+  onAddressInput(event: Event): void {
+    const query = (event.target as HTMLInputElement).value;
+    if (query && query.length > 5) {
+      this.isAddressLoading = true;
+      this.geocodingService.geocodeAddress(query).pipe(
+        catchError(() => {
+          this.isAddressLoading = false;
+          return of({ results: [] });
+        })
+      ).subscribe((response: any) => {
+        this.filteredAddresses = (response.results || []).map((result: any) => {
+          const address = result.address_components || [];
+          const streetNumber = address.find((c: any) => c.types.includes('street_number'))?.long_name || '';
+          const route = address.find((c: any) => c.types.includes('route'))?.long_name || '';
+          const streetAddress = `${streetNumber} ${route}`.trim();
+
+          const city = address.find((c: any) => c.types.includes('locality'))?.long_name || '';
+          const state = address.find((c: any) => c.types.includes('administrative_area_level_1'))?.long_name || '';
+          const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || '';
+          const zip = address.find((c: any) => c.types.includes('postal_code'))?.long_name || '';
+
+          const formattedAddress = [streetAddress, city, abbreviatedState, zip].filter(Boolean).join(', ');
+
+          return {
+            formattedAddress,
+            streetAddress,
+            city,
+            state: abbreviatedState,
+            zip,
+            original: result
+          };
+        });
+        this.isAddressLoading = false;
+      });
+    } else {
+      this.filteredAddresses = [];
+    }
+  }
+
+  selectAddress(suggestion: any): void {
+    this.basicInfoForm.patchValue({
+      homeAddress: suggestion.formattedAddress,
+      homeState: suggestion.state
+    });
+    this.filteredAddresses = [];
   }
 
   private extractStateFromAddress(address: string): string {
