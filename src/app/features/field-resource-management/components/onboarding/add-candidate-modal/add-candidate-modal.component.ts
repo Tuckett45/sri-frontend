@@ -459,14 +459,14 @@ export class AddCandidateModalComponent {
     });
 
     this.coreQualificationsForm = this.fb.group({
-      fiberExperience: [this.toBool(candidate?.biisciCertified)],
+      fiberExperience: [this.toBool(candidate?.fiberExperience)],
       oshaCertification: [this.toBool(candidate?.oshaCertified)],
-      liftCertification: [this.toBool(candidate?.scissorLiftCertified)],
-      travelAvailability: [false],
-      shiftAvailability: [false],
+      liftCertification: [this.toBool(candidate?.liftCertification)],
+      travelAvailability: [this.toBool(candidate?.travelAvailability)],
+      shiftAvailability: [this.toBool(candidate?.shiftAvailability)],
       backgroundCheckComplete: [this.toBool(candidate?.backgroundCheckComplete)],
       drugScreenComplete: [this.toBool(candidate?.drugTestComplete)],
-      militaryBackground: [false]
+      militaryBackground: [this.toBool(candidate?.militaryBackground)]
     });
 
     this.badgesAccessForm = this.fb.group({
