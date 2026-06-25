@@ -27,6 +27,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     { label: 'Create Quote', icon: 'request_quote', action: 'createQuote', color: 'green', visible: true },
     { label: 'View All Jobs', icon: 'work', route: '/field-resource-management/jobs', color: 'primary', visible: true },
     { label: 'Manage Technicians', icon: 'engineering', route: '/field-resource-management/technicians', color: 'primary', visible: true },
+    { label: 'Onboarding', icon: 'person_add', route: '/field-resource-management/onboarding', color: 'accent', visible: true },
     { label: 'Open Schedule', icon: 'calendar_today', route: '/field-resource-management/schedule', color: 'primary', visible: true },
     { label: 'View Map', icon: 'map', route: '/field-resource-management/map', color: 'primary', visible: true },
     { label: 'View Reports', icon: 'bar_chart', route: '/field-resource-management/reports', color: 'primary', visible: true },

@@ -27,6 +27,7 @@ export class HrPayrollDashboardComponent implements OnInit {
     const hrActions: QuickAction[] = [
       { label: 'Approvals', icon: 'approval', route: '/field-resource-management/approvals', color: 'primary', visible: true },
       { label: 'Timecard Management', icon: 'receipt_long', route: '/field-resource-management/timecards', color: 'primary', visible: true },
+      { label: 'Onboarding', icon: 'person_add', route: '/field-resource-management/onboarding', color: 'accent', visible: true },
       { label: 'Reports', icon: 'bar_chart', route: '/field-resource-management/reports', color: 'primary', visible: true }
     ];
 
