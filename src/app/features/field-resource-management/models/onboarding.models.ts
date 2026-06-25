@@ -28,6 +28,13 @@ export interface Candidate {
   referredBy?: string;
   notes?: string;
 
+  // Core Qualifications
+  fiberExperience: boolean;
+  liftCertification: boolean;
+  travelAvailability: boolean;
+  shiftAvailability: boolean;
+  militaryBackground: boolean;
+
   // Badges & Access
   attBadge?: boolean;
   lumenBadge?: boolean;
@@ -76,6 +83,13 @@ export interface CreateCandidatePayload {
   scissorLiftCertified?: boolean;
   biisciCertified?: boolean;
 
+  // Core Qualifications
+  fiberExperience?: boolean;
+  liftCertification?: boolean;
+  travelAvailability?: boolean;
+  shiftAvailability?: boolean;
+  militaryBackground?: boolean;
+
   // Badges & Access
   attBadge?: boolean;
   lumenBadge?: boolean;
@@ -117,6 +131,13 @@ export interface UpdateCandidatePayload {
   offerStatus?: OfferStatus;
   referredBy?: string;
   notes?: string;
+
+  // Core Qualifications
+  fiberExperience?: boolean;
+  liftCertification?: boolean;
+  travelAvailability?: boolean;
+  shiftAvailability?: boolean;
+  militaryBackground?: boolean;
 
   // Badges & Access
   attBadge?: boolean;

@@ -226,6 +226,42 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
           </div>
         </ng-container>
 
+        <!-- Core Qualifications -->
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="fiberExperience" />
+            Fiber Experience
+          </label>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="liftCertification" />
+            Lift Certification
+          </label>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="travelAvailability" />
+            Travel Availability
+          </label>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="shiftAvailability" />
+            Shift Availability
+          </label>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="militaryBackground" />
+            Military Background
+          </label>
+        </div>
+
         <!-- Submit Button -->
         <div class="form-actions">
           <button type="submit"
@@ -501,6 +537,11 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       backgroundCheckComplete: [false],
       oshaCertified: [false],
       scissorLiftCertified: [false],
+      fiberExperience: [false],
+      liftCertification: [false],
+      travelAvailability: [false],
+      shiftAvailability: [false],
+      militaryBackground: [false],
     });
   }
 
@@ -556,6 +597,11 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       backgroundCheckComplete: candidate.backgroundCheckComplete,
       oshaCertified: candidate.oshaCertified,
       scissorLiftCertified: candidate.scissorLiftCertified,
+      fiberExperience: candidate.fiberExperience,
+      liftCertification: candidate.liftCertification,
+      travelAvailability: candidate.travelAvailability,
+      shiftAvailability: candidate.shiftAvailability,
+      militaryBackground: candidate.militaryBackground,
     });
     // Reset dirty state after population
     this.candidateForm.markAsPristine();
@@ -584,6 +630,11 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
+      fiberExperience: formValue.fiberExperience,
+      liftCertification: formValue.liftCertification,
+      travelAvailability: formValue.travelAvailability,
+      shiftAvailability: formValue.shiftAvailability,
+      militaryBackground: formValue.militaryBackground,
     };
 
     this.onboardingService.createCandidate(payload).subscribe({
@@ -620,6 +671,11 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       backgroundCheckComplete: formValue.backgroundCheckComplete,
       oshaCertified: formValue.oshaCertified,
       scissorLiftCertified: formValue.scissorLiftCertified,
+      fiberExperience: formValue.fiberExperience,
+      liftCertification: formValue.liftCertification,
+      travelAvailability: formValue.travelAvailability,
+      shiftAvailability: formValue.shiftAvailability,
+      militaryBackground: formValue.militaryBackground,
     };
 
     this.onboardingService.updateCandidate(this.candidateId!, payload).subscribe({
