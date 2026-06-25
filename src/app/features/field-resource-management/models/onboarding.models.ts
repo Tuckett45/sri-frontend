@@ -29,11 +29,11 @@ export interface Candidate {
   notes?: string;
 
   // Core Qualifications
-  fiberExperience: boolean;
-  liftCertification: boolean;
-  travelAvailability: boolean;
-  shiftAvailability: boolean;
-  militaryBackground: boolean;
+  fiberExperience?: boolean;
+  liftCertification?: boolean;
+  travelAvailability?: boolean;
+  shiftAvailability?: boolean;
+  militaryBackground?: boolean;
 
   // Badges & Access
   attBadge?: boolean;
