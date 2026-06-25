@@ -120,6 +120,8 @@ const HR_GROUP_PERMISSIONS: FrmPermissionSet = {
 const PAYROLL_GROUP_PERMISSIONS: FrmPermissionSet = {
   ...HR_GROUP_PERMISSIONS,
   canCreateJob: true,
+  canEditJob: true,
+  canStartJob: true,
   canManageIncidentReports: true,
   canManageDirectDeposit: true,
   canManageW4: true,

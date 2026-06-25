@@ -738,7 +738,8 @@ export class PermissionService {
         { resource: 'approvals', actions: ['read', 'update'] },
         { resource: 'travel_profiles', actions: ['read', 'update'] },
         { resource: 'reports', actions: ['read'] },
-        { resource: 'payroll', actions: ['create', 'read', 'update'] }
+        { resource: 'payroll', actions: ['create', 'read', 'update'] },
+        { resource: 'jobs', actions: ['create', 'read', 'update'] }
       ],
       restrictions: []
     });
