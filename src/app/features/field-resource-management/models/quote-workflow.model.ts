@@ -253,9 +253,63 @@ export interface QuoteEmailData {
 
 export const PIPELINE_CATEGORIES: Record<string, WorkflowStatus[]> = {
   rfpsReceived: [WorkflowStatus.Draft, WorkflowStatus.Job_Summary_In_Progress],
-  bomsNotReady: [WorkflowStatus.BOM_In_Progress, WorkflowStatus.Validation_Rejected],
-  bomsReady: [WorkflowStatus.Pending_Validation, WorkflowStatus.Validation_Approved],
-  quotesReadyForCustomer: [WorkflowStatus.Quote_Assembled],
-  quotesDelivered: [WorkflowStatus.Quote_Delivered],
+  quotesInProgress: [WorkflowStatus.BOM_In_Progress, WorkflowStatus.Pending_Validation, WorkflowStatus.Validation_Rejected, WorkflowStatus.Validation_Approved],
+  quotesDelivered: [WorkflowStatus.Quote_Assembled, WorkflowStatus.Quote_Delivered],
+  poNeeded: [WorkflowStatus.Quote_Delivered],
   quotesConverted: [WorkflowStatus.Quote_Converted]
 };
+
+// ---------------------------------------------------------------------------
+// Interfaces – RFP Dashboard
+// ---------------------------------------------------------------------------
+
+export interface DashboardQuote {
+  id: string;
+  customer: string;
+  description: string;
+  requestorName: string;
+  rfpReceiveDate: string | null;
+  quoteDueDate: string | null;
+  assignedToQuote: string | null;
+  quoteSubmittedDate: string | null;
+  quoteNumber: string | null;
+  dateReceived: string | null;
+  poNumber: string | null;
+  poAmount: number | null;
+  jobNumber: string | null;
+  customerEquipment: string | null;
+  jobStart: string | null;
+  jobComplete: string | null;
+  invoiceNumber: string | null;
+  bomTrackings: BomTracking[];
+}
+
+export interface DashboardFilters {
+  customer: string;
+  dateFrom: string | null;
+  dateTo: string | null;
+  assignedTo: string;
+  phase: 'rfp' | 'poTracking' | 'projectTracking' | '';
+}
+
+export interface DashboardResponse {
+  rfpRecords: DashboardQuote[];
+  poTrackingRecords: DashboardQuote[];
+  projectTrackingRecords: DashboardQuote[];
+}
+
+export interface BomTracking {
+  id: string;
+  quoteId: string;
+  bomDescription: string;
+  orderedDate: string | null;
+  receivedDate: string | null;
+  trackingNumber: string | null;
+  status: string;
+}
+
+export interface DashboardUser {
+  id: string;
+  fullName: string;
+  email: string;
+}

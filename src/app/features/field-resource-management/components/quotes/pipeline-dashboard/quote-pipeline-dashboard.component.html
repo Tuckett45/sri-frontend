@@ -56,51 +56,57 @@
             </div>
           </div>
 
-          <!-- Expanded quote list -->
+          <!-- Expanded summary -->
           <div
             *ngIf="expandedCategory === category.key"
-            class="category-quotes"
-            role="list"
+            class="category-summary"
+            role="region"
+            [attr.aria-label]="category.label + ' summary'"
           >
             <ng-container *ngIf="category.quotes$ | async as quotes">
-              <div
-                *ngFor="let quote of quotes; trackBy: trackByQuote"
-                class="quote-item"
-                (click)="navigateToQuote(quote.id)"
-                role="listitem"
-                tabindex="0"
-                (keydown.enter)="navigateToQuote(quote.id)"
-                [attr.aria-label]="quote.rfpRecord.projectName + ' - ' + quote.rfpRecord.clientName"
-              >
-                <div class="quote-details">
-                  <span class="quote-project">{{ quote.rfpRecord.projectName }}</span>
-                  <span class="quote-client">{{ quote.rfpRecord.clientName }}</span>
+              <!-- High-level stats -->
+              <div class="summary-stats" *ngIf="quotes.length > 0">
+                <div class="stat-item">
+                  <span class="stat-value">{{ quotes.length }}</span>
+                  <span class="stat-label">Total Items</span>
                 </div>
-                <div class="quote-indicators">
-                  <span
-                    *ngIf="quote.poNumber"
-                    class="indicator po-indicator"
-                    matTooltip="PO Number: {{ quote.poNumber }}"
-                  >
-                    <mat-icon>receipt</mat-icon>
-                    PO
-                  </span>
-                  <span
-                    *ngIf="quote.sriJobNumber"
-                    class="indicator job-indicator"
-                    matTooltip="SRI Job #: {{ quote.sriJobNumber }}"
-                  >
-                    <mat-icon>work</mat-icon>
-                    Job#
-                  </span>
-                  <span class="status-badge" [ngClass]="'status-' + quote.workflowStatus">
-                    {{ getStatusLabel(quote.workflowStatus) }}
-                  </span>
+                <div class="stat-item" *ngIf="getOldestDate(quotes) as oldest">
+                  <span class="stat-value">{{ oldest | date:'MMM d' }}</span>
+                  <span class="stat-label">Oldest</span>
+                </div>
+                <div class="stat-item" *ngIf="getCategoryTotal(quotes) as total">
+                  <span class="stat-value">{{ total | currency:'USD':'symbol':'1.0-0' }}</span>
+                  <span class="stat-label">Total Value</span>
                 </div>
               </div>
 
+              <!-- Compact clickable list -->
+              <div class="summary-items" *ngIf="quotes.length > 0">
+                <a
+                  *ngFor="let quote of quotes.slice(0, 5); trackBy: trackByQuote"
+                  class="summary-item"
+                  (click)="navigateToTab(category, quote)"
+                  tabindex="0"
+                  (keydown.enter)="navigateToTab(category, quote)"
+                >
+                  <span class="item-customer">{{ quote.rfpRecord.clientName }}</span>
+                  <span class="item-project">{{ quote.rfpRecord.projectName }}</span>
+                  <mat-icon class="item-arrow">chevron_right</mat-icon>
+                </a>
+                <a
+                  *ngIf="quotes.length > 5"
+                  class="summary-item view-all"
+                  (click)="navigateToFilteredList(category)"
+                  tabindex="0"
+                  (keydown.enter)="navigateToFilteredList(category)"
+                >
+                  <span class="item-customer">View all {{ quotes.length }} items</span>
+                  <mat-icon class="item-arrow">arrow_forward</mat-icon>
+                </a>
+              </div>
+
               <div *ngIf="quotes.length === 0" class="empty-category">
-                <span>No quotes in this category</span>
+                <span>No items in this category</span>
               </div>
             </ng-container>
           </div>

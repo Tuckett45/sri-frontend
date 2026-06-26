@@ -1,0 +1,194 @@
+<div class="rfp-dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-title">
+      <mat-icon class="page-icon">request_quote</mat-icon>
+      <h2>RFP Dashboard</h2>
+      <span class="page-subtitle">Track quotes, purchase orders, and project progress</span>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="openNewRfp()">
+        <mat-icon>add</mat-icon>
+        New RFP
+      </button>
+      <button mat-stroked-button [matMenuTriggerFor]="exportMenu">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <mat-menu #exportMenu="matMenu">
+        <button mat-menu-item (click)="exportToCSV()">
+          <mat-icon>description</mat-icon>
+          <span>Export to CSV</span>
+        </button>
+        <button mat-menu-item (click)="exportToPDF()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <span>Export to PDF</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <mat-card class="filter-panel">
+    <mat-card-content>
+      <!-- Search Input -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search by customer</mat-label>
+        <input matInput
+               [(ngModel)]="filters.customer"
+               (ngModelChange)="onCustomerInput()"
+               placeholder="Enter customer name">
+        <mat-icon matPrefix>search</mat-icon>
+        <button
+          mat-icon-button
+          matSuffix
+          *ngIf="filters.customer"
+          (click)="filters.customer = ''; onFilterChange()"
+          aria-label="Clear search"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Filter Expansion Panel -->
+      <mat-expansion-panel class="filter-expansion">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>filter_list</mat-icon>
+            <span>Filters</span>
+            <span class="filter-count" *ngIf="getActiveFilterCount() > 0">
+              ({{ getActiveFilterCount() }} active)
+            </span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <!-- Filters -->
+        <div class="filters-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Date From</mat-label>
+            <input matInput [matDatepicker]="dateFromPicker" (dateChange)="onDateFromChange($event)">
+            <mat-datepicker-toggle matIconSuffix [for]="dateFromPicker"></mat-datepicker-toggle>
+            <mat-datepicker #dateFromPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Date To</mat-label>
+            <input matInput [matDatepicker]="dateToPicker" (dateChange)="onDateToChange($event)">
+            <mat-datepicker-toggle matIconSuffix [for]="dateToPicker"></mat-datepicker-toggle>
+            <mat-datepicker #dateToPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Assigned To</mat-label>
+            <mat-select [(ngModel)]="filters.assignedTo" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              <mat-option *ngFor="let user of users$ | async" [value]="user.id">
+                {{ user.fullName }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phase</mat-label>
+            <mat-select [(ngModel)]="filters.phase" (selectionChange)="onFilterChange()">
+              <mat-option value="">All Phases</mat-option>
+              <mat-option value="rfp">New RFPs</mat-option>
+              <mat-option value="po">PO Tracking</mat-option>
+              <mat-option value="project">Project Tracking</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Clear Filters Button -->
+          <button mat-stroked-button (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Active Filter Chips -->
+      <div class="active-filters" *ngIf="getActiveFilterCount() > 0">
+        <span class="filter-label">Active Filters:</span>
+        <mat-chip-set aria-label="Active filters">
+          <mat-chip *ngIf="filters.customer" [removable]="true" (removed)="filters.customer = ''; onFilterChange()">
+            <strong>Customer:</strong> {{ filters.customer }}
+            <button matChipRemove><mat-icon>cancel</mat-icon></button>
+          </mat-chip>
+          <mat-chip *ngIf="filters.dateFrom" [removable]="true" (removed)="filters.dateFrom = null; onFilterChange()">
+            <strong>From:</strong> {{ filters.dateFrom | date:'shortDate' }}
+            <button matChipRemove><mat-icon>cancel</mat-icon></button>
+          </mat-chip>
+          <mat-chip *ngIf="filters.dateTo" [removable]="true" (removed)="filters.dateTo = null; onFilterChange()">
+            <strong>To:</strong> {{ filters.dateTo | date:'shortDate' }}
+            <button matChipRemove><mat-icon>cancel</mat-icon></button>
+          </mat-chip>
+          <mat-chip *ngIf="filters.assignedTo" [removable]="true" (removed)="filters.assignedTo = ''; onFilterChange()">
+            <strong>Assigned To:</strong> {{ filters.assignedTo }}
+            <button matChipRemove><mat-icon>cancel</mat-icon></button>
+          </mat-chip>
+          <mat-chip *ngIf="filters.phase" [removable]="true" (removed)="filters.phase = ''; onFilterChange()">
+            <strong>Phase:</strong> {{ filters.phase }}
+            <button matChipRemove><mat-icon>cancel</mat-icon></button>
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Executive Summary Cards -->
+  <div class="exec-summary" *ngIf="!(loading$ | async)">
+    <div class="kpi-hero-card kpi-primary">
+      <mat-icon class="kpi-icon">inbox</mat-icon>
+      <span class="kpi-value">{{ (rfpRecords$ | async)?.length || 0 }}</span>
+      <span class="kpi-label">Active RFPs</span>
+    </div>
+    <div class="kpi-hero-card kpi-success">
+      <mat-icon class="kpi-icon">receipt</mat-icon>
+      <span class="kpi-value">{{ (poTrackingRecords$ | async)?.length || 0 }}</span>
+      <span class="kpi-label">POs Received</span>
+    </div>
+    <div class="kpi-hero-card kpi-accent">
+      <mat-icon class="kpi-icon">attach_money</mat-icon>
+      <span class="kpi-value">{{ getPoTotal() | currency:'USD':'symbol':'1.0-0' }}</span>
+      <span class="kpi-label">PO Total Value</span>
+    </div>
+    <div class="kpi-hero-card kpi-primary">
+      <mat-icon class="kpi-icon">engineering</mat-icon>
+      <span class="kpi-value">{{ (projectTrackingRecords$ | async)?.length || 0 }}</span>
+      <span class="kpi-label">Active Projects</span>
+    </div>
+    <div class="kpi-hero-card kpi-success">
+      <mat-icon class="kpi-icon">check_circle</mat-icon>
+      <span class="kpi-value">{{ getInvoicedCount() }}</span>
+      <span class="kpi-label">Invoiced</span>
+    </div>
+    <div class="kpi-hero-card kpi-accent">
+      <mat-icon class="kpi-icon">pending_actions</mat-icon>
+      <span class="kpi-value">{{ getCloseoutPendingCount() }}</span>
+      <span class="kpi-label">Pending Closeout</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-container" *ngIf="!(loading$ | async)">
+    <mat-tab-group animationDuration="200ms">
+      <mat-tab label="Quote Pipeline">
+        <app-quote-pipeline-dashboard></app-quote-pipeline-dashboard>
+      </mat-tab>
+      <mat-tab label="New RFPs">
+        <app-rfp-tab [records]="(rfpRecords$ | async) || []" [users]="(users$ | async) || []"></app-rfp-tab>
+      </mat-tab>
+      <mat-tab label="PO Tracking">
+        <app-po-tracking-tab [records]="(poTrackingRecords$ | async) || []"></app-po-tracking-tab>
+      </mat-tab>
+      <mat-tab label="Project Tracking">
+        <app-project-tracking-tab [records]="(projectTrackingRecords$ | async) || []"></app-project-tracking-tab>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

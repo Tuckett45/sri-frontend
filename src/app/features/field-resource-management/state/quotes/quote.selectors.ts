@@ -72,17 +72,14 @@ function createPipelineCategorySelector(categoryKey: string) {
 /** RFPs Received: Draft + Job_Summary_In_Progress */
 export const selectRfpsReceived = createPipelineCategorySelector('rfpsReceived');
 
-/** BOMs Not Ready: BOM_In_Progress + Validation_Rejected */
-export const selectBomsNotReady = createPipelineCategorySelector('bomsNotReady');
+/** Quotes In Progress: BOM_In_Progress + Pending_Validation + Validation_Rejected + Validation_Approved */
+export const selectQuotesInProgress = createPipelineCategorySelector('quotesInProgress');
 
-/** BOMs Ready: Pending_Validation + Validation_Approved */
-export const selectBomsReady = createPipelineCategorySelector('bomsReady');
-
-/** Quotes Ready for Customer: Quote_Assembled */
-export const selectQuotesReadyForCustomer = createPipelineCategorySelector('quotesReadyForCustomer');
-
-/** Quotes Delivered: Quote_Delivered */
+/** Quotes Delivered: Quote_Assembled + Quote_Delivered */
 export const selectQuotesDelivered = createPipelineCategorySelector('quotesDelivered');
+
+/** PO Needed: Quote_Delivered (delivered but no PO yet) */
+export const selectPoNeeded = createPipelineCategorySelector('poNeeded');
 
 /** Quotes Converted to Job: Quote_Converted */
 export const selectQuotesConverted = createPipelineCategorySelector('quotesConverted');
