@@ -199,7 +199,7 @@ export class ClientDashboardComponent implements OnInit {
               },
               {
                 type: 'bar',
-                label: 'PacNet',
+                label: 'Pacific Network Solutions',
                 data: data.totalVendorIssueStats.map(stat => stat.pacNetIssues),
                 backgroundColor: '#795548',
                 borderColor: '#000000',
