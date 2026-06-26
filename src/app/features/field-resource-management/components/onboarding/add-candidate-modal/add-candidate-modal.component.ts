@@ -1,7 +1,10 @@
 import { Component, Inject, Optional } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { catchError, of } from 'rxjs';
 import { Candidate } from '../../../models/onboarding.models';
+import { GeocodingService } from 'src/app/services/geocoding.service';
+import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 
 @Component({
   selector: 'app-add-candidate-modal',
@@ -15,18 +18,18 @@ import { Candidate } from '../../../models/onboarding.models';
             <div class="form-row">
               <mat-form-field appearance="outline">
                 <mat-label>First Name</mat-label>
-                <input matInput formControlName="firstName" required />
+                <input matInput formControlName="firstName" appNameCapitalize required />
                 <mat-error *ngIf="basicInfoForm.get('firstName')?.hasError('required')">First name is required</mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Middle Name</mat-label>
-                <input matInput formControlName="middleName" placeholder="Enter middle name (optional)" />
+                <input matInput formControlName="middleName" appNameCapitalize placeholder="Enter middle name (optional)" />
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Last Name</mat-label>
-                <input matInput formControlName="lastName" required />
+                <input matInput formControlName="lastName" appNameCapitalize required />
                 <mat-error *ngIf="basicInfoForm.get('lastName')?.hasError('required')">Last name is required</mat-error>
               </mat-form-field>
             </div>
@@ -41,7 +44,7 @@ import { Candidate } from '../../../models/onboarding.models';
 
               <mat-form-field appearance="outline">
                 <mat-label>Phone</mat-label>
-                <input matInput formControlName="phone" required />
+                <input matInput formControlName="phone" appPhoneMask placeholder="(555) 555-5555" required />
                 <mat-error *ngIf="basicInfoForm.get('phone')?.hasError('required')">Phone is required</mat-error>
               </mat-form-field>
             </div>
@@ -56,7 +59,16 @@ import { Candidate } from '../../../models/onboarding.models';
 
               <mat-form-field appearance="outline">
                 <mat-label>Home Address</mat-label>
-                <input matInput formControlName="homeAddress" required placeholder="Candidate's home address" />
+                <input matInput formControlName="homeAddress" required
+                       placeholder="Start typing an address..."
+                       [matAutocomplete]="addressAuto"
+                       (input)="onAddressInput($event)" />
+                <mat-spinner *ngIf="isAddressLoading" matSuffix diameter="20"></mat-spinner>
+                <mat-autocomplete #addressAuto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)">
+                  <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
+                    {{ suggestion.formattedAddress }}
+                  </mat-option>
+                </mat-autocomplete>
                 <mat-error *ngIf="basicInfoForm.get('homeAddress')?.hasError('required')">Home address is required</mat-error>
               </mat-form-field>
             </div>
@@ -152,8 +164,12 @@ import { Candidate } from '../../../models/onboarding.models';
                 <mat-slide-toggle formControlName="shiftAvailability"></mat-slide-toggle>
               </div>
               <div class="toggle-item">
-                <span>Background/Drug Screen Complete</span>
-                <mat-slide-toggle formControlName="backgroundDrugScreen"></mat-slide-toggle>
+                <span>Background Check Complete</span>
+                <mat-slide-toggle formControlName="backgroundCheckComplete"></mat-slide-toggle>
+              </div>
+              <div class="toggle-item">
+                <span>Drug Screen Complete</span>
+                <mat-slide-toggle formControlName="drugScreenComplete"></mat-slide-toggle>
               </div>
               <div class="toggle-item">
                 <span>Military Background</span>
@@ -417,6 +433,10 @@ export class AddCandidateModalComponent {
   resumeFile: File | null = null;
   headshotFile: File | null = null;
 
+  // Address autocomplete
+  filteredAddresses: any[] = [];
+  isAddressLoading = false;
+
   basicInfoForm: FormGroup;
   coreQualificationsForm: FormGroup;
   badgesAccessForm: FormGroup;
@@ -426,6 +446,7 @@ export class AddCandidateModalComponent {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<AddCandidateModalComponent>,
+    private geocodingService: GeocodingService,
     @Optional() @Inject(MAT_DIALOG_DATA) public data: { candidate?: Candidate } | null
   ) {
     const candidate = data?.candidate;
@@ -455,39 +476,40 @@ export class AddCandidateModalComponent {
     });
 
     this.coreQualificationsForm = this.fb.group({
-      fiberExperience: [false],
-      oshaCertification: [candidate?.oshaCertified || false],
-      liftCertification: [candidate?.scissorLiftCertified || false],
-      travelAvailability: [false],
-      shiftAvailability: [false],
-      backgroundDrugScreen: [candidate?.drugTestComplete || false],
-      militaryBackground: [false]
+      fiberExperience: [this.toBool(candidate?.fiberExperience)],
+      oshaCertification: [this.toBool(candidate?.oshaCertified)],
+      liftCertification: [this.toBool(candidate?.liftCertification)],
+      travelAvailability: [this.toBool(candidate?.travelAvailability)],
+      shiftAvailability: [this.toBool(candidate?.shiftAvailability)],
+      backgroundCheckComplete: [this.toBool(candidate?.backgroundCheckComplete)],
+      drugScreenComplete: [this.toBool(candidate?.drugTestComplete)],
+      militaryBackground: [this.toBool(candidate?.militaryBackground)]
     });
 
     this.badgesAccessForm = this.fb.group({
-      attBadge: [candidate?.attBadge || false],
-      lumenBadge: [candidate?.lumenBadge || false],
-      attSupplierTraining: [candidate?.attSupplierTraining || false],
-      cienaBasicTraining: [candidate?.cienaBasicTraining || false],
-      googleRedBadge: [candidate?.googleRedBadge || false],
-      googleLdap: [candidate?.googleLdap || false],
-      metaGreenListing: [candidate?.metaGreenListing || false]
+      attBadge: [this.toBool(candidate?.attBadge)],
+      lumenBadge: [this.toBool(candidate?.lumenBadge)],
+      attSupplierTraining: [this.toBool(candidate?.attSupplierTraining)],
+      cienaBasicTraining: [this.toBool(candidate?.cienaBasicTraining)],
+      googleRedBadge: [this.toBool(candidate?.googleRedBadge)],
+      googleLdap: [this.toBool(candidate?.googleLdap)],
+      metaGreenListing: [this.toBool(candidate?.metaGreenListing)]
     });
 
     this.trainingCertsForm = this.fb.group({
-      obsTraining: [candidate?.obsTraining || false],
-      scissorLift: [candidate?.scissorLiftCertified || false],
-      osha10: [candidate?.osha10 || false],
-      osha30: [candidate?.osha30 || false],
-      techHandTools: [candidate?.techHandTools || false]
+      obsTraining: [this.toBool(candidate?.obsTraining)],
+      scissorLift: [this.toBool(candidate?.scissorLiftCertified)],
+      osha10: [this.toBool(candidate?.osha10)],
+      osha30: [this.toBool(candidate?.osha30)],
+      techHandTools: [this.toBool(candidate?.techHandTools)]
     });
 
     this.equipmentKitsForm = this.fb.group({
-      ciKitAssigned: [candidate?.ciKitAssigned || false],
-      fiberKitAssigned: [candidate?.fiberKitAssigned || false],
-      labelingKitAssigned: [candidate?.labelingKitAssigned || false],
-      powerKitAssigned: [candidate?.powerKitAssigned || false],
-      testingEquipmentAssigned: [candidate?.testingEqptAssigned || false]
+      ciKitAssigned: [this.toBool(candidate?.ciKitAssigned)],
+      fiberKitAssigned: [this.toBool(candidate?.fiberKitAssigned)],
+      labelingKitAssigned: [this.toBool(candidate?.labelingKitAssigned)],
+      powerKitAssigned: [this.toBool(candidate?.powerKitAssigned)],
+      testingEquipmentAssigned: [this.toBool(candidate?.testingEqptAssigned)]
     });
 
     // Auto-populate homeState from homeAddress when the user hasn't manually set it
@@ -509,10 +531,68 @@ export class AddCandidateModalComponent {
     }
   }
 
+  onAddressInput(event: Event): void {
+    const query = (event.target as HTMLInputElement).value;
+    if (query && query.length > 5) {
+      this.isAddressLoading = true;
+      this.geocodingService.geocodeAddress(query).pipe(
+        catchError(() => {
+          this.isAddressLoading = false;
+          return of({ results: [] });
+        })
+      ).subscribe((response: any) => {
+        this.filteredAddresses = (response.results || []).map((result: any) => {
+          const address = result.address_components || [];
+          const streetNumber = address.find((c: any) => c.types.includes('street_number'))?.long_name || '';
+          const route = address.find((c: any) => c.types.includes('route'))?.long_name || '';
+          const streetAddress = `${streetNumber} ${route}`.trim();
+
+          const city = address.find((c: any) => c.types.includes('locality'))?.long_name || '';
+          const state = address.find((c: any) => c.types.includes('administrative_area_level_1'))?.long_name || '';
+          const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || '';
+          const zip = address.find((c: any) => c.types.includes('postal_code'))?.long_name || '';
+
+          const formattedAddress = [streetAddress, city, abbreviatedState, zip].filter(Boolean).join(', ');
+
+          return {
+            formattedAddress,
+            streetAddress,
+            city,
+            state: abbreviatedState,
+            zip,
+            original: result
+          };
+        });
+        this.isAddressLoading = false;
+      });
+    } else {
+      this.filteredAddresses = [];
+    }
+  }
+
+  selectAddress(suggestion: any): void {
+    this.basicInfoForm.patchValue({
+      homeAddress: suggestion.formattedAddress,
+      homeState: suggestion.state
+    });
+    this.filteredAddresses = [];
+  }
+
   private extractStateFromAddress(address: string): string {
     if (!address) return '';
     const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
     return match ? match[1] : '';
+  }
+
+  /**
+   * Safely converts a value that may be a boolean, string ("true"/"false"/""), null, or undefined
+   * into an actual boolean. The API returns some fields as strings rather than booleans.
+   */
+  private toBool(value: any): boolean {
+    if (value === true) return true;
+    if (value === false) return false;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    return false;
   }
 
   private parseStartDate(dateStr: string | undefined): Date | string {

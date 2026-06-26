@@ -13,6 +13,7 @@ export interface Candidate {
   techEmail: string;
   techPhone: string;
   vestSize: VestSize;
+  backgroundCheckComplete: boolean;
   drugTestComplete: boolean;
   oshaCertified: boolean;
   scissorLiftCertified: boolean;
@@ -26,6 +27,13 @@ export interface Candidate {
   headshotUrl?: string;
   referredBy?: string;
   notes?: string;
+
+  // Core Qualifications
+  fiberExperience?: boolean;
+  liftCertification?: boolean;
+  travelAvailability?: boolean;
+  shiftAvailability?: boolean;
+  militaryBackground?: boolean;
 
   // Badges & Access
   attBadge?: boolean;
@@ -69,9 +77,18 @@ export interface CreateCandidatePayload {
   startDate: string;
   offerStatus: OfferStatus;
   referredBy?: string;
+  backgroundCheckComplete?: boolean;
   drugTestComplete?: boolean;
   oshaCertified?: boolean;
   scissorLiftCertified?: boolean;
+  biisciCertified?: boolean;
+
+  // Core Qualifications
+  fiberExperience?: boolean;
+  liftCertification?: boolean;
+  travelAvailability?: boolean;
+  shiftAvailability?: boolean;
+  militaryBackground?: boolean;
 
   // Badges & Access
   attBadge?: boolean;
@@ -102,9 +119,11 @@ export interface UpdateCandidatePayload {
   techEmail?: string;
   techPhone?: string;
   vestSize?: VestSize;
+  backgroundCheckComplete?: boolean;
   drugTestComplete?: boolean;
   oshaCertified?: boolean;
   scissorLiftCertified?: boolean;
+  biisciCertified?: boolean;
   workSite?: string;
   homeAddress?: string;
   homeState?: string;
@@ -112,6 +131,13 @@ export interface UpdateCandidatePayload {
   offerStatus?: OfferStatus;
   referredBy?: string;
   notes?: string;
+
+  // Core Qualifications
+  fiberExperience?: boolean;
+  liftCertification?: boolean;
+  travelAvailability?: boolean;
+  shiftAvailability?: boolean;
+  militaryBackground?: boolean;
 
   // Badges & Access
   attBadge?: boolean;

@@ -742,9 +742,16 @@ export class CandidateDetailComponent implements OnInit {
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
           referredBy: result.basicInfo.referredBy || undefined,
-          drugTestComplete: result.coreQualifications.backgroundDrugScreen,
+          biisciCertified: result.coreQualifications.fiberExperience,
+          backgroundCheckComplete: result.coreQualifications.backgroundCheckComplete,
+          drugTestComplete: result.coreQualifications.drugScreenComplete,
           oshaCertified: result.coreQualifications.oshaCertification,
           scissorLiftCertified: result.coreQualifications.liftCertification,
+          fiberExperience: result.coreQualifications.fiberExperience,
+          liftCertification: result.coreQualifications.liftCertification,
+          travelAvailability: result.coreQualifications.travelAvailability,
+          shiftAvailability: result.coreQualifications.shiftAvailability,
+          militaryBackground: result.coreQualifications.militaryBackground,
           attBadge: result.badgesAccess.attBadge,
           lumenBadge: result.badgesAccess.lumenBadge,
           attSupplierTraining: result.badgesAccess.attSupplierTraining,
@@ -925,12 +932,12 @@ export class CandidateDetailComponent implements OnInit {
 
   private getDummyCandidate(): Candidate | null {
     const dummies: Record<string, Candidate> = {
-      'cand-001': { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', homeState: 'TX', startDate: '2026-06-01', offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-002': { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', homeState: 'CA', startDate: '2026-06-10', offerStatus: 'offer_extended', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-003': { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', homeState: 'FL', startDate: '2026-05-20', offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-004': { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', homeState: 'NY', startDate: '2026-07-01', offerStatus: 'needs_review', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-005': { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', homeState: 'GA', startDate: '2026-06-15', offerStatus: 'vetted_available', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
-      'cand-006': { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', homeState: 'CO', startDate: '2026-06-20', offerStatus: 'needs_review', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() }
+      'cand-001': { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', backgroundCheckComplete: true, drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', homeState: 'TX', startDate: '2026-06-01', offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-002': { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', backgroundCheckComplete: true, drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', homeState: 'CA', startDate: '2026-06-10', offerStatus: 'offer_extended', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-003': { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', backgroundCheckComplete: true, drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', homeState: 'FL', startDate: '2026-05-20', offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-004': { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', backgroundCheckComplete: false, drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', homeState: 'NY', startDate: '2026-07-01', offerStatus: 'needs_review', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-005': { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', backgroundCheckComplete: true, drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', homeState: 'GA', startDate: '2026-06-15', offerStatus: 'vetted_available', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() },
+      'cand-006': { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', backgroundCheckComplete: false, drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', homeState: 'CO', startDate: '2026-06-20', offerStatus: 'needs_review', createdBy: 'system', createdAt: new Date().toISOString(), updatedBy: 'system', updatedAt: new Date().toISOString() }
     };
     return dummies[this.candidateId] || null;
   }

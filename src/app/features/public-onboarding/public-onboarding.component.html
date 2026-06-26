@@ -56,7 +56,7 @@
           <input id="techName"
                  formControlName="techName"
                  placeholder="Enter your full name"
-                 (blur)="markTouched('techName')" />
+                 (blur)="onNameBlur('techName')" />
           <span class="field-error" *ngIf="showError('techName')">
             Full Name is required.
           </span>
@@ -68,7 +68,7 @@
           <input id="middleName"
                  formControlName="middleName"
                  placeholder="Enter middle name (optional)"
-                 (blur)="markTouched('middleName')" />
+                 (blur)="onNameBlur('middleName')" />
         </div>
 
         <!-- Tech Email -->
@@ -94,14 +94,15 @@
           <label for="techPhone">Phone Number *</label>
           <input id="techPhone"
                  formControlName="techPhone"
-                 placeholder="Enter your phone number"
+                 placeholder="(555) 555-5555"
+                 (input)="onPhoneInput($event)"
                  (blur)="markTouched('techPhone')" />
           <span class="field-error" *ngIf="showError('techPhone')">
             <ng-container *ngIf="candidateForm.get('techPhone')?.hasError('required')">
               Phone Number is required.
             </ng-container>
             <ng-container *ngIf="!candidateForm.get('techPhone')?.hasError('required') && candidateForm.get('techPhone')?.hasError('invalidPhone')">
-              Phone must contain only digits, spaces, hyphens, parentheses, and + with at least 10 digits.
+              Please enter a valid 10-digit phone number.
             </ng-container>
           </span>
         </div>
@@ -121,12 +122,24 @@
         </div>
 
         <!-- Home Address -->
-        <div class="form-field">
+        <div class="form-field address-autocomplete-wrapper">
           <label for="homeAddress">Home Address *</label>
-          <input id="homeAddress"
-                 formControlName="homeAddress"
-                 placeholder="Enter your home address"
-                 (blur)="markTouched('homeAddress')" />
+          <div class="address-input-wrapper">
+            <input id="homeAddress"
+                   formControlName="homeAddress"
+                   placeholder="Start typing your address..."
+                   autocomplete="off"
+                   (input)="onAddressInput($event)"
+                   (blur)="hideAddressSuggestions(); markTouched('homeAddress')" />
+            <span class="address-loading" *ngIf="isAddressLoading">&#8987;</span>
+          </div>
+          <ul class="address-suggestions" *ngIf="showAddressSuggestions && filteredAddresses.length > 0">
+            <li *ngFor="let suggestion of filteredAddresses"
+                (mousedown)="selectAddress(suggestion)"
+                class="address-suggestion-item">
+              {{ suggestion.formattedAddress }}
+            </li>
+          </ul>
           <span class="field-error" *ngIf="showError('homeAddress')">
             Home Address is required.
           </span>

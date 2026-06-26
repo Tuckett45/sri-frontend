@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, of } from 'rxjs';
 import { OnboardingService } from '../../../services/onboarding.service';
+import { GeocodingService } from 'src/app/services/geocoding.service';
+import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { HasUnsavedChanges } from '../../../guards/unsaved-changes.guard';
 import { getValidTransitions } from '../../../utils/offer-status.util';
 import {
@@ -53,6 +56,7 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
           <label for="techName">Tech Name *</label>
           <input id="techName"
                  formControlName="techName"
+                 appNameCapitalize
                  placeholder="Enter technician name"
                  (blur)="markTouched('techName')" />
           <span class="field-error"
@@ -66,6 +70,7 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
           <label for="middleName">Middle Name</label>
           <input id="middleName"
                  formControlName="middleName"
+                 appNameCapitalize
                  placeholder="Enter middle name (optional)"
                  (blur)="markTouched('middleName')" />
         </div>
@@ -94,7 +99,8 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
           <label for="techPhone">Tech Phone *</label>
           <input id="techPhone"
                  formControlName="techPhone"
-                 placeholder="Enter phone number"
+                 appPhoneMask
+                 placeholder="(555) 555-5555"
                  (blur)="markTouched('techPhone')" />
           <span class="field-error"
                 *ngIf="showError('techPhone')">
@@ -102,7 +108,7 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
               Tech Phone is required.
             </ng-container>
             <ng-container *ngIf="!candidateForm.get('techPhone')?.hasError('required') && candidateForm.get('techPhone')?.hasError('invalidPhone')">
-              Phone must contain only digits, spaces, hyphens, parentheses, and + with at least 10 digits.
+              Please enter a valid 10-digit phone number.
             </ng-container>
           </span>
         </div>
@@ -136,16 +142,33 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
         </div>
 
         <!-- Home Address -->
-        <div class="form-field">
+        <div class="form-field address-field">
           <label for="homeAddress">Home Address *</label>
           <input id="homeAddress"
                  formControlName="homeAddress"
-                 placeholder="Enter candidate's home address"
+                 placeholder="Start typing an address..."
+                 (input)="onAddressInput($event)"
+                 [matAutocomplete]="addressAuto"
                  (blur)="markTouched('homeAddress')" />
+          <mat-spinner *ngIf="isAddressLoading" diameter="18" class="address-spinner"></mat-spinner>
+          <mat-autocomplete #addressAuto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)">
+            <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
+              {{ suggestion.formattedAddress }}
+            </mat-option>
+          </mat-autocomplete>
           <span class="field-error"
                 *ngIf="showError('homeAddress')">
             Home Address is required.
           </span>
+        </div>
+
+        <!-- Home State -->
+        <div class="form-field">
+          <label for="homeState">Home State</label>
+          <input id="homeState"
+                 formControlName="homeState"
+                 placeholder="e.g. TX, CA, FL"
+                 (blur)="markTouched('homeState')" />
         </div>
 
         <!-- Referred By -->
@@ -190,6 +213,13 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
         <ng-container *ngIf="isEditMode">
           <div class="form-field checkbox-field">
             <label>
+              <input type="checkbox" formControlName="backgroundCheckComplete" />
+              Background Check Complete
+            </label>
+          </div>
+
+          <div class="form-field checkbox-field">
+            <label>
               <input type="checkbox" formControlName="drugTestComplete" />
               Drug Test Complete
             </label>
@@ -209,6 +239,42 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
             </label>
           </div>
         </ng-container>
+
+        <!-- Core Qualifications -->
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="fiberExperience" />
+            Fiber Experience
+          </label>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="liftCertification" />
+            Lift Certification
+          </label>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="travelAvailability" />
+            Travel Availability
+          </label>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="shiftAvailability" />
+            Shift Availability
+          </label>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="militaryBackground" />
+            Military Background
+          </label>
+        </div>
 
         <!-- Submit Button -->
         <div class="form-actions">
@@ -395,6 +461,16 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
         padding: 1rem;
       }
     }
+
+    .address-field {
+      position: relative;
+    }
+
+    .address-spinner {
+      position: absolute;
+      right: 0.75rem;
+      top: 2rem;
+    }
   `]
 })
 export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
@@ -410,11 +486,16 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
   vestSizes = VEST_SIZES;
   availableStatuses = ALL_OFFER_STATUSES;
 
+  // Address autocomplete
+  filteredAddresses: any[] = [];
+  isAddressLoading = false;
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private onboardingService: OnboardingService
+    private onboardingService: OnboardingService,
+    private geocodingService: GeocodingService
   ) {}
 
   ngOnInit(): void {
@@ -476,13 +557,20 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techPhone: ['', [Validators.required, CandidateFormComponent.phoneValidator]],
       vestSize: ['', Validators.required],
       homeAddress: ['', Validators.required],
+      homeState: [''],
       workSite: ['', Validators.required],
       referredBy: [''],
       startDate: ['', Validators.required],
       offerStatus: ['', Validators.required],
       drugTestComplete: [false],
+      backgroundCheckComplete: [false],
       oshaCertified: [false],
       scissorLiftCertified: [false],
+      fiberExperience: [false],
+      liftCertification: [false],
+      travelAvailability: [false],
+      shiftAvailability: [false],
+      militaryBackground: [false],
     });
   }
 
@@ -491,12 +579,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
     if (!value || !value.trim()) {
       return null; // let required validator handle empty
     }
-    // Only allow digits, spaces, hyphens, parentheses, and +
-    const allowedPattern = /^[\d\s\-\(\)\+]+$/;
-    if (!allowedPattern.test(value)) {
-      return { invalidPhone: true };
-    }
-    // Count only digit characters — require at least 10
+    // Count only digit characters — require exactly 10 for a masked phone
     const digitCount = (value.match(/\d/g) || []).length;
     if (digitCount < 10) {
       return { invalidPhone: true };
@@ -529,13 +612,20 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techPhone: candidate.techPhone,
       vestSize: candidate.vestSize,
       homeAddress: candidate.homeAddress || '',
+      homeState: candidate.homeState || '',
       workSite: candidate.workSite,
       referredBy: candidate.referredBy || '',
       startDate: candidate.startDate,
       offerStatus: candidate.offerStatus,
       drugTestComplete: candidate.drugTestComplete,
+      backgroundCheckComplete: candidate.backgroundCheckComplete,
       oshaCertified: candidate.oshaCertified,
       scissorLiftCertified: candidate.scissorLiftCertified,
+      fiberExperience: candidate.fiberExperience,
+      liftCertification: candidate.liftCertification,
+      travelAvailability: candidate.travelAvailability,
+      shiftAvailability: candidate.shiftAvailability,
+      militaryBackground: candidate.militaryBackground,
     });
     // Reset dirty state after population
     this.candidateForm.markAsPristine();
@@ -559,10 +649,16 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
       homeAddress: formValue.homeAddress,
+      homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
+      fiberExperience: formValue.fiberExperience,
+      liftCertification: formValue.liftCertification,
+      travelAvailability: formValue.travelAvailability,
+      shiftAvailability: formValue.shiftAvailability,
+      militaryBackground: formValue.militaryBackground,
     };
 
     this.onboardingService.createCandidate(payload).subscribe({
@@ -590,13 +686,20 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
       homeAddress: formValue.homeAddress,
+      homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
       drugTestComplete: formValue.drugTestComplete,
+      backgroundCheckComplete: formValue.backgroundCheckComplete,
       oshaCertified: formValue.oshaCertified,
       scissorLiftCertified: formValue.scissorLiftCertified,
+      fiberExperience: formValue.fiberExperience,
+      liftCertification: formValue.liftCertification,
+      travelAvailability: formValue.travelAvailability,
+      shiftAvailability: formValue.shiftAvailability,
+      militaryBackground: formValue.militaryBackground,
     };
 
     this.onboardingService.updateCandidate(this.candidateId!, payload).subscribe({
@@ -611,5 +714,56 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
         this.errorMessage = err?.message || 'Failed to update candidate.';
       },
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Address verification (Google Geocoding autocomplete)
+  // ---------------------------------------------------------------------------
+
+  onAddressInput(event: Event): void {
+    const query = (event.target as HTMLInputElement).value;
+    if (query && query.length > 5) {
+      this.isAddressLoading = true;
+      this.geocodingService.geocodeAddress(query).pipe(
+        catchError(() => {
+          this.isAddressLoading = false;
+          return of({ results: [] });
+        })
+      ).subscribe((response: any) => {
+        this.filteredAddresses = (response.results || []).map((result: any) => {
+          const address = result.address_components || [];
+          const streetNumber = address.find((c: any) => c.types.includes('street_number'))?.long_name || '';
+          const route = address.find((c: any) => c.types.includes('route'))?.long_name || '';
+          const streetAddress = `${streetNumber} ${route}`.trim();
+
+          const city = address.find((c: any) => c.types.includes('locality'))?.long_name || '';
+          const state = address.find((c: any) => c.types.includes('administrative_area_level_1'))?.long_name || '';
+          const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || '';
+          const zip = address.find((c: any) => c.types.includes('postal_code'))?.long_name || '';
+
+          const formattedAddress = [streetAddress, city, abbreviatedState, zip].filter(Boolean).join(', ');
+
+          return {
+            formattedAddress,
+            streetAddress,
+            city,
+            state: abbreviatedState,
+            zip,
+            original: result
+          };
+        });
+        this.isAddressLoading = false;
+      });
+    } else {
+      this.filteredAddresses = [];
+    }
+  }
+
+  selectAddress(suggestion: any): void {
+    this.candidateForm.patchValue({
+      homeAddress: suggestion.formattedAddress,
+      homeState: suggestion.state
+    });
+    this.filteredAddresses = [];
   }
 }

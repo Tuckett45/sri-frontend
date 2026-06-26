@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 
 import { OnboardingRoutingModule } from './onboarding-routing.module';
 import { SharedMaterialModule } from '../../shared-material.module';
+import { PhoneMaskDirective } from '../../directives/phone-mask.directive';
+import { NameCapitalizeDirective } from '../../directives/name-capitalize.directive';
 
 import { OnboardingNavComponent } from './onboarding-nav/onboarding-nav.component';
 import { CandidateListComponent } from './candidate-list/candidate-list.component';
@@ -54,7 +56,9 @@ import { CandidateNotesDialogComponent } from './candidate-notes-dialog/candidat
     GoalEditModalComponent,
     ConfirmDeleteModalComponent,
     GenerateLinkDialogComponent,
-    CandidateNotesDialogComponent
+    CandidateNotesDialogComponent,
+    PhoneMaskDirective,
+    NameCapitalizeDirective
   ],
   imports: [
     CommonModule,

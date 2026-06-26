@@ -4,6 +4,11 @@ export class TotalVendorIssueStats {
       public congruexIssues: number,
       public ervinIssues: number,
       public blueEdgeIssues: number,
-      public northStarIssues: number
+      public northStarIssues: number,
+      public masTecIssues: number,
+      public bcommIssues: number,
+      public mjEnterprisesIssues: number,
+      public pacNetIssues: number,
+      public utilitiesOneIssues: number
     ) {}
   }

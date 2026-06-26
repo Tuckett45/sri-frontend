@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { catchError, of } from 'rxjs';
 import { PublicOnboardingService, VestSize } from './public-onboarding.service';
+import { GeocodingService } from 'src/app/services/geocoding.service';
+import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 
 const VEST_SIZES: VestSize[] = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
@@ -83,13 +86,19 @@ export class PublicOnboardingComponent implements OnInit {
   resumeError = '';
   headshotError = '';
 
+  // Address autocomplete
+  filteredAddresses: any[] = [];
+  isAddressLoading = false;
+  showAddressSuggestions = false;
+
   vestSizes = VEST_SIZES;
   usStates = US_STATES;
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private publicOnboardingService: PublicOnboardingService
+    private publicOnboardingService: PublicOnboardingService,
+    private geocodingService: GeocodingService
   ) {}
 
   ngOnInit(): void {
@@ -237,6 +246,108 @@ export class PublicOnboardingComponent implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
+  // Phone mask
+  // ---------------------------------------------------------------------------
+
+  onPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 10);
+    let formatted = '';
+    if (digits.length === 0) {
+      formatted = '';
+    } else if (digits.length <= 3) {
+      formatted = `(${digits}`;
+    } else if (digits.length <= 6) {
+      formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    } else {
+      formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    input.value = formatted;
+    this.candidateForm.get('techPhone')?.setValue(formatted, { emitEvent: false });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Name capitalization
+  // ---------------------------------------------------------------------------
+
+  onNameBlur(controlName: string): void {
+    const control = this.candidateForm.get(controlName);
+    if (!control || !control.value || !control.value.trim()) return;
+    const capitalized = this.toTitleCase(control.value);
+    if (capitalized !== control.value) {
+      control.setValue(capitalized, { emitEvent: true });
+    }
+    control.markAsTouched();
+  }
+
+  private toTitleCase(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/(?:^|\s|[-'])\S/g, (match) => match.toUpperCase());
+  }
+
+  // ---------------------------------------------------------------------------
+  // Address autocomplete (Google Geocoding)
+  // ---------------------------------------------------------------------------
+
+  onAddressInput(event: Event): void {
+    const query = (event.target as HTMLInputElement).value;
+    if (query && query.length > 5) {
+      this.isAddressLoading = true;
+      this.geocodingService.geocodeAddress(query).pipe(
+        catchError(() => {
+          this.isAddressLoading = false;
+          return of({ results: [] });
+        })
+      ).subscribe((response: any) => {
+        this.filteredAddresses = (response.results || []).map((result: any) => {
+          const address = result.address_components || [];
+          const streetNumber = address.find((c: any) => c.types.includes('street_number'))?.long_name || '';
+          const route = address.find((c: any) => c.types.includes('route'))?.long_name || '';
+          const streetAddress = `${streetNumber} ${route}`.trim();
+
+          const city = address.find((c: any) => c.types.includes('locality'))?.long_name || '';
+          const state = address.find((c: any) => c.types.includes('administrative_area_level_1'))?.long_name || '';
+          const abbreviatedState = StateAbbreviation[state as keyof typeof StateAbbreviation] || state || '';
+          const zip = address.find((c: any) => c.types.includes('postal_code'))?.long_name || '';
+
+          const formattedAddress = [streetAddress, city, abbreviatedState, zip].filter(Boolean).join(', ');
+
+          return {
+            formattedAddress,
+            streetAddress,
+            city,
+            state: abbreviatedState,
+            zip,
+            original: result
+          };
+        });
+        this.showAddressSuggestions = this.filteredAddresses.length > 0;
+        this.isAddressLoading = false;
+      });
+    } else {
+      this.filteredAddresses = [];
+      this.showAddressSuggestions = false;
+    }
+  }
+
+  selectAddress(suggestion: any): void {
+    this.candidateForm.patchValue({
+      homeAddress: suggestion.formattedAddress,
+      homeState: suggestion.state
+    });
+    this.filteredAddresses = [];
+    this.showAddressSuggestions = false;
+  }
+
+  hideAddressSuggestions(): void {
+    // Delay to allow click event to fire on suggestion
+    setTimeout(() => {
+      this.showAddressSuggestions = false;
+    }, 200);
+  }
+
+  // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
 
@@ -259,12 +370,7 @@ export class PublicOnboardingComponent implements OnInit {
     if (!value || !value.trim()) {
       return null; // let required validator handle empty
     }
-    // Only allow digits, spaces, hyphens, parentheses, and +
-    const allowedPattern = /^[\d\s\-\(\)\+]+$/;
-    if (!allowedPattern.test(value)) {
-      return { invalidPhone: true };
-    }
-    // Count only digit characters - require at least 10
+    // Count only digit characters — require exactly 10 for masked phone
     const digitCount = (value.match(/\d/g) || []).length;
     if (digitCount < 10) {
       return { invalidPhone: true };

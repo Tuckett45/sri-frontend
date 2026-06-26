@@ -35,6 +35,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   preliminaryPunchListForm!: FormGroup;
   isEditMode: boolean = false;
   isDisabled: boolean = false;
+  isImageUploadDisabled: boolean = false;
   displayModal: boolean = false;
   currentImage: string = '';
   currentImageIndex: number = 0;
@@ -132,7 +133,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   stateAbbreviations!: StateAbbreviation;
 
-  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction'];
+  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction', 'PacNet', 'Utilities One'];
 
   isAddressLoading = false;
   filteredAddresses: any[] = [];
@@ -209,10 +210,10 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       dateReported: [this.data?.dateReported ||  new Date().toISOString()],
       issueImages: this.fb.array(this.data?.issueImages || []),
       resolutionImages: this.fb.array(this.data?.resolutionImages || []), 
-      pmResolved: [this.data?.pmResolved || false],
+      pmResolved: [this.data?.pmResolved ?? false],
       pmConcerns: [this.data?.pmConcerns || ''],
       resolvedDate: [this.data?.resolvedDate || null],
-      cmResolved: [this.data?.cmResolved || false],
+      cmResolved: [this.data?.cmResolved ?? false],
       updatedBy: [this.data?.updatedBy || null],
       updatedDate: [this.data?.updatedDate || null],
       resolvedBy: [this.data?.resolvedBy || null]
@@ -253,9 +254,14 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   isModalDisabled() {
     if(this.userData.role === 'PM' || this.userData.role === 'Client'){
-      return this.isDisabled = true;
+      this.isDisabled = true;
+      // PM users can still upload images; only Clients are fully restricted
+      this.isImageUploadDisabled = this.userData.role === 'Client';
+      return true;
     }else{
-      return this.isDisabled = false;
+      this.isDisabled = false;
+      this.isImageUploadDisabled = false;
+      return false;
     }
   }
 
@@ -581,73 +587,68 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   private restoreDraftIfAvailable(): void {
     if (typeof localStorage === 'undefined') return;
-    // Look for any draft
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX)) {
-        try {
-          const draft = JSON.parse(localStorage.getItem(key) || '');
-          if (draft && draft.id) {
-            // Remove the old draft from localStorage since we're consuming it
-            localStorage.removeItem(key);
+    // Look for the draft matching THIS form's ID only (not any random draft)
+    const formId = this.preliminaryPunchListForm.get('id')?.value;
+    if (!formId) return;
+    const draftKey = PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX + formId;
+    const stored = localStorage.getItem(draftKey);
+    if (!stored) return;
 
-            // Generate a new UUID so we don't collide with the previously-submitted entry
-            const newId = uuidv4();
-            const oldId = draft.id;
+    try {
+      const draft = JSON.parse(stored);
+      if (draft && draft.id) {
+        // Remove the draft from localStorage since we're consuming it
+        localStorage.removeItem(draftKey);
 
-            // Restore the form with draft data but a fresh ID
-            this.preliminaryPunchListForm.patchValue({
-              id: newId,
-              segmentId: draft.segmentId || '',
-              vendorName: draft.vendorName || '',
-              streetAddress: draft.streetAddress || '',
-              city: draft.city || '',
-              state: draft.state || '',
-              additionalConcerns: draft.additionalConcerns || '',
-              createdBy: null,
-              dateReported: new Date().toISOString(),
-              pmResolved: draft.pmResolved || false,
-              pmConcerns: draft.pmConcerns || '',
-              resolvedDate: draft.resolvedDate || null,
-              cmResolved: draft.cmResolved || false,
-              updatedBy: null,
-              updatedDate: null,
-              resolvedBy: null
-            });
-            // Restore images
-            if (draft.issueImages?.length) {
-              const fa = this.issueImagesFormArray;
-              fa.clear();
-              draft.issueImages.forEach((img: any) => fa.push(this.fb.control(img)));
-            }
-            if (draft.resolutionImages?.length) {
-              const fa = this.resolutionImagesFormArray;
-              fa.clear();
-              draft.resolutionImages.forEach((img: any) => fa.push(this.fb.control(img)));
-            }
-            // Restore issues with updated punch list ID references
-            if (draft.issues?.length) {
-              const issuesArray = this.issueAreasFormArray;
-              issuesArray.clear();
-              draft.issues.forEach((issue: any) => {
-                issuesArray.push(this.fb.group({
-                  id: [uuidv4()],
-                  area: [issue.area || '', Validators.required],
-                  category: [issue.category || '', Validators.required],
-                  subCategory: [issue.subCategory || ''],
-                  preliminaryPunchListId: [newId],
-                  errorCodeId: [issue.errorCodeId || '']
-                }));
-              });
-            }
-            this.toastr.info('Your previous form data has been restored.', 'Draft Restored');
-            break; // Only restore one draft
-          }
-        } catch {
-          // Invalid draft, remove it
-          localStorage.removeItem(key!);
+        // Restore the form with draft data (keep same ID since it matches)
+        this.preliminaryPunchListForm.patchValue({
+          segmentId: draft.segmentId || '',
+          vendorName: draft.vendorName || '',
+          streetAddress: draft.streetAddress || '',
+          city: draft.city || '',
+          state: draft.state || '',
+          additionalConcerns: draft.additionalConcerns || '',
+          createdBy: null,
+          dateReported: draft.dateReported || new Date().toISOString(),
+          pmResolved: draft.pmResolved ?? false,
+          pmConcerns: draft.pmConcerns || '',
+          resolvedDate: draft.resolvedDate || null,
+          cmResolved: draft.cmResolved ?? false,
+          updatedBy: null,
+          updatedDate: null,
+          resolvedBy: null
+        });
+        // Restore images
+        if (draft.issueImages?.length) {
+          const fa = this.issueImagesFormArray;
+          fa.clear();
+          draft.issueImages.forEach((img: any) => fa.push(this.fb.control(img)));
         }
+        if (draft.resolutionImages?.length) {
+          const fa = this.resolutionImagesFormArray;
+          fa.clear();
+          draft.resolutionImages.forEach((img: any) => fa.push(this.fb.control(img)));
+        }
+        // Restore issues
+        if (draft.issues?.length) {
+          const issuesArray = this.issueAreasFormArray;
+          issuesArray.clear();
+          draft.issues.forEach((issue: any) => {
+            issuesArray.push(this.fb.group({
+              id: [uuidv4()],
+              area: [issue.area || '', Validators.required],
+              category: [issue.category || '', Validators.required],
+              subCategory: [issue.subCategory || ''],
+              preliminaryPunchListId: [formId],
+              errorCodeId: [issue.errorCodeId || '']
+            }));
+          });
+        }
+        this.toastr.info('Your previous form data has been restored.', 'Draft Restored');
       }
+    } catch {
+      // Invalid draft, remove it
+      localStorage.removeItem(draftKey);
     }
   }
 
