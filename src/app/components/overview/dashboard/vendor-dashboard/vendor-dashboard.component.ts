@@ -165,7 +165,7 @@ export class VendorDashboardComponent implements OnInit {
               ]
             };
           }
-          else if(this.user.company === 'PacNet'){
+          else if(this.user.company === 'Pacific Network Solutions'){
 
             this.totalVendorIssueChartData = {
               

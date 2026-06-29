@@ -43,7 +43,7 @@ export class StreetSheetModalComponent implements OnInit {
 
   equipmentOptions: string[] = ['Saws', 'Bore Rigs', 'Splicing equipment', 'Mini Excavators', 'Dump Trailers', 'TCP Equipment', 'Box Crew Equipment', 'Other'];
 
-  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction', 'PacNet', 'Utilities One'];
+  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction', 'Pacific Network Solutions', 'Utilities One'];
 
   stateAbbreviations!: StateAbbreviation;
 

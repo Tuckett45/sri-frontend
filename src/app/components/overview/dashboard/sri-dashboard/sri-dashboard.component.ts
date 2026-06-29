@@ -590,7 +590,7 @@ export class SRIDashboardComponent implements OnInit {
         case 'MasTec': entry.masTecIssues++; break;
         case 'Bcomm': entry.bcommIssues++; break;
         case 'M&J Enterprises Construction': entry.mjEnterprisesIssues++; break;
-        case 'PacNet': entry.pacNetIssues++; break;
+        case 'Pacific Network Solutions': entry.pacNetIssues++; break;
         case 'Utilities One': entry.utilitiesOneIssues++; break;
       }
     });
@@ -833,7 +833,7 @@ export class SRIDashboardComponent implements OnInit {
         case 'MasTec': entry.masTecIssues++; break;
         case 'Bcomm': entry.bcommIssues++; break;
         case 'M&J Enterprises Construction': entry.mjEnterprisesIssues++; break;
-        case 'PacNet': entry.pacNetIssues++; break;
+        case 'Pacific Network Solutions': entry.pacNetIssues++; break;
         case 'Utilities One': entry.utilitiesOneIssues++; break;
       }
     });
@@ -929,7 +929,7 @@ export class SRIDashboardComponent implements OnInit {
       case 'MasTec': return '#9C27B0';
       case 'Bcomm': return '#FF9800';
       case 'M&J Enterprises Construction': return '#00BCD4';
-      case 'PacNet': return '#795548';
+      case 'Pacific Network Solutions': return '#795548';
       case 'Utilities One': return '#607D8B';
       default: return '#888888';
     }

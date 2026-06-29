@@ -33,7 +33,7 @@ export class RegisterModalComponent {
     'Payroll',
     'Executive'
   ];
-  companys: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction', 'PacNet', 'Utilities One'];
+  companys: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction', 'Pacific Network Solutions', 'Utilities One'];
   markets: { name: string, abbreviation: string }[] = [
     { name: 'Alabama', abbreviation: 'AL' },
     { name: 'Arizona', abbreviation: 'AZ' },

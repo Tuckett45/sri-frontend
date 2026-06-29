@@ -133,7 +133,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   stateAbbreviations!: StateAbbreviation;
 
-  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction', 'PacNet', 'Utilities One'];
+  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction', 'Pacific Network Solutions', 'Utilities One'];
 
   isAddressLoading = false;
   filteredAddresses: any[] = [];
