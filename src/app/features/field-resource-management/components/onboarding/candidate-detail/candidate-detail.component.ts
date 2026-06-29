@@ -144,6 +144,9 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
             </div>
           </div>
 
+          <!-- Attachments Section (Certs & Drug Screens) -->
+          <app-candidate-attachments-section [candidateId]="candidateId"></app-candidate-attachments-section>
+
           <!-- Notes Section (inline editable) -->
           <div class="notes-section">
             <div class="notes-header">
