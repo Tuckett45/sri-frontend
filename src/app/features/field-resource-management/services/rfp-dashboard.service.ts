@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment, local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 import {
   BomTracking,
+  BulkImportRecord,
+  BulkImportResponse,
   DashboardFilters,
   DashboardQuote,
   DashboardResponse,
@@ -17,9 +19,9 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class RfpDashboardService {
-  private readonly dashboardUrl = `${local_environment.apiUrl}/quotes/dashboard`;
-  private readonly quotesUrl = `${local_environment.apiUrl}/quotes`;
-  private readonly usersUrl = `${local_environment.apiUrl}/user-management/users`;
+  private readonly dashboardUrl = `${environment.atlasApiUrl}/quotes/dashboard`;
+  private readonly quotesUrl = `${environment.atlasApiUrl}/quotes`;
+  private readonly usersUrl = `${environment.apiUrl}/user-management/users`;
 
   constructor(private http: HttpClient) {}
 
@@ -96,6 +98,21 @@ export class RfpDashboardService {
     return this.http.put<BomTracking>(
       `${this.quotesUrl}/${quoteId}/bom-trackings/${trackingId}`,
       entry
+    );
+  }
+
+  // ===========================================================================
+  // Bulk Import
+  // ===========================================================================
+
+  /**
+   * Bulk import RFP records from a parsed spreadsheet.
+   * Sends an array of RFP records to be created in batch.
+   */
+  bulkImportRfps(records: BulkImportRecord[]): Observable<BulkImportResponse> {
+    return this.http.post<BulkImportResponse>(
+      `${this.quotesUrl}/bulk-import`,
+      { records }
     );
   }
 

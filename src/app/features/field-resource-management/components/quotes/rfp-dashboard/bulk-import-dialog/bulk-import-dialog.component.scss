@@ -1,0 +1,423 @@
+.bulk-import-dialog {
+  width: 100%;
+  min-width: 700px;
+  max-width: 950px;
+
+  @media (max-width: 767px) {
+    min-width: unset;
+  }
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px 0;
+
+  .header-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: #1976d2;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 500;
+    color: #424242;
+  }
+}
+
+// ─── Upload Step ─────────────────────────────────────────────────────────────
+
+.upload-step {
+  padding: 16px 0;
+
+  .step-description {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+}
+
+.drop-zone {
+  border: 2px dashed #bdbdbd;
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fafafa;
+
+  &:hover,
+  &:focus {
+    border-color: #1976d2;
+    background: #e3f2fd;
+    outline: none;
+  }
+
+  .upload-icon {
+    font-size: 56px;
+    width: 56px;
+    height: 56px;
+    color: #90caf9;
+    margin-bottom: 16px;
+  }
+
+  .drop-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #424242;
+    margin: 0 0 4px;
+  }
+
+  .drop-subtext {
+    font-size: 14px;
+    color: #9e9e9e;
+    margin: 0 0 12px;
+  }
+
+  .file-types {
+    font-size: 12px;
+    color: #bdbdbd;
+    margin: 0;
+  }
+}
+
+.file-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #ffebee;
+  border-radius: 8px;
+  color: #c62828;
+  font-size: 14px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.template-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+
+  .template-hint {
+    font-size: 13px;
+    color: #9e9e9e;
+  }
+}
+
+// ─── Preview Step ────────────────────────────────────────────────────────────
+
+.preview-step {
+  padding: 16px 0;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #e8f5e9;
+  border-radius: 8px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    color: #2e7d32;
+  }
+
+  .file-name {
+    font-weight: 500;
+    flex: 1;
+    color: #2e7d32;
+  }
+}
+
+.validation-summary {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+
+  .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .count {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .label {
+      font-size: 13px;
+      color: #666;
+    }
+
+    &.total .count {
+      color: #424242;
+    }
+
+    &.valid {
+      mat-icon {
+        color: #2e7d32;
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+      .count { color: #2e7d32; }
+    }
+
+    &.invalid {
+      mat-icon {
+        color: #c62828;
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+      .count { color: #c62828; }
+    }
+  }
+}
+
+.table-container {
+  max-height: 400px;
+  overflow: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #ffffff;
+
+  ::ng-deep {
+    .mat-mdc-table {
+      background: #ffffff !important;
+    }
+
+    .mat-mdc-header-row {
+      background: #fafafa !important;
+    }
+
+    .mat-mdc-header-cell {
+      color: #424242 !important;
+      background: #fafafa !important;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .mat-mdc-row {
+      background: #ffffff !important;
+
+      &:nth-child(even) {
+        background: #f9f9f9 !important;
+      }
+
+      &:hover {
+        background: #f0f0f0 !important;
+      }
+    }
+
+    .mat-mdc-cell {
+      color: #333333 !important;
+      font-size: 13px;
+    }
+  }
+
+  .preview-table {
+    width: 100%;
+    min-width: 900px;
+    background: #ffffff;
+
+    th {
+      font-size: 12px;
+      font-weight: 600;
+      color: #424242;
+      background: #fafafa !important;
+      white-space: nowrap;
+    }
+
+    tr.mat-mdc-row,
+    tr.mat-row {
+      background: #ffffff !important;
+
+      &:nth-child(even) {
+        background: #f9f9f9 !important;
+      }
+
+      &:hover {
+        background: #f0f0f0 !important;
+      }
+    }
+
+    td {
+      font-size: 13px;
+      color: #333333 !important;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mat-mdc-cell,
+    .mat-cell {
+      color: #333333 !important;
+    }
+
+    .mat-mdc-header-cell,
+    .mat-header-cell {
+      color: #424242 !important;
+      background: #fafafa !important;
+    }
+
+    .notes-cell {
+      max-width: 150px;
+    }
+
+    .cell-error {
+      color: #c62828;
+      font-style: italic;
+    }
+
+    .row-invalid {
+      background: #fff3e0 !important;
+    }
+
+    .status-valid {
+      color: #2e7d32;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .status-invalid {
+      color: #c62828;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      cursor: help;
+    }
+  }
+}
+
+.import-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #e65100;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// ─── Importing Step ──────────────────────────────────────────────────────────
+
+.importing-step {
+  padding: 48px 0;
+
+  .importing-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+
+    h3 {
+      margin: 8px 0 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: #424242;
+    }
+
+    p {
+      color: #666;
+      margin: 0;
+    }
+
+    mat-progress-bar {
+      width: 80%;
+      margin-top: 16px;
+    }
+  }
+}
+
+// ─── Complete Step ───────────────────────────────────────────────────────────
+
+.complete-step {
+  padding: 48px 0;
+
+  .complete-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+
+    .success-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      color: #2e7d32;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 500;
+      color: #424242;
+    }
+  }
+
+  .import-results {
+    display: flex;
+    gap: 32px;
+    margin-top: 16px;
+
+    .result-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+
+      .result-count {
+        font-size: 28px;
+        font-weight: 700;
+      }
+
+      .result-label {
+        font-size: 13px;
+        color: #666;
+      }
+
+      &.success .result-count {
+        color: #2e7d32;
+      }
+
+      &.failed .result-count {
+        color: #c62828;
+      }
+    }
+  }
+}
+
+// ─── Dialog Actions ──────────────────────────────────────────────────────────
+
+mat-dialog-actions {
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+}

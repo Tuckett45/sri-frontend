@@ -313,3 +313,27 @@ export interface DashboardUser {
   fullName: string;
   email: string;
 }
+
+
+// ---------------------------------------------------------------------------
+// Interfaces – Bulk Import
+// ---------------------------------------------------------------------------
+
+export interface BulkImportRecord {
+  customer: string;
+  projectDescription: string;
+  requestorName: string;
+  rfpReceiveDate: string | null;
+  quoteDueDate: string | null;
+  assignedTo: string;
+  quoteSubmittedDate: string | null;
+  quoteNumber: string;
+  notes: string;
+}
+
+export interface BulkImportResponse {
+  importedCount: number;
+  failedCount: number;
+  errors: string[];
+  createdIds: string[];
+}

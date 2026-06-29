@@ -1,0 +1,245 @@
+<div class="bulk-import-dialog">
+  <!-- Dialog Header -->
+  <div class="dialog-header">
+    <mat-icon class="header-icon">upload_file</mat-icon>
+    <h2 mat-dialog-title>Bulk Import RFPs</h2>
+  </div>
+
+  <mat-dialog-content>
+    <!-- Step 1: Upload -->
+    <div *ngIf="step === 'upload'" class="upload-step">
+      <p class="step-description">
+        Upload a CSV or Excel (.xlsx) file matching the RFP Quote Tracker template.
+        The file should contain columns for Customer, Project Description, Requester's Name,
+        RFP Receive Date, Quote Due Date, Assigned, Quote Submitted, Quote Number, and Notes.
+      </p>
+
+      <!-- Drop Zone -->
+      <div
+        class="drop-zone"
+        (drop)="onFileDrop($event)"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (click)="fileInput.click()"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="fileInput.click()"
+        (keydown.space)="fileInput.click()"
+        aria-label="Upload file. Click or drag and drop a CSV or Excel file."
+      >
+        <mat-icon class="upload-icon">cloud_upload</mat-icon>
+        <p class="drop-text">Drag & drop your file here</p>
+        <p class="drop-subtext">or click to browse</p>
+        <p class="file-types">Supported formats: .csv, .xlsx</p>
+      </div>
+
+      <input
+        #fileInput
+        type="file"
+        accept=".csv,.xlsx,.xls"
+        (change)="onFileSelected($event)"
+        hidden
+      />
+
+      <!-- File Error -->
+      <div *ngIf="fileError" class="file-error">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ fileError }}</span>
+      </div>
+
+      <!-- Template Download -->
+      <div class="template-section">
+        <button mat-stroked-button color="primary" (click)="downloadTemplate()">
+          <mat-icon>download</mat-icon>
+          Download Template
+        </button>
+        <span class="template-hint">Use this template to ensure correct column format</span>
+      </div>
+    </div>
+
+    <!-- Step 2: Preview -->
+    <div *ngIf="step === 'preview'" class="preview-step">
+      <!-- File Info -->
+      <div class="file-info">
+        <mat-icon>description</mat-icon>
+        <span class="file-name">{{ selectedFile?.name }}</span>
+        <button mat-icon-button (click)="onBack()" aria-label="Remove file">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Validation Summary -->
+      <div class="validation-summary">
+        <div class="summary-item total">
+          <span class="count">{{ totalCount }}</span>
+          <span class="label">Total Rows</span>
+        </div>
+        <div class="summary-item valid">
+          <mat-icon>check_circle</mat-icon>
+          <span class="count">{{ validCount }}</span>
+          <span class="label">Valid</span>
+        </div>
+        <div class="summary-item invalid" *ngIf="invalidCount > 0">
+          <mat-icon>error</mat-icon>
+          <span class="count">{{ invalidCount }}</span>
+          <span class="label">Errors</span>
+        </div>
+      </div>
+
+      <!-- Preview Table -->
+      <div class="table-container">
+        <table mat-table [dataSource]="parsedRows" class="preview-table">
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <mat-icon *ngIf="row.isValid" class="status-valid">check_circle</mat-icon>
+              <mat-icon *ngIf="!row.isValid" class="status-invalid"
+                        [matTooltip]="row.errors.join(', ')">error</mat-icon>
+            </td>
+          </ng-container>
+
+          <!-- Customer Column -->
+          <ng-container matColumnDef="customer">
+            <th mat-header-cell *matHeaderCellDef>Customer</th>
+            <td mat-cell *matCellDef="let row" [class.cell-error]="!row.customer">
+              {{ row.customer || '(missing)' }}
+            </td>
+          </ng-container>
+
+          <!-- Project Description Column -->
+          <ng-container matColumnDef="projectDescription">
+            <th mat-header-cell *matHeaderCellDef>Project Description</th>
+            <td mat-cell *matCellDef="let row" [class.cell-error]="!row.projectDescription">
+              {{ row.projectDescription || '(missing)' }}
+            </td>
+          </ng-container>
+
+          <!-- Requester Name Column -->
+          <ng-container matColumnDef="requestorName">
+            <th mat-header-cell *matHeaderCellDef>Requester</th>
+            <td mat-cell *matCellDef="let row">{{ row.requestorName }}</td>
+          </ng-container>
+
+          <!-- RFP Receive Date Column -->
+          <ng-container matColumnDef="rfpReceiveDate">
+            <th mat-header-cell *matHeaderCellDef>RFP Received</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.rfpReceiveDate ? (row.rfpReceiveDate | date:'shortDate') : '-' }}
+            </td>
+          </ng-container>
+
+          <!-- Quote Due Date Column -->
+          <ng-container matColumnDef="quoteDueDate">
+            <th mat-header-cell *matHeaderCellDef>Due Date</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.quoteDueDate ? (row.quoteDueDate | date:'shortDate') : '-' }}
+            </td>
+          </ng-container>
+
+          <!-- Assigned To Column -->
+          <ng-container matColumnDef="assignedTo">
+            <th mat-header-cell *matHeaderCellDef>Assigned</th>
+            <td mat-cell *matCellDef="let row">{{ row.assignedTo }}</td>
+          </ng-container>
+
+          <!-- Quote Submitted Date Column -->
+          <ng-container matColumnDef="quoteSubmittedDate">
+            <th mat-header-cell *matHeaderCellDef>Submitted</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.quoteSubmittedDate ? (row.quoteSubmittedDate | date:'shortDate') : '-' }}
+            </td>
+          </ng-container>
+
+          <!-- Quote Number Column -->
+          <ng-container matColumnDef="quoteNumber">
+            <th mat-header-cell *matHeaderCellDef>Quote #</th>
+            <td mat-cell *matCellDef="let row">{{ row.quoteNumber }}</td>
+          </ng-container>
+
+          <!-- Notes Column -->
+          <ng-container matColumnDef="notes">
+            <th mat-header-cell *matHeaderCellDef>Notes</th>
+            <td mat-cell *matCellDef="let row" class="notes-cell">{{ row.notes }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [class.row-invalid]="!row.isValid"></tr>
+        </table>
+      </div>
+
+      <!-- Import notice -->
+      <p class="import-notice" *ngIf="invalidCount > 0">
+        <mat-icon>info</mat-icon>
+        Only valid rows ({{ validCount }}) will be imported. Rows with errors will be skipped.
+      </p>
+    </div>
+
+    <!-- Step 3: Importing -->
+    <div *ngIf="step === 'importing'" class="importing-step">
+      <div class="importing-content">
+        <mat-spinner diameter="48"></mat-spinner>
+        <h3>Importing RFP Records...</h3>
+        <p>Please wait while your records are being imported.</p>
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      </div>
+    </div>
+
+    <!-- Step 4: Complete -->
+    <div *ngIf="step === 'complete'" class="complete-step">
+      <div class="complete-content">
+        <mat-icon class="success-icon">check_circle_outline</mat-icon>
+        <h3>Import Complete</h3>
+        <div class="import-results">
+          <div class="result-item success">
+            <span class="result-count">{{ importedCount }}</span>
+            <span class="result-label">Records imported successfully</span>
+          </div>
+          <div class="result-item failed" *ngIf="failedCount > 0">
+            <span class="result-count">{{ failedCount }}</span>
+            <span class="result-label">Records failed to import</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <!-- Dialog Actions -->
+  <mat-dialog-actions align="end">
+    <ng-container [ngSwitch]="step">
+      <!-- Upload step actions -->
+      <ng-container *ngSwitchCase="'upload'">
+        <button mat-button (click)="onCancel()">Cancel</button>
+      </ng-container>
+
+      <!-- Preview step actions -->
+      <ng-container *ngSwitchCase="'preview'">
+        <button mat-button (click)="onBack()">Back</button>
+        <button mat-button (click)="onCancel()">Cancel</button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="onImport()"
+          [disabled]="validCount === 0"
+        >
+          <mat-icon>upload</mat-icon>
+          Import {{ validCount }} Record{{ validCount !== 1 ? 's' : '' }}
+        </button>
+      </ng-container>
+
+      <!-- Importing step actions -->
+      <ng-container *ngSwitchCase="'importing'">
+        <button mat-button disabled>Importing...</button>
+      </ng-container>
+
+      <!-- Complete step actions -->
+      <ng-container *ngSwitchCase="'complete'">
+        <button mat-raised-button color="primary" (click)="onDone()">
+          <mat-icon>done</mat-icon>
+          Done
+        </button>
+      </ng-container>
+    </ng-container>
+  </mat-dialog-actions>
+</div>
