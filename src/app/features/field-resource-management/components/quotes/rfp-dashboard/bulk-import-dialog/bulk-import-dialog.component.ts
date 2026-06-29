@@ -194,10 +194,10 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
       const sheet = workbook.Sheets[sheetName];
 
       // Convert to JSON with headers
-      const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, {
+      const jsonData = XLSX.utils.sheet_to_json(sheet, {
         raw: false,
         dateNF: 'MM/DD/YY'
-      });
+      }) as Record<string, any>[];
 
       if (jsonData && jsonData.length > 0) {
         this.mapAndValidateRows(jsonData);
