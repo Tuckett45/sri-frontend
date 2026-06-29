@@ -35,6 +35,7 @@ import { PoTrackingTabComponent } from './rfp-dashboard/po-tracking-tab/po-track
 import { ProjectTrackingTabComponent } from './rfp-dashboard/project-tracking-tab/project-tracking-tab.component';
 import { BomHistoryDialogComponent } from './rfp-dashboard/bom-history-dialog/bom-history-dialog.component';
 import { BulkImportDialogComponent } from './rfp-dashboard/bulk-import-dialog/bulk-import-dialog.component';
+import { RfpDetailDialogComponent } from './rfp-dashboard/rfp-detail-dialog/rfp-detail-dialog.component';
 
 // Dashboard State
 import { dashboardReducer } from '../../state/quotes/dashboard.reducer';
@@ -92,7 +93,8 @@ const routes: Routes = [
     PoTrackingTabComponent,
     ProjectTrackingTabComponent,
     BomHistoryDialogComponent,
-    BulkImportDialogComponent
+    BulkImportDialogComponent,
+    RfpDetailDialogComponent
   ],
   imports: [
     CommonModule,

@@ -24,11 +24,36 @@ export class ProjectTrackingTabComponent implements OnChanges {
 
   dataSource = new MatTableDataSource<DashboardQuote>([]);
 
+  // Per-tab filters
+  filterCustomer = '';
+  filterJobNumber = '';
+  filterStatus = '';
+
   constructor(private dialog: MatDialog) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['records']) {
       this.dataSource.data = this.records;
+      this.dataSource.filterPredicate = (data: DashboardQuote, filter: string) => {
+        const filters = JSON.parse(filter);
+        let matches = true;
+        if (filters.customer) {
+          matches = matches && (data.customer || '').toLowerCase().includes(filters.customer.toLowerCase());
+        }
+        if (filters.jobNumber) {
+          matches = matches && (data.jobNumber || '').toLowerCase().includes(filters.jobNumber.toLowerCase());
+        }
+        if (filters.status) {
+          if (filters.status === 'active') {
+            matches = matches && !data.jobComplete;
+          } else if (filters.status === 'complete') {
+            matches = matches && !!data.jobComplete && !!data.invoiceNumber;
+          } else if (filters.status === 'pendingCloseout') {
+            matches = matches && !!data.jobComplete && !data.invoiceNumber;
+          }
+        }
+        return matches;
+      };
       setTimeout(() => {
         if (this.sort) { this.dataSource.sort = this.sort; }
         if (this.paginator) { this.dataSource.paginator = this.paginator; }
@@ -69,5 +94,24 @@ export class ProjectTrackingTabComponent implements OnChanges {
       width: '700px',
       data: { quoteId: row.id, bomTrackings: row.bomTrackings || [] }
     });
+  }
+
+  applyFilters(): void {
+    this.dataSource.filter = JSON.stringify({
+      customer: this.filterCustomer,
+      jobNumber: this.filterJobNumber,
+      status: this.filterStatus
+    });
+  }
+
+  clearFilters(): void {
+    this.filterCustomer = '';
+    this.filterJobNumber = '';
+    this.filterStatus = '';
+    this.applyFilters();
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(this.filterCustomer || this.filterJobNumber || this.filterStatus);
   }
 }

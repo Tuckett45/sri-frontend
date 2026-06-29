@@ -180,7 +180,7 @@
 
   <!-- Tabs -->
   <div class="tab-container" *ngIf="!(loading$ | async)">
-    <mat-tab-group animationDuration="200ms">
+    <mat-tab-group #tabGroup animationDuration="200ms" [(selectedIndex)]="selectedTabIndex">
       <mat-tab label="Quote Pipeline">
         <app-quote-pipeline-dashboard></app-quote-pipeline-dashboard>
       </mat-tab>

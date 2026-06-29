@@ -4,7 +4,9 @@ import { Store } from '@ngrx/store';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardQuote, DashboardUser } from '../../../../models/quote-workflow.model';
+import { RfpDetailDialogComponent } from '../rfp-detail-dialog/rfp-detail-dialog.component';
 import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 
 @Component({
@@ -30,9 +32,36 @@ export class RfpTabComponent implements OnInit, OnChanges {
   editingField: string | null = null;
   editValue: string = '';
 
-  constructor(private store: Store, private router: Router) {}
+  // Per-tab filters
+  filterCustomer = '';
+  filterAssigned = '';
+  filterStatus = '';
 
-  ngOnInit(): void {}
+  constructor(private store: Store, private router: Router, private dialog: MatDialog) {}
+
+  ngOnInit(): void {
+    this.dataSource.filterPredicate = (data: DashboardQuote, filter: string) => {
+      const filters = JSON.parse(filter);
+      let matches = true;
+
+      if (filters.customer) {
+        matches = matches && (data.customer || '').toLowerCase().includes(filters.customer.toLowerCase());
+      }
+      if (filters.assigned) {
+        matches = matches && (data.assignedToQuote || '').toLowerCase().includes(filters.assigned.toLowerCase());
+      }
+      if (filters.status) {
+        if (filters.status === 'overdue') {
+          matches = matches && this.isOverdue(data);
+        } else if (filters.status === 'submitted') {
+          matches = matches && !!data.quoteSubmittedDate;
+        } else if (filters.status === 'pending') {
+          matches = matches && !data.quoteSubmittedDate && !this.isOverdue(data);
+        }
+      }
+      return matches;
+    };
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['records']) {
@@ -92,6 +121,29 @@ export class RfpTabComponent implements OnInit, OnChanges {
   }
 
   onRowClick(row: DashboardQuote): void {
-    this.router.navigate(['/field-resource-management/quotes', row.id]);
+    this.dialog.open(RfpDetailDialogComponent, {
+      width: '700px',
+      maxWidth: '95vw',
+      data: { record: row }
+    });
+  }
+
+  applyFilters(): void {
+    this.dataSource.filter = JSON.stringify({
+      customer: this.filterCustomer,
+      assigned: this.filterAssigned,
+      status: this.filterStatus
+    });
+  }
+
+  clearFilters(): void {
+    this.filterCustomer = '';
+    this.filterAssigned = '';
+    this.filterStatus = '';
+    this.applyFilters();
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(this.filterCustomer || this.filterAssigned || this.filterStatus);
   }
 }

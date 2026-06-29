@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { MatDialog } from '@angular/material/dialog';
+import { MatTabGroup } from '@angular/material/tabs';
 import { Observable, Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import { DashboardFilters, DashboardQuote, DashboardUser } from '../../../models/quote-workflow.model';
@@ -15,11 +17,15 @@ import * as DashboardSelectors from '../../../state/quotes/dashboard.selectors';
   styleUrls: ['./rfp-dashboard.component.scss']
 })
 export class RfpDashboardComponent implements OnInit, OnDestroy {
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
+
   rfpRecords$: Observable<DashboardQuote[]>;
   poTrackingRecords$: Observable<DashboardQuote[]>;
   projectTrackingRecords$: Observable<DashboardQuote[]>;
   loading$: Observable<boolean>;
   users$: Observable<DashboardUser[]>;
+
+  selectedTabIndex = 0;
 
   filters: DashboardFilters = {
     customer: '',
@@ -32,7 +38,11 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private customerFilter$ = new Subject<string>();
 
-  constructor(private store: Store, private dialog: MatDialog) {
+  constructor(
+    private store: Store,
+    private dialog: MatDialog,
+    private route: ActivatedRoute
+  ) {
     this.rfpRecords$ = this.store.select(DashboardSelectors.selectRfpRecords);
     this.poTrackingRecords$ = this.store.select(DashboardSelectors.selectPoTrackingRecords);
     this.projectTrackingRecords$ = this.store.select(DashboardSelectors.selectProjectTrackingRecords);
@@ -49,6 +59,17 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(() => {
       this.dispatchFilterChange();
+    });
+
+    // Handle query params for tab navigation (from "View all items" in pipeline)
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['tab']) {
+        this.selectedTabIndex = this.getTabIndex(params['tab']);
+      } else if (params['status']) {
+        // Map workflow statuses to appropriate tab
+        const statuses = params['status'].split(',');
+        this.selectedTabIndex = this.getTabFromStatuses(statuses);
+      }
     });
   }
 
@@ -154,5 +175,26 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
   private dispatchFilterChange(): void {
     this.store.dispatch(DashboardActions.updateFilters({ filters: { ...this.filters } }));
     this.store.dispatch(DashboardActions.loadDashboard({ filters: this.filters }));
+  }
+
+  private getTabIndex(tabParam: string): number {
+    switch (tabParam) {
+      case 'pipeline': return 0;
+      case 'rfps': return 1;
+      case 'po': return 2;
+      case 'projects': return 3;
+      default: return 0;
+    }
+  }
+
+  private getTabFromStatuses(statuses: string[]): number {
+    const rfpStatuses = ['Draft', 'Job_Summary_In_Progress'];
+    const poStatuses = ['Quote_Assembled', 'Quote_Delivered'];
+    const projectStatuses = ['Quote_Converted'];
+
+    if (statuses.some(s => rfpStatuses.includes(s))) return 1;
+    if (statuses.some(s => poStatuses.includes(s))) return 2;
+    if (statuses.some(s => projectStatuses.includes(s))) return 3;
+    return 1; // Default to New RFPs tab
   }
 }

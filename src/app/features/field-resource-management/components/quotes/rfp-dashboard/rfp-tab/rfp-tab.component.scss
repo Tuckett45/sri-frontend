@@ -4,6 +4,39 @@
   padding: 16px;
 }
 
+.tab-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .filter-field {
+    flex: 1;
+    min-width: 180px;
+    max-width: 280px;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  .filter-field--narrow {
+    flex: 0 1 180px;
+    min-width: 140px;
+  }
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+
+    .filter-field,
+    .filter-field--narrow {
+      max-width: 100%;
+      width: 100%;
+    }
+  }
+}
+
 .table-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -15,11 +48,27 @@
   background-color: #ffffff !important;
 }
 
-.overdue-chip {
-  background-color: #f44336 !important;
-  color: white !important;
-  font-size: 11px;
-  margin-left: 8px;
+.overdue-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+  white-space: nowrap;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.due-date-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .inline-edit-cell {

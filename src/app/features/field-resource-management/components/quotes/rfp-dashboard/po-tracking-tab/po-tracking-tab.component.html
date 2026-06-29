@@ -1,4 +1,25 @@
 <div class="po-tracking-tab">
+  <!-- Tab Filters -->
+  <div class="tab-filters">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Search customer</mat-label>
+      <input matInput [(ngModel)]="filterCustomer" (ngModelChange)="applyFilters()" placeholder="Filter by customer...">
+      <mat-icon matPrefix>search</mat-icon>
+      <button mat-icon-button matSuffix *ngIf="filterCustomer" (click)="filterCustomer = ''; applyFilters()" aria-label="Clear">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+      <mat-label>PO Number</mat-label>
+      <input matInput [(ngModel)]="filterPoNumber" (ngModelChange)="applyFilters()" placeholder="Search PO#...">
+    </mat-form-field>
+
+    <button mat-icon-button (click)="clearFilters()" matTooltip="Clear filters" *ngIf="hasActiveFilters()">
+      <mat-icon>filter_list_off</mat-icon>
+    </button>
+  </div>
+
   <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-on-table">
 
     <!-- Customer Column -->
