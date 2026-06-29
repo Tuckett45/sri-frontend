@@ -99,10 +99,45 @@ export class DashboardEffects {
         DashboardActions.loadDashboardFailure,
         DashboardActions.loadUsersFailure,
         DashboardActions.updateDashboardFieldsFailure,
-        DashboardActions.createBomTrackingFailure
+        DashboardActions.createBomTrackingFailure,
+        DashboardActions.bulkImportRfpsFailure
       ),
       tap(({ error }) => {
         this.snackBar.open(error, 'Close', { duration: 5000 });
+      })
+    ),
+    { dispatch: false }
+  );
+
+  bulkImportRfps$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.bulkImportRfps),
+      switchMap(({ records }) =>
+        this.dashboardService.bulkImportRfps(records).pipe(
+          map((response) => DashboardActions.bulkImportRfpsSuccess({
+            importedCount: response.importedCount,
+            failedCount: response.failedCount,
+            errors: response.errors
+          })),
+          catchError((error) =>
+            of(DashboardActions.bulkImportRfpsFailure({
+              error: error?.error?.message || error.message || 'Failed to import RFP records'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  bulkImportSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.bulkImportRfpsSuccess),
+      tap(({ importedCount }) => {
+        this.snackBar.open(
+          `Successfully imported ${importedCount} RFP record${importedCount !== 1 ? 's' : ''}`,
+          'Close',
+          { duration: 5000 }
+        );
       })
     ),
     { dispatch: false }

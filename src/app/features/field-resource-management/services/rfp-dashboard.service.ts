@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment, local_environment } from '../../../../environments/environments';
 import {
   BomTracking,
+  BulkImportRecord,
+  BulkImportResponse,
   DashboardFilters,
   DashboardQuote,
   DashboardResponse,
@@ -96,6 +98,21 @@ export class RfpDashboardService {
     return this.http.put<BomTracking>(
       `${this.quotesUrl}/${quoteId}/bom-trackings/${trackingId}`,
       entry
+    );
+  }
+
+  // ===========================================================================
+  // Bulk Import
+  // ===========================================================================
+
+  /**
+   * Bulk import RFP records from a parsed spreadsheet.
+   * Sends an array of RFP records to be created in batch.
+   */
+  bulkImportRfps(records: BulkImportRecord[]): Observable<BulkImportResponse> {
+    return this.http.post<BulkImportResponse>(
+      `${this.quotesUrl}/bulk-import`,
+      { records }
     );
   }
 

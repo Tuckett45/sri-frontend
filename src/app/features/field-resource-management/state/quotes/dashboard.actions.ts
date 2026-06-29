@@ -1,6 +1,7 @@
 import { createAction, props } from '@ngrx/store';
 import {
   BomTracking,
+  BulkImportRecord,
   DashboardFilters,
   DashboardQuote,
   DashboardResponse,
@@ -71,5 +72,22 @@ export const createBomTrackingSuccess = createAction(
 
 export const createBomTrackingFailure = createAction(
   '[Dashboard] Create BOM Tracking Failure',
+  props<{ error: string }>()
+);
+
+
+// Bulk Import RFPs
+export const bulkImportRfps = createAction(
+  '[Dashboard] Bulk Import RFPs',
+  props<{ records: BulkImportRecord[] }>()
+);
+
+export const bulkImportRfpsSuccess = createAction(
+  '[Dashboard] Bulk Import RFPs Success',
+  props<{ importedCount: number; failedCount: number; errors: string[] }>()
+);
+
+export const bulkImportRfpsFailure = createAction(
+  '[Dashboard] Bulk Import RFPs Failure',
   props<{ error: string }>()
 );

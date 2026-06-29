@@ -5,6 +5,7 @@ import { Observable, Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import { DashboardFilters, DashboardQuote, DashboardUser } from '../../../models/quote-workflow.model';
 import { RfpIntakeFormComponent } from '../rfp-intake/rfp-intake-form.component';
+import { BulkImportDialogComponent } from './bulk-import-dialog/bulk-import-dialog.component';
 import * as DashboardActions from '../../../state/quotes/dashboard.actions';
 import * as DashboardSelectors from '../../../state/quotes/dashboard.selectors';
 
@@ -108,6 +109,21 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
       width: '900px',
       maxWidth: '95vw',
       disableClose: true
+    });
+  }
+
+  openBulkImport(): void {
+    const dialogRef = this.dialog.open(BulkImportDialogComponent, {
+      width: '950px',
+      maxWidth: '95vw',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.imported) {
+        // Refresh the dashboard after successful import
+        this.store.dispatch(DashboardActions.loadDashboard({ filters: this.filters }));
+      }
     });
   }
 
