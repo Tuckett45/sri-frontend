@@ -22,6 +22,7 @@ import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-
 import { ReferralTrackerComponent } from './referral-tracker/referral-tracker.component';
 import { OnboardingInfoModalComponent } from './onboarding-info-modal/onboarding-info-modal.component';
 import { CandidateDetailComponent } from './candidate-detail/candidate-detail.component';
+import { CandidateAttachmentsSectionComponent } from './candidate-detail/candidate-attachments-section.component';
 import { OnboardingProgressHeaderComponent } from './onboarding-progress-header/onboarding-progress-header.component';
 import { CredentialFormModalComponent } from './credential-form-modal/credential-form-modal.component';
 import { AddCandidateModalComponent } from './add-candidate-modal/add-candidate-modal.component';
@@ -48,6 +49,7 @@ import { CandidateNotesDialogComponent } from './candidate-notes-dialog/candidat
     ReferralTrackerComponent,
     OnboardingInfoModalComponent,
     CandidateDetailComponent,
+    CandidateAttachmentsSectionComponent,
     OnboardingProgressHeaderComponent,
     CredentialFormModalComponent,
     AddCandidateModalComponent,
