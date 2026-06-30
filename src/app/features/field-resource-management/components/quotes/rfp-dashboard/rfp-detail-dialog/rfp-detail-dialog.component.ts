@@ -1,7 +1,8 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { DashboardQuote } from '../../../../models/quote-workflow.model';
+import { RfpIntakeFormComponent } from '../../rfp-intake/rfp-intake-form.component';
 
 /**
  * RFP Detail Dialog Component
@@ -20,7 +21,8 @@ export class RfpDetailDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<RfpDetailDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { record: DashboardQuote },
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {}
 
   get record(): DashboardQuote {
@@ -43,7 +45,12 @@ export class RfpDetailDialogComponent {
 
   openWorkflow(): void {
     this.dialogRef.close();
-    this.router.navigate(['/field-resource-management/quotes', this.record.id]);
+    this.dialog.open(RfpIntakeFormComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      disableClose: true,
+      data: { editRecord: this.record }
+    });
   }
 
   close(): void {

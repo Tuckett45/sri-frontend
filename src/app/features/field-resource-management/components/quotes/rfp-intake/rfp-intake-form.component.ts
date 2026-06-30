@@ -26,6 +26,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { JobType, Priority } from '../../../models/job.model';
 import {
   ClientConfiguration,
+  DashboardQuote,
   DashboardUser,
   RfpRecord
 } from '../../../models/quote-workflow.model';
@@ -33,6 +34,7 @@ import { CustomValidators } from '../../../validators/custom-validators';
 import { QuoteWorkflowService } from '../../../services/quote-workflow.service';
 import { ClientConfigurationService } from '../../../services/client-configuration.service';
 import * as QuoteActions from '../../../state/quotes/quote.actions';
+import * as DashboardActions from '../../../state/quotes/dashboard.actions';
 import * as DashboardSelectors from '../../../state/quotes/dashboard.selectors';
 
 /**
@@ -55,6 +57,12 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
 
   /** True when opened via MatDialog */
   isDialog = false;
+
+  /** True when editing an existing RFP record */
+  isEditMode = false;
+
+  /** The existing record being edited (if in edit mode) */
+  editRecord: DashboardQuote | null = null;
 
   rfpForm!: FormGroup;
   isSubmitting = false;
@@ -99,14 +107,25 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
     @Optional() @Inject(MAT_DIALOG_DATA) public dialogData: any
   ) {
     this.isDialog = !!this.dialogRef;
+    this.isEditMode = !!this.dialogData?.editRecord;
+    this.editRecord = this.dialogData?.editRecord || null;
+    if (this.editRecord) {
+      this.quoteId = this.editRecord.id;
+    }
   }
 
   ngOnInit(): void {
     this.initializeForm();
     this.setupClientAutocomplete();
-    this.restoreDraft();
-    this.setupDraftAutoSave();
     this.users$ = this.store.select(DashboardSelectors.selectDashboardUsers);
+
+    // If editing an existing record, populate the form
+    if (this.isEditMode && this.editRecord) {
+      this.populateFormForEdit(this.editRecord);
+    } else {
+      this.restoreDraft();
+      this.setupDraftAutoSave();
+    }
 
     if (!this.canEdit) {
       this.rfpForm.disable();
@@ -144,6 +163,22 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
       }, { validators: CustomValidators.dateRange('rfpReceivedDate', 'requestedCompletionDate') }),
       jobType: [JobType.Install],
       priority: [Priority.Normal]
+    });
+  }
+
+  /**
+   * Pre-populate form with existing DashboardQuote data for edit mode.
+   */
+  private populateFormForEdit(record: DashboardQuote): void {
+    this.rfpForm.patchValue({
+      clientName: record.customer || '',
+      projectName: record.description || '',
+      requestorName: record.requestorName || '',
+      assignedToQuote: record.assignedToQuote || '',
+      dates: {
+        rfpReceivedDate: record.rfpReceiveDate ? new Date(record.rfpReceiveDate) : null,
+        requestedCompletionDate: record.quoteDueDate ? new Date(record.quoteDueDate) : null
+      }
     });
   }
 
@@ -242,6 +277,50 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
 
     const formValue = this.rfpForm.getRawValue();
 
+    // ─── Edit Mode: update existing record via dashboard-fields ───────────
+    if (this.isEditMode && this.editRecord) {
+      const fields: Partial<DashboardQuote> = {
+        customer: formValue.clientName,
+        description: formValue.projectName,
+        requestorName: formValue.requestorName || null,
+        assignedToQuote: formValue.assignedToQuote || null,
+        rfpReceiveDate: formValue.dates.rfpReceivedDate
+          ? new Date(formValue.dates.rfpReceivedDate).toISOString()
+          : null,
+        quoteDueDate: formValue.dates.requestedCompletionDate
+          ? new Date(formValue.dates.requestedCompletionDate).toISOString()
+          : null
+      };
+
+      this.store.dispatch(DashboardActions.updateDashboardFields({
+        quoteId: this.editRecord.id,
+        fields
+      }));
+
+      this.actions$
+        .pipe(
+          ofType(DashboardActions.updateDashboardFieldsSuccess, DashboardActions.updateDashboardFieldsFailure),
+          take(1),
+          takeUntil(this.destroy$)
+        )
+        .subscribe(action => {
+          this.isSubmitting = false;
+
+          if (action.type === DashboardActions.updateDashboardFieldsSuccess.type) {
+            this.snackBar.open('RFP updated successfully', 'Close', { duration: 3000 });
+            if (this.isDialog) {
+              this.dialogRef.close({ success: true, updated: true });
+            }
+          } else {
+            const error = (action as ReturnType<typeof DashboardActions.updateDashboardFieldsFailure>).error;
+            this.snackBar.open(`Error updating RFP: ${error}`, 'Close', { duration: 5000 });
+          }
+        });
+
+      return;
+    }
+
+    // ─── Create Mode: create new quote ───────────────────────────────────
     const rfpData: RfpRecord = {
       clientName: formValue.clientName,
       projectName: formValue.projectName,

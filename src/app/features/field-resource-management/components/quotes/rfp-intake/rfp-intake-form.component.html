@@ -1,9 +1,9 @@
 <!-- Dialog Header (only in dialog mode) -->
-<h2 mat-dialog-title *ngIf="isDialog">New Quote — RFP Intake</h2>
+<h2 mat-dialog-title *ngIf="isDialog">{{ isEditMode ? 'Edit RFP' : 'New Quote — RFP Intake' }}</h2>
 
 <!-- Page Header (only in page mode) -->
 <div class="page-header" *ngIf="!isDialog">
-  <h2>New Quote — RFP Intake</h2>
+  <h2>{{ isEditMode ? 'Edit RFP' : 'New Quote — RFP Intake' }}</h2>
 </div>
 
 <!-- Draft Restored Banner -->
@@ -40,8 +40,8 @@
     class="submit-btn"
   >
     <mat-spinner *ngIf="isSubmitting" diameter="20" class="button-spinner"></mat-spinner>
-    <span *ngIf="!isSubmitting">Create Quote</span>
-    <span *ngIf="isSubmitting">Creating...</span>
+    <span *ngIf="!isSubmitting">{{ isEditMode ? 'Save Changes' : 'Create Quote' }}</span>
+    <span *ngIf="isSubmitting">{{ isEditMode ? 'Saving...' : 'Creating...' }}</span>
   </button>
 </mat-dialog-actions>
 
