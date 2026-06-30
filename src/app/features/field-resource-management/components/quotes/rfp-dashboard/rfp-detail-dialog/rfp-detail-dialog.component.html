@@ -1,0 +1,101 @@
+<div class="rfp-detail-dialog">
+  <!-- Header -->
+  <div class="detail-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">description</mat-icon>
+      <div class="header-text">
+        <h2 mat-dialog-title>{{ record.description }}</h2>
+        <span class="header-customer">{{ record.customer }}</span>
+      </div>
+    </div>
+    <button mat-icon-button (click)="close()" aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <!-- Status Banner -->
+    <div class="status-banner" [class.overdue]="isOverdue()" [class.submitted]="record.quoteSubmittedDate">
+      <mat-icon *ngIf="isOverdue()">warning</mat-icon>
+      <mat-icon *ngIf="record.quoteSubmittedDate && !isOverdue()">check_circle</mat-icon>
+      <mat-icon *ngIf="!record.quoteSubmittedDate && !isOverdue()">schedule</mat-icon>
+      <span *ngIf="isOverdue()">Overdue by {{ getDaysOverdue() }} day{{ getDaysOverdue() !== 1 ? 's' : '' }}</span>
+      <span *ngIf="record.quoteSubmittedDate && !isOverdue()">Quote Submitted</span>
+      <span *ngIf="!record.quoteSubmittedDate && !isOverdue()">Awaiting Quote Submission</span>
+    </div>
+
+    <!-- Detail Grid -->
+    <div class="detail-grid">
+      <!-- Left Column -->
+      <div class="detail-section">
+        <h4 class="section-title">RFP Information</h4>
+
+        <div class="detail-row">
+          <span class="detail-label">Customer</span>
+          <span class="detail-value">{{ record.customer || '-' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Project Description</span>
+          <span class="detail-value">{{ record.description || '-' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Requester</span>
+          <span class="detail-value">{{ record.requestorName || '-' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">RFP Received Date</span>
+          <span class="detail-value">{{ record.rfpReceiveDate ? (record.rfpReceiveDate | date:'mediumDate') : '-' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Quote Due Date</span>
+          <span class="detail-value" [class.text-danger]="isOverdue()">
+            {{ record.quoteDueDate ? (record.quoteDueDate | date:'mediumDate') : '-' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="detail-section">
+        <h4 class="section-title">Quote Details</h4>
+
+        <div class="detail-row">
+          <span class="detail-label">Assigned To</span>
+          <span class="detail-value">{{ record.assignedToQuote || '-' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Quote Submitted</span>
+          <span class="detail-value">{{ record.quoteSubmittedDate ? (record.quoteSubmittedDate | date:'mediumDate') : '-' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Quote Number</span>
+          <span class="detail-value quote-number">{{ record.quoteNumber || '-' }}</span>
+        </div>
+
+        <div class="detail-row" *ngIf="record.poNumber">
+          <span class="detail-label">PO Number</span>
+          <span class="detail-value">{{ record.poNumber }}</span>
+        </div>
+
+        <div class="detail-row" *ngIf="record.jobNumber">
+          <span class="detail-label">Job Number</span>
+          <span class="detail-value">{{ record.jobNumber }}</span>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="close()">Close</button>
+    <button mat-raised-button color="primary" (click)="openWorkflow()">
+      <mat-icon>edit</mat-icon>
+      Open Workflow
+    </button>
+  </mat-dialog-actions>
+</div>

@@ -27,11 +27,26 @@ export class PoTrackingTabComponent implements OnChanges {
   editingField: string | null = null;
   editValue: string = '';
 
+  // Per-tab filters
+  filterCustomer = '';
+  filterPoNumber = '';
+
   constructor(private store: Store) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['records']) {
       this.dataSource.data = this.records;
+      this.dataSource.filterPredicate = (data: DashboardQuote, filter: string) => {
+        const filters = JSON.parse(filter);
+        let matches = true;
+        if (filters.customer) {
+          matches = matches && (data.customer || '').toLowerCase().includes(filters.customer.toLowerCase());
+        }
+        if (filters.poNumber) {
+          matches = matches && (data.poNumber || '').toLowerCase().includes(filters.poNumber.toLowerCase());
+        }
+        return matches;
+      };
       setTimeout(() => {
         if (this.sort) { this.dataSource.sort = this.sort; }
         if (this.paginator) { this.dataSource.paginator = this.paginator; }
@@ -75,5 +90,22 @@ export class PoTrackingTabComponent implements OnChanges {
       }));
     }
     this.cancelEdit();
+  }
+
+  applyFilters(): void {
+    this.dataSource.filter = JSON.stringify({
+      customer: this.filterCustomer,
+      poNumber: this.filterPoNumber
+    });
+  }
+
+  clearFilters(): void {
+    this.filterCustomer = '';
+    this.filterPoNumber = '';
+    this.applyFilters();
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(this.filterCustomer || this.filterPoNumber);
   }
 }
