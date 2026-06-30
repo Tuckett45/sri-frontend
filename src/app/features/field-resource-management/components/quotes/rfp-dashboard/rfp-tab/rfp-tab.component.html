@@ -14,7 +14,7 @@
       <mat-label>Assigned To</mat-label>
       <mat-select [(ngModel)]="filterAssigned" (selectionChange)="applyFilters()">
         <mat-option value="">All</mat-option>
-        <mat-option *ngFor="let user of users" [value]="user.fullName">{{ user.fullName }}</mat-option>
+        <mat-option *ngFor="let name of assignedToOptions" [value]="name">{{ name }}</mat-option>
       </mat-select>
     </mat-form-field>
 

@@ -37,6 +37,9 @@ export class RfpTabComponent implements OnInit, OnChanges {
   filterAssigned = '';
   filterStatus = '';
 
+  // Distinct assignee names derived from the records' assignedToQuote column
+  assignedToOptions: string[] = [];
+
   constructor(private store: Store, private router: Router, private dialog: MatDialog) {}
 
   ngOnInit(): void {
@@ -48,7 +51,8 @@ export class RfpTabComponent implements OnInit, OnChanges {
         matches = matches && (data.customer || '').toLowerCase().includes(filters.customer.toLowerCase());
       }
       if (filters.assigned) {
-        matches = matches && (data.assignedToQuote || '').toLowerCase().includes(filters.assigned.toLowerCase());
+        const assigneeName = this.getAssigneeName(data.assignedToQuote);
+        matches = matches && assigneeName.toLowerCase().includes(filters.assigned.toLowerCase());
       }
       if (filters.status) {
         if (filters.status === 'overdue') {
@@ -64,13 +68,26 @@ export class RfpTabComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['records']) {
+    if (changes['records'] || changes['users']) {
       this.dataSource.data = this.records;
+      this.buildAssignedToOptions();
       setTimeout(() => {
         if (this.sort) { this.dataSource.sort = this.sort; }
         if (this.paginator) { this.dataSource.paginator = this.paginator; }
       });
     }
+  }
+
+  private buildAssignedToOptions(): void {
+    const names = this.records
+      .map(r => {
+        if (!r.assignedToQuote) return null;
+        // Try to resolve ID to name via users list
+        const user = this.users.find(u => u.id === r.assignedToQuote);
+        return user ? user.fullName : r.assignedToQuote;
+      })
+      .filter((name): name is string => !!name);
+    this.assignedToOptions = [...new Set(names)].sort();
   }
 
   isOverdue(row: DashboardQuote): boolean {

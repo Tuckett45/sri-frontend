@@ -26,6 +26,39 @@
     min-width: 140px;
   }
 
+  // Force black text for filter labels and inputs
+  ::ng-deep {
+    .mat-mdc-floating-label,
+    .mdc-floating-label,
+    .mat-mdc-form-field-label {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-input-element,
+    .mat-mdc-select-value-text,
+    .mat-mdc-select-placeholder {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-arrow {
+      color: #000000 !important;
+    }
+
+    // Dark blue icons for search and clear filter
+    .mat-mdc-form-field-icon-prefix,
+    .mat-mdc-form-field-icon-suffix {
+      .mat-icon,
+      mat-icon {
+        color: #1565c0 !important;
+      }
+    }
+  }
+
+  // Dark blue for the standalone clear filters icon button
+  > button[mat-icon-button] .mat-icon {
+    color: #1565c0 !important;
+  }
+
   @media (max-width: 767px) {
     flex-direction: column;
 

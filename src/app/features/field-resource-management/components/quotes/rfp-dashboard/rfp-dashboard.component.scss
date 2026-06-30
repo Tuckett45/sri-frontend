@@ -85,6 +85,25 @@
 .filter-panel {
   margin-bottom: 24px;
 
+  // Force black text for filter labels and inputs
+  ::ng-deep {
+    .mat-mdc-floating-label,
+    .mdc-floating-label,
+    .mat-mdc-form-field-label {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-input-element,
+    .mat-mdc-select-value-text,
+    .mat-mdc-select-placeholder {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-arrow {
+      color: #000000 !important;
+    }
+  }
+
   .search-field {
     width: 100%;
     margin-bottom: 16px;
