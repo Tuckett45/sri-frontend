@@ -18,7 +18,7 @@ export class PoTrackingTabComponent implements OnChanges {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   displayedColumns: string[] = [
-    'customer', 'description', 'quoteNumber', 'dateReceived', 'poNumber', 'poAmount'
+    'customer', 'description', 'quoteNumber', 'dateReceived', 'poNumber', 'poAmount', 'poReceivedDate'
   ];
 
   dataSource = new MatTableDataSource<DashboardQuote>([]);
@@ -89,6 +89,15 @@ export class PoTrackingTabComponent implements OnChanges {
         fields
       }));
     }
+    this.cancelEdit();
+  }
+
+  onPoReceivedDateChange(event: any, row: DashboardQuote): void {
+    const dateValue = event.value ? event.value.toISOString() : null;
+    this.store.dispatch(DashboardActions.updateDashboardFields({
+      quoteId: row.id,
+      fields: { poReceivedDate: dateValue }
+    }));
     this.cancelEdit();
   }
 

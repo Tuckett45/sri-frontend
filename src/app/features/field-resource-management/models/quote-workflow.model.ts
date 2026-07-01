@@ -276,11 +276,13 @@ export interface DashboardQuote {
   dateReceived: string | null;
   poNumber: string | null;
   poAmount: number | null;
+  poReceivedDate: string | null;
   jobNumber: string | null;
   customerEquipment: string | null;
   jobStart: string | null;
   jobComplete: string | null;
   invoiceNumber: string | null;
+  workflowStatus: string | null;
   bomTrackings: BomTracking[];
 }
 
