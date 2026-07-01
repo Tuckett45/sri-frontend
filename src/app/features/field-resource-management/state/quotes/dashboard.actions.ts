@@ -91,3 +91,20 @@ export const bulkImportRfpsFailure = createAction(
   '[Dashboard] Bulk Import RFPs Failure',
   props<{ error: string }>()
 );
+
+
+// Delete RFP
+export const deleteRfp = createAction(
+  '[Dashboard] Delete RFP',
+  props<{ quoteId: string }>()
+);
+
+export const deleteRfpSuccess = createAction(
+  '[Dashboard] Delete RFP Success',
+  props<{ quoteId: string }>()
+);
+
+export const deleteRfpFailure = createAction(
+  '[Dashboard] Delete RFP Failure',
+  props<{ error: string }>()
+);
