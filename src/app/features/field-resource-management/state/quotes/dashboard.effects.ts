@@ -100,7 +100,8 @@ export class DashboardEffects {
         DashboardActions.loadUsersFailure,
         DashboardActions.updateDashboardFieldsFailure,
         DashboardActions.createBomTrackingFailure,
-        DashboardActions.bulkImportRfpsFailure
+        DashboardActions.bulkImportRfpsFailure,
+        DashboardActions.deleteRfpFailure
       ),
       tap(({ error }) => {
         this.snackBar.open(error, 'Close', { duration: 5000 });
@@ -138,6 +139,32 @@ export class DashboardEffects {
           'Close',
           { duration: 5000 }
         );
+      })
+    ),
+    { dispatch: false }
+  );
+
+  deleteRfp$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.deleteRfp),
+      switchMap(({ quoteId }) =>
+        this.dashboardService.deleteRfp(quoteId).pipe(
+          map(() => DashboardActions.deleteRfpSuccess({ quoteId })),
+          catchError((error) =>
+            of(DashboardActions.deleteRfpFailure({
+              error: error?.error?.message || error.message || 'Failed to delete RFP'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  deleteRfpSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.deleteRfpSuccess),
+      tap(() => {
+        this.snackBar.open('RFP deleted successfully', 'Close', { duration: 3000 });
       })
     ),
     { dispatch: false }

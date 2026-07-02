@@ -117,6 +117,19 @@ export class RfpDashboardService {
   }
 
   // ===========================================================================
+  // Delete
+  // ===========================================================================
+
+  /**
+   * Deletes an RFP/quote record.
+   */
+  deleteRfp(quoteId: string): Observable<{ message: string; id: string }> {
+    return this.http.delete<{ message: string; id: string }>(
+      `${this.quotesUrl}/${quoteId}`
+    );
+  }
+
+  // ===========================================================================
   // Users (for Assigned To dropdown)
   // ===========================================================================
 

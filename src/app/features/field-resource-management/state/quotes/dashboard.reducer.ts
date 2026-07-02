@@ -100,5 +100,13 @@ export const dashboardReducer = createReducer(
     ...state,
     saving: false,
     error
+  })),
+
+  // Delete RFP
+  on(DashboardActions.deleteRfpSuccess, (state, { quoteId }) => ({
+    ...state,
+    rfpRecords: state.rfpRecords.filter(q => q.id !== quoteId),
+    poTrackingRecords: state.poTrackingRecords.filter(q => q.id !== quoteId),
+    projectTrackingRecords: state.projectTrackingRecords.filter(q => q.id !== quoteId)
   }))
 );

@@ -1,8 +1,10 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { DashboardQuote } from '../../../../models/quote-workflow.model';
 import { RfpIntakeFormComponent } from '../../rfp-intake/rfp-intake-form.component';
+import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 
 /**
  * RFP Detail Dialog Component
@@ -22,7 +24,8 @@ export class RfpDetailDialogComponent {
     public dialogRef: MatDialogRef<RfpDetailDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { record: DashboardQuote },
     private router: Router,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private store: Store
   ) {}
 
   get record(): DashboardQuote {
@@ -55,5 +58,15 @@ export class RfpDetailDialogComponent {
 
   close(): void {
     this.dialogRef.close();
+  }
+
+  confirmDelete(): void {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this RFP?\n\n"${this.record.description}" (${this.record.customer})\n\nThis action cannot be undone.`
+    );
+    if (confirmed) {
+      this.store.dispatch(DashboardActions.deleteRfp({ quoteId: this.record.id }));
+      this.dialogRef.close({ deleted: true });
+    }
   }
 }
