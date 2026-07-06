@@ -46,7 +46,7 @@
         </mat-panel-description>
       </mat-expansion-panel-header>
 
-      <div class="detail-grid">
+      <div class="detail-grid" *ngIf="!editingRfp">
         <div class="detail-row">
           <span class="detail-label">Customer</span>
           <span class="detail-value">{{ record.customer || '-' }}</span>
@@ -84,11 +84,74 @@
         </div>
       </div>
 
-      <!-- Action: advance to PO stage -->
-      <div class="stage-action" *ngIf="!record.poNumber">
-        <button mat-stroked-button color="primary" (click)="addPoNumber()">
-          <mat-icon>receipt</mat-icon>
-          Add PO Number
+      <!-- Inline edit form for RFP details -->
+      <div class="rfp-edit-form" *ngIf="editingRfp">
+        <div class="edit-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Customer</mat-label>
+            <input matInput [(ngModel)]="rfpForm.customer">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Project</mat-label>
+            <input matInput [(ngModel)]="rfpForm.description">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Requester</mat-label>
+            <input matInput [(ngModel)]="rfpForm.requestorName">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Assigned To</mat-label>
+            <input matInput [(ngModel)]="rfpForm.assignedToQuote">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>RFP Received</mat-label>
+            <input matInput [matDatepicker]="rfpReceivedPicker" [(ngModel)]="rfpForm.rfpReceiveDate">
+            <mat-datepicker-toggle matSuffix [for]="rfpReceivedPicker"></mat-datepicker-toggle>
+            <mat-datepicker #rfpReceivedPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Quote Due</mat-label>
+            <input matInput [matDatepicker]="rfpDuePicker" [(ngModel)]="rfpForm.quoteDueDate">
+            <mat-datepicker-toggle matSuffix [for]="rfpDuePicker"></mat-datepicker-toggle>
+            <mat-datepicker #rfpDuePicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Quote Submitted</mat-label>
+            <input matInput [matDatepicker]="rfpSubmittedPicker" [(ngModel)]="rfpForm.quoteSubmittedDate">
+            <mat-datepicker-toggle matSuffix [for]="rfpSubmittedPicker"></mat-datepicker-toggle>
+            <mat-datepicker #rfpSubmittedPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Quote Number</mat-label>
+            <input matInput [(ngModel)]="rfpForm.quoteNumber">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>PO Number</mat-label>
+            <input matInput [(ngModel)]="rfpForm.poNumber">
+          </mat-form-field>
+        </div>
+
+        <div class="edit-actions">
+          <button mat-button (click)="cancelRfpEdit()">Cancel</button>
+          <button mat-raised-button class="update-project-btn" (click)="saveRfpDetails()">
+            Save
+          </button>
+        </div>
+      </div>
+
+      <!-- Action: edit RFP details -->
+      <div class="stage-action" *ngIf="!editingRfp">
+        <button mat-raised-button class="update-project-btn" (click)="startRfpEdit()">
+          <mat-icon>edit_note</mat-icon>
+          Edit RFP Details
         </button>
       </div>
     </mat-expansion-panel>
@@ -141,7 +204,7 @@
         </mat-panel-description>
       </mat-expansion-panel-header>
 
-      <div class="detail-grid" *ngIf="record.poReceivedDate">
+      <div class="detail-grid" *ngIf="record.poReceivedDate && !editingProject">
         <div class="detail-row">
           <span class="detail-label">Job Number</span>
           <span class="detail-value mono">{{ record.jobNumber || '-' }}</span>
@@ -164,16 +227,57 @@
         </div>
       </div>
 
-      <!-- Action: add project details -->
-      <div class="stage-action" *ngIf="record.poReceivedDate && !record.invoiceNumber">
-        <button mat-stroked-button color="primary" (click)="addProjectDetails()">
+      <!-- Inline edit form for project details -->
+      <div class="project-edit-form" *ngIf="editingProject">
+        <div class="edit-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Job Number</mat-label>
+            <input matInput [(ngModel)]="projectForm.jobNumber" placeholder="Enter job number">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Customer Equipment</mat-label>
+            <input matInput [(ngModel)]="projectForm.customerEquipment" placeholder="Enter customer equipment">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Job Start</mat-label>
+            <input matInput [matDatepicker]="projStartPicker" [(ngModel)]="projectForm.jobStart">
+            <mat-datepicker-toggle matSuffix [for]="projStartPicker"></mat-datepicker-toggle>
+            <mat-datepicker #projStartPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Job Complete</mat-label>
+            <input matInput [matDatepicker]="projCompletePicker" [(ngModel)]="projectForm.jobComplete">
+            <mat-datepicker-toggle matSuffix [for]="projCompletePicker"></mat-datepicker-toggle>
+            <mat-datepicker #projCompletePicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Invoice Number</mat-label>
+            <input matInput [(ngModel)]="projectForm.invoiceNumber" placeholder="Enter invoice number">
+          </mat-form-field>
+        </div>
+
+        <div class="edit-actions">
+          <button mat-button (click)="cancelProjectEdit()">Cancel</button>
+          <button mat-raised-button class="update-project-btn" (click)="saveProjectDetails()">
+            Save
+          </button>
+        </div>
+      </div>
+
+      <!-- Action: start inline edit -->
+      <div class="stage-action" *ngIf="record.poReceivedDate && !record.invoiceNumber && !editingProject">
+        <button mat-raised-button class="update-project-btn" (click)="startProjectEdit()">
           <mat-icon>edit_note</mat-icon>
           Update Project Details
         </button>
       </div>
 
       <!-- Closeout indicator -->
-      <div class="closeout-badge" *ngIf="record.invoiceNumber">
+      <div class="closeout-badge" *ngIf="record.invoiceNumber && !editingProject">
         <mat-icon>verified</mat-icon>
         <span>Project Closed Out</span>
       </div>

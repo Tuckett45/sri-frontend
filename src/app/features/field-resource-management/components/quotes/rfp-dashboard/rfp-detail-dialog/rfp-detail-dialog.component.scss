@@ -254,6 +254,19 @@
   button {
     border-radius: 20px;
   }
+
+  .update-project-btn {
+    background-color: #e18a25 !important;
+    color: #ffffff !important;
+
+    .mat-icon {
+      color: #ffffff !important;
+    }
+
+    &:hover {
+      background-color: #b86404 !important;
+    }
+  }
 }
 
 .closeout-badge {
@@ -293,4 +306,91 @@ mat-dialog-actions {
 
 .action-spacer {
   flex: 1;
+}
+
+// ─── Inline Project Edit Form ────────────────────────────────────────────────
+.project-edit-form {
+  padding: 8px 0;
+
+  .edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  .edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+// Ensure form field text is black in the dialog
+::ng-deep .project-edit-form {
+  .mat-mdc-input-element {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-floating-label,
+  .mdc-floating-label {
+    color: rgba(0, 0, 0, 0.6) !important;
+  }
+
+  .mat-datepicker-toggle {
+    color: #000000 !important;
+  }
+}
+
+// ─── Inline RFP Edit Form ────────────────────────────────────────────────────
+.rfp-edit-form {
+  padding: 8px 0;
+
+  .edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  .edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+::ng-deep .rfp-edit-form {
+  .mat-mdc-input-element {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-floating-label,
+  .mdc-floating-label {
+    color: rgba(0, 0, 0, 0.6) !important;
+  }
+
+  .mat-datepicker-toggle {
+    color: #000000 !important;
+  }
 }
