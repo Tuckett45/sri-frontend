@@ -1,6 +1,6 @@
 .rfp-detail-dialog {
-  min-width: 550px;
-  max-width: 700px;
+  min-width: 600px;
+  max-width: 750px;
 
   @media (max-width: 767px) {
     min-width: unset;
@@ -45,92 +45,255 @@
   }
 }
 
-.status-banner {
+// ─── Lifecycle Timeline ──────────────────────────────────────────────────────
+
+.lifecycle-timeline {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+
+.timeline-step {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 14px;
-  font-weight: 500;
+  flex: 1;
+  min-width: 80px;
+  position: relative;
 
-  // Default: pending
-  background: #e3f2fd;
-  color: #1565c0;
-
-  mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
   }
 
-  &.overdue {
-    background: #fbe9e7;
-    color: #bf360c;
+  .step-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 1;
+    margin: 0 auto;
+    border: 2px solid #e0e0e0;
+    background: white;
+    color: #9e9e9e;
+    transition: all 0.3s;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
   }
 
-  &.submitted {
-    background: #e8f5e9;
-    color: #2e7d32;
+  .step-connector {
+    position: absolute;
+    top: 15px;
+    left: calc(50% + 16px);
+    right: calc(-50% + 16px);
+    height: 2px;
+    background: #e0e0e0;
+    transition: background 0.3s;
+  }
+
+  .step-content {
+    margin-top: 8px;
+    text-align: center;
+
+    .step-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #9e9e9e;
+      display: block;
+      line-height: 1.3;
+    }
+
+    .step-date {
+      font-size: 10px;
+      color: #bdbdbd;
+      display: block;
+      margin-top: 2px;
+    }
+  }
+
+  // ─── States ─────────────
+
+  &.completed {
+    .step-dot {
+      background: #2e7d32;
+      border-color: #2e7d32;
+      color: white;
+    }
+
+    .step-connector {
+      background: #2e7d32;
+    }
+
+    .step-content .step-label {
+      color: #2e7d32;
+    }
+
+    .step-content .step-date {
+      color: #4caf50;
+    }
+  }
+
+  &.active {
+    .step-dot {
+      background: #1976d2;
+      border-color: #1976d2;
+      color: white;
+      box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.15);
+    }
+
+    .step-content .step-label {
+      color: #1976d2;
+      font-weight: 600;
+    }
+  }
+}
+
+// ─── Detail Panels ───────────────────────────────────────────────────────────
+
+.detail-panel {
+  margin-bottom: 8px;
+
+  ::ng-deep .mat-expansion-panel-header {
+    padding: 0 16px;
+    height: 48px;
+  }
+
+  mat-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 14px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #1976d2;
+    }
+  }
+
+  mat-panel-description {
+    font-size: 12px;
+    color: #757575;
   }
 }
 
 .detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 12px 24px;
+  padding: 8px 0;
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
 }
 
-.detail-section {
-  .section-title {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #9e9e9e;
-    margin: 0 0 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #f0f0f0;
-  }
-}
-
 .detail-row {
   display: flex;
   flex-direction: column;
-  margin-bottom: 14px;
 
   .detail-label {
-    font-size: 12px;
-    color: #757575;
+    font-size: 11px;
+    font-weight: 500;
+    color: #9e9e9e;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
     margin-bottom: 2px;
   }
 
   .detail-value {
     font-size: 14px;
     color: #212121;
-    font-weight: 500;
 
     &.text-danger {
       color: #c62828;
     }
 
-    &.quote-number {
+    &.mono {
       font-family: 'Roboto Mono', monospace;
       color: #1565c0;
     }
   }
 }
 
+.overdue-inline {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #ffebee;
+  color: #c62828;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+// ─── Stage Actions ───────────────────────────────────────────────────────────
+
+.stage-action {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e0e0e0;
+
+  button {
+    border-radius: 20px;
+  }
+
+  .update-project-btn {
+    background-color: #e18a25 !important;
+    color: #ffffff !important;
+
+    .mat-icon {
+      color: #ffffff !important;
+    }
+
+    &:hover {
+      background-color: #b86404 !important;
+    }
+  }
+}
+
+.closeout-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: #e8f5e9;
+  border-radius: 8px;
+  color: #2e7d32;
+  font-weight: 500;
+  font-size: 14px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// ─── Dialog Actions ──────────────────────────────────────────────────────────
+
 mat-dialog-actions {
   padding: 12px 24px 16px;
   border-top: 1px solid #e0e0e0;
 }
-
 
 .delete-btn {
   opacity: 0.7;
@@ -143,4 +306,91 @@ mat-dialog-actions {
 
 .action-spacer {
   flex: 1;
+}
+
+// ─── Inline Project Edit Form ────────────────────────────────────────────────
+.project-edit-form {
+  padding: 8px 0;
+
+  .edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  .edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+// Ensure form field text is black in the dialog
+::ng-deep .project-edit-form {
+  .mat-mdc-input-element {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-floating-label,
+  .mdc-floating-label {
+    color: rgba(0, 0, 0, 0.6) !important;
+  }
+
+  .mat-datepicker-toggle {
+    color: #000000 !important;
+  }
+}
+
+// ─── Inline RFP Edit Form ────────────────────────────────────────────────────
+.rfp-edit-form {
+  padding: 8px 0;
+
+  .edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  .edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+::ng-deep .rfp-edit-form {
+  .mat-mdc-input-element {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-floating-label,
+  .mdc-floating-label {
+    color: rgba(0, 0, 0, 0.6) !important;
+  }
+
+  .mat-datepicker-toggle {
+    color: #000000 !important;
+  }
 }

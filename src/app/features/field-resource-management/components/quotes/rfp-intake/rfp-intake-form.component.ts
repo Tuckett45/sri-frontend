@@ -183,7 +183,21 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
         requestedCompletionDate: [null]
       }, { validators: CustomValidators.dateRange('rfpReceivedDate', 'requestedCompletionDate') }),
       jobType: [JobType.Install],
-      priority: [Priority.Normal]
+      priority: [Priority.Normal],
+      // Quote details (edit mode)
+      quoteNumber: [''],
+      quoteSubmittedDate: [null],
+      // PO Tracking (edit mode)
+      poNumber: [''],
+      poAmount: [null],
+      dateReceived: [null],
+      poReceivedDate: [null],
+      // Project Tracking (edit mode)
+      jobNumber: [''],
+      customerEquipment: [''],
+      jobStart: [null],
+      jobComplete: [null],
+      invoiceNumber: ['']
     });
   }
 
@@ -199,7 +213,21 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
       dates: {
         rfpReceivedDate: record.rfpReceiveDate ? new Date(record.rfpReceiveDate) : null,
         requestedCompletionDate: record.quoteDueDate ? new Date(record.quoteDueDate) : null
-      }
+      },
+      // Quote details
+      quoteNumber: record.quoteNumber || '',
+      quoteSubmittedDate: record.quoteSubmittedDate ? new Date(record.quoteSubmittedDate) : null,
+      // PO Tracking
+      poNumber: record.poNumber || '',
+      poAmount: record.poAmount ?? null,
+      dateReceived: record.dateReceived ? new Date(record.dateReceived) : null,
+      poReceivedDate: record.poReceivedDate ? new Date(record.poReceivedDate) : null,
+      // Project Tracking
+      jobNumber: record.jobNumber || '',
+      customerEquipment: record.customerEquipment || '',
+      jobStart: record.jobStart ? new Date(record.jobStart) : null,
+      jobComplete: record.jobComplete ? new Date(record.jobComplete) : null,
+      invoiceNumber: record.invoiceNumber || ''
     });
   }
 
@@ -355,7 +383,31 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
           : null,
         quoteDueDate: formValue.dates.requestedCompletionDate
           ? new Date(formValue.dates.requestedCompletionDate).toISOString()
-          : null
+          : null,
+        // Quote details
+        quoteNumber: formValue.quoteNumber || null,
+        quoteSubmittedDate: formValue.quoteSubmittedDate
+          ? new Date(formValue.quoteSubmittedDate).toISOString()
+          : null,
+        // PO Tracking
+        poNumber: formValue.poNumber || null,
+        poAmount: formValue.poAmount != null ? Number(formValue.poAmount) : null,
+        dateReceived: formValue.dateReceived
+          ? new Date(formValue.dateReceived).toISOString()
+          : null,
+        poReceivedDate: formValue.poReceivedDate
+          ? new Date(formValue.poReceivedDate).toISOString()
+          : null,
+        // Project Tracking
+        jobNumber: formValue.jobNumber || null,
+        customerEquipment: formValue.customerEquipment || null,
+        jobStart: formValue.jobStart
+          ? new Date(formValue.jobStart).toISOString()
+          : null,
+        jobComplete: formValue.jobComplete
+          ? new Date(formValue.jobComplete).toISOString()
+          : null,
+        invoiceNumber: formValue.invoiceNumber || null
       };
 
       this.store.dispatch(DashboardActions.updateDashboardFields({
