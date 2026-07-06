@@ -14,80 +14,170 @@
   </div>
 
   <mat-dialog-content>
-    <!-- Status Banner -->
-    <div class="status-banner" [class.overdue]="isOverdue()" [class.submitted]="record.quoteSubmittedDate">
-      <mat-icon *ngIf="isOverdue()">warning</mat-icon>
-      <mat-icon *ngIf="record.quoteSubmittedDate && !isOverdue()">check_circle</mat-icon>
-      <mat-icon *ngIf="!record.quoteSubmittedDate && !isOverdue()">schedule</mat-icon>
-      <span *ngIf="isOverdue()">Overdue by {{ getDaysOverdue() }} day{{ getDaysOverdue() !== 1 ? 's' : '' }}</span>
-      <span *ngIf="record.quoteSubmittedDate && !isOverdue()">Quote Submitted</span>
-      <span *ngIf="!record.quoteSubmittedDate && !isOverdue()">Awaiting Quote Submission</span>
+    <!-- ─── Visual Timeline ─────────────────────────────────────────────── -->
+    <div class="lifecycle-timeline">
+      <div class="timeline-step" *ngFor="let step of timelineSteps; let i = index; let last = last"
+           [class.completed]="step.completed"
+           [class.active]="step.active"
+           [class.pending]="!step.completed && !step.active">
+        <div class="step-indicator">
+          <div class="step-dot">
+            <mat-icon *ngIf="step.completed">check</mat-icon>
+            <span *ngIf="!step.completed">{{ i + 1 }}</span>
+          </div>
+          <div class="step-connector" *ngIf="!last"></div>
+        </div>
+        <div class="step-content">
+          <span class="step-label">{{ step.label }}</span>
+          <span class="step-date" *ngIf="step.date">{{ step.date | date:'shortDate' }}</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Detail Grid -->
-    <div class="detail-grid">
-      <!-- Left Column -->
-      <div class="detail-section">
-        <h4 class="section-title">RFP Information</h4>
+    <!-- ─── RFP Details Section ─────────────────────────────────────────── -->
+    <mat-expansion-panel [expanded]="true" class="detail-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>inbox</mat-icon>
+          RFP Details
+        </mat-panel-title>
+        <mat-panel-description *ngIf="record.quoteNumber">
+          Quote #{{ record.quoteNumber }}
+        </mat-panel-description>
+      </mat-expansion-panel-header>
 
+      <div class="detail-grid">
         <div class="detail-row">
           <span class="detail-label">Customer</span>
           <span class="detail-value">{{ record.customer || '-' }}</span>
         </div>
-
         <div class="detail-row">
-          <span class="detail-label">Project Description</span>
+          <span class="detail-label">Project</span>
           <span class="detail-value">{{ record.description || '-' }}</span>
         </div>
-
         <div class="detail-row">
           <span class="detail-label">Requester</span>
           <span class="detail-value">{{ record.requestorName || '-' }}</span>
         </div>
-
-        <div class="detail-row">
-          <span class="detail-label">RFP Received Date</span>
-          <span class="detail-value">{{ record.rfpReceiveDate ? (record.rfpReceiveDate | date:'mediumDate') : '-' }}</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="detail-label">Quote Due Date</span>
-          <span class="detail-value" [class.text-danger]="isOverdue()">
-            {{ record.quoteDueDate ? (record.quoteDueDate | date:'mediumDate') : '-' }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Right Column -->
-      <div class="detail-section">
-        <h4 class="section-title">Quote Details</h4>
-
         <div class="detail-row">
           <span class="detail-label">Assigned To</span>
           <span class="detail-value">{{ record.assignedToQuote || '-' }}</span>
         </div>
-
+        <div class="detail-row">
+          <span class="detail-label">RFP Received</span>
+          <span class="detail-value">{{ record.rfpReceiveDate ? (record.rfpReceiveDate | date:'mediumDate') : '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Quote Due</span>
+          <span class="detail-value" [class.text-danger]="isOverdue()">
+            {{ record.quoteDueDate ? (record.quoteDueDate | date:'mediumDate') : '-' }}
+            <span *ngIf="isOverdue()" class="overdue-inline">Overdue</span>
+          </span>
+        </div>
         <div class="detail-row">
           <span class="detail-label">Quote Submitted</span>
           <span class="detail-value">{{ record.quoteSubmittedDate ? (record.quoteSubmittedDate | date:'mediumDate') : '-' }}</span>
         </div>
-
         <div class="detail-row">
           <span class="detail-label">Quote Number</span>
-          <span class="detail-value quote-number">{{ record.quoteNumber || '-' }}</span>
-        </div>
-
-        <div class="detail-row" *ngIf="record.poNumber">
-          <span class="detail-label">PO Number</span>
-          <span class="detail-value">{{ record.poNumber }}</span>
-        </div>
-
-        <div class="detail-row" *ngIf="record.jobNumber">
-          <span class="detail-label">Job Number</span>
-          <span class="detail-value">{{ record.jobNumber }}</span>
+          <span class="detail-value mono">{{ record.quoteNumber || '-' }}</span>
         </div>
       </div>
-    </div>
+
+      <!-- Action: advance to PO stage -->
+      <div class="stage-action" *ngIf="!record.poNumber">
+        <button mat-stroked-button color="primary" (click)="addPoNumber()">
+          <mat-icon>receipt</mat-icon>
+          Add PO Number
+        </button>
+      </div>
+    </mat-expansion-panel>
+
+    <!-- ─── PO Tracking Section ─────────────────────────────────────────── -->
+    <mat-expansion-panel [expanded]="!!record.poNumber" [disabled]="!record.poNumber" class="detail-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>receipt_long</mat-icon>
+          PO Tracking
+        </mat-panel-title>
+        <mat-panel-description *ngIf="record.poNumber">
+          PO #{{ record.poNumber }}
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="detail-grid" *ngIf="record.poNumber">
+        <div class="detail-row">
+          <span class="detail-label">PO Number</span>
+          <span class="detail-value mono">{{ record.poNumber }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">PO Amount</span>
+          <span class="detail-value">{{ record.poAmount != null ? (record.poAmount | currency) : '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">PO Received Date</span>
+          <span class="detail-value">{{ record.poReceivedDate ? (record.poReceivedDate | date:'mediumDate') : '-' }}</span>
+        </div>
+      </div>
+
+      <!-- Action: mark PO as received to advance to Project Tracking -->
+      <div class="stage-action" *ngIf="record.poNumber && !record.poReceivedDate">
+        <button mat-stroked-button color="primary" (click)="markPoReceived()">
+          <mat-icon>check_circle</mat-icon>
+          Mark PO Received
+        </button>
+      </div>
+    </mat-expansion-panel>
+
+    <!-- ─── Project Tracking Section ────────────────────────────────────── -->
+    <mat-expansion-panel [expanded]="!!record.poReceivedDate" [disabled]="!record.poReceivedDate" class="detail-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>engineering</mat-icon>
+          Project Tracking
+        </mat-panel-title>
+        <mat-panel-description *ngIf="record.jobNumber">
+          Job #{{ record.jobNumber }}
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="detail-grid" *ngIf="record.poReceivedDate">
+        <div class="detail-row">
+          <span class="detail-label">Job Number</span>
+          <span class="detail-value mono">{{ record.jobNumber || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Customer Equipment</span>
+          <span class="detail-value">{{ record.customerEquipment || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Job Start</span>
+          <span class="detail-value">{{ record.jobStart ? (record.jobStart | date:'mediumDate') : '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Job Complete</span>
+          <span class="detail-value">{{ record.jobComplete ? (record.jobComplete | date:'mediumDate') : '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Invoice Number</span>
+          <span class="detail-value mono">{{ record.invoiceNumber || '-' }}</span>
+        </div>
+      </div>
+
+      <!-- Action: add project details -->
+      <div class="stage-action" *ngIf="record.poReceivedDate && !record.invoiceNumber">
+        <button mat-stroked-button color="primary" (click)="addProjectDetails()">
+          <mat-icon>edit_note</mat-icon>
+          Update Project Details
+        </button>
+      </div>
+
+      <!-- Closeout indicator -->
+      <div class="closeout-badge" *ngIf="record.invoiceNumber">
+        <mat-icon>verified</mat-icon>
+        <span>Project Closed Out</span>
+      </div>
+    </mat-expansion-panel>
   </mat-dialog-content>
 
   <!-- Actions -->
@@ -100,7 +190,7 @@
     <button mat-button (click)="close()">Close</button>
     <button mat-raised-button color="primary" (click)="openWorkflow()">
       <mat-icon>edit</mat-icon>
-      Edit RFP
+      Edit
     </button>
   </mat-dialog-actions>
 </div>
