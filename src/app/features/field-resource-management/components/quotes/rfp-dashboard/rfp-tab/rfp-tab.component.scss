@@ -247,3 +247,37 @@
     font-size: 12px !important;
   }
 }
+
+
+// Actions column
+.actions-header {
+  width: 60px;
+  text-align: center;
+}
+
+.actions-cell {
+  width: 60px;
+  text-align: center;
+  padding: 0 4px !important;
+}
+
+.action-menu-trigger {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.clickable-row:hover .action-menu-trigger {
+  opacity: 0.8;
+}
+
+::ng-deep .delete-menu-item {
+  color: #c62828 !important;
+
+  .mat-icon {
+    color: #c62828 !important;
+  }
+}

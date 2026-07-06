@@ -7,6 +7,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { DashboardQuote, DashboardUser } from '../../../../models/quote-workflow.model';
 import { RfpDetailDialogComponent } from '../rfp-detail-dialog/rfp-detail-dialog.component';
+import { RfpIntakeFormComponent } from '../../rfp-intake/rfp-intake-form.component';
 import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 
 @Component({
@@ -23,7 +24,7 @@ export class RfpTabComponent implements OnInit, OnChanges {
 
   displayedColumns: string[] = [
     'customer', 'description', 'requestorName', 'rfpReceiveDate',
-    'quoteDueDate', 'assignedToQuote', 'quoteSubmittedDate', 'quoteNumber'
+    'quoteDueDate', 'assignedToQuote', 'quoteSubmittedDate', 'quoteNumber', 'actions'
   ];
 
   dataSource = new MatTableDataSource<DashboardQuote>([]);
@@ -162,5 +163,38 @@ export class RfpTabComponent implements OnInit, OnChanges {
 
   hasActiveFilters(): boolean {
     return !!(this.filterCustomer || this.filterAssigned || this.filterStatus);
+  }
+
+  // ─── Action Button Handlers ─────────────────────────────────────────────────
+
+  onEdit(row: DashboardQuote, event: Event): void {
+    event.stopPropagation();
+    this.dialog.open(RfpIntakeFormComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      disableClose: true,
+      data: { editRecord: row }
+    });
+  }
+
+  onDelete(row: DashboardQuote, event: Event): void {
+    event.stopPropagation();
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this RFP?\n\n"${row.description}" (${row.customer})\n\nThis action cannot be undone.`
+    );
+    if (confirmed) {
+      this.store.dispatch(DashboardActions.deleteRfp({ quoteId: row.id }));
+    }
+  }
+
+  onAddPo(row: DashboardQuote, event: Event): void {
+    event.stopPropagation();
+    const poNumber = window.prompt('Enter PO Number:', row.poNumber || '');
+    if (poNumber !== null && poNumber.trim() !== '') {
+      this.store.dispatch(DashboardActions.updateDashboardFields({
+        quoteId: row.id,
+        fields: { poNumber: poNumber.trim() }
+      }));
+    }
   }
 }
