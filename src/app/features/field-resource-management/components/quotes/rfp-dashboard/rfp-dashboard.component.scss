@@ -340,3 +340,45 @@
     color: #000000 !important;
   }
 }
+
+// Row action menus — rendered in CDK overlay, needs ::ng-deep from parent
+::ng-deep .mat-mdc-menu-panel {
+  background-color: #ffffff !important;
+
+  .mat-mdc-menu-content {
+    background-color: #ffffff !important;
+  }
+
+  .mat-mdc-menu-item {
+    color: #212121 !important;
+    background-color: transparent !important;
+
+    .mdc-list-item__primary-text {
+      color: #212121 !important;
+    }
+
+    span {
+      color: #212121 !important;
+    }
+
+    &:hover {
+      background-color: #f5f5f5 !important;
+    }
+  }
+
+  .delete-menu-item {
+    color: #c62828 !important;
+
+    .mdc-list-item__primary-text {
+      color: #c62828 !important;
+    }
+
+    span {
+      color: #c62828 !important;
+    }
+
+    &:hover {
+      background-color: #ffebee !important;
+    }
+  }
+}

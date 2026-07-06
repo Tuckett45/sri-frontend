@@ -44,6 +44,8 @@ export type QuoteStep = 'rfpIntake' | 'jobSummary' | 'bom' | 'quoteAssembly';
 export interface RfpRecord {
   clientName: string;                          // required, max 200
   projectName: string;                         // required, max 200
+  requestorName?: string;                      // optional, max 200
+  assignedToQuote?: string;                    // optional, user ID
   siteName: string;                            // required
   siteAddress: Address;                        // reuses existing Address interface
   customerContact: ContactInfo;                // reuses existing ContactInfo interface

@@ -3,7 +3,9 @@ import { Store } from '@ngrx/store';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardQuote } from '../../../../models/quote-workflow.model';
+import { RfpDetailDialogComponent } from '../rfp-detail-dialog/rfp-detail-dialog.component';
 import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 
 @Component({
@@ -18,7 +20,7 @@ export class PoTrackingTabComponent implements OnChanges {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   displayedColumns: string[] = [
-    'customer', 'description', 'quoteNumber', 'dateReceived', 'poNumber', 'poAmount', 'poReceivedDate'
+    'customer', 'description', 'quoteNumber', 'dateReceived', 'poNumber', 'poAmount', 'poReceivedDate', 'actions'
   ];
 
   dataSource = new MatTableDataSource<DashboardQuote>([]);
@@ -31,7 +33,7 @@ export class PoTrackingTabComponent implements OnChanges {
   filterCustomer = '';
   filterPoNumber = '';
 
-  constructor(private store: Store) {}
+  constructor(private store: Store, private dialog: MatDialog) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['records']) {
@@ -116,5 +118,26 @@ export class PoTrackingTabComponent implements OnChanges {
 
   hasActiveFilters(): boolean {
     return !!(this.filterCustomer || this.filterPoNumber);
+  }
+
+  // ─── Action Button Handlers ─────────────────────────────────────────────────
+
+  onViewDetails(row: DashboardQuote, event: Event): void {
+    event.stopPropagation();
+    this.dialog.open(RfpDetailDialogComponent, {
+      width: '700px',
+      maxWidth: '95vw',
+      data: { record: row }
+    });
+  }
+
+  onDelete(row: DashboardQuote, event: Event): void {
+    event.stopPropagation();
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this record?\n\n"${row.description}" (${row.customer})\n\nThis action cannot be undone.`
+    );
+    if (confirmed) {
+      this.store.dispatch(DashboardActions.deleteRfp({ quoteId: row.id }));
+    }
   }
 }

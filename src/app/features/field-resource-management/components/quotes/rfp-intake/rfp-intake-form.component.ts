@@ -11,10 +11,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, combineLatest, BehaviorSubject } from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
+  filter,
   map,
   startWith,
   take,
@@ -33,6 +34,7 @@ import {
 import { CustomValidators } from '../../../validators/custom-validators';
 import { QuoteWorkflowService } from '../../../services/quote-workflow.service';
 import { ClientConfigurationService } from '../../../services/client-configuration.service';
+import { RfpDashboardService } from '../../../services/rfp-dashboard.service';
 import * as QuoteActions from '../../../state/quotes/quote.actions';
 import * as DashboardActions from '../../../state/quotes/dashboard.actions';
 import * as DashboardSelectors from '../../../state/quotes/dashboard.selectors';
@@ -69,7 +71,9 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
   draftRestored = false;
 
   filteredClients$!: Observable<string[]>;
+  filteredUsers$!: Observable<DashboardUser[]>;
   users$: Observable<DashboardUser[]> = new Observable<DashboardUser[]>();
+  private allUsers$ = new BehaviorSubject<DashboardUser[]>([]);
   clientConfiguration: ClientConfiguration | null = null;
 
   jobTypeOptions = Object.values(JobType);
@@ -103,6 +107,7 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private quoteWorkflowService: QuoteWorkflowService,
     private clientConfigurationService: ClientConfigurationService,
+    private rfpDashboardService: RfpDashboardService,
     @Optional() public dialogRef: MatDialogRef<RfpIntakeFormComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) public dialogData: any
   ) {
@@ -118,10 +123,26 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
     this.initializeForm();
     this.setupClientAutocomplete();
     this.users$ = this.store.select(DashboardSelectors.selectDashboardUsers);
+    this.setupAssignedUserAutocomplete();
 
-    // If editing an existing record, populate the form
+    // If editing an existing record, populate immediately for most fields,
+    // then re-patch assignedToQuote once users are loaded so displayWith resolves correctly
     if (this.isEditMode && this.editRecord) {
       this.populateFormForEdit(this.editRecord);
+
+      // Re-trigger the assignedToQuote value once users load so displayWith can resolve the name
+      if (this.editRecord.assignedToQuote) {
+        this.allUsers$.pipe(
+          filter(users => users.length > 0),
+          take(1),
+          takeUntil(this.destroy$)
+        ).subscribe(() => {
+          const ctrl = this.rfpForm.get('assignedToQuote');
+          if (ctrl) {
+            ctrl.setValue(ctrl.value);
+          }
+        });
+      }
     } else {
       this.restoreDraft();
       this.setupDraftAutoSave();
@@ -192,6 +213,51 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       map(value => this.filterClients(value || ''))
     );
+  }
+
+  private setupAssignedUserAutocomplete(): void {
+    const assignedControl = this.rfpForm.get('assignedToQuote');
+    if (!assignedControl) return;
+
+    // Fetch users directly from the service to guarantee they're available
+    this.rfpDashboardService.getUsers().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(users => {
+      this.allUsers$.next(users);
+      // Also dispatch to store so other components can use them
+      this.store.dispatch(DashboardActions.loadUsersSuccess({ users }));
+    });
+
+    this.filteredUsers$ = combineLatest([
+      assignedControl.valueChanges.pipe(startWith(assignedControl.value || '')),
+      this.allUsers$
+    ]).pipe(
+      map(([value, users]) => {
+        // If value matches a user ID (i.e. we just set it programmatically), show all users
+        const isUserId = users.some(u => u.id === value);
+        if (!value || isUserId) return users;
+
+        const filterText = (typeof value === 'string' ? value : '').toLowerCase();
+        return users.filter(user =>
+          user.fullName.toLowerCase().includes(filterText)
+        );
+      })
+    );
+  }
+
+  /**
+   * Display function for the Assigned to Quote autocomplete.
+   * Maps a user ID back to the user's full name for display in the input.
+   */
+  displayAssignedUser = (userId: string): string => {
+    if (!userId) return '';
+    const users = this.allUsers$.getValue();
+    const user = users.find(u => u.id === userId);
+    return user ? user.fullName : userId;
+  }
+
+  onAssignedUserSelected(userId: string): void {
+    this.rfpForm.get('assignedToQuote')?.setValue(userId);
   }
 
   private filterClients(value: string): string[] {
@@ -324,6 +390,8 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
     const rfpData: RfpRecord = {
       clientName: formValue.clientName,
       projectName: formValue.projectName,
+      requestorName: formValue.requestorName || undefined,
+      assignedToQuote: formValue.assignedToQuote || undefined,
       siteName: formValue.siteName,
       siteAddress: {
         street: formValue.siteAddress.street,
@@ -363,12 +431,13 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
         if (action.type === QuoteActions.createQuoteSuccess.type) {
           const quote = (action as ReturnType<typeof QuoteActions.createQuoteSuccess>).quote;
           this.quoteWorkflowService.clearDraft(this.quoteId, 'rfpIntake');
-          this.snackBar.open('Quote created successfully', 'Close', { duration: 3000 });
+          this.snackBar.open('RFP created successfully', 'Close', { duration: 3000 });
 
           if (this.isDialog) {
             this.dialogRef.close({ success: true, quoteId: quote.id });
+          } else {
+            this.router.navigate(['/field-resource-management/quotes']);
           }
-          this.router.navigate(['/field-resource-management/quotes', quote.id]);
         } else {
           const error = (action as ReturnType<typeof QuoteActions.createQuoteFailure>).error;
           this.snackBar.open(`Error creating quote: ${error}`, 'Close', { duration: 5000 });

@@ -126,10 +126,17 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
   }
 
   openNewRfp(): void {
-    this.dialog.open(RfpIntakeFormComponent, {
+    const dialogRef = this.dialog.open(RfpIntakeFormComponent, {
       width: '900px',
       maxWidth: '95vw',
       disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        // Refresh the dashboard to show the new record
+        this.store.dispatch(DashboardActions.loadDashboard({ filters: this.filters }));
+      }
     });
   }
 

@@ -71,9 +71,7 @@ export class QuoteEffects {
             // Broadcast SignalR update (fire-and-forget)
             this.broadcastQuoteUpdate(quote.id, quote);
 
-            // Navigate to the new quote workflow view
-            this.router.navigate(['/field-resource-management/quotes', quote.id]);
-
+            // Navigation is handled by the component (dialog close or router navigate)
             return QuoteActions.createQuoteSuccess({ quote });
           }),
           catchError((error) =>
