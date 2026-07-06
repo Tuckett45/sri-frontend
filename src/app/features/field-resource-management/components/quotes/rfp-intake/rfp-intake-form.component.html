@@ -107,12 +107,22 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Assigned to Quote</mat-label>
-            <mat-select formControlName="assignedToQuote">
-              <mat-option value="">Unassigned</mat-option>
-              <mat-option *ngFor="let user of users$ | async" [value]="user.id">
+            <input
+              matInput
+              formControlName="assignedToQuote"
+              placeholder="Search by name..."
+              [matAutocomplete]="assignedAuto"
+            />
+            <mat-autocomplete
+              #assignedAuto="matAutocomplete"
+              [displayWith]="displayAssignedUser"
+              (optionSelected)="onAssignedUserSelected($event.option.value)"
+            >
+              <mat-option [value]="''">Unassigned</mat-option>
+              <mat-option *ngFor="let user of filteredUsers$ | async" [value]="user.id">
                 {{ user.fullName }}
               </mat-option>
-            </mat-select>
+            </mat-autocomplete>
           </mat-form-field>
         </div>
       </mat-card-content>

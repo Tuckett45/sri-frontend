@@ -280,3 +280,22 @@ mat-card-content {
 ::ng-deep .mat-mdc-select-value {
   color: #000000 !important;
 }
+
+// Datepicker toggle icons — ensure black
+::ng-deep .mat-datepicker-toggle {
+  color: #000000 !important;
+
+  .mat-mdc-icon-button {
+    color: #000000 !important;
+
+    .mat-icon,
+    svg {
+      color: #000000 !important;
+      fill: #000000 !important;
+    }
+  }
+
+  .mdc-icon-button__icon {
+    color: #000000 !important;
+  }
+}
