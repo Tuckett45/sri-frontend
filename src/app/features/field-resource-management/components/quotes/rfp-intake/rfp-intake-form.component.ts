@@ -431,12 +431,13 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
         if (action.type === QuoteActions.createQuoteSuccess.type) {
           const quote = (action as ReturnType<typeof QuoteActions.createQuoteSuccess>).quote;
           this.quoteWorkflowService.clearDraft(this.quoteId, 'rfpIntake');
-          this.snackBar.open('Quote created successfully', 'Close', { duration: 3000 });
+          this.snackBar.open('RFP created successfully', 'Close', { duration: 3000 });
 
           if (this.isDialog) {
             this.dialogRef.close({ success: true, quoteId: quote.id });
+          } else {
+            this.router.navigate(['/field-resource-management/quotes']);
           }
-          this.router.navigate(['/field-resource-management/quotes', quote.id]);
         } else {
           const error = (action as ReturnType<typeof QuoteActions.createQuoteFailure>).error;
           this.snackBar.open(`Error creating quote: ${error}`, 'Close', { duration: 5000 });
