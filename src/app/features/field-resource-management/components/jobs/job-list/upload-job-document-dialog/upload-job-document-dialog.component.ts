@@ -14,6 +14,8 @@ export interface UploadJobDocumentDialogResult {
   success: boolean;
   job?: Job;
   error?: string;
+  /** If true, the caller should navigate to the wizard with import data in sessionStorage */
+  redirectToWizard?: boolean;
 }
 
 /**
@@ -22,6 +24,9 @@ export interface UploadJobDocumentDialogResult {
  * Unlike the existing Import Document Dialog (which routes to the wizard),
  * this component parses the uploaded document and immediately submits
  * the extracted data as a new job — no wizard steps required.
+ *
+ * If direct creation fails (e.g., missing required fields), users are offered
+ * a fallback to open the wizard with the parsed data pre-filled.
  *
  * Supported formats: PDF, DOCX, TXT (max 25 MB)
  */
@@ -162,6 +167,14 @@ export interface UploadJobDocumentDialogResult {
         <mat-icon class="error-icon">error</mat-icon>
         <span class="error-text">{{ errorMessage }}</span>
       </div>
+
+      <!-- Fallback option when creation fails -->
+      <div *ngIf="createFailed" class="fallback-section">
+        <p class="fallback-text">
+          The document was parsed successfully but some required fields are missing for direct creation.
+          You can use the wizard to review and fill in the remaining fields.
+        </p>
+      </div>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
@@ -180,9 +193,20 @@ export interface UploadJobDocumentDialogResult {
         Parse Document
       </button>
 
-      <!-- Create Job button (shown after successful parse) -->
+      <!-- Use Wizard button (shown when direct creation fails) -->
       <button
-        *ngIf="parseComplete && !isSubmitting && !submitComplete"
+        *ngIf="createFailed"
+        mat-raised-button
+        color="accent"
+        (click)="onUseWizard()"
+      >
+        <mat-icon>edit_note</mat-icon>
+        Use Wizard Instead
+      </button>
+
+      <!-- Create Job button (shown after successful parse, before submission or failure) -->
+      <button
+        *ngIf="parseComplete && !isSubmitting && !submitComplete && !createFailed"
         mat-raised-button
         color="primary"
         (click)="onCreateJob()"
@@ -443,6 +467,20 @@ export interface UploadJobDocumentDialogResult {
       color: #c62828;
     }
 
+    .fallback-section {
+      margin-top: 12px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-radius: 4px;
+      border-left: 4px solid #2196f3;
+    }
+
+    .fallback-text {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.7);
+      margin: 0;
+    }
+
     mat-dialog-actions button mat-icon {
       margin-right: 4px;
       font-size: 18px;
@@ -458,6 +496,7 @@ export class UploadJobDocumentDialogComponent implements OnDestroy {
   isSubmitting = false;
   parseComplete = false;
   submitComplete = false;
+  createFailed = false;
   parsedResult: ParsedJobDocument | null = null;
   warnings: string[] = [];
   errorMessage: string | null = null;
@@ -555,6 +594,7 @@ export class UploadJobDocumentDialogComponent implements OnDestroy {
 
     this.isSubmitting = true;
     this.errorMessage = null;
+    this.createFailed = false;
     this.cdr.markForCheck();
 
     // Map parsed document to a JobSetupFormValue
@@ -572,7 +612,8 @@ export class UploadJobDocumentDialogComponent implements OnDestroy {
         },
         error: (err) => {
           this.isSubmitting = false;
-          this.errorMessage = err?.message || 'Failed to create job. Please try again or use the wizard to fill in missing fields.';
+          this.createFailed = true;
+          this.errorMessage = err?.message || 'Failed to create job. Some required fields may be missing from the document.';
           this.cdr.markForCheck();
         }
       });
@@ -589,6 +630,23 @@ export class UploadJobDocumentDialogComponent implements OnDestroy {
       this.dialogRef.close(result);
     } else {
       this.dialogRef.close(null);
+    }
+  }
+
+  /**
+   * Redirect to the wizard with the parsed data pre-filled.
+   * Stores the mapped form value in sessionStorage so the job-setup component picks it up.
+   */
+  onUseWizard(): void {
+    if (this.parsedResult) {
+      const formPatch = this.importService.mapToFormValue(this.parsedResult);
+      sessionStorage.setItem('frm_job_import_data', JSON.stringify(formPatch));
+
+      const result: UploadJobDocumentDialogResult = {
+        success: false,
+        redirectToWizard: true
+      };
+      this.dialogRef.close(result);
     }
   }
 
@@ -623,22 +681,23 @@ export class UploadJobDocumentDialogComponent implements OnDestroy {
     this.isProcessing = false;
     this.isSubmitting = false;
     this.submitComplete = false;
+    this.createFailed = false;
     this.createdJob = null;
   }
 
   /**
    * Maps ParsedJobDocument to a full JobSetupFormValue with sensible defaults
-   * for fields that couldn't be extracted.
+   * for fields that couldn't be extracted from the document.
    */
   private mapParsedToFormValue(parsed: ParsedJobDocument): JobSetupFormValue {
     return {
       customerInfo: {
         clientName: parsed.clientName || parsed.siteName || 'Imported Job',
-        siteName: parsed.siteName || parsed.clientName || '',
-        street: parsed.siteAddress?.street || '',
-        city: parsed.siteAddress?.city || '',
-        state: parsed.siteAddress?.state || '',
-        zipCode: parsed.siteAddress?.zipCode || '',
+        siteName: parsed.siteName || parsed.clientName || 'Imported Job',
+        street: parsed.siteAddress?.street || 'TBD',
+        city: parsed.siteAddress?.city || 'TBD',
+        state: parsed.siteAddress?.state || 'TBD',
+        zipCode: parsed.siteAddress?.zipCode || '00000',
         pocName: parsed.customerPOC?.name || parsed.siteLead?.name || '',
         pocPhone: parsed.customerPOC?.phone || parsed.siteLead?.phone || '',
         pocEmail: parsed.customerPOC?.email || parsed.siteLead?.email || '',
@@ -648,16 +707,16 @@ export class UploadJobDocumentDialogComponent implements OnDestroy {
         purchaseOrderNumber: ''
       },
       pricingBilling: {
-        standardBillRate: 0,
-        overtimeBillRate: 0,
+        standardBillRate: 1,    // Minimum non-zero to pass validation
+        overtimeBillRate: 1,    // Minimum non-zero to pass validation
         perDiem: parsed.perDiem || 0,
-        invoicingProcess: ''
+        invoicingProcess: 'weekly'  // Default to weekly (SRI pays weekly per doc)
       },
       sriInternal: {
-        projectDirector: parsed.siteLead?.name || '',
+        projectDirector: parsed.siteLead?.name || 'TBD',
         targetResources: 1,
-        bizDevContact: '',
-        requestedHours: 0,
+        bizDevContact: 'TBD',
+        requestedHours: 40,     // Default to 1 week of hours
         overtimeRequired: false,
         estimatedOvertimeHours: null
       }

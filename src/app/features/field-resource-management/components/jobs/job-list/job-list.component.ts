@@ -733,6 +733,17 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
             this.router.navigate(['/field-resource-management/jobs', result.job.id]);
           }
         });
+      } else if (result?.redirectToWizard) {
+        // Navigate to the job setup wizard with imported data pre-filled
+        this.router.navigate(['/field-resource-management/jobs/new'], {
+          queryParams: { imported: 'true' }
+        });
+
+        this.snackBar.open(
+          'Document imported — review and complete the form',
+          'OK',
+          { duration: 4000 }
+        );
       }
     });
   }
