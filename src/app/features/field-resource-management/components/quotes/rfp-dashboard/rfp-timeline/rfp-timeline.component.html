@@ -1,0 +1,57 @@
+<div class="rfp-timeline-container">
+  <!-- Progress Summary Bar -->
+  <div class="timeline-summary">
+    <div class="summary-left">
+      <mat-icon class="summary-icon">timeline</mat-icon>
+      <span class="summary-label">RFP Lifecycle</span>
+      <span class="summary-stage">
+        <span class="stage-badge" [ngClass]="'stage-' + (progressPercentage === 100 ? 'complete' : 'active')">
+          {{ currentStageLabel }}
+        </span>
+      </span>
+    </div>
+    <div class="summary-right">
+      <span class="elapsed-days" *ngIf="record.rfpReceiveDate">
+        {{ getElapsedDays() }} day{{ getElapsedDays() !== 1 ? 's' : '' }} elapsed
+      </span>
+      <span class="progress-text">{{ progressPercentage }}% complete</span>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" [style.width.%]="progressPercentage"></div>
+  </div>
+
+  <!-- Timeline Steps -->
+  <div class="timeline-steps">
+    <div *ngFor="let step of steps; let i = index; let last = last"
+         class="timeline-step"
+         [ngClass]="'step-' + step.status"
+         [matTooltip]="step.tooltip">
+
+      <!-- Connector Line (before this step, except first) -->
+      <div class="connector" *ngIf="i > 0"
+           [ngClass]="{ 'connector-completed': step.status === 'completed' }">
+        <span class="connector-days" *ngIf="getDaysBetweenSteps(i) !== null">
+          {{ getDaysBetweenSteps(i) }}d
+        </span>
+      </div>
+
+      <!-- Step Node -->
+      <div class="step-node">
+        <div class="node-circle">
+          <mat-icon *ngIf="step.status === 'completed'" class="node-icon completed-icon">check</mat-icon>
+          <mat-icon *ngIf="step.status === 'active'" class="node-icon active-icon">{{ step.icon }}</mat-icon>
+          <mat-icon *ngIf="step.status === 'pending'" class="node-icon pending-icon">{{ step.icon }}</mat-icon>
+        </div>
+        <div class="step-info">
+          <span class="step-label">{{ step.label }}</span>
+          <span class="step-date" *ngIf="step.date">{{ step.date | date:'shortDate' }}</span>
+          <span class="step-date step-date--pending" *ngIf="!step.date && step.status === 'active'">In Progress</span>
+          <span class="step-date step-date--pending" *ngIf="!step.date && step.status === 'pending'">Pending</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

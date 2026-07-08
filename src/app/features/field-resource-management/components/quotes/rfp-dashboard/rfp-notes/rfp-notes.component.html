@@ -1,0 +1,131 @@
+<div class="rfp-notes-container">
+  <!-- Notes Header -->
+  <div class="notes-header" (click)="toggleExpanded()">
+    <div class="notes-title">
+      <mat-icon>sticky_note_2</mat-icon>
+      <span>Notes</span>
+      <span class="notes-count" *ngIf="sortedNotes.length > 0">
+        ({{ sortedNotes.length }})
+      </span>
+    </div>
+    <button mat-icon-button class="expand-toggle" [attr.aria-label]="isExpanded ? 'Collapse notes' : 'Expand notes'">
+      <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+    </button>
+  </div>
+
+  <!-- Notes Content (collapsible) -->
+  <div class="notes-content" *ngIf="isExpanded">
+
+    <!-- Add Note Button / Form -->
+    <div class="add-note-section">
+      <button mat-stroked-button color="primary" (click)="startAddNote()" *ngIf="!isAddingNote" class="add-note-btn">
+        <mat-icon>add_comment</mat-icon>
+        Add Note
+      </button>
+
+      <!-- Add Note Form -->
+      <div class="note-form" *ngIf="isAddingNote">
+        <mat-form-field appearance="outline" class="note-textarea-field">
+          <mat-label>Write a note...</mat-label>
+          <textarea matInput
+                    [(ngModel)]="newNoteContent"
+                    rows="3"
+                    maxlength="2000"
+                    placeholder="Add your note here..."
+                    cdkTextareaAutosize
+                    cdkAutosizeMinRows="2"
+                    cdkAutosizeMaxRows="6"></textarea>
+          <mat-hint align="end">{{ newNoteContent.length }} / 2000</mat-hint>
+        </mat-form-field>
+        <div class="note-form-actions">
+          <button mat-button (click)="cancelAddNote()">Cancel</button>
+          <button mat-raised-button color="primary"
+                  (click)="submitNote()"
+                  [disabled]="!newNoteContent.trim()">
+            <mat-icon>send</mat-icon>
+            Save Note
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes List -->
+    <div class="notes-list" *ngIf="sortedNotes.length > 0">
+      <div *ngFor="let note of sortedNotes"
+           class="note-item"
+           [class.pinned]="note.isPinned">
+
+        <!-- Pinned indicator -->
+        <div class="pin-indicator" *ngIf="note.isPinned">
+          <mat-icon>push_pin</mat-icon>
+          <span>Pinned</span>
+        </div>
+
+        <!-- Note Content (view mode) -->
+        <div class="note-body" *ngIf="editingNoteId !== note.id">
+          <p class="note-content">{{ note.content }}</p>
+          <div class="note-meta">
+            <span class="note-author">
+              <mat-icon class="meta-icon">person</mat-icon>
+              {{ note.authorName }}
+            </span>
+            <span class="note-time" [matTooltip]="note.createdAt | date:'medium'">
+              {{ getRelativeTime(note.createdAt) }}
+            </span>
+            <span class="note-edited" *ngIf="note.updatedAt !== note.createdAt">(edited)</span>
+          </div>
+        </div>
+
+        <!-- Note Content (edit mode) -->
+        <div class="note-edit-form" *ngIf="editingNoteId === note.id">
+          <mat-form-field appearance="outline" class="note-textarea-field">
+            <textarea matInput
+                      [(ngModel)]="editNoteContent"
+                      rows="3"
+                      maxlength="2000"
+                      cdkTextareaAutosize
+                      cdkAutosizeMinRows="2"
+                      cdkAutosizeMaxRows="6"></textarea>
+            <mat-hint align="end">{{ editNoteContent.length }} / 2000</mat-hint>
+          </mat-form-field>
+          <div class="note-form-actions">
+            <button mat-button (click)="cancelEditNote()">Cancel</button>
+            <button mat-raised-button color="primary"
+                    (click)="saveEditNote(note)"
+                    [disabled]="!editNoteContent.trim()">
+              Save
+            </button>
+          </div>
+        </div>
+
+        <!-- Note Actions -->
+        <div class="note-actions" *ngIf="editingNoteId !== note.id">
+          <button mat-icon-button
+                  (click)="togglePin(note)"
+                  [matTooltip]="note.isPinned ? 'Unpin' : 'Pin'"
+                  class="note-action-btn">
+            <mat-icon>{{ note.isPinned ? 'push_pin' : 'outlined_flag' }}</mat-icon>
+          </button>
+          <button mat-icon-button
+                  (click)="startEditNote(note)"
+                  matTooltip="Edit"
+                  class="note-action-btn">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button
+                  (click)="deleteNote(note)"
+                  matTooltip="Delete"
+                  class="note-action-btn delete-action">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="notes-empty" *ngIf="sortedNotes.length === 0 && !isAddingNote">
+      <mat-icon class="empty-icon">speaker_notes_off</mat-icon>
+      <p>No notes yet. Click "Add Note" to start.</p>
+    </div>
+  </div>
+</div>

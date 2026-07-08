@@ -32,6 +32,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatRadioModule } from '@angular/material/radio';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { TextFieldModule } from '@angular/cdk/text-field';
 
 const MATERIAL_MODULES = [
   MatButtonModule,
@@ -64,7 +65,8 @@ const MATERIAL_MODULES = [
   MatTabsModule,
   MatRadioModule,
   DragDropModule,
-  ScrollingModule
+  ScrollingModule,
+  TextFieldModule
 ];
 
 /**

@@ -170,6 +170,104 @@ export class DashboardEffects {
     { dispatch: false }
   );
 
+  // ─── Notes Effects ────────────────────────────────────────────────────────
+
+  loadNotes$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.loadNotes),
+      switchMap(({ quoteId }) =>
+        this.dashboardService.getNotes(quoteId).pipe(
+          map((notes) => DashboardActions.loadNotesSuccess({ quoteId, notes })),
+          catchError((error) =>
+            of(DashboardActions.loadNotesFailure({
+              error: error?.error?.message || error.message || 'Failed to load notes'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  addNote$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.addNote),
+      switchMap(({ quoteId, content }) =>
+        this.dashboardService.addNote(quoteId, content).pipe(
+          map((note) => DashboardActions.addNoteSuccess({ quoteId, note })),
+          catchError((error) =>
+            of(DashboardActions.addNoteFailure({
+              error: error?.error?.message || error.message || 'Failed to add note'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  updateNote$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.updateNote),
+      switchMap(({ quoteId, noteId, content }) =>
+        this.dashboardService.updateNote(quoteId, noteId, content).pipe(
+          map((note) => DashboardActions.updateNoteSuccess({ quoteId, note })),
+          catchError((error) =>
+            of(DashboardActions.updateNoteFailure({
+              error: error?.error?.message || error.message || 'Failed to update note'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  toggleNotePin$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.toggleNotePin),
+      switchMap(({ quoteId, noteId, isPinned }) =>
+        this.dashboardService.toggleNotePin(quoteId, noteId, isPinned).pipe(
+          map((note) => DashboardActions.toggleNotePinSuccess({ quoteId, note })),
+          catchError((error) =>
+            of(DashboardActions.toggleNotePinFailure({
+              error: error?.error?.message || error.message || 'Failed to update pin status'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  deleteNote$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.deleteNote),
+      switchMap(({ quoteId, noteId }) =>
+        this.dashboardService.deleteNote(quoteId, noteId).pipe(
+          map(() => DashboardActions.deleteNoteSuccess({ quoteId, noteId })),
+          catchError((error) =>
+            of(DashboardActions.deleteNoteFailure({
+              error: error?.error?.message || error.message || 'Failed to delete note'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  showNoteErrors$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(
+        DashboardActions.loadNotesFailure,
+        DashboardActions.addNoteFailure,
+        DashboardActions.updateNoteFailure,
+        DashboardActions.toggleNotePinFailure,
+        DashboardActions.deleteNoteFailure
+      ),
+      tap(({ error }) => {
+        this.snackBar.open(error, 'Close', { duration: 5000 });
+      })
+    ),
+    { dispatch: false }
+  );
+
   constructor(
     private actions$: Actions,
     private dashboardService: RfpDashboardService,

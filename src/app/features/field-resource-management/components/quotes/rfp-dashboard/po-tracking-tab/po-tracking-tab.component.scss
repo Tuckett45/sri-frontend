@@ -343,3 +343,53 @@
     background-color: #ffebee !important;
   }
 }
+
+
+// ─── Bulk Actions Bar ─────────────────────────────────────────────────────────
+
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  margin-bottom: 12px;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+  animation: slideDown 0.2s ease;
+
+  .selection-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1565c0;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .bulk-buttons {
+    display: flex;
+    gap: 8px;
+
+    button {
+      font-size: 13px;
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

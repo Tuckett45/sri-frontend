@@ -1,0 +1,265 @@
+.rfp-timeline-container {
+  padding: 16px 0;
+}
+
+// ─── Progress Summary ─────────────────────────────────────────────────────────
+
+.timeline-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+
+  .summary-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .summary-icon {
+      color: #1976d2;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .summary-label {
+      font-weight: 500;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .stage-badge {
+      font-size: 12px;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-weight: 500;
+
+      &.stage-active {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+
+      &.stage-complete {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+    }
+  }
+
+  .summary-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .elapsed-days {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1976d2;
+    }
+  }
+}
+
+// ─── Progress Bar ─────────────────────────────────────────────────────────────
+
+.progress-bar-track {
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  margin-bottom: 20px;
+  overflow: hidden;
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50, #1976d2);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+}
+
+// ─── Timeline Steps ───────────────────────────────────────────────────────────
+
+.timeline-steps {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 8px;
+}
+
+.timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+// ─── Connector ────────────────────────────────────────────────────────────────
+
+.connector {
+  position: absolute;
+  top: 16px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: #e0e0e0;
+  z-index: 0;
+
+  &.connector-completed {
+    background: #4caf50;
+  }
+
+  .connector-days {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #999;
+    white-space: nowrap;
+  }
+}
+
+// ─── Step Node ────────────────────────────────────────────────────────────────
+
+.step-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+}
+
+.node-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+
+  .step-completed & {
+    background: #4caf50;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  }
+
+  .step-active & {
+    background: #1976d2;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+    animation: pulse 2s infinite;
+  }
+
+  .step-pending & {
+    background: #e0e0e0;
+  }
+}
+
+.node-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+
+  &.completed-icon {
+    color: white;
+  }
+
+  &.active-icon {
+    color: white;
+  }
+
+  &.pending-icon {
+    color: #999;
+  }
+}
+
+// ─── Step Info ────────────────────────────────────────────────────────────────
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.step-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+
+  .step-pending & {
+    color: #999;
+  }
+}
+
+.step-date {
+  font-size: 10px;
+  color: #666;
+  margin-top: 2px;
+
+  &.step-date--pending {
+    color: #bbb;
+    font-style: italic;
+  }
+}
+
+// ─── Animations ───────────────────────────────────────────────────────────────
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+  }
+  50% {
+    box-shadow: 0 2px 16px rgba(25, 118, 210, 0.5);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+  }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .timeline-steps {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-left: 24px;
+  }
+
+  .timeline-step {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .connector {
+    position: absolute;
+    top: -8px;
+    left: 16px;
+    width: 2px;
+    height: 16px;
+    right: unset;
+  }
+
+  .step-node {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .node-circle {
+    margin-bottom: 0;
+  }
+
+  .step-info {
+    align-items: flex-start;
+    text-align: left;
+  }
+}

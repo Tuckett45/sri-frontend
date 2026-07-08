@@ -9,7 +9,8 @@ import {
   DashboardFilters,
   DashboardQuote,
   DashboardResponse,
-  DashboardUser
+  DashboardUser,
+  RfpNote
 } from '../models/quote-workflow.model';
 
 /**
@@ -139,5 +140,57 @@ export class RfpDashboardService {
    */
   getUsers(): Observable<DashboardUser[]> {
     return this.http.get<DashboardUser[]>(this.usersUrl);
+  }
+
+  // ===========================================================================
+  // Notes
+  // ===========================================================================
+
+  /**
+   * Gets all notes for a quote.
+   */
+  getNotes(quoteId: string): Observable<RfpNote[]> {
+    return this.http.get<RfpNote[]>(
+      `${this.quotesUrl}/${quoteId}/notes`
+    );
+  }
+
+  /**
+   * Adds a new note to a quote.
+   */
+  addNote(quoteId: string, content: string): Observable<RfpNote> {
+    return this.http.post<RfpNote>(
+      `${this.quotesUrl}/${quoteId}/notes`,
+      { content }
+    );
+  }
+
+  /**
+   * Updates an existing note.
+   */
+  updateNote(quoteId: string, noteId: string, content: string): Observable<RfpNote> {
+    return this.http.put<RfpNote>(
+      `${this.quotesUrl}/${quoteId}/notes/${noteId}`,
+      { content }
+    );
+  }
+
+  /**
+   * Toggles the pinned status of a note.
+   */
+  toggleNotePin(quoteId: string, noteId: string, isPinned: boolean): Observable<RfpNote> {
+    return this.http.patch<RfpNote>(
+      `${this.quotesUrl}/${quoteId}/notes/${noteId}/pin`,
+      { isPinned }
+    );
+  }
+
+  /**
+   * Deletes a note from a quote.
+   */
+  deleteNote(quoteId: string, noteId: string): Observable<{ message: string; id: string }> {
+    return this.http.delete<{ message: string; id: string }>(
+      `${this.quotesUrl}/${quoteId}/notes/${noteId}`
+    );
   }
 }

@@ -1,6 +1,7 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
@@ -18,14 +19,17 @@ import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 export class RfpTabComponent implements OnInit, OnChanges {
   @Input() records: DashboardQuote[] = [];
   @Input() users: DashboardUser[] = [];
+  @Output() selectionChanged = new EventEmitter<DashboardQuote[]>();
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   displayedColumns: string[] = [
-    'customer', 'description', 'requestorName', 'rfpReceiveDate',
+    'select', 'customer', 'description', 'requestorName', 'rfpReceiveDate',
     'quoteDueDate', 'assignedToQuote', 'quoteSubmittedDate', 'quoteNumber', 'actions'
   ];
+
+  selection = new SelectionModel<DashboardQuote>(true, []);
 
   dataSource = new MatTableDataSource<DashboardQuote>([]);
 
@@ -44,6 +48,10 @@ export class RfpTabComponent implements OnInit, OnChanges {
   constructor(private store: Store, private router: Router, private dialog: MatDialog) {}
 
   ngOnInit(): void {
+    this.selection.changed.subscribe(() => {
+      this.selectionChanged.emit(this.selection.selected);
+    });
+
     this.dataSource.filterPredicate = (data: DashboardQuote, filter: string) => {
       const filters = JSON.parse(filter);
       let matches = true;
@@ -163,6 +171,48 @@ export class RfpTabComponent implements OnInit, OnChanges {
 
   hasActiveFilters(): boolean {
     return !!(this.filterCustomer || this.filterAssigned || this.filterStatus);
+  }
+
+  // ─── Selection Helpers ────────────────────────────────────────────────────
+
+  /** Whether the number of selected elements matches the total number of rows. */
+  isAllSelected(): boolean {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.filteredData.length;
+    return numSelected === numRows && numRows > 0;
+  }
+
+  /** Whether some but not all rows are selected. */
+  isIndeterminate(): boolean {
+    return this.selection.selected.length > 0 && !this.isAllSelected();
+  }
+
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  toggleAllRows(): void {
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.filteredData.forEach(row => this.selection.select(row));
+    }
+  }
+
+  /** Clear selection when data changes. */
+  clearSelection(): void {
+    this.selection.clear();
+  }
+
+  /** Bulk delete selected items. */
+  bulkDelete(): void {
+    const count = this.selection.selected.length;
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${count} selected RFP${count > 1 ? 's' : ''}?\n\nThis action cannot be undone.`
+    );
+    if (confirmed) {
+      this.selection.selected.forEach(row => {
+        this.store.dispatch(DashboardActions.deleteRfp({ quoteId: row.id }));
+      });
+      this.selection.clear();
+    }
   }
 
   // ─── Action Button Handlers ─────────────────────────────────────────────────

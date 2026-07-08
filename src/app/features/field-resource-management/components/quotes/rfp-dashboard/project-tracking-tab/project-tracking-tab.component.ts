@@ -1,5 +1,6 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ViewChild, Output, EventEmitter } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
@@ -16,23 +17,29 @@ import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 })
 export class ProjectTrackingTabComponent implements OnChanges {
   @Input() records: DashboardQuote[] = [];
+  @Output() selectionChanged = new EventEmitter<DashboardQuote[]>();
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   displayedColumns: string[] = [
-    'customer', 'description', 'quoteNumber', 'poNumber', 'jobNumber',
+    'select', 'customer', 'description', 'quoteNumber', 'poNumber', 'jobNumber',
     'materialsOrdered', 'materialsEta', 'customerEquipment', 'jobStart', 'jobComplete', 'invoiceNumber', 'closeout', 'actions'
   ];
 
   dataSource = new MatTableDataSource<DashboardQuote>([]);
+  selection = new SelectionModel<DashboardQuote>(true, []);
 
   // Per-tab filters
   filterCustomer = '';
   filterJobNumber = '';
   filterStatus = '';
 
-  constructor(private store: Store, private dialog: MatDialog) {}
+  constructor(private store: Store, private dialog: MatDialog) {
+    this.selection.changed.subscribe(() => {
+      this.selectionChanged.emit(this.selection.selected);
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['records']) {
@@ -116,6 +123,43 @@ export class ProjectTrackingTabComponent implements OnChanges {
 
   hasActiveFilters(): boolean {
     return !!(this.filterCustomer || this.filterJobNumber || this.filterStatus);
+  }
+
+  // ─── Selection Helpers ────────────────────────────────────────────────────
+
+  isAllSelected(): boolean {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.filteredData.length;
+    return numSelected === numRows && numRows > 0;
+  }
+
+  isIndeterminate(): boolean {
+    return this.selection.selected.length > 0 && !this.isAllSelected();
+  }
+
+  toggleAllRows(): void {
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.filteredData.forEach(row => this.selection.select(row));
+    }
+  }
+
+  clearSelection(): void {
+    this.selection.clear();
+  }
+
+  bulkDelete(): void {
+    const count = this.selection.selected.length;
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${count} selected record${count > 1 ? 's' : ''}?\n\nThis action cannot be undone.`
+    );
+    if (confirmed) {
+      this.selection.selected.forEach(row => {
+        this.store.dispatch(DashboardActions.deleteRfp({ quoteId: row.id }));
+      });
+      this.selection.clear();
+    }
   }
 
   // ─── Action Button Handlers ─────────────────────────────────────────────────
