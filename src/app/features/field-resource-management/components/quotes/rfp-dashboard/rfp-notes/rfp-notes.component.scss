@@ -1,0 +1,237 @@
+.rfp-notes-container {
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+
+.notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #f0f0f0;
+  }
+
+  .notes-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #ff9800;
+    }
+
+    .notes-count {
+      font-size: 12px;
+      font-weight: 400;
+      color: #666;
+    }
+  }
+
+  .expand-toggle {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+  }
+}
+
+// ─── Content ──────────────────────────────────────────────────────────────────
+
+.notes-content {
+  padding: 0 16px 16px;
+}
+
+// ─── Add Note Section ─────────────────────────────────────────────────────────
+
+.add-note-section {
+  margin-bottom: 12px;
+}
+
+.add-note-btn {
+  width: 100%;
+  border-style: dashed;
+}
+
+// ─── Note Form ────────────────────────────────────────────────────────────────
+
+.note-form,
+.note-edit-form {
+  .note-textarea-field {
+    width: 100%;
+
+    textarea {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  }
+}
+
+.note-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+// ─── Notes List ───────────────────────────────────────────────────────────────
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-item {
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 12px;
+  position: relative;
+  transition: box-shadow 0.2s, border-color 0.2s;
+
+  &:hover {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    border-color: #d0d0d0;
+
+    .note-actions {
+      opacity: 1;
+    }
+  }
+
+  &.pinned {
+    border-left: 3px solid #ff9800;
+    background: #fff8e1;
+  }
+}
+
+// ─── Pin Indicator ────────────────────────────────────────────────────────────
+
+.pin-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: #ff9800;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    transform: rotate(30deg);
+  }
+}
+
+// ─── Note Body ────────────────────────────────────────────────────────────────
+
+.note-body {
+  .note-content {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    margin: 0 0 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
+
+.note-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #999;
+
+  .note-author {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #666;
+
+    .meta-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .note-time {
+    cursor: default;
+  }
+
+  .note-edited {
+    font-style: italic;
+  }
+}
+
+// ─── Note Actions ─────────────────────────────────────────────────────────────
+
+.note-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  .note-action-btn {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: #666;
+    }
+
+    &.delete-action mat-icon {
+      color: #e53935;
+    }
+
+    &:hover mat-icon {
+      color: #1976d2;
+    }
+
+    &.delete-action:hover mat-icon {
+      color: #c62828;
+    }
+  }
+}
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+
+.notes-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: #999;
+
+  .empty-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    color: #ccc;
+  }
+
+  p {
+    margin: 8px 0 0;
+    font-size: 13px;
+  }
+}

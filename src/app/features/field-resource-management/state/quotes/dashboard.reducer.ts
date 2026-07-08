@@ -108,5 +108,90 @@ export const dashboardReducer = createReducer(
     rfpRecords: state.rfpRecords.filter(q => q.id !== quoteId),
     poTrackingRecords: state.poTrackingRecords.filter(q => q.id !== quoteId),
     projectTrackingRecords: state.projectTrackingRecords.filter(q => q.id !== quoteId)
-  }))
+  })),
+
+  // ─── Notes ────────────────────────────────────────────────────────────────
+
+  // Load Notes Success
+  on(DashboardActions.loadNotesSuccess, (state, { quoteId, notes }) => {
+    return updateNotesInArrays(state, quoteId, notes);
+  }),
+
+  // Add Note Success
+  on(DashboardActions.addNoteSuccess, (state, { quoteId, note }) => {
+    return addNoteToArrays(state, quoteId, note);
+  }),
+
+  // Update Note Success
+  on(DashboardActions.updateNoteSuccess, (state, { quoteId, note }) => {
+    return updateNoteInArrays(state, quoteId, note);
+  }),
+
+  // Toggle Pin Success
+  on(DashboardActions.toggleNotePinSuccess, (state, { quoteId, note }) => {
+    return updateNoteInArrays(state, quoteId, note);
+  }),
+
+  // Delete Note Success
+  on(DashboardActions.deleteNoteSuccess, (state, { quoteId, noteId }) => {
+    return deleteNoteFromArrays(state, quoteId, noteId);
+  })
 );
+
+// ─── Notes Helpers ──────────────────────────────────────────────────────────
+
+function updateNotesInArrays(state: DashboardState, quoteId: string, notes: any[]): DashboardState {
+  const updateArray = (arr: DashboardQuote[]) =>
+    arr.map(q => q.id === quoteId ? { ...q, notes } : q);
+  return {
+    ...state,
+    rfpRecords: updateArray(state.rfpRecords),
+    poTrackingRecords: updateArray(state.poTrackingRecords),
+    projectTrackingRecords: updateArray(state.projectTrackingRecords)
+  };
+}
+
+function addNoteToArrays(state: DashboardState, quoteId: string, note: any): DashboardState {
+  const updateArray = (arr: DashboardQuote[]) =>
+    arr.map(q => q.id === quoteId ? { ...q, notes: [...(q.notes || []), note] } : q);
+  return {
+    ...state,
+    rfpRecords: updateArray(state.rfpRecords),
+    poTrackingRecords: updateArray(state.poTrackingRecords),
+    projectTrackingRecords: updateArray(state.projectTrackingRecords)
+  };
+}
+
+function updateNoteInArrays(state: DashboardState, quoteId: string, updatedNote: any): DashboardState {
+  const updateArray = (arr: DashboardQuote[]) =>
+    arr.map(q => {
+      if (q.id === quoteId) {
+        const notes = (q.notes || []).map(n => n.id === updatedNote.id ? updatedNote : n);
+        return { ...q, notes };
+      }
+      return q;
+    });
+  return {
+    ...state,
+    rfpRecords: updateArray(state.rfpRecords),
+    poTrackingRecords: updateArray(state.poTrackingRecords),
+    projectTrackingRecords: updateArray(state.projectTrackingRecords)
+  };
+}
+
+function deleteNoteFromArrays(state: DashboardState, quoteId: string, noteId: string): DashboardState {
+  const updateArray = (arr: DashboardQuote[]) =>
+    arr.map(q => {
+      if (q.id === quoteId) {
+        const notes = (q.notes || []).filter(n => n.id !== noteId);
+        return { ...q, notes };
+      }
+      return q;
+    });
+  return {
+    ...state,
+    rfpRecords: updateArray(state.rfpRecords),
+    poTrackingRecords: updateArray(state.poTrackingRecords),
+    projectTrackingRecords: updateArray(state.projectTrackingRecords)
+  };
+}

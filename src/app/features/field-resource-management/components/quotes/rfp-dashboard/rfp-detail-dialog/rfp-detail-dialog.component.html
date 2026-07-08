@@ -24,37 +24,129 @@
       <span *ngIf="!record.quoteSubmittedDate && !isOverdue()">Awaiting Quote Submission</span>
     </div>
 
-    <!-- Detail Grid -->
+    <!-- Timeline -->
+    <app-rfp-timeline [record]="record"></app-rfp-timeline>
+
+    <!-- Detail Grid with Inline Editing -->
     <div class="detail-grid">
       <!-- Left Column -->
       <div class="detail-section">
         <h4 class="section-title">RFP Information</h4>
 
-        <div class="detail-row">
+        <!-- Customer (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'customer'">
           <span class="detail-label">Customer</span>
-          <span class="detail-value">{{ record.customer || '-' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'customer'">
+            <span class="detail-value">{{ record.customer || '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('customer')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'customer'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row">
+        <!-- Project Description (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'description'">
           <span class="detail-label">Project Description</span>
-          <span class="detail-value">{{ record.description || '-' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'description'">
+            <span class="detail-value">{{ record.description || '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('description')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'description'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row">
+        <!-- Requester (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'requestorName'">
           <span class="detail-label">Requester</span>
-          <span class="detail-value">{{ record.requestorName || '-' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'requestorName'">
+            <span class="detail-value">{{ record.requestorName || '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('requestorName')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'requestorName'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row">
+        <!-- RFP Received Date (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'rfpReceiveDate'">
           <span class="detail-label">RFP Received Date</span>
-          <span class="detail-value">{{ record.rfpReceiveDate ? (record.rfpReceiveDate | date:'mediumDate') : '-' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'rfpReceiveDate'">
+            <span class="detail-value">{{ record.rfpReceiveDate ? (record.rfpReceiveDate | date:'mediumDate') : '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('rfpReceiveDate')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'rfpReceiveDate'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [matDatepicker]="rfpDatePicker" [value]="editDateValue" (dateChange)="onDateFieldChange($event)">
+              <mat-datepicker-toggle matIconSuffix [for]="rfpDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #rfpDatePicker></mat-datepicker>
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row">
+        <!-- Quote Due Date (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'quoteDueDate'">
           <span class="detail-label">Quote Due Date</span>
-          <span class="detail-value" [class.text-danger]="isOverdue()">
-            {{ record.quoteDueDate ? (record.quoteDueDate | date:'mediumDate') : '-' }}
-          </span>
+          <div class="detail-value-container" *ngIf="editingField !== 'quoteDueDate'">
+            <span class="detail-value" [class.text-danger]="isOverdue()">
+              {{ record.quoteDueDate ? (record.quoteDueDate | date:'mediumDate') : '-' }}
+            </span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('quoteDueDate')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'quoteDueDate'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [matDatepicker]="dueDatePicker" [value]="editDateValue" (dateChange)="onDateFieldChange($event)">
+              <mat-datepicker-toggle matIconSuffix [for]="dueDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #dueDatePicker></mat-datepicker>
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -62,24 +154,94 @@
       <div class="detail-section">
         <h4 class="section-title">Quote Details</h4>
 
-        <div class="detail-row">
+        <!-- Assigned To (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'assignedToQuote'">
           <span class="detail-label">Assigned To</span>
-          <span class="detail-value">{{ record.assignedToQuote || '-' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'assignedToQuote'">
+            <span class="detail-value">{{ record.assignedToQuote || '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('assignedToQuote')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'assignedToQuote'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row">
+        <!-- Quote Submitted (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'quoteSubmittedDate'">
           <span class="detail-label">Quote Submitted</span>
-          <span class="detail-value">{{ record.quoteSubmittedDate ? (record.quoteSubmittedDate | date:'mediumDate') : '-' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'quoteSubmittedDate'">
+            <span class="detail-value">{{ record.quoteSubmittedDate ? (record.quoteSubmittedDate | date:'mediumDate') : '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('quoteSubmittedDate')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'quoteSubmittedDate'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [matDatepicker]="submittedDatePicker" [value]="editDateValue" (dateChange)="onDateFieldChange($event)">
+              <mat-datepicker-toggle matIconSuffix [for]="submittedDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #submittedDatePicker></mat-datepicker>
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row">
+        <!-- Quote Number (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'quoteNumber'">
           <span class="detail-label">Quote Number</span>
-          <span class="detail-value quote-number">{{ record.quoteNumber || '-' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'quoteNumber'">
+            <span class="detail-value quote-number">{{ record.quoteNumber || '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('quoteNumber')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'quoteNumber'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row" *ngIf="record.poNumber">
+        <!-- PO Number (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'poNumber'">
           <span class="detail-label">PO Number</span>
-          <span class="detail-value">{{ record.poNumber }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'poNumber'">
+            <span class="detail-value">{{ record.poNumber || '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('poNumber')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'poNumber'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
         <div class="detail-row" *ngIf="record.jobNumber">
@@ -87,6 +249,11 @@
           <span class="detail-value">{{ record.jobNumber }}</span>
         </div>
       </div>
+    </div>
+
+    <!-- Notes Section -->
+    <div class="notes-section">
+      <app-rfp-notes [quoteId]="record.id" [notes]="record.notes || []"></app-rfp-notes>
     </div>
   </mat-dialog-content>
 
@@ -100,7 +267,7 @@
     <button mat-button (click)="close()">Close</button>
     <button mat-raised-button color="primary" (click)="openWorkflow()">
       <mat-icon>edit</mat-icon>
-      Edit RFP
+      Edit Full RFP
     </button>
   </mat-dialog-actions>
 </div>
