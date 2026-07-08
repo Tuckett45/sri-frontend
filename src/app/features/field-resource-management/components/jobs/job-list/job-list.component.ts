@@ -34,6 +34,10 @@ import {
   ImportDocumentDialogComponent,
   ImportDocumentDialogResult
 } from '../job-setup/import-document-dialog/import-document-dialog.component';
+import {
+  UploadJobDocumentDialogComponent,
+  UploadJobDocumentDialogResult
+} from './upload-job-document-dialog/upload-job-document-dialog.component';
 
 /**
  * Job List Component
@@ -700,6 +704,35 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
           'OK',
           { duration: 4000 }
         );
+      }
+    });
+  }
+
+  /**
+   * Opens the Upload Job Document dialog. Allows users to upload a job
+   * one-pager/documentation file and directly create a new job from its
+   * contents without going through the multi-step wizard.
+   */
+  openUploadJobDocumentDialog(): void {
+    const dialogRef = this.dialog.open(UploadJobDocumentDialogComponent, {
+      width: '560px',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe((result: UploadJobDocumentDialogResult | null) => {
+      if (result?.success) {
+        // Refresh the job list to show the newly created job
+        this.applyFilters();
+
+        this.snackBar.open(
+          'Job created successfully from uploaded document',
+          'View',
+          { duration: 5000 }
+        ).onAction().subscribe(() => {
+          if (result.job?.id) {
+            this.router.navigate(['/field-resource-management/jobs', result.job.id]);
+          }
+        });
       }
     });
   }

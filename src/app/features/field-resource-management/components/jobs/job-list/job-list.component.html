@@ -16,6 +16,15 @@
         <mat-icon>upload_file</mat-icon>
         Import
       </button>
+      <button
+        mat-stroked-button
+        color="primary"
+        (click)="openUploadJobDocumentDialog()"
+        matTooltip="Upload a job document to create a job directly without the wizard"
+      >
+        <mat-icon>note_add</mat-icon>
+        Upload &amp; Create
+      </button>
       <button mat-stroked-button [matMenuTriggerFor]="exportMenu">
         <mat-icon>download</mat-icon>
         Export
