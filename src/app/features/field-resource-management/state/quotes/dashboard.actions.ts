@@ -5,7 +5,8 @@ import {
   DashboardFilters,
   DashboardQuote,
   DashboardResponse,
-  DashboardUser
+  DashboardUser,
+  RfpNote
 } from '../../models/quote-workflow.model';
 
 // Load Dashboard
@@ -106,5 +107,91 @@ export const deleteRfpSuccess = createAction(
 
 export const deleteRfpFailure = createAction(
   '[Dashboard] Delete RFP Failure',
+  props<{ error: string }>()
+);
+
+
+
+// ---------------------------------------------------------------------------
+// Notes
+// ---------------------------------------------------------------------------
+
+// Load Notes
+export const loadNotes = createAction(
+  '[Dashboard] Load Notes',
+  props<{ quoteId: string }>()
+);
+
+export const loadNotesSuccess = createAction(
+  '[Dashboard] Load Notes Success',
+  props<{ quoteId: string; notes: RfpNote[] }>()
+);
+
+export const loadNotesFailure = createAction(
+  '[Dashboard] Load Notes Failure',
+  props<{ error: string }>()
+);
+
+// Add Note
+export const addNote = createAction(
+  '[Dashboard] Add Note',
+  props<{ quoteId: string; content: string }>()
+);
+
+export const addNoteSuccess = createAction(
+  '[Dashboard] Add Note Success',
+  props<{ quoteId: string; note: RfpNote }>()
+);
+
+export const addNoteFailure = createAction(
+  '[Dashboard] Add Note Failure',
+  props<{ error: string }>()
+);
+
+// Update Note
+export const updateNote = createAction(
+  '[Dashboard] Update Note',
+  props<{ quoteId: string; noteId: string; content: string }>()
+);
+
+export const updateNoteSuccess = createAction(
+  '[Dashboard] Update Note Success',
+  props<{ quoteId: string; note: RfpNote }>()
+);
+
+export const updateNoteFailure = createAction(
+  '[Dashboard] Update Note Failure',
+  props<{ error: string }>()
+);
+
+// Toggle Pin
+export const toggleNotePin = createAction(
+  '[Dashboard] Toggle Note Pin',
+  props<{ quoteId: string; noteId: string; isPinned: boolean }>()
+);
+
+export const toggleNotePinSuccess = createAction(
+  '[Dashboard] Toggle Note Pin Success',
+  props<{ quoteId: string; note: RfpNote }>()
+);
+
+export const toggleNotePinFailure = createAction(
+  '[Dashboard] Toggle Note Pin Failure',
+  props<{ error: string }>()
+);
+
+// Delete Note
+export const deleteNote = createAction(
+  '[Dashboard] Delete Note',
+  props<{ quoteId: string; noteId: string }>()
+);
+
+export const deleteNoteSuccess = createAction(
+  '[Dashboard] Delete Note Success',
+  props<{ quoteId: string; noteId: string }>()
+);
+
+export const deleteNoteFailure = createAction(
+  '[Dashboard] Delete Note Failure',
   props<{ error: string }>()
 );

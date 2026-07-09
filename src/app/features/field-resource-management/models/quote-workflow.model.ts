@@ -262,6 +262,21 @@ export const PIPELINE_CATEGORIES: Record<string, WorkflowStatus[]> = {
 };
 
 // ---------------------------------------------------------------------------
+// Interfaces – RFP Notes
+// ---------------------------------------------------------------------------
+
+export interface RfpNote {
+  id: string;
+  quoteId: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;             // ISO UTC
+  updatedAt: string;             // ISO UTC
+  isPinned: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Interfaces – RFP Dashboard
 // ---------------------------------------------------------------------------
 
@@ -286,6 +301,7 @@ export interface DashboardQuote {
   invoiceNumber: string | null;
   workflowStatus: string | null;
   bomTrackings: BomTracking[];
+  notes: RfpNote[];
 }
 
 export interface DashboardFilters {
