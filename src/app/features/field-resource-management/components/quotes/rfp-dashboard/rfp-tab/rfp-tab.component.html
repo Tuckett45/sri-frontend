@@ -28,6 +28,16 @@
       </mat-select>
     </mat-form-field>
 
+    <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+      <mat-label>Quote Number</mat-label>
+      <mat-select [(ngModel)]="filterQuoteNumber" (selectionChange)="applyFilters()">
+        <mat-option value="">All</mat-option>
+        <mat-option value="has">Has Quote #</mat-option>
+        <mat-option value="none">No Quote #</mat-option>
+        <mat-option value="ready">Ready for PO Tracking</mat-option>
+      </mat-select>
+    </mat-form-field>
+
     <button mat-icon-button (click)="clearFilters()" matTooltip="Clear filters" *ngIf="hasActiveFilters()">
       <mat-icon>filter_list_off</mat-icon>
     </button>
@@ -40,6 +50,10 @@
       {{ selection.selected.length }} item{{ selection.selected.length > 1 ? 's' : '' }} selected
     </span>
     <div class="bulk-buttons">
+      <button mat-flat-button color="primary" (click)="bulkMoveToPoTracking()">
+        <mat-icon>move_up</mat-icon>
+        Move to PO Tracking
+      </button>
       <button mat-stroked-button color="warn" (click)="bulkDelete()">
         <mat-icon>delete</mat-icon>
         Delete Selected
@@ -49,6 +63,16 @@
         Clear Selection
       </button>
     </div>
+  </div>
+
+  <!-- Quick Select Bar (when nothing selected but ready records exist) -->
+  <div class="quick-select-bar" *ngIf="selection.selected.length === 0 && getReadyForPoTrackingCount() > 0">
+    <mat-icon class="info-icon">info</mat-icon>
+    <span class="ready-count">{{ getReadyForPoTrackingCount() }} RFP{{ getReadyForPoTrackingCount() > 1 ? 's' : '' }} ready for PO Tracking</span>
+    <button mat-stroked-button color="primary" (click)="selectReadyForPoTracking()">
+      <mat-icon>checklist</mat-icon>
+      Select All Ready
+    </button>
   </div>
 
   <div class="table-container">
