@@ -66,14 +66,27 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
   /** The existing record being edited (if in edit mode) */
   editRecord: DashboardQuote | null = null;
 
-  /** Current phase of the record being edited */
+  /** Current phase of the record being edited - determined by both workflowStatus AND field values */
   get currentPhase(): 'rfp' | 'poTracking' | 'projectTracking' {
-    if (!this.editRecord || !this.editRecord.workflowStatus) return 'rfp';
+    if (!this.editRecord) return 'rfp';
+
+    // First check actual field values (most reliable - matches what the user sees)
+    if (this.editRecord.poNumber) {
+      return 'projectTracking';
+    }
+    if (this.editRecord.quoteNumber && this.editRecord.quoteSubmittedDate) {
+      return 'poTracking';
+    }
+
+    // Fall back to workflowStatus if fields don't tell us
     const status = this.editRecord.workflowStatus;
-    const projectStatuses = ['Project_Active', 'Closed_Out', 'Quote_Converted'];
-    const poStatuses = ['PO_Tracking', 'PO_Received', 'Quote_Assembled', 'Quote_Delivered'];
-    if (projectStatuses.includes(status)) return 'projectTracking';
-    if (poStatuses.includes(status)) return 'poTracking';
+    if (status) {
+      const projectStatuses = ['Project_Active', 'Closed_Out', 'Quote_Converted'];
+      const poStatuses = ['PO_Tracking', 'PO_Received', 'Quote_Assembled', 'Quote_Delivered'];
+      if (projectStatuses.includes(status)) return 'projectTracking';
+      if (poStatuses.includes(status)) return 'poTracking';
+    }
+
     return 'rfp';
   }
 

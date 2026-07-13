@@ -175,8 +175,8 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Quote & PO Tracking Section (visible in PO Tracking phase and beyond) -->
-    <mat-card class="form-section" *ngIf="isEditMode && showPoTrackingFields">
+    <!-- Quote & PO Tracking Section (always visible in edit mode) -->
+    <mat-card class="form-section" *ngIf="isEditMode">
       <mat-card-header>
         <mat-card-title>Quote &amp; PO Tracking</mat-card-title>
       </mat-card-header>
@@ -217,7 +217,7 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Project Tracking Section (visible in Project Tracking phase) -->
+    <!-- Project Tracking Section (visible when record has PO number or is in Project phase) -->
     <mat-card class="form-section" *ngIf="isEditMode && showProjectTrackingFields">
       <mat-card-header>
         <mat-card-title>Project Tracking</mat-card-title>
