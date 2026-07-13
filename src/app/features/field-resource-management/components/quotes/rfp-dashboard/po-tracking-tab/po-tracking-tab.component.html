@@ -175,6 +175,10 @@
             <mat-icon>visibility</mat-icon>
             <span>View Details</span>
           </button>
+          <button mat-menu-item (click)="onEdit(row, $event)">
+            <mat-icon>edit</mat-icon>
+            <span>Edit Record</span>
+          </button>
           <mat-divider></mat-divider>
           <button mat-menu-item (click)="onDelete(row, $event)" class="delete-menu-item">
             <mat-icon color="warn">delete</mat-icon>
