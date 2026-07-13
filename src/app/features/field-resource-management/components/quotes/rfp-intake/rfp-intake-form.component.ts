@@ -66,6 +66,27 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
   /** The existing record being edited (if in edit mode) */
   editRecord: DashboardQuote | null = null;
 
+  /** Current phase of the record being edited */
+  get currentPhase(): 'rfp' | 'poTracking' | 'projectTracking' {
+    if (!this.editRecord || !this.editRecord.workflowStatus) return 'rfp';
+    const status = this.editRecord.workflowStatus;
+    const projectStatuses = ['Project_Active', 'Closed_Out', 'Quote_Converted'];
+    const poStatuses = ['PO_Tracking', 'PO_Received', 'Quote_Assembled', 'Quote_Delivered'];
+    if (projectStatuses.includes(status)) return 'projectTracking';
+    if (poStatuses.includes(status)) return 'poTracking';
+    return 'rfp';
+  }
+
+  /** Whether to show PO Tracking fields (PO Tracking phase or beyond) */
+  get showPoTrackingFields(): boolean {
+    return this.currentPhase === 'poTracking' || this.currentPhase === 'projectTracking';
+  }
+
+  /** Whether to show Project Tracking fields */
+  get showProjectTrackingFields(): boolean {
+    return this.currentPhase === 'projectTracking';
+  }
+
   rfpForm!: FormGroup;
   isSubmitting = false;
   draftRestored = false;
@@ -183,7 +204,19 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
         requestedCompletionDate: [null]
       }, { validators: CustomValidators.dateRange('rfpReceivedDate', 'requestedCompletionDate') }),
       jobType: [JobType.Install],
-      priority: [Priority.Normal]
+      priority: [Priority.Normal],
+      // ─── Quote / PO Tracking Fields ─────────────────────────────────────
+      quoteNumber: ['', [Validators.maxLength(100)]],
+      quoteSubmittedDate: [null],
+      poNumber: ['', [Validators.maxLength(100)]],
+      poAmount: [null],
+      poReceivedDate: [null],
+      // ─── Project Tracking Fields ────────────────────────────────────────
+      jobNumber: ['', [Validators.maxLength(100)]],
+      customerEquipment: ['', [Validators.maxLength(500)]],
+      jobStart: [null],
+      jobComplete: [null],
+      invoiceNumber: ['', [Validators.maxLength(100)]]
     });
   }
 
@@ -199,7 +232,19 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
       dates: {
         rfpReceivedDate: record.rfpReceiveDate ? new Date(record.rfpReceiveDate) : null,
         requestedCompletionDate: record.quoteDueDate ? new Date(record.quoteDueDate) : null
-      }
+      },
+      // Quote / PO Tracking fields
+      quoteNumber: record.quoteNumber || '',
+      quoteSubmittedDate: record.quoteSubmittedDate ? new Date(record.quoteSubmittedDate) : null,
+      poNumber: record.poNumber || '',
+      poAmount: record.poAmount,
+      poReceivedDate: record.poReceivedDate ? new Date(record.poReceivedDate) : null,
+      // Project Tracking fields
+      jobNumber: record.jobNumber || '',
+      customerEquipment: record.customerEquipment || '',
+      jobStart: record.jobStart ? new Date(record.jobStart) : null,
+      jobComplete: record.jobComplete ? new Date(record.jobComplete) : null,
+      invoiceNumber: record.invoiceNumber || ''
     });
   }
 
@@ -355,7 +400,27 @@ export class RfpIntakeFormComponent implements OnInit, OnDestroy {
           : null,
         quoteDueDate: formValue.dates.requestedCompletionDate
           ? new Date(formValue.dates.requestedCompletionDate).toISOString()
-          : null
+          : null,
+        // Quote / PO Tracking fields
+        quoteNumber: formValue.quoteNumber || null,
+        quoteSubmittedDate: formValue.quoteSubmittedDate
+          ? new Date(formValue.quoteSubmittedDate).toISOString()
+          : null,
+        poNumber: formValue.poNumber || null,
+        poAmount: formValue.poAmount != null ? parseFloat(formValue.poAmount) : null,
+        poReceivedDate: formValue.poReceivedDate
+          ? new Date(formValue.poReceivedDate).toISOString()
+          : null,
+        // Project Tracking fields
+        jobNumber: formValue.jobNumber || null,
+        customerEquipment: formValue.customerEquipment || null,
+        jobStart: formValue.jobStart
+          ? new Date(formValue.jobStart).toISOString()
+          : null,
+        jobComplete: formValue.jobComplete
+          ? new Date(formValue.jobComplete).toISOString()
+          : null,
+        invoiceNumber: formValue.invoiceNumber || null
       };
 
       this.store.dispatch(DashboardActions.updateDashboardFields({

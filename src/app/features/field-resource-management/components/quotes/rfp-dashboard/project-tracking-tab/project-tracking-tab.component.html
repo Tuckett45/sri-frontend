@@ -206,6 +206,10 @@
             <mat-icon>visibility</mat-icon>
             <span>View Details</span>
           </button>
+          <button mat-menu-item (click)="onEdit(row, $event)">
+            <mat-icon>edit</mat-icon>
+            <span>Edit Record</span>
+          </button>
           <button mat-menu-item (click)="openBomHistory(row)">
             <mat-icon>history</mat-icon>
             <span>BOM History</span>

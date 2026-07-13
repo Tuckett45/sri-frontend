@@ -1,9 +1,17 @@
 <!-- Dialog Header (only in dialog mode) -->
-<h2 mat-dialog-title *ngIf="isDialog">{{ isEditMode ? 'Edit RFP' : 'New Quote — RFP Intake' }}</h2>
+<h2 mat-dialog-title *ngIf="isDialog">
+  <ng-container *ngIf="!isEditMode">New Quote — RFP Intake</ng-container>
+  <ng-container *ngIf="isEditMode && currentPhase === 'rfp'">Edit RFP</ng-container>
+  <ng-container *ngIf="isEditMode && currentPhase === 'poTracking'">Edit — PO Tracking</ng-container>
+  <ng-container *ngIf="isEditMode && currentPhase === 'projectTracking'">Edit — Project Tracking</ng-container>
+</h2>
 
 <!-- Page Header (only in page mode) -->
 <div class="page-header" *ngIf="!isDialog">
-  <h2>{{ isEditMode ? 'Edit RFP' : 'New Quote — RFP Intake' }}</h2>
+  <h2 *ngIf="!isEditMode">New Quote — RFP Intake</h2>
+  <h2 *ngIf="isEditMode && currentPhase === 'rfp'">Edit RFP</h2>
+  <h2 *ngIf="isEditMode && currentPhase === 'poTracking'">Edit — PO Tracking</h2>
+  <h2 *ngIf="isEditMode && currentPhase === 'projectTracking'">Edit — Project Tracking</h2>
 </div>
 
 <!-- Draft Restored Banner -->
@@ -163,6 +171,91 @@
         <div class="form-error" *ngIf="hasDateRangeError">
           <mat-icon>error</mat-icon>
           <span>Quote due date must be on or after the RFP received date</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Quote & PO Tracking Section (visible in PO Tracking phase and beyond) -->
+    <mat-card class="form-section" *ngIf="isEditMode && showPoTrackingFields">
+      <mat-card-header>
+        <mat-card-title>Quote &amp; PO Tracking</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Quote Number</mat-label>
+            <input matInput formControlName="quoteNumber" placeholder="e.g. Q-2024-001" maxlength="100" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Quote Submitted Date</mat-label>
+            <input matInput [matDatepicker]="quoteSubmittedPicker" formControlName="quoteSubmittedDate" />
+            <mat-datepicker-toggle matSuffix [for]="quoteSubmittedPicker"></mat-datepicker-toggle>
+            <mat-datepicker #quoteSubmittedPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row three-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>PO Number</mat-label>
+            <input matInput formControlName="poNumber" placeholder="Enter PO number" maxlength="100" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>PO Amount</mat-label>
+            <input matInput type="number" formControlName="poAmount" placeholder="0.00" />
+            <span matPrefix>$&nbsp;</span>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>PO Received Date</mat-label>
+            <input matInput [matDatepicker]="poReceivedPicker" formControlName="poReceivedDate" />
+            <mat-datepicker-toggle matSuffix [for]="poReceivedPicker"></mat-datepicker-toggle>
+            <mat-datepicker #poReceivedPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Project Tracking Section (visible in Project Tracking phase) -->
+    <mat-card class="form-section" *ngIf="isEditMode && showProjectTrackingFields">
+      <mat-card-header>
+        <mat-card-title>Project Tracking</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Job Number</mat-label>
+            <input matInput formControlName="jobNumber" placeholder="Enter job number" maxlength="100" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Customer Equipment</mat-label>
+            <input matInput formControlName="customerEquipment" placeholder="Equipment details" maxlength="500" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Job Start Date</mat-label>
+            <input matInput [matDatepicker]="jobStartPicker" formControlName="jobStart" />
+            <mat-datepicker-toggle matSuffix [for]="jobStartPicker"></mat-datepicker-toggle>
+            <mat-datepicker #jobStartPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Job Complete Date</mat-label>
+            <input matInput [matDatepicker]="jobCompletePicker" formControlName="jobComplete" />
+            <mat-datepicker-toggle matSuffix [for]="jobCompletePicker"></mat-datepicker-toggle>
+            <mat-datepicker #jobCompletePicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Invoice Number</mat-label>
+            <input matInput formControlName="invoiceNumber" placeholder="Enter invoice number" maxlength="100" />
+          </mat-form-field>
         </div>
       </mat-card-content>
     </mat-card>

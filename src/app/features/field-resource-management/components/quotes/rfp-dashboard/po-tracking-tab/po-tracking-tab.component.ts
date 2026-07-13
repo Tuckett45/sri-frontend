@@ -7,6 +7,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { DashboardQuote } from '../../../../models/quote-workflow.model';
 import { RfpDetailDialogComponent } from '../rfp-detail-dialog/rfp-detail-dialog.component';
+import { RfpIntakeFormComponent } from '../../rfp-intake/rfp-intake-form.component';
 import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 
 @Component({
@@ -173,6 +174,16 @@ export class PoTrackingTabComponent implements OnChanges {
       width: '700px',
       maxWidth: '95vw',
       data: { record: row }
+    });
+  }
+
+  onEdit(row: DashboardQuote, event: Event): void {
+    event.stopPropagation();
+    this.dialog.open(RfpIntakeFormComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      disableClose: true,
+      data: { editRecord: row }
     });
   }
 
