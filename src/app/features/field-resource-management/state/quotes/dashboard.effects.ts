@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, tap } from 'rxjs/operators';
+import { map, catchError, switchMap, mergeMap, tap } from 'rxjs/operators';
 import * as DashboardActions from './dashboard.actions';
 import { RfpDashboardService } from '../../services/rfp-dashboard.service';
 
@@ -44,7 +44,7 @@ export class DashboardEffects {
   updateDashboardFields$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.updateDashboardFields),
-      switchMap(({ quoteId, fields }) =>
+      mergeMap(({ quoteId, fields }) =>
         this.dashboardService.updateDashboardFields(quoteId, fields).pipe(
           map((quote) => DashboardActions.updateDashboardFieldsSuccess({ quote })),
           catchError((error) =>
