@@ -4,7 +4,50 @@ import * as DashboardActions from './dashboard.actions';
 import { DashboardQuote } from '../../models/quote-workflow.model';
 
 /**
- * Helper to update a quote record across all three record arrays.
+ * Helper to determine which phase a quote belongs to based on its workflowStatus.
+ */
+function getQuotePhase(quote: DashboardQuote): 'rfp' | 'poTracking' | 'projectTracking' {
+  const rfpStatuses = ['Draft', 'Quote_Submitted', 'Job_Summary_In_Progress'];
+  const poStatuses = ['PO_Tracking', 'PO_Received', 'Quote_Assembled', 'Quote_Delivered'];
+  const projectStatuses = ['Project_Active', 'Closed_Out', 'Quote_Converted'];
+
+  if (projectStatuses.includes(quote.workflowStatus || '')) return 'projectTracking';
+  if (poStatuses.includes(quote.workflowStatus || '')) return 'poTracking';
+  return 'rfp';
+}
+
+/**
+ * Helper to remove a quote from all three arrays by ID.
+ */
+function removeQuoteFromAllArrays(state: DashboardState, quoteId: string): DashboardState {
+  return {
+    ...state,
+    rfpRecords: state.rfpRecords.filter(q => q.id !== quoteId),
+    poTrackingRecords: state.poTrackingRecords.filter(q => q.id !== quoteId),
+    projectTrackingRecords: state.projectTrackingRecords.filter(q => q.id !== quoteId)
+  };
+}
+
+/**
+ * Helper to place an updated quote into the correct phase array based on its workflowStatus.
+ * Removes it from all arrays first, then inserts into the correct one.
+ */
+function recategorizeQuote(state: DashboardState, updatedQuote: DashboardQuote): DashboardState {
+  const cleaned = removeQuoteFromAllArrays(state, updatedQuote.id);
+  const phase = getQuotePhase(updatedQuote);
+
+  switch (phase) {
+    case 'rfp':
+      return { ...cleaned, rfpRecords: [updatedQuote, ...cleaned.rfpRecords] };
+    case 'poTracking':
+      return { ...cleaned, poTrackingRecords: [updatedQuote, ...cleaned.poTrackingRecords] };
+    case 'projectTracking':
+      return { ...cleaned, projectTrackingRecords: [updatedQuote, ...cleaned.projectTrackingRecords] };
+  }
+}
+
+/**
+ * Helper to update a quote record across all three record arrays (without moving it).
  */
 function updateQuoteInArrays(state: DashboardState, updatedQuote: DashboardQuote): DashboardState {
   const updateArray = (arr: DashboardQuote[]) =>
@@ -63,7 +106,7 @@ export const dashboardReducer = createReducer(
   })),
 
   on(DashboardActions.updateDashboardFieldsSuccess, (state, { quote }) => ({
-    ...updateQuoteInArrays(state, quote),
+    ...recategorizeQuote(state, quote),
     saving: false,
     error: null
   })),

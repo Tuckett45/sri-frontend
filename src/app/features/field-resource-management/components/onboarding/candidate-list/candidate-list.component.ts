@@ -170,6 +170,12 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
               </button>
               <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
               <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
+              <button class="action-btn btn-convert"
+                      *ngIf="canConvert(candidate)"
+                      (click)="onConvertToTechnician(candidate); $event.stopPropagation()"
+                      [disabled]="convertingId === candidate.candidateId">
+                {{ convertingId === candidate.candidateId ? 'Converting...' : 'Convert to Tech' }}
+              </button>
               <button class="action-btn btn-delete" (click)="onDeleteCandidate(candidate); $event.stopPropagation()">Delete</button>
             </td>
           </tr>
@@ -442,6 +448,15 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 
     .btn-delete:hover { background: #ffcdd2; }
 
+    .btn-convert {
+      background: #f3e5f5;
+      color: #7b1fa2;
+      border: 1px solid #ce93d8;
+    }
+
+    .btn-convert:hover:not(:disabled) { background: #e1bee7; }
+    .btn-convert:disabled { opacity: 0.6; cursor: not-allowed; }
+
     .icon-btn {
       display: inline-flex;
       align-items: center;
@@ -550,6 +565,7 @@ export class CandidateListComponent implements OnInit {
   loading = false;
   submitting = false;
   errorMessage = '';
+  convertingId: string | null = null;
 
   searchText = '';
   statusFilter = '';
@@ -801,6 +817,35 @@ export class CandidateListComponent implements OnInit {
       },
       error: () => {
         this.errorMessage = 'Failed to delete candidate. Please try again.';
+      }
+    });
+  }
+
+  // ─── Convert to Technician ────────────────────────────────────────────────
+
+  canConvert(candidate: Candidate): boolean {
+    return (candidate.offerStatus === 'offer_accepted_onboarding' || candidate.offerStatus === 'hired_assigned') &&
+           candidate.drugTestComplete &&
+           candidate.oshaCertified;
+  }
+
+  onConvertToTechnician(candidate: Candidate): void {
+    if (this.convertingId) return;
+
+    const confirmed = window.confirm(
+      `Convert ${candidate.techName} to an active Technician? This will create a new technician record.`
+    );
+    if (!confirmed) return;
+
+    this.convertingId = candidate.candidateId;
+    this.onboardingService.convertToTechnician(candidate.candidateId).subscribe({
+      next: (result) => {
+        this.convertingId = null;
+        this.router.navigate(['/field-resource-management/onboarding/credentials', result.technicianId]);
+      },
+      error: () => {
+        this.convertingId = null;
+        this.errorMessage = 'Failed to convert candidate to technician. Please try again.';
       }
     });
   }

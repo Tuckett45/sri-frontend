@@ -22,7 +22,8 @@ export class PoTrackingTabComponent implements OnChanges {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   displayedColumns: string[] = [
-    'select', 'customer', 'description', 'quoteNumber', 'dateReceived', 'poNumber', 'poAmount', 'poReceivedDate', 'actions'
+    'select', 'customer', 'description', 'requestorName', 'rfpReceiveDate', 'quoteDueDate',
+    'assignedToQuote', 'quoteSubmittedDate', 'quoteNumber', 'dateReceived', 'poNumber', 'poAmount', 'poReceivedDate', 'actions'
   ];
 
   dataSource = new MatTableDataSource<DashboardQuote>([]);
