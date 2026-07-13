@@ -49,6 +49,12 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
         <button type="button" (click)="errorMessage = ''" aria-label="Dismiss error">Dismiss</button>
       </div>
 
+      <!-- Success Banner -->
+      <div class="success-banner" *ngIf="successMessage" role="status">
+        <span>{{ successMessage }}</span>
+        <button type="button" (click)="successMessage = ''" aria-label="Dismiss message">Dismiss</button>
+      </div>
+
       <!-- Filters -->
       <div class="filters-row">
         <div class="filter-field">
@@ -94,25 +100,49 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
         </div>
       </div>
 
+      <!-- Bulk Action Bar -->
+      <div class="bulk-action-bar" *ngIf="selectedCandidateIds.size > 0">
+        <span class="bulk-selection-count">{{ selectedCandidateIds.size }} candidate{{ selectedCandidateIds.size > 1 ? 's' : '' }} selected</span>
+        <button type="button"
+                class="bulk-convert-btn"
+                (click)="onBulkConvert()"
+                [disabled]="bulkConverting">
+          <mat-icon class="bulk-icon">group_add</mat-icon>
+          {{ bulkConverting ? 'Converting...' : 'Convert Selected to Technicians' }}
+        </button>
+        <button type="button" class="bulk-clear-btn" (click)="clearSelection()">
+          Clear Selection
+        </button>
+      </div>
+
       <!-- Candidate Table -->
       <div class="table-wrapper" *ngIf="filteredCandidates.length > 0">
       <table class="candidate-table">
         <colgroup>
-          <col style="width: 10%;">
-          <col style="width: 14%;">
+          <col style="width: 3%;">
           <col style="width: 9%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
+          <col style="width: 13%;">
           <col style="width: 8%;">
+          <col style="width: 5%;">
+          <col style="width: 5%;">
+          <col style="width: 5%;">
+          <col style="width: 5%;">
+          <col style="width: 5%;">
+          <col style="width: 7%;">
           <col style="width: 7%;">
           <col style="width: 10%;">
-          <col style="width: 17%;">
+          <col style="width: 18%;">
         </colgroup>
         <thead>
           <tr>
+            <th class="checkbox-col">
+              <input type="checkbox"
+                     [checked]="isAllPageSelected()"
+                     [indeterminate]="isSomePageSelected()"
+                     (change)="onToggleSelectAll($event)"
+                     aria-label="Select all eligible candidates on this page"
+                     title="Select all eligible candidates on this page" />
+            </th>
             <th (click)="onSort('techName')" class="sortable">
               Tech Name <span class="sort-icon">{{ getSortIcon('techName') }}</span>
             </th>
@@ -153,9 +183,17 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
           <tr *ngFor="let candidate of paginatedCandidates"
               (click)="onRowClick(candidate)"
               class="candidate-row"
+              [class.selected-row]="selectedCandidateIds.has(candidate.candidateId)"
               tabindex="0"
               (keydown.enter)="onRowClick(candidate)"
               [attr.aria-label]="'Edit candidate ' + candidate.techName">
+            <td class="checkbox-col" (click)="$event.stopPropagation()">
+              <input type="checkbox"
+                     *ngIf="canConvert(candidate)"
+                     [checked]="selectedCandidateIds.has(candidate.candidateId)"
+                     (change)="onToggleSelect(candidate, $event)"
+                     [attr.aria-label]="'Select ' + candidate.techName + ' for bulk conversion'" />
+            </td>
             <td>{{ candidate.techName }}</td>
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
@@ -311,6 +349,28 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       text-decoration: underline;
     }
 
+    .success-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 4px;
+      color: #1b5e20;
+      font-size: 0.875rem;
+    }
+
+    .success-banner button {
+      background: none;
+      border: none;
+      color: #1b5e20;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
     .filters-row {
       display: flex;
       gap: 1rem;
@@ -436,6 +496,96 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       white-space: normal;
       text-align: center;
       min-width: 180px;
+    }
+
+    .checkbox-col {
+      text-align: center;
+      width: 36px;
+      padding: 0.25rem !important;
+    }
+
+    .checkbox-col input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #7b1fa2;
+    }
+
+    .selected-row {
+      background-color: rgba(123, 31, 162, 0.06) !important;
+    }
+
+    .selected-row:hover {
+      background-color: rgba(123, 31, 162, 0.1) !important;
+    }
+
+    .bulk-action-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      background: #f3e5f5;
+      border: 1px solid #ce93d8;
+      border-radius: 6px;
+      animation: slideDown 0.2s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bulk-selection-count {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #4a148c;
+    }
+
+    .bulk-convert-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 1rem;
+      background-color: #7b1fa2;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .bulk-convert-btn:hover:not(:disabled) {
+      background-color: #6a1b9a;
+    }
+
+    .bulk-convert-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .bulk-convert-btn .bulk-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .bulk-clear-btn {
+      padding: 0.4rem 0.75rem;
+      background: none;
+      border: 1px solid #9c27b0;
+      border-radius: 4px;
+      color: #7b1fa2;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .bulk-clear-btn:hover {
+      background-color: rgba(123, 31, 162, 0.08);
     }
 
     .action-btn {
@@ -590,7 +740,12 @@ export class CandidateListComponent implements OnInit {
   loading = false;
   submitting = false;
   errorMessage = '';
+  successMessage = '';
   convertingId: string | null = null;
+
+  // Bulk selection
+  selectedCandidateIds = new Set<string>();
+  bulkConverting = false;
 
   searchText = '';
   statusFilter = '';
@@ -875,6 +1030,88 @@ export class CandidateListComponent implements OnInit {
     });
   }
 
+  // ─── Bulk Selection & Conversion ──────────────────────────────────────────
+
+  onToggleSelect(candidate: Candidate, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.selectedCandidateIds.add(candidate.candidateId);
+    } else {
+      this.selectedCandidateIds.delete(candidate.candidateId);
+    }
+  }
+
+  onToggleSelectAll(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const eligibleOnPage = this.paginatedCandidates.filter(c => this.canConvert(c));
+    if (checked) {
+      eligibleOnPage.forEach(c => this.selectedCandidateIds.add(c.candidateId));
+    } else {
+      eligibleOnPage.forEach(c => this.selectedCandidateIds.delete(c.candidateId));
+    }
+  }
+
+  isAllPageSelected(): boolean {
+    const eligibleOnPage = this.paginatedCandidates.filter(c => this.canConvert(c));
+    if (eligibleOnPage.length === 0) return false;
+    return eligibleOnPage.every(c => this.selectedCandidateIds.has(c.candidateId));
+  }
+
+  isSomePageSelected(): boolean {
+    const eligibleOnPage = this.paginatedCandidates.filter(c => this.canConvert(c));
+    if (eligibleOnPage.length === 0) return false;
+    const selectedCount = eligibleOnPage.filter(c => this.selectedCandidateIds.has(c.candidateId)).length;
+    return selectedCount > 0 && selectedCount < eligibleOnPage.length;
+  }
+
+  clearSelection(): void {
+    this.selectedCandidateIds.clear();
+  }
+
+  onBulkConvert(): void {
+    if (this.bulkConverting || this.selectedCandidateIds.size === 0) return;
+
+    const selectedCandidates = this.candidates.filter(
+      c => this.selectedCandidateIds.has(c.candidateId) && this.canConvert(c)
+    );
+
+    if (selectedCandidates.length === 0) {
+      this.errorMessage = 'No eligible candidates selected for conversion.';
+      return;
+    }
+
+    const names = selectedCandidates.map(c => c.techName).join(', ');
+    const confirmed = window.confirm(
+      `Convert ${selectedCandidates.length} candidate${selectedCandidates.length > 1 ? 's' : ''} to Technicians?\n\n${names}\n\nThis will create new technician records for each.`
+    );
+    if (!confirmed) return;
+
+    this.bulkConverting = true;
+    this.errorMessage = '';
+
+    const conversions = selectedCandidates.map(c =>
+      this.onboardingService.convertToTechnician(c.candidateId)
+    );
+
+    forkJoin(conversions).subscribe({
+      next: (results) => {
+        this.bulkConverting = false;
+        this.selectedCandidateIds.clear();
+        const count = results.length;
+        this.errorMessage = ''; // Clear any previous errors
+        // Show success message briefly using the error banner style (we'll reuse it)
+        this.successMessage = `Successfully converted ${count} candidate${count > 1 ? 's' : ''} to technicians.`;
+        this.loadCandidates();
+      },
+      error: (err) => {
+        this.bulkConverting = false;
+        this.errorMessage = `Some conversions failed. ${err?.message || 'Please review the candidate list and try again.'}`;
+        this.selectedCandidateIds.clear();
+        this.loadCandidates();
+      }
+    });
+  }
+
   onViewResume(candidate: Candidate): void {
     if (candidate.resumeUrl) {
       window.open(candidate.resumeUrl, '_blank', 'noopener,noreferrer');
@@ -955,6 +1192,9 @@ export class CandidateListComponent implements OnInit {
 
   private applyFiltersAndSort(): void {
     let result = [...this.candidates];
+
+    // Clear selection when filters change to avoid stale selections
+    this.selectedCandidateIds.clear();
 
     // Text search filter
     if (this.searchText.trim()) {
