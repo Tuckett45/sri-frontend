@@ -41,6 +41,7 @@ export class RfpTabComponent implements OnInit, OnChanges {
   filterCustomer = '';
   filterAssigned = '';
   filterStatus = '';
+  filterQuoteNumber = '';  // 'has' | 'none' | 'ready' | ''
 
   // Distinct assignee names derived from the records' assignedToQuote column
   assignedToOptions: string[] = [];
@@ -70,6 +71,16 @@ export class RfpTabComponent implements OnInit, OnChanges {
           matches = matches && !!data.quoteSubmittedDate;
         } else if (filters.status === 'pending') {
           matches = matches && !data.quoteSubmittedDate && !this.isOverdue(data);
+        }
+      }
+      if (filters.quoteNumber) {
+        if (filters.quoteNumber === 'has') {
+          matches = matches && !!data.quoteNumber;
+        } else if (filters.quoteNumber === 'none') {
+          matches = matches && !data.quoteNumber;
+        } else if (filters.quoteNumber === 'ready') {
+          // Ready for PO Tracking: has both quote number AND quote submitted date
+          matches = matches && !!data.quoteNumber && !!data.quoteSubmittedDate;
         }
       }
       return matches;
@@ -158,7 +169,8 @@ export class RfpTabComponent implements OnInit, OnChanges {
     this.dataSource.filter = JSON.stringify({
       customer: this.filterCustomer,
       assigned: this.filterAssigned,
-      status: this.filterStatus
+      status: this.filterStatus,
+      quoteNumber: this.filterQuoteNumber
     });
   }
 
@@ -166,11 +178,12 @@ export class RfpTabComponent implements OnInit, OnChanges {
     this.filterCustomer = '';
     this.filterAssigned = '';
     this.filterStatus = '';
+    this.filterQuoteNumber = '';
     this.applyFilters();
   }
 
   hasActiveFilters(): boolean {
-    return !!(this.filterCustomer || this.filterAssigned || this.filterStatus);
+    return !!(this.filterCustomer || this.filterAssigned || this.filterStatus || this.filterQuoteNumber);
   }
 
   // ─── Selection Helpers ────────────────────────────────────────────────────
@@ -210,6 +223,50 @@ export class RfpTabComponent implements OnInit, OnChanges {
     if (confirmed) {
       this.selection.selected.forEach(row => {
         this.store.dispatch(DashboardActions.deleteRfp({ quoteId: row.id }));
+      });
+      this.selection.clear();
+    }
+  }
+
+  /** Select all records that are ready for PO Tracking (have both quoteNumber AND quoteSubmittedDate). */
+  selectReadyForPoTracking(): void {
+    this.selection.clear();
+    const ready = this.dataSource.filteredData.filter(
+      row => !!row.quoteNumber && !!row.quoteSubmittedDate
+    );
+    ready.forEach(row => this.selection.select(row));
+  }
+
+  /** Returns count of records ready for PO Tracking in current filtered view. */
+  getReadyForPoTrackingCount(): number {
+    return this.dataSource.filteredData.filter(
+      row => !!row.quoteNumber && !!row.quoteSubmittedDate
+    ).length;
+  }
+
+  /** Bulk move selected items to PO Tracking by triggering re-evaluation of their status. */
+  bulkMoveToPoTracking(): void {
+    const eligible = this.selection.selected.filter(
+      row => !!row.quoteNumber && !!row.quoteSubmittedDate
+    );
+
+    if (eligible.length === 0) {
+      window.alert('No selected records are ready for PO Tracking.\n\nRecords need both a Quote Number and Quote Submitted Date to transition.');
+      return;
+    }
+
+    const count = eligible.length;
+    const confirmed = window.confirm(
+      `Move ${count} RFP${count > 1 ? 's' : ''} to PO Tracking?\n\nThis will transition records that have both a Quote Number and Quote Submitted Date.`
+    );
+    if (confirmed) {
+      eligible.forEach(row => {
+        // Dispatch a no-op field update to trigger the backend's DetermineWorkflowStatus re-evaluation
+        // We send the existing quoteNumber to force the status recalculation
+        this.store.dispatch(DashboardActions.updateDashboardFields({
+          quoteId: row.id,
+          fields: { quoteNumber: row.quoteNumber }
+        }));
       });
       this.selection.clear();
     }

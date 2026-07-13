@@ -442,3 +442,36 @@
     transform: translateY(0);
   }
 }
+
+// ─── Quick Select Bar (Ready for PO Tracking) ────────────────────────────────
+
+.quick-select-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  animation: slideDown 0.2s ease;
+
+  .info-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #f57c00;
+  }
+
+  .ready-count {
+    font-size: 14px;
+    font-weight: 500;
+    color: #e65100;
+    flex: 1;
+  }
+
+  button {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
