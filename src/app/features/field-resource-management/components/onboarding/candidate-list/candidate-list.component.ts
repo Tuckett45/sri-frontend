@@ -95,7 +95,22 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       </div>
 
       <!-- Candidate Table -->
-      <table *ngIf="filteredCandidates.length > 0" class="candidate-table">
+      <div class="table-wrapper" *ngIf="filteredCandidates.length > 0">
+      <table class="candidate-table">
+        <colgroup>
+          <col style="width: 10%;">
+          <col style="width: 14%;">
+          <col style="width: 9%;">
+          <col style="width: 5%;">
+          <col style="width: 5%;">
+          <col style="width: 5%;">
+          <col style="width: 5%;">
+          <col style="width: 5%;">
+          <col style="width: 8%;">
+          <col style="width: 7%;">
+          <col style="width: 10%;">
+          <col style="width: 17%;">
+        </colgroup>
         <thead>
           <tr>
             <th (click)="onSort('techName')" class="sortable">
@@ -181,8 +196,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
           </tr>
         </tbody>
       </table>
-
-      <!-- Paginator -->
+      </div>
       <mat-paginator *ngIf="filteredCandidates.length > 0"
                      [length]="filteredCandidates.length"
                      [pageSize]="pageSize"
@@ -332,20 +346,27 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
     }
 
+    .table-wrapper {
+      overflow-x: auto;
+      width: 100%;
+    }
+
     .candidate-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.875rem;
+      table-layout: fixed;
     }
 
     .candidate-table thead th {
       text-align: left;
-      padding: 0.625rem 0.75rem;
+      padding: 0.5rem 0.5rem;
       background: #f5f5f5;
       border-bottom: 2px solid #e0e0e0;
       font-weight: 600;
       color: #424242;
       white-space: nowrap;
+      font-size: 0.8rem;
     }
 
     .candidate-table thead th.sortable {
@@ -363,9 +384,11 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     }
 
     .candidate-table tbody td {
-      padding: 0.5rem 0.75rem;
+      padding: 0.4rem 0.5rem;
       border-bottom: 1px solid #e0e0e0;
       color: #212121;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .candidate-row {
@@ -410,18 +433,20 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     }
 
     .actions-cell {
-      white-space: nowrap;
+      white-space: normal;
       text-align: center;
+      min-width: 180px;
     }
 
     .action-btn {
-      padding: 0.25rem 0.625rem;
+      padding: 0.25rem 0.5rem;
       border-radius: 4px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 500;
       cursor: pointer;
-      margin-right: 4px;
+      margin: 2px;
       transition: background-color 0.2s;
+      display: inline-block;
     }
 
     .btn-view {
@@ -461,13 +486,13 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 30px;
-      height: 30px;
+      width: 26px;
+      height: 26px;
       border-radius: 4px;
       border: 1px solid transparent;
       background: none;
       cursor: pointer;
-      margin-right: 4px;
+      margin: 2px;
       transition: background-color 0.15s, opacity 0.15s, color 0.15s;
       vertical-align: middle;
       opacity: 0.4;
