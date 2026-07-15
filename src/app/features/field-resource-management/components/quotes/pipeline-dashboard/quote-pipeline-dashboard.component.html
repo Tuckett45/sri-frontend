@@ -89,8 +89,8 @@
                   tabindex="0"
                   (keydown.enter)="navigateToTab(category, quote)"
                 >
-                  <span class="item-customer">{{ quote.rfpRecord.clientName }}</span>
-                  <span class="item-project">{{ quote.rfpRecord.projectName }}</span>
+                  <span class="item-customer">{{ quote.customer }}</span>
+                  <span class="item-project">{{ quote.description }}</span>
                   <mat-icon class="item-arrow">chevron_right</mat-icon>
                 </a>
                 <a
