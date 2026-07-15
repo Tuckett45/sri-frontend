@@ -424,6 +424,41 @@ export class JobFormComponent implements OnInit, OnDestroy {
       leadTechnicianId: job.technicianId || null,
       crewId: job.crewId || null
     });
+
+    // In edit mode, relax required validators on Pricing/Billing and SRI Internal
+    // fields that may not exist on jobs created via upload/import or before these
+    // fields were added. This prevents the Update button from being permanently
+    // disabled when these fields have no data.
+    if (this.isEditMode) {
+      this.relaxEditModeValidators(job);
+    }
+  }
+
+  /**
+   * Relax required validators on Pricing/Billing and SRI Internal fields
+   * in edit mode when the existing job doesn't have these values.
+   * Users can still fill them in optionally, but they won't block saving other edits.
+   */
+  private relaxEditModeValidators(job: Job): void {
+    const billingAndInternalFields = [
+      { name: 'standardBillRate', value: (job as any).standardBillRate, validators: [Validators.min(0.01)] },
+      { name: 'overtimeBillRate', value: (job as any).overtimeBillRate, validators: [Validators.min(0.01)] },
+      { name: 'perDiem', value: (job as any).perDiem, validators: [Validators.min(0)] },
+      { name: 'invoicingProcess', value: (job as any).invoicingProcess, validators: [] },
+      { name: 'projectDirector', value: (job as any).projectDirector, validators: [Validators.maxLength(150)] },
+      { name: 'targetResources', value: (job as any).targetResources, validators: [Validators.min(1), Validators.max(500)] },
+      { name: 'bizDevContact', value: (job as any).bizDevContact, validators: [Validators.maxLength(150)] },
+      { name: 'requestedHours', value: (job as any).requestedHours, validators: [Validators.min(0.01)] },
+    ];
+
+    for (const field of billingAndInternalFields) {
+      const control = this.jobForm.get(field.name);
+      if (control && !field.value) {
+        // Remove required validator but keep other validators (min, max, maxLength)
+        control.setValidators(field.validators);
+        control.updateValueAndValidity();
+      }
+    }
   }
 
   /**
