@@ -1,117 +1,42 @@
-<mat-card class="pipeline-dashboard-card">
-  <mat-card-header>
-    <mat-card-title>
-      <mat-icon>assessment</mat-icon>
-      Quote Pipeline
-    </mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    <!-- Loading state -->
-    <div *ngIf="loading$ | async" class="widget-loading">
-      <mat-spinner diameter="40"></mat-spinner>
+<div class="pipeline-dashboard">
+  <!-- Loading state -->
+  <div *ngIf="loading$ | async" class="widget-loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error$ | async as error" class="widget-error">
+    <p>Unable to load pipeline data. Please try again.</p>
+    <button mat-button color="primary" (click)="retry()">Retry</button>
+  </div>
+
+  <!-- Pipeline quick-access list -->
+  <ng-container *ngIf="!(loading$ | async) && !(error$ | async)">
+    <div class="pipeline-header">
+      <mat-icon class="pipeline-header-icon">assessment</mat-icon>
+      <span class="pipeline-header-title">Quote Pipeline</span>
     </div>
 
-    <!-- Error state -->
-    <div *ngIf="error$ | async as error" class="widget-error">
-      <p>Unable to load pipeline data. Please try again.</p>
-      <button mat-button color="primary" (click)="retry()">Retry</button>
-    </div>
-
-    <!-- Pipeline categories -->
-    <ng-container *ngIf="!(loading$ | async) && !(error$ | async)">
-      <div class="pipeline-categories">
-        <div
-          *ngFor="let category of categories; trackBy: trackByCategory"
-          class="pipeline-category"
-          [ngClass]="category.colorClass"
-        >
-          <!-- Category header with count -->
-          <div
-            class="category-header"
-            (click)="toggleCategory(category.key)"
-            role="button"
-            tabindex="0"
-            (keydown.enter)="toggleCategory(category.key)"
-            [attr.aria-expanded]="expandedCategory === category.key"
-            [attr.aria-label]="category.label + ' - ' + (category.count$ | async) + ' quotes'"
-          >
-            <div class="category-info">
-              <mat-icon class="category-icon">{{ category.icon }}</mat-icon>
-              <span class="category-label">{{ category.label }}</span>
-            </div>
-            <div class="category-count-wrapper">
-              <span
-                class="category-count"
-                (click)="$event.stopPropagation(); navigateToFilteredList(category)"
-                role="link"
-                tabindex="0"
-                (keydown.enter)="$event.stopPropagation(); navigateToFilteredList(category)"
-                [attr.aria-label]="'View all ' + category.label"
-              >
-                {{ category.count$ | async }}
-              </span>
-              <mat-icon class="expand-icon">
-                {{ expandedCategory === category.key ? 'expand_less' : 'expand_more' }}
-              </mat-icon>
-            </div>
-          </div>
-
-          <!-- Expanded summary -->
-          <div
-            *ngIf="expandedCategory === category.key"
-            class="category-summary"
-            role="region"
-            [attr.aria-label]="category.label + ' summary'"
-          >
-            <ng-container *ngIf="category.quotes$ | async as quotes">
-              <!-- High-level stats -->
-              <div class="summary-stats" *ngIf="quotes.length > 0">
-                <div class="stat-item">
-                  <span class="stat-value">{{ quotes.length }}</span>
-                  <span class="stat-label">Total Items</span>
-                </div>
-                <div class="stat-item" *ngIf="getOldestDate(quotes) as oldest">
-                  <span class="stat-value">{{ oldest | date:'MMM d' }}</span>
-                  <span class="stat-label">Oldest</span>
-                </div>
-                <div class="stat-item" *ngIf="getCategoryTotal(quotes) as total">
-                  <span class="stat-value">{{ total | currency:'USD':'symbol':'1.0-0' }}</span>
-                  <span class="stat-label">Total Value</span>
-                </div>
-              </div>
-
-              <!-- Compact clickable list -->
-              <div class="summary-items" *ngIf="quotes.length > 0">
-                <a
-                  *ngFor="let quote of quotes.slice(0, 5); trackBy: trackByQuote"
-                  class="summary-item"
-                  (click)="navigateToTab(category, quote)"
-                  tabindex="0"
-                  (keydown.enter)="navigateToTab(category, quote)"
-                >
-                  <span class="item-customer">{{ quote.customer }}</span>
-                  <span class="item-project">{{ quote.description }}</span>
-                  <mat-icon class="item-arrow">chevron_right</mat-icon>
-                </a>
-                <a
-                  *ngIf="quotes.length > 5"
-                  class="summary-item view-all"
-                  (click)="navigateToFilteredList(category)"
-                  tabindex="0"
-                  (keydown.enter)="navigateToFilteredList(category)"
-                >
-                  <span class="item-customer">View all {{ quotes.length }} items</span>
-                  <mat-icon class="item-arrow">arrow_forward</mat-icon>
-                </a>
-              </div>
-
-              <div *ngIf="quotes.length === 0" class="empty-category">
-                <span>No items in this category</span>
-              </div>
-            </ng-container>
-          </div>
+    <div class="pipeline-list">
+      <div
+        *ngFor="let category of categories; trackBy: trackByCategory"
+        class="pipeline-row"
+        [ngClass]="category.colorClass"
+        (click)="navigateToFilteredList(category)"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="navigateToFilteredList(category)"
+        [attr.aria-label]="category.label + ' - ' + (category.count$ | async) + ' items'"
+      >
+        <div class="row-left">
+          <mat-icon class="row-icon">{{ category.icon }}</mat-icon>
+          <span class="row-label">{{ category.label }}</span>
+        </div>
+        <div class="row-right">
+          <span class="row-count">{{ category.count$ | async }}</span>
+          <mat-icon class="row-chevron">chevron_right</mat-icon>
         </div>
       </div>
-    </ng-container>
-  </mat-card-content>
-</mat-card>
+    </div>
+  </ng-container>
+</div>

@@ -2,13 +2,12 @@ import {
   Component,
   OnInit,
   OnDestroy,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 import { DashboardQuote } from '../../../models/quote-workflow.model';
 import * as DashboardSelectors from '../../../state/quotes/dashboard.selectors';
@@ -50,15 +49,11 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
   loading$!: Observable<boolean>;
   error$!: Observable<string | null>;
 
-  /** Tracks which category is currently expanded */
-  expandedCategory: string | null = null;
-
   private destroy$ = new Subject<void>();
 
   constructor(
     private store: Store,
-    private router: Router,
-    private cdr: ChangeDetectorRef
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -145,15 +140,8 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ---------------------------------------------------------------------------
-  // Category Interaction
+  // Navigation
   // ---------------------------------------------------------------------------
-
-  /**
-   * Toggles the expanded state of a pipeline category.
-   */
-  toggleCategory(categoryKey: string): void {
-    this.expandedCategory = this.expandedCategory === categoryKey ? null : categoryKey;
-  }
 
   /**
    * Navigates to the appropriate tab filtered by category.
@@ -164,45 +152,10 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Template Helpers
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Returns the oldest RFP received date from a set of dashboard quotes.
-   */
-  getOldestDate(quotes: DashboardQuote[]): string | null {
-    if (!quotes.length) return null;
-    const dates = quotes
-      .map(q => q.rfpReceiveDate)
-      .filter((d): d is string => !!d)
-      .sort();
-    return dates.length > 0 ? dates[0] : null;
-  }
-
-  /**
-   * Returns the total PO value for quotes that have a PO amount.
-   */
-  getCategoryTotal(quotes: DashboardQuote[]): number | null {
-    const total = quotes.reduce((sum, q) => sum + (q.poAmount || 0), 0);
-    return total > 0 ? total : null;
-  }
-
-  /**
-   * Navigate to the relevant tab and highlight the specific quote row.
-   */
-  navigateToTab(category: PipelineCategory, quote: DashboardQuote): void {
-    this.router.navigate(['/field-resource-management/quotes'], {
-      queryParams: { tab: category.tabParam, highlight: quote.id }
-    });
-  }
-
   /**
    * Retry loading - dispatches a dashboard reload via parent component's refresh
    */
   retry(): void {
-    // The dashboard data is loaded by the parent RFP Dashboard component.
-    // Triggering a navigation refresh to reload the dashboard.
     this.router.navigate(['/field-resource-management/quotes'], {
       queryParams: { refresh: Date.now() }
     });
@@ -213,12 +166,5 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
    */
   trackByCategory(_index: number, category: PipelineCategory): string {
     return category.key;
-  }
-
-  /**
-   * TrackBy function for quote list rendering.
-   */
-  trackByQuote(_index: number, quote: DashboardQuote): string {
-    return quote.id;
   }
 }
