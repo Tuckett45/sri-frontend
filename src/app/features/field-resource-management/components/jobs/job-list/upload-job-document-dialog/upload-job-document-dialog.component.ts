@@ -16,6 +16,8 @@ export interface UploadJobDocumentDialogResult {
   error?: string;
   /** If true, the caller should navigate to the wizard with import data in sessionStorage */
   redirectToWizard?: boolean;
+  /** If true, the caller should open the job edit dialog for the created job */
+  editJob?: boolean;
 }
 
 /**
@@ -158,7 +160,8 @@ export interface UploadJobDocumentDialogResult {
         <mat-icon class="success-icon big-success">task_alt</mat-icon>
         <span class="success-text big-text">Job Created Successfully!</span>
         <p class="success-detail">
-          The job has been created from the uploaded document. You can view and edit it from the Jobs list.
+          The job has been created from the uploaded document. You can view it from the Jobs list
+          or edit it now to review and fill in any additional details.
         </p>
       </div>
 
@@ -213,6 +216,17 @@ export interface UploadJobDocumentDialogResult {
       >
         <mat-icon>add_circle</mat-icon>
         Create Job
+      </button>
+
+      <!-- Edit Job button (shown after successful creation) -->
+      <button
+        *ngIf="submitComplete"
+        mat-raised-button
+        color="primary"
+        (click)="onEditJob()"
+      >
+        <mat-icon>edit</mat-icon>
+        Edit Job
       </button>
     </mat-dialog-actions>
   `,
@@ -630,6 +644,21 @@ export class UploadJobDocumentDialogComponent implements OnDestroy {
       this.dialogRef.close(result);
     } else {
       this.dialogRef.close(null);
+    }
+  }
+
+  /**
+   * Close the dialog and signal the caller to open the edit form
+   * for the newly created job.
+   */
+  onEditJob(): void {
+    if (this.createdJob) {
+      const result: UploadJobDocumentDialogResult = {
+        success: true,
+        job: this.createdJob,
+        editJob: true
+      };
+      this.dialogRef.close(result);
     }
   }
 
