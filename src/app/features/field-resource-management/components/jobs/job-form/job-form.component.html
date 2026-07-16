@@ -458,7 +458,7 @@
     color="primary"
     type="submit"
     (click)="onSubmit()"
-    [disabled]="jobForm.invalid"
+    [disabled]="isLoading"
     class="submit-btn"
   >
     {{ submitButtonText }}

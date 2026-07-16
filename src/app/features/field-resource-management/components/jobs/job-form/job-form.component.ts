@@ -382,6 +382,11 @@ export class JobFormComponent implements OnInit, OnDestroy {
    * Populate form with job data
    */
   private populateForm(job: Job): void {
+    // Dates from the NgRx store arrive as ISO strings (JSON serialization).
+    // matDatepicker requires Date objects, so we must convert them.
+    const startDate = job.scheduledStartDate ? new Date(job.scheduledStartDate) : null;
+    const endDate = job.scheduledEndDate ? new Date(job.scheduledEndDate) : null;
+
     this.jobForm.patchValue({
       client: job.client,
       siteName: job.siteName,
@@ -398,8 +403,8 @@ export class JobFormComponent implements OnInit, OnDestroy {
       requiredSkills: job.requiredSkills,
       requiredCrewSize: job.requiredCrewSize,
       estimatedLaborHours: job.estimatedLaborHours,
-      scheduledStartDate: job.scheduledStartDate,
-      scheduledEndDate: job.scheduledEndDate,
+      scheduledStartDate: startDate,
+      scheduledEndDate: endDate,
       customerPOC: job.customerPOC || {
         name: '',
         phone: '',
@@ -507,7 +512,11 @@ export class JobFormComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.jobForm.invalid) {
       this.markFormGroupTouched(this.jobForm);
-      this.snackBar.open('Please fix form errors before submitting', 'Close', { duration: 3000 });
+      const invalidFields = this.getInvalidFieldNames();
+      const message = invalidFields.length > 0
+        ? `Please fix: ${invalidFields.slice(0, 3).join(', ')}${invalidFields.length > 3 ? ` (+${invalidFields.length - 3} more)` : ''}`
+        : 'Please fix form errors before submitting';
+      this.snackBar.open(message, 'Close', { duration: 5000 });
       return;
     }
 
@@ -742,6 +751,60 @@ export class JobFormComponent implements OnInit, OnDestroy {
         this.markFormGroupTouched(control);
       }
     });
+  }
+
+  /**
+   * Get names of invalid form controls for error reporting
+   */
+  private getInvalidFieldNames(): string[] {
+    const fieldLabels: Record<string, string> = {
+      client: 'Client',
+      siteName: 'Site Name',
+      market: 'Market',
+      'siteAddress.street': 'Street Address',
+      'siteAddress.city': 'City',
+      'siteAddress.state': 'State',
+      'siteAddress.zipCode': 'ZIP Code',
+      jobType: 'Job Type',
+      priority: 'Priority',
+      scopeDescription: 'Scope Description',
+      requiredCrewSize: 'Crew Size',
+      estimatedLaborHours: 'Est. Hours',
+      scheduledStartDate: 'Start Date',
+      scheduledEndDate: 'End Date',
+      standardBillRate: 'Standard Bill Rate',
+      overtimeBillRate: 'Overtime Bill Rate',
+      perDiem: 'Per Diem',
+      invoicingProcess: 'Invoicing Process',
+      projectDirector: 'Project Director',
+      targetResources: 'Target Resources',
+      bizDevContact: 'Biz Dev Contact',
+      requestedHours: 'Requested Hours',
+      authorizationStatus: 'Authorization Status',
+    };
+
+    const invalid: string[] = [];
+    const controls = this.jobForm.controls;
+
+    for (const key of Object.keys(controls)) {
+      const control = controls[key];
+      if (control instanceof FormGroup) {
+        for (const subKey of Object.keys(control.controls)) {
+          if (control.get(subKey)?.invalid) {
+            invalid.push(fieldLabels[`${key}.${subKey}`] || subKey);
+          }
+        }
+      } else if (control.invalid) {
+        invalid.push(fieldLabels[key] || key);
+      }
+    }
+
+    // Check form-level errors (e.g., dateRangeInvalid)
+    if (this.jobForm.hasError('dateRangeInvalid')) {
+      invalid.push('Date Range (end must be after start)');
+    }
+
+    return invalid;
   }
 
   /**
