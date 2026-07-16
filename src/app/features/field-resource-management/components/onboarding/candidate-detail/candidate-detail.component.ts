@@ -837,7 +837,6 @@ export class CandidateDetailComponent implements OnInit {
 
   canConvert(candidate: Candidate): boolean {
     return (candidate.offerStatus === 'offer_accepted_onboarding' || candidate.offerStatus === 'hired_assigned') &&
-           candidate.drugTestComplete &&
            candidate.oshaCertified;
   }
 
