@@ -2,18 +2,15 @@ import {
   Component,
   OnInit,
   OnDestroy,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
-import { QuoteWorkflow, WorkflowStatus } from '../../../models/quote-workflow.model';
-import * as QuoteActions from '../../../state/quotes/quote.actions';
-import * as QuoteSelectors from '../../../state/quotes/quote.selectors';
-import { FrmSignalRService } from '../../../services/frm-signalr.service';
+import { DashboardQuote } from '../../../models/quote-workflow.model';
+import * as DashboardSelectors from '../../../state/quotes/dashboard.selectors';
 
 /**
  * Pipeline category definition used by the template.
@@ -23,20 +20,23 @@ export interface PipelineCategory {
   label: string;
   icon: string;
   colorClass: string;
-  quotes$: Observable<QuoteWorkflow[]>;
+  quotes$: Observable<DashboardQuote[]>;
   count$: Observable<number>;
-  /** WorkflowStatus values that map to this category (used for filtered navigation) */
-  statuses: WorkflowStatus[];
+  /** Tab parameter for navigation */
+  tabParam: string;
 }
 
 /**
  * Quote Pipeline Dashboard Widget
  *
- * Displays six pipeline categories with counts and clickable quote lists
- * on the FRM home dashboard. Subscribes to NgRx selectors for pipeline
- * data and to SignalR for real-time updates.
+ * Displays pipeline categories with counts derived from the same
+ * dashboard data source that powers the KPI cards above.
+ * This ensures the pipeline counts are consistent with the KPIs.
  *
- * Requirements: 8.4–8.14
+ * Data source: DashboardSelectors (from /quotes/dashboard API)
+ *   - rfpRecords → RFPs Received + Quotes in Progress + Quotes Delivered
+ *   - poTrackingRecords → PO Needed
+ *   - projectTrackingRecords → Quotes Converted to Job
  */
 @Component({
   selector: 'app-quote-pipeline-dashboard',
@@ -49,31 +49,41 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
   loading$!: Observable<boolean>;
   error$!: Observable<string | null>;
 
-  /** Tracks which category is currently expanded */
-  expandedCategory: string | null = null;
-
   private destroy$ = new Subject<void>();
 
   constructor(
     private store: Store,
-    private router: Router,
-    private signalRService: FrmSignalRService,
-    private cdr: ChangeDetectorRef
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    // Dispatch loadQuotes to ensure pipeline data is available
-    this.store.dispatch(QuoteActions.loadQuotes({}));
+    // Use the same dashboard loading/error state as the KPI cards
+    this.loading$ = this.store.select(DashboardSelectors.selectDashboardLoading);
+    this.error$ = this.store.select(DashboardSelectors.selectDashboardError);
 
-    this.loading$ = this.store.select(QuoteSelectors.selectQuoteLoading);
-    this.error$ = this.store.select(QuoteSelectors.selectQuoteError);
+    // Use the same dashboard data that powers the KPI cards
+    const rfpRecords$ = this.store.select(DashboardSelectors.selectRfpRecords);
+    const poTrackingRecords$ = this.store.select(DashboardSelectors.selectPoTrackingRecords);
+    const projectTrackingRecords$ = this.store.select(DashboardSelectors.selectProjectTrackingRecords);
 
-    // Build the pipeline categories from NgRx selectors
-    const rfpsReceived$ = this.store.select(QuoteSelectors.selectRfpsReceived);
-    const quotesInProgress$ = this.store.select(QuoteSelectors.selectQuotesInProgress);
-    const quotesDelivered$ = this.store.select(QuoteSelectors.selectQuotesDelivered);
-    const poNeeded$ = this.store.select(QuoteSelectors.selectPoNeeded);
-    const quotesConverted$ = this.store.select(QuoteSelectors.selectQuotesConverted);
+    // RFPs Received: all rfpRecords (matches "Active RFPs" KPI)
+    const rfpsReceived$ = rfpRecords$;
+
+    // Quotes in Progress: rfpRecords that don't yet have a quoteSubmittedDate
+    const quotesInProgress$ = rfpRecords$.pipe(
+      map(records => records.filter(r => !r.quoteSubmittedDate))
+    );
+
+    // Quotes Delivered: rfpRecords that have a quoteSubmittedDate
+    const quotesDelivered$ = rfpRecords$.pipe(
+      map(records => records.filter(r => !!r.quoteSubmittedDate))
+    );
+
+    // PO Needed: poTrackingRecords (matches "POs Received" KPI)
+    const poNeeded$ = poTrackingRecords$;
+
+    // Quotes Converted to Job: projectTrackingRecords (matches "Active Projects" KPI)
+    const quotesConverted$ = projectTrackingRecords$;
 
     this.categories = [
       {
@@ -83,16 +93,16 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
         colorClass: 'category-rfps',
         quotes$: rfpsReceived$,
         count$: rfpsReceived$.pipe(map(q => q.length)),
-        statuses: [WorkflowStatus.Draft, WorkflowStatus.Job_Summary_In_Progress]
+        tabParam: 'rfps'
       },
       {
         key: 'quotesInProgress',
-        label: 'Quotes In Progress',
+        label: 'Quotes in Progress',
         icon: 'build',
         colorClass: 'category-quotes-in-progress',
         quotes$: quotesInProgress$,
         count$: quotesInProgress$.pipe(map(q => q.length)),
-        statuses: [WorkflowStatus.BOM_In_Progress, WorkflowStatus.Pending_Validation, WorkflowStatus.Validation_Rejected, WorkflowStatus.Validation_Approved]
+        tabParam: 'rfps'
       },
       {
         key: 'quotesDelivered',
@@ -101,7 +111,7 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
         colorClass: 'category-delivered',
         quotes$: quotesDelivered$,
         count$: quotesDelivered$.pipe(map(q => q.length)),
-        statuses: [WorkflowStatus.Quote_Assembled, WorkflowStatus.Quote_Delivered]
+        tabParam: 'rfps'
       },
       {
         key: 'poNeeded',
@@ -110,7 +120,7 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
         colorClass: 'category-po-needed',
         quotes$: poNeeded$,
         count$: poNeeded$.pipe(map(q => q.length)),
-        statuses: [WorkflowStatus.Quote_Delivered]
+        tabParam: 'po'
       },
       {
         key: 'quotesConverted',
@@ -119,22 +129,9 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
         colorClass: 'category-converted',
         quotes$: quotesConverted$,
         count$: quotesConverted$.pipe(map(q => q.length)),
-        statuses: [WorkflowStatus.Quote_Converted]
+        tabParam: 'projects'
       }
     ];
-
-    // Subscribe to SignalR for real-time quote updates
-    this.signalRService.quoteUpdated$
-      .pipe(
-        takeUntil(this.destroy$)
-      )
-      .subscribe(update => {
-        if (update) {
-          // The SignalR handler dispatches quoteUpdatedRemotely to the store,
-          // so selectors update automatically. Mark for change detection.
-          this.cdr.markForCheck();
-        }
-      });
   }
 
   ngOnDestroy(): void {
@@ -143,99 +140,25 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ---------------------------------------------------------------------------
-  // Category Interaction
+  // Navigation
   // ---------------------------------------------------------------------------
 
   /**
-   * Toggles the expanded state of a pipeline category.
-   */
-  toggleCategory(categoryKey: string): void {
-    this.expandedCategory = this.expandedCategory === categoryKey ? null : categoryKey;
-  }
-
-  /**
-   * Navigates to the quote list filtered by the given category's statuses.
+   * Navigates to the appropriate tab filtered by category.
    */
   navigateToFilteredList(category: PipelineCategory): void {
     this.router.navigate(['/field-resource-management/quotes'], {
-      queryParams: { status: category.statuses.join(',') }
+      queryParams: { tab: category.tabParam }
     });
   }
 
   /**
-   * Navigates to the workflow view for a specific quote.
-   */
-  navigateToQuote(quoteId: string): void {
-    this.router.navigate(['/field-resource-management/quotes', quoteId]);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Template Helpers
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Returns the oldest RFP received date from a set of quotes.
-   */
-  getOldestDate(quotes: QuoteWorkflow[]): string | null {
-    if (!quotes.length) return null;
-    const dates = quotes
-      .map(q => q.rfpRecord.rfpReceivedDate)
-      .filter(d => !!d)
-      .sort();
-    return dates.length > 0 ? dates[0] : null;
-  }
-
-  /**
-   * Returns the total PO value for quotes that have a PO amount.
-   */
-  getCategoryTotal(quotes: QuoteWorkflow[]): number | null {
-    const total = quotes.reduce((sum, q) => sum + (q.poNumber ? 1 : 0), 0);
-    // Only show if there are PO-related quotes with amounts
-    return null; // PO amounts are on dashboard records, not workflow objects
-  }
-
-  /**
-   * Navigate to the relevant tab and highlight the specific quote row.
-   */
-  navigateToTab(category: PipelineCategory, quote: QuoteWorkflow): void {
-    // Map category to the appropriate tab index
-    let tabParam = 'pipeline';
-    if (category.key === 'rfpsReceived') {
-      tabParam = 'rfps';
-    } else if (category.key === 'quotesDelivered' || category.key === 'poNeeded') {
-      tabParam = 'po';
-    } else if (category.key === 'quotesConverted') {
-      tabParam = 'projects';
-    }
-
-    this.router.navigate(['/field-resource-management/quotes'], {
-      queryParams: { tab: tabParam, highlight: quote.id }
-    });
-  }
-
-  /**
-   * Returns a display label for the workflow status.
-   */
-  getStatusLabel(status: WorkflowStatus): string {
-    switch (status) {
-      case WorkflowStatus.Draft: return 'Draft';
-      case WorkflowStatus.Job_Summary_In_Progress: return 'Job Summary';
-      case WorkflowStatus.BOM_In_Progress: return 'BOM In Progress';
-      case WorkflowStatus.Pending_Validation: return 'Pending Validation';
-      case WorkflowStatus.Validation_Approved: return 'Approved';
-      case WorkflowStatus.Validation_Rejected: return 'Rejected';
-      case WorkflowStatus.Quote_Assembled: return 'Assembled';
-      case WorkflowStatus.Quote_Delivered: return 'Delivered';
-      case WorkflowStatus.Quote_Converted: return 'Converted';
-      default: return status;
-    }
-  }
-
-  /**
-   * Retry loading quotes after an error.
+   * Retry loading - dispatches a dashboard reload via parent component's refresh
    */
   retry(): void {
-    this.store.dispatch(QuoteActions.loadQuotes({}));
+    this.router.navigate(['/field-resource-management/quotes'], {
+      queryParams: { refresh: Date.now() }
+    });
   }
 
   /**
@@ -243,12 +166,5 @@ export class QuotePipelineDashboardComponent implements OnInit, OnDestroy {
    */
   trackByCategory(_index: number, category: PipelineCategory): string {
     return category.key;
-  }
-
-  /**
-   * TrackBy function for quote list rendering.
-   */
-  trackByQuote(_index: number, quote: QuoteWorkflow): string {
-    return quote.id;
   }
 }

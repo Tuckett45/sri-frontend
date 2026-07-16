@@ -1,75 +1,79 @@
-.pipeline-dashboard-card {
-  background-color: #ffffff;
+// ---------------------------------------------------------------------------
+// Pipeline Dashboard — quick-access pipeline rows
+// Styled to match the top KPI indicators design language
+// ---------------------------------------------------------------------------
+
+.pipeline-dashboard {
+  padding: 1rem 0;
+}
+
+.widget-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.widget-error {
+  text-align: center;
+  padding: 1.5rem;
+  color: #d32f2f;
+
+  p {
+    margin-bottom: 0.5rem;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Header
+// ---------------------------------------------------------------------------
+
+.pipeline-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+
+  .pipeline-header-icon {
+    color: #144f80;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .pipeline-header-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pipeline List
+// ---------------------------------------------------------------------------
+
+.pipeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   border-radius: 12px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-
-  mat-card-header {
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 18px;
-
-      mat-icon {
-        color: #144f80;
-      }
-    }
-  }
-
-  mat-card-content {
-    .widget-loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-    }
-
-    .widget-error {
-      text-align: center;
-      padding: 1.5rem;
-      color: #d32f2f;
-
-      p {
-        margin-bottom: 0.5rem;
-      }
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Pipeline Categories
-// ---------------------------------------------------------------------------
-
-.pipeline-categories {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.pipeline-category {
-  border-radius: 8px;
   border: 1px solid #e0e0e0;
   overflow: hidden;
-  transition: border-color 0.2s;
-
-  &:hover {
-    border-color: #bdbdbd;
-  }
+  background-color: #ffffff;
 }
 
-// ---------------------------------------------------------------------------
-// Category Header
-// ---------------------------------------------------------------------------
-
-.category-header {
+.pipeline-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.15s;
+  border-left: 4px solid transparent;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
 
   &:hover {
     background-color: #f5f7fa;
@@ -81,229 +85,113 @@
   }
 }
 
-.category-info {
+.row-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
-.category-icon {
+.row-icon {
   font-size: 20px;
   width: 20px;
   height: 20px;
 }
 
-.category-label {
+.row-label {
   font-size: 14px;
   font-weight: 500;
   color: #333;
 }
 
-.category-count-wrapper {
+.row-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
-.category-count {
+.row-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
+  min-width: 32px;
   height: 28px;
-  padding: 0 8px;
+  padding: 0 10px;
   border-radius: 14px;
   font-size: 14px;
   font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    transform: scale(1.1);
-  }
-
-  &:focus {
-    outline: 2px solid #144f80;
-    outline-offset: 2px;
-  }
 }
 
-.expand-icon {
+.row-chevron {
   font-size: 20px;
   width: 20px;
   height: 20px;
-  color: #666;
+  color: #999;
 }
 
 // ---------------------------------------------------------------------------
-// Category Color Themes
+// Color Themes — border-left accent + icon/count colors
 // ---------------------------------------------------------------------------
 
 .category-rfps {
-  .category-icon { color: #1565c0; }
-  .category-count {
+  border-left-color: #1565c0;
+
+  .row-icon { color: #1565c0; }
+  .row-count {
     background-color: #e3f2fd;
     color: #1565c0;
   }
 }
 
 .category-quotes-in-progress {
-  .category-icon { color: #e65100; }
-  .category-count {
+  border-left-color: #e65100;
+
+  .row-icon { color: #e65100; }
+  .row-count {
     background-color: #fff3e0;
     color: #e65100;
   }
 }
 
 .category-delivered {
-  .category-icon { color: #00838f; }
-  .category-count {
+  border-left-color: #00838f;
+
+  .row-icon { color: #00838f; }
+  .row-count {
     background-color: #e0f7fa;
     color: #00838f;
   }
 }
 
 .category-po-needed {
-  .category-icon { color: #ad1457; }
-  .category-count {
+  border-left-color: #ad1457;
+
+  .row-icon { color: #ad1457; }
+  .row-count {
     background-color: #fce4ec;
     color: #ad1457;
   }
 }
 
 .category-converted {
-  .category-icon { color: #558b2f; }
-  .category-count {
+  border-left-color: #558b2f;
+
+  .row-icon { color: #558b2f; }
+  .row-count {
     background-color: #f1f8e9;
     color: #558b2f;
   }
 }
 
 // ---------------------------------------------------------------------------
-// Summary Panel (expanded)
-// ---------------------------------------------------------------------------
-
-.category-summary {
-  border-top: 1px solid #e0e0e0;
-  padding: 0.75rem 1rem;
-}
-
-.summary-stats {
-  display: flex;
-  gap: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #f0f0f0;
-  margin-bottom: 0.5rem;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  .stat-value {
-    font-size: 16px;
-    font-weight: 700;
-    color: #144f80;
-  }
-
-  .stat-label {
-    font-size: 11px;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-}
-
-.summary-items {
-  display: flex;
-  flex-direction: column;
-}
-
-.summary-item {
-  display: flex;
-  align-items: center;
-  padding: 0.4rem 0.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.15s;
-
-  &:hover {
-    background-color: #f5f7fa;
-  }
-
-  &:focus {
-    outline: 2px solid #144f80;
-    outline-offset: 2px;
-  }
-
-  .item-customer {
-    font-size: 13px;
-    font-weight: 600;
-    color: #333;
-    min-width: 120px;
-  }
-
-  .item-project {
-    font-size: 12px;
-    color: #666;
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-left: 8px;
-  }
-
-  .item-arrow {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    color: #bbb;
-    flex-shrink: 0;
-  }
-
-  &.view-all {
-    margin-top: 4px;
-    padding-top: 0.5rem;
-    border-top: 1px solid #f0f0f0;
-
-    .item-customer {
-      color: #144f80;
-      font-weight: 500;
-    }
-
-    .item-arrow {
-      color: #144f80;
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Empty State
-// ---------------------------------------------------------------------------
-
-.empty-category {
-  text-align: center;
-  padding: 1rem;
-  color: #999;
-  font-size: 13px;
-  font-style: italic;
-}
-
-// ---------------------------------------------------------------------------
 // Responsive
 // ---------------------------------------------------------------------------
 
-@media (max-width: 768px) {
-  .quote-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+@media (max-width: 767px) {
+  .pipeline-row {
+    padding: 0.75rem 1rem;
   }
 
-  .quote-indicators {
-    margin-left: 0;
-    flex-wrap: wrap;
+  .row-label {
+    font-size: 13px;
   }
 }
