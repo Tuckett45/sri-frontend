@@ -143,8 +143,9 @@ export class JobService {
    */
   createJob(job: CreateJobDto): Observable<Job> {
     const payload = this.prepareJobPayload(job);
-    return this.http.post<Job>(this.apiUrl, payload)
+    return this.http.post<any>(this.apiUrl, payload)
       .pipe(
+        map(response => this.mapJobResponse(response?.data || response)),
         catchError(this.handleError)
       );
   }
@@ -157,23 +158,24 @@ export class JobService {
    */
   updateJob(id: string, job: UpdateJobDto): Observable<Job> {
     const payload = this.prepareJobPayload(job);
-    return this.http.put<Job>(`${this.apiUrl}/${id}`, payload)
+    return this.http.put<any>(`${this.apiUrl}/${id}`, payload)
       .pipe(
+        map(response => this.mapJobResponse(response?.data || response)),
         catchError(this.handleError)
       );
   }
 
   /**
    * Transforms the DTO before sending to the API.
-   * Converts requiredSkills from Skill[] to the shape the backend expects
-   * (array of { skillName: string }).
+   * Converts requiredSkills from Skill[] to a flat array of skill name strings
+   * as expected by the backend (List<string>).
    */
   private prepareJobPayload(dto: CreateJobDto | UpdateJobDto): any {
     const payload: any = { ...dto };
     if (dto.requiredSkills && Array.isArray(dto.requiredSkills)) {
-      payload.requiredSkills = dto.requiredSkills.map(s => ({
-        skillName: (s as any).name || (s as any).skillName || (s as any).SkillName || String(s)
-      }));
+      payload.requiredSkills = dto.requiredSkills.map(s =>
+        (s as any).name || (s as any).skillName || (s as any).SkillName || String(s)
+      );
     }
     return payload;
   }

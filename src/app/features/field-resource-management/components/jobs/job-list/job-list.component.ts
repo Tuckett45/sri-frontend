@@ -724,15 +724,20 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
         // Refresh the job list to show the newly created job
         this.applyFilters();
 
-        this.snackBar.open(
-          'Job created successfully from uploaded document',
-          'View',
-          { duration: 5000 }
-        ).onAction().subscribe(() => {
-          if (result.job?.id) {
-            this.router.navigate(['/field-resource-management/jobs', result.job.id]);
-          }
-        });
+        if (result.editJob && result.job?.id) {
+          // Open the edit dialog immediately for the newly created job
+          this.editJob(result.job);
+        } else {
+          this.snackBar.open(
+            'Job created successfully from uploaded document',
+            'View',
+            { duration: 5000 }
+          ).onAction().subscribe(() => {
+            if (result.job?.id) {
+              this.router.navigate(['/field-resource-management/jobs', result.job.id]);
+            }
+          });
+        }
       } else if (result?.redirectToWizard) {
         // Navigate to the job setup wizard with imported data pre-filled
         this.router.navigate(['/field-resource-management/jobs/new'], {
