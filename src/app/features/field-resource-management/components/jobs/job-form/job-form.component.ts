@@ -387,10 +387,10 @@ export class JobFormComponent implements OnInit, OnDestroy {
       siteName: job.siteName,
       market: job.market || job.region || '',
       siteAddress: {
-        street: job.siteAddress.street,
-        city: job.siteAddress.city,
-        state: job.siteAddress.state,
-        zipCode: job.siteAddress.zipCode
+        street: job.siteAddress?.street || '',
+        city: job.siteAddress?.city || '',
+        state: job.siteAddress?.state || '',
+        zipCode: job.siteAddress?.zipCode || ''
       },
       jobType: job.jobType,
       priority: job.priority,
@@ -405,24 +405,24 @@ export class JobFormComponent implements OnInit, OnDestroy {
         phone: '',
         email: ''
       },
-      // Pricing/Billing
-      authorizationStatus: (job as any).authorizationStatus || 'pending',
-      hasPurchaseOrders: (job as any).hasPurchaseOrders || false,
-      purchaseOrderNumber: (job as any).purchaseOrderNumber || '',
-      standardBillRate: (job as any).standardBillRate || null,
-      overtimeBillRate: (job as any).overtimeBillRate || null,
-      perDiem: (job as any).perDiem || null,
-      invoicingProcess: (job as any).invoicingProcess || '',
+      // Pricing/Billing — use ?? to preserve 0 as a valid value
+      authorizationStatus: job.authorizationStatus ?? 'pending',
+      hasPurchaseOrders: job.hasPurchaseOrders ?? false,
+      purchaseOrderNumber: job.purchaseOrderNumber ?? '',
+      standardBillRate: job.standardBillRate ?? null,
+      overtimeBillRate: job.overtimeBillRate ?? null,
+      perDiem: job.perDiem ?? null,
+      invoicingProcess: job.invoicingProcess ?? '',
       // SRI Internal
-      projectDirector: (job as any).projectDirector || '',
-      targetResources: (job as any).targetResources || null,
-      bizDevContact: (job as any).bizDevContact || '',
-      requestedHours: (job as any).requestedHours || null,
-      overtimeRequired: (job as any).overtimeRequired || false,
-      estimatedOvertimeHours: (job as any).estimatedOvertimeHours || null,
+      projectDirector: job.projectDirector ?? '',
+      targetResources: job.targetResources ?? null,
+      bizDevContact: job.bizDevContact ?? '',
+      requestedHours: job.requestedHours ?? null,
+      overtimeRequired: job.overtimeRequired ?? false,
+      estimatedOvertimeHours: job.estimatedOvertimeHours ?? null,
       // Assignment
-      leadTechnicianId: job.technicianId || null,
-      crewId: job.crewId || null
+      leadTechnicianId: job.technicianId ?? null,
+      crewId: job.crewId ?? null
     });
 
     // In edit mode, relax required validators on Pricing/Billing and SRI Internal
@@ -441,22 +441,48 @@ export class JobFormComponent implements OnInit, OnDestroy {
    */
   private relaxEditModeValidators(job: Job): void {
     const billingAndInternalFields = [
-      { name: 'standardBillRate', value: (job as any).standardBillRate, validators: [Validators.min(0.01)] },
-      { name: 'overtimeBillRate', value: (job as any).overtimeBillRate, validators: [Validators.min(0.01)] },
-      { name: 'perDiem', value: (job as any).perDiem, validators: [Validators.min(0)] },
-      { name: 'invoicingProcess', value: (job as any).invoicingProcess, validators: [] },
-      { name: 'projectDirector', value: (job as any).projectDirector, validators: [Validators.maxLength(150)] },
-      { name: 'targetResources', value: (job as any).targetResources, validators: [Validators.min(1), Validators.max(500)] },
-      { name: 'bizDevContact', value: (job as any).bizDevContact, validators: [Validators.maxLength(150)] },
-      { name: 'requestedHours', value: (job as any).requestedHours, validators: [Validators.min(0.01)] },
+      { name: 'standardBillRate', value: job.standardBillRate, validators: [Validators.min(0.01)] },
+      { name: 'overtimeBillRate', value: job.overtimeBillRate, validators: [Validators.min(0.01)] },
+      { name: 'perDiem', value: job.perDiem, validators: [Validators.min(0)] },
+      { name: 'invoicingProcess', value: job.invoicingProcess, validators: [] },
+      { name: 'projectDirector', value: job.projectDirector, validators: [Validators.maxLength(150)] },
+      { name: 'targetResources', value: job.targetResources, validators: [Validators.min(1), Validators.max(500)] },
+      { name: 'bizDevContact', value: job.bizDevContact, validators: [Validators.maxLength(150)] },
+      { name: 'requestedHours', value: job.requestedHours, validators: [Validators.min(0.01)] },
     ];
 
     for (const field of billingAndInternalFields) {
       const control = this.jobForm.get(field.name);
-      if (control && !field.value) {
-        // Remove required validator but keep other validators (min, max, maxLength)
-        control.setValidators(field.validators);
-        control.updateValueAndValidity();
+      if (control) {
+        // Use nullish check: only keep required if the field has a real value
+        // (not null/undefined). This ensures 0 is treated as a valid existing value.
+        const hasValue = field.value != null && field.value !== '';
+        if (!hasValue) {
+          // Remove required validator but keep other validators (min, max, maxLength)
+          control.setValidators(field.validators);
+          control.updateValueAndValidity();
+        }
+      }
+    }
+
+    // Also relax market if it's empty and the user can't edit it (non-admin)
+    const marketControl = this.jobForm.get('market');
+    if (marketControl && marketControl.disabled && !marketControl.value) {
+      marketControl.clearValidators();
+      marketControl.updateValueAndValidity();
+    }
+
+    // Relax siteAddress fields if they weren't provided on the original job
+    if (!job.siteAddress || (!job.siteAddress.street && !job.siteAddress.city)) {
+      const addressGroup = this.jobForm.get('siteAddress');
+      if (addressGroup) {
+        ['street', 'city', 'state', 'zipCode'].forEach(fieldName => {
+          const ctrl = addressGroup.get(fieldName);
+          if (ctrl && !ctrl.value) {
+            ctrl.clearValidators();
+            ctrl.updateValueAndValidity();
+          }
+        });
       }
     }
   }
