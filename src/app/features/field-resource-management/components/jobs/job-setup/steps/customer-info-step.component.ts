@@ -1,23 +1,8 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { FormGroup, AbstractControl, ValidatorFn, Validators } from '@angular/forms';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { FormGroup, AbstractControl, Validators } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-
-/**
- * Custom validator: ensures date is today or in the future.
- */
-function minDateTodayValidator(): ValidatorFn {
-  return (control: AbstractControl): { [key: string]: any } | null => {
-    if (!control.value) {
-      return null; // let required validator handle empty
-    }
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selected = new Date(control.value);
-    selected.setHours(0, 0, 0, 0);
-    return selected < today ? { minDate: { min: today, actual: selected } } : null;
-  };
-}
 
 /**
  * Customer Info Step Component
@@ -26,7 +11,7 @@ function minDateTodayValidator(): ValidatorFn {
  * detail fields using the FormGroup passed in from the parent
  * JobSetupComponent.
  *
- * Requirements: 3.1–3.10, 8.1–8.6
+ * Requirements: 3.1-3.10, 8.1-8.6
  */
 @Component({
   selector: 'app-customer-info-step',
@@ -113,12 +98,17 @@ function minDateTodayValidator(): ValidatorFn {
 
       <mat-form-field appearance="outline">
         <mat-label>Target Start Date</mat-label>
-        <input matInput [matDatepicker]="startDatePicker" formControlName="targetStartDate" [min]="minDate" />
+        <input matInput [matDatepicker]="startDatePicker" formControlName="targetStartDate" />
         <mat-datepicker-toggle matIconSuffix [for]="startDatePicker"></mat-datepicker-toggle>
         <mat-datepicker #startDatePicker></mat-datepicker>
         <mat-error *ngIf="formGroup.get('targetStartDate')?.hasError('required')">Start date is required</mat-error>
-        <mat-error *ngIf="formGroup.get('targetStartDate')?.hasError('minDate')">Start date cannot be in the past</mat-error>
       </mat-form-field>
+
+      <!-- Past date warning banner (shown after user confirms) -->
+      <div class="past-date-warning" *ngIf="showPastDateWarning">
+        <mat-icon>warning</mat-icon>
+        <span>This start date is in the past.</span>
+      </div>
 
       <!-- Authorization & Purchase Orders -->
       <h3 class="section-heading">Authorization</h3>
@@ -185,6 +175,26 @@ function minDateTodayValidator(): ValidatorFn {
       margin: 8px 0 16px;
     }
 
+    .past-date-warning {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background-color: #fff3e0;
+      border: 1px solid #ffb74d;
+      border-radius: 4px;
+      color: #e65100;
+      font-size: 13px;
+      margin-top: -4px;
+    }
+
+    .past-date-warning mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #f57c00;
+    }
+
     @media (max-width: 600px) {
       .form-row {
         flex-direction: column;
@@ -198,8 +208,20 @@ export class CustomerInfoStepComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  /** Minimum selectable date (today) */
-  minDate = new Date();
+  /** Whether to show the past-date warning banner below the date field */
+  showPastDateWarning = false;
+
+  /**
+   * Tracks the previous date value so we only prompt once per change
+   * (avoids re-prompting on programmatic patches like draft restore).
+   */
+  private previousDateValue: string | null = null;
+
+  /**
+   * When true, skip the confirmation prompt (used during initial load
+   * so pre-populated past dates don't trigger an alert).
+   */
+  private suppressPrompt = true;
 
   /** US state abbreviations for the state dropdown */
   states = [
@@ -210,9 +232,15 @@ export class CustomerInfoStepComponent implements OnInit, OnDestroy {
     'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
   ];
 
+  constructor(
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
+  ) {}
+
   ngOnInit(): void {
     this.setupValidators();
     this.watchPurchaseOrderToggle();
+    this.watchTargetStartDate();
   }
 
   ngOnDestroy(): void {
@@ -237,12 +265,99 @@ export class CustomerInfoStepComponent implements OnInit, OnDestroy {
     controls['pocName']?.setValidators([Validators.required]);
     controls['pocPhone']?.setValidators([Validators.required, Validators.pattern(/^\d{10}$/)]);
     controls['pocEmail']?.setValidators([Validators.required, Validators.email]);
-    controls['targetStartDate']?.setValidators([Validators.required, minDateTodayValidator()]);
+    controls['targetStartDate']?.setValidators([Validators.required]);
     controls['authorizationStatus']?.setValidators([Validators.required]);
     controls['hasPurchaseOrders']?.setValidators([Validators.required]);
 
     // Update validity after setting validators
     Object.keys(controls).forEach(key => controls[key].updateValueAndValidity());
+  }
+
+  /**
+   * Watch the targetStartDate control for changes. When the user picks
+   * a date in the past, show a confirmation prompt. If they decline,
+   * clear the date. If they confirm, show a warning banner.
+   */
+  private watchTargetStartDate(): void {
+    const dateControl = this.formGroup.get('targetStartDate');
+    if (!dateControl) return;
+
+    // Capture the initial value so we don't prompt on load
+    this.previousDateValue = dateControl.value;
+
+    // Evaluate whether to show the warning for the initial value (no prompt)
+    this.showPastDateWarning = this.isDateInPast(dateControl.value);
+
+    // Allow prompt after a short delay so that any programmatic patches
+    // (draft restore, import) that happen during init don't trigger it.
+    setTimeout(() => {
+      this.suppressPrompt = false;
+    }, 500);
+
+    dateControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        // If value hasn't actually changed (e.g. re-patch), skip
+        if (this.normalizeDateStr(value) === this.normalizeDateStr(this.previousDateValue)) {
+          return;
+        }
+
+        this.previousDateValue = value;
+
+        if (this.isDateInPast(value)) {
+          if (this.suppressPrompt) {
+            // Still in initialization — just show the warning, no prompt
+            this.showPastDateWarning = true;
+            this.cdr.markForCheck();
+            return;
+          }
+
+          // Ask user to confirm the past date
+          const confirmed = confirm(
+            'The selected start date is in the past. Are you sure you want to use this date?'
+          );
+
+          if (confirmed) {
+            this.showPastDateWarning = true;
+            this.cdr.markForCheck();
+          } else {
+            // User declined — clear the date
+            dateControl.setValue('', { emitEvent: false });
+            this.previousDateValue = '';
+            this.showPastDateWarning = false;
+            this.cdr.markForCheck();
+          }
+        } else {
+          // Date is today or in the future — no warning needed
+          this.showPastDateWarning = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  /**
+   * Check if a date value is in the past (before today).
+   */
+  private isDateInPast(value: any): boolean {
+    if (!value) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(value);
+    selected.setHours(0, 0, 0, 0);
+    return selected < today;
+  }
+
+  /**
+   * Normalize a date value to a comparable string (YYYY-MM-DD).
+   */
+  private normalizeDateStr(value: any): string {
+    if (!value) return '';
+    try {
+      const d = new Date(value);
+      return d.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
   }
 
   /**
