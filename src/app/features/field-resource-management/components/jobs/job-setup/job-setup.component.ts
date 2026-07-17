@@ -67,7 +67,6 @@ export interface JobSetupStep {
         <app-customer-info-step
           *ngIf="currentStep === 0"
           [formGroup]="customerInfoGroup"
-          [allowPastDate]="hasPrePopulatedDate"
         ></app-customer-info-step>
 
         <!-- Step 1: Pricing & Billing -->
@@ -266,13 +265,6 @@ export class JobSetupComponent implements OnInit, OnDestroy {
   submitError: string | null = null;
   submitted = false;
 
-  /**
-   * True when the form was pre-populated with an existing target start date
-   * (from a restored draft or imported document). This signals the child
-   * customer-info-step to allow the loaded past date without validation error.
-   */
-  hasPrePopulatedDate = false;
-
   steps: JobSetupStep[] = [
     { label: 'Customer Info', formGroupName: 'customerInfo', isValid: false },
     { label: 'Pricing & Billing', formGroupName: 'pricingBilling', isValid: false },
@@ -386,10 +378,6 @@ export class JobSetupComponent implements OnInit, OnDestroy {
         const formPatch = this.importService.mapToFormValue(result.parsed);
         this.form.patchValue(formPatch);
         this.form.markAsDirty();
-        // If the imported document includes a target start date, allow it
-        if (formPatch?.customerInfo?.targetStartDate) {
-          this.hasPrePopulatedDate = true;
-        }
         this.cdr.markForCheck();
 
         const fieldCount = this.countExtractedFields(formPatch);
@@ -467,11 +455,6 @@ export class JobSetupComponent implements OnInit, OnDestroy {
     if (draft) {
       this.form.patchValue(draft.formValue);
       this.currentStep = draft.currentStep;
-      // If the draft has a target start date, allow it through validation
-      // even if it's now in the past (it was valid when originally entered)
-      if (draft.formValue?.customerInfo?.targetStartDate) {
-        this.hasPrePopulatedDate = true;
-      }
       this.cdr.markForCheck();
     }
   }
@@ -496,10 +479,6 @@ export class JobSetupComponent implements OnInit, OnDestroy {
         this.form.patchValue(importedPatch);
         this.form.markAsDirty();
         sessionStorage.removeItem('frm_job_import_data');
-        // If imported data includes a target start date, allow it through validation
-        if (importedPatch?.customerInfo?.targetStartDate) {
-          this.hasPrePopulatedDate = true;
-        }
         this.cdr.markForCheck();
       }
     } catch (e) {
