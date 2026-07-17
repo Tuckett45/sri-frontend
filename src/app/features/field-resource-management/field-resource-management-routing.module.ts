@@ -71,56 +71,56 @@ const routes: Routes = [
         }
       },
 
-      // CM Dashboard - CM and Admin access
-      {
-        path: 'cm',
-        children: [
-          {
-            path: 'dashboard',
-            component: CMDashboardComponent,
-            canActivate: [CMGuard],
-            data: { 
-              title: 'CM Dashboard',
-              breadcrumb: 'CM Dashboard'
-            }
-          }
-        ]
-      },
+      // DISABLED: CM Dashboard - reduce usage
+      // {
+      //   path: 'cm',
+      //   children: [
+      //     {
+      //       path: 'dashboard',
+      //       component: CMDashboardComponent,
+      //       canActivate: [CMGuard],
+      //       data: { 
+      //         title: 'CM Dashboard',
+      //         breadcrumb: 'CM Dashboard'
+      //       }
+      //     }
+      //   ]
+      // },
 
-      // Admin Dashboard - Admin only
-      {
-        path: 'admin-dashboard',
-        component: AdminDashboardComponent,
-        canActivate: [EnhancedRoleGuard],
-        data: { 
-          title: 'Admin Dashboard',
-          breadcrumb: 'Admin Dashboard',
-          roleGuard: {
-            allowedRoles: [UserRole.Admin]
-          }
-        }
-      },
+      // DISABLED: Admin Dashboard - reduce usage
+      // {
+      //   path: 'admin-dashboard',
+      //   component: AdminDashboardComponent,
+      //   canActivate: [EnhancedRoleGuard],
+      //   data: { 
+      //     title: 'Admin Dashboard',
+      //     breadcrumb: 'Admin Dashboard',
+      //     roleGuard: {
+      //       allowedRoles: [UserRole.Admin]
+      //     }
+      //   }
+      // },
 
-      // My Team - Manager view of direct reports
-      {
-        path: 'my-team',
-        component: MyTeamComponent,
-        canActivate: [ManagerGuard],
-        data: {
-          title: 'My Team',
-          breadcrumb: 'My Team'
-        }
-      },
+      // DISABLED: My Team - reduce usage
+      // {
+      //   path: 'my-team',
+      //   component: MyTeamComponent,
+      //   canActivate: [ManagerGuard],
+      //   data: {
+      //     title: 'My Team',
+      //     breadcrumb: 'My Team'
+      //   }
+      // },
 
-      // Timecard - All authenticated users
-      {
-        path: 'timecard',
-        component: TimecardDashboardComponent,
-        data: { 
-          title: 'My Timecard',
-          breadcrumb: 'Timecard'
-        }
-      },
+      // DISABLED: Timecard - reduce usage
+      // {
+      //   path: 'timecard',
+      //   component: TimecardDashboardComponent,
+      //   data: { 
+      //     title: 'My Timecard',
+      //     breadcrumb: 'Timecard'
+      //   }
+      // },
 
       // Timecard Manager View - Manager, HR, and Admin access
       {
@@ -175,12 +175,12 @@ const routes: Routes = [
         canActivate: [TechnicianGuard]
       },
 
-      // Reporting Routes - Lazy Loaded
-      {
-        path: 'reports',
-        loadChildren: () => import('./components/reporting/reporting.module').then(m => m.ReportingModule),
-        canActivate: [DispatcherGuard]
-      },
+      // DISABLED: Reporting Routes - reduce usage
+      // {
+      //   path: 'reports',
+      //   loadChildren: () => import('./components/reporting/reporting.module').then(m => m.ReportingModule),
+      //   canActivate: [DispatcherGuard]
+      // },
 
       // Mapping Routes - Lazy Loaded
       {
@@ -189,12 +189,12 @@ const routes: Routes = [
         canActivate: [DispatcherGuard]
       },
 
-      // Approval Routes - Lazy Loaded
-      {
-        path: 'approvals',
-        loadChildren: () => import('./components/approvals/approvals.module').then(m => m.ApprovalsModule),
-        canActivate: [HrGuard]
-      },
+      // DISABLED: Approval Routes - reduce usage
+      // {
+      //   path: 'approvals',
+      //   loadChildren: () => import('./components/approvals/approvals.module').then(m => m.ApprovalsModule),
+      //   canActivate: [HrGuard]
+      // },
 
       // Payroll Routes - Lazy Loaded
       {
@@ -203,33 +203,33 @@ const routes: Routes = [
         canActivate: [PayrollGuard]
       },
 
-      // Admin Routes - Lazy Loaded
-      {
-        path: 'admin',
-        loadChildren: () => import('./components/admin/admin.module').then(m => m.AdminModule),
-        canActivate: [AdminGuard]
-      },
+      // DISABLED: Admin Routes (System Config) - reduce usage
+      // {
+      //   path: 'admin',
+      //   loadChildren: () => import('./components/admin/admin.module').then(m => m.AdminModule),
+      //   canActivate: [AdminGuard]
+      // },
 
-      // Inventory Routes - Lazy Loaded
-      {
-        path: 'inventory',
-        loadChildren: () => import('./components/inventory/inventory.module').then(m => m.InventoryModule),
-        canActivate: [DispatcherGuard]
-      },
+      // DISABLED: Inventory Routes - reduce usage
+      // {
+      //   path: 'inventory',
+      //   loadChildren: () => import('./components/inventory/inventory.module').then(m => m.InventoryModule),
+      //   canActivate: [DispatcherGuard]
+      // },
 
-      // Travel Routes - Lazy Loaded
-      {
-        path: 'travel',
-        loadChildren: () => import('./components/travel/travel.module').then(m => m.TravelModule),
-        canActivate: [DispatcherGuard]
-      },
+      // DISABLED: Travel Routes - reduce usage
+      // {
+      //   path: 'travel',
+      //   loadChildren: () => import('./components/travel/travel.module').then(m => m.TravelModule),
+      //   canActivate: [DispatcherGuard]
+      // },
 
-      // Materials Routes - Lazy Loaded
-      {
-        path: 'materials',
-        loadChildren: () => import('./components/materials/materials.module').then(m => m.MaterialsModule),
-        canActivate: [DispatcherGuard]
-      },
+      // DISABLED: Materials Routes - reduce usage
+      // {
+      //   path: 'materials',
+      //   loadChildren: () => import('./components/materials/materials.module').then(m => m.MaterialsModule),
+      //   canActivate: [DispatcherGuard]
+      // },
 
       // Onboarding Routes - Lazy Loaded
       {
@@ -238,11 +238,11 @@ const routes: Routes = [
         canActivate: [DispatcherGuard]
       },
 
-      // PTO Routes - Lazy Loaded
-      {
-        path: 'pto',
-        loadChildren: () => import('./components/pto/pto.module').then(m => m.PtoModule)
-      }
+      // DISABLED: PTO Routes - reduce usage
+      // {
+      //   path: 'pto',
+      //   loadChildren: () => import('./components/pto/pto.module').then(m => m.PtoModule)
+      // }
     ]
   }
 ];
