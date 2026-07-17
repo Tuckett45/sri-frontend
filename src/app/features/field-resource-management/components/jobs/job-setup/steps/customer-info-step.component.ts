@@ -5,8 +5,11 @@ import { takeUntil } from 'rxjs/operators';
 
 /**
  * Custom validator: ensures date is today or in the future.
+ * Accepts an optional `allowedPastDate` parameter — if the control's value
+ * matches this date (e.g. a pre-populated value loaded from an existing job),
+ * the validator will pass even though the date is in the past.
  */
-function minDateTodayValidator(): ValidatorFn {
+function minDateTodayValidator(allowedPastDate?: Date | null): ValidatorFn {
   return (control: AbstractControl): { [key: string]: any } | null => {
     if (!control.value) {
       return null; // let required validator handle empty
@@ -15,7 +18,21 @@ function minDateTodayValidator(): ValidatorFn {
     today.setHours(0, 0, 0, 0);
     const selected = new Date(control.value);
     selected.setHours(0, 0, 0, 0);
-    return selected < today ? { minDate: { min: today, actual: selected } } : null;
+
+    if (selected >= today) {
+      return null;
+    }
+
+    // Allow the originally-loaded past date to pass validation
+    if (allowedPastDate) {
+      const allowed = new Date(allowedPastDate);
+      allowed.setHours(0, 0, 0, 0);
+      if (selected.getTime() === allowed.getTime()) {
+        return null;
+      }
+    }
+
+    return { minDate: { min: today, actual: selected } };
   };
 }
 
@@ -113,7 +130,7 @@ function minDateTodayValidator(): ValidatorFn {
 
       <mat-form-field appearance="outline">
         <mat-label>Target Start Date</mat-label>
-        <input matInput [matDatepicker]="startDatePicker" formControlName="targetStartDate" [min]="minDate" />
+        <input matInput [matDatepicker]="startDatePicker" formControlName="targetStartDate" [min]="effectiveMinDate" />
         <mat-datepicker-toggle matIconSuffix [for]="startDatePicker"></mat-datepicker-toggle>
         <mat-datepicker #startDatePicker></mat-datepicker>
         <mat-error *ngIf="formGroup.get('targetStartDate')?.hasError('required')">Start date is required</mat-error>
@@ -196,10 +213,25 @@ function minDateTodayValidator(): ValidatorFn {
 export class CustomerInfoStepComponent implements OnInit, OnDestroy {
   @Input() formGroup!: FormGroup;
 
+  /**
+   * When true, the component will allow a pre-populated past date to pass
+   * validation. Use this when loading an existing job (draft restore,
+   * document import, or edit mode) whose target start date is already
+   * in the past.
+   */
+  @Input() allowPastDate = false;
+
   private destroy$ = new Subject<void>();
 
   /** Minimum selectable date (today) */
   minDate = new Date();
+
+  /**
+   * Effective minimum date for the datepicker widget.
+   * When a past date is pre-loaded and allowed, we remove the min
+   * constraint so the datepicker doesn't highlight it as invalid.
+   */
+  effectiveMinDate: Date | null = new Date();
 
   /** US state abbreviations for the state dropdown */
   states = [
@@ -237,7 +269,20 @@ export class CustomerInfoStepComponent implements OnInit, OnDestroy {
     controls['pocName']?.setValidators([Validators.required]);
     controls['pocPhone']?.setValidators([Validators.required, Validators.pattern(/^\d{10}$/)]);
     controls['pocEmail']?.setValidators([Validators.required, Validators.email]);
-    controls['targetStartDate']?.setValidators([Validators.required, minDateTodayValidator()]);
+
+    // Determine if the pre-populated date should be allowed through validation.
+    // When allowPastDate is true and the form already has a date value, we pass
+    // that date to the validator so it won't flag the pre-existing value as invalid.
+    const existingDate = controls['targetStartDate']?.value;
+    let allowedDate: Date | null = null;
+    if (this.allowPastDate && existingDate) {
+      allowedDate = new Date(existingDate);
+      // Also remove the datepicker's min constraint so the field
+      // doesn't show a red outline from the native material datepicker
+      this.effectiveMinDate = null;
+    }
+
+    controls['targetStartDate']?.setValidators([Validators.required, minDateTodayValidator(allowedDate)]);
     controls['authorizationStatus']?.setValidators([Validators.required]);
     controls['hasPurchaseOrders']?.setValidators([Validators.required]);
 
