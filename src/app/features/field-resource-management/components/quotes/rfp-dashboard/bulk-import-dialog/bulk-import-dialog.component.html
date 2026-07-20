@@ -11,7 +11,8 @@
       <p class="step-description">
         Upload a CSV or Excel (.xlsx) file matching the RFP Quote Tracker template.
         The file should contain columns for Customer, Project Description, Requester's Name,
-        RFP Receive Date, Quote Due Date, Assigned, Quote Submitted, Quote Number, and Notes.
+        RFP Receive Date, Quote Due Date, Assigned, Quote Submitted, Quote Number, PO Number,
+        PO Received Date, PO Amount, and Notes.
       </p>
 
       <!-- Drop Zone -->
@@ -155,6 +156,28 @@
           <ng-container matColumnDef="quoteNumber">
             <th mat-header-cell *matHeaderCellDef>Quote #</th>
             <td mat-cell *matCellDef="let row">{{ row.quoteNumber }}</td>
+          </ng-container>
+
+          <!-- PO Number Column -->
+          <ng-container matColumnDef="poNumber">
+            <th mat-header-cell *matHeaderCellDef>PO #</th>
+            <td mat-cell *matCellDef="let row">{{ row.poNumber }}</td>
+          </ng-container>
+
+          <!-- PO Received Date Column -->
+          <ng-container matColumnDef="poReceivedDate">
+            <th mat-header-cell *matHeaderCellDef>PO Received</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.poReceivedDate ? (row.poReceivedDate | date:'shortDate') : '-' }}
+            </td>
+          </ng-container>
+
+          <!-- PO Amount Column -->
+          <ng-container matColumnDef="poAmount">
+            <th mat-header-cell *matHeaderCellDef>PO Amount</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.poAmount !== null ? (row.poAmount | currency:'USD':'symbol':'1.2-2') : '-' }}
+            </td>
           </ng-container>
 
           <!-- Notes Column -->

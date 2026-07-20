@@ -348,6 +348,9 @@ export interface BulkImportRecord {
   assignedTo: string;
   quoteSubmittedDate: string | null;
   quoteNumber: string;
+  poNumber: string;
+  poReceivedDate: string | null;
+  poAmount: number | null;
   notes: string;
 }
 

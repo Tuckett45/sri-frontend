@@ -17,7 +17,8 @@ import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
  *
  * Template columns expected:
  *   Customer | Project Description | Requester's Name | RFP Receive Date |
- *   Quote Due Date | Assigned | Quote Submitted | Quote Number | Notes
+ *   Quote Due Date | Assigned | Quote Submitted | Quote Number | PO Number |
+ *   PO Received Date | PO Amount | Notes
  */
 
 export interface BulkImportRow {
@@ -29,6 +30,9 @@ export interface BulkImportRow {
   assignedTo: string;
   quoteSubmittedDate: string | null;
   quoteNumber: string;
+  poNumber: string;
+  poReceivedDate: string | null;
+  poAmount: number | null;
   notes: string;
   isValid: boolean;
   errors: string[];
@@ -71,6 +75,9 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
     'assignedTo',
     'quoteSubmittedDate',
     'quoteNumber',
+    'poNumber',
+    'poReceivedDate',
+    'poAmount',
     'notes'
   ];
 
@@ -89,6 +96,16 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
     'quote submitted': 'quoteSubmittedDate',
     'quote submitted date': 'quoteSubmittedDate',
     'quote number': 'quoteNumber',
+    'po number': 'poNumber',
+    'po #': 'poNumber',
+    'po': 'poNumber',
+    'purchase order': 'poNumber',
+    'purchase order number': 'poNumber',
+    'po received date': 'poReceivedDate',
+    'po received': 'poReceivedDate',
+    'po date received': 'poReceivedDate',
+    'po amount': 'poAmount',
+    'purchase order amount': 'poAmount',
     'notes': 'notes'
   };
 
@@ -248,6 +265,9 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
       assignedTo: '',
       quoteSubmittedDate: null,
       quoteNumber: '',
+      poNumber: '',
+      poReceivedDate: null,
+      poAmount: null,
       notes: '',
       isValid: true,
       errors: []
@@ -260,8 +280,11 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
 
       if (mappedField && value !== undefined && value !== null) {
         const strValue = String(value).trim();
-        if (mappedField === 'rfpReceiveDate' || mappedField === 'quoteDueDate' || mappedField === 'quoteSubmittedDate') {
+        if (mappedField === 'rfpReceiveDate' || mappedField === 'quoteDueDate' || mappedField === 'quoteSubmittedDate' || mappedField === 'poReceivedDate') {
           (row as any)[mappedField] = this.parseDate(strValue);
+        } else if (mappedField === 'poAmount') {
+          const parsed = parseFloat(strValue.replace(/[^0-9.\-]/g, ''));
+          (row as any)[mappedField] = isNaN(parsed) ? null : parsed;
         } else {
           (row as any)[mappedField] = strValue;
         }
@@ -339,6 +362,9 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
       assignedTo: row.assignedTo,
       quoteSubmittedDate: row.quoteSubmittedDate,
       quoteNumber: row.quoteNumber,
+      poNumber: row.poNumber,
+      poReceivedDate: row.poReceivedDate,
+      poAmount: row.poAmount,
       notes: row.notes
     }));
 
@@ -391,8 +417,8 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
    * Download a sample template CSV
    */
   downloadTemplate(): void {
-    const headers = 'Customer,Project Description,Requester\'s Name,RFP Receive Date,Quote Due Date,Assigned,Quote Submitted,Quote Number,Notes';
-    const sampleRow = 'Comcast - TX,TX Brenham IT Switch,John Smith,1/5/26,1/12/26,Kevin Thibodeaux,1/5/26,87016,';
+    const headers = 'Customer,Project Description,Requester\'s Name,RFP Receive Date,Quote Due Date,Assigned,Quote Submitted,Quote Number,PO Number,PO Received Date,PO Amount,Notes';
+    const sampleRow = 'Comcast - TX,TX Brenham IT Switch,John Smith,1/5/26,1/12/26,Kevin Thibodeaux,1/5/26,87016,PO-2026-001,1/10/26,15000,';
     const csv = `${headers}\n${sampleRow}\n`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
