@@ -15,10 +15,17 @@ import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
  * the RFP Quote Tracker template, preview parsed records, and bulk-create
  * RFP entries in the system.
  *
+ * Records are automatically categorized into the correct workflow phase
+ * (RFP, PO Tracking, or Project Tracking) based on the fields provided:
+ * - Job data (Job Number, Job Start, Job Complete, Invoice) → Project Tracking
+ * - PO data (PO Number, PO Received Date, PO Amount) → PO Tracking
+ * - Otherwise → RFP
+ *
  * Template columns expected:
  *   Customer | Project Description | Requester's Name | RFP Receive Date |
  *   Quote Due Date | Assigned | Quote Submitted | Quote Number | PO Number |
- *   PO Received Date | PO Amount | Notes
+ *   PO Received Date | PO Amount | Job Number | Job Start | Job Complete |
+ *   Invoice Number | Notes
  */
 
 export interface BulkImportRow {
@@ -33,7 +40,13 @@ export interface BulkImportRow {
   poNumber: string;
   poReceivedDate: string | null;
   poAmount: number | null;
+  jobNumber: string;
+  jobStart: string | null;
+  jobComplete: string | null;
+  invoiceNumber: string;
   notes: string;
+  /** Inferred workflow phase based on populated fields */
+  inferredPhase: 'rfp' | 'poTracking' | 'projectTracking';
   isValid: boolean;
   errors: string[];
 }
@@ -55,6 +68,11 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
   invalidCount = 0;
   totalCount = 0;
 
+  /** Phase breakdown counts */
+  rfpCount = 0;
+  poTrackingCount = 0;
+  projectTrackingCount = 0;
+
   /** Import progress */
   importProgress = 0;
   importedCount = 0;
@@ -67,6 +85,7 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
   /** Displayed columns for the preview table */
   displayedColumns: string[] = [
     'status',
+    'inferredPhase',
     'customer',
     'projectDescription',
     'requestorName',
@@ -78,6 +97,10 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
     'poNumber',
     'poReceivedDate',
     'poAmount',
+    'jobNumber',
+    'jobStart',
+    'jobComplete',
+    'invoiceNumber',
     'notes'
   ];
 
@@ -106,6 +129,17 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
     'po date received': 'poReceivedDate',
     'po amount': 'poAmount',
     'purchase order amount': 'poAmount',
+    'job number': 'jobNumber',
+    'job #': 'jobNumber',
+    'sri job number': 'jobNumber',
+    'job start': 'jobStart',
+    'job start date': 'jobStart',
+    'job complete': 'jobComplete',
+    'job complete date': 'jobComplete',
+    'job completed': 'jobComplete',
+    'invoice number': 'invoiceNumber',
+    'invoice #': 'invoiceNumber',
+    'invoice': 'invoiceNumber',
     'notes': 'notes'
   };
 
@@ -244,6 +278,9 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
     this.totalCount = this.parsedRows.length;
     this.validCount = this.parsedRows.filter(r => r.isValid).length;
     this.invalidCount = this.parsedRows.filter(r => !r.isValid).length;
+    this.rfpCount = this.parsedRows.filter(r => r.isValid && r.inferredPhase === 'rfp').length;
+    this.poTrackingCount = this.parsedRows.filter(r => r.isValid && r.inferredPhase === 'poTracking').length;
+    this.projectTrackingCount = this.parsedRows.filter(r => r.isValid && r.inferredPhase === 'projectTracking').length;
 
     if (this.totalCount === 0) {
       this.fileError = 'No valid data rows found. Please check the file format.';
@@ -268,7 +305,12 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
       poNumber: '',
       poReceivedDate: null,
       poAmount: null,
+      jobNumber: '',
+      jobStart: null,
+      jobComplete: null,
+      invoiceNumber: '',
       notes: '',
+      inferredPhase: 'rfp',
       isValid: true,
       errors: []
     };
@@ -280,7 +322,7 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
 
       if (mappedField && value !== undefined && value !== null) {
         const strValue = String(value).trim();
-        if (mappedField === 'rfpReceiveDate' || mappedField === 'quoteDueDate' || mappedField === 'quoteSubmittedDate' || mappedField === 'poReceivedDate') {
+        if (mappedField === 'rfpReceiveDate' || mappedField === 'quoteDueDate' || mappedField === 'quoteSubmittedDate' || mappedField === 'poReceivedDate' || mappedField === 'jobStart' || mappedField === 'jobComplete') {
           (row as any)[mappedField] = this.parseDate(strValue);
         } else if (mappedField === 'poAmount') {
           const parsed = parseFloat(strValue.replace(/[^0-9.\-]/g, ''));
@@ -308,6 +350,41 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
     }
 
     row.isValid = row.errors.length === 0;
+
+    // Infer the workflow phase based on populated fields
+    row.inferredPhase = this.inferPhase(row);
+  }
+
+  /**
+   * Infer which workflow phase a row belongs to based on its populated fields.
+   *
+   * Logic:
+   * - If job-related fields are present (jobNumber, jobStart, jobComplete, invoiceNumber)
+   *   → Project Tracking
+   * - If PO-related fields are present (poNumber, poReceivedDate, poAmount)
+   *   → PO Tracking
+   * - Otherwise → RFP
+   */
+  private inferPhase(row: BulkImportRow): 'rfp' | 'poTracking' | 'projectTracking' {
+    const hasJobData = !!(row.jobNumber || row.jobStart || row.jobComplete || row.invoiceNumber);
+    const hasPoData = !!(row.poNumber || row.poReceivedDate || row.poAmount);
+
+    if (hasJobData) return 'projectTracking';
+    if (hasPoData) return 'poTracking';
+    return 'rfp';
+  }
+
+  /**
+   * Map the inferred phase to the appropriate workflow status string
+   * that the backend uses for categorization.
+   */
+  private mapPhaseToStatus(phase: 'rfp' | 'poTracking' | 'projectTracking'): string {
+    switch (phase) {
+      case 'projectTracking': return 'Project_Active';
+      case 'poTracking': return 'PO_Received';
+      case 'rfp':
+      default: return 'Draft';
+    }
   }
 
   /**
@@ -365,6 +442,11 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
       poNumber: row.poNumber,
       poReceivedDate: row.poReceivedDate,
       poAmount: row.poAmount,
+      jobNumber: row.jobNumber,
+      jobStart: row.jobStart,
+      jobComplete: row.jobComplete,
+      invoiceNumber: row.invoiceNumber,
+      workflowStatus: this.mapPhaseToStatus(row.inferredPhase),
       notes: row.notes
     }));
 
@@ -417,9 +499,11 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
    * Download a sample template CSV
    */
   downloadTemplate(): void {
-    const headers = 'Customer,Project Description,Requester\'s Name,RFP Receive Date,Quote Due Date,Assigned,Quote Submitted,Quote Number,PO Number,PO Received Date,PO Amount,Notes';
-    const sampleRow = 'Comcast - TX,TX Brenham IT Switch,John Smith,1/5/26,1/12/26,Kevin Thibodeaux,1/5/26,87016,PO-2026-001,1/10/26,15000,';
-    const csv = `${headers}\n${sampleRow}\n`;
+    const headers = 'Customer,Project Description,Requester\'s Name,RFP Receive Date,Quote Due Date,Assigned,Quote Submitted,Quote Number,PO Number,PO Received Date,PO Amount,Job Number,Job Start,Job Complete,Invoice Number,Notes';
+    const sampleRow1 = 'Comcast - TX,TX Brenham IT Switch,John Smith,1/5/26,1/12/26,Kevin Thibodeaux,1/5/26,87016,,,,,,,,"RFP phase example"';
+    const sampleRow2 = 'AT&T - FL,FL Tampa Fiber Run,Jane Doe,12/15/25,12/22/25,Mike Johnson,12/18/25,87020,PO-2026-002,1/3/26,25000,,,,,"PO Tracking example"';
+    const sampleRow3 = 'Verizon - CA,CA Site Survey,Bob Wilson,11/1/25,11/8/25,Sarah Lee,11/5/25,87025,PO-2025-050,11/10/25,18000,SRI-4521,11/15/25,,,"Project Tracking example"';
+    const csv = `${headers}\n${sampleRow1}\n${sampleRow2}\n${sampleRow3}\n`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

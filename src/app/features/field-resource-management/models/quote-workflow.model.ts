@@ -351,6 +351,11 @@ export interface BulkImportRecord {
   poNumber: string;
   poReceivedDate: string | null;
   poAmount: number | null;
+  jobNumber: string;
+  jobStart: string | null;
+  jobComplete: string | null;
+  invoiceNumber: string;
+  workflowStatus: string;
   notes: string;
 }
 

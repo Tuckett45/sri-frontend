@@ -10,9 +10,8 @@
     <div *ngIf="step === 'upload'" class="upload-step">
       <p class="step-description">
         Upload a CSV or Excel (.xlsx) file matching the RFP Quote Tracker template.
-        The file should contain columns for Customer, Project Description, Requester's Name,
-        RFP Receive Date, Quote Due Date, Assigned, Quote Submitted, Quote Number, PO Number,
-        PO Received Date, PO Amount, and Notes.
+        Records will be automatically categorized into RFP, PO Tracking, or Project Tracking
+        based on the fields provided. Include PO details for PO Tracking, or job details for Project Tracking.
       </p>
 
       <!-- Drop Zone -->
@@ -87,6 +86,14 @@
         </div>
       </div>
 
+      <!-- Phase Breakdown -->
+      <div class="phase-summary" *ngIf="validCount > 0">
+        <span class="phase-summary-label">Will import to:</span>
+        <span class="phase-badge phase-rfp" *ngIf="rfpCount > 0">RFP ({{ rfpCount }})</span>
+        <span class="phase-badge phase-poTracking" *ngIf="poTrackingCount > 0">PO Tracking ({{ poTrackingCount }})</span>
+        <span class="phase-badge phase-projectTracking" *ngIf="projectTrackingCount > 0">Project Tracking ({{ projectTrackingCount }})</span>
+      </div>
+
       <!-- Preview Table -->
       <div class="table-container">
         <table mat-table [dataSource]="parsedRows" class="preview-table">
@@ -97,6 +104,16 @@
               <mat-icon *ngIf="row.isValid" class="status-valid">check_circle</mat-icon>
               <mat-icon *ngIf="!row.isValid" class="status-invalid"
                         [matTooltip]="row.errors.join(', ')">error</mat-icon>
+            </td>
+          </ng-container>
+
+          <!-- Inferred Phase Column -->
+          <ng-container matColumnDef="inferredPhase">
+            <th mat-header-cell *matHeaderCellDef>Phase</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="phase-badge" [ngClass]="'phase-' + row.inferredPhase">
+                {{ row.inferredPhase === 'rfp' ? 'RFP' : row.inferredPhase === 'poTracking' ? 'PO Tracking' : 'Project' }}
+              </span>
             </td>
           </ng-container>
 
@@ -178,6 +195,34 @@
             <td mat-cell *matCellDef="let row">
               {{ row.poAmount !== null ? (row.poAmount | currency:'USD':'symbol':'1.2-2') : '-' }}
             </td>
+          </ng-container>
+
+          <!-- Job Number Column -->
+          <ng-container matColumnDef="jobNumber">
+            <th mat-header-cell *matHeaderCellDef>Job #</th>
+            <td mat-cell *matCellDef="let row">{{ row.jobNumber || '-' }}</td>
+          </ng-container>
+
+          <!-- Job Start Column -->
+          <ng-container matColumnDef="jobStart">
+            <th mat-header-cell *matHeaderCellDef>Job Start</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.jobStart ? (row.jobStart | date:'shortDate') : '-' }}
+            </td>
+          </ng-container>
+
+          <!-- Job Complete Column -->
+          <ng-container matColumnDef="jobComplete">
+            <th mat-header-cell *matHeaderCellDef>Job Complete</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.jobComplete ? (row.jobComplete | date:'shortDate') : '-' }}
+            </td>
+          </ng-container>
+
+          <!-- Invoice Number Column -->
+          <ng-container matColumnDef="invoiceNumber">
+            <th mat-header-cell *matHeaderCellDef>Invoice #</th>
+            <td mat-cell *matCellDef="let row">{{ row.invoiceNumber || '-' }}</td>
           </ng-container>
 
           <!-- Notes Column -->
