@@ -26,6 +26,12 @@ export class DeploymentNotificationIntegratorService implements OnDestroy {
    * Should be called once when the app starts
    */
   async initialize(): Promise<void> {
+    // DISABLED: Push subscriptions (push-subscriptions 401) and SignalR socket
+    // connections disabled to reduce API noise. Re-enable when these services
+    // are active.
+    console.log('📵 Notification integrator disabled to reduce API usage');
+    return;
+
     if (this.isInitialized) {
       console.log('⚠️ Notification integrator already initialized');
       return;

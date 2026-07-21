@@ -8,7 +8,7 @@ export const environment = {
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
   enableSignalR: false, // DISABLED: Azure SignalR instance deleted
-  googleAnalyticsId: 'G-XXXXXXXXXX' // Replace with actual GA4 Measurement ID
+  googleAnalyticsId: undefined // DISABLED: placeholder ID — set to real GA4 ID to re-enable
 };
 
 //Staging
@@ -21,7 +21,7 @@ export const staging_environment = {
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
   enableSignalR: false, // DISABLED: Azure SignalR instance deleted
-  googleAnalyticsId: 'G-XXXXXXXXXX' // Replace with actual GA4 Measurement ID for staging
+  googleAnalyticsId: undefined // DISABLED: placeholder ID — set to real GA4 ID to re-enable
 };
 
 // Local server

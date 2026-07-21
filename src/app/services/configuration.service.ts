@@ -243,61 +243,50 @@ export class ConfigurationService {
    * Fetch configuration from backend with retry logic
    */
   private async fetchConfiguration(): Promise<RuntimeConfiguration> {
+    // DISABLED: Backend config endpoints (/config/runtime, /configuration/runtime, /app/config)
+    // return 404 — skip network fetch and go straight to fallback config.
+    // Re-enable by removing the early return and restoring the block below.
+    console.log('📋 Using fallback configuration (backend config endpoints disabled)');
+    return this.fallbackConfig;
+
+    // --- DISABLED BLOCK START ---
     // Check cache first
-    if (this.configCache && this.isCacheValid()) {
-      console.log('📋 Using cached configuration');
-      return this.configCache;
-    }
-
-    // Try to fetch from real backend endpoints first
-    const endpoints = this.getConfigurationEndpoints();
-    let lastError: Error | null = null;
-
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`🌐 Fetching configuration from: ${endpoint}`);
-        
-        const config = await firstValueFrom(this.http.get<RuntimeConfiguration>(endpoint));
-
-        if (!config) {
-          throw new Error('Empty configuration response');
-        }
-
-        // Validate the configuration
-        if (this.validateConfiguration(config)) {
-          this.configCache = config;
-          this.lastFetchTime = new Date();
-          this.useMockService = false;
-          console.log('✅ Configuration fetched and validated successfully');
-          return config;
-        }
-      } catch (error) {
-        lastError = error as Error;
-        console.warn(`⚠️ Failed to fetch configuration from ${endpoint}:`, error);
-        continue; // Try next endpoint
-      }
-    }
-
-    // If all backend endpoints failed, try mock service for development
-    if (!environment.production) {
-      try {
-        console.log('🔧 Backend endpoints failed, using mock configuration for development');
-        const mockConfig = await firstValueFrom(this.mockConfigService.getRuntimeConfiguration());
-        
-        if (this.validateConfiguration(mockConfig)) {
-          this.configCache = mockConfig;
-          this.lastFetchTime = new Date();
-          this.useMockService = true;
-          console.log('✅ Mock configuration loaded successfully');
-          return mockConfig;
-        }
-      } catch (mockError) {
-        console.error('❌ Mock configuration also failed:', mockError);
-      }
-    }
-
-    // If everything failed, throw the last error
-    throw lastError || new Error('All configuration endpoints failed');
+    // if (this.configCache && this.isCacheValid()) {
+    //   console.log('📋 Using cached configuration');
+    //   return this.configCache;
+    // }
+    // const endpoints = this.getConfigurationEndpoints();
+    // let lastError: Error | null = null;
+    // for (const endpoint of endpoints) {
+    //   try {
+    //     console.log(`🌐 Fetching configuration from: ${endpoint}`);
+    //     const config = await firstValueFrom(this.http.get<RuntimeConfiguration>(endpoint));
+    //     if (!config) { throw new Error('Empty configuration response'); }
+    //     if (this.validateConfiguration(config)) {
+    //       this.configCache = config;
+    //       this.lastFetchTime = new Date();
+    //       this.useMockService = false;
+    //       return config;
+    //     }
+    //   } catch (error) {
+    //     lastError = error as Error;
+    //     console.warn(`⚠️ Failed to fetch from ${endpoint}:`, error);
+    //     continue;
+    //   }
+    // }
+    // if (!environment.production) {
+    //   try {
+    //     const mockConfig = await firstValueFrom(this.mockConfigService.getRuntimeConfiguration());
+    //     if (this.validateConfiguration(mockConfig)) {
+    //       this.configCache = mockConfig;
+    //       this.lastFetchTime = new Date();
+    //       this.useMockService = true;
+    //       return mockConfig;
+    //     }
+    //   } catch (mockError) { console.error('❌ Mock configuration also failed:', mockError); }
+    // }
+    // throw lastError || new Error('All configuration endpoints failed');
+    // --- DISABLED BLOCK END ---
   }
 
   /**
