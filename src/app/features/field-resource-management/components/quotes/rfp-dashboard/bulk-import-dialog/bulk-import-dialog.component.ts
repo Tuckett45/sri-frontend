@@ -17,8 +17,9 @@ import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
  *
  * Records are automatically categorized into the correct workflow phase
  * (RFP, PO Tracking, or Project Tracking) based on the fields provided:
+ * - PO Number present → Project Tracking (auto-converted to active Job)
  * - Job data (Job Number, Job Start, Job Complete, Invoice) → Project Tracking
- * - PO data (PO Number, PO Received Date, PO Amount) → PO Tracking
+ * - PO tracking fields without PO Number (PO Received Date, PO Amount) → PO Tracking
  * - Otherwise → RFP
  *
  * Template columns expected:
@@ -359,18 +360,20 @@ export class BulkImportDialogComponent implements OnInit, OnDestroy {
    * Infer which workflow phase a row belongs to based on its populated fields.
    *
    * Logic:
+   * - If PO number is present → Project Tracking (PO means active project)
    * - If job-related fields are present (jobNumber, jobStart, jobComplete, invoiceNumber)
    *   → Project Tracking
-   * - If PO-related fields are present (poNumber, poReceivedDate, poAmount)
-   *   → PO Tracking
+   * - If other PO-related fields are present without PO number (poReceivedDate, poAmount)
+   *   → PO Tracking (awaiting PO)
    * - Otherwise → RFP
    */
   private inferPhase(row: BulkImportRow): 'rfp' | 'poTracking' | 'projectTracking' {
+    const hasPoNumber = !!row.poNumber;
     const hasJobData = !!(row.jobNumber || row.jobStart || row.jobComplete || row.invoiceNumber);
-    const hasPoData = !!(row.poNumber || row.poReceivedDate || row.poAmount);
+    const hasPoTrackingData = !!(row.poReceivedDate || row.poAmount);
 
-    if (hasJobData) return 'projectTracking';
-    if (hasPoData) return 'poTracking';
+    if (hasPoNumber || hasJobData) return 'projectTracking';
+    if (hasPoTrackingData) return 'poTracking';
     return 'rfp';
   }
 
