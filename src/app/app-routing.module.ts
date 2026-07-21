@@ -61,12 +61,13 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     data: { preload: true }
   },
-  {
-    path: 'admin-dashboard',
-    loadChildren: () => import('./features/admin-dashboard/admin-dashboard.module').then(m => m.AdminDashboardModule),
-    canActivate: [AuthGuard],
-    data: { preload: false }
-  },
+  // DISABLED: Admin Dashboard - reduce usage
+  // {
+  //   path: 'admin-dashboard',
+  //   loadChildren: () => import('./features/admin-dashboard/admin-dashboard.module').then(m => m.AdminDashboardModule),
+  //   canActivate: [AuthGuard],
+  //   data: { preload: false }
+  // },
   {
     path: 'construction',
     loadChildren: () => import('./features/construction-integration/construction-integration.module').then(m => m.ConstructionIntegrationModule),

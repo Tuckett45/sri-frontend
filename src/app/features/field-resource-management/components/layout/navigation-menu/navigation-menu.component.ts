@@ -104,73 +104,74 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       resource: 'technicians',
       action: 'read'
     },
-    {
-      label: 'Reports & Analytics',
-      icon: 'bar_chart',
-      route: '/field-resource-management/reports',
-      resource: 'reports',
-      action: 'read'
-    },
-    {
-      label: 'Budget Dashboard',
-      icon: 'account_balance_wallet',
-      route: '/field-resource-management/reports/budget-dashboard',
-      resource: 'reports',
-      action: 'read'
-    },
-    {
-      label: 'Travel',
-      icon: 'flight',
-      route: '/field-resource-management/travel',
-      resource: 'travel_profiles',
-      action: 'read'
-    },
-    {
-      label: 'Inventory',
-      icon: 'inventory_2',
-      route: '/field-resource-management/inventory',
-      resource: 'jobs',
-      action: 'read'
-    },
-    {
-      label: 'Materials',
-      icon: 'category',
-      route: '/field-resource-management/materials',
-      resource: 'jobs',
-      action: 'read'
-    },
-    {
-      label: 'Approvals',
-      icon: 'approval',
-      route: '/field-resource-management/approvals',
-      resource: 'approvals',
-      action: 'read',
-      roles: [UserRole.Admin, UserRole.CM, UserRole.Controller, UserRole.OSPCoordinator, UserRole.HR, UserRole.Payroll]
-    },
-    {
-      label: 'System Config',
-      icon: 'admin_panel_settings',
-      route: '/field-resource-management/admin',
-      resource: 'system_config',
-      action: 'read',
-      roles: [UserRole.Admin]
-    },
-    {
-      label: 'My Team',
-      icon: 'group',
-      route: '/field-resource-management/my-team',
-      resource: 'technicians',
-      action: 'read',
-      roles: [UserRole.Admin, UserRole.Manager, UserRole.CM, UserRole.PM, UserRole.DCOps, UserRole.OSPCoordinator, UserRole.EngineeringFieldSupport, UserRole.MaterialsManager]
-    },
-    {
-      label: 'My Timecard',
-      icon: 'schedule',
-      route: '/field-resource-management/timecard',
-      resource: 'time_entries',
-      action: 'read'
-      // Available to all authenticated users
-    },
+    // DISABLED: Features commented out to reduce API/DB usage
+    // {
+    //   label: 'Reports & Analytics',
+    //   icon: 'bar_chart',
+    //   route: '/field-resource-management/reports',
+    //   resource: 'reports',
+    //   action: 'read'
+    // },
+    // {
+    //   label: 'Budget Dashboard',
+    //   icon: 'account_balance_wallet',
+    //   route: '/field-resource-management/reports/budget-dashboard',
+    //   resource: 'reports',
+    //   action: 'read'
+    // },
+    // {
+    //   label: 'Travel',
+    //   icon: 'flight',
+    //   route: '/field-resource-management/travel',
+    //   resource: 'travel_profiles',
+    //   action: 'read'
+    // },
+    // {
+    //   label: 'Inventory',
+    //   icon: 'inventory_2',
+    //   route: '/field-resource-management/inventory',
+    //   resource: 'jobs',
+    //   action: 'read'
+    // },
+    // {
+    //   label: 'Materials',
+    //   icon: 'category',
+    //   route: '/field-resource-management/materials',
+    //   resource: 'jobs',
+    //   action: 'read'
+    // },
+    // {
+    //   label: 'Approvals',
+    //   icon: 'approval',
+    //   route: '/field-resource-management/approvals',
+    //   resource: 'approvals',
+    //   action: 'read',
+    //   roles: [UserRole.Admin, UserRole.CM, UserRole.Controller, UserRole.OSPCoordinator, UserRole.HR, UserRole.Payroll]
+    // },
+    // {
+    //   label: 'System Config',
+    //   icon: 'admin_panel_settings',
+    //   route: '/field-resource-management/admin',
+    //   resource: 'system_config',
+    //   action: 'read',
+    //   roles: [UserRole.Admin]
+    // },
+    // {
+    //   label: 'My Team',
+    //   icon: 'group',
+    //   route: '/field-resource-management/my-team',
+    //   resource: 'technicians',
+    //   action: 'read',
+    //   roles: [UserRole.Admin, UserRole.Manager, UserRole.CM, UserRole.PM, UserRole.DCOps, UserRole.OSPCoordinator, UserRole.EngineeringFieldSupport, UserRole.MaterialsManager]
+    // },
+    // {
+    //   label: 'My Timecard',
+    //   icon: 'schedule',
+    //   route: '/field-resource-management/timecard',
+    //   resource: 'time_entries',
+    //   action: 'read'
+    //   // Available to all authenticated users
+    // },
     {
       label: 'Timecard Management',
       icon: 'fact_check',
@@ -187,36 +188,39 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       action: 'read',
       roles: [UserRole.Admin, UserRole.Technician]
     },
-    {
-      label: 'CM Dashboard',
-      icon: 'business',
-      route: '/field-resource-management/cm/dashboard',
-      resource: 'kpis',
-      action: 'read',
-      roles: [UserRole.Admin, UserRole.CM, UserRole.Controller, UserRole.OSPCoordinator]
-    },
-    {
-      label: 'Admin Dashboard',
-      icon: 'dashboard_customize',
-      route: '/field-resource-management/admin-dashboard',
-      resource: 'kpis',
-      action: 'read',
-      roles: [UserRole.Admin]
-    },
+    // DISABLED: CM Dashboard - service deleted
+    // {
+    //   label: 'CM Dashboard',
+    //   icon: 'business',
+    //   route: '/field-resource-management/cm/dashboard',
+    //   resource: 'kpis',
+    //   action: 'read',
+    //   roles: [UserRole.Admin, UserRole.CM, UserRole.Controller, UserRole.OSPCoordinator]
+    // },
+    // DISABLED: Admin Dashboard - service deleted
+    // {
+    //   label: 'Admin Dashboard',
+    //   icon: 'dashboard_customize',
+    //   route: '/field-resource-management/admin-dashboard',
+    //   resource: 'kpis',
+    //   action: 'read',
+    //   roles: [UserRole.Admin]
+    // },
     {
       label: 'Onboarding',
       icon: 'person_add',
       route: '/field-resource-management/onboarding',
       frmPermission: 'canManageOnboarding'
     },
-    {
-      label: 'PTO Requests',
-      icon: 'event_busy',
-      route: '/field-resource-management/pto',
-      resource: 'time_entries',
-      action: 'read'
-      // Available to all authenticated users
-    },
+    // DISABLED: PTO Requests - service deleted
+    // {
+    //   label: 'PTO Requests',
+    //   icon: 'event_busy',
+    //   route: '/field-resource-management/pto',
+    //   resource: 'time_entries',
+    //   action: 'read'
+    //   // Available to all authenticated users
+    // },
     {
       label: 'PTO Approvals',
       icon: 'how_to_reg',
