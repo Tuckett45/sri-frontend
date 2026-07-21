@@ -38,17 +38,10 @@ export class LocationBroadcastService implements OnDestroy {
 
   /** Start broadcasting location updates. Safe to call multiple times — idempotent. */
   start(technicianId: string): void {
-    if (this.active) return;
-    this.active = true;
-    this.technicianId = technicianId;
-    this.lastBroadcast = null;
-    this.lastBroadcastTime = 0;
-
-    this.watchId = this.geolocationService.watchPosition(
-      (location) => this.throttledBroadcast(location),
-      (error) => console.warn('[LocationBroadcast] GPS error:', error),
-      true
-    );
+    // DISABLED: Location broadcasting disabled to reduce API usage
+    // With SignalR off, this would fall back to REST PUT every 15s per technician
+    console.log('[LocationBroadcast] Disabled to reduce API usage');
+    return;
   }
 
   /** Stop broadcasting and release the GPS watch. */

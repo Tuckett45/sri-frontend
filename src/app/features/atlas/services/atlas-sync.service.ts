@@ -131,6 +131,12 @@ export class AtlasSyncService implements OnDestroy {
    * Requirements: 8.1
    */
   private initialize(): void {
+    // DISABLED: All polling and sync disabled to reduce API usage
+    // Atlas services (SignalR, sync, consistency checks) are not needed while
+    // the backend SignalR and related services are turned off.
+    console.log('[AtlasSyncService] Sync service disabled to reduce API usage');
+    return;
+
     // Load queued operations from storage
     this.loadQueueFromStorage();
 
