@@ -33,7 +33,8 @@ export class FrmNavMenuComponent implements OnInit, OnDestroy {
     { label: 'Jobs', route: '/field-resource-management/jobs', icon: 'work', permission: 'canStartJob' },
     { label: 'Quotes', route: '/field-resource-management/quotes', icon: 'request_quote', permission: 'canViewQuote' },
     { label: 'Mobile', route: '/field-resource-management/mobile', icon: 'phone_android', permission: 'canTrackTime' },
-    { label: 'Timecards', route: '/field-resource-management/timecard', icon: 'schedule', permission: 'canSubmitTimecard' },
+    // DISABLED: Timecards - commented out
+    // { label: 'Timecards', route: '/field-resource-management/timecard', icon: 'schedule', permission: 'canSubmitTimecard' },
     { label: 'Technicians', route: '/field-resource-management/technicians', icon: 'people', permission: 'canViewAllSchedules' },
     { label: 'Crews', route: '/field-resource-management/crews', icon: 'groups', permission: 'canAssignCrew' },
     { label: 'Schedule', route: '/field-resource-management/schedule', icon: 'calendar_today', permission: 'canEditSchedule' },

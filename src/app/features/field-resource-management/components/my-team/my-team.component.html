@@ -36,11 +36,12 @@
         <div class="summary-value">{{ teamStatus.availableCount }}</div>
         <div class="summary-label">Available</div>
       </div>
-      <div class="summary-card pending" *ngIf="pendingTimecards.length > 0">
+      <!-- DISABLED: Pending Timecards summary card - commented out -->
+      <!-- <div class="summary-card pending" *ngIf="pendingTimecards.length > 0">
         <mat-icon>pending_actions</mat-icon>
         <div class="summary-value">{{ pendingTimecards.length }}</div>
         <div class="summary-label">Pending Timecards</div>
-      </div>
+      </div> -->
     </div>
 
     <!-- Active Entries (Who's Working Now) -->
@@ -79,8 +80,8 @@
       </div>
     </section>
 
-    <!-- Pending Timecards -->
-    <section class="section" *ngIf="pendingTimecards.length > 0">
+    <!-- DISABLED: Pending Timecards section - commented out -->
+    <!-- <section class="section" *ngIf="pendingTimecards.length > 0">
       <h2>
         <mat-icon>receipt_long</mat-icon> Pending Timecards
         <button mat-button color="primary" (click)="navigateToTimecard()">View All</button>
@@ -97,7 +98,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
 
   </ng-container>
 </div>

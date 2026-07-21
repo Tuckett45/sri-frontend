@@ -17,9 +17,11 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { UtilizationReportComponent } from './utilization-report/utilization-report.component';
 import { JobPerformanceReportComponent } from './job-performance-report/job-performance-report.component';
 import { KPICardComponent } from './kpi-card/kpi-card.component';
-import { TimecardDashboardComponent } from './timecard-dashboard/timecard-dashboard.component';
-import { TimecardWeeklyViewComponent } from './timecard-weekly-view/timecard-weekly-view.component';
-import { TimecardManagerViewComponent } from './timecard-manager-view/timecard-manager-view.component';
+// DISABLED: Timecard components - commented out
+// import { TimecardDashboardComponent } from './timecard-dashboard/timecard-dashboard.component';
+// import { TimecardWeeklyViewComponent } from './timecard-weekly-view/timecard-weekly-view.component';
+// DISABLED: TimecardManagerViewComponent - commented out
+// import { TimecardManagerViewComponent } from './timecard-manager-view/timecard-manager-view.component';
 import { CMDashboardComponent } from './cm-dashboard/cm-dashboard.component';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
 import { JobCostReportComponent } from './job-cost-report/job-cost-report.component';
@@ -86,9 +88,10 @@ const routes: Routes = [
     UtilizationReportComponent,
     JobPerformanceReportComponent,
     KPICardComponent,
-    TimecardDashboardComponent,
-    TimecardWeeklyViewComponent,
-    TimecardManagerViewComponent,
+    // DISABLED: Timecard components - commented out
+    // TimecardDashboardComponent,
+    // TimecardWeeklyViewComponent,
+    // TimecardManagerViewComponent,
     CMDashboardComponent,
     AdminDashboardComponent,
     JobCostReportComponent,
@@ -104,8 +107,9 @@ const routes: Routes = [
     RouterModule.forChild(routes)
   ],
   exports: [
-    TimecardDashboardComponent,
-    TimecardManagerViewComponent,
+    // DISABLED: Timecard components - commented out
+    // TimecardDashboardComponent,
+    // TimecardManagerViewComponent,
     CMDashboardComponent,
     AdminDashboardComponent,
     JobCostReportComponent,

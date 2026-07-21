@@ -20,10 +20,11 @@
     <!-- Data state -->
     <ng-container *ngIf="!loading && !error">
       <div *ngIf="counts as c" class="approvals-grid">
-        <div class="approval-item">
+        <!-- DISABLED: Timecards approval item - commented out -->
+        <!-- <div class="approval-item">
           <span class="approval-count">{{ c.pendingTimecards }}</span>
           <span class="approval-label">Timecards</span>
-        </div>
+        </div> -->
         <div class="approval-item">
           <span class="approval-count">{{ c.pendingExpenses }}</span>
           <span class="approval-label">Expenses</span>

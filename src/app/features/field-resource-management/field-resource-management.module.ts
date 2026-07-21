@@ -67,19 +67,22 @@ import { ActiveJobsWidgetComponent } from './components/home/widgets/active-jobs
 import { RecentJobsWidgetComponent } from './components/home/widgets/recent-jobs-widget/recent-jobs-widget.component';
 import { AssignmentsWidgetComponent } from './components/home/widgets/assignments-widget/assignments-widget.component';
 import { MyWorkWidgetComponent } from './components/home/widgets/my-work-widget/my-work-widget.component';
-import { TimecardWidgetComponent } from './components/home/widgets/timecard-widget/timecard-widget.component';
+// DISABLED: Timecard widgets - commented out
+// import { TimecardWidgetComponent } from './components/home/widgets/timecard-widget/timecard-widget.component';
 import { ScheduleWidgetComponent } from './components/home/widgets/schedule-widget/schedule-widget.component';
 import { CurrentJobStatusWidgetComponent } from './components/home/widgets/current-job-status-widget/current-job-status-widget.component';
 import { AvailableTechniciansWidgetComponent } from './components/home/widgets/available-technicians-widget/available-technicians-widget.component';
 import { KpiSummaryCardComponent } from './components/home/widgets/kpi-summary-card/kpi-summary-card.component';
 import { ApprovalsWidgetComponent } from './components/home/widgets/approvals-widget/approvals-widget.component';
-import { TimecardReviewWidgetComponent } from './components/home/widgets/timecard-review-widget/timecard-review-widget.component';
+// DISABLED: Timecard widgets - commented out
+// import { TimecardReviewWidgetComponent } from './components/home/widgets/timecard-review-widget/timecard-review-widget.component';
 import { ExpensesWidgetComponent } from './components/home/widgets/expenses-widget/expenses-widget.component';
 import { TravelBreakPtoWidgetComponent } from './components/home/widgets/travel-break-pto-widget/travel-break-pto-widget.component';
 import { ClockInWidgetComponent } from './components/home/widgets/clock-in-widget/clock-in-widget.component';
 import { NotificationFeedWidgetComponent } from './components/home/widgets/notification-feed-widget/notification-feed-widget.component';
 import { LiveActivityFeedWidgetComponent } from './components/home/widgets/live-activity-feed-widget/live-activity-feed-widget.component';
-import { PendingTimecardsWidgetComponent } from './components/home/widgets/pending-timecards-widget/pending-timecards-widget.component';
+// DISABLED: Timecard widgets - commented out
+// import { PendingTimecardsWidgetComponent } from './components/home/widgets/pending-timecards-widget/pending-timecards-widget.component';
 
 // Role-Specific Dashboard Components
 import { TechnicianDashboardComponent } from './components/home/dashboards/technician-dashboard/technician-dashboard.component';
@@ -164,19 +167,22 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     RecentJobsWidgetComponent,
     AssignmentsWidgetComponent,
     MyWorkWidgetComponent,
-    TimecardWidgetComponent,
+    // DISABLED: Timecard widgets - commented out
+    // TimecardWidgetComponent,
     ScheduleWidgetComponent,
     CurrentJobStatusWidgetComponent,
     AvailableTechniciansWidgetComponent,
     KpiSummaryCardComponent,
     ApprovalsWidgetComponent,
-    TimecardReviewWidgetComponent,
+    // DISABLED: Timecard widgets - commented out
+    // TimecardReviewWidgetComponent,
     ExpensesWidgetComponent,
     TravelBreakPtoWidgetComponent,
     ClockInWidgetComponent,
     NotificationFeedWidgetComponent,
     LiveActivityFeedWidgetComponent,
-    PendingTimecardsWidgetComponent,
+    // DISABLED: Timecard widgets - commented out
+    // PendingTimecardsWidgetComponent,
 
     // Role-Specific Dashboard Components
     TechnicianDashboardComponent,

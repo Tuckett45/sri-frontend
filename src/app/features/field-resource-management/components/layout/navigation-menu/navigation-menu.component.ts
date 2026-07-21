@@ -172,14 +172,15 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
     //   action: 'read'
     //   // Available to all authenticated users
     // },
-    {
-      label: 'Timecard Management',
-      icon: 'fact_check',
-      route: '/field-resource-management/timecard-manager',
-      resource: 'time_entries',
-      action: 'execute',
-      roles: [UserRole.Admin, UserRole.Manager, UserRole.HR, UserRole.CM, UserRole.Controller, UserRole.Payroll]
-    },
+    // DISABLED: Timecard Management - commented out
+    // {
+    //   label: 'Timecard Management',
+    //   icon: 'fact_check',
+    //   route: '/field-resource-management/timecard-manager',
+    //   resource: 'time_entries',
+    //   action: 'execute',
+    //   roles: [UserRole.Admin, UserRole.Manager, UserRole.HR, UserRole.CM, UserRole.Controller, UserRole.Payroll]
+    // },
     {
       label: 'My Assignments',
       icon: 'assignment',

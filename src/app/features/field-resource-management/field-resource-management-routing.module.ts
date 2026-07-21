@@ -18,13 +18,16 @@ import { UserRole } from '../../models/role.enum';
 import { HomeDashboardComponent } from './components/home/home-dashboard.component';
 
 // Components - Reporting (Analytics Dashboard)
-import { DashboardComponent } from './components/reporting/dashboard/dashboard.component';
+// DISABLED: DashboardComponent - unused import (reporting routes disabled)
+// import { DashboardComponent } from './components/reporting/dashboard/dashboard.component';
 
 // Components - Reporting (kept for direct routes)
-import { TimecardDashboardComponent } from './components/reporting/timecard-dashboard/timecard-dashboard.component';
-import { TimecardManagerViewComponent } from './components/reporting/timecard-manager-view/timecard-manager-view.component';
-import { CMDashboardComponent } from './components/reporting/cm-dashboard/cm-dashboard.component';
-import { AdminDashboardComponent } from './components/reporting/admin-dashboard/admin-dashboard.component';
+// DISABLED: Timecard components - commented out
+// import { TimecardDashboardComponent } from './components/reporting/timecard-dashboard/timecard-dashboard.component';
+// import { TimecardManagerViewComponent } from './components/reporting/timecard-manager-view/timecard-manager-view.component';
+// DISABLED: CM and Admin dashboards - routes disabled
+// import { CMDashboardComponent } from './components/reporting/cm-dashboard/cm-dashboard.component';
+// import { AdminDashboardComponent } from './components/reporting/admin-dashboard/admin-dashboard.component';
 
 // Layout Components
 import { FrmLayoutComponent } from './components/layout/frm-layout/frm-layout.component';
@@ -122,16 +125,16 @@ const routes: Routes = [
       //   }
       // },
 
-      // Timecard Manager View - Manager, HR, and Admin access
-      {
-        path: 'timecard-manager',
-        component: TimecardManagerViewComponent,
-        canActivate: [HrGuard],
-        data: { 
-          title: 'Timecard Management',
-          breadcrumb: 'Timecard Management'
-        }
-      },
+      // DISABLED: Timecard Manager View - commented out
+      // {
+      //   path: 'timecard-manager',
+      //   component: TimecardManagerViewComponent,
+      //   canActivate: [HrGuard],
+      //   data: { 
+      //     title: 'Timecard Management',
+      //     breadcrumb: 'Timecard Management'
+      //   }
+      // },
 
       // Technician Management Routes - Lazy Loaded
       {
