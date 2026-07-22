@@ -42,6 +42,7 @@ export class ProjectTrackingTabComponent implements OnChanges {
   filterJobNumber = '';
   filterStatus = '';
   filterPo = '';
+  filterPoNumber = '';
   filterMaterials = '';
 
   constructor(private store: Store, private dialog: MatDialog) {
@@ -61,6 +62,9 @@ export class ProjectTrackingTabComponent implements OnChanges {
         }
         if (filters.jobNumber) {
           matches = matches && (data.jobNumber || '').toLowerCase().includes(filters.jobNumber.toLowerCase());
+        }
+        if (filters.poNumber) {
+          matches = matches && (data.poNumber || '').toLowerCase().includes(filters.poNumber.toLowerCase());
         }
         if (filters.po) {
           if (filters.po === 'has') {
@@ -136,6 +140,7 @@ export class ProjectTrackingTabComponent implements OnChanges {
     this.dataSource.filter = JSON.stringify({
       customer: this.filterCustomer,
       jobNumber: this.filterJobNumber,
+      poNumber: this.filterPoNumber,
       status: this.filterStatus,
       po: this.filterPo,
       materials: this.filterMaterials
@@ -145,6 +150,7 @@ export class ProjectTrackingTabComponent implements OnChanges {
   clearFilters(): void {
     this.filterCustomer = '';
     this.filterJobNumber = '';
+    this.filterPoNumber = '';
     this.filterStatus = '';
     this.filterPo = '';
     this.filterMaterials = '';
@@ -152,7 +158,7 @@ export class ProjectTrackingTabComponent implements OnChanges {
   }
 
   hasActiveFilters(): boolean {
-    return !!(this.filterCustomer || this.filterJobNumber || this.filterStatus || this.filterPo || this.filterMaterials);
+    return !!(this.filterCustomer || this.filterJobNumber || this.filterPoNumber || this.filterStatus || this.filterPo || this.filterMaterials);
   }
 
   // ─── Inline Editing ────────────────────────────────────────────────────────

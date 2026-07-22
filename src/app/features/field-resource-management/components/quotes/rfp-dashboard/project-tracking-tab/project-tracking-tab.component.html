@@ -16,6 +16,11 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+      <mat-label>PO Number</mat-label>
+      <input matInput [(ngModel)]="filterPoNumber" (ngModelChange)="applyFilters()" placeholder="Search PO#...">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
       <mat-label>Status</mat-label>
       <mat-select [(ngModel)]="filterStatus" (selectionChange)="applyFilters()">
         <mat-option value="">All</mat-option>
