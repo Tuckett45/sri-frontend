@@ -61,7 +61,7 @@ export class RfpDetailDialogComponent {
     const value = (this.record as any)[field];
 
     // Determine if this is a date field
-    const dateFields = ['rfpReceiveDate', 'quoteDueDate', 'quoteSubmittedDate', 'poReceivedDate'];
+    const dateFields = ['rfpReceiveDate', 'quoteDueDate', 'quoteSubmittedDate', 'poReceivedDate', 'jobStart', 'jobComplete'];
     if (dateFields.includes(field)) {
       this.editDateValue = value ? new Date(value) : null;
       this.editValue = value || '';
@@ -91,7 +91,7 @@ export class RfpDetailDialogComponent {
     const currentValue = (this.record as any)[field];
 
     // Determine actual value based on field type
-    const dateFields = ['rfpReceiveDate', 'quoteDueDate', 'quoteSubmittedDate', 'poReceivedDate'];
+    const dateFields = ['rfpReceiveDate', 'quoteDueDate', 'quoteSubmittedDate', 'poReceivedDate', 'jobStart', 'jobComplete'];
     const numericFields = ['poAmount'];
     let newValue: any;
     if (dateFields.includes(field)) {
@@ -133,7 +133,13 @@ export class RfpDetailDialogComponent {
       quoteSubmittedDate: 'Quote Submitted Date',
       quoteNumber: 'Quote Number',
       poNumber: 'PO Number',
-      poAmount: 'PO Amount'
+      poAmount: 'PO Amount',
+      poReceivedDate: 'PO Received Date',
+      jobNumber: 'Job Number',
+      customerEquipment: 'Customer Equipment',
+      jobStart: 'Job Start',
+      jobComplete: 'Job Complete',
+      invoiceNumber: 'Invoice Number'
     };
     return labels[field] || field;
   }

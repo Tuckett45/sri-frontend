@@ -32,10 +32,17 @@ export class ProjectTrackingTabComponent implements OnChanges {
   dataSource = new MatTableDataSource<DashboardQuote>([]);
   selection = new SelectionModel<DashboardQuote>(true, []);
 
+  // Inline editing state
+  editingId: string | null = null;
+  editingField: string | null = null;
+  editValue: string = '';
+
   // Per-tab filters
   filterCustomer = '';
   filterJobNumber = '';
   filterStatus = '';
+  filterPo = '';
+  filterMaterials = '';
 
   constructor(private store: Store, private dialog: MatDialog) {
     this.selection.changed.subscribe(() => {
@@ -54,6 +61,23 @@ export class ProjectTrackingTabComponent implements OnChanges {
         }
         if (filters.jobNumber) {
           matches = matches && (data.jobNumber || '').toLowerCase().includes(filters.jobNumber.toLowerCase());
+        }
+        if (filters.po) {
+          if (filters.po === 'has') {
+            matches = matches && !!data.poNumber;
+          } else if (filters.po === 'none') {
+            matches = matches && !data.poNumber;
+          }
+        }
+        if (filters.materials) {
+          const status = this.getMaterialsStatus(data).toLowerCase();
+          if (filters.materials === 'ordered') {
+            matches = matches && status === 'on the way';
+          } else if (filters.materials === 'received') {
+            matches = matches && status === 'received';
+          } else if (filters.materials === 'notOrdered') {
+            matches = matches && status === 'not ordered';
+          }
         }
         if (filters.status) {
           if (filters.status === 'active') {
@@ -112,7 +136,9 @@ export class ProjectTrackingTabComponent implements OnChanges {
     this.dataSource.filter = JSON.stringify({
       customer: this.filterCustomer,
       jobNumber: this.filterJobNumber,
-      status: this.filterStatus
+      status: this.filterStatus,
+      po: this.filterPo,
+      materials: this.filterMaterials
     });
   }
 
@@ -120,11 +146,52 @@ export class ProjectTrackingTabComponent implements OnChanges {
     this.filterCustomer = '';
     this.filterJobNumber = '';
     this.filterStatus = '';
+    this.filterPo = '';
+    this.filterMaterials = '';
     this.applyFilters();
   }
 
   hasActiveFilters(): boolean {
-    return !!(this.filterCustomer || this.filterJobNumber || this.filterStatus);
+    return !!(this.filterCustomer || this.filterJobNumber || this.filterStatus || this.filterPo || this.filterMaterials);
+  }
+
+  // ─── Inline Editing ────────────────────────────────────────────────────────
+
+  startEdit(id: string, field: string): void {
+    this.editingId = id;
+    this.editingField = field;
+    const record = this.records.find(r => r.id === id);
+    if (record) {
+      this.editValue = (record as any)[field] || '';
+    }
+  }
+
+  cancelEdit(): void {
+    this.editingId = null;
+    this.editingField = null;
+    this.editValue = '';
+  }
+
+  saveEdit(row: DashboardQuote, field: string): void {
+    const currentValue = (row as any)[field];
+    if (this.editValue !== (currentValue || '')) {
+      const fields: Partial<DashboardQuote> = {};
+      (fields as any)[field] = this.editValue || null;
+      this.store.dispatch(DashboardActions.updateDashboardFields({
+        quoteId: row.id,
+        fields
+      }));
+    }
+    this.cancelEdit();
+  }
+
+  onDateFieldChange(event: any, row: DashboardQuote, field: string): void {
+    const dateValue = event.value ? event.value.toISOString() : null;
+    this.store.dispatch(DashboardActions.updateDashboardFields({
+      quoteId: row.id,
+      fields: { [field]: dateValue } as Partial<DashboardQuote>
+    }));
+    this.cancelEdit();
   }
 
   // ─── Selection Helpers ────────────────────────────────────────────────────

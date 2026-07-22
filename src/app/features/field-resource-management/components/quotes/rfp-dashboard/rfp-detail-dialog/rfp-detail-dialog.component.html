@@ -267,34 +267,142 @@
           </div>
         </div>
 
-        <div class="detail-row" *ngIf="record.poReceivedDate">
+        <!-- PO Received Date (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'poReceivedDate'">
           <span class="detail-label">PO Received Date</span>
-          <span class="detail-value">{{ record.poReceivedDate | date:'mediumDate' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'poReceivedDate'">
+            <span class="detail-value">{{ record.poReceivedDate ? (record.poReceivedDate | date:'mediumDate') : '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('poReceivedDate')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'poReceivedDate'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [matDatepicker]="poReceivedDatePicker" [value]="editDateValue" (dateChange)="onDateFieldChange($event)">
+              <mat-datepicker-toggle matIconSuffix [for]="poReceivedDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #poReceivedDatePicker></mat-datepicker>
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row" *ngIf="record.jobNumber">
+        <!-- Job Number (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'jobNumber'">
           <span class="detail-label">Job Number</span>
-          <span class="detail-value">{{ record.jobNumber }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'jobNumber'">
+            <span class="detail-value">{{ record.jobNumber || '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('jobNumber')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'jobNumber'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row" *ngIf="record.customerEquipment">
+        <!-- Customer Equipment (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'customerEquipment'">
           <span class="detail-label">Customer Equipment</span>
-          <span class="detail-value">{{ record.customerEquipment }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'customerEquipment'">
+            <span class="detail-value">{{ record.customerEquipment || '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('customerEquipment')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'customerEquipment'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row" *ngIf="record.jobStart">
+        <!-- Job Start (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'jobStart'">
           <span class="detail-label">Job Start</span>
-          <span class="detail-value">{{ record.jobStart | date:'mediumDate' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'jobStart'">
+            <span class="detail-value">{{ record.jobStart ? (record.jobStart | date:'mediumDate') : '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('jobStart')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'jobStart'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [matDatepicker]="jobStartDialogPicker" [value]="editDateValue" (dateChange)="onDateFieldChange($event)">
+              <mat-datepicker-toggle matIconSuffix [for]="jobStartDialogPicker"></mat-datepicker-toggle>
+              <mat-datepicker #jobStartDialogPicker></mat-datepicker>
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row" *ngIf="record.jobComplete">
+        <!-- Job Complete (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'jobComplete'">
           <span class="detail-label">Job Complete</span>
-          <span class="detail-value">{{ record.jobComplete | date:'mediumDate' }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'jobComplete'">
+            <span class="detail-value">{{ record.jobComplete ? (record.jobComplete | date:'mediumDate') : '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('jobComplete')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'jobComplete'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [matDatepicker]="jobCompleteDialogPicker" [value]="editDateValue" (dateChange)="onDateFieldChange($event)">
+              <mat-datepicker-toggle matIconSuffix [for]="jobCompleteDialogPicker"></mat-datepicker-toggle>
+              <mat-datepicker #jobCompleteDialogPicker></mat-datepicker>
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="detail-row" *ngIf="record.invoiceNumber">
+        <!-- Invoice Number (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'invoiceNumber'">
           <span class="detail-label">Invoice Number</span>
-          <span class="detail-value">{{ record.invoiceNumber }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'invoiceNumber'">
+            <span class="detail-value">{{ record.invoiceNumber || '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('invoiceNumber')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'invoiceNumber'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <input matInput [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
       </div>
     </div>

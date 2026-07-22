@@ -15,6 +15,21 @@
       <input matInput [(ngModel)]="filterPoNumber" (ngModelChange)="applyFilters()" placeholder="Search PO#...">
     </mat-form-field>
 
+    <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+      <mat-label>Quote Number</mat-label>
+      <input matInput [(ngModel)]="filterQuoteNumber" (ngModelChange)="applyFilters()" placeholder="Search quote#...">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+      <mat-label>PO Status</mat-label>
+      <mat-select [(ngModel)]="filterPoStatus" (selectionChange)="applyFilters()">
+        <mat-option value="">All</mat-option>
+        <mat-option value="hasPo">Has PO #</mat-option>
+        <mat-option value="noPo">No PO #</mat-option>
+        <mat-option value="received">PO Received</mat-option>
+      </mat-select>
+    </mat-form-field>
+
     <button mat-icon-button (click)="clearFilters()" matTooltip="Clear filters" *ngIf="hasActiveFilters()">
       <mat-icon>filter_list_off</mat-icon>
     </button>
@@ -120,11 +135,11 @@
       <th mat-header-cell *matHeaderCellDef mat-sort-header>PO Number</th>
       <td mat-cell *matCellDef="let row">
         <div *ngIf="editingId !== row.id || editingField !== 'poNumber'"
-             class="inline-edit-cell" (click)="startEdit(row.id, 'poNumber')">
+             class="inline-edit-cell" (click)="$event.stopPropagation(); startEdit(row.id, 'poNumber')">
           <span>{{ row.poNumber || '-' }}</span>
           <mat-icon class="edit-icon">edit</mat-icon>
         </div>
-        <mat-form-field *ngIf="editingId === row.id && editingField === 'poNumber'" class="inline-edit-input" appearance="outline">
+        <mat-form-field *ngIf="editingId === row.id && editingField === 'poNumber'" class="inline-edit-input" appearance="outline" (click)="$event.stopPropagation()">
           <input matInput [(ngModel)]="editValue" (blur)="saveEdit(row, 'poNumber')" (keyup.enter)="saveEdit(row, 'poNumber')">
         </mat-form-field>
       </td>
@@ -135,11 +150,11 @@
       <th mat-header-cell *matHeaderCellDef mat-sort-header>PO Amount</th>
       <td mat-cell *matCellDef="let row">
         <div *ngIf="editingId !== row.id || editingField !== 'poAmount'"
-             class="inline-edit-cell" (click)="startEdit(row.id, 'poAmount')">
+             class="inline-edit-cell" (click)="$event.stopPropagation(); startEdit(row.id, 'poAmount')">
           <span>{{ row.poAmount != null ? (row.poAmount | currency) : '-' }}</span>
           <mat-icon class="edit-icon">edit</mat-icon>
         </div>
-        <mat-form-field *ngIf="editingId === row.id && editingField === 'poAmount'" class="inline-edit-input" appearance="outline">
+        <mat-form-field *ngIf="editingId === row.id && editingField === 'poAmount'" class="inline-edit-input" appearance="outline" (click)="$event.stopPropagation()">
           <input matInput type="number" [(ngModel)]="editValue" (blur)="saveEdit(row, 'poAmount')" (keyup.enter)="saveEdit(row, 'poAmount')">
         </mat-form-field>
       </td>
@@ -150,11 +165,11 @@
       <th mat-header-cell *matHeaderCellDef mat-sort-header>PO Received</th>
       <td mat-cell *matCellDef="let row">
         <div *ngIf="editingId !== row.id || editingField !== 'poReceivedDate'"
-             class="inline-edit-cell" (click)="startEdit(row.id, 'poReceivedDate')">
+             class="inline-edit-cell" (click)="$event.stopPropagation(); startEdit(row.id, 'poReceivedDate')">
           <span>{{ row.poReceivedDate ? (row.poReceivedDate | date:'shortDate') : '-' }}</span>
           <mat-icon class="edit-icon">edit</mat-icon>
         </div>
-        <mat-form-field *ngIf="editingId === row.id && editingField === 'poReceivedDate'" class="inline-edit-input" appearance="outline">
+        <mat-form-field *ngIf="editingId === row.id && editingField === 'poReceivedDate'" class="inline-edit-input" appearance="outline" (click)="$event.stopPropagation()">
           <input matInput [matDatepicker]="poReceivedPicker" (dateChange)="onPoReceivedDateChange($event, row)" (blur)="cancelEdit()">
           <mat-datepicker-toggle matIconSuffix [for]="poReceivedPicker"></mat-datepicker-toggle>
           <mat-datepicker #poReceivedPicker [opened]="true"></mat-datepicker>

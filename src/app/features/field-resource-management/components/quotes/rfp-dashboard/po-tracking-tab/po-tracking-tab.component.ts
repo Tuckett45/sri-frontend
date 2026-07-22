@@ -37,6 +37,8 @@ export class PoTrackingTabComponent implements OnChanges {
   // Per-tab filters
   filterCustomer = '';
   filterPoNumber = '';
+  filterQuoteNumber = '';
+  filterPoStatus = '';
 
   constructor(private store: Store, private dialog: MatDialog) {
     this.selection.changed.subscribe(() => {
@@ -55,6 +57,18 @@ export class PoTrackingTabComponent implements OnChanges {
         }
         if (filters.poNumber) {
           matches = matches && (data.poNumber || '').toLowerCase().includes(filters.poNumber.toLowerCase());
+        }
+        if (filters.quoteNumber) {
+          matches = matches && (data.quoteNumber || '').toLowerCase().includes(filters.quoteNumber.toLowerCase());
+        }
+        if (filters.poStatus) {
+          if (filters.poStatus === 'hasPo') {
+            matches = matches && !!data.poNumber;
+          } else if (filters.poStatus === 'noPo') {
+            matches = matches && !data.poNumber;
+          } else if (filters.poStatus === 'received') {
+            matches = matches && !!data.poReceivedDate;
+          }
         }
         return matches;
       };
@@ -115,18 +129,22 @@ export class PoTrackingTabComponent implements OnChanges {
   applyFilters(): void {
     this.dataSource.filter = JSON.stringify({
       customer: this.filterCustomer,
-      poNumber: this.filterPoNumber
+      poNumber: this.filterPoNumber,
+      quoteNumber: this.filterQuoteNumber,
+      poStatus: this.filterPoStatus
     });
   }
 
   clearFilters(): void {
     this.filterCustomer = '';
     this.filterPoNumber = '';
+    this.filterQuoteNumber = '';
+    this.filterPoStatus = '';
     this.applyFilters();
   }
 
   hasActiveFilters(): boolean {
-    return !!(this.filterCustomer || this.filterPoNumber);
+    return !!(this.filterCustomer || this.filterPoNumber || this.filterQuoteNumber || this.filterPoStatus);
   }
 
   // ─── Selection Helpers ────────────────────────────────────────────────────

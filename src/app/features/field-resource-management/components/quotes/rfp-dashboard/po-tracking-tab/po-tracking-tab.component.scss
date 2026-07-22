@@ -122,6 +122,9 @@
 
     .mdc-text-field--outlined {
       --mdc-outlined-text-field-container-shape: 6px;
+      --mdc-outlined-text-field-outline-color: #616161;
+      --mdc-outlined-text-field-focus-outline-color: #1565c0;
+      --mdc-outlined-text-field-hover-outline-color: #212121;
     }
 
     .mat-mdc-form-field-infix {

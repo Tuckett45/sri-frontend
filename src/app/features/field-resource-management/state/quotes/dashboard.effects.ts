@@ -49,7 +49,7 @@ export class DashboardEffects {
           map((quote) => DashboardActions.updateDashboardFieldsSuccess({ quote })),
           catchError((error) =>
             of(DashboardActions.updateDashboardFieldsFailure({
-              error: error.message || 'Failed to update fields'
+              error: error?.error?.message || error.message || 'Failed to update fields'
             }))
           )
         )
@@ -78,9 +78,9 @@ export class DashboardEffects {
       ofType(DashboardActions.updateDashboardFieldsSuccess),
       tap(() => {
         this.snackBar.open('Record updated successfully', 'Close', { duration: 3000 });
-      })
-    ),
-    { dispatch: false }
+      }),
+      map(() => DashboardActions.loadDashboard({ filters: {} as any }))
+    )
   );
 
   showBomTrackingSuccess$ = createEffect(() =>
