@@ -24,8 +24,8 @@ export class ProjectTrackingTabComponent implements OnChanges {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   displayedColumns: string[] = [
-    'select', 'customer', 'description', 'requestorName', 'rfpReceiveDate',
-    'assignedToQuote', 'quoteSubmittedDate', 'quoteNumber', 'poNumber', 'poAmount', 'poReceivedDate',
+    'select', 'customer', 'description', 'requestorName',
+    'quoteNumber', 'poNumber', 'poReceivedDate',
     'jobNumber', 'materialsOrdered', 'materialsEta', 'customerEquipment', 'jobStart', 'jobComplete', 'invoiceNumber', 'closeout', 'actions'
   ];
 
