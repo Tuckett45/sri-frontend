@@ -52,7 +52,6 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.store.dispatch(DashboardActions.loadDashboard({ filters: this.filters }));
-    this.store.dispatch(DashboardActions.loadUsers());
 
     this.customerFilter$.pipe(
       debounceTime(400),
@@ -158,7 +157,10 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
   getPoTotal(): number {
     let total = 0;
     this.poTrackingRecords$.subscribe(records => {
-      total = records.reduce((sum, r) => sum + (r.poAmount || 0), 0);
+      total += records.reduce((sum, r) => sum + (r.poAmount || 0), 0);
+    }).unsubscribe();
+    this.projectTrackingRecords$.subscribe(records => {
+      total += records.reduce((sum, r) => sum + (r.poAmount || 0), 0);
     }).unsubscribe();
     return total;
   }

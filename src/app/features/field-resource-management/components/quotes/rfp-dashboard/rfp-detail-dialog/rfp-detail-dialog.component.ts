@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DashboardQuote } from '../../../../models/quote-workflow.model';
 import { RfpIntakeFormComponent } from '../../rfp-intake/rfp-intake-form.component';
+import { BomHistoryDialogComponent } from '../bom-history-dialog/bom-history-dialog.component';
 import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 
 /**
@@ -65,7 +66,7 @@ export class RfpDetailDialogComponent {
       this.editDateValue = value ? new Date(value) : null;
       this.editValue = value || '';
     } else {
-      this.editValue = value || '';
+      this.editValue = value != null ? String(value) : '';
       this.editDateValue = null;
     }
   }
@@ -91,9 +92,13 @@ export class RfpDetailDialogComponent {
 
     // Determine actual value based on field type
     const dateFields = ['rfpReceiveDate', 'quoteDueDate', 'quoteSubmittedDate', 'poReceivedDate'];
+    const numericFields = ['poAmount'];
     let newValue: any;
     if (dateFields.includes(field)) {
       newValue = this.editDateValue ? this.editDateValue.toISOString() : null;
+    } else if (numericFields.includes(field)) {
+      const parsed = parseFloat(this.editValue);
+      newValue = !isNaN(parsed) ? parsed : null;
     } else {
       newValue = this.editValue;
     }
@@ -127,9 +132,26 @@ export class RfpDetailDialogComponent {
       assignedToQuote: 'Assigned To',
       quoteSubmittedDate: 'Quote Submitted Date',
       quoteNumber: 'Quote Number',
-      poNumber: 'PO Number'
+      poNumber: 'PO Number',
+      poAmount: 'PO Amount'
     };
     return labels[field] || field;
+  }
+
+  // ─── BOM Tracking ──────────────────────────────────────────────────────────
+
+  openBomHistory(): void {
+    const dialogRef = this.dialog.open(BomHistoryDialogComponent, {
+      width: '700px',
+      data: { quoteId: this.record.id, bomTrackings: this.record.bomTrackings || [] }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Reload notes/data if a BOM was added
+        this.store.dispatch(DashboardActions.loadDashboard({ filters: {} as any }));
+      }
+    });
   }
 
   // ─── Dialog Actions ─────────────────────────────────────────────────────────

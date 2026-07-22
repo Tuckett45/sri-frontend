@@ -19,6 +19,7 @@ export class BomHistoryDialogComponent {
   bomTrackings: BomTracking[];
   quoteId: string;
   addForm: FormGroup;
+  hasAdded = false;
 
   displayedColumns: string[] = ['bomDescription', 'orderedDate', 'receivedDate', 'trackingNumber', 'status'];
 
@@ -52,8 +53,9 @@ export class BomHistoryDialogComponent {
         quoteId: this.quoteId,
         entry
       }));
-      // Optimistically add to local list so user sees feedback before closing
+      // Optimistically add to local list so user sees feedback
       this.bomTrackings = [
+        ...this.bomTrackings,
         {
           id: '',
           quoteId: this.quoteId,
@@ -62,15 +64,14 @@ export class BomHistoryDialogComponent {
           receivedDate: entry.receivedDate || null,
           trackingNumber: entry.trackingNumber || null,
           status: entry.status
-        } as BomTracking,
-        ...this.bomTrackings
+        } as BomTracking
       ];
       this.addForm.reset({ status: 'Ordered' });
-      this.dialogRef.close(true);
+      this.hasAdded = true;
     }
   }
 
   onClose(): void {
-    this.dialogRef.close();
+    this.dialogRef.close(this.hasAdded);
   }
 }

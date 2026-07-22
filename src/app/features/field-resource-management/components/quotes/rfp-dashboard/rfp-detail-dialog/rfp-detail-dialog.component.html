@@ -244,9 +244,27 @@
           </div>
         </div>
 
-        <div class="detail-row" *ngIf="record.poAmount != null">
+        <!-- PO Amount (inline edit) -->
+        <div class="detail-row" [class.editing]="editingField === 'poAmount'">
           <span class="detail-label">PO Amount</span>
-          <span class="detail-value">{{ record.poAmount | currency }}</span>
+          <div class="detail-value-container" *ngIf="editingField !== 'poAmount'">
+            <span class="detail-value">{{ record.poAmount != null ? (record.poAmount | currency) : '-' }}</span>
+            <button mat-icon-button class="inline-edit-btn" (click)="startInlineEdit('poAmount')" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+          <div class="inline-edit-field" *ngIf="editingField === 'poAmount'">
+            <mat-form-field appearance="outline" class="inline-form-field">
+              <span matPrefix>$&nbsp;</span>
+              <input matInput type="number" [(ngModel)]="editValue" (keyup.enter)="saveInlineEdit()" (keyup.escape)="cancelInlineEdit()">
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveInlineEdit()" matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelInlineEdit()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
         </div>
 
         <div class="detail-row" *ngIf="record.poReceivedDate">
@@ -284,6 +302,38 @@
     <!-- Notes Section -->
     <div class="notes-section">
       <app-rfp-notes [quoteId]="record.id" [notes]="record.notes || []"></app-rfp-notes>
+    </div>
+
+    <!-- BOM Tracking Section (Project Tracking records) -->
+    <div class="bom-section" *ngIf="record.bomTrackings">
+      <h4 class="section-title">
+        <mat-icon>inventory_2</mat-icon>
+        BOM Tracking
+        <span class="bom-count" *ngIf="record.bomTrackings.length > 0">({{ record.bomTrackings.length }})</span>
+      </h4>
+
+      <!-- BOM List -->
+      <div class="bom-entries" *ngIf="record.bomTrackings.length > 0">
+        <div class="bom-entry" *ngFor="let bom of record.bomTrackings">
+          <div class="bom-entry-header">
+            <span class="bom-description">{{ bom.bomDescription }}</span>
+            <mat-chip class="bom-status-chip">{{ bom.status }}</mat-chip>
+          </div>
+          <div class="bom-entry-details">
+            <span *ngIf="bom.orderedDate"><strong>Ordered:</strong> {{ bom.orderedDate | date:'shortDate' }}</span>
+            <span *ngIf="bom.receivedDate"><strong>Received:</strong> {{ bom.receivedDate | date:'shortDate' }}</span>
+            <span *ngIf="bom.trackingNumber"><strong>Tracking:</strong> {{ bom.trackingNumber }}</span>
+          </div>
+        </div>
+      </div>
+
+      <p *ngIf="record.bomTrackings.length === 0" class="no-bom-entries">No BOM tracking entries yet.</p>
+
+      <!-- Add BOM Button -->
+      <button mat-raised-button color="primary" (click)="openBomHistory()" class="add-bom-btn">
+        <mat-icon>add</mat-icon>
+        Add BOM Entry
+      </button>
     </div>
   </mat-dialog-content>
 
