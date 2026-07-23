@@ -39,7 +39,7 @@ export interface StatusHistory {
   providedIn: 'root'
 })
 export class JobService {
-  private readonly apiUrl = `https://localhost:7028/v1/jobs`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/jobs`;
   private readonly retryCount = 2;
 
   constructor(private http: HttpClient) {}
