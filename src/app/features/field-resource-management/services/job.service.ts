@@ -39,7 +39,7 @@ export interface StatusHistory {
   providedIn: 'root'
 })
 export class JobService {
-  private readonly apiUrl = `${environment.atlasApiUrl}/jobs`;
+  private readonly apiUrl = `https://localhost:7028/v1/jobs`;
   private readonly retryCount = 2;
 
   constructor(private http: HttpClient) {}
@@ -52,6 +52,10 @@ export class JobService {
   getJobs(filters?: JobFilters): Observable<Job[]> {
     let params = new HttpParams();
     
+    // page and pageSize are always sent to satisfy the API contract
+    params = params.set('page', (filters?.page ?? 1).toString());
+    params = params.set('pageSize', (filters?.pageSize ?? 20).toString());
+
     if (filters) {
       if (filters.searchTerm) {
         params = params.set('searchTerm', filters.searchTerm);
@@ -95,12 +99,6 @@ export class JobService {
       }
       if (filters.endDate) {
         params = params.set('endDate', filters.endDate.toISOString());
-      }
-      if (filters.page !== undefined) {
-        params = params.set('page', filters.page.toString());
-      }
-      if (filters.pageSize !== undefined) {
-        params = params.set('pageSize', filters.pageSize.toString());
       }
     }
 

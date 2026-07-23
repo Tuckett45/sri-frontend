@@ -45,7 +45,7 @@ export class FieldResourceManagementComponent implements OnInit {
       }
     });
 
-    this.fieldResourceService.getJobs({ pageSize: 50 }).subscribe({
+    this.fieldResourceService.getJobs({ page: 1, pageSize: 50 }).subscribe({
       next: response => {
         this.jobs = response.items ?? [];
         this.openJobs = this.jobs.filter(j => j.status !== JobStatus.Completed).length;

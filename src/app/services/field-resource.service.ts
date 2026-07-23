@@ -71,6 +71,7 @@ export class FieldResourceService {
 
   getJobs(params?: JobQueryParams): Observable<JobListResponse> {
     let httpParams = new HttpParams();
+    if (params?.query) httpParams = httpParams.set('query', params.query);
     if (params?.status) httpParams = httpParams.set('status', params.status);
     if (params?.priority) httpParams = httpParams.set('priority', params.priority);
     if (params?.technicianId) httpParams = httpParams.set('technicianId', params.technicianId);

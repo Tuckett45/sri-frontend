@@ -137,6 +137,7 @@ export interface JobStatusUpdateRequest {
 }
 
 export interface JobQueryParams {
+  query?: string;
   status?: JobStatus;
   priority?: JobPriority;
   technicianId?: string;
