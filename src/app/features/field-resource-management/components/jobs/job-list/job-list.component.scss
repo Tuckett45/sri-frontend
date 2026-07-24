@@ -757,3 +757,560 @@ mat-paginator {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TABLE VIEW & PIPELINE ADDITIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Tab Styling ─────────────────────────────────────────────────────────────
+
+::ng-deep .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 16px;
+  }
+
+  .mdc-tab__text-label {
+    color: #424242 !important;
+    font-weight: 500;
+  }
+
+  .mdc-tab--active .mdc-tab__text-label {
+    color: #1976d2 !important;
+  }
+
+  .mdc-tab-indicator__content--underline {
+    border-color: #1976d2 !important;
+  }
+}
+
+.tab-icon {
+  margin-right: 6px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+// ─── Tab Filters ─────────────────────────────────────────────────────────────
+
+.tab-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+
+  .filter-field {
+    flex: 1;
+    min-width: 180px;
+    max-width: 280px;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  .filter-field--narrow {
+    flex: 0 1 160px;
+    min-width: 140px;
+  }
+
+  ::ng-deep {
+    .mat-mdc-floating-label,
+    .mdc-floating-label,
+    .mat-mdc-form-field-label {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-input-element,
+    .mat-mdc-select-value-text,
+    .mat-mdc-select-placeholder {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-select-arrow {
+      color: #000000 !important;
+    }
+
+    .mat-mdc-form-field-icon-prefix,
+    .mat-mdc-form-field-icon-suffix {
+      .mat-icon,
+      mat-icon {
+        color: #1565c0 !important;
+      }
+    }
+  }
+
+  > button[mat-icon-button] .mat-icon {
+    color: #1565c0 !important;
+  }
+}
+
+// ─── Active Filter Chips ─────────────────────────────────────────────────────
+
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .filter-label {
+    font-weight: 500;
+    color: #757575;
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  mat-chip {
+    background-color: #1565c0 !important;
+    color: #ffffff !important;
+    font-size: 13px;
+    border: none !important;
+
+    strong {
+      margin-right: 4px;
+    }
+
+    button[matChipRemove] {
+      color: #ffffff;
+      mat-icon {
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+::ng-deep .active-filters {
+  .mat-mdc-chip,
+  .mdc-evolution-chip {
+    background-color: #1565c0 !important;
+    border: none !important;
+  }
+
+  .mdc-evolution-chip__text-label,
+  .mat-mdc-chip-action-label {
+    color: #ffffff !important;
+  }
+}
+
+// ─── Job Table ───────────────────────────────────────────────────────────────
+
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.job-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  thead th {
+    text-align: left;
+    padding: 0.625rem 0.5rem;
+    background: #f5f5f5;
+    border-bottom: 2px solid #e0e0e0;
+    font-weight: 600;
+    color: #424242;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  tbody td {
+    padding: 0.5rem 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    color: #212121;
+  }
+
+  .checkbox-col {
+    width: 48px;
+    text-align: center;
+    padding: 0.25rem !important;
+  }
+
+  .job-row {
+    cursor: pointer;
+    transition: background-color 0.15s;
+
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.04);
+    }
+
+    &:focus {
+      outline: 2px solid #1976d2;
+      outline-offset: -2px;
+    }
+  }
+
+  .site-cell {
+    .site-name {
+      display: block;
+      font-weight: 500;
+      color: #1565c0;
+    }
+
+    .site-address {
+      display: block;
+      font-size: 0.75rem;
+      color: #757575;
+    }
+  }
+
+  .actions-cell {
+    white-space: nowrap;
+    text-align: center;
+
+    .action-view .mat-icon {
+      color: #1565c0 !important;
+    }
+
+    .action-edit .mat-icon {
+      color: #e65100 !important;
+    }
+
+    .mat-mdc-icon-button .mat-icon {
+      color: #212121;
+    }
+  }
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+// ─── Batch Toolbar ───────────────────────────────────────────────────────────
+
+.batch-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  margin-bottom: 12px;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+
+  .batch-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .selected-count {
+      font-weight: 600;
+      color: #1565c0;
+    }
+  }
+
+  .batch-actions {
+    display: flex;
+    gap: 4px;
+  }
+}
+
+// ─── Error Banner ────────────────────────────────────────────────────────────
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #fdecea;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  color: #b71c1c;
+  font-size: 0.875rem;
+}
+
+// ─── Pipeline / Stats View ───────────────────────────────────────────────────
+
+.pipeline-view {
+  padding: 16px 0;
+}
+
+.pipeline-summary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  .summary-card {
+    flex: 1;
+    min-width: 120px;
+    padding: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-align: center;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-count {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .summary-label {
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    &.summary-notstarted {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      .summary-count { color: #4b5563; }
+      .summary-label { color: #6b7280; }
+    }
+
+    &.summary-enroute {
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      .summary-count { color: #1e40af; }
+      .summary-label { color: #1d4ed8; }
+    }
+
+    &.summary-onsite {
+      background: #fefce8;
+      border: 1px solid #fde047;
+      .summary-count { color: #854d0e; }
+      .summary-label { color: #a16207; }
+    }
+
+    &.summary-completed {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      .summary-count { color: #166534; }
+      .summary-label { color: #15803d; }
+    }
+
+    &.summary-issue {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      .summary-count { color: #991b1b; }
+      .summary-label { color: #b91c1c; }
+    }
+
+    &.summary-cancelled {
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      .summary-count { color: #737373; }
+      .summary-label { color: #a3a3a3; }
+    }
+  }
+}
+
+.pipeline-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+
+  .pipeline-filter-label {
+    font-size: 14px;
+    color: #1565c0;
+  }
+}
+
+.pipeline-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+
+  .pipeline-column {
+    background: #fafafa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 14px;
+
+      .column-count {
+        margin-left: auto;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      &.column-notstarted { background: #f3f4f6; color: #4b5563; }
+      &.column-enroute { background: #dbeafe; color: #1e40af; }
+      &.column-onsite { background: #fef3c7; color: #92400e; }
+      &.column-completed { background: #d1fae5; color: #065f46; }
+    }
+
+    .column-cards {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .column-empty {
+      padding: 24px;
+      text-align: center;
+      color: #9e9e9e;
+      font-size: 13px;
+      font-style: italic;
+    }
+  }
+}
+
+.pipeline-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+
+  &:hover, &:focus {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: #90caf9;
+    outline: none;
+  }
+
+  .pipeline-card-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1565c0;
+    margin-bottom: 4px;
+  }
+
+  .pipeline-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #616161;
+  }
+
+  .pipeline-card-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #757575;
+    margin-top: 6px;
+  }
+}
+
+.type-badge-sm {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.priority-badge-sm {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+// ─── Paginator Override ──────────────────────────────────────────────────────
+
+::ng-deep mat-paginator {
+  background-color: #ffffff !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+
+  .mat-mdc-paginator-range-label,
+  .mat-mdc-paginator-page-size-label {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-select-value-text {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-select-arrow svg {
+    fill: #000000 !important;
+  }
+
+  .mat-mdc-paginator-navigation-previous,
+  .mat-mdc-paginator-navigation-next,
+  .mat-mdc-paginator-navigation-first,
+  .mat-mdc-paginator-navigation-last {
+    color: #000000 !important;
+
+    .mat-mdc-paginator-icon {
+      fill: #000000 !important;
+    }
+  }
+}
+
+// ─── Delete action in menus ──────────────────────────────────────────────────
+
+::ng-deep .mat-mdc-menu-panel {
+  .delete-action {
+    color: #c62828 !important;
+
+    .mat-icon { color: #c62828 !important; }
+    span { color: #c62828 !important; }
+  }
+}
+
+@media (max-width: 767px) {
+  .pipeline-summary {
+    flex-direction: column;
+    .summary-card { min-width: unset; }
+  }
+
+  .pipeline-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .tab-filters {
+    flex-direction: column;
+    .filter-field, .filter-field--narrow {
+      max-width: 100%;
+      width: 100%;
+    }
+  }
+}

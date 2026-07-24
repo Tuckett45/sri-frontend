@@ -132,6 +132,13 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
   // Filtered and paginated jobs
   displayedJobs: Job[] = [];
 
+  // Tabs
+  activeTabIndex = 0;
+
+  // Pipeline view
+  pipelineStatusFilter: JobStatus | null = null;
+  private allJobs: Job[] = [];
+
   // Technician names lookup by job ID
   private techniciansByJobId: Record<string, string> = {};
 
@@ -263,6 +270,7 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
     // Subscribe to jobs for pagination and dynamic filter options
     this.jobs$.pipe(takeUntil(this.destroy$)).subscribe(jobs => {
       this.totalJobs = jobs.length;
+      this.allJobs = jobs;
       this.updateDisplayedJobs(jobs);
     });
 
@@ -1001,5 +1009,23 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
         this.snackBar.open('Failed to export to PDF', 'Close', { duration: 5000 });
       }
     });
+  }
+
+  // ─── Pipeline / Stats View ─────────────────────────────────────────────────
+
+  filterByStatus(status: JobStatus): void {
+    this.pipelineStatusFilter = this.pipelineStatusFilter === status ? null : status;
+  }
+
+  clearPipelineFilter(): void {
+    this.pipelineStatusFilter = null;
+  }
+
+  getStatusCount(status: JobStatus): number {
+    return this.allJobs.filter(j => j.status === status).length;
+  }
+
+  getJobsByStatus(status: JobStatus): Job[] {
+    return this.allJobs.filter(j => j.status === status);
   }
 }
