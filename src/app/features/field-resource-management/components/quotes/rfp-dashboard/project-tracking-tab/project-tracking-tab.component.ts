@@ -81,6 +81,8 @@ export class ProjectTrackingTabComponent implements OnChanges {
             matches = matches && status === 'received';
           } else if (filters.materials === 'notOrdered') {
             matches = matches && status === 'not ordered';
+          } else if (filters.materials === 'na') {
+            matches = matches && status === 'n/a';
           }
         }
         if (filters.status) {
@@ -124,6 +126,7 @@ export class ProjectTrackingTabComponent implements OnChanges {
   getMaterialsStatus(row: DashboardQuote): string {
     if (!row.bomTrackings || row.bomTrackings.length === 0) return 'Not Ordered';
     const latest = row.bomTrackings[row.bomTrackings.length - 1];
+    if (latest.status === 'N/A') return 'N/A';
     if (latest.receivedDate) return 'Received';
     if (latest.orderedDate) return 'On the Way';
     return 'Pending';

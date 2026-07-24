@@ -1004,8 +1004,9 @@ export class CandidateListComponent implements OnInit {
   // ─── Convert to Technician ────────────────────────────────────────────────
 
   canConvert(candidate: Candidate): boolean {
-    return (candidate.offerStatus === 'offer_accepted_onboarding' || candidate.offerStatus === 'hired_assigned') &&
-           candidate.oshaCertified;
+    // Hired/Assigned candidates can always be converted to technicians
+    if (candidate.offerStatus === 'hired_assigned') return true;
+    return candidate.offerStatus === 'offer_accepted_onboarding' && candidate.oshaCertified;
   }
 
   onConvertToTechnician(candidate: Candidate): void {
