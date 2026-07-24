@@ -58,8 +58,7 @@ import {
 @Component({
   selector: 'frm-job-list',
   templateUrl: './job-list.component.html',
-  styleUrls: ['./job-list.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./job-list.component.scss']
 })
 export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();

@@ -19,8 +19,7 @@ import { UserRole } from '../../../../../models/role.enum';
 @Component({
   selector: 'app-technician-list',
   templateUrl: './technician-list.component.html',
-  styleUrls: ['./technician-list.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./technician-list.component.scss']
 })
 export class TechnicianListComponent implements OnInit, OnDestroy {
   technicians$: Observable<Technician[]>;

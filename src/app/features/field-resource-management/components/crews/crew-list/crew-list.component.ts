@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subject, combineLatest } from 'rxjs';
@@ -48,8 +48,7 @@ import * as RolePermissionsSelectors from '../../../../../store/role-permissions
 @Component({
   selector: 'frm-crew-list',
   templateUrl: './crew-list.component.html',
-  styleUrls: ['./crew-list.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./crew-list.component.scss']
 })
 export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   crews$: Observable<Crew[]>;
@@ -89,6 +88,12 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   // Enum references for template
   CrewStatus = CrewStatus;
   UserRole = UserRole;
+
+  // Tabs
+  activeTabIndex = 0;
+
+  // Pipeline view
+  pipelineStatusFilter: CrewStatus | null = null;
   
   private destroy$ = new Subject<void>();
   
@@ -167,6 +172,19 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Load crews on init
     this.store.dispatch(CrewActions.loadCrews({ filters: {} }));
+
+    // Always subscribe to crews$ to populate dataSource (fallback for when scoped selector isn't available)
+    this.crews$.pipe(takeUntil(this.destroy$)).subscribe(crews => {
+      this.dataSource.data = crews;
+      const marketsSet = new Set<string>();
+      const companiesSet = new Set<string>();
+      crews.forEach(crew => {
+        if (crew.market) marketsSet.add(crew.market);
+        if (crew.company) companiesSet.add(crew.company);
+      });
+      this.availableMarkets = Array.from(marketsSet).sort();
+      this.availableCompanies = Array.from(companiesSet).sort();
+    });
 
     // Load technicians for name lookups
     this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
@@ -391,6 +409,7 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getTechnicianName(technicianId: string): string {
+    if (!technicianId) return '—';
     return this.technicianNameMap.get(technicianId) || technicianId.substring(0, 8) + '...';
   }
   
@@ -399,12 +418,11 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
   
   getStatusBadgeClass(status: CrewStatus): string {
-    const classMap: Record<CrewStatus, string> = {
-      [CrewStatus.Available]: 'status-available',
-      [CrewStatus.OnJob]: 'status-on-job',
-      [CrewStatus.Unavailable]: 'status-unavailable'
-    };
-    return classMap[status] || '';
+    const normalized = (status || '').toUpperCase();
+    if (normalized === 'AVAILABLE') return 'status-available';
+    if (normalized === 'ON_JOB') return 'status-on-job';
+    if (normalized === 'UNAVAILABLE') return 'status-unavailable';
+    return '';
   }
 
   /**
@@ -497,5 +515,25 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
         this.snackBar.open('Failed to export to PDF', 'Close', { duration: 5000 });
       }
     });
+  }
+
+  // ─── Pipeline View ─────────────────────────────────────────────────────────
+
+  filterByCrewStatus(status: CrewStatus): void {
+    this.pipelineStatusFilter = this.pipelineStatusFilter === status ? null : status;
+  }
+
+  clearPipelineFilter(): void {
+    this.pipelineStatusFilter = null;
+  }
+
+  getCrewStatusCount(status: CrewStatus): number {
+    const statusUpper = status.toUpperCase();
+    return this.dataSource.data.filter(c => (c.status || '').toUpperCase() === statusUpper).length;
+  }
+
+  getCrewsByStatus(status: CrewStatus): Crew[] {
+    const statusUpper = status.toUpperCase();
+    return this.dataSource.data.filter(c => (c.status || '').toUpperCase() === statusUpper);
   }
 }
