@@ -28,93 +28,67 @@
     </div>
   </div>
 
-  <!-- Search and Filters -->
-  <mat-card class="filter-panel">
-    <mat-card-content>
-      <!-- Search Input -->
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search by name or ID</mat-label>
-        <input matInput [formControl]="searchControl" placeholder="Enter name or technician ID">
-        <mat-icon matPrefix>search</mat-icon>
-        <button
-          mat-icon-button
-          matSuffix
-          *ngIf="searchControl.value"
-          (click)="searchControl.setValue('')"
-          aria-label="Clear search"
-        >
-          <mat-icon>close</mat-icon>
-        </button>
-      </mat-form-field>
+  <!-- Tabs -->
+  <mat-tab-group [(selectedIndex)]="activeTabIndex" animationDuration="200ms">
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 1: TABLE VIEW -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">table_chart</mat-icon>
+        Technician Roster
+      </ng-template>
 
-      <!-- Filter Expansion Panel -->
-      <mat-expansion-panel class="filter-expansion">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>filter_list</mat-icon>
-            <span>Filters</span>
-            <span class="filter-count" *ngIf="getActiveFilters().length > 0">
-              ({{ getActiveFilters().length }} active)
-            </span>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-
-        <!-- Filters -->
-        <div class="filters-row">
-          <!-- Role Filter -->
-          <mat-form-field appearance="outline">
-            <mat-label>Role</mat-label>
-            <mat-select [formControl]="roleControl">
-              <mat-option value="">All Roles</mat-option>
-              <mat-option *ngFor="let role of roles" [value]="role">
-                {{ role }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <!-- Region Filter -->
-          <mat-form-field appearance="outline">
-            <mat-label>Region</mat-label>
-            <mat-select [formControl]="regionControl">
-              <mat-option value="">All Regions</mat-option>
-              <mat-option *ngFor="let region of availableRegions" [value]="region">
-                {{ region }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <!-- Active Status Filter -->
-          <mat-form-field appearance="outline">
-            <mat-label>Active Status</mat-label>
-            <mat-select [formControl]="activeStatusControl">
-              <mat-option value="">All</mat-option>
-              <mat-option value="active">Active</mat-option>
-              <mat-option value="inactive">Inactive</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <!-- Availability Toggle -->
-          <mat-checkbox [formControl]="availabilityControl" class="availability-toggle">
-            Available Only
-          </mat-checkbox>
-
-          <!-- Clear Filters Button -->
-          <button mat-stroked-button (click)="clearFilters()">
-            <mat-icon>clear</mat-icon>
-            Clear Filters
+      <!-- Search and Filters -->
+      <div class="tab-filters">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Search by name or ID</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Enter name, email, or technician ID">
+          <mat-icon matPrefix>search</mat-icon>
+          <button mat-icon-button matSuffix *ngIf="searchControl.value" (click)="searchControl.setValue('')" aria-label="Clear search">
+            <mat-icon>close</mat-icon>
           </button>
-        </div>
-      </mat-expansion-panel>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+          <mat-label>Role</mat-label>
+          <mat-select [formControl]="roleControl">
+            <mat-option value="">All Roles</mat-option>
+            <mat-option *ngFor="let role of roles" [value]="role">{{ role }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+          <mat-label>Region</mat-label>
+          <mat-select [formControl]="regionControl">
+            <mat-option value="">All Regions</mat-option>
+            <mat-option *ngFor="let region of availableRegions" [value]="region">{{ region }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+          <mat-label>Status</mat-label>
+          <mat-select [formControl]="activeStatusControl">
+            <mat-option value="">All</mat-option>
+            <mat-option value="active">Active</mat-option>
+            <mat-option value="inactive">Inactive</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-checkbox [formControl]="availabilityControl" class="availability-toggle">
+          Available Only
+        </mat-checkbox>
+
+        <button mat-icon-button (click)="clearFilters()" matTooltip="Clear filters" *ngIf="getActiveFilters().length > 0">
+          <mat-icon>filter_list_off</mat-icon>
+        </button>
+      </div>
 
       <!-- Active Filter Chips -->
       <div class="active-filters" *ngIf="getActiveFilters().length > 0">
         <span class="filter-label">Active Filters:</span>
         <div class="filter-chips">
-          <mat-chip
-            *ngFor="let filter of getActiveFilters()"
-            [removable]="true"
-            (removed)="removeFilter(filter.key)"
-          >
+          <mat-chip *ngFor="let filter of getActiveFilters()" [removable]="true" (removed)="removeFilter(filter.key)">
             <strong>{{ filter.label }}:</strong> {{ filter.value }}
             <button matChipRemove [attr.aria-label]="'Remove ' + filter.label + ' filter'">
               <mat-icon>cancel</mat-icon>
@@ -122,124 +96,282 @@
           </mat-chip>
         </div>
       </div>
-    </mat-card-content>
-  </mat-card>
 
-  <!-- Loading Spinner -->
-  <div *ngIf="loading$ | async" class="loading-container">
-    <mat-spinner></mat-spinner>
-  </div>
+      <!-- Loading Spinner -->
+      <div *ngIf="loading$ | async" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
 
-  <!-- Error State -->
-  <div class="error-state" *ngIf="(error$ | async) as error">
-    <mat-card class="error-card">
-      <mat-card-content>
-        <mat-icon color="warn">error_outline</mat-icon>
-        <h3>Failed to load technicians</h3>
-        <p>{{ error }}</p>
-        <button mat-raised-button color="primary" class="retry-button" (click)="retryLoad()">
-          <mat-icon>refresh</mat-icon>
-          Retry
-        </button>
-      </mat-card-content>
-    </mat-card>
-  </div>
-
-  <!-- Card View -->
-  <ng-container *ngIf="technicians$ | async as technicians">
-    <div class="technician-cards" *ngIf="!(loading$ | async) && !(error$ | async)">
-      <div
-        class="technician-card"
-        *ngFor="let technician of technicians"
-        [routerLink]="['./', technician.id]"
-        role="button"
-        tabindex="0">
-        <div class="technician-card-header">
-          <span class="technician-card-title">{{ getFullName(technician) }}</span>
-          <span class="status-badge"
-            [class.active]="technician.isActive && (!technician.currentStatus || technician.currentStatus === 'Available')"
-            [class.inactive]="!technician.isActive"
-            [class.on-site]="technician.currentStatus === 'OnSite'"
-            [class.en-route]="technician.currentStatus === 'EnRoute'">
-            {{ getCurrentStatus(technician) }}
-          </span>
-        </div>
-        <div class="technician-card-body">
-          <div class="technician-card-row">
-            <span class="technician-card-label">Role</span>
-            <span class="technician-card-value role-badge">{{ technician.role }}</span>
-          </div>
-          <div class="technician-card-row">
-            <span class="technician-card-label">Region</span>
-            <span class="technician-card-value">{{ technician.region || 'N/A' }}</span>
-          </div>
-          <div class="technician-card-row">
-            <span class="technician-card-label">Crew</span>
-            <span class="technician-card-value">{{ technicianCrewMap[technician.id] || '—' }}</span>
-          </div>
-          <div class="technician-card-row">
-            <span class="technician-card-label">Current Job</span>
-            <span class="technician-card-value">{{ technicianJobMap[technician.id] || '—' }}</span>
-          </div>
-          <div class="technician-card-row">
-            <span class="technician-card-label">Field Status</span>
-            <span class="technician-card-value">
-              <span class="field-status-badge" [ngClass]="getFieldStatusClass(technician)">
-                {{ getFieldStatusLabel(technician) }}
-              </span>
-            </span>
-          </div>
-          <div class="technician-card-row" *ngIf="technician.email">
-            <span class="technician-card-label">Email</span>
-            <span class="technician-card-value">{{ technician.email }}</span>
-          </div>
-          <div class="technician-card-row" *ngIf="technician.phone">
-            <span class="technician-card-label">Phone</span>
-            <span class="technician-card-value">{{ technician.phone }}</span>
-          </div>
-        </div>
-        <div class="technician-card-actions">
-          <button mat-icon-button [routerLink]="['./', technician.id]" (click)="$event.stopPropagation()" aria-label="View">
-            <mat-icon>visibility</mat-icon>
+      <!-- Error State -->
+      <div class="error-state" *ngIf="(error$ | async) as error">
+        <div class="error-banner" role="alert">
+          <mat-icon color="warn">error_outline</mat-icon>
+          <span>{{ error }}</span>
+          <button mat-stroked-button (click)="retryLoad()">
+            <mat-icon>refresh</mat-icon> Retry
           </button>
-          <button mat-icon-button [routerLink]="['./', technician.id, 'edit']" (click)="$event.stopPropagation()" aria-label="Edit">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button [matMenuTriggerFor]="technicianActionsMenu" (click)="$event.stopPropagation()" aria-label="More actions">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #technicianActionsMenu="matMenu">
-            <button mat-menu-item *ngIf="technician.isActive" (click)="deactivateTechnician(technician)">
-              <mat-icon>person_off</mat-icon>
-              <span>Deactivate</span>
-            </button>
-            <button mat-menu-item *ngIf="!technician.isActive" (click)="reactivateTechnician(technician)">
-              <mat-icon>person_add</mat-icon>
-              <span>Reactivate</span>
-            </button>
-            <mat-divider></mat-divider>
-            <button mat-menu-item class="delete-action" (click)="deleteTechnician(technician)">
-              <mat-icon color="warn">delete_forever</mat-icon>
-              <span>Delete Permanently</span>
-            </button>
-          </mat-menu>
         </div>
       </div>
 
-      <div class="empty-state" *ngIf="technicians.length === 0">
-        <mat-icon>person_off</mat-icon>
-        <h3>No technicians found</h3>
-        <p>Try adjusting your search or filters</p>
-      </div>
+      <!-- Technician Table -->
+      <ng-container *ngIf="technicians$ | async as technicians">
+        <div class="table-wrapper" *ngIf="!(loading$ | async) && !(error$ | async) && technicians.length > 0">
+          <table class="technician-table">
+            <colgroup>
+              <col style="width: 14%;">
+              <col style="width: 16%;">
+              <col style="width: 10%;">
+              <col style="width: 8%;">
+              <col style="width: 8%;">
+              <col style="width: 10%;">
+              <col style="width: 12%;">
+              <col style="width: 8%;">
+              <col style="width: 14%;">
+            </colgroup>
+            <thead>
+              <tr>
+                <th (click)="onTableSort('name')" class="sortable">
+                  Name <span class="sort-icon">{{ getTableSortIcon('name') }}</span>
+                </th>
+                <th (click)="onTableSort('email')" class="sortable">
+                  Email <span class="sort-icon">{{ getTableSortIcon('email') }}</span>
+                </th>
+                <th (click)="onTableSort('phone')" class="sortable">
+                  Phone <span class="sort-icon">{{ getTableSortIcon('phone') }}</span>
+                </th>
+                <th (click)="onTableSort('role')" class="sortable">
+                  Role <span class="sort-icon">{{ getTableSortIcon('role') }}</span>
+                </th>
+                <th (click)="onTableSort('region')" class="sortable">
+                  Region <span class="sort-icon">{{ getTableSortIcon('region') }}</span>
+                </th>
+                <th>Crew</th>
+                <th>Current Job</th>
+                <th (click)="onTableSort('fieldStatus')" class="sortable">
+                  Field Status <span class="sort-icon">{{ getTableSortIcon('fieldStatus') }}</span>
+                </th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let technician of getPaginatedTechnicians(technicians)"
+                  (click)="viewTechnician(technician)"
+                  class="technician-row"
+                  [class.inactive-row]="!technician.isActive"
+                  tabindex="0"
+                  (keydown.enter)="viewTechnician(technician)"
+                  [attr.aria-label]="'View technician ' + getFullName(technician)">
+                <td class="name-cell">
+                  <span class="tech-name">{{ getFullName(technician) }}</span>
+                  <span class="status-dot" [class.active]="technician.isActive" [class.inactive]="!technician.isActive"></span>
+                </td>
+                <td>{{ technician.email }}</td>
+                <td>{{ technician.phone }}</td>
+                <td><span class="role-badge">{{ technician.role }}</span></td>
+                <td>{{ technician.region || '—' }}</td>
+                <td>{{ technicianCrewMap[technician.id] || '—' }}</td>
+                <td class="job-cell">{{ technicianJobMap[technician.id] || '—' }}</td>
+                <td>
+                  <span class="field-status-badge" [ngClass]="getFieldStatusClass(technician)">
+                    {{ getFieldStatusLabel(technician) }}
+                  </span>
+                </td>
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <button mat-icon-button class="action-view" [routerLink]="['./', technician.id]" matTooltip="View" aria-label="View">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button mat-icon-button class="action-edit" [routerLink]="['./', technician.id, 'edit']" matTooltip="Edit" aria-label="Edit">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button [matMenuTriggerFor]="techMenu" matTooltip="More" aria-label="More actions">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #techMenu="matMenu">
+                    <button mat-menu-item *ngIf="technician.isActive" (click)="deactivateTechnician(technician)">
+                      <mat-icon>person_off</mat-icon>
+                      <span>Deactivate</span>
+                    </button>
+                    <button mat-menu-item *ngIf="!technician.isActive" (click)="reactivateTechnician(technician)">
+                      <mat-icon>person_add</mat-icon>
+                      <span>Reactivate</span>
+                    </button>
+                    <mat-divider></mat-divider>
+                    <button mat-menu-item class="delete-action" (click)="deleteTechnician(technician)">
+                      <mat-icon color="warn">delete_forever</mat-icon>
+                      <span>Delete Permanently</span>
+                    </button>
+                  </mat-menu>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <mat-paginator
-        [length]="technicians.length"
-        [pageSize]="pageSize"
-        [pageSizeOptions]="pageSizeOptions"
-        [pageIndex]="pageIndex"
-        (page)="onPageChange($event)"
-        showFirstLastButtons>
-      </mat-paginator>
-    </div>
-  </ng-container>
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="!(loading$ | async) && !(error$ | async) && technicians.length === 0">
+          <mat-icon>person_off</mat-icon>
+          <h3>No technicians found</h3>
+          <p>Try adjusting your search or filters</p>
+        </div>
+
+        <mat-paginator *ngIf="technicians.length > 0"
+          [length]="technicians.length"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          [pageIndex]="pageIndex"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
+      </ng-container>
+    </mat-tab>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 2: PIPELINE / SCHEDULE VIEW -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">view_kanban</mat-icon>
+        Pipeline / Schedule
+      </ng-template>
+
+      <ng-container *ngIf="technicians$ | async as technicians">
+        <div class="pipeline-view" *ngIf="!(loading$ | async)">
+          <!-- Summary Cards -->
+          <div class="pipeline-summary">
+            <div class="summary-card summary-available" (click)="filterByFieldStatus('Available')">
+              <div class="summary-count">{{ getPipelineCount(technicians, 'Available') }}</div>
+              <div class="summary-label">Available</div>
+            </div>
+            <div class="summary-card summary-enroute" (click)="filterByFieldStatus('EnRoute')">
+              <div class="summary-count">{{ getPipelineCount(technicians, 'EnRoute') }}</div>
+              <div class="summary-label">En Route</div>
+            </div>
+            <div class="summary-card summary-onsite" (click)="filterByFieldStatus('OnSite')">
+              <div class="summary-count">{{ getPipelineCount(technicians, 'OnSite') }}</div>
+              <div class="summary-label">On Site</div>
+            </div>
+            <div class="summary-card summary-clockedout" (click)="filterByFieldStatus('ClockedOut')">
+              <div class="summary-count">{{ getPipelineCount(technicians, 'ClockedOut') }}</div>
+              <div class="summary-label">Clocked Out</div>
+            </div>
+            <div class="summary-card summary-inactive" (click)="filterByFieldStatus('Inactive')">
+              <div class="summary-count">{{ getInactiveCount(technicians) }}</div>
+              <div class="summary-label">Inactive</div>
+            </div>
+          </div>
+
+          <!-- Pipeline Filter -->
+          <div class="pipeline-filter-bar" *ngIf="pipelineStatusFilter">
+            <span class="pipeline-filter-label">Showing: <strong>{{ pipelineStatusFilter }}</strong></span>
+            <button mat-stroked-button (click)="clearPipelineFilter()">
+              <mat-icon>close</mat-icon> Show All
+            </button>
+          </div>
+
+          <!-- Pipeline Columns -->
+          <div class="pipeline-columns">
+            <!-- Available Column -->
+            <div class="pipeline-column" *ngIf="!pipelineStatusFilter || pipelineStatusFilter === 'Available'">
+              <div class="column-header column-available">
+                <mat-icon>check_circle</mat-icon>
+                <span>Available</span>
+                <span class="column-count">{{ getAvailableTechnicians(technicians).length }}</span>
+              </div>
+              <div class="column-cards">
+                <div class="pipeline-card" *ngFor="let tech of getAvailableTechnicians(technicians)"
+                     [routerLink]="['./', tech.id]" tabindex="0">
+                  <div class="pipeline-card-name">{{ getFullName(tech) }}</div>
+                  <div class="pipeline-card-meta">
+                    <span class="role-badge-sm">{{ tech.role }}</span>
+                    <span>{{ tech.region || '—' }}</span>
+                  </div>
+                  <div class="pipeline-card-detail" *ngIf="technicianCrewMap[tech.id]">
+                    <mat-icon class="detail-icon">groups</mat-icon>
+                    {{ technicianCrewMap[tech.id] }}
+                  </div>
+                </div>
+                <div class="column-empty" *ngIf="getAvailableTechnicians(technicians).length === 0">
+                  No technicians available
+                </div>
+              </div>
+            </div>
+
+            <!-- En Route Column -->
+            <div class="pipeline-column" *ngIf="!pipelineStatusFilter || pipelineStatusFilter === 'EnRoute'">
+              <div class="column-header column-enroute">
+                <mat-icon>directions_car</mat-icon>
+                <span>En Route</span>
+                <span class="column-count">{{ getEnRouteTechnicians(technicians).length }}</span>
+              </div>
+              <div class="column-cards">
+                <div class="pipeline-card" *ngFor="let tech of getEnRouteTechnicians(technicians)"
+                     [routerLink]="['./', tech.id]" tabindex="0">
+                  <div class="pipeline-card-name">{{ getFullName(tech) }}</div>
+                  <div class="pipeline-card-meta">
+                    <span class="role-badge-sm">{{ tech.role }}</span>
+                    <span>{{ tech.region || '—' }}</span>
+                  </div>
+                  <div class="pipeline-card-detail" *ngIf="technicianJobMap[tech.id]">
+                    <mat-icon class="detail-icon">work</mat-icon>
+                    {{ technicianJobMap[tech.id] }}
+                  </div>
+                </div>
+                <div class="column-empty" *ngIf="getEnRouteTechnicians(technicians).length === 0">
+                  No technicians en route
+                </div>
+              </div>
+            </div>
+
+            <!-- On Site Column -->
+            <div class="pipeline-column" *ngIf="!pipelineStatusFilter || pipelineStatusFilter === 'OnSite'">
+              <div class="column-header column-onsite">
+                <mat-icon>location_on</mat-icon>
+                <span>On Site</span>
+                <span class="column-count">{{ getOnSiteTechnicians(technicians).length }}</span>
+              </div>
+              <div class="column-cards">
+                <div class="pipeline-card" *ngFor="let tech of getOnSiteTechnicians(technicians)"
+                     [routerLink]="['./', tech.id]" tabindex="0">
+                  <div class="pipeline-card-name">{{ getFullName(tech) }}</div>
+                  <div class="pipeline-card-meta">
+                    <span class="role-badge-sm">{{ tech.role }}</span>
+                    <span>{{ tech.region || '—' }}</span>
+                  </div>
+                  <div class="pipeline-card-detail" *ngIf="technicianJobMap[tech.id]">
+                    <mat-icon class="detail-icon">work</mat-icon>
+                    {{ technicianJobMap[tech.id] }}
+                  </div>
+                </div>
+                <div class="column-empty" *ngIf="getOnSiteTechnicians(technicians).length === 0">
+                  No technicians on site
+                </div>
+              </div>
+            </div>
+
+            <!-- Clocked Out Column -->
+            <div class="pipeline-column" *ngIf="!pipelineStatusFilter || pipelineStatusFilter === 'ClockedOut'">
+              <div class="column-header column-clockedout">
+                <mat-icon>logout</mat-icon>
+                <span>Clocked Out</span>
+                <span class="column-count">{{ getClockedOutTechnicians(technicians).length }}</span>
+              </div>
+              <div class="column-cards">
+                <div class="pipeline-card" *ngFor="let tech of getClockedOutTechnicians(technicians)"
+                     [routerLink]="['./', tech.id]" tabindex="0">
+                  <div class="pipeline-card-name">{{ getFullName(tech) }}</div>
+                  <div class="pipeline-card-meta">
+                    <span class="role-badge-sm">{{ tech.role }}</span>
+                    <span>{{ tech.region || '—' }}</span>
+                  </div>
+                </div>
+                <div class="column-empty" *ngIf="getClockedOutTechnicians(technicians).length === 0">
+                  No technicians clocked out
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </mat-tab>
+  </mat-tab-group>
 </div>

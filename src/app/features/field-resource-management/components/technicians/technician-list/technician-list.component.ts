@@ -53,6 +53,16 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   
   // Crew map (technicianId → crew name)
   technicianCrewMap: Record<string, string> = {};
+
+  // Tabs
+  activeTabIndex = 0;
+
+  // Table sorting
+  tableSortColumn: string = '';
+  tableSortDirection: 'asc' | 'desc' = 'asc';
+
+  // Pipeline view
+  pipelineStatusFilter: string = '';
   
   private destroy$ = new Subject<void>();
   
@@ -291,7 +301,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   
   viewTechnician(technician: Technician): void {
     this.store.dispatch(TechnicianActions.selectTechnician({ id: technician.id }));
-    // Navigation will be handled by routing
+    this.router.navigate(['./', technician.id], { relativeTo: this.route });
   }
   
   editTechnician(technician: Technician): void {
@@ -507,5 +517,101 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
         this.snackBar.open('Failed to export to PDF', 'Close', { duration: 5000 });
       }
     });
+  }
+
+  // ─── Table Sort ──────────────────────────────────────────────────────────────
+
+  onTableSort(column: string): void {
+    if (this.tableSortColumn === column) {
+      this.tableSortDirection = this.tableSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.tableSortColumn = column;
+      this.tableSortDirection = 'asc';
+    }
+  }
+
+  getTableSortIcon(column: string): string {
+    if (this.tableSortColumn !== column) return '';
+    return this.tableSortDirection === 'asc' ? '▲' : '▼';
+  }
+
+  getPaginatedTechnicians(technicians: Technician[]): Technician[] {
+    let sorted = [...technicians];
+
+    if (this.tableSortColumn) {
+      sorted.sort((a, b) => {
+        let aVal = '';
+        let bVal = '';
+
+        switch (this.tableSortColumn) {
+          case 'name':
+            aVal = this.getFullName(a).toLowerCase();
+            bVal = this.getFullName(b).toLowerCase();
+            break;
+          case 'email':
+            aVal = (a.email || '').toLowerCase();
+            bVal = (b.email || '').toLowerCase();
+            break;
+          case 'phone':
+            aVal = a.phone || '';
+            bVal = b.phone || '';
+            break;
+          case 'role':
+            aVal = a.role || '';
+            bVal = b.role || '';
+            break;
+          case 'region':
+            aVal = (a.region || '').toLowerCase();
+            bVal = (b.region || '').toLowerCase();
+            break;
+          case 'fieldStatus':
+            aVal = (a.fieldStatus || 'Available').toLowerCase();
+            bVal = (b.fieldStatus || 'Available').toLowerCase();
+            break;
+          default:
+            return 0;
+        }
+
+        const comparison = aVal.localeCompare(bVal);
+        return this.tableSortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    const start = this.pageIndex * this.pageSize;
+    return sorted.slice(start, start + this.pageSize);
+  }
+
+  // ─── Pipeline / Schedule View ────────────────────────────────────────────────
+
+  filterByFieldStatus(status: string): void {
+    this.pipelineStatusFilter = this.pipelineStatusFilter === status ? '' : status;
+  }
+
+  clearPipelineFilter(): void {
+    this.pipelineStatusFilter = '';
+  }
+
+  getPipelineCount(technicians: Technician[], status: string): number {
+    return technicians.filter(t => t.isActive && (t.fieldStatus || 'Available') === status).length;
+  }
+
+  getInactiveCount(technicians: Technician[]): number {
+    return technicians.filter(t => !t.isActive).length;
+  }
+
+  getAvailableTechnicians(technicians: Technician[]): Technician[] {
+    return technicians.filter(t => t.isActive && (!t.fieldStatus || t.fieldStatus === 'Available'));
+  }
+
+  getEnRouteTechnicians(technicians: Technician[]): Technician[] {
+    return technicians.filter(t => t.isActive && t.fieldStatus === 'EnRoute');
+  }
+
+  getOnSiteTechnicians(technicians: Technician[]): Technician[] {
+    return technicians.filter(t => t.isActive && t.fieldStatus === 'OnSite');
+  }
+
+  getClockedOutTechnicians(technicians: Technician[]): Technician[] {
+    return technicians.filter(t => t.isActive && t.fieldStatus === 'ClockedOut');
   }
 }

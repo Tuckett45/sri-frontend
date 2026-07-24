@@ -74,39 +74,187 @@
   }
 }
 
-.filter-panel {
-  margin-bottom: 24px;
-  background-color: white;
+// ─── Tab Styling ─────────────────────────────────────────────────────────────
 
-  mat-card-content {
-    padding: 16px;
-  }
-
-  .search-field {
-    width: 100%;
+::ng-deep .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    border-bottom: 2px solid #e0e0e0;
     margin-bottom: 16px;
   }
 
-  .filters-row {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    flex-wrap: wrap;
+  .mat-mdc-tab-labels {
+    gap: 4px;
+  }
 
-    mat-form-field {
-      flex: 1;
-      min-width: 200px;
+  .mdc-tab__text-label {
+    color: #424242 !important;
+    font-weight: 500;
+  }
+
+  .mdc-tab--active .mdc-tab__text-label {
+    color: #1976d2 !important;
+  }
+
+  .mdc-tab-indicator__content--underline {
+    border-color: #1976d2 !important;
+  }
+}
+
+.tab-icon {
+  margin-right: 6px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+// ─── Tab Filters ─────────────────────────────────────────────────────────────
+
+.tab-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+
+  .filter-field {
+    flex: 1;
+    min-width: 180px;
+    max-width: 280px;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  .filter-field--narrow {
+    flex: 0 1 160px;
+    min-width: 140px;
+  }
+
+  .availability-toggle {
+    margin-left: 8px;
+    color: #000000 !important;
+
+    ::ng-deep {
+      .mdc-form-field > label,
+      .mdc-label {
+        color: #000000 !important;
+      }
+
+      .mdc-checkbox__background {
+        border-color: #000000 !important;
+      }
+    }
+  }
+
+  // Force black text for filter labels and inputs
+  ::ng-deep {
+    .mat-mdc-floating-label,
+    .mdc-floating-label,
+    .mat-mdc-form-field-label {
+      color: #000000 !important;
     }
 
-    .availability-toggle {
-      margin-left: 8px;
+    .mat-mdc-input-element,
+    .mat-mdc-select-value-text,
+    .mat-mdc-select-placeholder {
+      color: #000000 !important;
     }
 
-    button {
-      white-space: nowrap;
+    .mat-mdc-select-arrow {
+      color: #000000 !important;
+    }
+
+    // Dark blue icons for search and clear filter
+    .mat-mdc-form-field-icon-prefix,
+    .mat-mdc-form-field-icon-suffix {
+      .mat-icon,
+      mat-icon {
+        color: #1565c0 !important;
+      }
+    }
+  }
+
+  // Dark blue for the standalone clear filters icon button
+  > button[mat-icon-button] .mat-icon {
+    color: #1565c0 !important;
+  }
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+
+    .filter-field,
+    .filter-field--narrow {
+      max-width: 100%;
+      width: 100%;
     }
   }
 }
+
+// ─── Active Filter Chips ─────────────────────────────────────────────────────
+
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .filter-label {
+    font-weight: 500;
+    color: #757575;
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  mat-chip {
+    background-color: #1565c0 !important;
+    color: #ffffff !important;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 400;
+    border: none !important;
+
+    strong {
+      margin-right: 4px;
+    }
+
+    button[matChipRemove] {
+      margin-left: 4px;
+      opacity: 0.85;
+      cursor: pointer;
+      color: #ffffff;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+::ng-deep .active-filters {
+  .mat-mdc-chip,
+  .mat-mdc-chip-row,
+  .mdc-evolution-chip {
+    background-color: #1565c0 !important;
+    border: none !important;
+  }
+
+  .mdc-evolution-chip__text-label,
+  .mat-mdc-chip-action-label {
+    color: #ffffff !important;
+  }
+}
+
+// ─── Loading & Error ─────────────────────────────────────────────────────────
 
 .loading-container {
   display: flex;
@@ -115,111 +263,171 @@
   padding: 48px;
 }
 
-.error-state {
-  .error-card {
-    background-color: #ffffff !important;
-    border: 1px solid #f44336;
-    border-radius: 8px;
-    margin-bottom: 24px;
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #fdecea;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  color: #b71c1c;
+  font-size: 0.875rem;
+}
 
-    mat-card-content {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 24px;
-      gap: 8px;
+// ─── Technician Table ────────────────────────────────────────────────────────
 
-      h3 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 500;
-        color: #424242;
-      }
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
 
-      p {
-        margin: 0;
-        color: #757575;
+.technician-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  table-layout: fixed;
+
+  thead th {
+    text-align: left;
+    padding: 0.625rem 0.5rem;
+    background: #f5f5f5;
+    border-bottom: 2px solid #e0e0e0;
+    font-weight: 600;
+    color: #424242;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+
+    &.sortable {
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        background: #eeeeee;
       }
     }
   }
-}
 
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-
-  &.active {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-  }
-
-  &.inactive {
-    background-color: #f5f5f5;
-    color: #757575;
-  }
-
-  &.on-site {
-    background-color: #4caf50 !important;
-    color: white !important;
-  }
-
-  &.en-route {
-    background-color: #ff9800 !important;
-    color: white !important;
-  }
-}
-
-.field-status-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-
-  &.status-on-site {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #4caf50;
-  }
-
-  &.status-en-route {
-    background-color: #fff3e0;
+  .sort-icon {
+    font-size: 0.7rem;
+    margin-left: 0.25rem;
     color: #e65100;
-    border: 1px solid #ff9800;
   }
 
-  &.status-off-duty {
-    background-color: #f5f5f5;
-    color: #757575;
-    border: 1px solid #9e9e9e;
+  tbody td {
+    padding: 0.5rem 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    color: #212121;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .technician-row {
+    cursor: pointer;
+    transition: background-color 0.15s;
+
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.04);
+    }
+
+    &:focus {
+      outline: 2px solid #1976d2;
+      outline-offset: -2px;
+    }
+
+    &.inactive-row {
+      opacity: 0.6;
+    }
+  }
+
+  .name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+
+    .tech-name {
+      color: #1565c0;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+
+      &.active {
+        background-color: #4caf50;
+      }
+
+      &.inactive {
+        background-color: #bdbdbd;
+      }
+    }
+  }
+
+  .job-cell {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .actions-cell {
+    white-space: nowrap;
+    text-align: center;
   }
 }
 
 .role-badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
   background-color: #e3f2fd;
-  color: #1976d2;
-  font-size: 12px;
+  color: #1565c0;
+  font-size: 11px;
   font-weight: 500;
 }
 
-mat-paginator {
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
-  background-color: #ffffff !important;
-  color: #000000 !important;
+.field-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.field-status-onsite {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  &.field-status-enroute {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+
+  &.field-status-available {
+    background-color: #f3f4f6;
+    color: #374151;
+  }
+
+  &.field-status-clockedout {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
 }
+
+// ─── Paginator ───────────────────────────────────────────────────────────────
 
 ::ng-deep mat-paginator {
   background-color: #ffffff !important;
-
-  .mat-mdc-paginator-container {
-    color: #000000 !important;
-  }
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
 
   .mat-mdc-paginator-range-label,
   .mat-mdc-paginator-page-size-label {
@@ -245,6 +453,8 @@ mat-paginator {
     }
   }
 }
+
+// ─── Empty State ─────────────────────────────────────────────────────────────
 
 .empty-state {
   display: flex;
@@ -275,263 +485,276 @@ mat-paginator {
   }
 }
 
-// Mobile responsive styles
-@media (max-width: 768px) {
-  .technician-list-container {
+// ─── Pipeline / Schedule View ────────────────────────────────────────────────
+
+.pipeline-view {
+  padding: 16px 0;
+}
+
+.pipeline-summary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  .summary-card {
+    flex: 1;
+    min-width: 140px;
     padding: 16px;
-  }
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-align: center;
 
-  .list-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-
-    button {
-      width: 100%;
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-  }
 
-  .filter-panel {
-    .filters-row {
-      flex-direction: column;
-
-      mat-form-field {
-        width: 100%;
-      }
-
-      button {
-        width: 100%;
-      }
+    .summary-count {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
     }
-  }
-}
 
-// Search highlighting
-::ng-deep .search-highlight {
-  background-color: #ffeb3b;
-  font-weight: 600;
-  padding: 2px 0;
-  border-radius: 2px;
-}
-
-// Filter expansion panel
-.filter-expansion {
-  margin-top: 16px;
-
-  mat-panel-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .filter-count {
-      color: #1976d2;
+    .summary-label {
+      font-size: 13px;
       font-weight: 500;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    &.summary-available {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      .summary-count { color: #166534; }
+      .summary-label { color: #15803d; }
+    }
+
+    &.summary-enroute {
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      .summary-count { color: #1e40af; }
+      .summary-label { color: #1d4ed8; }
+    }
+
+    &.summary-onsite {
+      background: #fefce8;
+      border: 1px solid #fde047;
+      .summary-count { color: #854d0e; }
+      .summary-label { color: #a16207; }
+    }
+
+    &.summary-clockedout {
+      background: #fef3f2;
+      border: 1px solid #fecaca;
+      .summary-count { color: #991b1b; }
+      .summary-label { color: #b91c1c; }
+    }
+
+    &.summary-inactive {
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+      .summary-count { color: #4b5563; }
+      .summary-label { color: #6b7280; }
     }
   }
 }
 
-// Active filter chips
-.active-filters {
+.pipeline-filter-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 16px;
-  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
 
-  .filter-label {
-    font-weight: 500;
-    color: #757575;
+  .pipeline-filter-label {
+    font-size: 14px;
+    color: #1565c0;
   }
+}
 
-  .filter-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+.pipeline-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
 
-  mat-chip {
-    background-color: #1565c0 !important;
-    color: #ffffff !important;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: 400;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
+  .pipeline-column {
+    background: #fafafa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
 
-    strong {
-      margin-right: 4px;
-      font-weight: 400;
-    }
+    .column-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 14px;
 
-    button[matChipRemove] {
-      margin-left: 4px;
-      opacity: 0.85;
-      cursor: pointer;
-      color: #ffffff;
-
-      &:hover {
-        opacity: 1;
+      .column-count {
+        margin-left: auto;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
       }
 
       mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        color: #ffffff;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
       }
+
+      &.column-available {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      &.column-enroute {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      &.column-onsite {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      &.column-clockedout {
+        background: #f3f4f6;
+        color: #4b5563;
+      }
+    }
+
+    .column-cards {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .column-empty {
+      padding: 24px;
+      text-align: center;
+      color: #9e9e9e;
+      font-size: 13px;
+      font-style: italic;
     }
   }
 }
 
-::ng-deep .active-filters {
-  .mat-mdc-chip,
-  .mat-mdc-chip-row,
-  .mdc-evolution-chip {
-    background-color: #1565c0 !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  .mdc-evolution-chip__action--primary,
-  .mdc-evolution-chip__action--trailing {
-    border: none !important;
-    outline: none !important;
-  }
-
-  .mdc-evolution-chip__cell,
-  .mat-mdc-chip-action-label {
-    color: #ffffff !important;
-    font-weight: 400 !important;
-  }
-
-  .mdc-evolution-chip__text-label {
-    color: #ffffff !important;
-    font-weight: 400 !important;
-  }
-}
-
-
-.technician-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.technician-card {
-  background: white;
-  border-radius: 8px;
+.pipeline-card {
+  background: #ffffff;
   border: 1px solid #e0e0e0;
-  padding: 14px;
+  border-radius: 6px;
+  padding: 10px 12px;
   cursor: pointer;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.15s, border-color 0.15s;
   text-decoration: none;
   color: inherit;
 
   &:hover, &:focus {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: #90caf9;
     outline: none;
   }
 
-  .technician-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    gap: 8px;
-  }
-
-  .technician-card-title {
+  .pipeline-card-name {
     font-weight: 600;
-    font-size: 0.95rem;
-    color: #1976d2;
-    flex: 1;
-    min-width: 0;
+    font-size: 0.875rem;
+    color: #1565c0;
+    margin-bottom: 4px;
   }
 
-  .technician-card-body {
+  .pipeline-card-meta {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .technician-card-row {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 8px;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
+    color: #616161;
   }
 
-  .technician-card-label {
-    color: #757575;
-    font-weight: 500;
-    flex-shrink: 0;
-    min-width: 80px;
-  }
-
-  .technician-card-value {
-    color: #212121;
-    text-align: right;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .technician-card-actions {
+  .pipeline-card-detail {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
     gap: 4px;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #f0f0f0;
+    font-size: 0.75rem;
+    color: #757575;
+    margin-top: 6px;
 
-    button {
-      color: #616161;
-
-      &.delete-action {
-        color: #d32f2f;
-      }
+    .detail-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
     }
   }
 }
 
-@media (max-width: 767px) {
-  .technician-list-container {
-    padding: 12px;
-    min-height: auto;
-    height: auto;
+.role-badge-sm {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+// ─── Menu Styling ────────────────────────────────────────────────────────────
+
+// Action button icon colors
+.actions-cell {
+  .action-view .mat-icon {
+    color: #1565c0 !important;
+  }
+
+  .action-edit .mat-icon {
+    color: #e65100 !important;
+  }
+
+  .mat-mdc-icon-button .mat-icon {
+    color: #212121;
   }
 }
 
-// Field Status Badge Styles
-.field-status-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
+::ng-deep .mat-mdc-menu-panel {
+  .delete-action {
+    color: #c62828 !important;
 
-  &.field-status-onsite {
-    background-color: #d1fae5;
-    color: #065f46;
+    .mat-icon {
+      color: #c62828 !important;
+    }
+
+    span {
+      color: #c62828 !important;
+    }
+  }
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+
+@media (max-width: 767px) {
+  .technician-list-container {
+    padding: 12px;
   }
 
-  &.field-status-enroute {
-    background-color: #dbeafe;
-    color: #1e40af;
+  .pipeline-summary {
+    flex-direction: column;
+
+    .summary-card {
+      min-width: unset;
+    }
   }
 
-  &.field-status-available {
-    background-color: #f3f4f6;
-    color: #374151;
-  }
-
-  &.field-status-clockedout {
-    background-color: #fef3c7;
-    color: #92400e;
+  .pipeline-columns {
+    grid-template-columns: 1fr;
   }
 }

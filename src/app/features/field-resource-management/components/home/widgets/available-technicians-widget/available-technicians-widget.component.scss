@@ -113,3 +113,31 @@
     }
   }
 }
+
+::ng-deep mat-paginator {
+  background-color: #ffffff !important;
+
+  .mat-mdc-paginator-range-label,
+  .mat-mdc-paginator-page-size-label {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-select-value-text {
+    color: #000000 !important;
+  }
+
+  .mat-mdc-select-arrow svg {
+    fill: #000000 !important;
+  }
+
+  .mat-mdc-paginator-navigation-previous,
+  .mat-mdc-paginator-navigation-next,
+  .mat-mdc-paginator-navigation-first,
+  .mat-mdc-paginator-navigation-last {
+    color: #000000 !important;
+
+    .mat-mdc-paginator-icon {
+      fill: #000000 !important;
+    }
+  }
+}

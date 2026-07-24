@@ -31,6 +31,10 @@ export class AvailableTechniciansWidgetComponent implements OnInit, OnChanges, O
   loading$!: Observable<boolean>;
   error: string | null = null;
 
+  // Pagination
+  pageSize = 5;
+  pageIndex = 0;
+
   private technicianIds$ = new BehaviorSubject<string[] | null>(null);
   private destroy$ = new Subject<void>();
 
@@ -86,5 +90,10 @@ export class AvailableTechniciansWidgetComponent implements OnInit, OnChanges, O
 
   retry(): void {
     this.error = null;
+  }
+
+  onPageChange(event: any): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
   }
 }
