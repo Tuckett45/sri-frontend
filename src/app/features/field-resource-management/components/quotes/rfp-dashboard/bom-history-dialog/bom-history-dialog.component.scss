@@ -1,6 +1,25 @@
 .full-width {
   width: 100%;
   margin-bottom: 16px;
+
+  ::ng-deep {
+    .mat-mdc-header-row {
+      background-color: #fafafa !important;
+    }
+
+    .mat-mdc-header-cell {
+      color: #000000 !important;
+      font-weight: 600;
+    }
+
+    .mat-mdc-row {
+      background-color: #ffffff !important;
+    }
+
+    .mat-mdc-cell {
+      color: #000000 !important;
+    }
+  }
 }
 
 .no-entries {
