@@ -1,26 +1,97 @@
-.full-width {
-  width: 100%;
+// ─── BOM List ──────────────────────────────────────────────────────────────
+
+.bom-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 16px;
+}
 
-  ::ng-deep {
-    .mat-mdc-header-row {
-      background-color: #fafafa !important;
-    }
+.bom-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  background: #fafafa;
+  transition: border-color 0.2s;
 
-    .mat-mdc-header-cell {
-      color: #000000 !important;
-      font-weight: 600;
-    }
-
-    .mat-mdc-row {
-      background-color: #ffffff !important;
-    }
-
-    .mat-mdc-cell {
-      color: #000000 !important;
-    }
+  &.editing {
+    border-color: #e65100;
+    background: #fff8e1;
   }
 }
+
+.bom-list-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.bom-item-description {
+  font-size: 14px;
+  font-weight: 500;
+  color: #212121;
+}
+
+.bom-list-item-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #616161;
+  margin-top: 2px;
+}
+
+.bom-list-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+// ─── Icon Button Colors ─────────────────────────────────────────────────────
+
+.edit-btn {
+  color: #e65100 !important; // orange
+
+  .mat-icon {
+    color: #e65100 !important;
+  }
+}
+
+.delete-btn {
+  color: #c62828 !important; // red
+
+  .mat-icon {
+    color: #c62828 !important;
+  }
+}
+
+// Calendar icon color (date picker toggle) - must target SVG fill for Material 18
+::ng-deep {
+  .mat-datepicker-toggle,
+  .mat-datepicker-toggle-default-icon,
+  .mat-datepicker-toggle .mat-mdc-icon-button {
+    color: #212121 !important;
+  }
+
+  .mat-datepicker-toggle svg {
+    fill: #212121 !important;
+  }
+
+  .mat-datepicker-toggle .mat-icon {
+    color: #212121 !important;
+  }
+
+  .mat-datepicker-toggle .mdc-icon-button {
+    color: #212121 !important;
+  }
+}
+
+// ─── No Entries ─────────────────────────────────────────────────────────────
 
 .no-entries {
   text-align: center;
@@ -28,7 +99,9 @@
   margin: 16px 0;
 }
 
-.add-form {
+// ─── Entry Form ─────────────────────────────────────────────────────────────
+
+.entry-form {
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
@@ -52,4 +125,46 @@
     flex: 1;
     min-width: 200px;
   }
+}
+
+// ─── Status Badge Colors ────────────────────────────────────────────────────
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-ordered {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+
+.status-shipped {
+  background-color: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+}
+
+.status-received {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.status-backordered {
+  background-color: #fce4ec;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+
+.status-na {
+  background-color: #f5f5f5;
+  color: #616161;
+  border: 1px solid #e0e0e0;
 }

@@ -146,6 +146,30 @@ export class RfpDetailDialogComponent {
 
   // ─── BOM Tracking ──────────────────────────────────────────────────────────
 
+  getBomStatusClass(status: string): string {
+    switch (status) {
+      case 'Ordered': return 'bom-status-ordered';
+      case 'Shipped': return 'bom-status-shipped';
+      case 'Received': return 'bom-status-received';
+      case 'Backordered': return 'bom-status-backordered';
+      case 'N/A': return 'bom-status-na';
+      default: return '';
+    }
+  }
+
+  deleteBomEntry(bom: any): void {
+    if (!bom.id) return;
+    const confirmed = window.confirm(`Delete BOM entry "${bom.bomDescription}"?`);
+    if (confirmed) {
+      this.store.dispatch(DashboardActions.deleteBomTracking({
+        quoteId: this.record.id,
+        trackingId: bom.id
+      }));
+      // Optimistically remove from local list
+      this.data.record.bomTrackings = this.data.record.bomTrackings?.filter((b: any) => b.id !== bom.id);
+    }
+  }
+
   openBomHistory(): void {
     const dialogRef = this.dialog.open(BomHistoryDialogComponent, {
       width: '700px',
@@ -154,9 +178,8 @@ export class RfpDetailDialogComponent {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // BOM was added – the createBomTrackingSuccess effect already
-        // triggers a dashboard reload with the correct filters from the store.
-        // No manual dispatch needed here.
+        // BOM was changed – the success effects already
+        // trigger a dashboard reload with the correct filters from the store.
       }
     });
   }

@@ -291,6 +291,74 @@ mat-dialog-actions {
     color: #212121;
   }
 
+  .bom-entry-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .bom-action-btn {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    color: #e65100 !important; // orange for edit
+
+    .mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: #e65100 !important;
+    }
+  }
+
+  .bom-delete-btn {
+    color: #c62828 !important; // red for delete
+
+    .mat-icon {
+      color: #c62828 !important;
+    }
+  }
+
+  .bom-status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .bom-status-ordered {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+  }
+
+  .bom-status-shipped {
+    background-color: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+  }
+
+  .bom-status-received {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+  }
+
+  .bom-status-backordered {
+    background-color: #fce4ec;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+  }
+
+  .bom-status-na {
+    background-color: #f5f5f5;
+    color: #616161;
+    border: 1px solid #e0e0e0;
+  }
+
   .bom-status-chip {
     font-size: 11px;
   }

@@ -425,7 +425,15 @@
         <div class="bom-entry" *ngFor="let bom of record.bomTrackings">
           <div class="bom-entry-header">
             <span class="bom-description">{{ bom.bomDescription }}</span>
-            <mat-chip class="bom-status-chip">{{ bom.status }}</mat-chip>
+            <div class="bom-entry-actions">
+              <span class="bom-status-badge" [ngClass]="getBomStatusClass(bom.status)">{{ bom.status }}</span>
+              <button mat-icon-button class="bom-action-btn" (click)="openBomHistory()" matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button class="bom-action-btn bom-delete-btn" (click)="deleteBomEntry(bom)" matTooltip="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
           </div>
           <div class="bom-entry-details">
             <span *ngIf="bom.orderedDate"><strong>Ordered:</strong> {{ bom.orderedDate | date:'shortDate' }}</span>

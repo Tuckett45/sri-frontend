@@ -76,6 +76,36 @@ export const createBomTrackingFailure = createAction(
   props<{ error: string }>()
 );
 
+export const updateBomTracking = createAction(
+  '[Dashboard] Update BOM Tracking',
+  props<{ quoteId: string; trackingId: string; entry: Partial<BomTracking> }>()
+);
+
+export const updateBomTrackingSuccess = createAction(
+  '[Dashboard] Update BOM Tracking Success',
+  props<{ quoteId: string; tracking: BomTracking }>()
+);
+
+export const updateBomTrackingFailure = createAction(
+  '[Dashboard] Update BOM Tracking Failure',
+  props<{ error: string }>()
+);
+
+export const deleteBomTracking = createAction(
+  '[Dashboard] Delete BOM Tracking',
+  props<{ quoteId: string; trackingId: string }>()
+);
+
+export const deleteBomTrackingSuccess = createAction(
+  '[Dashboard] Delete BOM Tracking Success',
+  props<{ quoteId: string; trackingId: string }>()
+);
+
+export const deleteBomTrackingFailure = createAction(
+  '[Dashboard] Delete BOM Tracking Failure',
+  props<{ error: string }>()
+);
+
 
 // Bulk Import RFPs
 export const bulkImportRfps = createAction(

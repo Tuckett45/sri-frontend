@@ -42,8 +42,12 @@ export class DeploymentNotificationIntegratorService implements OnDestroy {
       }
     }
 
-    // Connect to SignalR hub
-    await this.socket.connect();
+    // Connect to SignalR hub only if notifications are enabled
+    if (notificationsEnabled) {
+      await this.socket.connect();
+    } else {
+      console.log('📵 SignalR connection skipped - notifications disabled');
+    }
 
     // Subscribe to all deployment events
     this.subscribeToDeploymentAssigned();

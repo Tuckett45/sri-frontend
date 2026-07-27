@@ -102,6 +102,15 @@ export class RfpDashboardService {
     );
   }
 
+  /**
+   * Deletes a BOM tracking entry.
+   */
+  deleteBomTracking(quoteId: string, trackingId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.quotesUrl}/${quoteId}/bom-trackings/${trackingId}`
+    );
+  }
+
   // ===========================================================================
   // Bulk Import
   // ===========================================================================

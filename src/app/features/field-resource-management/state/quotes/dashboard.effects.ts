@@ -88,12 +88,55 @@ export class DashboardEffects {
 
   showBomTrackingSuccess$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(DashboardActions.createBomTrackingSuccess),
+      ofType(
+        DashboardActions.createBomTrackingSuccess,
+        DashboardActions.updateBomTrackingSuccess,
+        DashboardActions.deleteBomTrackingSuccess
+      ),
       withLatestFrom(this.store.select(selectDashboardFilters)),
-      tap(() => {
-        this.snackBar.open('BOM tracking entry added', 'Close', { duration: 3000 });
+      tap((action) => {
+        const [a] = action;
+        if (a.type === DashboardActions.createBomTrackingSuccess.type) {
+          this.snackBar.open('BOM tracking entry added', 'Close', { duration: 3000 });
+        } else if (a.type === DashboardActions.updateBomTrackingSuccess.type) {
+          this.snackBar.open('BOM tracking entry updated', 'Close', { duration: 3000 });
+        } else {
+          this.snackBar.open('BOM tracking entry deleted', 'Close', { duration: 3000 });
+        }
       }),
       map(([_, filters]) => DashboardActions.loadDashboard({ filters }))
+    )
+  );
+
+  updateBomTracking$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.updateBomTracking),
+      switchMap(({ quoteId, trackingId, entry }) =>
+        this.dashboardService.updateBomTracking(quoteId, trackingId, entry).pipe(
+          map((tracking) => DashboardActions.updateBomTrackingSuccess({ quoteId, tracking })),
+          catchError((error) =>
+            of(DashboardActions.updateBomTrackingFailure({
+              error: error.message || 'Failed to update BOM tracking'
+            }))
+          )
+        )
+      )
+    )
+  );
+
+  deleteBomTracking$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DashboardActions.deleteBomTracking),
+      switchMap(({ quoteId, trackingId }) =>
+        this.dashboardService.deleteBomTracking(quoteId, trackingId).pipe(
+          map(() => DashboardActions.deleteBomTrackingSuccess({ quoteId, trackingId })),
+          catchError((error) =>
+            of(DashboardActions.deleteBomTrackingFailure({
+              error: error.message || 'Failed to delete BOM tracking'
+            }))
+          )
+        )
+      )
     )
   );
 
@@ -104,6 +147,8 @@ export class DashboardEffects {
         DashboardActions.loadUsersFailure,
         DashboardActions.updateDashboardFieldsFailure,
         DashboardActions.createBomTrackingFailure,
+        DashboardActions.updateBomTrackingFailure,
+        DashboardActions.deleteBomTrackingFailure,
         DashboardActions.bulkImportRfpsFailure,
         DashboardActions.deleteRfpFailure
       ),

@@ -36,7 +36,7 @@ export class FeatureFlagService {
       key: 'notifications',
       label: 'Notifications',
       description: 'Enable in-app and push notifications to keep teams aware of project changes.',
-      defaultValue: true
+      defaultValue: false // DISABLED: for local BOM testing (no push/SignalR backend)
     },
     {
       key: 'atlas',

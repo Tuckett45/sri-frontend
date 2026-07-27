@@ -66,9 +66,10 @@ export class AppComponent {
         
         // Initialize notification integrator when user is logged in
         if (authState.isAuthenticated) {
-          this.notificationIntegrator.initialize().catch(error => {
-            console.error('Failed to initialize notifications:', error);
-          });
+          // DISABLED: push notifications & SignalR not available locally
+          // this.notificationIntegrator.initialize().catch(error => {
+          //   console.error('Failed to initialize notifications:', error);
+          // });
 
           // Track login event and set user properties for analytics
           this.analyticsService.trackLogin();

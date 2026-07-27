@@ -202,6 +202,22 @@ mat-error{
   }
 }
 
+/* Black calendar icons in BOM tracking dialog */
+.cdk-overlay-container app-bom-history-dialog .mat-datepicker-toggle,
+app-bom-history-dialog .mat-datepicker-toggle {
+  color: #212121 !important;
+
+  .mat-mdc-icon-button {
+    color: #212121 !important;
+
+    mat-icon,
+    svg {
+      color: #212121 !important;
+      fill: #212121 !important;
+    }
+  }
+}
+
 /* Blue back arrow buttons in detail pages */
 button[mat-icon-button] mat-icon,
 button.mat-mdc-icon-button mat-icon {
