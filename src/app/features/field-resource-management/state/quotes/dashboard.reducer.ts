@@ -125,15 +125,19 @@ export const dashboardReducer = createReducer(
   })),
 
   on(DashboardActions.createBomTrackingSuccess, (state, { quoteId, tracking }) => {
-    const projectTrackingRecords = state.projectTrackingRecords.map(q => {
-      if (q.id === quoteId) {
-        return { ...q, bomTrackings: [...q.bomTrackings, tracking] };
-      }
-      return q;
-    });
+    const addBomToArray = (arr: DashboardQuote[]) =>
+      arr.map(q => {
+        if (q.id === quoteId) {
+          return { ...q, bomTrackings: [...(q.bomTrackings || []), tracking] };
+        }
+        return q;
+      });
+
     return {
       ...state,
-      projectTrackingRecords,
+      rfpRecords: addBomToArray(state.rfpRecords),
+      poTrackingRecords: addBomToArray(state.poTrackingRecords),
+      projectTrackingRecords: addBomToArray(state.projectTrackingRecords),
       saving: false,
       error: null
     };
