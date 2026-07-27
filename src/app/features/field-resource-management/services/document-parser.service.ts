@@ -65,10 +65,62 @@ export class DocumentParserService {
 
   /**
    * Full pipeline: extract text then parse it.
+   * Also uses the file name to extract client/site info if the naming convention
+   * follows "SRI - Client - City" pattern.
    */
   async parseFile(file: File): Promise<ParsedJobDocument> {
     const text = await this.extractText(file);
-    return this.parseText(text);
+    const result = this.parseText(text);
+
+    // If client wasn't extracted from document content, try the file name
+    // File names follow convention: "SRI - Client City.pdf" or "SRI - Client - City.docx"
+    if (!result.clientName || result.clientName === result.siteName) {
+      this.extractFromFileName(file.name, result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Extracts client and site info from file name.
+   * Expected patterns: "SRI - FTI Columbus.pdf", "SRI - IES - Montgomery.docx"
+   */
+  private extractFromFileName(fileName: string, result: ParsedJobDocument): void {
+    // Remove file extension
+    const nameWithoutExt = fileName.replace(/\.[^.]+$/, '').trim();
+
+    const sriMatch = nameWithoutExt.match(/^SRI\s*[–\-—]\s*(.+)$/i);
+    if (!sriMatch) return;
+
+    const afterSri = sriMatch[1].trim();
+    const dashParts = afterSri.split(/\s*[–\-—]\s*/);
+
+    if (dashParts.length >= 2) {
+      // "Client - City" format
+      const client = dashParts[0].trim();
+      const city = dashParts.slice(1).join(' ').trim().replace(/,?\s*[A-Z]{2}\s*$/, '').trim();
+      result.clientName = client;
+      result.siteName = `${client} - ${city || dashParts.slice(1).join(' ').trim()}`;
+      if (!result.siteAddress) {
+        result.siteAddress = { city: city || dashParts.slice(1).join(' ').trim() };
+      } else if (!result.siteAddress.city) {
+        result.siteAddress.city = city || dashParts.slice(1).join(' ').trim();
+      }
+    } else {
+      // "Client City" format — client is first all-caps word
+      const parts = afterSri.match(/^([A-Z][A-Z0-9&]{1,10})\s+(.+)$/);
+      if (parts) {
+        const client = parts[1].trim();
+        const city = parts[2].trim().replace(/,?\s*[A-Z]{2}\s*$/, '').trim();
+        result.clientName = client;
+        result.siteName = `${client} - ${city || parts[2].trim()}`;
+        if (!result.siteAddress) {
+          result.siteAddress = { city: city || parts[2].trim() };
+        } else if (!result.siteAddress.city) {
+          result.siteAddress.city = city || parts[2].trim();
+        }
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -135,13 +187,58 @@ export class DocumentParserService {
   // ---------------------------------------------------------------------------
 
   private extractClientName(text: string, result: ParsedJobDocument): void {
-    // Look for patterns like "SRI – Columbus, OH" or "SRI - IES Huntsville" or "SRI – FTI Columbus"
-    // These typically appear as a title/header line near the top of the document
-    const sriPattern = text.match(/\b(SRI\s*[–\-—]\s*[^\n]{3,60})/i);
+    // Look for patterns like "SRI - FTI Columbus" or "SRI – IES - Montgomery" or "SRI - CBRE Dallas"
+    // Format: SRI - Client City  OR  SRI - Client - City
+    // SRI is always the company, the next part is the Client, and the last part is the City
+    const sriPattern = text.match(/\bSRI\s*[–\-—]\s*([^\n]{3,60})/i);
     if (sriPattern) {
-      const fullName = sriPattern[1].trim();
-      result.siteName = fullName;
-      result.clientName = 'SRI';
+      const afterSri = sriPattern[1].trim();
+
+      // Try splitting on a second dash: "IES - Montgomery" or "FTI - Columbus, OH"
+      const dashParts = afterSri.split(/\s*[–\-—]\s*/);
+
+      if (dashParts.length >= 2) {
+        // "SRI - Client - City" format
+        const client = dashParts[0].trim();
+        const city = dashParts.slice(1).join(' ').trim();
+        // Remove state abbreviation from city for the site name (e.g., "Columbus, OH" → city is "Columbus")
+        const cityClean = city.replace(/,?\s*[A-Z]{2}\s*$/, '').trim() || city;
+        result.clientName = client;
+        result.siteName = `${client} - ${cityClean}`;
+        if (!result.siteAddress) {
+          result.siteAddress = { city: cityClean };
+        } else if (!result.siteAddress.city) {
+          result.siteAddress.city = cityClean;
+        }
+      } else {
+        // "SRI - Client City" format (e.g., "SRI - FTI Columbus" or "SRI - FTI Columbus, OH")
+        // The client is typically a short abbreviation (all caps, 2-5 chars), then city follows
+        const parts = afterSri.match(/^([A-Z][A-Z0-9&]{1,10})\s+(.+)$/);
+        if (parts) {
+          const client = parts[1].trim();
+          const cityRaw = parts[2].trim();
+          // Remove state abbreviation from city portion (e.g., "Columbus, OH" → "Columbus")
+          const cityClean = cityRaw.replace(/,?\s*[A-Z]{2}\s*$/, '').trim() || cityRaw;
+          result.clientName = client;
+          result.siteName = `${client} - ${cityClean}`;
+          if (!result.siteAddress) {
+            result.siteAddress = { city: cityClean };
+          } else if (!result.siteAddress.city) {
+            result.siteAddress.city = cityClean;
+          }
+        } else {
+          // Can't separate client from city — might be just a city like "Columbus, OH"
+          // or a single-word client. Use the full string as site name
+          const cityClean = afterSri.replace(/,?\s*[A-Z]{2}\s*$/, '').trim() || afterSri;
+          result.clientName = afterSri;
+          result.siteName = afterSri;
+          if (!result.siteAddress) {
+            result.siteAddress = { city: cityClean };
+          } else if (!result.siteAddress.city) {
+            result.siteAddress.city = cityClean;
+          }
+        }
+      }
       return;
     }
 
