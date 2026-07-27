@@ -126,16 +126,24 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       </div>
 
       <!-- Bulk Action Bar -->
-      <div class="bulk-action-bar" *ngIf="selectedCandidateIds.size > 0">
-        <span class="bulk-selection-count">{{ selectedCandidateIds.size }} candidate{{ selectedCandidateIds.size > 1 ? 's' : '' }} selected</span>
+      <div class="bulk-action-bar" *ngIf="selectedCandidateIds.size > 0 || getAllEligibleCount() > 0">
+        <button type="button"
+                class="bulk-select-all-btn"
+                (click)="onSelectAllEligible()"
+                *ngIf="getAllEligibleCount() > 0 && selectedCandidateIds.size < getAllEligibleCount()"
+                [disabled]="bulkConverting">
+          <mat-icon class="bulk-icon">select_all</mat-icon>
+          Select All {{ getAllEligibleCount() }} Eligible Candidates
+        </button>
+        <span class="bulk-selection-count" *ngIf="selectedCandidateIds.size > 0">{{ selectedCandidateIds.size }} candidate{{ selectedCandidateIds.size > 1 ? 's' : '' }} selected</span>
         <button type="button"
                 class="bulk-convert-btn"
                 (click)="onBulkConvert()"
-                [disabled]="bulkConverting">
+                [disabled]="bulkConverting || selectedCandidateIds.size === 0">
           <mat-icon class="bulk-icon">group_add</mat-icon>
           {{ bulkConverting ? 'Converting...' : 'Convert Selected to Technicians' }}
         </button>
-        <button type="button" class="bulk-clear-btn" (click)="clearSelection()">
+        <button type="button" class="bulk-clear-btn" (click)="clearSelection()" *ngIf="selectedCandidateIds.size > 0">
           Clear Selection
         </button>
       </div>
@@ -695,6 +703,36 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       background-color: rgba(123, 31, 162, 0.08);
     }
 
+    .bulk-select-all-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 1rem;
+      background-color: #1565c0;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .bulk-select-all-btn:hover:not(:disabled) {
+      background-color: #0d47a1;
+    }
+
+    .bulk-select-all-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .bulk-select-all-btn .bulk-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
     .action-btn {
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
@@ -1176,6 +1214,23 @@ export class CandidateListComponent implements OnInit {
 
   clearSelection(): void {
     this.selectedCandidateIds.clear();
+  }
+
+  /**
+   * Returns the total number of eligible candidates across ALL pages (not just current page).
+   * A candidate is eligible if canConvert() returns true (hired_assigned or offer_accepted_onboarding with OSHA).
+   */
+  getAllEligibleCount(): number {
+    return this.filteredCandidates.filter(c => this.canConvert(c)).length;
+  }
+
+  /**
+   * Selects ALL eligible candidates across every page, not just the current page.
+   * This allows bulk conversion of all hired candidates in a single operation.
+   */
+  onSelectAllEligible(): void {
+    const allEligible = this.filteredCandidates.filter(c => this.canConvert(c));
+    allEligible.forEach(c => this.selectedCandidateIds.add(c.candidateId));
   }
 
   onBulkConvert(): void {
