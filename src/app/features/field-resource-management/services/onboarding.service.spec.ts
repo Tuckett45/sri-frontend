@@ -31,6 +31,7 @@ describe('OnboardingService', () => {
     drugTestComplete: false,
     oshaCertified: false,
     scissorLiftCertified: false,
+    biisciCertified: false,
     workSite: 'Dallas HQ',
     startDate: '2025-08-01',
     offerStatus: 'pre_offer',

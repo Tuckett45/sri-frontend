@@ -1,14 +1,7 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
-import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { forkJoin, Observable } from 'rxjs';
 import { OnboardingService } from '../../../services/onboarding.service';
-import { OnboardingLinkService } from '../../../services/onboarding-link.service';
-import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
-import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
-import { GenerateLinkDialogComponent } from '../generate-link-dialog/generate-link-dialog.component';
-import { CandidateNotesDialogComponent } from '../candidate-notes-dialog/candidate-notes-dialog.component';
+import { Candidate, OfferStatus } from '../../../models/onboarding.models';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -18,13 +11,9 @@ interface SortState {
 }
 
 const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
-  needs_review: 'Needs Review',
-  vetted_available: 'Vetted/Available',
-  offer_extended: 'Offer Extended',
-  offer_accepted_onboarding: 'Offer Accepted/Onboarding',
-  hired_assigned: 'Hired/Assigned',
-  do_not_hire: 'Do Not Hire',
-  turned_down_hold: 'Turned Down/Hold for Later',
+  pre_offer: 'Pre Offer',
+  offer: 'Offer',
+  offer_acceptance: 'Offer Acceptance',
 };
 
 @Component({
@@ -33,14 +22,9 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     <div class="candidate-list-container">
       <div class="header-row">
         <h2>Candidates</h2>
-        <div class="header-actions">
-          <button type="button" class="generate-link-btn" (click)="onGenerateLink()" aria-label="Generate candidate information sheet link">
-            Generate Info Sheet Link
-          </button>
-          <button type="button" class="add-candidate-btn" (click)="onAddCandidate()" aria-label="Add new candidate">
-            + Add Candidate
-          </button>
-        </div>
+        <button type="button" class="add-candidate-btn" (click)="onAddCandidate()" aria-label="Add new candidate">
+          + Add Candidate
+        </button>
       </div>
 
       <!-- Error Banner -->
@@ -57,7 +41,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
                  type="text"
                  [value]="searchText"
                  (input)="onSearchChange($event)"
-                 placeholder="Search by name, email, or home state" />
+                 placeholder="Search by name, email, or work site" />
         </div>
         <div class="filter-field">
           <label for="statusFilter">Offer Status</label>
@@ -65,31 +49,9 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
                   [value]="statusFilter"
                   (change)="onStatusFilterChange($event)">
             <option value="">All Statuses</option>
-            <option value="needs_review">Needs Review</option>
-            <option value="vetted_available">Vetted/Available</option>
-            <option value="offer_extended">Offer Extended</option>
-            <option value="offer_accepted_onboarding">Offer Accepted/Onboarding</option>
-            <option value="hired_assigned">Hired/Assigned</option>
-            <option value="do_not_hire">Do Not Hire</option>
-            <option value="turned_down_hold">Turned Down/Hold for Later</option>
-          </select>
-        </div>
-        <div class="filter-field">
-          <label for="homeStateFilter">Home State</label>
-          <select id="homeStateFilter"
-                  [(ngModel)]="homeStateFilter"
-                  (ngModelChange)="onHomeStateFilterChange()">
-            <option value="">All States</option>
-            <option *ngFor="let state of availableStates" [value]="state">{{ state }}</option>
-          </select>
-        </div>
-        <div class="filter-field">
-          <label for="referredByFilter">Referred By</label>
-          <select id="referredByFilter"
-                  [(ngModel)]="referredByFilter"
-                  (ngModelChange)="onReferredByFilterChange()">
-            <option value="">All Referrers</option>
-            <option *ngFor="let referrer of availableReferrers" [value]="referrer">{{ referrer }}</option>
+            <option value="pre_offer">Pre Offer</option>
+            <option value="offer">Offer</option>
+            <option value="offer_acceptance">Offer Acceptance</option>
           </select>
         </div>
       </div>
@@ -119,11 +81,11 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('scissorLiftCertified')" class="sortable">
               Scissor Lift <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
             </th>
-            <th (click)="onSort('homeState')" class="sortable">
-              Home State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
+            <th (click)="onSort('biisciCertified')" class="sortable">
+              BIISCI <span class="sort-icon">{{ getSortIcon('biisciCertified') }}</span>
             </th>
-            <th (click)="onSort('referredBy')" class="sortable">
-              Referred By <span class="sort-icon">{{ getSortIcon('referredBy') }}</span>
+            <th (click)="onSort('workSite')" class="sortable">
+              Work Site <span class="sort-icon">{{ getSortIcon('workSite') }}</span>
             </th>
             <th (click)="onSort('startDate')" class="sortable">
               Start Date <span class="sort-icon">{{ getSortIcon('startDate') }}</span>
@@ -131,11 +93,10 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('offerStatus')" class="sortable">
               Offer Status <span class="sort-icon">{{ getSortIcon('offerStatus') }}</span>
             </th>
-            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let candidate of paginatedCandidates"
+          <tr *ngFor="let candidate of filteredCandidates"
               (click)="onRowClick(candidate)"
               class="candidate-row"
               tabindex="0"
@@ -145,47 +106,16 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
             <td>{{ candidate.vestSize }}</td>
-            <td class="bool-cell"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td>{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
-            <td>{{ candidate.referredBy || '—' }}</td>
-            <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
+            <td class="bool-cell">{{ candidate.drugTestComplete ? '✓' : '—' }}</td>
+            <td class="bool-cell">{{ candidate.oshaCertified ? '✓' : '—' }}</td>
+            <td class="bool-cell">{{ candidate.scissorLiftCertified ? '✓' : '—' }}</td>
+            <td class="bool-cell">{{ candidate.biisciCertified ? '✓' : '—' }}</td>
+            <td>{{ candidate.workSite }}</td>
+            <td>{{ candidate.startDate }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
-            <td class="actions-cell">
-              <button class="icon-btn icon-resume"
-                      [class.has-file]="candidate.resumeUrl"
-                      [disabled]="!candidate.resumeUrl"
-                      (click)="onViewResume(candidate); $event.stopPropagation()"
-                      [attr.aria-label]="candidate.resumeUrl ? 'View resume for ' + candidate.techName : 'No resume uploaded'"
-                      [title]="candidate.resumeUrl ? 'View Resume' : 'No resume uploaded'">
-                <mat-icon class="action-icon">description</mat-icon>
-              </button>
-              <button class="icon-btn icon-notes"
-                      [class.has-notes]="candidate.notes"
-                      (click)="onViewNotes(candidate); $event.stopPropagation()"
-                      [attr.aria-label]="'Notes for ' + candidate.techName"
-                      [title]="candidate.notes ? 'View/Edit Notes' : 'Add Notes'">
-                <mat-icon class="action-icon">sticky_note_2</mat-icon>
-              </button>
-              <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
-              <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
-              <button class="action-btn btn-delete" (click)="onDeleteCandidate(candidate); $event.stopPropagation()">Delete</button>
-            </td>
           </tr>
         </tbody>
       </table>
-
-      <!-- Paginator -->
-      <mat-paginator *ngIf="filteredCandidates.length > 0"
-                     [length]="filteredCandidates.length"
-                     [pageSize]="pageSize"
-                     [pageSizeOptions]="pageSizeOptions"
-                     [pageIndex]="pageIndex"
-                     (page)="onPageChange($event)"
-                     showFirstLastButtons
-                     aria-label="Select page of candidates">
-      </mat-paginator>
 
       <!-- Empty State -->
       <p *ngIf="!loading && filteredCandidates.length === 0 && !errorMessage" class="empty-state">
@@ -219,33 +149,6 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       align-items: center;
       justify-content: space-between;
       margin-bottom: 1.25rem;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .generate-link-btn {
-      padding: 0.5rem 1rem;
-      background-color: #7b1fa2;
-      color: #ffffff;
-      border: none;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .generate-link-btn:hover {
-      background-color: #6a1b9a;
-    }
-
-    .generate-link-btn:focus {
-      outline: 2px solid #7b1fa2;
-      outline-offset: 2px;
     }
 
     .add-candidate-btn {
@@ -378,16 +281,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 
     .bool-cell {
       text-align: center;
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-
-    .yn-yes {
-      color: #2e7d32;
-    }
-
-    .yn-no {
-      color: #c62828;
+      font-size: 1rem;
     }
 
     .empty-state {
@@ -401,126 +295,6 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       text-align: center;
       padding: 2rem;
       color: #757575;
-    }
-
-    .actions-cell {
-      white-space: nowrap;
-      text-align: center;
-    }
-
-    .action-btn {
-      padding: 0.25rem 0.625rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      cursor: pointer;
-      margin-right: 4px;
-      transition: background-color 0.2s;
-    }
-
-    .btn-view {
-      background: #e3f2fd;
-      color: #1565c0;
-      border: 1px solid #90caf9;
-    }
-
-    .btn-view:hover { background: #bbdefb; }
-
-    .btn-edit-action {
-      background: #fff3e0;
-      color: #e65100;
-      border: 1px solid #ffcc80;
-    }
-
-    .btn-edit-action:hover { background: #ffe0b2; }
-
-    .btn-delete {
-      background: #ffebee;
-      color: #c62828;
-      border: 1px solid #ef9a9a;
-    }
-
-    .btn-delete:hover { background: #ffcdd2; }
-
-    .icon-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      border-radius: 4px;
-      border: 1px solid transparent;
-      background: none;
-      cursor: pointer;
-      margin-right: 4px;
-      transition: background-color 0.15s, opacity 0.15s, color 0.15s;
-      vertical-align: middle;
-      opacity: 0.4;
-      color: #757575;
-      padding: 0;
-    }
-
-    .icon-btn .action-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-
-    .icon-btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.2;
-    }
-
-    .icon-btn.has-file {
-      opacity: 1;
-      color: #1565c0;
-    }
-
-    .icon-btn.has-notes {
-      opacity: 1;
-      color: #e65100;
-    }
-
-    .icon-btn.icon-resume:not(:disabled):hover {
-      background: #e3f2fd;
-      border-color: #90caf9;
-      color: #1565c0;
-      opacity: 1;
-    }
-
-    .icon-btn.icon-notes:hover {
-      background: #fff3e0;
-      border-color: #ffcc80;
-      color: #e65100;
-      opacity: 1;
-    }
-
-    :host ::ng-deep .mat-mdc-paginator {
-      border-top: 1px solid #e0e0e0;
-      background: #fafafa;
-      border-radius: 0 0 8px 8px;
-      color: #000000;
-    }
-
-    :host ::ng-deep .mat-mdc-paginator .mat-mdc-paginator-range-label,
-    :host ::ng-deep .mat-mdc-paginator .mat-mdc-select-value-text {
-      color: #000000;
-    }
-
-    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button {
-      color: #000000;
-    }
-
-    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button svg {
-      fill: #000000;
-    }
-
-    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button[disabled] {
-      color: rgba(0, 0, 0, 0.38);
-    }
-
-    :host ::ng-deep .mat-mdc-paginator .mat-mdc-icon-button[disabled] svg {
-      fill: rgba(0, 0, 0, 0.38);
     }
 
     @media (max-width: 768px) {
@@ -546,33 +320,18 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 export class CandidateListComponent implements OnInit {
   candidates: Candidate[] = [];
   filteredCandidates: Candidate[] = [];
-  paginatedCandidates: Candidate[] = [];
   loading = false;
-  submitting = false;
   errorMessage = '';
 
   searchText = '';
   statusFilter = '';
-  homeStateFilter = '';
-  referredByFilter = '';
   incompleteCertsFilter = false;
   sortState: SortState | null = null;
-  availableStates: string[] = [];
-  availableReferrers: string[] = [];
-
-  // Pagination
-  pageSize = 10;
-  pageIndex = 0;
-  pageSizeOptions = [5, 10, 25, 50];
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private dialog: MatDialog,
-    private onboardingService: OnboardingService,
-    private onboardingLinkService: OnboardingLinkService
+    private onboardingService: OnboardingService
   ) {}
 
   ngOnInit(): void {
@@ -593,23 +352,11 @@ export class CandidateListComponent implements OnInit {
 
   onSearchChange(event: Event): void {
     this.searchText = (event.target as HTMLInputElement).value;
-    this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
 
   onStatusFilterChange(event: Event): void {
     this.statusFilter = (event.target as HTMLSelectElement).value;
-    this.pageIndex = 0;
-    this.applyFiltersAndSort();
-  }
-
-  onHomeStateFilterChange(): void {
-    this.pageIndex = 0;
-    this.applyFiltersAndSort();
-  }
-
-  onReferredByFilterChange(): void {
-    this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
 
@@ -634,180 +381,15 @@ export class CandidateListComponent implements OnInit {
     return OFFER_STATUS_LABELS[status] ?? status;
   }
 
-  extractState(address: string | undefined): string {
-    if (!address) return '';
-    const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
-    return match ? match[1] : '';
-  }
-
-  onPageChange(event: PageEvent): void {
-    this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize;
-    this.updatePaginatedCandidates();
-  }
-
   onRowClick(candidate: Candidate): void {
     this.router.navigate(['candidates', candidate.candidateId], {
       relativeTo: this.route.parent,
     });
   }
 
-  onEditCandidate(candidate: Candidate): void {
-    const dialogRef = this.dialog.open(AddCandidateModalComponent, {
-      width: '780px',
-      maxWidth: '90vw',
-      disableClose: true,
-      data: { candidate }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const payload: UpdateCandidatePayload = {
-          techName: `${result.basicInfo.firstName} ${result.basicInfo.lastName}`,
-          middleName: result.basicInfo.middleName,
-          techEmail: result.basicInfo.email,
-          techPhone: result.basicInfo.phone,
-          vestSize: result.basicInfo.vestSize,
-          homeAddress: result.basicInfo.homeAddress,
-          workSite: result.basicInfo.workSite || undefined,
-          homeState: result.basicInfo.homeState || undefined,
-          startDate: result.basicInfo.startDate,
-          offerStatus: result.basicInfo.offerStatus,
-          referredBy: result.basicInfo.referredBy || undefined,
-          drugTestComplete: result.coreQualifications.backgroundDrugScreen,
-          oshaCertified: result.coreQualifications.oshaCertification,
-          scissorLiftCertified: result.coreQualifications.liftCertification,
-          attBadge: result.badgesAccess.attBadge,
-          lumenBadge: result.badgesAccess.lumenBadge,
-          attSupplierTraining: result.badgesAccess.attSupplierTraining,
-          cienaBasicTraining: result.badgesAccess.cienaBasicTraining,
-          googleRedBadge: result.badgesAccess.googleRedBadge,
-          googleLdap: result.badgesAccess.googleLdap,
-          metaGreenListing: result.badgesAccess.metaGreenListing,
-          obsTraining: result.trainingCerts.obsTraining,
-          osha10: result.trainingCerts.osha10,
-          osha30: result.trainingCerts.osha30,
-          techHandTools: result.trainingCerts.techHandTools,
-          ciKitAssigned: result.equipmentKits.ciKitAssigned,
-          fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
-          labelingKitAssigned: result.equipmentKits.labelingKitAssigned,
-          powerKitAssigned: result.equipmentKits.powerKitAssigned,
-          testingEqptAssigned: result.equipmentKits.testingEquipmentAssigned
-        };
-        this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
-          next: () => {
-            this.uploadCandidateFiles(candidate.candidateId, result.files, () => this.loadCandidates());
-          },
-          error: () => {
-            this.errorMessage = 'Failed to update candidate. Please try again.';
-            this.loadCandidates();
-          }
-        });
-      }
-    });
-  }
-
-  onGenerateLink(): void {
-    this.dialog.open(GenerateLinkDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-    });
-  }
-
   onAddCandidate(): void {
-    if (this.submitting) return;
-
-    const dialogRef = this.dialog.open(AddCandidateModalComponent, {
-      width: '780px',
-      maxWidth: '90vw',
-      disableClose: true,
-      data: {}
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.submitting = true;
-        const payload: CreateCandidatePayload = {
-          techName: `${result.basicInfo.firstName} ${result.basicInfo.lastName}`,
-          middleName: result.basicInfo.middleName,
-          techEmail: result.basicInfo.email,
-          techPhone: result.basicInfo.phone,
-          vestSize: result.basicInfo.vestSize,
-          homeAddress: result.basicInfo.homeAddress,
-          workSite: result.basicInfo.workSite || undefined,
-          homeState: result.basicInfo.homeState || undefined,
-          startDate: result.basicInfo.startDate,
-          offerStatus: result.basicInfo.offerStatus,
-          referredBy: result.basicInfo.referredBy || undefined,
-          drugTestComplete: result.coreQualifications.backgroundDrugScreen,
-          oshaCertified: result.coreQualifications.oshaCertification,
-          scissorLiftCertified: result.coreQualifications.liftCertification,
-          attBadge: result.badgesAccess.attBadge,
-          lumenBadge: result.badgesAccess.lumenBadge,
-          attSupplierTraining: result.badgesAccess.attSupplierTraining,
-          cienaBasicTraining: result.badgesAccess.cienaBasicTraining,
-          googleRedBadge: result.badgesAccess.googleRedBadge,
-          googleLdap: result.badgesAccess.googleLdap,
-          metaGreenListing: result.badgesAccess.metaGreenListing,
-          obsTraining: result.trainingCerts.obsTraining,
-          osha10: result.trainingCerts.osha10,
-          osha30: result.trainingCerts.osha30,
-          techHandTools: result.trainingCerts.techHandTools,
-          ciKitAssigned: result.equipmentKits.ciKitAssigned,
-          fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
-          labelingKitAssigned: result.equipmentKits.labelingKitAssigned,
-          powerKitAssigned: result.equipmentKits.powerKitAssigned,
-          testingEqptAssigned: result.equipmentKits.testingEquipmentAssigned
-        };
-
-        this.onboardingService.createCandidate(payload).subscribe({
-          next: (createdCandidate) => {
-            this.submitting = false;
-            this.uploadCandidateFiles(createdCandidate.candidateId, result.files, () => this.loadCandidates());
-          },
-          error: () => {
-            this.submitting = false;
-            this.errorMessage = 'Failed to create candidate. Please try again.';
-            this.loadCandidates();
-          }
-        });
-      }
-    });
-  }
-
-  onDeleteCandidate(candidate: Candidate): void {
-    const confirmed = window.confirm(
-      `Are you sure you want to remove ${candidate.techName}? This cannot be undone.`
-    );
-    if (!confirmed) return;
-
-    this.onboardingService.deleteCandidateById(candidate.candidateId).subscribe({
-      next: () => {
-        this.loadCandidates();
-      },
-      error: () => {
-        this.errorMessage = 'Failed to delete candidate. Please try again.';
-      }
-    });
-  }
-
-  onViewResume(candidate: Candidate): void {
-    if (candidate.resumeUrl) {
-      window.open(candidate.resumeUrl, '_blank', 'noopener,noreferrer');
-    }
-  }
-
-  onViewNotes(candidate: Candidate): void {
-    const dialogRef = this.dialog.open(CandidateNotesDialogComponent, {
-      width: '480px',
-      maxWidth: '90vw',
-      data: { candidate },
-    });
-
-    dialogRef.afterClosed().subscribe((notesChanged: boolean) => {
-      if (notesChanged) {
-        this.loadCandidates();
-      }
+    this.router.navigate(['candidates', 'new'], {
+      relativeTo: this.route.parent,
     });
   }
 
@@ -823,7 +405,6 @@ export class CandidateListComponent implements OnInit {
       next: (candidates) => {
         this.candidates = candidates;
         this.loading = false;
-        this.updateAvailableStates();
         this.applyFiltersAndSort();
       },
       error: (err) => {
@@ -833,40 +414,6 @@ export class CandidateListComponent implements OnInit {
         this.filteredCandidates = [];
       },
     });
-  }
-
-  private getDummyCandidates(): Candidate[] {
-    const dateOnly = (daysOffset: number) => {
-      const d = new Date();
-      d.setDate(d.getDate() + daysOffset);
-      return d.toISOString().split('T')[0];
-    };
-    const iso = (daysOffset: number) => {
-      const d = new Date();
-      d.setDate(d.getDate() + daysOffset);
-      return d.toISOString();
-    };
-
-    return [
-      { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', homeState: 'TX', startDate: dateOnly(5), offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: iso(-30), updatedBy: 'system', updatedAt: iso(-5) },
-      { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', homeState: 'CA', startDate: dateOnly(10), offerStatus: 'offer_extended', createdBy: 'system', createdAt: iso(-25), updatedBy: 'system', updatedAt: iso(-3) },
-      { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', homeState: 'FL', startDate: dateOnly(3), offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: iso(-20), updatedBy: 'system', updatedAt: iso(-2) },
-      { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', homeState: 'NY', startDate: dateOnly(18), offerStatus: 'needs_review', createdBy: 'system', createdAt: iso(-15), updatedBy: 'system', updatedAt: iso(-1) },
-      { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', homeState: 'GA', startDate: dateOnly(7), offerStatus: 'vetted_available', createdBy: 'system', createdAt: iso(-10), updatedBy: 'system', updatedAt: iso(-1) },
-      { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', homeState: 'CO', startDate: dateOnly(12), offerStatus: 'needs_review', createdBy: 'system', createdAt: iso(-8), updatedBy: 'system', updatedAt: iso(-1) }
-    ];
-  }
-
-  private updateAvailableStates(): void {
-    const states = this.candidates
-      .map(c => c.homeState || this.extractState(c.homeAddress) || '')
-      .filter(s => s.length > 0);
-    this.availableStates = [...new Set(states)].sort();
-
-    const referrers = this.candidates
-      .map(c => c.referredBy || '')
-      .filter(r => r.length > 0);
-    this.availableReferrers = [...new Set(referrers)].sort();
   }
 
   private applyFiltersAndSort(): void {
@@ -879,7 +426,7 @@ export class CandidateListComponent implements OnInit {
         (c) =>
           c.techName.toLowerCase().includes(term) ||
           c.techEmail.toLowerCase().includes(term) ||
-          (c.homeState || this.extractState(c.homeAddress) || '').toLowerCase().includes(term)
+          c.workSite.toLowerCase().includes(term)
       );
     }
 
@@ -888,22 +435,10 @@ export class CandidateListComponent implements OnInit {
       result = result.filter((c) => c.offerStatus === this.statusFilter);
     }
 
-    // Home state filter
-    if (this.homeStateFilter) {
-      result = result.filter(
-        (c) => (c.homeState || this.extractState(c.homeAddress) || '') === this.homeStateFilter
-      );
-    }
-
-    // Referred by filter
-    if (this.referredByFilter) {
-      result = result.filter((c) => c.referredBy === this.referredByFilter);
-    }
-
     // Incomplete certifications filter
     if (this.incompleteCertsFilter) {
       result = result.filter(
-        (c) => !c.oshaCertified || !c.scissorLiftCertified
+        (c) => !c.oshaCertified || !c.scissorLiftCertified || !c.biisciCertified
       );
     }
 
@@ -911,14 +446,8 @@ export class CandidateListComponent implements OnInit {
     if (this.sortState) {
       const { column, direction } = this.sortState;
       result.sort((a, b) => {
-        let aVal = a[column];
-        let bVal = b[column];
-
-        // For homeState, fall back to extracted state from address
-        if (column === 'homeState') {
-          aVal = (aVal as string) || this.extractState(a.homeAddress) || '';
-          bVal = (bVal as string) || this.extractState(b.homeAddress) || '';
-        }
+        const aVal = a[column];
+        const bVal = b[column];
 
         let comparison = 0;
         if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
@@ -926,7 +455,7 @@ export class CandidateListComponent implements OnInit {
         } else if (typeof aVal === 'string' && typeof bVal === 'string') {
           comparison = aVal.localeCompare(bVal);
         } else {
-          comparison = (aVal ?? '').toString().localeCompare((bVal ?? '').toString());
+          comparison = String(aVal).localeCompare(String(bVal));
         }
 
         return direction === 'asc' ? comparison : -comparison;
@@ -934,33 +463,5 @@ export class CandidateListComponent implements OnInit {
     }
 
     this.filteredCandidates = result;
-    this.updatePaginatedCandidates();
-  }
-
-  private updatePaginatedCandidates(): void {
-    const startIndex = this.pageIndex * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    this.paginatedCandidates = this.filteredCandidates.slice(startIndex, endIndex);
-  }
-
-  private uploadCandidateFiles(candidateId: string, files: { resume?: File | null; headshot?: File | null }, reloadFn: () => void): void {
-    const uploads: Observable<any>[] = [];
-    if (files?.resume) {
-      uploads.push(this.onboardingService.uploadResume(candidateId, files.resume));
-    }
-    if (files?.headshot) {
-      uploads.push(this.onboardingService.uploadHeadshot(candidateId, files.headshot));
-    }
-    if (uploads.length > 0) {
-      forkJoin(uploads).subscribe({
-        next: () => reloadFn(),
-        error: () => {
-          this.errorMessage = 'Candidate saved, but one or more file uploads failed. Please try re-uploading.';
-          reloadFn();
-        }
-      });
-    } else {
-      reloadFn();
-    }
   }
 }

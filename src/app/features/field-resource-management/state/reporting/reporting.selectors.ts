@@ -60,7 +60,7 @@ export const selectTotalAvailableTechnicians = createSelector(
   (dashboard) => dashboard?.totalAvailableTechnicians || 0
 );
 
-export const selectReportingJobsByStatus = createSelector(
+export const selectJobsByStatus = createSelector(
   selectDashboard,
   (dashboard) => dashboard?.jobsByStatus || {}
 );
@@ -295,7 +295,7 @@ export const selectAverageOnTimeCompletionRate = createSelector(
 );
 
 // Calculate total jobs (completed + open)
-export const selectReportingTotalJobs = createSelector(
+export const selectTotalJobs = createSelector(
   selectTotalJobsCompleted,
   selectTotalJobsOpen,
   (completed, open) => completed + open
@@ -304,7 +304,7 @@ export const selectReportingTotalJobs = createSelector(
 // Calculate job completion percentage
 export const selectJobCompletionPercentage = createSelector(
   selectTotalJobsCompleted,
-  selectReportingTotalJobs,
+  selectTotalJobs,
   (completed, total) => total > 0 ? (completed / total) * 100 : 0
 );
 

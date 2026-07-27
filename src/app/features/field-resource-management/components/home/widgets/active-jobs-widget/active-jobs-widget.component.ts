@@ -37,8 +37,6 @@ const ACTIVE_STATUSES: JobStatus[] = [
 })
 export class ActiveJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
   @Input() marketFilter: string | null = null;
-  /** Optional: when provided, only show jobs assigned to these technician IDs */
-  @Input() technicianIds: string[] | null = null;
   @Output() jobSelected = new EventEmitter<string>();
 
   activeJobs$!: Observable<JobWithTechnicians[]>;
@@ -51,7 +49,6 @@ export class ActiveJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
   pageSize = 5;
 
   private marketFilter$ = new BehaviorSubject<string | null>(null);
-  private technicianIds$ = new BehaviorSubject<string[] | null>(null);
   private page$ = new BehaviorSubject<number>(0);
   private destroy$ = new Subject<void>();
 
@@ -75,24 +72,12 @@ export class ActiveJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
       this.store.select(selectActiveAssignments),
       this.store.select(selectTechnicianEntities),
       this.store.select(selectCrewEntities),
-      this.marketFilter$,
-      this.technicianIds$
+      this.marketFilter$
     ]).pipe(
-      map(([jobs, activeAssignments, techEntities, crewEntities, market, teamIds]) => {
+      map(([jobs, activeAssignments, techEntities, crewEntities, market]) => {
         let filtered = jobs.filter(job => ACTIVE_STATUSES.includes(job.status));
         if (market != null && market !== '') {
           filtered = filtered.filter(job => job.market === market);
-        }
-        // Filter to jobs assigned to team members only
-        if (teamIds && teamIds.length > 0) {
-          const teamSet = new Set(teamIds);
-          filtered = filtered.filter(job => {
-            // Job directly assigned to a team member
-            if (job.technicianId && teamSet.has(job.technicianId)) return true;
-            // Job has an assignment to a team member
-            const jobAssignments = activeAssignments.filter(a => a.jobId === job.id);
-            return jobAssignments.some(a => teamSet.has(a.technicianId));
-          });
         }
         return filtered.map(job => {
           const jobAssignments = activeAssignments.filter(a => a.jobId === job.id);
@@ -124,9 +109,6 @@ export class ActiveJobsWidgetComponent implements OnInit, OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['marketFilter']) {
       this.marketFilter$.next(this.marketFilter);
-    }
-    if (changes['technicianIds']) {
-      this.technicianIds$.next(this.technicianIds);
     }
   }
 

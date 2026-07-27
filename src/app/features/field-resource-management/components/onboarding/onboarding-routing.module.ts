@@ -10,7 +10,6 @@ import { CredentialDetailComponent } from './credential-detail/credential-detail
 import { CredentialFormComponent } from './credential-form/credential-form.component';
 import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-checklist.component';
 import { ReferralTrackerComponent } from './referral-tracker/referral-tracker.component';
-import { CandidateDetailComponent } from './candidate-detail/candidate-detail.component';
 import { UnsavedChangesGuard } from '../../guards/unsaved-changes.guard';
 
 const routes: Routes = [
@@ -36,11 +35,6 @@ const routes: Routes = [
       },
       {
         path: 'candidates/:candidateId',
-        component: CandidateDetailComponent,
-        data: { title: 'Candidate Detail', breadcrumb: 'Candidate Detail' }
-      },
-      {
-        path: 'candidates/:candidateId/edit',
         component: CandidateFormComponent,
         canDeactivate: [UnsavedChangesGuard],
         data: { title: 'Edit Candidate', breadcrumb: 'Edit Candidate' }
@@ -61,23 +55,23 @@ const routes: Routes = [
         data: { title: 'Tech Credentials', breadcrumb: 'Credentials' }
       },
       {
-        path: 'credentials/:candidateId',
+        path: 'credentials/:technicianId',
         component: CredentialDetailComponent,
         data: { title: 'Credential Detail', breadcrumb: 'Credential Detail' }
       },
       {
-        path: 'credentials/:candidateId/checklist',
+        path: 'credentials/:technicianId/checklist',
         component: OnboardingChecklistComponent,
         data: { title: 'Onboarding Checklist', breadcrumb: 'Checklist' }
       },
       {
-        path: 'credentials/:candidateId/new',
+        path: 'credentials/:technicianId/new',
         component: CredentialFormComponent,
         canDeactivate: [UnsavedChangesGuard],
         data: { title: 'Add Credential', breadcrumb: 'New Credential' }
       },
       {
-        path: 'credentials/:candidateId/edit/:credentialId',
+        path: 'credentials/:technicianId/edit/:credentialId',
         component: CredentialFormComponent,
         canDeactivate: [UnsavedChangesGuard],
         data: { title: 'Edit Credential', breadcrumb: 'Edit Credential' }

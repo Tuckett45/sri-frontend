@@ -15,7 +15,6 @@ import { Job } from '../../../models/job.model';
 import { TimecardService } from '../../../services/timecard.service';
 import { AccessibilityService } from '../../../services/accessibility.service';
 import { AuthService } from '../../../../../services/auth.service';
-import { ManagerTeamService } from '../../../services/manager-team.service';
 
 import * as TimeEntrySelectors from '../../../state/time-entries/time-entry.selectors';
 import * as TimecardSelectors from '../../../state/timecards/timecard.selectors';
@@ -45,17 +44,12 @@ export class TimecardManagerViewComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
   // Filter controls
-  filterByControl = new FormControl('all'); // all, technician, crew, job, myTeam
+  filterByControl = new FormControl('all'); // all, technician, crew, job
   selectedTechnicianControl = new FormControl(null);
   selectedCrewControl = new FormControl(null);
   selectedJobControl = new FormControl(null);
   dateRangeControl = new FormControl('week'); // week, biweek, month, custom
   statusFilterControl = new FormControl('all'); // all, draft, submitted, approved, rejected
-  myTeamControl = new FormControl(false); // "My Team" toggle
-
-  // My Team data
-  myTeamEnabled = false;
-  teamTechnicianIds: string[] = [];
   
   // Observable data
   allTimeEntries$: Observable<TimeEntry[]>;
@@ -94,8 +88,7 @@ export class TimecardManagerViewComponent implements OnInit, OnDestroy {
     private store: Store,
     private timecardService: TimecardService,
     private accessibilityService: AccessibilityService,
-    private authService: AuthService,
-    private managerTeamService: ManagerTeamService
+    private authService: AuthService
   ) {
     // Initialize date range (current week)
     this.startDate = this.timecardService.getWeekStart();
@@ -137,13 +130,7 @@ export class TimecardManagerViewComponent implements OnInit, OnDestroy {
     
     // Subscribe to filtered periods for table datasource
     this.filteredPeriods$.pipe(takeUntil(this.destroy$)).subscribe(periods => {
-      // Apply "My Team" filter if enabled
-      if (this.myTeamEnabled && this.teamTechnicianIds.length > 0) {
-        const teamSet = new Set(this.teamTechnicianIds);
-        this.filteredPeriodsData = periods.filter(p => teamSet.has(p.technicianId));
-      } else {
-        this.filteredPeriodsData = periods;
-      }
+      this.filteredPeriodsData = periods;
     });
   }
   
@@ -167,52 +154,11 @@ export class TimecardManagerViewComponent implements OnInit, OnDestroy {
         this.accessibilityService.announceError(error);
       }
     });
-
-    // Subscribe to "My Team" toggle state
-    this.managerTeamService.myTeamEnabled$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(enabled => {
-        this.myTeamEnabled = enabled;
-        this.myTeamControl.setValue(enabled, { emitEvent: false });
-        if (enabled) {
-          this.loadTeamIds();
-        } else {
-          this.teamTechnicianIds = [];
-        }
-      });
-
-    // Listen to local toggle changes and propagate to service
-    this.myTeamControl.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(enabled => {
-        this.managerTeamService.setMyTeamEnabled(enabled ?? false);
-      });
   }
   
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  /**
-   * Load team technician IDs for the current manager.
-   */
-  private loadTeamIds(): void {
-    const userId = this.authService.getUser()?.id;
-    if (!userId) return;
-    this.managerTeamService.getTeamIds(userId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(ids => {
-        this.teamTechnicianIds = ids;
-      });
-  }
-
-  /**
-   * Check if a technician is in the manager's team (for template filtering).
-   */
-  isInMyTeam(technicianId: string): boolean {
-    if (!this.myTeamEnabled || this.teamTechnicianIds.length === 0) return true;
-    return this.teamTechnicianIds.includes(technicianId);
   }
   
   /**

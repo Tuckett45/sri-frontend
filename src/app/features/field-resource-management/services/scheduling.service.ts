@@ -8,15 +8,14 @@ import {
   TechnicianMatch, 
   DateRange 
 } from '../models/assignment.model';
-import {
-  AssignmentDto,
-  BulkAssignmentDto,
-  ReassignmentDto,
-  AssignmentFilters,
-  CertGateConflict
+import { 
+  AssignmentDto, 
+  BulkAssignmentDto, 
+  ReassignmentDto, 
+  AssignmentFilters 
 } from '../models/dtos';
 import { Skill } from '../models/technician.model';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Schedule item representing a technician's scheduled work
@@ -49,7 +48,7 @@ export interface AssignmentResult {
   providedIn: 'root'
 })
 export class SchedulingService {
-  private readonly apiUrl = `${environment.atlasApiUrl}/scheduling`;
+  private readonly apiUrl = `${local_environment.apiUrl}/scheduling`;
   private readonly retryCount = 2;
 
   constructor(private http: HttpClient) {}
@@ -89,30 +88,40 @@ export class SchedulingService {
    * @throws Error if technician lacks required skills and overrideConflicts is false
    */
   assignTechnicianToJob(
-    jobId: string,
-    technicianId: string,
+    jobId: string, 
+    technicianId: string, 
     assignedBy: string,
-    overrideConflicts: boolean = false,
-    justification?: string,
-    overrideCertifications: boolean = false
+    overrideConflicts: boolean = false, 
+    justification?: string
   ): Observable<Assignment> {
+    // Validate preconditions
     if (!jobId || jobId.trim().length === 0) {
       return throwError(() => new Error('Invalid jobId: must be a non-empty string'));
     }
+    
     if (!technicianId || technicianId.trim().length === 0) {
       return throwError(() => new Error('Invalid technicianId: must be a non-empty string'));
     }
+    
     if (!assignedBy || assignedBy.trim().length === 0) {
       return throwError(() => new Error('Invalid assignedBy: must be a non-empty string'));
     }
+    
     if (overrideConflicts && (!justification || justification.trim().length === 0)) {
       return throwError(() => new Error('Justification is required when overriding conflicts'));
     }
 
-    const dto: AssignmentDto = { jobId, technicianId, overrideConflicts, overrideCertifications, justification };
+    const dto: AssignmentDto = {
+      jobId,
+      technicianId,
+      overrideConflicts,
+      justification
+    };
 
     return this.http.post<Assignment>(`${this.apiUrl}/assign`, dto)
-      .pipe(catchError(this.handleError));
+      .pipe(
+        catchError(this.handleError)
+      );
   }
 
   /**
@@ -660,14 +669,9 @@ export class SchedulingService {
         case 409:
           errorMessage = 'Scheduling conflict detected. Please resolve conflicts or override with justification.';
           break;
-        case 422: {
-          // Cert-gate conflict — preserve the structured payload so the UI can display details
-          const certConflict: CertGateConflict = error.error;
-          const certErr: any = new Error(certConflict?.message || 'Technician does not meet certification requirements.');
-          certErr.certConflict = certConflict;
-          console.error('[SchedulingService] Cert gate:', certConflict);
-          return throwError(() => certErr);
-        }
+        case 422:
+          errorMessage = 'Technician does not have required skills for this job.';
+          break;
         case 500:
           errorMessage = 'Server error. Please try again later.';
           break;

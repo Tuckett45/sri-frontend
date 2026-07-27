@@ -1,8 +1,7 @@
 /** Time category for a time entry */
 export enum TimeCategory {
   DriveTime = 'DriveTime',
-  OnSite = 'OnSite',
-  EnRoute = 'EnRoute'
+  OnSite = 'OnSite'
 }
 
 /** Pay type classification */

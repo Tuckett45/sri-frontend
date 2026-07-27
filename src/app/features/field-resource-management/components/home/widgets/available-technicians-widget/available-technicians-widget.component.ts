@@ -1,17 +1,14 @@
 import {
   Component,
-  Input,
   Output,
   EventEmitter,
   OnInit,
-  OnChanges,
-  OnDestroy,
-  SimpleChanges
+  OnDestroy
 } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, BehaviorSubject, combineLatest } from 'rxjs';
+import { Observable, Subject, combineLatest } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { selectActiveTechnicians, selectTechniciansLoading, selectTechniciansError, selectTechniciansTotal } from '../../../../state/technicians/technician.selectors';
+import { selectActiveTechnicians, selectTechniciansLoading, selectTechniciansError } from '../../../../state/technicians/technician.selectors';
 import { selectActiveAssignments } from '../../../../state/assignments/assignment.selectors';
 import { Technician } from '../../../../models/technician.model';
 
@@ -20,18 +17,14 @@ import { Technician } from '../../../../models/technician.model';
   templateUrl: './available-technicians-widget.component.html',
   styleUrls: ['./available-technicians-widget.component.scss']
 })
-export class AvailableTechniciansWidgetComponent implements OnInit, OnChanges, OnDestroy {
-  /** Optional: when provided, only show technicians whose IDs are in this list */
-  @Input() technicianIds: string[] | null = null;
+export class AvailableTechniciansWidgetComponent implements OnInit, OnDestroy {
   @Output() technicianSelected = new EventEmitter<string>();
 
   availableTechnicians$!: Observable<Technician[]>;
   availableCount$!: Observable<number>;
-  totalCount$!: Observable<number>;
   loading$!: Observable<boolean>;
   error: string | null = null;
 
-  private technicianIds$ = new BehaviorSubject<string[] | null>(null);
   private destroy$ = new Subject<void>();
 
   constructor(private store: Store) {}
@@ -45,34 +38,19 @@ export class AvailableTechniciansWidgetComponent implements OnInit, OnChanges, O
 
     this.availableTechnicians$ = combineLatest([
       this.store.select(selectActiveTechnicians),
-      this.store.select(selectActiveAssignments),
-      this.technicianIds$
+      this.store.select(selectActiveAssignments)
     ]).pipe(
-      map(([technicians, activeAssignments, teamIds]) => {
+      map(([technicians, activeAssignments]) => {
         const assignedTechIds = new Set(
           activeAssignments.map(a => a.technicianId)
         );
-        let available = technicians.filter(t => !assignedTechIds.has(t.id));
-        // Filter to team members only if technicianIds provided
-        if (teamIds && teamIds.length > 0) {
-          const teamSet = new Set(teamIds);
-          available = available.filter(t => teamSet.has(t.id));
-        }
-        return available;
+        return technicians.filter(t => !assignedTechIds.has(t.id));
       })
     );
 
     this.availableCount$ = this.availableTechnicians$.pipe(
       map(techs => techs.length)
     );
-
-    this.totalCount$ = this.store.select(selectTechniciansTotal);
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['technicianIds']) {
-      this.technicianIds$.next(this.technicianIds);
-    }
   }
 
   ngOnDestroy(): void {

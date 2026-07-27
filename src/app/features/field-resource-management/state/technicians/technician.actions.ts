@@ -33,7 +33,7 @@ export const createTechnician = createAction(
 
 export const createTechnicianSuccess = createAction(
   '[Technician] Create Technician Success',
-  props<{ technician: Technician; tempId?: string }>()
+  props<{ technician: Technician }>()
 );
 
 export const createTechnicianFailure = createAction(
@@ -111,12 +111,6 @@ export const updateTechnicianLocationFailure = createAction(
   props<{ error: string }>()
 );
 
-// Update Technician Availability (Real-time clock-in/out)
-export const updateTechnicianAvailability = createAction(
-  '[Technician] Update Technician Availability',
-  props<{ technicianId: string; isAvailable: boolean }>()
-);
-
 // Optimistic Update Actions
 export const updateTechnicianOptimistic = createAction(
   '[Technician] Update Technician Optimistic',
@@ -146,43 +140,5 @@ export const deleteTechnicianOptimistic = createAction(
 export const rollbackTechnicianDelete = createAction(
   '[Technician] Rollback Technician Delete',
   props<{ originalData: Technician }>()
-);
-
-// Deactivate Technician (soft-delete)
-export const deactivateTechnician = createAction(
-  '[Technician] Deactivate Technician',
-  props<{ id: string }>()
-);
-
-export const deactivateTechnicianSuccess = createAction(
-  '[Technician] Deactivate Technician Success',
-  props<{ technician: Technician }>()
-);
-
-export const deactivateTechnicianFailure = createAction(
-  '[Technician] Deactivate Technician Failure',
-  props<{ error: string }>()
-);
-
-// Reactivate Technician
-export const reactivateTechnician = createAction(
-  '[Technician] Reactivate Technician',
-  props<{ id: string }>()
-);
-
-export const reactivateTechnicianSuccess = createAction(
-  '[Technician] Reactivate Technician Success',
-  props<{ technician: Technician }>()
-);
-
-export const reactivateTechnicianFailure = createAction(
-  '[Technician] Reactivate Technician Failure',
-  props<{ error: string }>()
-);
-
-// Update Technician Field Status (from clock-in/out response)
-export const updateTechnicianFieldStatus = createAction(
-  '[Technician] Update Field Status',
-  props<{ technicianId: string; fieldStatus: string }>()
 );
 

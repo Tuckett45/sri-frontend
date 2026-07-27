@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environments';
+import { local_environment } from '../../../../environments/environments';
 import { QuoteDocument, QuoteEmailData, QuoteWorkflow } from '../models/quote-workflow.model';
 
 /**
@@ -16,7 +16,7 @@ import { QuoteDocument, QuoteEmailData, QuoteWorkflow } from '../models/quote-wo
  */
 @Injectable({ providedIn: 'root' })
 export class QuoteAssemblyService {
-  private readonly apiUrl = `${environment.atlasApiUrl}/quotes`;
+  private readonly apiUrl = `${local_environment.apiUrl}/quotes`;
 
   constructor(private http: HttpClient) {}
 

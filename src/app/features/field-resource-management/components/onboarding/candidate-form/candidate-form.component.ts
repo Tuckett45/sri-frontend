@@ -13,10 +13,9 @@ import {
 const VEST_SIZES: VestSize[] = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
-  { value: 'needs_review', label: 'Needs Review' },
-  { value: 'vetted_available', label: 'Vetted/Available' },
-  { value: 'offer_extended', label: 'Offer Extended' },
-  { value: 'offer_accepted_onboarding', label: 'Offer Accepted/Onboarding' },
+  { value: 'pre_offer', label: 'Pre Offer' },
+  { value: 'offer', label: 'Offer' },
+  { value: 'offer_acceptance', label: 'Offer Acceptance' },
 ];
 
 @Component({
@@ -59,15 +58,6 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
                 *ngIf="showError('techName')">
             Tech Name is required.
           </span>
-        </div>
-
-        <!-- Middle Name -->
-        <div class="form-field">
-          <label for="middleName">Middle Name</label>
-          <input id="middleName"
-                 formControlName="middleName"
-                 placeholder="Enter middle name (optional)"
-                 (blur)="markTouched('middleName')" />
         </div>
 
         <!-- Tech Email -->
@@ -135,36 +125,6 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
           </span>
         </div>
 
-        <!-- Home Address -->
-        <div class="form-field">
-          <label for="homeAddress">Home Address *</label>
-          <input id="homeAddress"
-                 formControlName="homeAddress"
-                 placeholder="Enter candidate's home address"
-                 (blur)="markTouched('homeAddress')" />
-          <span class="field-error"
-                *ngIf="showError('homeAddress')">
-            Home Address is required.
-          </span>
-        </div>
-
-        <!-- Home State -->
-        <div class="form-field">
-          <label for="homeState">Home State</label>
-          <input id="homeState"
-                 formControlName="homeState"
-                 placeholder="e.g. TX, CA, FL"
-                 (blur)="markTouched('homeState')" />
-        </div>
-
-        <!-- Referred By -->
-        <div class="form-field">
-          <label for="referredBy">Referred By</label>
-          <input id="referredBy"
-                 formControlName="referredBy"
-                 placeholder="Referral source (optional)" />
-        </div>
-
         <!-- Start Date -->
         <div class="form-field">
           <label for="startDate">Start Date *</label>
@@ -215,6 +175,13 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
             <label>
               <input type="checkbox" formControlName="scissorLiftCertified" />
               Scissor Lift Certified
+            </label>
+          </div>
+
+          <div class="form-field checkbox-field">
+            <label>
+              <input type="checkbox" formControlName="biisciCertified" />
+              BIISCI Certified
             </label>
           </div>
         </ng-container>
@@ -436,7 +403,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       this.loadCandidate(this.candidateId);
     } else {
       // Create mode defaults
-      this.candidateForm.patchValue({ offerStatus: 'needs_review' });
+      this.candidateForm.patchValue({ offerStatus: 'pre_offer' });
     }
   }
 
@@ -480,19 +447,16 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
   private buildForm(): void {
     this.candidateForm = this.fb.group({
       techName: ['', Validators.required],
-      middleName: [''],
       techEmail: ['', [Validators.required, Validators.email]],
       techPhone: ['', [Validators.required, CandidateFormComponent.phoneValidator]],
       vestSize: ['', Validators.required],
-      homeAddress: ['', Validators.required],
-      homeState: [''],
       workSite: ['', Validators.required],
-      referredBy: [''],
       startDate: ['', Validators.required],
       offerStatus: ['', Validators.required],
       drugTestComplete: [false],
       oshaCertified: [false],
       scissorLiftCertified: [false],
+      biisciCertified: [false],
     });
   }
 
@@ -534,19 +498,16 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
   private populateForm(candidate: Candidate): void {
     this.candidateForm.patchValue({
       techName: candidate.techName,
-      middleName: candidate.middleName || '',
       techEmail: candidate.techEmail,
       techPhone: candidate.techPhone,
       vestSize: candidate.vestSize,
-      homeAddress: candidate.homeAddress || '',
-      homeState: candidate.homeState || '',
       workSite: candidate.workSite,
-      referredBy: candidate.referredBy || '',
       startDate: candidate.startDate,
       offerStatus: candidate.offerStatus,
       drugTestComplete: candidate.drugTestComplete,
       oshaCertified: candidate.oshaCertified,
       scissorLiftCertified: candidate.scissorLiftCertified,
+      biisciCertified: candidate.biisciCertified,
     });
     // Reset dirty state after population
     this.candidateForm.markAsPristine();
@@ -565,14 +526,10 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
     const formValue = this.candidateForm.value;
     const payload = {
       techName: formValue.techName,
-      middleName: formValue.middleName,
       techEmail: formValue.techEmail,
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
-      homeAddress: formValue.homeAddress,
-      homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
-      referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
     };
@@ -597,19 +554,16 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
     const formValue = this.candidateForm.value;
     const payload = {
       techName: formValue.techName,
-      middleName: formValue.middleName,
       techEmail: formValue.techEmail,
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
-      homeAddress: formValue.homeAddress,
-      homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
-      referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
       drugTestComplete: formValue.drugTestComplete,
       oshaCertified: formValue.oshaCertified,
       scissorLiftCertified: formValue.scissorLiftCertified,
+      biisciCertified: formValue.biisciCertified,
     };
 
     this.onboardingService.updateCandidate(this.candidateId!, payload).subscribe({

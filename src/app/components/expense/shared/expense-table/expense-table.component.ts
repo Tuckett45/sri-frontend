@@ -106,7 +106,6 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   @Input() enableDelete = true;
   @Input() enableApproval = false;
   @Input() enableSelection = false;
-  @Input() enableMarkPaid = false;
   @Input() selectedExpenseIds: ReadonlyArray<string> | ReadonlySet<string> = [];
   @Input() pendingStatusIds: ReadonlyArray<string> | Set<string> | null = null;
 
@@ -115,7 +114,6 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
   @Output() delete = new EventEmitter<Expense>();
   @Output() approve = new EventEmitter<Expense>();
   @Output() reject = new EventEmitter<Expense>();
-  @Output() markPaid = new EventEmitter<Expense>();
   @Output() selectionChange = new EventEmitter<ExpenseSelectionChange>();
   @Output() pageChange = new EventEmitter<PageEvent>();
 
@@ -143,8 +141,7 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
       changes['enableApproval'] ||
       changes['enableEdit'] ||
       changes['enableDelete'] ||
-      changes['enableSelection'] ||
-      changes['enableMarkPaid']
+      changes['enableSelection']
     ) {
       this.configureDisplayedColumns();
     }
@@ -171,10 +168,6 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
 
   onReject(expense: Expense): void {
     this.reject.emit(expense);
-  }
-
-  onMarkPaid(expense: Expense): void {
-    this.markPaid.emit(expense);
   }
 
   isSelected(expense: Expense): boolean {
@@ -344,10 +337,6 @@ export class ExpenseTableComponent implements AfterViewInit, OnChanges {
       base.push('employee');
     }
     base.push('job', 'category', 'amount', 'notes', 'receipt', 'status');
-
-    if (this.enableMarkPaid) {
-      base.push('paid');
-    }
 
     if (this.shouldShowActionsColumn()) {
       base.push('actions');

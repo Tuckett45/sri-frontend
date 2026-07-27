@@ -55,13 +55,6 @@ export interface Availability {
   reason?: string; // PTO, Sick, Training
 }
 
-export enum TechnicianStatus {
-  Available = 'Available',
-  OnSite = 'OnSite',
-  EnRoute = 'EnRoute',
-  OffDuty = 'OffDuty'
-}
-
 export interface Technician {
   id: string;
   firstName: string;
@@ -72,70 +65,14 @@ export interface Technician {
   region: string;
   isAvailable: boolean;
   isActive: boolean;
-  currentStatus?: TechnicianStatus;
-  statusUpdatedAt?: string;
-  userId?: string; // Links to authenticated user account in SRI backend
   willingToTravel?: boolean;
   scissorLiftCertified?: boolean;
-
-  // Onboarding tracking fields
-  fiberExperience?: FiberExperienceLevel;
-  oshaCertified?: boolean;
-  oshaCertNumber?: string;
-  oshaCertExpiration?: string;
-  liftCertifications?: LiftCertificationType[];
-  shiftAvailability?: ShiftType[];
-  backgroundCheckStatus?: ScreeningStatus;
-  drugScreenStatus?: ScreeningStatus;
-  isVeteran?: boolean;
-  militaryBranch?: string;
-
-  // Badges & Access
-  attBadge?: boolean;
-  comcastBadge?: boolean;
-  attSupplierTraining?: boolean;
-  cienaBasicTraining?: boolean;
-  googleRedBadge?: boolean;
-  googleLdap?: boolean;
-  metaGreenListing?: boolean;
-
-  // Training & Certs
-  obsTraining?: boolean;
-  osha10?: boolean;
-  osha30?: boolean;
-  techHandTools?: boolean;
-  biisciCertified?: boolean;
-
-  // Equipment Kits
-  ciKitAssigned?: boolean;
-  fiberKitAssigned?: boolean;
-  labelingKitAssigned?: boolean;
-  powerKitAssigned?: boolean;
-  testingEqptAssigned?: boolean;
-
-  // Notes
-  onboardingNotes?: string;
-
   lastKnownLatitude?: number;
   lastKnownLongitude?: number;
   locationUpdatedAt?: Date;
   skills?: Skill[];
   certifications?: Certification[];
   availability?: Availability[];
-
-  // Real-time field status determined by backend on clock-in/out
-  fieldStatus?: 'Available' | 'EnRoute' | 'OnSite' | 'ClockedOut';
-
   createdAt: Date;
   updatedAt: Date;
 }
-
-// --- Onboarding Tracking Types ---
-
-export type FiberExperienceLevel = 'none' | '1-2_years' | '3-5_years' | '5+_years';
-
-export type LiftCertificationType = 'scissor_lift' | 'boom_lift' | 'forklift';
-
-export type ShiftType = 'day' | 'night' | 'swing' | 'weekends';
-
-export type ScreeningStatus = 'not_started' | 'pending' | 'pass' | 'fail';

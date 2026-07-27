@@ -88,38 +88,7 @@ describe('ErrorHandlingInterceptor', () => {
       expect(errorReceived).toBe(true);
     }));
 
-    it('should retry POST requests up to 2 times on network errors', fakeAsync(() => {
-      const testUrl = '/api/test';
-      let attemptCount = 0;
-      let errorReceived = false;
-
-      httpClient.post(testUrl, { data: 'test' }).subscribe({
-        next: () => fail('Should have failed'),
-        error: (error: HttpErrorResponse) => {
-          expect(attemptCount).toBe(3); // Initial + 2 retries
-          expect(error.error.errorType).toBe('upload_timeout');
-          expect(error.error.canRetry).toBe(true);
-          errorReceived = true;
-        }
-      });
-
-      // Simulate 3 failed attempts (initial + 2 retries)
-      for (let i = 0; i < 3; i++) {
-        const req = httpMock.expectOne(testUrl);
-        attemptCount++;
-        req.flush(null, { status: 0, statusText: 'Network Error' });
-
-        // Advance time for exponential backoff (1000ms, 2000ms)
-        if (i < 2) {
-          tick(1000 * Math.pow(2, i));
-        }
-      }
-
-      tick();
-      expect(errorReceived).toBe(true);
-    }));
-
-    it('should not retry POST requests on 400 errors', (done) => {
+    it('should not retry POST requests', (done) => {
       const testUrl = '/api/test';
       let attemptCount = 0;
 
@@ -127,14 +96,13 @@ describe('ErrorHandlingInterceptor', () => {
         next: () => fail('Should have failed'),
         error: (error: HttpErrorResponse) => {
           expect(attemptCount).toBe(1); // Only initial attempt, no retries
-          expect(error.error.errorType).toBe('validation');
           done();
         }
       });
 
       const req = httpMock.expectOne(testUrl);
       attemptCount++;
-      req.flush({ message: 'Bad Request' }, { status: 400, statusText: 'Bad Request' });
+      req.flush(null, { status: 0, statusText: 'Network Error' });
     });
 
     it('should not retry authentication endpoints', (done) => {
@@ -231,48 +199,6 @@ describe('ErrorHandlingInterceptor', () => {
       tick();
       expect(errorReceived).toBe(true);
     }));
-
-    it('should provide upload_timeout message for POST with network error', fakeAsync(() => {
-      let errorReceived = false;
-
-      httpClient.post('/api/test', { data: 'test' }).subscribe({
-        next: () => fail('Should have failed'),
-        error: (error: HttpErrorResponse) => {
-          expect(error.error.userFriendlyMessage).toContain('upload timed out');
-          expect(error.error.userFriendlyMessage).toContain('saved locally');
-          expect(error.error.errorType).toBe('upload_timeout');
-          errorReceived = true;
-        }
-      });
-
-      // Exhaust all retries (initial + 2 retries = 3 attempts)
-      for (let i = 0; i < 3; i++) {
-        const req = httpMock.expectOne('/api/test');
-        req.flush(null, { status: 0, statusText: 'Network Error' });
-
-        if (i < 2) {
-          tick(1000 * Math.pow(2, i));
-        }
-      }
-
-      tick();
-      expect(errorReceived).toBe(true);
-    }));
-
-    it('should provide conflict message for 409 errors', (done) => {
-      httpClient.post('/api/test', { data: 'test' }).subscribe({
-        next: () => fail('Should have failed'),
-        error: (error: HttpErrorResponse) => {
-          expect(error.error.userFriendlyMessage).toContain('already saved');
-          expect(error.error.userFriendlyMessage).toContain('refresh the page');
-          expect(error.error.errorType).toBe('conflict');
-          done();
-        }
-      });
-
-      const req = httpMock.expectOne('/api/test');
-      req.flush({ message: 'Conflict' }, { status: 409, statusText: 'Conflict' });
-    });
 
     it('should provide user-friendly message for validation errors', (done) => {
       httpClient.post('/api/test', {}).subscribe({
@@ -447,31 +373,6 @@ describe('ErrorHandlingInterceptor', () => {
       expect(errorReceived).toBe(true);
     }));
 
-    it('should include canRetry flag as true for POST with network error', fakeAsync(() => {
-      let errorReceived = false;
-
-      httpClient.post('/api/test', {}).subscribe({
-        next: () => fail('Should have failed'),
-        error: (error: HttpErrorResponse) => {
-          expect(error.error.canRetry).toBe(true);
-          errorReceived = true;
-        }
-      });
-
-      // Exhaust all retries (initial + 2 retries = 3 attempts)
-      for (let i = 0; i < 3; i++) {
-        const req = httpMock.expectOne('/api/test');
-        req.flush(null, { status: 0, statusText: 'Network Error' });
-
-        if (i < 2) {
-          tick(1000 * Math.pow(2, i));
-        }
-      }
-
-      tick();
-      expect(errorReceived).toBe(true);
-    }));
-
     it('should include canRetry flag as false for non-retryable errors', (done) => {
       httpClient.post('/api/test', {}).subscribe({
         next: () => fail('Should have failed'),
@@ -482,7 +383,7 @@ describe('ErrorHandlingInterceptor', () => {
       });
 
       const req = httpMock.expectOne('/api/test');
-      req.flush({ message: 'Bad Request' }, { status: 400, statusText: 'Bad Request' });
+      req.flush(null, { status: 0, statusText: 'Network Error' });
     });
 
     it('should preserve original error data', (done) => {

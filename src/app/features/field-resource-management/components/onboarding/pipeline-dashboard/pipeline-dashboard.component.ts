@@ -22,53 +22,25 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
         <!-- Summary Cards -->
         <div class="cards-grid">
           <div class="card clickable" tabindex="0" role="button"
-               aria-label="View Needs Review candidates"
-               (click)="navigateToStatus('needs_review')"
-               (keydown.enter)="navigateToStatus('needs_review')">
-            <span class="card-count">{{ needsReviewCount }}</span>
-            <span class="card-label">Needs Review</span>
+               aria-label="View Pre Offer candidates"
+               (click)="navigateToStatus('pre_offer')"
+               (keydown.enter)="navigateToStatus('pre_offer')">
+            <span class="card-count">{{ preOfferCount }}</span>
+            <span class="card-label">Pre Offer</span>
           </div>
           <div class="card clickable" tabindex="0" role="button"
-               aria-label="View Vetted/Available candidates"
-               (click)="navigateToStatus('vetted_available')"
-               (keydown.enter)="navigateToStatus('vetted_available')">
-            <span class="card-count">{{ vettedAvailableCount }}</span>
-            <span class="card-label">Vetted/Available</span>
+               aria-label="View Offer candidates"
+               (click)="navigateToStatus('offer')"
+               (keydown.enter)="navigateToStatus('offer')">
+            <span class="card-count">{{ offerCount }}</span>
+            <span class="card-label">Offer</span>
           </div>
           <div class="card clickable" tabindex="0" role="button"
-               aria-label="View Offer Extended candidates"
-               (click)="navigateToStatus('offer_extended')"
-               (keydown.enter)="navigateToStatus('offer_extended')">
-            <span class="card-count">{{ offerExtendedCount }}</span>
-            <span class="card-label">Offer Extended</span>
-          </div>
-          <div class="card clickable" tabindex="0" role="button"
-               aria-label="View Offer Accepted/Onboarding candidates"
-               (click)="navigateToStatus('offer_accepted_onboarding')"
-               (keydown.enter)="navigateToStatus('offer_accepted_onboarding')">
-            <span class="card-count">{{ offerAcceptedOnboardingCount }}</span>
-            <span class="card-label">Accepted/Onboarding</span>
-          </div>
-          <div class="card clickable" tabindex="0" role="button"
-               aria-label="View Hired/Assigned candidates"
-               (click)="navigateToStatus('hired_assigned')"
-               (keydown.enter)="navigateToStatus('hired_assigned')">
-            <span class="card-count">{{ hiredAssignedCount }}</span>
-            <span class="card-label">Hired/Assigned</span>
-          </div>
-          <div class="card clickable" tabindex="0" role="button"
-               aria-label="View Do Not Hire candidates"
-               (click)="navigateToStatus('do_not_hire')"
-               (keydown.enter)="navigateToStatus('do_not_hire')">
-            <span class="card-count warn">{{ doNotHireCount }}</span>
-            <span class="card-label">Do Not Hire</span>
-          </div>
-          <div class="card clickable" tabindex="0" role="button"
-               aria-label="View Turned Down/Hold for Later candidates"
-               (click)="navigateToStatus('turned_down_hold')"
-               (keydown.enter)="navigateToStatus('turned_down_hold')">
-            <span class="card-count warn">{{ turnedDownHoldCount }}</span>
-            <span class="card-label">Turned Down/Hold</span>
+               aria-label="View Offer Acceptance candidates"
+               (click)="navigateToStatus('offer_acceptance')"
+               (keydown.enter)="navigateToStatus('offer_acceptance')">
+            <span class="card-count">{{ offerAcceptanceCount }}</span>
+            <span class="card-label">Offer Acceptance</span>
           </div>
           <div class="card clickable" tabindex="0" role="button"
                aria-label="View candidates with incomplete certifications"
@@ -114,7 +86,7 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
                     (keydown.enter)="navigateToCandidate(c.candidateId)">
                   <td>{{ c.techName }}</td>
                   <td>{{ c.workSite }}</td>
-                  <td>{{ c.startDate | date:'MMM d, yyyy' }}</td>
+                  <td>{{ c.startDate }}</td>
                   <td class="ready-cell">
                     <span *ngIf="isReady(c)" class="badge ready">Ready</span>
                     <span *ngIf="!isReady(c)" class="badge not-ready">Not Ready</span>
@@ -178,13 +150,9 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
 
     .funnel { display: flex; flex-direction: column; gap: 0.5rem; }
     .funnel-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 1rem; border-radius: 6px; min-width: 80px; font-size: 0.875rem; font-weight: 500; color: #fff; transition: width 0.4s ease; }
-    .stage-needs-review { background: #42a5f5; }
-    .stage-vetted-available { background: #66bb6a; }
-    .stage-offer-extended { background: #ffa726; }
-    .stage-accepted { background: #7b1fa2; }
-    .stage-hired-assigned { background: #2e7d32; }
-    .stage-do-not-hire { background: #c62828; }
-    .stage-turned-down-hold { background: #6d4c41; }
+    .stage-pre-offer { background: #42a5f5; }
+    .stage-offer { background: #1976d2; }
+    .stage-acceptance { background: #0d47a1; }
     .funnel-label { white-space: nowrap; }
     .funnel-value { font-weight: 700; }
 
@@ -215,13 +183,9 @@ export class PipelineDashboardComponent implements OnInit {
   loading = false;
   errorMessage = '';
 
-  needsReviewCount = 0;
-  vettedAvailableCount = 0;
-  offerExtendedCount = 0;
-  offerAcceptedOnboardingCount = 0;
-  hiredAssignedCount = 0;
-  doNotHireCount = 0;
-  turnedDownHoldCount = 0;
+  preOfferCount = 0;
+  offerCount = 0;
+  offerAcceptanceCount = 0;
   incompleteCertsCount = 0;
   incompleteDrugTestCount = 0;
   startingWithin14DaysCount = 0;
@@ -231,13 +195,9 @@ export class PipelineDashboardComponent implements OnInit {
   recentCandidates: Candidate[] = [];
 
   private readonly STATUS_LABELS: Record<OfferStatus, string> = {
-    needs_review: 'Needs Review',
-    vetted_available: 'Vetted/Available',
-    offer_extended: 'Offer Extended',
-    offer_accepted_onboarding: 'Accepted/Onboarding',
-    hired_assigned: 'Hired/Assigned',
-    do_not_hire: 'Do Not Hire',
-    turned_down_hold: 'Turned Down/Hold for Later',
+    pre_offer: 'Pre Offer',
+    offer: 'Offer',
+    offer_acceptance: 'Acceptance',
   };
 
   constructor(
@@ -267,16 +227,16 @@ export class PipelineDashboardComponent implements OnInit {
   statusLabel(status: OfferStatus): string { return this.STATUS_LABELS[status] ?? status; }
 
   isReady(c: Candidate): boolean {
-    return c.drugTestComplete && c.oshaCertified && c.scissorLiftCertified;
+    return c.drugTestComplete && c.oshaCertified && c.scissorLiftCertified && c.biisciCertified;
   }
 
   certsComplete(c: Candidate): boolean {
-    return c.oshaCertified && c.scissorLiftCertified;
+    return c.oshaCertified && c.scissorLiftCertified && c.biisciCertified;
   }
 
   certsFraction(c: Candidate): string {
-    const done = [c.oshaCertified, c.scissorLiftCertified].filter(Boolean).length;
-    return done + '/2';
+    const done = [c.oshaCertified, c.scissorLiftCertified, c.biisciCertified].filter(Boolean).length;
+    return done + '/3';
   }
 
   private loadCandidates(): void {
@@ -284,7 +244,11 @@ export class PipelineDashboardComponent implements OnInit {
     this.errorMessage = '';
     this.onboardingService.getCandidates().subscribe({
       next: (candidates) => {
-        this.populateDashboard(candidates);
+        this.computeCounts(candidates);
+        this.buildFunnel();
+        this.buildUpcomingStarts(candidates);
+        this.buildRecentCandidates(candidates);
+        this.loading = false;
       },
       error: (err) => {
         this.loading = false;
@@ -293,45 +257,11 @@ export class PipelineDashboardComponent implements OnInit {
     });
   }
 
-  private populateDashboard(candidates: Candidate[]): void {
-    this.computeCounts(candidates);
-    this.buildFunnel();
-    this.buildUpcomingStarts(candidates);
-    this.buildRecentCandidates(candidates);
-    this.loading = false;
-  }
-
-  private getDummyCandidates(): Candidate[] {
-    const dateOnly = (daysOffset: number) => {
-      const d = new Date();
-      d.setDate(d.getDate() + daysOffset);
-      return d.toISOString().split('T')[0];
-    };
-    const iso = (daysOffset: number) => {
-      const d = new Date();
-      d.setDate(d.getDate() + daysOffset);
-      return d.toISOString();
-    };
-
-    return [
-      { candidateId: 'cand-001', techName: 'Marcus Rivera', techEmail: 'marcus.rivera@fieldops.com', techPhone: '214-555-2001', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'Dallas HQ', startDate: dateOnly(5), offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: iso(-30), updatedBy: 'system', updatedAt: iso(-5) },
-      { candidateId: 'cand-002', techName: 'Priya Patel', techEmail: 'priya.patel@fieldops.com', techPhone: '214-555-2002', vestSize: 'S', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: false, workSite: 'Plano Tech Center', startDate: dateOnly(10), offerStatus: 'offer_extended', createdBy: 'system', createdAt: iso(-25), updatedBy: 'system', updatedAt: iso(-3) },
-      { candidateId: 'cand-003', techName: 'James O\'Connor', techEmail: 'james.oconnor@fieldops.com', techPhone: '972-555-2003', vestSize: 'XL', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Irving Business Park', startDate: dateOnly(3), offerStatus: 'offer_accepted_onboarding', createdBy: 'system', createdAt: iso(-20), updatedBy: 'system', updatedAt: iso(-2) },
-      { candidateId: 'cand-004', techName: 'Aisha Johnson', techEmail: 'aisha.johnson@fieldops.com', techPhone: '469-555-2004', vestSize: 'M', drugTestComplete: true, oshaCertified: false, scissorLiftCertified: false, workSite: 'Fort Worth DC', startDate: dateOnly(18), offerStatus: 'needs_review', createdBy: 'system', createdAt: iso(-15), updatedBy: 'system', updatedAt: iso(-1) },
-      { candidateId: 'cand-005', techName: 'Carlos Mendez', techEmail: 'carlos.mendez@fieldops.com', techPhone: '214-555-2005', vestSize: 'L', drugTestComplete: true, oshaCertified: true, scissorLiftCertified: true, workSite: 'McKinney Site A', startDate: dateOnly(7), offerStatus: 'vetted_available', createdBy: 'system', createdAt: iso(-10), updatedBy: 'system', updatedAt: iso(-1) },
-      { candidateId: 'cand-006', techName: 'Sarah Kim', techEmail: 'sarah.kim@fieldops.com', techPhone: '972-555-2006', vestSize: 'S', drugTestComplete: false, oshaCertified: true, scissorLiftCertified: true, workSite: 'Richardson Data Center', startDate: dateOnly(12), offerStatus: 'needs_review', createdBy: 'system', createdAt: iso(-8), updatedBy: 'system', updatedAt: iso(-1) }
-    ];
-  }
-
   private computeCounts(candidates: Candidate[]): void {
-    this.needsReviewCount = candidates.filter(c => c.offerStatus === 'needs_review').length;
-    this.vettedAvailableCount = candidates.filter(c => c.offerStatus === 'vetted_available').length;
-    this.offerExtendedCount = candidates.filter(c => c.offerStatus === 'offer_extended').length;
-    this.offerAcceptedOnboardingCount = candidates.filter(c => c.offerStatus === 'offer_accepted_onboarding').length;
-    this.hiredAssignedCount = candidates.filter(c => c.offerStatus === 'hired_assigned').length;
-    this.doNotHireCount = candidates.filter(c => c.offerStatus === 'do_not_hire').length;
-    this.turnedDownHoldCount = candidates.filter(c => c.offerStatus === 'turned_down_hold').length;
-    this.incompleteCertsCount = candidates.filter(c => !c.oshaCertified || !c.scissorLiftCertified).length;
+    this.preOfferCount = candidates.filter(c => c.offerStatus === 'pre_offer').length;
+    this.offerCount = candidates.filter(c => c.offerStatus === 'offer').length;
+    this.offerAcceptanceCount = candidates.filter(c => c.offerStatus === 'offer_acceptance').length;
+    this.incompleteCertsCount = candidates.filter(c => !c.oshaCertified || !c.scissorLiftCertified || !c.biisciCertified).length;
     this.incompleteDrugTestCount = candidates.filter(c => !c.drugTestComplete).length;
 
     const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -343,16 +273,12 @@ export class PipelineDashboardComponent implements OnInit {
   }
 
   private buildFunnel(): void {
-    const total = this.needsReviewCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount + this.doNotHireCount + this.turnedDownHoldCount;
-    const pct = (n: number) => total > 0 ? Math.max(20, Math.round((n / total) * 100)) : 20;
+    const total = this.preOfferCount + this.offerCount + this.offerAcceptanceCount;
+    const pct = (n: number) => total > 0 ? Math.max(25, Math.round((n / total) * 100)) : 33;
     this.funnelStages = [
-      { label: 'Needs Review', count: this.needsReviewCount, pct: pct(this.needsReviewCount), cls: 'stage-needs-review' },
-      { label: 'Vetted/Available', count: this.vettedAvailableCount, pct: pct(this.vettedAvailableCount), cls: 'stage-vetted-available' },
-      { label: 'Offer Extended', count: this.offerExtendedCount, pct: pct(this.offerExtendedCount), cls: 'stage-offer-extended' },
-      { label: 'Accepted/Onboarding', count: this.offerAcceptedOnboardingCount, pct: pct(this.offerAcceptedOnboardingCount), cls: 'stage-accepted' },
-      { label: 'Hired/Assigned', count: this.hiredAssignedCount, pct: pct(this.hiredAssignedCount), cls: 'stage-hired-assigned' },
-      { label: 'Do Not Hire', count: this.doNotHireCount, pct: pct(this.doNotHireCount), cls: 'stage-do-not-hire' },
-      { label: 'Turned Down/Hold', count: this.turnedDownHoldCount, pct: pct(this.turnedDownHoldCount), cls: 'stage-turned-down-hold' },
+      { label: 'Pre Offer', count: this.preOfferCount, pct: pct(this.preOfferCount), cls: 'stage-pre-offer' },
+      { label: 'Offer', count: this.offerCount, pct: pct(this.offerCount), cls: 'stage-offer' },
+      { label: 'Acceptance', count: this.offerAcceptanceCount, pct: pct(this.offerAcceptanceCount), cls: 'stage-acceptance' },
     ];
   }
 

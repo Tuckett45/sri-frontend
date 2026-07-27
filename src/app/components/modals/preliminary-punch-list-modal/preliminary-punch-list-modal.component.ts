@@ -24,14 +24,6 @@ import { ErrorCodes } from 'src/app/models/error-codes.model';
   standalone: false
 })
 export class PreliminaryPunchListModalComponent implements OnInit {
-  static readonly DRAFT_KEY_PREFIX = 'punchlist-draft-';
-
-  static clearDraft(id: string): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX + id);
-    }
-  }
-
   preliminaryPunchListForm!: FormGroup;
   isEditMode: boolean = false;
   isDisabled: boolean = false;
@@ -132,7 +124,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
   stateAbbreviations!: StateAbbreviation;
 
-  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction', 'PacNet', 'Utilities One'];
+  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction'];
 
   isAddressLoading = false;
   filteredAddresses: any[] = [];
@@ -232,10 +224,6 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     if (this.isEditMode) {
       this.initializeImages(this.data.issueImages || [], 'issueImages');
       this.initializeImages(this.data.resolutionImages || [], 'resolutionImages');
-    }
-
-    if (!this.isEditMode) {
-      this.restoreDraftIfAvailable();
     }
 
     this.preliminaryPunchListForm.get('pmResolved')?.valueChanges.subscribe((pmResolved: boolean) => {
@@ -445,9 +433,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
         const img = new window.Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const existingImageCount = this.issueImagesFormArray.length + this.resolutionImagesFormArray.length;
-          const maxWidth = existingImageCount >= 2 ? 800 : 1000;
-          const quality = existingImageCount >= 2 ? 0.4 : 0.6;
+          const maxWidth = 1000;
           const scale = maxWidth / img.width;
           canvas.width = maxWidth;
           canvas.height = img.height * scale;
@@ -468,7 +454,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
             } else {
               this.toastr.error('Image compression failed');
             }
-          }, 'image/jpeg', quality);
+          }, 'image/jpeg', 0.6); // 60% quality
         };
         img.onerror = () => this.toastr.error('Invalid image file');
         img.src = reader.result as string;
@@ -548,109 +534,6 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     return '';
   }
 
-  private saveDraft(): boolean {
-    if (typeof localStorage === 'undefined') return false;
-    const formValue = this.preliminaryPunchListForm.getRawValue();
-    try {
-      localStorage.setItem(
-        PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX + formValue.id,
-        JSON.stringify(formValue)
-      );
-      return true;
-    } catch (e) {
-      // localStorage might be full, especially with base64 images
-      console.warn('Could not save punch list draft to localStorage', e);
-      return false;
-    }
-  }
-
-  private loadDraft(): any | null {
-    if (typeof localStorage === 'undefined') return null;
-    // Only load drafts for new entries (not edit mode)
-    const formId = this.preliminaryPunchListForm.get('id')?.value;
-    if (!formId) return null;
-    const key = PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX + formId;
-    const stored = localStorage.getItem(key);
-    if (!stored) return null;
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return null;
-    }
-  }
-
-  private restoreDraftIfAvailable(): void {
-    if (typeof localStorage === 'undefined') return;
-    // Look for any draft
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(PreliminaryPunchListModalComponent.DRAFT_KEY_PREFIX)) {
-        try {
-          const draft = JSON.parse(localStorage.getItem(key) || '');
-          if (draft && draft.id) {
-            // Remove the old draft from localStorage since we're consuming it
-            localStorage.removeItem(key);
-
-            // Generate a new UUID so we don't collide with the previously-submitted entry
-            const newId = uuidv4();
-            const oldId = draft.id;
-
-            // Restore the form with draft data but a fresh ID
-            this.preliminaryPunchListForm.patchValue({
-              id: newId,
-              segmentId: draft.segmentId || '',
-              vendorName: draft.vendorName || '',
-              streetAddress: draft.streetAddress || '',
-              city: draft.city || '',
-              state: draft.state || '',
-              additionalConcerns: draft.additionalConcerns || '',
-              createdBy: null,
-              dateReported: new Date().toISOString(),
-              pmResolved: draft.pmResolved || false,
-              pmConcerns: draft.pmConcerns || '',
-              resolvedDate: draft.resolvedDate || null,
-              cmResolved: draft.cmResolved || false,
-              updatedBy: null,
-              updatedDate: null,
-              resolvedBy: null
-            });
-            // Restore images
-            if (draft.issueImages?.length) {
-              const fa = this.issueImagesFormArray;
-              fa.clear();
-              draft.issueImages.forEach((img: any) => fa.push(this.fb.control(img)));
-            }
-            if (draft.resolutionImages?.length) {
-              const fa = this.resolutionImagesFormArray;
-              fa.clear();
-              draft.resolutionImages.forEach((img: any) => fa.push(this.fb.control(img)));
-            }
-            // Restore issues with updated punch list ID references
-            if (draft.issues?.length) {
-              const issuesArray = this.issueAreasFormArray;
-              issuesArray.clear();
-              draft.issues.forEach((issue: any) => {
-                issuesArray.push(this.fb.group({
-                  id: [uuidv4()],
-                  area: [issue.area || '', Validators.required],
-                  category: [issue.category || '', Validators.required],
-                  subCategory: [issue.subCategory || ''],
-                  preliminaryPunchListId: [newId],
-                  errorCodeId: [issue.errorCodeId || '']
-                }));
-              });
-            }
-            this.toastr.info('Your previous form data has been restored.', 'Draft Restored');
-            break; // Only restore one draft
-          }
-        } catch {
-          // Invalid draft, remove it
-          localStorage.removeItem(key!);
-        }
-      }
-    }
-  }
-
   close(): void {
     this.dialogRef.close();
   }
@@ -714,46 +597,15 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       punchList.resolutionImages = (punchList.resolutionImages || []).map((img: any) =>
         typeof img === 'string' ? img : (img?.imageData ?? img?.image ?? '')
       ).filter((s: string) => s);
-
+  
       this.dialogRef.close(punchList);
     } else {
-      this.preliminaryPunchListForm.markAllAsTouched();
-
-      // Build specific error messages so the user knows exactly what to fix
-      const errors: string[] = [];
-      const form = this.preliminaryPunchListForm;
-
-      if (form.get('segmentId')?.hasError('required')) {
-        errors.push('Segment ID is required');
-      }
-      if (form.get('vendorName')?.hasError('required')) {
-        errors.push('Vendor Name is required');
-      }
-      if (form.get('streetAddress')?.hasError('required')) {
-        errors.push('Street Address is required');
-      }
-      if (form.get('city')?.hasError('required')) {
-        errors.push('City is required');
-      } else if (form.get('city')?.hasError('pattern')) {
-        errors.push('City must contain only letters and spaces (no numbers or special characters)');
-      }
-      if (form.get('state')?.hasError('required')) {
-        errors.push('State is required');
-      } else if (form.get('state')?.hasError('pattern')) {
-        errors.push('State must be a 2-letter abbreviation (e.g. AZ, CO, TX)');
-      }
-
-      // Show each error as its own toast so the user can address them one by one
-      if (errors.length > 0) {
-        const message = errors.length === 1
-          ? errors[0]
-          : 'Please fix the following:\n• ' + errors.join('\n• ');
-        this.toastr.error(message, 'Punch List cannot be saved', {
-          timeOut: 8000,
-          enableHtml: false,
-          closeButton: true
-        });
-      }
+      this.preliminaryPunchListForm.get('segmentId')?.hasError('required') ? this.preliminaryPunchListForm.markAsTouched({'emitEvent': true}) : this.preliminaryPunchListForm.markAsTouched({'emitEvent': true});
+      this.preliminaryPunchListForm.get('vendorName')?.hasError('required');
+      this.preliminaryPunchListForm.get('streetAddress')?.hasError('required');
+      this.preliminaryPunchListForm.get('city')?.hasError('required');
+      this.preliminaryPunchListForm.get('state')?.hasError('required');
+      this.toastr.error('Form is invalid. Check required fields');
     }
   }
   

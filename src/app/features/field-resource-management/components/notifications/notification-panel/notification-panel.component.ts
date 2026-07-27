@@ -6,7 +6,6 @@ import { takeUntil } from 'rxjs/operators';
 import { Notification } from '../../../models/notification.model';
 import * as NotificationActions from '../../../state/notifications/notification.actions';
 import * as NotificationSelectors from '../../../state/notifications/notification.selectors';
-import { AuthService } from '../../../../../services/auth.service';
 
 /**
  * Notification Panel Component
@@ -30,18 +29,16 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
   constructor(
     private store: Store,
-    private router: Router,
-    private authService: AuthService
+    private router: Router
   ) {
     this.notifications$ = this.store.select(NotificationSelectors.selectAllNotifications);
     this.unreadCount$ = this.store.select(NotificationSelectors.selectUnreadCount);
   }
 
   ngOnInit(): void {
-    const userId = this.authService.getUser()?.id ?? '';
-    if (userId) {
-      this.store.dispatch(NotificationActions.loadNotifications({ userId }));
-    }
+    // Load notifications for current user
+    // TODO: Get current user ID from auth service
+    this.store.dispatch(NotificationActions.loadNotifications({ userId: 'current-user' }));
     
     // Group notifications by date
     this.notifications$.pipe(takeUntil(this.destroy$)).subscribe(notifications => {
@@ -79,10 +76,8 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
    * Marks all notifications as read
    */
   onMarkAllAsRead(): void {
-    const userId = this.authService.getUser()?.id ?? '';
-    if (userId) {
-      this.store.dispatch(NotificationActions.markAllAsRead({ userId }));
-    }
+    // TODO: Get current user ID from auth service
+    this.store.dispatch(NotificationActions.markAllAsRead({ userId: 'current-user' }));
   }
 
   /**

@@ -57,17 +57,13 @@ export const technicianReducer = createReducer(
     error: null
   })),
 
-  on(TechnicianActions.createTechnicianSuccess, (state, { technician, tempId }) => {
-    // If tempId is provided (from optimistic create), remove the temp entity first
-    const stateAfterRemoval = tempId
-      ? technicianAdapter.removeOne(tempId, state)
-      : state;
-    return technicianAdapter.upsertOne(technician, {
-      ...stateAfterRemoval,
+  on(TechnicianActions.createTechnicianSuccess, (state, { technician }) =>
+    technicianAdapter.addOne(technician, {
+      ...state,
       loading: false,
       error: null
-    });
-  }),
+    })
+  ),
 
   on(TechnicianActions.createTechnicianFailure, (state, { error }) => ({
     ...state,
@@ -174,23 +170,6 @@ export const technicianReducer = createReducer(
     error
   })),
 
-  // Real-time availability update (clock-in/out)
-  on(TechnicianActions.updateTechnicianAvailability, (state, { technicianId, isAvailable }) =>
-    technicianAdapter.updateOne(
-      {
-        id: technicianId,
-        changes: {
-          isAvailable,
-          updatedAt: new Date()
-        }
-      },
-      {
-        ...state,
-        error: null
-      }
-    )
-  ),
-
   // Optimistic Update Handlers
   on(TechnicianActions.updateTechnicianOptimistic, (state, { id, changes }) =>
     technicianAdapter.updateOne(
@@ -238,61 +217,5 @@ export const technicianReducer = createReducer(
       ...state,
       error: 'Delete failed - changes reverted'
     })
-  ),
-
-  // Deactivate Technician
-  on(TechnicianActions.deactivateTechnician, (state) => ({
-    ...state,
-    loading: true,
-    error: null
-  })),
-
-  on(TechnicianActions.deactivateTechnicianSuccess, (state, { technician }) =>
-    technicianAdapter.updateOne(
-      { id: technician.id, changes: technician },
-      {
-        ...state,
-        loading: false,
-        error: null
-      }
-    )
-  ),
-
-  on(TechnicianActions.deactivateTechnicianFailure, (state, { error }) => ({
-    ...state,
-    loading: false,
-    error
-  })),
-
-  // Reactivate Technician
-  on(TechnicianActions.reactivateTechnician, (state) => ({
-    ...state,
-    loading: true,
-    error: null
-  })),
-
-  on(TechnicianActions.reactivateTechnicianSuccess, (state, { technician }) =>
-    technicianAdapter.updateOne(
-      { id: technician.id, changes: technician },
-      {
-        ...state,
-        loading: false,
-        error: null
-      }
-    )
-  ),
-
-  on(TechnicianActions.reactivateTechnicianFailure, (state, { error }) => ({
-    ...state,
-    loading: false,
-    error
-  })),
-
-  // Update Technician Field Status
-  on(TechnicianActions.updateTechnicianFieldStatus, (state, { technicianId, fieldStatus }) =>
-    technicianAdapter.updateOne(
-      { id: technicianId, changes: { fieldStatus: fieldStatus as any } },
-      state
-    )
   )
 );

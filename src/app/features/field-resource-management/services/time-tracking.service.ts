@@ -4,7 +4,7 @@ import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { TimeEntry, GeoLocation } from '../models/time-entry.model';
 import { TimeCategory, PayType, SyncStatus } from '../../../models/time-payroll.enum';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Time Tracking Service
@@ -27,7 +27,7 @@ import { environment } from '../../../../environments/environments';
   providedIn: 'root'
 })
 export class TimeTrackingService {
-  private readonly apiUrl = `${environment.atlasApiUrl}/time-entries`;
+  private readonly apiUrl = `${local_environment.apiUrl}/time-entries`;
 
   constructor(private http: HttpClient) {}
 
@@ -39,8 +39,7 @@ export class TimeTrackingService {
     jobId: string,
     technicianId: string,
     location?: GeoLocation,
-    timeCategory: TimeCategory = TimeCategory.OnSite,
-    proximityStatus?: string
+    timeCategory: TimeCategory = TimeCategory.OnSite
   ): Observable<TimeEntry> {
     const payload: any = {
       jobId,
@@ -55,10 +54,6 @@ export class TimeTrackingService {
         longitude: location.longitude,
         accuracy: location.accuracy ?? null
       };
-    }
-
-    if (proximityStatus) {
-      payload.proximityStatus = proximityStatus;
     }
 
     return this.http.post<any>(`${this.apiUrl}/clock-in`, payload).pipe(
@@ -202,8 +197,8 @@ export class TimeTrackingService {
       id: raw.id || raw.Id || '',
       jobId: raw.jobId || raw.JobId || '',
       technicianId: raw.technicianId || raw.TechnicianId || '',
-      clockInTime: this.ensureUtcDate(raw.clockInTime || raw.ClockInTime),
-      clockOutTime: this.ensureUtcDate(raw.clockOutTime || raw.ClockOutTime) || undefined,
+      clockInTime: raw.clockInTime || raw.ClockInTime,
+      clockOutTime: raw.clockOutTime || raw.ClockOutTime || undefined,
       clockInLocation: (clockInLat != null && clockInLng != null)
         ? { latitude: clockInLat, longitude: clockInLng, accuracy: 0 }
         : undefined,
@@ -219,28 +214,8 @@ export class TimeTrackingService {
       updatedAt: raw.updatedAt || raw.UpdatedAt || new Date(),
       timeCategory: raw.timeCategory || raw.TimeCategory || TimeCategory.OnSite,
       payType: raw.payType || raw.PayType || PayType.Regular,
-      syncStatus: raw.syncStatus || raw.SyncStatus || SyncStatus.Synced,
-      proximityStatus: raw.proximityStatus || raw.ProximityStatus || undefined
+      syncStatus: raw.syncStatus || raw.SyncStatus || SyncStatus.Synced
     };
-  }
-
-  /**
-   * Ensures a date string from the API is treated as UTC.
-   * If the string lacks a timezone suffix (Z or +/-offset), append 'Z' so that
-   * `new Date()` interprets it correctly. This prevents the 7-hour offset bug
-   * where UTC times are mistakenly displayed as local times.
-   */
-  private ensureUtcDate(dateStr: string | null | undefined): any {
-    if (!dateStr) return dateStr;
-    if (typeof dateStr !== 'string') return dateStr;
-    
-    // Already has timezone info (Z, +HH:MM, -HH:MM)
-    if (/Z$|[+-]\d{2}:\d{2}$|[+-]\d{4}$/.test(dateStr)) {
-      return dateStr;
-    }
-    
-    // No timezone info — assume UTC and append Z
-    return dateStr + 'Z';
   }
 
   private handleError(error: any): Observable<never> {

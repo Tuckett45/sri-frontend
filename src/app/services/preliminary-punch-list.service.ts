@@ -1,12 +1,11 @@
 import { Injectable, effect } from '@angular/core';
-import { BehaviorSubject, Observable, from, throwError, of } from 'rxjs';
+import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
 import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
 import { environment, local_environment } from '../../environments/environments';
 import { User } from '../models/user.model';
 import { OfflineCacheService } from './offline-cache.service';
-import { OfflineQueueService } from './offline-queue.service';
 import { RoleBasedDataService } from './role-based-data.service';
 import { AuthService } from './auth.service';
 
@@ -51,8 +50,6 @@ export type SearchParams = {
 
 @Injectable({ providedIn: 'root' })
 export class PreliminaryPunchListService {
-  private pendingImageUploadIds = new Set<string>();
-
   private entriesCache$!: Observable<PagedResponse<PreliminaryPunchList>> | null;
   private entriesCacheData: PagedResponse<PreliminaryPunchList> | null = null;
 
@@ -75,7 +72,6 @@ export class PreliminaryPunchListService {
   constructor(
     private http: HttpClient, 
     private offlineCache: OfflineCacheService,
-    private offlineQueue: OfflineQueueService,
     private roleBasedDataService: RoleBasedDataService,
     private authService: AuthService
   ) {
@@ -330,20 +326,20 @@ export class PreliminaryPunchListService {
 
     // CM users: filter by their market
     if (this.authService.isCM()) {
-      const userMarket = (user.market || '').trim().toUpperCase();
-
-      // Regional CMs (market = 'RG') can see all markets — no filtering needed
-      if (userMarket === 'RG') {
-        return response;
-      }
-
-      // Non-regional CMs: filter to only their market
-      const items = response.items.filter(item =>
-        (item.state || '').trim().toUpperCase() === userMarket
+      // Map state to market for filtering
+      const itemsWithMarket = response.items.map(item => ({ ...item, market: item.state }));
+      const filteredItems = this.roleBasedDataService.applyMarketFilter(
+        itemsWithMarket,
+        { specificMarket: user.market }
       );
+      // Map back to original PreliminaryPunchList objects
+      const items = filteredItems.map(item => {
+        const { market, ...rest } = item as any;
+        return rest as PreliminaryPunchList;
+      });
       return {
         ...response,
-        items,
+        items: items,
         total: items.length
       };
     }
@@ -480,13 +476,6 @@ export class PreliminaryPunchListService {
       }
     }
 
-    // If offline, queue the submission for later
-    if (this.offlineQueue.isOffline()) {
-      return from(this.offlineQueue.enqueue(punchList, 'create')).pipe(
-        map(() => ({ queued: true, id: punchList.id }))
-      );
-    }
-
     this.clearCaches();
 
     const issueImages = punchList.issueImages;
@@ -495,95 +484,40 @@ export class PreliminaryPunchListService {
                          (resolutionImages && resolutionImages.length > 0);
 
     if (hasNewImages) {
-      // Check if we already know the POST succeeded (from a previous failed attempt)
-      if (this.pendingImageUploadIds.has(punchList.id)) {
-        // Skip POST, go straight to PUT with images
-        const withImages = { ...punchList, issueImages, resolutionImages };
-        return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions)
-          .pipe(
-            tap(() => this.pendingImageUploadIds.delete(punchList.id)),
-            catchError((err) => this.handleError(err))
-          );
-      }
-
-      // Check if entry already exists (handles case where user retries after 409)
-      return this.http.get(`${environment.apiUrl}/PunchList/${punchList.id}`, this.httpOptions).pipe(
-        // Entry exists - just do the PUT
-        switchMap(() => {
-          const withImages = { ...punchList, issueImages, resolutionImages };
-          return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions);
-        }),
-        catchError((getError) => {
-          // Entry doesn't exist (404) or GET failed for another reason - do the full POST + PUT flow
-          return this.postThenPutWithImages(punchList, issueImages ?? [], resolutionImages ?? []);
-        })
-      );
+      // Two-step: create the punch list without images first so the parent row
+      // exists, then update with images to satisfy the FK constraint on PunchListImages.
+      const withoutImages = { ...punchList, issueImages: [], resolutionImages: [] };
+      return this.http.post(`${environment.apiUrl}/PunchList`, withoutImages, this.httpOptions)
+        .pipe(
+          switchMap(() => {
+            const withImages = { ...punchList, issueImages, resolutionImages };
+            return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions);
+          }),
+          catchError(this.handleError)
+        );
     }
 
     return this.http.post(`${environment.apiUrl}/PunchList`, punchList, this.httpOptions)
-      .pipe(catchError((err) => this.handleError(err)));
-  }
-
-  /**
-   * Shared helper for the two-step create flow: POST without images, then PUT with images.
-   * Tracks the punchlist ID in pendingImageUploadIds between the two steps so that
-   * a retry after PUT failure can skip the POST.
-   */
-  private postThenPutWithImages(
-    punchList: PreliminaryPunchList,
-    issueImages: any[],
-    resolutionImages: any[]
-  ): Observable<any> {
-    const withoutImages = { ...punchList, issueImages: [], resolutionImages: [] };
-    return this.http.post(`${environment.apiUrl}/PunchList`, withoutImages, this.httpOptions).pipe(
-      tap(() => this.pendingImageUploadIds.add(punchList.id)),
-      switchMap(() => {
-        const withImages = { ...punchList, issueImages, resolutionImages };
-        return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, withImages, this.httpOptions).pipe(
-          tap(() => this.pendingImageUploadIds.delete(punchList.id))
-        );
-      }),
-      catchError((err) => {
-        // If PUT failed but POST succeeded, pendingImageUploadIds already has the id
-        return this.handleError(err);
-      })
-    );
+      .pipe(catchError(this.handleError));
   }
 
   updateEntry(punchList: PreliminaryPunchList): Observable<any> {
-    // Validate market ownership for CMs (regional CMs with market 'RG' can access all markets)
+    // Validate market ownership for CMs
     if (this.authService.isCM() && !this.authService.isAdmin()) {
-      const user = this.authService.getUser();
-      const userMarket = (user?.market || '').trim().toUpperCase();
-      const isRegional = userMarket === 'RG';
-      
-      // Regional CMs can access all markets, non-regional CMs can only access their own
-      if (!isRegional && !this.roleBasedDataService.canAccessMarket(punchList['market'] || punchList.state || '')) {
-        const punchListMarket = punchList['market'] || punchList.state || 'a different market';
-        return throwError(() => new Error(
-          `You do not have permission to update this punch list. ` +
-          `Your market is "${userMarket}" but this punch list belongs to "${punchListMarket}". ` +
-          `Only administrators, regional users, or users assigned to that market can make changes.`
-        ));
+      if (!this.roleBasedDataService.canAccessMarket(punchList['market'] || '')) {
+        return throwError(() => new Error('You do not have permission to update punch lists from other markets'));
       }
-    }
-
-    // If offline, queue the update for later
-    if (this.offlineQueue.isOffline()) {
-      return from(this.offlineQueue.enqueue(punchList, 'update')).pipe(
-        map(() => ({ queued: true, id: punchList.id }))
-      );
     }
 
     this.clearCaches();
     return this.http.put(`${environment.apiUrl}/PunchList/${punchList.id}`, punchList, this.httpOptions)
-      .pipe(catchError((err) => this.handleError(err)));
+      .pipe(catchError(this.handleError));
   }
 
   removeEntry(id: string | undefined): Observable<any> {
     this.clearCaches();
     return this.http.delete<void>(`${environment.apiUrl}/PunchList/${id}`, this.httpOptions)
-      .pipe(catchError((err) => this.handleError(err)));
+      .pipe(catchError(this.handleError));
   }
 
   getCachedUnresolvedCount(user: User): number {

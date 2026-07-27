@@ -43,7 +43,7 @@ export class StreetSheetModalComponent implements OnInit {
 
   equipmentOptions: string[] = ['Saws', 'Bore Rigs', 'Splicing equipment', 'Mini Excavators', 'Dump Trailers', 'TCP Equipment', 'Box Crew Equipment', 'Other'];
 
-  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction', 'PacNet', 'Utilities One'];
+  vendors: string[] = ['Congruex (SCI)', 'Ervin (ECC)', 'Blue Edge (BE)', 'North Star', 'MasTec', 'Bcomm', 'M&J Enterprises Construction'];
 
   stateAbbreviations!: StateAbbreviation;
 
@@ -477,7 +477,6 @@ export class StreetSheetModalComponent implements OnInit {
           equipment: !!formValue.equipment,
           date: !!formValue.date
         });
-        this.isSaving = false;
         this.toastr.error('Please fill in all required fields');
         return;
       }
@@ -553,16 +552,12 @@ export class StreetSheetModalComponent implements OnInit {
         }
       });
 
-      const request$ = this.isEditMode
-        ? this.streetSheetService.updateStreetSheet(formData, formValue.segmentId)
-        : this.streetSheetService.saveStreetSheet(formData);
-
-      request$.subscribe(
+      this.streetSheetService.saveStreetSheet(formData).subscribe(
         (response: StreetSheet) => {
           console.log('✅ Street sheet saved successfully:', response);
           this.isSaving = false;
           this.toastr.success('Street Sheet Saved');
-          this.dialogRef.close(response);
+          this.dialogRef.close(response); 
         },
         (error) => {
           this.isSaving = false;

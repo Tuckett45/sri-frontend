@@ -83,10 +83,6 @@ export interface Expense {
   approvedBy?: string;
   approvedAt?: string;
 
-  isPaid?: boolean;
-  paidBy?: string;
-  paidDate?: string;
-
   createdBy?: string;
   createdDate?: string;
   updatedBy?: string;

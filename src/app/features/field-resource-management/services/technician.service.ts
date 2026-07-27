@@ -22,7 +22,7 @@ import { TechnicalCompetency } from '../models/competency.model';
 import { PRC, PRCGoal } from '../models/prc.model';
 import { RoleBasedDataService } from '../../../services/role-based-data.service';
 import { AuthService } from '../../../services/auth.service';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 /**
  * Service for managing technician data and operations
@@ -32,7 +32,7 @@ import { environment } from '../../../../environments/environments';
   providedIn: 'root'
 })
 export class TechnicianService {
-  private readonly apiUrl = `${environment.atlasApiUrl}/technicians`;
+  private readonly apiUrl = `${local_environment.apiUrl}/technicians`;
   private readonly retryCount = 2;
 
   constructor(
@@ -54,11 +54,6 @@ export class TechnicianService {
    */
   getTechnicians(filters?: TechnicianFilters): Observable<Technician[]> {
     let params = new HttpParams();
-
-    // For Admin users, request all technicians (not just self)
-    if (this.authService.isAdmin()) {
-      params = params.set('scope', 'all');
-    }
 
     // Apply filters if provided
     if (filters) {
@@ -105,23 +100,10 @@ export class TechnicianService {
 
     return this.http.get<any>(this.apiUrl, { params })
       .pipe(
+        retry(this.retryCount),
         map(response => {
-          // API may return paginated response { items: [...] } or a plain array
-          let technicians: Technician[];
-          if (Array.isArray(response)) {
-            technicians = response;
-          } else if (response && Array.isArray(response.items)) {
-            technicians = response.items;
-          } else {
-            console.warn('[TechnicianService] Unexpected response format:', response);
-            technicians = [];
-          }
-          // Normalize: default isActive/isAvailable to true if not provided by API
-          technicians = technicians.map(t => ({
-            ...t,
-            isActive: t.isActive ?? true,
-            isAvailable: t.isAvailable ?? true
-          }));
+          // API returns paginated response with items array
+          const technicians: Technician[] = response.items || response;
           return this.applyRoleBasedFiltering(technicians);
         }),
         catchError(this.handleError)
@@ -295,43 +277,7 @@ export class TechnicianService {
   }
 
   /**
-   * Deactivates a technician (soft-delete)
-   * Sets the technician to inactive status while preserving the record
-   * Only Admin users can deactivate technicians
-   * @param id Technician ID
-   * @returns Observable of updated technician
-   */
-  deactivateTechnician(id: string): Observable<Technician> {
-    if (!this.authService.isAdmin()) {
-      return throwError(() => new Error('Only administrators can deactivate technicians'));
-    }
-
-    return this.http.patch<Technician>(`${this.apiUrl}/${id}/deactivate`, {})
-      .pipe(
-        catchError(this.handleError)
-      );
-  }
-
-  /**
-   * Reactivates a previously deactivated technician
-   * Only Admin users can reactivate technicians
-   * @param id Technician ID
-   * @returns Observable of updated technician
-   */
-  reactivateTechnician(id: string): Observable<Technician> {
-    if (!this.authService.isAdmin()) {
-      return throwError(() => new Error('Only administrators can reactivate technicians'));
-    }
-
-    return this.http.patch<Technician>(`${this.apiUrl}/${id}/reactivate`, {})
-      .pipe(
-        catchError(this.handleError)
-      );
-  }
-
-  /**
-   * Permanently deletes a technician record
-   * This action cannot be undone - use deactivateTechnician for soft-delete
+   * Deletes a technician
    * Only Admin users can delete technicians
    * @param id Technician ID
    * @returns Observable of void
@@ -463,6 +409,7 @@ export class TechnicianService {
   getTechnicianEquipment(technicianId: string): Observable<EquipmentAssignment[]> {
     return this.http.get<EquipmentAssignment[]>(`${this.apiUrl}/${technicianId}/equipment`)
       .pipe(
+        retry(this.retryCount),
         catchError(this.handleError)
       );
   }
@@ -496,22 +443,6 @@ export class TechnicianService {
   }
 
   /**
-   * Deletes an equipment assignment
-   */
-  deleteEquipmentAssignment(technicianId: string, equipmentId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${technicianId}/equipment/${equipmentId}`)
-      .pipe(catchError(this.handleError));
-  }
-
-  /**
-   * Deletes a technical competency
-   */
-  deleteTechnicianCompetency(technicianId: string, competencyId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${technicianId}/competencies/${competencyId}`)
-      .pipe(catchError(this.handleError));
-  }
-
-  /**
    * Validates that an asset identifier is unique across all technicians
    * @param assetIdentifier The asset identifier to validate
    * @param excludeTechnicianId Optional technician ID to exclude from the check
@@ -537,6 +468,7 @@ export class TechnicianService {
   getTechnicianCompetencies(technicianId: string): Observable<TechnicalCompetency[]> {
     return this.http.get<TechnicalCompetency[]>(`${this.apiUrl}/${technicianId}/competencies`)
       .pipe(
+        retry(this.retryCount),
         catchError(this.handleError)
       );
   }
@@ -577,6 +509,7 @@ export class TechnicianService {
   getTechnicianPRC(technicianId: string): Observable<PRC | null> {
     return this.http.get<PRC | null>(`${this.apiUrl}/${technicianId}/prc`)
       .pipe(
+        retry(this.retryCount),
         catchError(this.handleError)
       );
   }
@@ -650,6 +583,7 @@ export class TechnicianService {
   getRoleCredentialTemplate(role: TechnicianRole): Observable<RoleCredentialTemplate> {
     return this.http.get<RoleCredentialTemplate>(`${this.apiUrl}/role-templates/${role}`)
       .pipe(
+        retry(this.retryCount),
         catchError(this.handleError)
       );
   }
@@ -794,26 +728,6 @@ export class TechnicianService {
         retry(1), // Retry once on network failure
         catchError(this.handleError)
       );
-  }
-
-  /**
-   * Retrieves technician field statuses from the dedicated endpoint
-   * Used by admin/manager views to see real-time technician status
-   * @param filters Optional status and region filters
-   * @returns Observable of technician field status data
-   */
-  getFieldStatuses(filters?: { status?: string; region?: string }): Observable<any[]> {
-    let params = new HttpParams();
-    if (filters?.status) {
-      params = params.set('status', filters.status);
-    }
-    if (filters?.region) {
-      params = params.set('region', filters.region);
-    }
-
-    return this.http.get<any[]>(`${this.apiUrl}/field-status`, { params }).pipe(
-      catchError(this.handleError)
-    );
   }
 
   /**

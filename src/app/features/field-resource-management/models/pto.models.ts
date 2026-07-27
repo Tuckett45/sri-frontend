@@ -38,7 +38,7 @@ export interface PtoRequest {
   endDate: string;
   requestType: string;
   reason: string | null;
-  status: RequestStatus;
+  status: string;
   totalDays?: number;
   approvalHistory?: ApprovalEntry[];
   createdAt: string;

@@ -1,13 +1,6 @@
-:host {
-  display: block;
-  height: calc(100vh - 64px - 40px); // viewport - navbar - main-content padding (20px top + 20px bottom)
-  overflow: hidden;
-  margin: -20px; // Negate the .main-content padding so FRM fills edge-to-edge
-}
-
 .frm-layout {
   display: flex;
-  height: 100%;
+  height: 100vh;
   overflow: hidden;
   position: relative;
   width: 100%;
@@ -25,7 +18,7 @@
   transition: transform 0.3s ease-in-out;
   z-index: 100;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-  height: 100%;
+  height: 100vh;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -35,45 +28,36 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    min-height: 0;
+    min-height: 0; // Allow flex child to shrink below content size
     -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-    position: relative;
-    padding-bottom: 16px;
 
-    // Always-visible scrollbar so users know it scrolls
+    // Subtle scrollbar that blends with the dark sidebar
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.08);
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 
     &::-webkit-scrollbar {
-      width: 6px;
+      width: 4px;
     }
 
     &::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 6px;
-      margin: 8px 0;
+      background: transparent;
     }
 
     &::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 255, 255, 0.35);
-      border-radius: 6px;
-      min-height: 40px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.5);
+        background-color: rgba(255, 255, 255, 0.35);
       }
     }
   }
 
-  // Bottom fade gradient removed — no longer needed since nav is scrollable
-  // and fade was causing last item to appear greyed out
-
   @media (max-width: 768px) {
     position: fixed;
-    top: 64px; // Below the main app navbar
+    top: 0;
     left: 0;
-    height: calc(100vh - 64px);
+    height: 100vh;
     z-index: 1000;
     transform: translateX(-100%);
 

@@ -19,8 +19,6 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { TimelineItem } from 'src/app/models/timeline-item.model';
 import { DailyReportService } from 'src/app/services/daily-report.service';
 import { DailyReport, DailyReportSubmissionStatus } from 'src/app/models/daily-report.model';
-import { OfflineQueueService } from 'src/app/services/offline-queue.service';
-import { OfflineCacheService } from 'src/app/services/offline-cache.service';
 
 // Child expects a searchParams bag; define a local type (no import needed)
 type ChildSearchParams = {
@@ -136,8 +134,6 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
     public authService: AuthService,
     public datePipe: DatePipe,
     private dailyReportService: DailyReportService,
-    public offlineQueue: OfflineQueueService,
-    public offlineCache: OfflineCacheService,
   ) {}
 
   ngOnInit(): void {
@@ -414,20 +410,8 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
         : this.punchListService.addEntry(punchList);
 
       action$.subscribe({
-        next: (response: any) => {
-          // Check if the item was queued for offline submission
-          if (response?.queued) {
-            this.toastr.info(
-              'You\'re currently offline. Your punch list has been queued and will be submitted automatically when connectivity returns.',
-              'Saved Offline',
-              { timeOut: 8000, closeButton: true }
-            );
-            PreliminaryPunchListModalComponent.clearDraft(punchList.id);
-            return;
-          }
-
+        next: () => {
           this.toastr.success('Punch List saved');
-          PreliminaryPunchListModalComponent.clearDraft(punchList.id);
           // refresh children (they fetch their own pages)
           this.resolvedPunchListComponent.refreshPunchLists();
           this.unresolvedPunchListComponent.refreshPunchLists();
@@ -435,65 +419,9 @@ export class PreliminaryPunchListComponent implements OnInit, AfterViewInit, OnD
           this.loadPunchLists();
           this.loadFacetsForActiveTab();
         },
-        error: (err: any) => {
-          // Save draft on failure so user can recover their work
-          this.savePunchListDraft(punchList);
-
-          let message = this.getPunchListSaveErrorMessage(err);
-          const raw = typeof err === 'string' ? err : (err?.error || err?.message || '');
-          const errorText = typeof raw === 'string' ? raw : (raw?.message || raw?.title || JSON.stringify(raw));
-          const errorType = err?.errorType || '';
-          if (errorType === 'upload_timeout' || errorText.includes('timed out') || errorText.includes('Timeout')) {
-            message += ' Your form data has been saved and will be restored when you reopen the form.';
-          }
-          this.toastr.error(message, 'Punch List cannot be saved', {
-            timeOut: 10000,
-            closeButton: true
-          });
-        }
+        error: () => this.toastr.error('Error saving Punch List.')
       });
     });
-  }
-
-  private savePunchListDraft(punchList: PreliminaryPunchList): void {
-    try {
-      const key = 'punchlist-draft-' + punchList.id;
-      localStorage.setItem(key, JSON.stringify(punchList));
-    } catch (e) {
-      console.warn('Could not save punch list draft to localStorage', e);
-    }
-  }
-
-  private getPunchListSaveErrorMessage(err: any): string {
-    const raw = typeof err === 'string' ? err : (err?.error || err?.message || '');
-    const errorText = typeof raw === 'string' ? raw : (raw?.message || raw?.title || JSON.stringify(raw));
-
-    if (errorText.includes('already exists')) {
-      return 'This punch list was already saved. Please close this form and refresh the list to see it.';
-    }
-    if (errorText.includes('do not have permission') || errorText.includes('Only administrators, regional users')) {
-      return 'You do not have permission to save punch lists for this market. You can only edit punch lists in your assigned market.';
-    }
-    if (errorText.includes('Invalid punch list data')) {
-      return 'The punch list data is incomplete. Please ensure all required fields (Segment ID, Vendor, Address, City, State) are filled in and try again.';
-    }
-    if (errorText.includes('truncat') || errorText.includes('String or binary data')) {
-      return 'One or more fields exceed the maximum allowed length. Try shortening the Additional Concerns or Street Address text.';
-    }
-    if (errorText.includes('timeout') || errorText.includes('Timeout')) {
-      return 'The server took too long to respond. Please check your internet connection and try again.';
-    }
-    if (errorText.includes('0 Unknown') || errorText.includes('status: 0')) {
-      return 'Unable to reach the server. Please check your internet connection and try again.';
-    }
-    if (errorText.includes('404') || errorText.includes('Not Found')) {
-      return 'This punch list no longer exists. It may have been deleted by another user. Please refresh the page.';
-    }
-    if (errorText.includes('409') || errorText.includes('Conflict')) {
-      return 'This punch list was already saved. Please close this form and refresh the list.';
-    }
-
-    return 'Unable to save the punch list. Please try again. If the problem persists, contact your administrator.';
   }
 
   openDeleteConfirmationDialog(report: PreliminaryPunchList): void {

@@ -299,9 +299,6 @@ export class TechnicianFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Prevent double submission
-    if (this.submitting) return;
-
     const formValue = this.technicianForm.value;
 
     if (this.isEditMode && this.technicianId) {

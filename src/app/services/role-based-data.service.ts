@@ -80,30 +80,14 @@ export class RoleBasedDataService {
       return data;
     }
 
-    // CM users see only their assigned market (regional CMs see all)
+    // CM users see only their assigned market
     if (this.authService.isCM()) {
       const user = this.authService.getUser();
       if (!user || !user.market) {
         return [];
       }
 
-      // Regional CMs (market = 'RG') can see all markets
-      if (user.market.trim().toUpperCase() === 'RG') {
-        if (options?.specificMarket && options.specificMarket.trim().toUpperCase() !== 'RG') {
-          return data.filter(item => item.market?.toUpperCase() === options.specificMarket?.toUpperCase());
-        }
-        // Exclude RG markets for street sheets if specified
-        if (options?.excludeRGMarkets) {
-          return data.filter(item => 
-            !item.market || !item.market.toUpperCase().includes('RG')
-          );
-        }
-        return data;
-      }
-
-      let filtered = data.filter(item => 
-        item.market?.toUpperCase() === user.market.toUpperCase()
-      );
+      let filtered = data.filter(item => item.market === user.market);
 
       // Exclude RG markets for street sheets if specified
       if (options?.excludeRGMarkets) {
@@ -161,7 +145,7 @@ export class RoleBasedDataService {
    * @returns True if user can access the market
    */
   canAccessMarket(market: string): boolean {
-    if (!market || !market.trim()) {
+    if (!market) {
       return false;
     }
 
@@ -170,17 +154,10 @@ export class RoleBasedDataService {
       return true;
     }
 
-    // CM can only access their assigned market (regional CMs with 'RG' can access all)
+    // CM can only access their assigned market
     if (this.authService.isCM()) {
       const user = this.authService.getUser();
-      if (!user || !user.market) {
-        return false;
-      }
-      // Regional users (market = 'RG') have access to all markets
-      if (user.market.trim().toUpperCase() === 'RG') {
-        return true;
-      }
-      return user.market.trim().toUpperCase() === market.trim().toUpperCase();
+      return user && user.market === market;
     }
 
     // Other roles - default to false for security

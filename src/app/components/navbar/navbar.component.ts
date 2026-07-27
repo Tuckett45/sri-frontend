@@ -35,18 +35,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
       route: '/overview',
       shouldShow: () => this.authService.isClient() || this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM()
     },
-    // {
-    //   label: 'Phase Dashboard',
-    //   route: '/admin-dashboard/overview',
-    //   shouldShow: () => this.authService.isAdmin()
-    // },
+    {
+      label: 'Phase Dashboard',
+      route: '/admin-dashboard/overview',
+      shouldShow: () => this.authService.isAdmin()
+    },
     {
       label: 'Deployments',
       route: '/deployments',
       shouldShow: () => this.authService.isAdmin()
     },
     {
-      label: 'QA/QC Punch List',
+      label: 'Prelim Punch List',
       route: '/preliminary-punch-list',
       shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isPM() || this.authService.isEngineeringFieldSupport() || this.authService.isMaterialsManager()
     },
@@ -70,11 +70,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     //   route: '/tps',
     //   shouldShow: () => this.authService.isAdmin() || this.authService.isClient()
     // },
-    {
-      label: 'Hyperscale Construction',
-      route: '/construction',
-      shouldShow: () => true
-    },
     {
       label: 'Expenses',
       route: '/expenses',
