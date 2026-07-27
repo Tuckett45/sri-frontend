@@ -2,7 +2,8 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, from, of } from 'rxjs';
+import { concatMap, delay, catchError, toArray, tap } from 'rxjs/operators';
 import { OnboardingService } from '../../../services/onboarding.service';
 import { OnboardingLinkService } from '../../../services/onboarding-link.service';
 import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
@@ -55,6 +56,30 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
         <button type="button" (click)="successMessage = ''" aria-label="Dismiss message">Dismiss</button>
       </div>
 
+      <!-- Bulk Conversion Progress -->
+      <div class="progress-banner" *ngIf="bulkConverting" role="status" aria-live="polite">
+        <div class="progress-text">
+          Converting candidates... {{ bulkConvertProgress }} / {{ bulkConvertTotal }}
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" [style.width.%]="(bulkConvertProgress / bulkConvertTotal) * 100"></div>
+        </div>
+      </div>
+
+      <!-- Bulk Conversion Failures Detail -->
+      <div class="failures-banner" *ngIf="bulkConvertFailures.length > 0" role="alert">
+        <div class="failures-header">
+          <strong>{{ bulkConvertFailures.length }} conversion{{ bulkConvertFailures.length > 1 ? 's' : '' }} failed:</strong>
+          <button type="button" (click)="bulkConvertFailures = []" aria-label="Dismiss failures">Dismiss</button>
+        </div>
+        <ul class="failures-list">
+          <li *ngFor="let failure of bulkConvertFailures">
+            <span class="failure-name">{{ failure.techName }}</span> &mdash;
+            <span class="failure-reason">{{ failure.reason }}</span>
+          </li>
+        </ul>
+      </div>
+
       <!-- Filters -->
       <div class="filters-row">
         <div class="filter-field">
@@ -101,16 +126,24 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       </div>
 
       <!-- Bulk Action Bar -->
-      <div class="bulk-action-bar" *ngIf="selectedCandidateIds.size > 0">
-        <span class="bulk-selection-count">{{ selectedCandidateIds.size }} candidate{{ selectedCandidateIds.size > 1 ? 's' : '' }} selected</span>
+      <div class="bulk-action-bar" *ngIf="selectedCandidateIds.size > 0 || getAllEligibleCount() > 0">
+        <button type="button"
+                class="bulk-select-all-btn"
+                (click)="onSelectAllEligible()"
+                *ngIf="getAllEligibleCount() > 0 && selectedCandidateIds.size < getAllEligibleCount()"
+                [disabled]="bulkConverting">
+          <mat-icon class="bulk-icon">select_all</mat-icon>
+          Select All {{ getAllEligibleCount() }} Eligible Candidates
+        </button>
+        <span class="bulk-selection-count" *ngIf="selectedCandidateIds.size > 0">{{ selectedCandidateIds.size }} candidate{{ selectedCandidateIds.size > 1 ? 's' : '' }} selected</span>
         <button type="button"
                 class="bulk-convert-btn"
                 (click)="onBulkConvert()"
-                [disabled]="bulkConverting">
+                [disabled]="bulkConverting || selectedCandidateIds.size === 0">
           <mat-icon class="bulk-icon">group_add</mat-icon>
           {{ bulkConverting ? 'Converting...' : 'Convert Selected to Technicians' }}
         </button>
-        <button type="button" class="bulk-clear-btn" (click)="clearSelection()">
+        <button type="button" class="bulk-clear-btn" (click)="clearSelection()" *ngIf="selectedCandidateIds.size > 0">
           Clear Selection
         </button>
       </div>
@@ -371,6 +404,88 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       text-decoration: underline;
     }
 
+    .progress-banner {
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 4px;
+      color: #0d47a1;
+      font-size: 0.875rem;
+    }
+
+    .progress-text {
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #bbdefb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: #1976d2;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .failures-banner {
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      background: #fff3e0;
+      border: 1px solid #ffcc80;
+      border-radius: 4px;
+      color: #e65100;
+      font-size: 0.875rem;
+    }
+
+    .failures-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .failures-header button {
+      background: none;
+      border: none;
+      color: #e65100;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .failures-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .failures-list li {
+      padding: 0.25rem 0;
+      border-bottom: 1px solid #ffe0b2;
+    }
+
+    .failures-list li:last-child {
+      border-bottom: none;
+    }
+
+    .failure-name {
+      font-weight: 500;
+    }
+
+    .failure-reason {
+      font-style: italic;
+      color: #bf360c;
+    }
+
     .filters-row {
       display: flex;
       gap: 1rem;
@@ -588,6 +703,36 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       background-color: rgba(123, 31, 162, 0.08);
     }
 
+    .bulk-select-all-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 1rem;
+      background-color: #1565c0;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .bulk-select-all-btn:hover:not(:disabled) {
+      background-color: #0d47a1;
+    }
+
+    .bulk-select-all-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .bulk-select-all-btn .bulk-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
     .action-btn {
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
@@ -746,6 +891,9 @@ export class CandidateListComponent implements OnInit {
   // Bulk selection
   selectedCandidateIds = new Set<string>();
   bulkConverting = false;
+  bulkConvertProgress = 0;
+  bulkConvertTotal = 0;
+  bulkConvertFailures: { candidateId: string; techName: string; reason: string }[] = [];
 
   searchText = '';
   statusFilter = '';
@@ -1068,6 +1216,23 @@ export class CandidateListComponent implements OnInit {
     this.selectedCandidateIds.clear();
   }
 
+  /**
+   * Returns the total number of eligible candidates across ALL pages (not just current page).
+   * A candidate is eligible if canConvert() returns true (hired_assigned or offer_accepted_onboarding with OSHA).
+   */
+  getAllEligibleCount(): number {
+    return this.filteredCandidates.filter(c => this.canConvert(c)).length;
+  }
+
+  /**
+   * Selects ALL eligible candidates across every page, not just the current page.
+   * This allows bulk conversion of all hired candidates in a single operation.
+   */
+  onSelectAllEligible(): void {
+    const allEligible = this.filteredCandidates.filter(c => this.canConvert(c));
+    allEligible.forEach(c => this.selectedCandidateIds.add(c.candidateId));
+  }
+
   onBulkConvert(): void {
     if (this.bulkConverting || this.selectedCandidateIds.size === 0) return;
 
@@ -1088,27 +1253,49 @@ export class CandidateListComponent implements OnInit {
 
     this.bulkConverting = true;
     this.errorMessage = '';
+    this.successMessage = '';
+    this.bulkConvertProgress = 0;
+    this.bulkConvertTotal = selectedCandidates.length;
+    this.bulkConvertFailures = [];
 
-    const conversions = selectedCandidates.map(c =>
-      this.onboardingService.convertToTechnician(c.candidateId)
-    );
+    // Process sequentially with a small delay between requests to avoid
+    // rate limiting and race conditions on unique constraints.
+    from(selectedCandidates).pipe(
+      concatMap(candidate =>
+        this.onboardingService.convertToTechnician(candidate.candidateId).pipe(
+          delay(150), // Small delay between requests to avoid overwhelming the API
+          tap(() => this.bulkConvertProgress++),
+          catchError(err => {
+            // Isolate individual failures — don't abort the whole batch
+            this.bulkConvertProgress++;
+            return of({
+              error: true as const,
+              candidateId: candidate.candidateId,
+              techName: candidate.techName,
+              reason: err?.message || 'Unknown error'
+            });
+          })
+        )
+      ),
+      toArray()
+    ).subscribe(results => {
+      this.bulkConverting = false;
+      this.selectedCandidateIds.clear();
 
-    forkJoin(conversions).subscribe({
-      next: (results) => {
-        this.bulkConverting = false;
-        this.selectedCandidateIds.clear();
-        const count = results.length;
-        this.errorMessage = ''; // Clear any previous errors
-        // Show success message briefly using the error banner style (we'll reuse it)
-        this.successMessage = `Successfully converted ${count} candidate${count > 1 ? 's' : ''} to technicians.`;
-        this.loadCandidates();
-      },
-      error: (err) => {
-        this.bulkConverting = false;
-        this.errorMessage = `Some conversions failed. ${err?.message || 'Please review the candidate list and try again.'}`;
-        this.selectedCandidateIds.clear();
-        this.loadCandidates();
+      const failures = results.filter((r: any) => r?.error === true) as { error: boolean; candidateId: string; techName: string; reason: string }[];
+      const successCount = results.length - failures.length;
+
+      this.bulkConvertFailures = failures;
+
+      if (failures.length === 0) {
+        this.successMessage = `Successfully converted ${successCount} candidate${successCount > 1 ? 's' : ''} to technicians.`;
+      } else if (successCount === 0) {
+        this.errorMessage = `All ${failures.length} conversions failed. Please review the errors below.`;
+      } else {
+        this.successMessage = `Converted ${successCount} of ${results.length} candidates. ${failures.length} failed — see details below.`;
       }
+
+      this.loadCandidates();
     });
   }
 

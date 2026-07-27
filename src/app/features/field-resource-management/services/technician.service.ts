@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, forkJoin, of } from 'rxjs';
 import { catchError, map, retry, switchMap } from 'rxjs/operators';
 import { 
   Technician, 
@@ -103,19 +103,62 @@ export class TechnicianService {
       }
     }
 
+    // Always ensure pageSize is sent to avoid the API defaulting to 20.
+    // The API max is 100 — request the maximum to load all technicians at once
+    // when no explicit pageSize filter is provided.
+    if (!params.has('pageSize')) {
+      params = params.set('pageSize', '100');
+    }
+
     return this.http.get<any>(this.apiUrl, { params })
       .pipe(
-        map(response => {
-          // API may return paginated response { items: [...] } or a plain array
+        switchMap(response => {
+          // API may return paginated response { items: [...], totalCount, hasNextPage } or a plain array
           let technicians: Technician[];
+          let totalCount = 0;
+          let hasNextPage = false;
+
           if (Array.isArray(response)) {
             technicians = response;
+            totalCount = response.length;
           } else if (response && Array.isArray(response.items)) {
             technicians = response.items;
+            totalCount = response.totalCount || response.items.length;
+            hasNextPage = response.hasNextPage === true;
           } else {
             console.warn('[TechnicianService] Unexpected response format:', response);
             technicians = [];
           }
+
+          // If there are more pages, fetch them all so the frontend has the complete dataset
+          if (hasNextPage && totalCount > technicians.length) {
+            const currentPage = parseInt(params.get('page') || '1', 10);
+            const currentPageSize = parseInt(params.get('pageSize') || '100', 10);
+            const totalPages = Math.ceil(totalCount / currentPageSize);
+            const remainingPages: Observable<any>[] = [];
+
+            for (let page = currentPage + 1; page <= totalPages; page++) {
+              const nextParams = params.set('page', page.toString());
+              remainingPages.push(this.http.get<any>(this.apiUrl, { params: nextParams }));
+            }
+
+            return forkJoin(remainingPages).pipe(
+              map(responses => {
+                for (const resp of responses) {
+                  if (resp && Array.isArray(resp.items)) {
+                    technicians = technicians.concat(resp.items);
+                  } else if (Array.isArray(resp)) {
+                    technicians = technicians.concat(resp);
+                  }
+                }
+                return technicians;
+              })
+            );
+          }
+
+          return of(technicians);
+        }),
+        map(technicians => {
           // Normalize: default isActive/isAvailable to true if not provided by API
           technicians = technicians.map(t => ({
             ...t,
