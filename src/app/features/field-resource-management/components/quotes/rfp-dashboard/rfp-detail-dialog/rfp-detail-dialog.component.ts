@@ -154,8 +154,9 @@ export class RfpDetailDialogComponent {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // Reload notes/data if a BOM was added
-        this.store.dispatch(DashboardActions.loadDashboard({ filters: {} as any }));
+        // BOM was added – the createBomTrackingSuccess effect already
+        // triggers a dashboard reload with the correct filters from the store.
+        // No manual dispatch needed here.
       }
     });
   }

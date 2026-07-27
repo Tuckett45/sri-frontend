@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, mergeMap, tap } from 'rxjs/operators';
+import { map, catchError, switchMap, mergeMap, tap, withLatestFrom } from 'rxjs/operators';
 import * as DashboardActions from './dashboard.actions';
+import { selectDashboardFilters } from './dashboard.selectors';
 import { RfpDashboardService } from '../../services/rfp-dashboard.service';
 
 @Injectable()
@@ -76,21 +78,23 @@ export class DashboardEffects {
   showUpdateSuccess$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.updateDashboardFieldsSuccess),
+      withLatestFrom(this.store.select(selectDashboardFilters)),
       tap(() => {
         this.snackBar.open('Record updated successfully', 'Close', { duration: 3000 });
       }),
-      map(() => DashboardActions.loadDashboard({ filters: {} as any }))
+      map(([_, filters]) => DashboardActions.loadDashboard({ filters }))
     )
   );
 
   showBomTrackingSuccess$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.createBomTrackingSuccess),
+      withLatestFrom(this.store.select(selectDashboardFilters)),
       tap(() => {
         this.snackBar.open('BOM tracking entry added', 'Close', { duration: 3000 });
-      })
-    ),
-    { dispatch: false }
+      }),
+      map(([_, filters]) => DashboardActions.loadDashboard({ filters }))
+    )
   );
 
   showErrors$ = createEffect(() =>
@@ -270,6 +274,7 @@ export class DashboardEffects {
 
   constructor(
     private actions$: Actions,
+    private store: Store,
     private dashboardService: RfpDashboardService,
     private snackBar: MatSnackBar
   ) {}
