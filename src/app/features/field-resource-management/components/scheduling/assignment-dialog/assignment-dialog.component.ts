@@ -115,20 +115,48 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
     this.qualifiedTechnicians$
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
-        this.qualifiedTechnicians = technicians;
+        this.qualifiedTechnicians = [...technicians].sort((a, b) => {
+          const nameA = `${a.technician.firstName} ${a.technician.lastName}`;
+          const nameB = `${b.technician.firstName} ${b.technician.lastName}`;
+          return nameA.localeCompare(nameB);
+        });
         // If qualified list is populated, use it; otherwise we'll fall back to all technicians
         if (technicians.length > 0) {
           this.showingAllTechnicians = false;
         }
       });
 
-    // Subscribe to all technicians as fallback
+    // Subscribe to all technicians as fallback — filtered by job's client + market
     this.allTechnicians$
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
+        const jobClient = this.job.client?.toUpperCase() || '';
+        const jobMarket = this.job.market?.toUpperCase() || '';
+
         this.allTechnicianMatches = technicians
-          .filter(t => t.isActive)
-          .map(t => this.toTechnicianMatch(t));
+          .filter(t => {
+            if (!t.isActive) return false;
+            if (!t.region) return false;
+            // Technician region format: "{Client} {Market}" (e.g., "IES OH")
+            const regionUpper = t.region.toUpperCase();
+            const regionMarket = regionUpper.split(' ').pop() || '';
+            const regionClient = regionUpper.replace(/ [^ ]+$/, '');
+            // Match by client + market
+            if (jobClient && jobMarket) {
+              return regionClient === jobClient && regionMarket === jobMarket;
+            }
+            // Fallback to market only
+            if (jobMarket) {
+              return regionMarket === jobMarket;
+            }
+            return true;
+          })
+          .map(t => this.toTechnicianMatch(t))
+          .sort((a, b) => {
+            const nameA = `${a.technician.firstName} ${a.technician.lastName}`;
+            const nameB = `${b.technician.firstName} ${b.technician.lastName}`;
+            return nameA.localeCompare(nameB);
+          });
         // Auto-show all if qualified list is empty and we have technicians
         if (this.qualifiedTechnicians.length === 0 && this.allTechnicianMatches.length > 0) {
           this.showingAllTechnicians = true;
@@ -178,8 +206,22 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
 
   /**
    * Select a technician — clears any prior cert conflict from a previous selection.
+   * Clicking the same technician again deselects them.
    */
   onSelectTechnician(technician: TechnicianMatch): void {
+    // Toggle: if already selected, deselect
+    if (this.selectedTechnician?.technician.id === technician.technician.id) {
+      this.selectedTechnician = null;
+      this.certConflict = null;
+      this.assignmentForm.patchValue({
+        technicianId: '',
+        override: false,
+        justification: '',
+        overrideCertifications: false
+      });
+      return;
+    }
+
     this.selectedTechnician = technician;
     this.certConflict = null;
     this.assignmentForm.patchValue({
@@ -189,6 +231,8 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
 
     if (technician.hasConflicts) {
       this.assignmentForm.patchValue({ override: true });
+    } else {
+      this.assignmentForm.patchValue({ override: false, justification: '' });
     }
   }
 
@@ -329,6 +373,7 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
     return list.filter(tm => {
       const name = `${tm.technician.firstName} ${tm.technician.lastName}`.toLowerCase();
       return name.includes(term) || tm.technician.role.toLowerCase().includes(term)
+        || tm.technician.id?.toLowerCase().includes(term)
         || tm.technician.region?.toLowerCase().includes(term);
     });
   }

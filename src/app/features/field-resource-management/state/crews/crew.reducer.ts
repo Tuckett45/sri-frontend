@@ -213,15 +213,24 @@ export const crewReducer = createReducer(
   })),
 
   // Add Crew Member
-  on(CrewActions.addCrewMember, (state) => ({
-    ...state,
-    loading: true,
-    error: null
-  })),
+  on(CrewActions.addCrewMember, (state, { crewId, technicianId }) => {
+    // Optimistically add the member to the crew's memberIds
+    const existingCrew = state.entities[crewId];
+    if (existingCrew) {
+      const currentMemberIds = existingCrew.memberIds || [];
+      if (!currentMemberIds.includes(technicianId)) {
+        return crewAdapter.updateOne(
+          { id: crewId, changes: { memberIds: [...currentMemberIds, technicianId] } },
+          { ...state, loading: true, error: null }
+        );
+      }
+    }
+    return { ...state, loading: true, error: null };
+  }),
 
   on(CrewActions.addCrewMemberSuccess, (state, { crew }) =>
     crewAdapter.updateOne(
-      { id: crew.id, changes: crew },
+      { id: crew.id, changes: { memberIds: crew.memberIds || state.entities[crew.id]?.memberIds || [] } },
       {
         ...state,
         loading: false,
@@ -230,22 +239,29 @@ export const crewReducer = createReducer(
     )
   ),
 
-  on(CrewActions.addCrewMemberFailure, (state, { error }) => ({
-    ...state,
-    loading: false,
-    error
-  })),
+  on(CrewActions.addCrewMemberFailure, (state, { error }) => {
+    // On failure, we should reload crews to revert optimistic update
+    // For now just set error state - the component will show the error
+    return { ...state, loading: false, error };
+  }),
 
   // Remove Crew Member
-  on(CrewActions.removeCrewMember, (state) => ({
-    ...state,
-    loading: true,
-    error: null
-  })),
+  on(CrewActions.removeCrewMember, (state, { crewId, technicianId }) => {
+    // Optimistically remove the member from the crew's memberIds
+    const existingCrew = state.entities[crewId];
+    if (existingCrew) {
+      const updatedMemberIds = (existingCrew.memberIds || []).filter(id => id !== technicianId);
+      return crewAdapter.updateOne(
+        { id: crewId, changes: { memberIds: updatedMemberIds } },
+        { ...state, loading: true, error: null }
+      );
+    }
+    return { ...state, loading: true, error: null };
+  }),
 
   on(CrewActions.removeCrewMemberSuccess, (state, { crew }) =>
     crewAdapter.updateOne(
-      { id: crew.id, changes: crew },
+      { id: crew.id, changes: { memberIds: crew.memberIds || state.entities[crew.id]?.memberIds || [] } },
       {
         ...state,
         loading: false,

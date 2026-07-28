@@ -46,13 +46,13 @@
           <span class="label">Name:</span>
           <span class="value">{{ selectedTechnician.firstName }} {{ selectedTechnician.lastName }}</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-row" *ngIf="selectedTechnician.role">
           <span class="label">Role:</span>
           <span class="value">{{ selectedTechnician.role }}</span>
         </div>
         <div class="detail-row">
           <span class="label">Region:</span>
-          <span class="value">{{ selectedTechnician.region }}</span>
+          <span class="value">{{ selectedTechnician.region || '—' }}</span>
         </div>
       </mat-card-content>
     </mat-card>

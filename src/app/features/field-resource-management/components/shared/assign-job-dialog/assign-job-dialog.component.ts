@@ -58,8 +58,12 @@ export class AssignJobDialogComponent implements OnInit, OnDestroy {
       this.store.select(selectActiveAssignments)
     ]).pipe(takeUntil(this.destroy$))
       .subscribe(([technicians, crews, assignments]) => {
-        this.technicians = technicians;
-        this.crews = crews;
+        // Sort technicians alphabetically
+        this.technicians = [...technicians].sort((a, b) =>
+          `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+        );
+        // Sort crews alphabetically
+        this.crews = [...crews].sort((a, b) => a.name.localeCompare(b.name));
 
         // Resolve currently assigned technicians for this job
         const jobAssignments = assignments.filter(a => a.jobId === this.data.jobId);
@@ -112,7 +116,8 @@ export class AssignJobDialogComponent implements OnInit, OnDestroy {
   }
 
   getTechnicianDisplayName(tech: Technician): string {
-    return `${tech.firstName} ${tech.lastName} (${tech.role})`;
+    const name = `${tech.firstName} ${tech.lastName}`;
+    return tech.role ? `${name} (${tech.role})` : name;
   }
 
   clearTechnician(): void {

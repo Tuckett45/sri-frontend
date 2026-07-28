@@ -198,20 +198,12 @@
                 <button mat-icon-button class="action-edit" (click)="editJob(job)" matTooltip="Edit" aria-label="Edit">
                   <mat-icon>edit</mat-icon>
                 </button>
-                <button mat-icon-button [matMenuTriggerFor]="jobMenu" matTooltip="More" aria-label="More actions">
-                  <mat-icon>more_vert</mat-icon>
+                <button mat-icon-button class="action-assign" (click)="assignJob(job)" matTooltip="Assign" aria-label="Assign technician or crew">
+                  <mat-icon>person_add</mat-icon>
                 </button>
-                <mat-menu #jobMenu="matMenu">
-                  <button mat-menu-item (click)="assignJob(job)">
-                    <mat-icon>person_add</mat-icon>
-                    <span>Assign</span>
-                  </button>
-                  <mat-divider></mat-divider>
-                  <button mat-menu-item class="delete-action" (click)="deleteJob(job)">
-                    <mat-icon color="warn">delete</mat-icon>
-                    <span>Delete</span>
-                  </button>
-                </mat-menu>
+                <button mat-icon-button class="action-delete" (click)="deleteJob(job)" matTooltip="Delete" aria-label="Delete" color="warn">
+                  <mat-icon>delete</mat-icon>
+                </button>
               </td>
             </tr>
           </tbody>

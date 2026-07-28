@@ -209,26 +209,50 @@ export const selectTechniciansByStatus = (status: 'available' | 'on-job' | 'unav
 );
 
 // Select technicians by market (for scope filtering)
+// Technician region format: "{Client} {Market}" (e.g., "IES OH")
 export const selectTechniciansByMarket = (market: string) => createSelector(
   selectAllTechnicians,
-  (technicians) => technicians.filter(tech => tech.region === market)
+  (technicians) => {
+    if (!market) return technicians;
+    const marketUpper = market.toUpperCase();
+    return technicians.filter(tech => {
+      if (!tech.region) return false;
+      const regionMarket = tech.region.split(' ').pop()?.toUpperCase() || '';
+      return regionMarket === marketUpper;
+    });
+  }
 );
 
 // Select technicians by company (for scope filtering)
-export const selectTechniciansByCompany = (_company: string) => createSelector(
+// Technician region format: "{Client} {Market}" — client portion maps to company
+export const selectTechniciansByCompany = (company: string) => createSelector(
   selectAllTechnicians,
   (technicians) => {
-    // Note: Technician model doesn't have company field yet
-    return technicians;
+    if (!company) return technicians;
+    const companyUpper = company.toUpperCase();
+    return technicians.filter(tech => {
+      if (!tech.region) return false;
+      const regionClient = tech.region.toUpperCase().replace(/ [^ ]+$/, '');
+      return regionClient === companyUpper;
+    });
   }
 );
 
 // Select technicians by market and company (for PM/Vendor scope)
-export const selectTechniciansByMarketAndCompany = (market: string, _company: string) => createSelector(
+export const selectTechniciansByMarketAndCompany = (market: string, company: string) => createSelector(
   selectAllTechnicians,
   (technicians) => {
-    // Note: Technician model doesn't have company field yet
-    return technicians.filter(tech => tech.region === market);
+    const marketUpper = market?.toUpperCase() || '';
+    const companyUpper = company?.toUpperCase() || '';
+    return technicians.filter(tech => {
+      if (!tech.region) return false;
+      const regionUpper = tech.region.toUpperCase();
+      const regionMarket = regionUpper.split(' ').pop() || '';
+      const regionClient = regionUpper.replace(/ [^ ]+$/, '');
+      const marketMatch = !marketUpper || regionMarket === marketUpper;
+      const companyMatch = !companyUpper || regionClient === companyUpper;
+      return marketMatch && companyMatch;
+    });
   }
 );
 
@@ -355,9 +379,17 @@ export const selectScopedTechnicians = (user: User, dataScopes: DataScope[]) => 
         return technicians;
       case 'market':
         if (user.market === 'RG') return technicians;
-        return technicians.filter(tech => tech.region === user.market);
+        return technicians.filter(tech => {
+          if (!tech.region) return false;
+          const regionMarket = tech.region.split(' ').pop()?.toUpperCase() || '';
+          return regionMarket === user.market?.toUpperCase();
+        });
       case 'company':
-        return technicians.filter(tech => tech.region === user.market);
+        return technicians.filter(tech => {
+          if (!tech.region) return false;
+          const regionMarket = tech.region.split(' ').pop()?.toUpperCase() || '';
+          return regionMarket === user.market?.toUpperCase();
+        });
       case 'self':
         return technicians.filter(tech => tech.id === user.id);
       default:

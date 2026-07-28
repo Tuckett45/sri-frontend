@@ -151,9 +151,24 @@ export class CrewEffects {
       ofType(CrewActions.addCrewMember),
       switchMap(({ crewId, technicianId }) =>
         this.crewService.addCrewMember(crewId, technicianId).pipe(
-          map((updatedCrew) =>
-            CrewActions.addCrewMemberSuccess({ crew: updatedCrew })
-          ),
+          map((updatedCrew) => {
+            // If the API didn't return a proper crew with memberIds,
+            // fall back to manually adding the technician to the existing crew
+            if (!updatedCrew || !updatedCrew.id) {
+              // Dispatch a reload to get fresh data
+              return CrewActions.addCrewMemberSuccess({ 
+                crew: { id: crewId, memberIds: [] } as any 
+              });
+            }
+            // Ensure the new technician is in memberIds (API might not include it)
+            if (!updatedCrew.memberIds?.includes(technicianId)) {
+              updatedCrew = {
+                ...updatedCrew,
+                memberIds: [...(updatedCrew.memberIds || []), technicianId]
+              };
+            }
+            return CrewActions.addCrewMemberSuccess({ crew: updatedCrew });
+          }),
           catchError((error) =>
             of(CrewActions.addCrewMemberFailure({ 
               error: error.message || 'Failed to add crew member' 

@@ -6,7 +6,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, map, retry } from 'rxjs/operators';
 import { Crew } from '../models/crew.model';
 import { CreateCrewDto, UpdateCrewDto } from '../models/dtos/crew.dto';
 import { CrewFilters } from '../models/dtos/filters.dto';
@@ -55,8 +55,9 @@ export class CrewService {
       }
     }
 
-    return this.http.get<Crew[]>(this.apiUrl, { params }).pipe(
+    return this.http.get<any[]>(this.apiUrl, { params }).pipe(
       retry(this.retryCount),
+      map(crews => crews.map(crew => this.normalizeCrew(crew))),
       catchError(this.handleError)
     );
   }
@@ -67,8 +68,9 @@ export class CrewService {
    * @returns Observable of crew
    */
   getCrewById(id: string): Observable<Crew> {
-    return this.http.get<Crew>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       retry(this.retryCount),
+      map(crew => this.normalizeCrew(crew)),
       catchError(this.handleError)
     );
   }
@@ -79,7 +81,8 @@ export class CrewService {
    * @returns Observable of created crew
    */
   createCrew(crew: CreateCrewDto): Observable<Crew> {
-    return this.http.post<Crew>(this.apiUrl, crew).pipe(
+    return this.http.post<any>(this.apiUrl, crew).pipe(
+      map(c => this.normalizeCrew(c)),
       catchError(this.handleError)
     );
   }
@@ -91,7 +94,8 @@ export class CrewService {
    * @returns Observable of updated crew
    */
   updateCrew(id: string, crew: UpdateCrewDto): Observable<Crew> {
-    return this.http.put<Crew>(`${this.apiUrl}/${id}`, crew).pipe(
+    return this.http.put<any>(`${this.apiUrl}/${id}`, crew).pipe(
+      map(c => this.normalizeCrew(c)),
       catchError(this.handleError)
     );
   }
@@ -114,7 +118,8 @@ export class CrewService {
    * @returns Observable of updated crew
    */
   updateCrewLocation(crewId: string, location: GeoLocation): Observable<Crew> {
-    return this.http.patch<Crew>(`${this.apiUrl}/${crewId}/location`, location).pipe(
+    return this.http.patch<any>(`${this.apiUrl}/${crewId}/location`, location).pipe(
+      map(c => this.normalizeCrew(c)),
       catchError(this.handleError)
     );
   }
@@ -126,7 +131,8 @@ export class CrewService {
    * @returns Observable of updated crew
    */
   assignJobToCrew(crewId: string, jobId: string): Observable<Crew> {
-    return this.http.post<Crew>(`${this.apiUrl}/${crewId}/assign-job`, { jobId }).pipe(
+    return this.http.post<any>(`${this.apiUrl}/${crewId}/assign-job`, { jobId }).pipe(
+      map(c => this.normalizeCrew(c)),
       catchError(this.handleError)
     );
   }
@@ -137,7 +143,8 @@ export class CrewService {
    * @returns Observable of updated crew
    */
   unassignJobFromCrew(crewId: string): Observable<Crew> {
-    return this.http.post<Crew>(`${this.apiUrl}/${crewId}/unassign-job`, {}).pipe(
+    return this.http.post<any>(`${this.apiUrl}/${crewId}/unassign-job`, {}).pipe(
+      map(c => this.normalizeCrew(c)),
       catchError(this.handleError)
     );
   }
@@ -149,7 +156,8 @@ export class CrewService {
    * @returns Observable of updated crew
    */
   addCrewMember(crewId: string, technicianId: string): Observable<Crew> {
-    return this.http.post<Crew>(`${this.apiUrl}/${crewId}/members`, { technicianId }).pipe(
+    return this.http.post<any>(`${this.apiUrl}/${crewId}/members`, { technicianId }).pipe(
+      map(c => this.normalizeCrew(c)),
       catchError(this.handleError)
     );
   }
@@ -161,7 +169,8 @@ export class CrewService {
    * @returns Observable of updated crew
    */
   removeCrewMember(crewId: string, technicianId: string): Observable<Crew> {
-    return this.http.delete<Crew>(`${this.apiUrl}/${crewId}/members/${technicianId}`).pipe(
+    return this.http.delete<any>(`${this.apiUrl}/${crewId}/members/${technicianId}`).pipe(
+      map(c => this.normalizeCrew(c)),
       catchError(this.handleError)
     );
   }
@@ -191,6 +200,32 @@ export class CrewService {
       retry(this.retryCount),
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * Normalizes crew data from API response.
+   * Handles cases where the API may return:
+   * - `members` (array of objects) instead of `memberIds` (array of strings)
+   * - `memberCount` instead of actual member IDs
+   * - `null` or `undefined` for memberIds
+   */
+  private normalizeCrew(crew: any): Crew {
+    let memberIds: string[] = crew.memberIds || [];
+
+    // If API returns `members` as an array of objects, extract technician IDs
+    if ((!memberIds || memberIds.length === 0) && Array.isArray(crew.members)) {
+      memberIds = crew.members.map((m: any) =>
+        typeof m === 'string' ? m : m.technicianId || m.id
+      ).filter(Boolean);
+    }
+
+    return {
+      ...crew,
+      memberIds,
+      // Ensure dates are present
+      createdAt: crew.createdAt || new Date(),
+      updatedAt: crew.updatedAt || new Date()
+    };
   }
 
   /**

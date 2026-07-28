@@ -211,7 +211,7 @@ export class MockDataService {
         email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@company.com`,
         phone: `214-555-${String(1000 + i).padStart(4, '0')}`,
         role: roles[i % roles.length],
-        region: i < 5 ? 'North Dallas' : i < 10 ? 'South Dallas' : 'Fort Worth',
+        region: i < 5 ? 'IES OH' : i < 8 ? 'FTI OH' : i < 11 ? 'CBRE OH' : i < 13 ? 'IES AL' : 'COX OK',
         skills,
         certifications,
         availability,

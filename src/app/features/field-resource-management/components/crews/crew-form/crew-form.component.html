@@ -90,14 +90,20 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width" style="padding-top: 18px;">
-        <mat-label>Lead Technician</mat-label>
-        <mat-select formControlName="leadTechnicianId"
-                    (selectionChange)="onLeadTechnicianChange($any($event).value)"
-                    required>
-          <mat-option *ngFor="let tech of availableTechnicians" [value]="tech.id">
-            {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }})
+        <mat-label>Lead Technician*</mat-label>
+        <input matInput
+               [formControl]="leadTechSearch"
+               [matAutocomplete]="leadTechAuto"
+               (focus)="onLeadTechFocus()"
+               required>
+        <mat-icon matSuffix>search</mat-icon>
+        <mat-autocomplete #leadTechAuto="matAutocomplete"
+                          [displayWith]="displayLeadTechnician"
+                          (optionSelected)="onLeadTechnicianSelected($event)">
+          <mat-option *ngFor="let tech of filteredLeadTechnicians$ | async" [value]="tech.id">
+            {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }}) — {{ tech.role }}
           </mat-option>
-        </mat-select>
+        </mat-autocomplete>
         <mat-error *ngIf="hasError('leadTechnicianId', 'required')">Lead technician is required</mat-error>
       </mat-form-field>
     </div>
@@ -108,15 +114,19 @@
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Add Crew Members</mat-label>
-        <mat-select formControlName="memberIds"
-                    multiple
-                    (selectionChange)="onMemberSelectionChange($any($event).value)">
-          <mat-option *ngFor="let tech of availableMemberTechnicians" [value]="tech.id">
-            {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }})
+        <input matInput
+               [formControl]="memberSearch"
+               [matAutocomplete]="memberTechAuto"
+               (focus)="onMemberSearchFocus()">
+        <mat-icon matSuffix>search</mat-icon>
+        <mat-autocomplete #memberTechAuto="matAutocomplete"
+                          (optionSelected)="onMemberTechnicianSelected($event)">
+          <mat-option *ngFor="let tech of filteredMemberTechnicians$ | async" [value]="tech.id">
+            {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }}) — {{ tech.role }}
           </mat-option>
-        </mat-select>
+        </mat-autocomplete>
         <mat-error *ngIf="hasError('memberIds', 'leadInMembers')">{{ getErrorMessage('memberIds') }}</mat-error>
-        <mat-hint>Select crew members (excluding lead technician)</mat-hint>
+        <mat-hint>Type to search and select crew members</mat-hint>
       </mat-form-field>
 
       <div class="selected-members-list" *ngIf="selectedMemberIds.length > 0">
@@ -164,14 +174,6 @@
           <mat-option *ngFor="let market of availableMarkets" [value]="market">{{ market }}</mat-option>
         </mat-select>
         <mat-error *ngIf="hasError('market', 'required')">Market is required</mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Company</mat-label>
-        <mat-select formControlName="company" required>
-          <mat-option *ngFor="let company of availableCompanies" [value]="company">{{ company }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="hasError('company', 'required')">Company is required</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">

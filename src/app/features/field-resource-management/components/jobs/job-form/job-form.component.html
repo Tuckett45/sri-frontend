@@ -384,13 +384,24 @@
         <div class="form-row two-columns">
           <mat-form-field appearance="outline">
             <mat-label>Lead Technician</mat-label>
-            <mat-select formControlName="leadTechnicianId">
-              <mat-option>None</mat-option>
-              <mat-option *ngFor="let tech of technicians" [value]="tech.id">
+            <input matInput
+                   [formControl]="technicianSearch"
+                   [matAutocomplete]="jobTechAuto"
+                   (focus)="onTechnicianSearchFocus()"
+                   placeholder="Search by name, ID, or role...">
+            <mat-icon matSuffix *ngIf="!jobForm.get('leadTechnicianId')?.value">search</mat-icon>
+            <button mat-icon-button matSuffix *ngIf="jobForm.get('leadTechnicianId')?.value"
+                    (click)="clearLeadTechnician()" type="button" aria-label="Clear selection">
+              <mat-icon>close</mat-icon>
+            </button>
+            <mat-autocomplete #jobTechAuto="matAutocomplete"
+                              [displayWith]="displayTechnician"
+                              (optionSelected)="onTechnicianSelected($event)">
+              <mat-option *ngFor="let tech of filteredTechnicians$ | async" [value]="tech.id">
                 {{ tech.firstName }} {{ tech.lastName }} ({{ tech.role }})
               </mat-option>
-            </mat-select>
-            <mat-hint>Assign a lead technician to this job</mat-hint>
+            </mat-autocomplete>
+            <mat-hint>Search and assign a lead technician to this job</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline">

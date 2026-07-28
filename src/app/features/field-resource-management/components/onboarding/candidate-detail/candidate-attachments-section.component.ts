@@ -1,4 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { AttachmentService, Attachment, AttachmentCategory } from '../../../services/attachment.service';
 
 @Component({
@@ -12,7 +13,45 @@ import { AttachmentService, Attachment, AttachmentCategory } from '../../../serv
         </button>
       </div>
 
-      <!-- Upload Form -->
+      <!-- Drag & Drop Zone -->
+      <div class="drop-zone"
+           [class.drag-over]="isDragOver"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave($event)"
+           (drop)="onDrop($event)">
+        <div class="drop-zone-content">
+          <span class="drop-icon">📂</span>
+          <p class="drop-text" *ngIf="!isDragOver">Drag &amp; drop files here to upload</p>
+          <p class="drop-text drop-text-active" *ngIf="isDragOver">Drop files to upload</p>
+          <p class="drop-hint">PDF, DOC, DOCX, JPG, PNG accepted</p>
+        </div>
+      </div>
+
+      <!-- Dropped Files Pending Category Selection -->
+      <div *ngIf="droppedFiles.length > 0" class="dropped-files-form">
+        <h4 class="dropped-files-title">Files ready to upload ({{ droppedFiles.length }})</h4>
+        <div class="dropped-file-item" *ngFor="let df of droppedFiles; let i = index">
+          <span class="dropped-file-name">{{ df.file.name }} ({{ formatFileSize(df.file.size) }})</span>
+          <select [(ngModel)]="df.category" class="category-select">
+            <option value="" disabled>Select Category</option>
+            <option value="certification">Certification</option>
+            <option value="drug_screen">Drug Screen</option>
+            <option value="background_check">Background Check</option>
+            <option value="other">Other</option>
+          </select>
+          <button class="btn-remove-file" (click)="removeDroppedFile(i)">&times;</button>
+        </div>
+        <div class="dropped-files-actions">
+          <button class="btn-submit-upload" (click)="uploadDroppedFiles()"
+                  [disabled]="!allDroppedFilesHaveCategory() || uploading">
+            {{ uploading ? 'Uploading...' : 'Upload All' }}
+          </button>
+          <button class="btn-clear-dropped" (click)="clearDroppedFiles()">Clear All</button>
+        </div>
+        <p *ngIf="uploadError" class="upload-error">{{ uploadError }}</p>
+      </div>
+
+      <!-- Upload Form (traditional) -->
       <div *ngIf="showUploadForm" class="upload-form">
         <div class="upload-row">
           <select [(ngModel)]="selectedCategory" class="category-select">
@@ -116,6 +155,36 @@ import { AttachmentService, Attachment, AttachmentCategory } from '../../../serv
     .btn-download:hover { background: #bbdefb; }
     .btn-delete { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
     .btn-delete:hover { background: #ffcdd2; }
+
+    /* Drag & Drop */
+    .drop-zone {
+      border: 2px dashed #bdbdbd;
+      border-radius: 8px;
+      padding: 1.25rem;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      background: #fafafa;
+    }
+    .drop-zone:hover { border-color: #90caf9; background: #f5faff; }
+    .drop-zone.drag-over { border-color: #1976d2; background: #e3f2fd; }
+    .drop-zone-content { pointer-events: none; }
+    .drop-icon { font-size: 1.5rem; display: block; margin-bottom: 0.25rem; }
+    .drop-text { margin: 0; font-size: 0.875rem; font-weight: 500; color: #424242; }
+    .drop-text-active { color: #1976d2; }
+    .drop-hint { margin: 0.25rem 0 0; font-size: 0.75rem; color: #9e9e9e; }
+
+    /* Dropped files pending upload */
+    .dropped-files-form { padding: 0.75rem; background: #f5f7fa; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 0.75rem; }
+    .dropped-files-title { font-size: 0.8125rem; font-weight: 600; color: #424242; margin: 0 0 0.5rem; }
+    .dropped-file-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.375rem; flex-wrap: wrap; }
+    .dropped-file-name { font-size: 0.8125rem; color: #212121; min-width: 150px; flex: 1; }
+    .btn-remove-file { background: none; border: none; color: #c62828; font-size: 1.125rem; cursor: pointer; padding: 0 0.25rem; line-height: 1; }
+    .btn-remove-file:hover { color: #b71c1c; }
+    .dropped-files-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .btn-clear-dropped { padding: 0.375rem 0.75rem; background: #f5f5f5; color: #616161; border: 1px solid #bdbdbd; border-radius: 4px; font-size: 0.8125rem; cursor: pointer; }
+    .btn-clear-dropped:hover { background: #e0e0e0; }
   `]
 })
 export class CandidateAttachmentsSectionComponent implements OnInit {
@@ -130,10 +199,102 @@ export class CandidateAttachmentsSectionComponent implements OnInit {
   filterCategory: AttachmentCategory | '' = '';
   uploadError = '';
 
+  // Drag & drop state
+  isDragOver = false;
+  droppedFiles: { file: File; category: AttachmentCategory | '' }[] = [];
+
+  private readonly allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/jpeg',
+    'image/png'
+  ];
+
   constructor(private attachmentService: AttachmentService) {}
 
   ngOnInit(): void {
     this.loadAttachments();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Drag & Drop
+  // ---------------------------------------------------------------------------
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+    this.uploadError = '';
+
+    const files = event.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (this.isFileTypeAllowed(file)) {
+        this.droppedFiles.push({ file, category: '' });
+      }
+    }
+
+    if (this.droppedFiles.length === 0) {
+      this.uploadError = 'No valid files detected. Accepted: PDF, DOC, DOCX, JPG, PNG.';
+    }
+  }
+
+  removeDroppedFile(index: number): void {
+    this.droppedFiles.splice(index, 1);
+  }
+
+  clearDroppedFiles(): void {
+    this.droppedFiles = [];
+    this.uploadError = '';
+  }
+
+  allDroppedFilesHaveCategory(): boolean {
+    return this.droppedFiles.length > 0 && this.droppedFiles.every(df => !!df.category);
+  }
+
+  uploadDroppedFiles(): void {
+    if (!this.allDroppedFilesHaveCategory()) return;
+    this.uploading = true;
+    this.uploadError = '';
+
+    const uploads = this.droppedFiles.map(df =>
+      this.attachmentService.uploadCandidateAttachment(this.candidateId, df.file, df.category as AttachmentCategory)
+    );
+
+    forkJoin(uploads).subscribe({
+      next: () => {
+        this.uploading = false;
+        this.droppedFiles = [];
+        this.loadAttachments();
+      },
+      error: (err) => {
+        this.uploading = false;
+        this.uploadError = err?.message || 'One or more uploads failed. Please try again.';
+        this.loadAttachments(); // refresh to show any that succeeded
+      }
+    });
+  }
+
+  private isFileTypeAllowed(file: File): boolean {
+    if (this.allowedTypes.includes(file.type)) return true;
+    // Fallback: check extension for cases where MIME type isn't set
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    return ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'].includes(ext || '');
   }
 
   loadAttachments(): void {

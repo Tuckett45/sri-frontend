@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, Inject, Optional } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
-import { Subject } from 'rxjs';
-import { takeUntil, filter, take } from 'rxjs/operators';
+import { Observable, Subject, combineLatest, BehaviorSubject } from 'rxjs';
+import { takeUntil, filter, take, startWith, map } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
@@ -62,7 +62,16 @@ export class CrewFormComponent implements OnInit, OnDestroy {
   
   // Available technicians for selection
   availableTechnicians: Technician[] = [];
+  private availableTechnicians$ = new BehaviorSubject<Technician[]>([]);
   selectedMemberIds: string[] = [];
+  
+  // Autocomplete search controls
+  leadTechSearch = new FormControl('');
+  memberSearch = new FormControl('');
+  filteredLeadTechnicians$!: Observable<Technician[]>;
+  filteredMemberTechnicians$!: Observable<Technician[]>;
+  private leadTechSearchTrigger$ = new BehaviorSubject<string>('');
+  private memberSearchTrigger$ = new BehaviorSubject<string>('');
   
   // Role-based fields
   isAdmin = false;
@@ -73,7 +82,6 @@ export class CrewFormComponent implements OnInit, OnDestroy {
     'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
     'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
   ];
-  availableCompanies: string[] = ['Internal', 'Vendor A', 'Vendor B', 'Vendor C'];
 
   constructor(
     private fb: FormBuilder,
@@ -137,14 +145,13 @@ export class CrewFormComponent implements OnInit, OnDestroy {
       leadTechnicianId: ['', Validators.required],
       memberIds: [[], this.noLeadInMembersValidator()],
       market: [this.isAdmin ? '' : userMarket, Validators.required],
-      company: [this.isAdmin ? '' : userCompany, Validators.required],
+      company: [userCompany || 'Internal'],
       status: [CrewStatus.Available, [Validators.required, this.validCrewStatusValidator()]]
     });
 
-    // Disable market and company fields for non-admin users
+    // Disable market field for non-admin users
     if (!this.isAdmin) {
       this.crewForm.get('market')?.disable();
-      this.crewForm.get('company')?.disable();
     }
 
     // Re-validate memberIds when lead technician changes
@@ -156,15 +163,96 @@ export class CrewFormComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load available technicians from store
+   * Load available technicians from store, filtered by crew market
    */
   private loadTechnicians(): void {
     this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
-    this.store.select(TechnicianSelectors.selectAllTechnicians)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(technicians => {
-        this.availableTechnicians = technicians;
+
+    // Create a market stream that emits the current market value reactively
+    const market$ = this.crewForm.get('market')!.valueChanges.pipe(
+      startWith(this.crewForm.get('market')!.value)
+    );
+
+    // Combine technicians from store with current market to filter
+    combineLatest([
+      this.store.select(TechnicianSelectors.selectAllTechnicians),
+      market$
+    ]).pipe(takeUntil(this.destroy$))
+      .subscribe(([technicians, market]) => {
+        // Technician region format is "{Client} {Market}" (e.g., "IES OH", "FTI OH")
+        // Filter technicians whose region ends with the crew's market
+        const filtered = market
+          ? technicians.filter(t => {
+              if (!t.region) return false;
+              const regionMarket = t.region.split(' ').pop()?.toUpperCase() || '';
+              return regionMarket === market.toUpperCase();
+            })
+          : technicians;
+        this.availableTechnicians = [...filtered].sort((a, b) =>
+          `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+        );
+        this.availableTechnicians$.next(this.availableTechnicians);
+
+        // Update or clear lead technician display based on filtered list
+        const leadId = this.crewForm.get('leadTechnicianId')?.value;
+        if (leadId) {
+          const leadTech = this.availableTechnicians.find(t => t.id === leadId);
+          if (leadTech) {
+            // Update display text in case it wasn't set yet (race condition on edit)
+            this.leadTechSearch.setValue(`${leadTech.firstName} ${leadTech.lastName}`, { emitEvent: false });
+          } else {
+            this.crewForm.patchValue({ leadTechnicianId: '' });
+            this.leadTechSearch.setValue('');
+          }
+        }
+        const validMemberIds = this.selectedMemberIds.filter(id =>
+          this.availableTechnicians.find(t => t.id === id)
+        );
+        if (validMemberIds.length !== this.selectedMemberIds.length) {
+          this.selectedMemberIds = validMemberIds;
+          this.crewForm.patchValue({ memberIds: validMemberIds });
+        }
       });
+
+    // Setup filtered observables for autocomplete
+    // Use combineLatest with availableTechnicians$ so the list updates when technicians change
+    // leadTechSearchTrigger$ emits on both valueChanges and focus events
+    this.leadTechSearch.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(value => this.leadTechSearchTrigger$.next(value || ''));
+
+    this.memberSearch.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(value => this.memberSearchTrigger$.next(value || ''));
+
+    this.filteredLeadTechnicians$ = combineLatest([
+      this.leadTechSearchTrigger$,
+      this.availableTechnicians$
+    ]).pipe(
+      map(([value, technicians]) => this.filterTechnicians(value || '', technicians))
+    );
+
+    this.filteredMemberTechnicians$ = combineLatest([
+      this.memberSearchTrigger$,
+      this.availableTechnicians$
+    ]).pipe(
+      map(([value, technicians]) => {
+        const leadTechnicianId = this.crewForm.get('leadTechnicianId')?.value;
+        const members = technicians.filter(tech => tech.id !== leadTechnicianId);
+        return this.filterTechnicians(value || '', members);
+      })
+    );
+  }
+
+  /**
+   * Filter technicians by search text (name, id, or role)
+   */
+  private filterTechnicians(searchText: string, technicians: Technician[]): Technician[] {
+    if (!searchText) return technicians;
+    const term = searchText.toLowerCase();
+    return technicians.filter(t =>
+      `${t.firstName} ${t.lastName}`.toLowerCase().includes(term) ||
+      t.id.toLowerCase().includes(term) ||
+      t.role.toLowerCase().includes(term)
+    );
   }
 
   /**
@@ -199,8 +287,28 @@ export class CrewFormComponent implements OnInit, OnDestroy {
       company: crew.company,
       status: crew.status
     });
+
+    // Set lead technician search display value
+    const leadTech = this.availableTechnicians.find(t => t.id === crew.leadTechnicianId);
+    if (leadTech) {
+      this.leadTechSearch.setValue(`${leadTech.firstName} ${leadTech.lastName}`, { emitEvent: false });
+    }
   }
 
+
+  /**
+   * Handle lead technician search field focus — triggers dropdown to show
+   */
+  onLeadTechFocus(): void {
+    this.leadTechSearchTrigger$.next(this.leadTechSearch.value || '');
+  }
+
+  /**
+   * Handle member search field focus — triggers dropdown to show
+   */
+  onMemberSearchFocus(): void {
+    this.memberSearchTrigger$.next(this.memberSearch.value || '');
+  }
 
   /**
    * Handle lead technician selection change
@@ -211,6 +319,45 @@ export class CrewFormComponent implements OnInit, OnDestroy {
       this.selectedMemberIds = this.selectedMemberIds.filter(id => id !== technicianId);
       this.crewForm.patchValue({ memberIds: this.selectedMemberIds });
     }
+  }
+
+  /**
+   * Handle lead technician selected from autocomplete
+   */
+  onLeadTechnicianSelected(event: any): void {
+    const technicianId = event.option.value;
+    this.crewForm.patchValue({ leadTechnicianId: technicianId });
+    this.onLeadTechnicianChange(technicianId);
+    // Update the display text
+    const tech = this.availableTechnicians.find(t => t.id === technicianId);
+    this.leadTechSearch.setValue(tech ? `${tech.firstName} ${tech.lastName}` : '', { emitEvent: false });
+  }
+
+  /**
+   * Handle member technician selected from autocomplete
+   */
+  onMemberTechnicianSelected(event: any): void {
+    const technicianId = event.option.value;
+    const leadTechnicianId = this.crewForm.get('leadTechnicianId')?.value;
+    
+    // Don't add if it's the lead or already selected
+    if (technicianId === leadTechnicianId || this.selectedMemberIds.includes(technicianId)) {
+      this.memberSearch.setValue('');
+      return;
+    }
+    
+    this.selectedMemberIds = [...this.selectedMemberIds, technicianId];
+    this.crewForm.patchValue({ memberIds: this.selectedMemberIds });
+    this.memberSearch.setValue('');
+  }
+
+  /**
+   * Display function for lead technician autocomplete
+   */
+  displayLeadTechnician = (technicianId: string): string => {
+    if (!technicianId) return '';
+    const tech = this.availableTechnicians.find(t => t.id === technicianId);
+    return tech ? `${tech.firstName} ${tech.lastName}` : '';
   }
 
   /**
@@ -229,7 +376,9 @@ export class CrewFormComponent implements OnInit, OnDestroy {
    */
   get availableMemberTechnicians(): Technician[] {
     const leadTechnicianId = this.crewForm.get('leadTechnicianId')?.value;
-    return this.availableTechnicians.filter(tech => tech.id !== leadTechnicianId);
+    return this.availableTechnicians
+      .filter(tech => tech.id !== leadTechnicianId)
+      .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
   }
 
   /**

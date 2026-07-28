@@ -136,13 +136,18 @@
         <!-- Add Member Panel -->
         <div *ngIf="showAddMember" class="add-member-panel">
           <mat-form-field appearance="outline" class="add-member-select">
-            <mat-label>Select Technician</mat-label>
-            <mat-select (selectionChange)="addMemberToCrew($event.value)" placeholder="Choose a technician to add">
-              <mat-option *ngFor="let tech of availableTechnicians$ | async" [value]="tech.id">
+            <input matInput
+                   [formControl]="addMemberSearch"
+                   [matAutocomplete]="addMemberAuto"
+                   placeholder="Search by name, ID, or role...">
+            <mat-icon matSuffix>search</mat-icon>
+            <mat-autocomplete #addMemberAuto="matAutocomplete"
+                              (optionSelected)="addMemberToCrew($event.option.value)">
+              <mat-option *ngFor="let tech of filteredAvailableTechnicians$ | async" [value]="tech.id">
                 {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }}) — {{ tech.role }}
               </mat-option>
-            </mat-select>
-            <mat-hint>Select a technician to add to this crew</mat-hint>
+            </mat-autocomplete>
+            <mat-hint>Type to search for a technician to add</mat-hint>
           </mat-form-field>
         </div>
 

@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, of } from 'rxjs';
-import { takeUntil, filter, map, take } from 'rxjs/operators';
+import { Observable, Subject, of, combineLatest } from 'rxjs';
+import { takeUntil, filter, map, take, startWith } from 'rxjs/operators';
 import { Actions, ofType } from '@ngrx/effects';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -67,6 +68,8 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
   // Add member state
   showAddMember = false;
   availableTechnicians$: Observable<Technician[]> = of([]);
+  addMemberSearch = new FormControl('');
+  filteredAvailableTechnicians$: Observable<Technician[]> = of([]);
   
   // Enum references for template
   CrewStatus = CrewStatus;
@@ -327,12 +330,13 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
   toggleAddMember(): void {
     this.showAddMember = !this.showAddMember;
     if (this.showAddMember) {
+      this.addMemberSearch.setValue('');
       this.updateAvailableTechnicians();
     }
   }
 
   /**
-   * Update the list of technicians available to add (not already in crew)
+   * Update the list of technicians available to add (not already in crew, matching crew market)
    */
   private updateAvailableTechnicians(): void {
     this.crew$.pipe(
@@ -342,11 +346,35 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
     ).subscribe(crew => {
       if (crew) {
         const existingIds = new Set([crew.leadTechnicianId, ...(crew.memberIds || [])]);
+        const crewMarket = crew.market?.toUpperCase() || '';
         this.availableTechnicians$ = this.store.select(TechnicianSelectors.selectAllTechnicians).pipe(
           map(technicians => technicians
-            .filter(t => !existingIds.has(t.id) && t.isActive)
+            .filter(t => {
+              if (existingIds.has(t.id) || !t.isActive) return false;
+              // Technician region format: "{Client} {Market}" (e.g., "IES OH")
+              // Filter by crew market (last part of region)
+              if (!crewMarket || !t.region) return !crewMarket;
+              const regionMarket = t.region.split(' ').pop()?.toUpperCase() || '';
+              return regionMarket === crewMarket;
+            })
             .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`))
           )
+        );
+        
+        // Combine search text changes with available technicians for filtering
+        this.filteredAvailableTechnicians$ = combineLatest([
+          this.availableTechnicians$,
+          this.addMemberSearch.valueChanges.pipe(startWith(''))
+        ]).pipe(
+          map(([technicians, searchText]) => {
+            const term = (searchText || '').toLowerCase();
+            if (!term) return technicians;
+            return technicians.filter(t =>
+              `${t.firstName} ${t.lastName}`.toLowerCase().includes(term) ||
+              t.id.toLowerCase().includes(term) ||
+              t.role.toLowerCase().includes(term)
+            );
+          })
         );
       }
     });
@@ -370,6 +398,7 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
           take(1)
         ).subscribe(() => {
           this.snackBar.open('Member added to crew', 'Close', { duration: 3000 });
+          this.addMemberSearch.setValue('');
           this.showAddMember = false;
         });
 

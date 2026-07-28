@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy, Inject, Optional } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
-import { Subject } from 'rxjs';
-import { takeUntil, filter, take } from 'rxjs/operators';
+import { Observable, Subject, combineLatest, BehaviorSubject } from 'rxjs';
+import { takeUntil, filter, take, startWith, map } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
@@ -102,7 +102,13 @@ export class JobFormComponent implements OnInit, OnDestroy {
 
   // Assignment options
   technicians: Technician[] = [];
+  private technicians$ = new BehaviorSubject<Technician[]>([]);
   crews: Crew[] = [];
+
+  // Technician search for autocomplete
+  technicianSearch = new FormControl('');
+  filteredTechnicians$!: Observable<Technician[]>;
+  private technicianSearchTrigger$ = new BehaviorSubject<string>('');
 
   // Available skills for the skill selector (loaded from API)
   availableSkills: Skill[] = [];
@@ -207,6 +213,40 @@ export class JobFormComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Display function for technician autocomplete
+   */
+  displayTechnician = (technicianId: string): string => {
+    if (!technicianId) return '';
+    const tech = this.technicians.find(t => t.id === technicianId);
+    return tech ? `${tech.firstName} ${tech.lastName}` : '';
+  }
+
+  /**
+   * Handle lead technician selected from autocomplete
+   */
+  onTechnicianSelected(event: any): void {
+    const technicianId = event.option.value;
+    this.jobForm.patchValue({ leadTechnicianId: technicianId });
+    const tech = this.technicians.find(t => t.id === technicianId);
+    this.technicianSearch.setValue(tech ? `${tech.firstName} ${tech.lastName}` : '', { emitEvent: false });
+  }
+
+  /**
+   * Handle technician search field focus — triggers dropdown to show
+   */
+  onTechnicianSearchFocus(): void {
+    this.technicianSearchTrigger$.next(this.technicianSearch.value || '');
+  }
+
+  /**
+   * Clear the lead technician selection
+   */
+  clearLeadTechnician(): void {
+    this.jobForm.patchValue({ leadTechnicianId: null });
+    this.technicianSearch.setValue('');
+  }
+
+  /**
    * Initialize the form with validators
    */
   private initializeForm(): void {
@@ -267,10 +307,79 @@ export class JobFormComponent implements OnInit, OnDestroy {
       }
 
       // Load technicians and crews for assignment dropdowns
-      this.store.select(selectAllTechnicians).pipe(takeUntil(this.destroy$))
-        .subscribe(techs => this.technicians = techs);
+      // Filter technicians by the job's client + market (tech region format: "{Client} {Market}")
+      const jobMarket$ = this.jobForm.get('market')!.valueChanges.pipe(
+        startWith(this.jobForm.get('market')!.value)
+      );
+      const jobClient$ = this.jobForm.get('client')!.valueChanges.pipe(
+        startWith(this.jobForm.get('client')!.value)
+      );
+
+      combineLatest([
+        this.store.select(selectAllTechnicians),
+        jobMarket$,
+        jobClient$
+      ]).pipe(takeUntil(this.destroy$))
+        .subscribe(([techs, market, client]) => {
+          // Technician region format is "{Client} {Market}" (e.g., "IES OH", "CBRE OH")
+          // Match technicians whose region matches the job's client + market
+          let filtered: Technician[];
+          if (client && market) {
+            // Best match: both client and market
+            const clientUpper = client.toUpperCase();
+            const marketUpper = market.toUpperCase();
+            filtered = techs.filter(t => {
+              if (!t.region) return false;
+              const regionUpper = t.region.toUpperCase();
+              const regionMarket = regionUpper.split(' ').pop() || '';
+              const regionClient = regionUpper.replace(/ [^ ]+$/, '');
+              return regionMarket === marketUpper && regionClient === clientUpper;
+            });
+          } else if (market) {
+            // Fallback: just market
+            filtered = techs.filter(t => {
+              if (!t.region) return false;
+              const regionMarket = t.region.split(' ').pop()?.toUpperCase() || '';
+              return regionMarket === market.toUpperCase();
+            });
+          } else {
+            filtered = techs;
+          }
+          this.technicians = [...filtered].sort((a, b) =>
+            `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+          );
+          this.technicians$.next(this.technicians);
+          // Clear lead technician if no longer in the filtered list
+          const leadId = this.jobForm.get('leadTechnicianId')?.value;
+          if (leadId && !this.technicians.find(t => t.id === leadId)) {
+            this.jobForm.patchValue({ leadTechnicianId: null });
+            this.technicianSearch.setValue('');
+          }
+        });
+
       this.store.select(selectAllCrews).pipe(takeUntil(this.destroy$))
         .subscribe(crews => this.crews = crews);
+
+      // Setup filtered technicians for autocomplete
+      // Use combineLatest with technicians$ so the list updates when technicians change
+      // technicianSearchTrigger$ emits on both valueChanges and focus events
+      this.technicianSearch.valueChanges.pipe(takeUntil(this.destroy$))
+        .subscribe(value => this.technicianSearchTrigger$.next(value || ''));
+
+      this.filteredTechnicians$ = combineLatest([
+        this.technicianSearchTrigger$,
+        this.technicians$
+      ]).pipe(
+        map(([value, techs]) => {
+          const term = (value || '').toLowerCase();
+          if (!term) return techs;
+          return techs.filter(t =>
+            `${t.firstName} ${t.lastName}`.toLowerCase().includes(term) ||
+            t.id.toLowerCase().includes(term) ||
+            t.role.toLowerCase().includes(term)
+          );
+        })
+      );
     } catch (error) {
       console.error('Error initializing job form:', error);
       // Initialize with default values if auth service fails
@@ -429,6 +538,14 @@ export class JobFormComponent implements OnInit, OnDestroy {
       leadTechnicianId: job.technicianId ?? null,
       crewId: job.crewId ?? null
     });
+
+    // Set the technician search display value for autocomplete
+    if (job.technicianId) {
+      const tech = this.technicians.find(t => t.id === job.technicianId);
+      if (tech) {
+        this.technicianSearch.setValue(`${tech.firstName} ${tech.lastName}`, { emitEvent: false });
+      }
+    }
 
     // In edit mode, relax required validators on Pricing/Billing and SRI Internal
     // fields that may not exist on jobs created via upload/import or before these
