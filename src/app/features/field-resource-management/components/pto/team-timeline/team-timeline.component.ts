@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
+import { map, switchMap, catchError, tap } from 'rxjs/operators';
 
-import { PtoRequest, RequestStatus } from '../../../models/pto.models';
+import { PtoRequest, RequestStatus, TeamAvailabilityEntry } from '../../../models/pto.models';
 import { SUPPORTED_MARKETS, SupportedMarket } from '../../../models/overtime.models';
-import * as PtoActions from '../../../state/pto/pto.actions';
-import { selectAllPtoRequests } from '../../../state/pto/pto.selectors';
+import { PtoApiService } from '../../../services/pto-api.service';
 
 /**
  * Timeline entry for display
@@ -50,9 +49,6 @@ interface MarketGroup {
   styleUrls: ['./team-timeline.component.scss']
 })
 export class TeamTimelineComponent implements OnInit {
-  /** All approved PTO requests */
-  allRequests$!: Observable<PtoRequest[]>;
-
   /** Market groups for display */
   marketGroups$!: Observable<MarketGroup[]>;
 
@@ -74,6 +70,12 @@ export class TeamTimelineComponent implements OnInit {
   /** Month labels */
   months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+  /** Loading state */
+  loading = false;
+
+  /** Error state */
+  error: string | null = null;
+
   /** Color palette for timeline entries */
   private colorPalette = [
     '#4285f4', '#ea4335', '#fbbc04', '#34a853',
@@ -86,17 +88,39 @@ export class TeamTimelineComponent implements OnInit {
   private employeeColorMap = new Map<string, string>();
   private colorIndex = 0;
 
-  constructor(private store: Store) {}
+  constructor(private store: Store, private ptoApiService: PtoApiService) {}
 
   ngOnInit(): void {
-    this.store.dispatch(PtoActions.loadRequests());
-    this.allRequests$ = this.store.select(selectAllPtoRequests);
+    this.loadTimelineData();
+  }
 
-    this.marketGroups$ = combineLatest([
-      this.allRequests$,
-      this.selectedMarket$
-    ]).pipe(
-      map(([requests, marketFilter]) => this.buildTimeline(requests, marketFilter))
+  /**
+   * Load timeline data from API
+   */
+  private loadTimelineData(): void {
+    const startDate = `${this.currentYear}-01-01`;
+    const endDate = `${this.currentYear}-12-31`;
+    const market = this.selectedMarket$.value || undefined;
+
+    this.loading = true;
+    this.error = null;
+
+    this.marketGroups$ = this.selectedMarket$.pipe(
+      switchMap(marketFilter => {
+        const sd = `${this.currentYear}-01-01`;
+        const ed = `${this.currentYear}-12-31`;
+        const mkt = marketFilter || undefined;
+
+        return this.ptoApiService.getTeamAvailability(sd, ed, mkt).pipe(
+          map(entries => this.buildTimelineFromApi(entries)),
+          tap(() => { this.loading = false; }),
+          catchError(err => {
+            this.loading = false;
+            this.error = 'Failed to load team availability. Please try again.';
+            return of([]);
+          })
+        );
+      })
     );
   }
 
@@ -105,8 +129,7 @@ export class TeamTimelineComponent implements OnInit {
    */
   prevYear(): void {
     this.currentYear--;
-    // Trigger recalculation
-    this.selectedMarket$.next(this.selectedMarket$.value);
+    this.loadTimelineData();
   }
 
   /**
@@ -114,7 +137,7 @@ export class TeamTimelineComponent implements OnInit {
    */
   nextYear(): void {
     this.currentYear++;
-    this.selectedMarket$.next(this.selectedMarket$.value);
+    this.loadTimelineData();
   }
 
   /**
@@ -122,7 +145,7 @@ export class TeamTimelineComponent implements OnInit {
    */
   goToToday(): void {
     this.currentYear = new Date().getFullYear();
-    this.selectedMarket$.next(this.selectedMarket$.value);
+    this.loadTimelineData();
   }
 
   /**
@@ -204,7 +227,58 @@ export class TeamTimelineComponent implements OnInit {
   }
 
   /**
-   * Build timeline data from approved PTO requests
+   * Build timeline data from API response (TeamAvailabilityEntry[])
+   */
+  private buildTimelineFromApi(entries: TeamAvailabilityEntry[]): MarketGroup[] {
+    const yearStart = new Date(this.currentYear, 0, 1);
+    const yearEnd = new Date(this.currentYear, 11, 31);
+    const totalDays = this.daysBetween(yearStart, yearEnd);
+
+    // Group by market
+    const marketMap = new Map<string, TeamAvailabilityEntry[]>();
+    for (const entry of entries) {
+      const market = entry.market || 'Other';
+      if (!marketMap.has(market)) {
+        marketMap.set(market, []);
+      }
+      marketMap.get(market)!.push(entry);
+    }
+
+    // Build groups
+    const groups: MarketGroup[] = [];
+    marketMap.forEach((reqs, market) => {
+      const timelineEntries: TimelineEntry[] = reqs.map(req => {
+        const start = new Date(req.startDate);
+        const end = new Date(req.endDate);
+
+        const clampedStart = start < yearStart ? yearStart : start;
+        const clampedEnd = end > yearEnd ? yearEnd : end;
+
+        const leftDays = this.daysBetween(yearStart, clampedStart);
+        const widthDays = this.daysBetween(clampedStart, clampedEnd) + 1;
+
+        return {
+          id: req.id,
+          employeeName: req.employeeName || 'Unknown',
+          startDate: start,
+          endDate: end,
+          market,
+          leftPercent: (leftDays / totalDays) * 100,
+          widthPercent: Math.max((widthDays / totalDays) * 100, 0.5),
+          color: this.getEmployeeColor(req.employeeName)
+        };
+      });
+
+      timelineEntries.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+      groups.push({ market, entries: timelineEntries });
+    });
+
+    groups.sort((a, b) => a.market.localeCompare(b.market));
+    return groups;
+  }
+
+  /**
+   * Build timeline data from approved PTO requests (legacy/fallback)
    */
   private buildTimeline(requests: PtoRequest[], marketFilter: string): MarketGroup[] {
     // Filter to approved requests in the current year

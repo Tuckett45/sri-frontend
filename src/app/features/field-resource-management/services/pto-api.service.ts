@@ -7,7 +7,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { PtoRequest, CreatePtoRequestDto, LeaveType } from '../models/pto.models';
+import { PtoRequest, CreatePtoRequestDto, LeaveType, TeamAvailabilityEntry } from '../models/pto.models';
 import { environment } from '../../../../environments/environments';
 
 interface PaginatedResponse<T> {
@@ -152,6 +152,23 @@ export class PtoApiService {
    */
   getLeaveTypes(): Observable<LeaveType[]> {
     return this.http.get<LeaveType[]>(`${this.apiUrl}/leave-types`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get team availability data for the timeline view.
+   * Returns all approved PTO requests within a date range, optionally filtered by market.
+   * @param startDate ISO date string
+   * @param endDate ISO date string
+   * @param market Optional market filter
+   */
+  getTeamAvailability(startDate: string, endDate: string, market?: string): Observable<TeamAvailabilityEntry[]> {
+    let url = `${this.apiUrl}/team-availability?startDate=${startDate}&endDate=${endDate}`;
+    if (market) {
+      url += `&market=${encodeURIComponent(market)}`;
+    }
+    return this.http.get<TeamAvailabilityEntry[]>(url).pipe(
       catchError(this.handleError)
     );
   }

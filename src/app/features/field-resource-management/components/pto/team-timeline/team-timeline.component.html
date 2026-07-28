@@ -45,8 +45,20 @@
 
   <!-- Timeline Chart -->
   <div class="timeline-chart">
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading team availability...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error && !loading">
+      <p>{{ error }}</p>
+      <button class="btn-today" (click)="goToToday()" type="button">Retry</button>
+    </div>
+
     <!-- Time axis header -->
-    <div class="time-axis">
+    <div class="time-axis" *ngIf="!loading && !error">
       <div class="axis-label-col">
         <span class="axis-header">Which Market do<br/>you support?</span>
       </div>
@@ -89,7 +101,7 @@
     </div>
 
     <!-- Market Groups -->
-    <div class="timeline-body" *ngIf="marketGroups$ | async as groups">
+    <div class="timeline-body" *ngIf="marketGroups$ | async as groups; else loadingBody">
       <ng-container *ngIf="groups.length > 0; else emptyTimeline">
         <div class="market-row" *ngFor="let group of groups; trackBy: trackByMarket">
           <div class="market-label-col">
