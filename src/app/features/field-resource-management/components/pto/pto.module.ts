@@ -41,6 +41,9 @@ import { ApprovalDashboardComponent } from './approval-dashboard/approval-dashbo
 // Timeline Component
 import { TeamTimelineComponent } from './team-timeline/team-timeline.component';
 
+// Reports Component
+import { PtoReportsComponent } from './reports/pto-reports.component';
+
 const routes: Routes = [
   {
     path: '',
@@ -89,6 +92,12 @@ const routes: Routes = [
         path: 'overtime/new',
         component: OvertimeRequestFormComponent
       },
+      // Reports (Manager/Payroll only)
+      {
+        path: 'reports',
+        component: PtoReportsComponent,
+        canActivate: [ManagerGuard]
+      },
       // PTO Request Detail
       {
         path: ':id',
@@ -115,7 +124,9 @@ const routes: Routes = [
     OvertimeRequestListComponent,
     // Approval & Timeline Components
     ApprovalDashboardComponent,
-    TeamTimelineComponent
+    TeamTimelineComponent,
+    // Reports Component
+    PtoReportsComponent
   ],
   imports: [
     CommonModule,
