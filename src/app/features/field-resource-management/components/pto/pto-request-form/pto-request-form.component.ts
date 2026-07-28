@@ -147,7 +147,16 @@ export class PtoRequestFormComponent implements OnInit {
       employeeId: user?.id ?? '',
       startDate: formValue.startDate,
       endDate: formValue.endDate,
-      requestType: formValue.market // Using market as part of request context
+      requestType: formValue.market, // Using market as part of request context
+      // Phase 2: Enhanced form fields
+      employeeName: formValue.employeeName?.trim(),
+      coveragePerson: formValue.coveragePerson?.trim(),
+      emailedSriLead: formValue.emailedLead === 'yes',
+      isApprovedByLead: formValue.isApproved,
+      market: formValue.market,
+      outOfOfficeCalendar: formValue.outOfOfficeCalendar || false,
+      outOfOfficeChat: formValue.outOfOfficeChat || false,
+      outOfOfficeEmail: formValue.outOfOfficeEmail || false
     };
 
     if (formValue.notes && formValue.notes.trim().length > 0) {
