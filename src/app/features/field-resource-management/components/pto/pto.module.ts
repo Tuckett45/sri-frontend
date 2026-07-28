@@ -26,6 +26,10 @@ import { PtoManagerQueueComponent } from './pto-manager-queue/pto-manager-queue.
 import { PtoBackofficeQueueComponent } from './pto-backoffice-queue/pto-backoffice-queue.component';
 import { PtoLeaveTypeChipComponent } from './pto-leave-type-chip/pto-leave-type-chip.component';
 
+// Layout & Navigation Components
+import { PtoLayoutComponent } from './pto-layout/pto-layout.component';
+import { PtoSubNavComponent } from './pto-sub-nav/pto-sub-nav.component';
+
 // Overtime Components
 import { OvertimeRequestFormComponent } from './overtime-request-form/overtime-request-form.component';
 import { OvertimeRequestListComponent } from './overtime-request-list/overtime-request-list.component';
@@ -37,58 +41,67 @@ import { ApprovalDashboardComponent } from './approval-dashboard/approval-dashbo
 import { TeamTimelineComponent } from './team-timeline/team-timeline.component';
 
 const routes: Routes = [
-  // PTO Request List (default)
   {
     path: '',
-    component: PtoRequestListComponent
-  },
-  // New PTO Request
-  {
-    path: 'new',
-    component: PtoRequestFormComponent
-  },
-  // Team Timeline / Calendar View
-  {
-    path: 'timeline',
-    component: TeamTimelineComponent
-  },
-  // Approval Dashboard (Manager/Backoffice combined view)
-  {
-    path: 'approvals',
-    component: ApprovalDashboardComponent,
-    canActivate: [ManagerGuard]
-  },
-  // Legacy Manager Queue (still accessible)
-  {
-    path: 'approvals/manager',
-    component: PtoManagerQueueComponent,
-    canActivate: [ManagerGuard]
-  },
-  // Legacy Backoffice Queue (still accessible)
-  {
-    path: 'approvals/backoffice',
-    component: PtoBackofficeQueueComponent,
-    canActivate: [PayrollGuard]
-  },
-  // Overtime Request List
-  {
-    path: 'overtime',
-    component: OvertimeRequestListComponent
-  },
-  // New Overtime Request
-  {
-    path: 'overtime/new',
-    component: OvertimeRequestFormComponent
-  },
-  // PTO Request Detail
-  {
-    path: ':id',
-    component: PtoRequestDetailComponent
+    component: PtoLayoutComponent,
+    children: [
+      // PTO Request List (default)
+      {
+        path: '',
+        component: PtoRequestListComponent
+      },
+      // New PTO Request
+      {
+        path: 'new',
+        component: PtoRequestFormComponent
+      },
+      // Team Timeline / Calendar View
+      {
+        path: 'timeline',
+        component: TeamTimelineComponent
+      },
+      // Approval Dashboard (Manager/Backoffice combined view)
+      {
+        path: 'approvals',
+        component: ApprovalDashboardComponent,
+        canActivate: [ManagerGuard]
+      },
+      // Legacy Manager Queue (still accessible)
+      {
+        path: 'approvals/manager',
+        component: PtoManagerQueueComponent,
+        canActivate: [ManagerGuard]
+      },
+      // Legacy Backoffice Queue (still accessible)
+      {
+        path: 'approvals/backoffice',
+        component: PtoBackofficeQueueComponent,
+        canActivate: [PayrollGuard]
+      },
+      // Overtime Request List
+      {
+        path: 'overtime',
+        component: OvertimeRequestListComponent
+      },
+      // New Overtime Request
+      {
+        path: 'overtime/new',
+        component: OvertimeRequestFormComponent
+      },
+      // PTO Request Detail
+      {
+        path: ':id',
+        component: PtoRequestDetailComponent
+      }
+    ]
   }
 ];
 
 @NgModule({
   declarations: [
+    // Layout & Navigation
+    PtoLayoutComponent,
+    PtoSubNavComponent,
     // PTO Components
     PtoRequestFormComponent,
     PtoRequestListComponent,

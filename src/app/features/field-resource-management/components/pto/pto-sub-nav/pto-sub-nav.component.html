@@ -1,0 +1,20 @@
+<nav class="pto-sub-nav" aria-label="PTO Navigation">
+  <div class="nav-tabs">
+    <a
+      *ngFor="let tab of tabs"
+      [routerLink]="tab.route"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: tab.route === '/field-resource-management/pto' }"
+      class="nav-tab"
+      [class.hidden]="!tab.visible"
+      [attr.aria-label]="tab.label">
+      <span class="tab-icon material-icons">{{ tab.icon }}</span>
+      <span class="tab-label">{{ tab.label }}</span>
+      <span
+        class="tab-badge"
+        *ngIf="tab.label === 'Approvals' && (pendingCount$ | async) as count">
+        {{ count }}
+      </span>
+    </a>
+  </div>
+</nav>
