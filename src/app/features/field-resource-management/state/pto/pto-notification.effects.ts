@@ -2,8 +2,9 @@
  * PTO Notification Effects
  *
  * Handles side effects for PTO workflow status change notifications.
- * Dispatches notifications to relevant parties when PTO requests
- * transition through the approval workflow.
+ * The backend dispatches in-app notifications to relevant parties
+ * via INotificationService.SendAsync() in the PtoRequestsController.
+ * These frontend effects provide UI feedback and logging.
  *
  * Requirements: 6.1, 6.2, 6.3, 6.4
  */
@@ -21,8 +22,8 @@ export class PtoNotificationEffects {
   /**
    * Effect: notifyOnSubmission$
    *
-   * On successful PTO request creation, the manager should be notified
-   * that a new request requires their approval.
+   * On successful PTO request creation, the backend notifies the manager.
+   * Frontend logs the event for tracing.
    *
    * Requirement 6.1
    */
@@ -30,11 +31,9 @@ export class PtoNotificationEffects {
     this.actions$.pipe(
       ofType(PtoActions.createRequestSuccess),
       tap(({ request }) => {
-        // TODO: In production, call NotificationService to notify the manager.
-        // Currently logging since the manager's userId is available on the request payload.
-        console.log(
+        console.info(
           `[PTO Notification] Request ${request.id} submitted by ${request.employeeName}. ` +
-          `Manager ${request.managerName} (${request.managerId}) should be notified.`
+          `Manager ${request.managerName} (${request.managerId}) notified via backend.`
         );
       })
     ),
@@ -44,8 +43,7 @@ export class PtoNotificationEffects {
   /**
    * Effect: notifyOnManagerApproval$
    *
-   * On successful manager approval, backoffice users should be notified
-   * that a request is ready for their review.
+   * On successful manager approval, backoffice users are notified via backend.
    *
    * Requirement 6.2
    */
@@ -53,10 +51,9 @@ export class PtoNotificationEffects {
     this.actions$.pipe(
       ofType(PtoActions.managerApproveSuccess),
       tap(({ request }) => {
-        // TODO: In production, call NotificationService to notify backoffice users.
-        console.log(
+        console.info(
           `[PTO Notification] Request ${request.id} approved by manager. ` +
-          `Backoffice users should be notified for final review.`
+          `Backoffice users notified for final review via backend.`
         );
       })
     ),
@@ -66,8 +63,8 @@ export class PtoNotificationEffects {
   /**
    * Effect: notifyOnManagerRejection$
    *
-   * On successful manager rejection, the employee should be notified
-   * that their request was rejected.
+   * On successful manager rejection, the employee is notified via backend
+   * (in-app notification + email with rejection reason).
    *
    * Requirement 6.3
    */
@@ -75,10 +72,9 @@ export class PtoNotificationEffects {
     this.actions$.pipe(
       ofType(PtoActions.managerRejectSuccess),
       tap(({ request }) => {
-        // TODO: In production, call NotificationService to notify the employee.
-        console.log(
+        console.info(
           `[PTO Notification] Request ${request.id} rejected by manager. ` +
-          `Employee ${request.employeeName} (${request.employeeId}) should be notified of rejection.`
+          `Employee ${request.employeeName} (${request.employeeId}) notified with reason via backend.`
         );
       })
     ),
@@ -88,8 +84,8 @@ export class PtoNotificationEffects {
   /**
    * Effect: notifyOnBackofficeApproval$
    *
-   * On successful backoffice approval, the employee and manager should be
-   * notified of the final approval.
+   * On successful backoffice approval (final approval), employee and manager
+   * are notified via backend (in-app + email).
    *
    * Requirement 6.4
    */
@@ -97,11 +93,9 @@ export class PtoNotificationEffects {
     this.actions$.pipe(
       ofType(PtoActions.backofficeApproveSuccess),
       tap(({ request }) => {
-        // TODO: In production, call NotificationService to notify employee and manager.
-        console.log(
-          `[PTO Notification] Request ${request.id} approved by backoffice. ` +
-          `Employee ${request.employeeName} (${request.employeeId}) and ` +
-          `Manager ${request.managerName} (${request.managerId}) should be notified of final approval.`
+        console.info(
+          `[PTO Notification] Request ${request.id} approved by backoffice (final). ` +
+          `Employee ${request.employeeName} and Manager ${request.managerName} notified via backend.`
         );
       })
     ),
@@ -111,8 +105,8 @@ export class PtoNotificationEffects {
   /**
    * Effect: notifyOnBackofficeRejection$
    *
-   * On successful backoffice rejection, the employee and manager should be
-   * notified of the rejection.
+   * On successful backoffice rejection, employee and manager are notified
+   * via backend (in-app + email with rejection reason).
    *
    * Requirement 6.3
    */
@@ -120,11 +114,9 @@ export class PtoNotificationEffects {
     this.actions$.pipe(
       ofType(PtoActions.backofficeRejectSuccess),
       tap(({ request }) => {
-        // TODO: In production, call NotificationService to notify employee and manager.
-        console.log(
+        console.info(
           `[PTO Notification] Request ${request.id} rejected by backoffice. ` +
-          `Employee ${request.employeeName} (${request.employeeId}) and ` +
-          `Manager ${request.managerName} (${request.managerId}) should be notified of rejection.`
+          `Employee ${request.employeeName} and Manager ${request.managerName} notified via backend.`
         );
       })
     ),
@@ -134,8 +126,7 @@ export class PtoNotificationEffects {
   /**
    * Effect: notifyOnCancellation$
    *
-   * On successful cancellation, the manager and backoffice should be
-   * notified that the request was cancelled.
+   * On successful cancellation, manager and backoffice are notified via backend.
    *
    * Requirement 6.3
    */
@@ -143,10 +134,9 @@ export class PtoNotificationEffects {
     this.actions$.pipe(
       ofType(PtoActions.cancelRequestSuccess),
       tap(({ request }) => {
-        // TODO: In production, call NotificationService to notify manager and backoffice.
-        console.log(
+        console.info(
           `[PTO Notification] Request ${request.id} cancelled by employee ${request.employeeName}. ` +
-          `Manager ${request.managerName} (${request.managerId}) and backoffice should be notified.`
+          `Manager ${request.managerName} notified via backend.`
         );
       })
     ),

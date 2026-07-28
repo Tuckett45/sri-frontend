@@ -13,6 +13,7 @@ import { PtoNotificationEffects } from '../../state/pto/pto-notification.effects
 // Overtime State
 import { overtimeReducer } from '../../state/overtime/overtime.reducer';
 import { OvertimeEffects } from '../../state/overtime/overtime.effects';
+import { OvertimeNotificationEffects } from '../../state/overtime/overtime-notification.effects';
 
 // Guards
 import { ManagerGuard } from '../../guards/manager.guard';
@@ -123,7 +124,7 @@ const routes: Routes = [
     RouterModule.forChild(routes),
     StoreModule.forFeature('pto', ptoReducer),
     StoreModule.forFeature('overtime', overtimeReducer),
-    EffectsModule.forFeature([PtoEffects, PtoNotificationEffects, OvertimeEffects])
+    EffectsModule.forFeature([PtoEffects, PtoNotificationEffects, OvertimeEffects, OvertimeNotificationEffects])
   ]
 })
 export class PtoModule { }
