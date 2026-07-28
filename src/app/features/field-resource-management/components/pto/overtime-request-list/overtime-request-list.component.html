@@ -1,0 +1,119 @@
+<div class="overtime-request-list">
+  <div class="list-header">
+    <h2>My Overtime Requests</h2>
+    <button class="btn-new-request" (click)="onNewRequest()" aria-label="Submit a new overtime request">
+      + New Overtime Request
+    </button>
+  </div>
+
+  <!-- Status Filter Chips -->
+  <div class="filter-chips">
+    <button
+      *ngFor="let filter of filterOptions"
+      class="filter-chip"
+      [class.active]="activeFilter === filter"
+      (click)="setFilter(filter)"
+      [attr.aria-pressed]="activeFilter === filter"
+      type="button">
+      {{ filter }}
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading$ | async">
+    <div class="spinner"></div>
+    <p>Loading overtime requests...</p>
+  </div>
+
+  <!-- Request Table -->
+  <div class="request-table" *ngIf="(loading$ | async) === false">
+    <ng-container *ngIf="filteredRequests$ | async as requests">
+      <table *ngIf="requests.length > 0; else emptyState">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Employee</th>
+            <th>Market</th>
+            <th>Start Date</th>
+            <th>Duration</th>
+            <th>SRI Lead</th>
+            <th>Justification</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let request of requests; trackBy: trackByRequest" class="request-row">
+            <td>
+              <span class="status-badge" [ngClass]="getStatusBadgeClass(request.approvalStatus)">
+                {{ getStatusLabel(request.approvalStatus) }}
+              </span>
+            </td>
+            <td class="employee-cell">{{ request.employeeFullName }}</td>
+            <td>
+              <span class="market-badge">{{ request.market }}</span>
+            </td>
+            <td>{{ request.overtimeStartDate | date:'mediumDate' }}</td>
+            <td class="duration-cell">{{ formatDuration(request) }}</td>
+            <td>{{ request.sriLeadName }}</td>
+            <td class="justification-cell" [title]="request.justification">
+              {{ request.justification | slice:0:50 }}{{ request.justification.length > 50 ? '...' : '' }}
+            </td>
+            <td class="actions-cell" (click)="$event.stopPropagation()">
+              <button
+                *ngIf="canCancel(request)"
+                class="btn-action btn-cancel"
+                (click)="onCancel(request)"
+                title="Cancel this request">
+                Cancel
+              </button>
+              <button
+                *ngIf="canApprove(request)"
+                class="btn-action btn-approve"
+                (click)="onApprove(request)"
+                title="Approve this request">
+                Approve
+              </button>
+              <button
+                *ngIf="canReject(request)"
+                class="btn-action btn-reject"
+                (click)="onReject(request)"
+                title="Reject this request">
+                Reject
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #emptyState>
+        <div class="empty-state">
+          <div class="empty-icon">&#128337;</div>
+          <p>No overtime requests found for the selected filter.</p>
+          <button class="btn-new-request" (click)="onNewRequest()">Submit Your First Overtime Request</button>
+        </div>
+      </ng-template>
+    </ng-container>
+  </div>
+
+  <!-- Reject Reason Modal -->
+  <div class="reject-overlay" *ngIf="showRejectModal">
+    <div class="reject-modal">
+      <h3>Reject Overtime Request</h3>
+      <p>Please provide a reason for rejection:</p>
+      <textarea
+        [(ngModel)]="rejectReason"
+        placeholder="Enter rejection reason..."
+        rows="3"
+        class="reject-textarea"
+      ></textarea>
+      <div class="modal-actions">
+        <button class="btn-action btn-reject" (click)="confirmReject()" [disabled]="!rejectReason.trim()">
+          Confirm Reject
+        </button>
+        <button class="btn-action btn-cancel-modal" (click)="cancelReject()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

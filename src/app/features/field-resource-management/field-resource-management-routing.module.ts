@@ -241,11 +241,11 @@ const routes: Routes = [
         canActivate: [DispatcherGuard]
       },
 
-      // DISABLED: PTO Routes - reduce usage
-      // {
-      //   path: 'pto',
-      //   loadChildren: () => import('./components/pto/pto.module').then(m => m.PtoModule)
-      // }
+      // PTO & Overtime Routes - Lazy Loaded
+      {
+        path: 'pto',
+        loadChildren: () => import('./components/pto/pto.module').then(m => m.PtoModule)
+      }
     ]
   }
 ];

@@ -1,0 +1,239 @@
+<div class="approval-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h2>Approval Dashboard</h2>
+    <p class="subtitle">Review and manage pending PTO and overtime requests for your team</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid" *ngIf="stats$ | async as stats">
+    <div class="stat-card stat-pending">
+      <div class="stat-number">{{ stats.totalPending }}</div>
+      <div class="stat-label">Total Pending</div>
+      <div class="stat-breakdown">
+        <span>{{ stats.pendingPto }} PTO</span>
+        <span class="separator">|</span>
+        <span>{{ stats.pendingOvertime }} Overtime</span>
+      </div>
+    </div>
+    <div class="stat-card stat-approved">
+      <div class="stat-number">{{ stats.approvedThisWeek }}</div>
+      <div class="stat-label">Approved This Week</div>
+    </div>
+    <div class="stat-card stat-rejected">
+      <div class="stat-number">{{ stats.rejectedThisWeek }}</div>
+      <div class="stat-label">Rejected This Week</div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'all'"
+      (click)="setTab('all')"
+      type="button">
+      All Pending
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'pto'"
+      (click)="setTab('pto')"
+      type="button">
+      PTO Requests
+      <span class="tab-badge" *ngIf="(ptoManagerQueue$ | async)?.length || (ptoBackofficeQueue$ | async)?.length">
+        {{ ((ptoManagerQueue$ | async)?.length || 0) + ((ptoBackofficeQueue$ | async)?.length || 0) }}
+      </span>
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'overtime'"
+      (click)="setTab('overtime')"
+      type="button">
+      Overtime Requests
+      <span class="tab-badge" *ngIf="(overtimeManagerQueue$ | async)?.length">
+        {{ (overtimeManagerQueue$ | async)?.length }}
+      </span>
+    </button>
+  </div>
+
+  <!-- PTO Pending Requests Section -->
+  <div class="queue-section" *ngIf="activeTab === 'all' || activeTab === 'pto'">
+    <h3 class="section-title" *ngIf="activeTab === 'all'">
+      <span class="section-icon pto-icon"></span>
+      PTO Requests
+    </h3>
+
+    <!-- Manager Queue -->
+    <ng-container *ngIf="ptoManagerQueue$ | async as ptoQueue">
+      <div class="queue-table-container" *ngIf="ptoQueue.length > 0">
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Type</th>
+              <th>Market</th>
+              <th>Status</th>
+              <th>Reason</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let request of ptoQueue; trackBy: trackByPto">
+              <td class="employee-cell">{{ request.employeeName }}</td>
+              <td>{{ request.startDate | date:'MMM d, y' }}</td>
+              <td>{{ request.endDate | date:'MMM d, y' }}</td>
+              <td>{{ request.requestType }}</td>
+              <td>
+                <span class="market-badge">{{ request.requestType }}</span>
+              </td>
+              <td>
+                <span class="status-chip status-pending">{{ getPtoStatusLabel(request.status) }}</span>
+              </td>
+              <td class="reason-cell">{{ request.reason || '—' }}</td>
+              <td class="actions-cell">
+                <button class="btn-approve" (click)="approvePto(request)" title="Approve">
+                  <span class="btn-icon">&#10003;</span> Approve
+                </button>
+                <button class="btn-reject" (click)="rejectPto(request)" title="Reject">
+                  <span class="btn-icon">&#10007;</span> Reject
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-queue" *ngIf="ptoQueue.length === 0 && activeTab === 'pto'">
+        <p>No pending PTO requests to review.</p>
+      </div>
+    </ng-container>
+
+    <!-- Backoffice Queue -->
+    <ng-container *ngIf="ptoBackofficeQueue$ | async as boQueue">
+      <div class="queue-table-container" *ngIf="boQueue.length > 0">
+        <h4 class="subsection-title">Backoffice Approval Queue</h4>
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Reason</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let request of boQueue; trackBy: trackByPto">
+              <td class="employee-cell">{{ request.employeeName }}</td>
+              <td>{{ request.startDate | date:'MMM d, y' }}</td>
+              <td>{{ request.endDate | date:'MMM d, y' }}</td>
+              <td>{{ request.requestType }}</td>
+              <td>
+                <span class="status-chip status-pending">{{ getPtoStatusLabel(request.status) }}</span>
+              </td>
+              <td class="reason-cell">{{ request.reason || '—' }}</td>
+              <td class="actions-cell">
+                <button class="btn-approve" (click)="approvePto(request)" title="Approve">
+                  <span class="btn-icon">&#10003;</span> Approve
+                </button>
+                <button class="btn-reject" (click)="rejectPto(request)" title="Reject">
+                  <span class="btn-icon">&#10007;</span> Reject
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Overtime Pending Requests Section -->
+  <div class="queue-section" *ngIf="activeTab === 'all' || activeTab === 'overtime'">
+    <h3 class="section-title" *ngIf="activeTab === 'all'">
+      <span class="section-icon overtime-icon"></span>
+      Overtime Requests
+    </h3>
+
+    <ng-container *ngIf="overtimeManagerQueue$ | async as otQueue">
+      <div class="queue-table-container" *ngIf="otQueue.length > 0">
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Department</th>
+              <th>Market</th>
+              <th>Start Date</th>
+              <th>Duration</th>
+              <th>SRI Lead</th>
+              <th>Justification</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let request of otQueue; trackBy: trackByOvertime">
+              <td class="employee-cell">{{ request.employeeFullName }}</td>
+              <td>{{ request.department }}</td>
+              <td>
+                <span class="market-badge">{{ request.market }}</span>
+              </td>
+              <td>{{ request.overtimeStartDate | date:'MMM d, y' }}</td>
+              <td class="duration-cell">{{ formatOvertimeDuration(request) }}</td>
+              <td>{{ request.sriLeadName }}</td>
+              <td class="reason-cell" [title]="request.justification">
+                {{ request.justification | slice:0:40 }}{{ request.justification.length > 40 ? '...' : '' }}
+              </td>
+              <td class="actions-cell">
+                <button class="btn-approve" (click)="approveOvertime(request)" title="Approve">
+                  <span class="btn-icon">&#10003;</span> Approve
+                </button>
+                <button class="btn-reject" (click)="rejectOvertime(request)" title="Reject">
+                  <span class="btn-icon">&#10007;</span> Reject
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-queue" *ngIf="otQueue.length === 0 && activeTab === 'overtime'">
+        <p>No pending overtime requests to review.</p>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Empty state for All tab when nothing pending -->
+  <div class="empty-queue all-empty" *ngIf="activeTab === 'all' && (stats$ | async)?.totalPending === 0">
+    <div class="empty-icon">&#127881;</div>
+    <p>All caught up! No pending requests to review.</p>
+  </div>
+
+  <!-- Reject Reason Modal -->
+  <div class="reject-overlay" *ngIf="showRejectModal">
+    <div class="reject-modal">
+      <h3>Reject Request</h3>
+      <p>Please provide a reason for rejection. This will be shared with the employee.</p>
+      <textarea
+        [(ngModel)]="rejectReason"
+        placeholder="Enter rejection reason..."
+        rows="4"
+        class="reject-textarea"
+      ></textarea>
+      <div class="modal-actions">
+        <button
+          class="btn-confirm-reject"
+          (click)="confirmReject()"
+          [disabled]="!rejectReason.trim()">
+          Confirm Rejection
+        </button>
+        <button class="btn-cancel-modal" (click)="cancelReject()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

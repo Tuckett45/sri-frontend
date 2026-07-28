@@ -1,0 +1,156 @@
+<div class="team-timeline">
+  <!-- Header -->
+  <div class="timeline-header">
+    <div class="header-left">
+      <h2>Team Availability Timeline</h2>
+      <p class="subtitle">View who is off and when across all markets</p>
+    </div>
+    <div class="header-controls">
+      <button class="btn-today" (click)="goToToday()" type="button">Today</button>
+      <div class="view-toggle">
+        <button
+          class="toggle-btn"
+          [class.active]="viewMode === 'quarters'"
+          (click)="setViewMode('quarters')"
+          type="button">
+          Quarters
+        </button>
+        <button
+          class="toggle-btn"
+          [class.active]="viewMode === 'months'"
+          (click)="setViewMode('months')"
+          type="button">
+          Months
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Year Navigation & Market Filter -->
+  <div class="timeline-toolbar">
+    <div class="year-nav">
+      <button class="nav-btn" (click)="prevYear()" type="button" aria-label="Previous year">&#9664;</button>
+      <span class="year-label">{{ currentYear }}</span>
+      <button class="nav-btn" (click)="nextYear()" type="button" aria-label="Next year">&#9654;</button>
+    </div>
+
+    <div class="market-filter">
+      <label for="marketFilter">Market:</label>
+      <select id="marketFilter" (change)="filterByMarket($any($event.target).value)">
+        <option value="">All Markets</option>
+        <option *ngFor="let m of markets" [value]="m.value">{{ m.label }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Timeline Chart -->
+  <div class="timeline-chart">
+    <!-- Time axis header -->
+    <div class="time-axis">
+      <div class="axis-label-col">
+        <span class="axis-header">Which Market do<br/>you support?</span>
+      </div>
+      <div class="axis-track">
+        <!-- Quarter/Month labels -->
+        <div class="axis-labels" *ngIf="viewMode === 'quarters'">
+          <span class="quarter-label" *ngFor="let q of quarters; let i = index"
+                [style.left.%]="i * 25"
+                [style.width.%]="25">
+            {{ q }}
+          </span>
+        </div>
+        <div class="axis-labels" *ngIf="viewMode === 'months'">
+          <span class="month-label" *ngFor="let mp of getMonthPositions()"
+                [style.left.%]="mp.left">
+            {{ mp.label }}
+          </span>
+        </div>
+
+        <!-- Quarter/Month dividers -->
+        <div class="divider-lines">
+          <div class="divider-line"
+               *ngFor="let pos of (viewMode === 'quarters' ? getQuarterPositions() : [])"
+               [style.left.%]="pos">
+          </div>
+          <div class="divider-line month-divider"
+               *ngFor="let mp of (viewMode === 'months' ? getMonthPositions() : [])"
+               [style.left.%]="mp.left">
+          </div>
+        </div>
+
+        <!-- Today indicator -->
+        <div class="today-indicator"
+             *ngIf="getTodayPosition() >= 0"
+             [style.left.%]="getTodayPosition()">
+          <div class="today-dot"></div>
+          <div class="today-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Market Groups -->
+    <div class="timeline-body" *ngIf="marketGroups$ | async as groups">
+      <ng-container *ngIf="groups.length > 0; else emptyTimeline">
+        <div class="market-row" *ngFor="let group of groups; trackBy: trackByMarket">
+          <div class="market-label-col">
+            <span class="market-name">{{ group.market }}</span>
+          </div>
+          <div class="market-track">
+            <!-- Quarter/Month dividers in track -->
+            <div class="track-dividers">
+              <div class="track-divider"
+                   *ngFor="let pos of (viewMode === 'quarters' ? getQuarterPositions() : [])"
+                   [style.left.%]="pos">
+              </div>
+              <div class="track-divider month-track-divider"
+                   *ngFor="let mp of (viewMode === 'months' ? getMonthPositions() : [])"
+                   [style.left.%]="mp.left">
+              </div>
+            </div>
+
+            <!-- Today line in track -->
+            <div class="track-today"
+                 *ngIf="getTodayPosition() >= 0"
+                 [style.left.%]="getTodayPosition()">
+            </div>
+
+            <!-- Timeline entries -->
+            <div
+              class="timeline-entry"
+              *ngFor="let entry of group.entries; trackBy: trackByEntry"
+              [style.left.%]="entry.leftPercent"
+              [style.width.%]="entry.widthPercent"
+              [style.backgroundColor]="entry.color + '22'"
+              [style.borderLeftColor]="entry.color"
+              [title]="entry.employeeName + '\n' + formatDateRange(entry)">
+              <div class="entry-content">
+                <span class="entry-name">{{ entry.employeeName }}</span>
+                <span class="entry-dates">{{ formatDateRange(entry) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #emptyTimeline>
+        <div class="empty-timeline">
+          <div class="empty-icon">&#128197;</div>
+          <p>No approved time-off requests found for {{ currentYear }}.</p>
+          <p class="empty-hint">Approved PTO requests will appear here on the timeline.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="timeline-legend">
+    <div class="legend-item">
+      <div class="legend-dot today-legend"></div>
+      <span>Today</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-block"></div>
+      <span>Approved Time Off</span>
+    </div>
+  </div>
+</div>

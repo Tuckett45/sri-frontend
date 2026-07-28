@@ -5,16 +5,20 @@ import { RouterModule, Routes } from '@angular/router';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 
-// State
+// PTO State
 import { ptoReducer } from '../../state/pto/pto.reducer';
 import { PtoEffects } from '../../state/pto/pto.effects';
 import { PtoNotificationEffects } from '../../state/pto/pto-notification.effects';
+
+// Overtime State
+import { overtimeReducer } from '../../state/overtime/overtime.reducer';
+import { OvertimeEffects } from '../../state/overtime/overtime.effects';
 
 // Guards
 import { ManagerGuard } from '../../guards/manager.guard';
 import { PayrollGuard } from '../../guards/payroll.guard';
 
-// Components
+// PTO Components
 import { PtoRequestFormComponent } from './pto-request-form/pto-request-form.component';
 import { PtoRequestListComponent } from './pto-request-list/pto-request-list.component';
 import { PtoRequestDetailComponent } from './pto-request-detail/pto-request-detail.component';
@@ -22,25 +26,61 @@ import { PtoManagerQueueComponent } from './pto-manager-queue/pto-manager-queue.
 import { PtoBackofficeQueueComponent } from './pto-backoffice-queue/pto-backoffice-queue.component';
 import { PtoLeaveTypeChipComponent } from './pto-leave-type-chip/pto-leave-type-chip.component';
 
+// Overtime Components
+import { OvertimeRequestFormComponent } from './overtime-request-form/overtime-request-form.component';
+import { OvertimeRequestListComponent } from './overtime-request-list/overtime-request-list.component';
+
+// Manager/Approval Components
+import { ApprovalDashboardComponent } from './approval-dashboard/approval-dashboard.component';
+
+// Timeline Component
+import { TeamTimelineComponent } from './team-timeline/team-timeline.component';
+
 const routes: Routes = [
+  // PTO Request List (default)
   {
     path: '',
     component: PtoRequestListComponent
   },
+  // New PTO Request
   {
     path: 'new',
     component: PtoRequestFormComponent
   },
+  // Team Timeline / Calendar View
+  {
+    path: 'timeline',
+    component: TeamTimelineComponent
+  },
+  // Approval Dashboard (Manager/Backoffice combined view)
+  {
+    path: 'approvals',
+    component: ApprovalDashboardComponent,
+    canActivate: [ManagerGuard]
+  },
+  // Legacy Manager Queue (still accessible)
   {
     path: 'approvals/manager',
     component: PtoManagerQueueComponent,
     canActivate: [ManagerGuard]
   },
+  // Legacy Backoffice Queue (still accessible)
   {
     path: 'approvals/backoffice',
     component: PtoBackofficeQueueComponent,
     canActivate: [PayrollGuard]
   },
+  // Overtime Request List
+  {
+    path: 'overtime',
+    component: OvertimeRequestListComponent
+  },
+  // New Overtime Request
+  {
+    path: 'overtime/new',
+    component: OvertimeRequestFormComponent
+  },
+  // PTO Request Detail
   {
     path: ':id',
     component: PtoRequestDetailComponent
@@ -49,12 +89,19 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [
+    // PTO Components
     PtoRequestFormComponent,
     PtoRequestListComponent,
     PtoRequestDetailComponent,
     PtoManagerQueueComponent,
     PtoBackofficeQueueComponent,
-    PtoLeaveTypeChipComponent
+    PtoLeaveTypeChipComponent,
+    // Overtime Components
+    OvertimeRequestFormComponent,
+    OvertimeRequestListComponent,
+    // Approval & Timeline Components
+    ApprovalDashboardComponent,
+    TeamTimelineComponent
   ],
   imports: [
     CommonModule,
@@ -62,7 +109,8 @@ const routes: Routes = [
     ReactiveFormsModule,
     RouterModule.forChild(routes),
     StoreModule.forFeature('pto', ptoReducer),
-    EffectsModule.forFeature([PtoEffects, PtoNotificationEffects])
+    StoreModule.forFeature('overtime', overtimeReducer),
+    EffectsModule.forFeature([PtoEffects, PtoNotificationEffects, OvertimeEffects])
   ]
 })
 export class PtoModule { }

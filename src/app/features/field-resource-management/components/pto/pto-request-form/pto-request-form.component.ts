@@ -1,19 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Store } from '@ngrx/store';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { LeaveType, CreatePtoRequestDto } from '../../../models/pto.models';
+import { SUPPORTED_MARKETS } from '../../../models/overtime.models';
 import * as PtoActions from '../../../state/pto/pto.actions';
 import { selectLeaveTypes } from '../../../state/pto/pto.selectors';
 import { AuthService } from '../../../../../services/auth.service';
 
 /**
- * PTO Request Form Component
+ * PTO Request Form Component (Enhanced)
  *
  * Provides a reactive form for employees to submit new PTO/time off requests.
- * Validates date ranges, requires leave type selection, and dispatches
- * the createRequest action on valid submission.
+ * Matches the SRI Time-off Request Form (Google Form) with fields:
+ * - Full name (first, last format: e.g. John Doe)
+ * - Who is covering your business commitments while you are out?
+ * - Have you emailed your time-off request to your SRI Lead?
+ * - Is your time-off request approved?
+ * - When will your approved time off start? (date)
+ * - When will your approved time-off end? (date)
+ * - Which Market do you support?
+ * - Out of office notification checkboxes (Google Calendar, Google Chat, Google Auto Reply)
  *
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 8.3
  */
@@ -26,10 +35,28 @@ export class PtoRequestFormComponent implements OnInit {
   ptoForm!: FormGroup;
   leaveTypes$!: Observable<LeaveType[]>;
   submitted = false;
+  submitting = false;
+
+  /** Markets for dropdown */
+  markets = SUPPORTED_MARKETS;
+
+  /** Email confirmation options */
+  emailedLeadOptions = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' }
+  ];
+
+  /** Approval status options */
+  approvalOptions = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+    { value: 'pending', label: 'Pending' }
+  ];
 
   constructor(
     private fb: FormBuilder,
     private store: Store,
+    private router: Router,
     private authService: AuthService
   ) {}
 
@@ -38,13 +65,26 @@ export class PtoRequestFormComponent implements OnInit {
     this.leaveTypes$ = this.store.select(selectLeaveTypes);
 
     this.ptoForm = this.fb.group({
+      employeeName: ['', [Validators.required, Validators.minLength(2)]],
+      coveragePerson: ['', [Validators.required, Validators.minLength(2)]],
+      emailedLead: ['', [Validators.required]],
+      isApproved: ['', [Validators.required]],
       startDate: ['', [Validators.required, this.notInPastValidator]],
       endDate: ['', [Validators.required]],
-      requestType: ['', [Validators.required]],
+      market: ['', [Validators.required]],
+      outOfOfficeCalendar: [false],
+      outOfOfficeChat: [false],
+      outOfOfficeEmail: [false],
       notes: ['', [Validators.maxLength(1000)]]
     }, {
       validators: this.endDateAfterStartDateValidator
     });
+
+    // Pre-fill employee name if available
+    const user = this.authService.getUser();
+    if (user?.displayName) {
+      this.ptoForm.patchValue({ employeeName: user.displayName });
+    }
   }
 
   /**
@@ -99,13 +139,15 @@ export class PtoRequestFormComponent implements OnInit {
       return;
     }
 
+    this.submitting = true;
     const formValue = this.ptoForm.value;
     const user = this.authService.getUser();
+
     const dto: CreatePtoRequestDto = {
       employeeId: user?.id ?? '',
       startDate: formValue.startDate,
       endDate: formValue.endDate,
-      requestType: formValue.requestType
+      requestType: formValue.market // Using market as part of request context
     };
 
     if (formValue.notes && formValue.notes.trim().length > 0) {
@@ -114,7 +156,14 @@ export class PtoRequestFormComponent implements OnInit {
 
     this.store.dispatch(PtoActions.createRequest({ dto }));
     this.submitted = true;
-    this.ptoForm.reset();
+    this.submitting = false;
+  }
+
+  /**
+   * Navigate back to PTO list
+   */
+  onCancel(): void {
+    this.router.navigate(['/field-resource-management/pto']);
   }
 
   /**
