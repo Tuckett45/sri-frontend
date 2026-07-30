@@ -81,13 +81,19 @@
         <mat-card class="info-card tab-card">
           <mat-card-header>
             <mat-card-title>Skills</mat-card-title>
+            <button mat-icon-button color="primary" (click)="openAddSkillDialog()" matTooltip="Add Skill" *ngIf="isAdmin()">
+              <mat-icon>add_circle</mat-icon>
+            </button>
           </mat-card-header>
           <mat-card-content>
             <div *ngIf="technicianSkills.length > 0; else noSkills">
               <mat-chip-set>
-                <mat-chip *ngFor="let skill of technicianSkills" [title]="skill.category">
+                <mat-chip *ngFor="let skill of technicianSkills" [title]="skill.category" (click)="openEditSkillDialog(skill)">
                   <strong>{{ skill.name }}</strong>
                   <span class="skill-category"> - {{ skill.category }}</span>
+                  <button matChipRemove *ngIf="isAdmin()" (click)="removeSkill($event, skill)">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
                 </mat-chip>
               </mat-chip-set>
             </div>
@@ -101,6 +107,9 @@
         <mat-card class="info-card tab-card">
           <mat-card-header>
             <mat-card-title>Certifications</mat-card-title>
+            <button mat-icon-button color="primary" (click)="openAddCertificationDialog()" matTooltip="Add Certification" *ngIf="isAdmin()">
+              <mat-icon>add_circle</mat-icon>
+            </button>
           </mat-card-header>
           <mat-card-content>
             <div *ngIf="technicianCertifications.length > 0; else noCertifications">
@@ -117,8 +126,22 @@
                   <th mat-header-cell *matHeaderCellDef>Expiration Date</th>
                   <td mat-cell *matCellDef="let cert">{{ cert.expirationDate | date:'shortDate' }}</td>
                 </ng-container>
-                <tr mat-header-row *matHeaderRowDef="['name', 'issueDate', 'expirationDate']"></tr>
-                <tr mat-row *matRowDef="let row; columns: ['name', 'issueDate', 'expirationDate'];"></tr>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let cert">
+                    <button mat-icon-button *ngIf="cert.attachmentId" (click)="downloadCertDocument(cert)" matTooltip="Download Document" color="accent">
+                      <mat-icon>attach_file</mat-icon>
+                    </button>
+                    <button mat-icon-button color="primary" (click)="openEditCertificationDialog(cert)" matTooltip="Edit" *ngIf="isAdmin()">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="removeCertification(cert)" matTooltip="Delete" *ngIf="isAdmin()">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="certificationColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: certificationColumns;"></tr>
               </table>
             </div>
             <ng-template #noCertifications>
@@ -226,6 +249,24 @@
           <app-technician-travel-profile [technicianId]="technicianId">
           </app-technician-travel-profile>
         </div>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Documents Tab -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">folder</mat-icon>
+        Documents
+      </ng-template>
+      <ng-template matTabContent>
+        <mat-card class="info-card tab-card">
+          <mat-card-content>
+            <app-technician-attachments-section
+              *ngIf="technicianId"
+              [technicianId]="technicianId">
+            </app-technician-attachments-section>
+          </mat-card-content>
+        </mat-card>
       </ng-template>
     </mat-tab>
 

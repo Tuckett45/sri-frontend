@@ -1,9 +1,9 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, of, combineLatest } from 'rxjs';
-import { takeUntil, filter, map, take, startWith } from 'rxjs/operators';
+import { Observable, Subject, of } from 'rxjs';
+import { takeUntil, filter, map, take } from 'rxjs/operators';
 import { Actions, ofType } from '@ngrx/effects';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -43,8 +43,7 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
 @Component({
   selector: 'frm-crew-detail',
   templateUrl: './crew-detail.component.html',
-  styleUrls: ['./crew-detail.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./crew-detail.component.scss']
 })
 export class CrewDetailComponent implements OnInit, OnDestroy {
   crew$: Observable<Crew | null | undefined>;
@@ -67,9 +66,9 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
   
   // Add member state
   showAddMember = false;
-  availableTechnicians$: Observable<Technician[]> = of([]);
+  availableTechnicians: Technician[] = [];
   addMemberSearch = new FormControl('');
-  filteredAvailableTechnicians$: Observable<Technician[]> = of([]);
+  filteredAvailableTechnicians: Technician[] = [];
   
   // Enum references for template
   CrewStatus = CrewStatus;
@@ -346,44 +345,54 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
     ).subscribe(crew => {
       if (crew) {
         const existingIds = new Set([crew.leadTechnicianId, ...(crew.memberIds || [])]);
-        const crewMarket = crew.market?.toUpperCase() || '';
-        this.availableTechnicians$ = this.store.select(TechnicianSelectors.selectAllTechnicians).pipe(
-          map(technicians => technicians
+
+        this.store.select(TechnicianSelectors.selectAllTechnicians).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(technicians => {
+          this.availableTechnicians = technicians
             .filter(t => {
               if (existingIds.has(t.id) || !t.isActive) return false;
-              // Technician region format: "{Client} {Market}" (e.g., "IES OH")
-              // Filter by crew market (last part of region)
-              if (!crewMarket || !t.region) return !crewMarket;
-              const regionMarket = t.region.split(' ').pop()?.toUpperCase() || '';
-              return regionMarket === crewMarket;
+              return true;
             })
-            .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`))
-          )
-        );
-        
-        // Combine search text changes with available technicians for filtering
-        this.filteredAvailableTechnicians$ = combineLatest([
-          this.availableTechnicians$,
-          this.addMemberSearch.valueChanges.pipe(startWith(''))
-        ]).pipe(
-          map(([technicians, searchText]) => {
-            const term = (searchText || '').toLowerCase();
-            if (!term) return technicians;
-            return technicians.filter(t =>
-              `${t.firstName} ${t.lastName}`.toLowerCase().includes(term) ||
-              t.id.toLowerCase().includes(term) ||
-              t.role.toLowerCase().includes(term)
-            );
-          })
-        );
+            .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+
+          this.filterTechnicianList(this.addMemberSearch.value || '');
+        });
       }
     });
+  }
+
+  /**
+   * Handle input event on the member search field
+   */
+  onMemberSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value || '';
+    this.filterTechnicianList(value);
+  }
+
+  /**
+   * Filter technician list by search term (case-insensitive)
+   */
+  private filterTechnicianList(searchText: string): void {
+    const term = searchText.toLowerCase();
+    if (!term) {
+      this.filteredAvailableTechnicians = this.availableTechnicians;
+    } else {
+      this.filteredAvailableTechnicians = this.availableTechnicians.filter(t =>
+        `${t.firstName} ${t.lastName}`.toLowerCase().includes(term) ||
+        (t.id && t.id.toLowerCase().includes(term)) ||
+        (t.role && t.role.toLowerCase().includes(term))
+      );
+    }
   }
 
   /**
    * Add a technician to the crew
    */
   addMemberToCrew(technicianId: string): void {
+    // Immediately clear search to avoid showing the ID in the input
+    this.addMemberSearch.setValue('');
+
     this.crew$.pipe(
       takeUntil(this.destroy$),
       filter(crew => !!crew),
@@ -398,7 +407,6 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
           take(1)
         ).subscribe(() => {
           this.snackBar.open('Member added to crew', 'Close', { duration: 3000 });
-          this.addMemberSearch.setValue('');
           this.showAddMember = false;
         });
 

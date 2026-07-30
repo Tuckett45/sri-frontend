@@ -139,11 +139,12 @@
             <input matInput
                    [formControl]="addMemberSearch"
                    [matAutocomplete]="addMemberAuto"
+                   (input)="onMemberSearchInput($event)"
                    placeholder="Search by name, ID, or role...">
             <mat-icon matSuffix>search</mat-icon>
             <mat-autocomplete #addMemberAuto="matAutocomplete"
                               (optionSelected)="addMemberToCrew($event.option.value)">
-              <mat-option *ngFor="let tech of filteredAvailableTechnicians$ | async" [value]="tech.id">
+              <mat-option *ngFor="let tech of filteredAvailableTechnicians" [value]="tech.id">
                 {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }}) — {{ tech.role }}
               </mat-option>
             </mat-autocomplete>

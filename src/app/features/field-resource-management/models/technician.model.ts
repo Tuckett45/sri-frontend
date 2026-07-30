@@ -43,6 +43,7 @@ export interface Certification {
   issueDate: Date;
   expirationDate: Date;
   status: CertificationStatus;
+  attachmentId?: string; // Links to an uploaded document in AttachmentService
 }
 
 export interface Availability {

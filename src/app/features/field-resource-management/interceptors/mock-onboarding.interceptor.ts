@@ -40,6 +40,9 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
   private prcRecords: Map<string, PRC> = buildMockPRCRecords();
   private roleTemplates: Map<string, RoleCredentialTemplate> = buildMockRoleTemplates();
 
+  // In-memory attachment store keyed by technicianId
+  private technicianAttachments: Map<string, any[]> = new Map();
+
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Handle technician endpoints
     const techResult = this.handleTechnicianRequests(req);
@@ -183,20 +186,87 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
       return prcResult;
     }
 
+    // --- Technician Attachments ---
+
+    // DELETE /technicians/:id/attachments/:attachmentId
+    const deleteAttachMatch = url.match(/\/technicians\/([^/]+)\/attachments\/([^/]+)$/);
+    if (req.method === 'DELETE' && deleteAttachMatch) {
+      const techId = deleteAttachMatch[1];
+      const attachId = deleteAttachMatch[2];
+      const attachments = this.technicianAttachments.get(techId) || [];
+      const idx = attachments.findIndex((a: any) => a.id === attachId);
+      if (idx === -1) {
+        return notFound(attachId);
+      }
+      attachments.splice(idx, 1);
+      return ok(null);
+    }
+
+    // GET /technicians/:id/attachments/:attachmentId (download — return a fake blob)
+    const downloadAttachMatch = url.match(/\/technicians\/([^/]+)\/attachments\/([^/]+)$/);
+    if (req.method === 'GET' && downloadAttachMatch) {
+      const techId = downloadAttachMatch[1];
+      const attachId = downloadAttachMatch[2];
+      const attachments = this.technicianAttachments.get(techId) || [];
+      const attachment = attachments.find((a: any) => a.id === attachId);
+      if (!attachment) {
+        return notFound(attachId);
+      }
+      // Return a fake blob for download
+      const blob = new Blob(['mock file content'], { type: attachment.contentType });
+      return ok(blob);
+    }
+
+    // POST /technicians/:id/attachments (upload)
+    const postAttachMatch = url.match(/\/technicians\/([^/]+)\/attachments$/);
+    if (req.method === 'POST' && postAttachMatch) {
+      const techId = postAttachMatch[1];
+      const formData = req.body as FormData;
+      const file = formData.get('file') as File;
+      const category = formData.get('category') as string;
+      const userName = formData.get('userName') as string;
+
+      const newAttachment = {
+        id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        fileName: file?.name || 'unknown',
+        contentType: file?.type || 'application/octet-stream',
+        fileSize: file?.size || 0,
+        storagePath: `/mock-storage/${techId}/${file?.name || 'file'}`,
+        category: category || 'other',
+        uploadedBy: userName || 'unknown',
+        uploadedAt: new Date().toISOString()
+      };
+
+      if (!this.technicianAttachments.has(techId)) {
+        this.technicianAttachments.set(techId, []);
+      }
+      this.technicianAttachments.get(techId)!.push(newAttachment);
+      return ok(newAttachment);
+    }
+
+    // GET /technicians/:id/attachments (list)
+    const getAttachMatch = url.match(/\/technicians\/([^/]+)\/attachments$/);
+    if (req.method === 'GET' && getAttachMatch) {
+      const techId = getAttachMatch[1];
+      const attachments = this.technicianAttachments.get(techId) || [];
+      // Support category filter via query params
+      const category = req.params.get('category');
+      const filtered = category ? attachments.filter((a: any) => a.category === category) : attachments;
+      return ok(filtered);
+    }
+
     // --- DELETE /technicians/:id/certifications/:certId ---
     const deleteCertMatch = url.match(/\/technicians\/([^/]+)\/certifications\/([^/]+)$/);
     if (req.method === 'DELETE' && deleteCertMatch) {
       const techId = deleteCertMatch[1];
       const certId = deleteCertMatch[2];
       const technician = this.technicians.find(t => t.id === techId);
-      if (!technician) {
-        return notFound(techId);
+      if (technician) {
+        const certIndex = (technician.certifications || []).findIndex(c => c.id === certId);
+        if (certIndex !== -1) {
+          technician.certifications!.splice(certIndex, 1);
+        }
       }
-      const certIndex = (technician.certifications || []).findIndex(c => c.id === certId);
-      if (certIndex === -1) {
-        return notFound(certId);
-      }
-      technician.certifications!.splice(certIndex, 1);
       return ok(null);
     }
 
@@ -206,37 +276,37 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
       const techId = putCertMatch[1];
       const certId = putCertMatch[2];
       const technician = this.technicians.find(t => t.id === techId);
-      if (!technician) {
-        return notFound(techId);
-      }
-      const certIndex = (technician.certifications || []).findIndex(c => c.id === certId);
-      if (certIndex === -1) {
-        return notFound(certId);
-      }
-      technician.certifications![certIndex] = {
-        ...technician.certifications![certIndex],
+      const updatedCert: Certification = {
         ...req.body,
         id: certId,
       };
-      return ok(technician.certifications![certIndex]);
+      if (technician) {
+        const certIndex = (technician.certifications || []).findIndex(c => c.id === certId);
+        if (certIndex !== -1) {
+          technician.certifications![certIndex] = updatedCert;
+        } else {
+          if (!technician.certifications) technician.certifications = [];
+          technician.certifications.push(updatedCert);
+        }
+      }
+      return ok(updatedCert);
     }
 
     // --- POST /technicians/:id/certifications ---
     const postCertMatch = url.match(/\/technicians\/([^/]+)\/certifications$/);
     if (req.method === 'POST' && postCertMatch) {
       const techId = postCertMatch[1];
-      const technician = this.technicians.find(t => t.id === techId);
-      if (!technician) {
-        return notFound(techId);
-      }
       const newCert: Certification = {
         id: `cert-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
         ...req.body,
       };
-      if (!technician.certifications) {
-        technician.certifications = [];
+      const technician = this.technicians.find(t => t.id === techId);
+      if (technician) {
+        if (!technician.certifications) {
+          technician.certifications = [];
+        }
+        technician.certifications.push(newCert);
       }
-      technician.certifications.push(newCert);
       return ok(newCert);
     }
 
@@ -245,10 +315,7 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
     if (req.method === 'GET' && getCertsMatch) {
       const techId = getCertsMatch[1];
       const technician = this.technicians.find(t => t.id === techId);
-      if (!technician) {
-        return notFound(techId);
-      }
-      return ok(technician.certifications || []);
+      return ok(technician?.certifications || []);
     }
 
     // --- GET /technicians/:id ---

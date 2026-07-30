@@ -391,6 +391,36 @@ export class JobDetailComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get display label for a status
+   */
+  formatStatus(status: JobStatus): string {
+    const labels: Record<string, string> = {
+      NotStarted: 'Not Started',
+      EnRoute: 'En Route',
+      OnSite: 'On Site',
+      Completed: 'Completed',
+      Issue: 'Issue',
+      Cancelled: 'Cancelled'
+    };
+    return labels[status] || status;
+  }
+
+  /**
+   * Get icon for a status
+   */
+  getStatusIcon(status: JobStatus): string {
+    const icons: Record<string, string> = {
+      NotStarted: 'schedule',
+      EnRoute: 'directions_car',
+      OnSite: 'location_on',
+      Completed: 'check_circle',
+      Issue: 'warning',
+      Cancelled: 'cancel'
+    };
+    return icons[status] || 'circle';
+  }
+
+  /**
    * Change job status with validation
    */
   changeStatus(newStatus: JobStatus, reason?: string): void {

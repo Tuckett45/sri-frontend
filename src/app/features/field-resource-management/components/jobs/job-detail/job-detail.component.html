@@ -23,9 +23,19 @@
         <mat-icon>more_vert</mat-icon>
       </button>
       <mat-menu #moreMenu="matMenu">
+        <button mat-menu-item [matMenuTriggerFor]="statusMenu" *ngIf="getValidTransitions(job.status).length > 0">
+          <mat-icon>swap_horiz</mat-icon>
+          <span>Change Status</span>
+        </button>
         <button mat-menu-item (click)="deleteJob()">
           <mat-icon color="warn">delete</mat-icon>
           <span>Delete Job</span>
+        </button>
+      </mat-menu>
+      <mat-menu #statusMenu="matMenu">
+        <button mat-menu-item *ngFor="let status of getValidTransitions(job.status)" (click)="changeStatus(status)">
+          <mat-icon>{{ getStatusIcon(status) }}</mat-icon>
+          <span>{{ formatStatus(status) }}</span>
         </button>
       </mat-menu>
     </div>
@@ -73,7 +83,21 @@
           </div>
           <div class="info-item">
             <label>Status</label>
-            <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+            <div class="status-change-wrapper" *ngIf="getValidTransitions(job.status).length > 0; else staticStatus">
+              <button mat-stroked-button [matMenuTriggerFor]="inlineStatusMenu" class="status-change-btn">
+                <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+                <mat-icon class="dropdown-arrow">arrow_drop_down</mat-icon>
+              </button>
+              <mat-menu #inlineStatusMenu="matMenu">
+                <button mat-menu-item *ngFor="let status of getValidTransitions(job.status)" (click)="changeStatus(status)">
+                  <mat-icon>{{ getStatusIcon(status) }}</mat-icon>
+                  <span>{{ formatStatus(status) }}</span>
+                </button>
+              </mat-menu>
+            </div>
+            <ng-template #staticStatus>
+              <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+            </ng-template>
           </div>
           <div class="info-item full-width">
             <label>Site Address</label>

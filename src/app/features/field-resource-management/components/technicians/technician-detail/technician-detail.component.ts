@@ -8,6 +8,9 @@ import { MatCalendar } from '@angular/material/datepicker';
 import { Technician, CertificationStatus, Skill, Certification, Availability } from '../../../models/technician.model';
 import { TravelProfile } from '../../../models/travel.model';
 import { TechnicianService } from '../../../services/technician.service';
+import { AttachmentService } from '../../../services/attachment.service';
+import { AddSkillDialogComponent } from './add-skill-dialog/add-skill-dialog.component';
+import { AddCertificationDialogComponent, AddCertificationDialogResult } from './add-certification-dialog/add-certification-dialog.component';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 import { selectTravelProfile } from '../../../state/travel/travel.selectors';
@@ -31,6 +34,9 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
   // Tab management
   selectedTabIndex = 0;
   
+  // Certification table columns
+  certificationColumns = ['name', 'issueDate', 'expirationDate', 'actions'];
+  
   // For calendar display
   selectedDate: Date = new Date();
   unavailableDates: Date[] = [];
@@ -53,6 +59,7 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
     private store: Store,
     private dialog: MatDialog,
     private technicianService: TechnicianService,
+    private attachmentService: AttachmentService,
     private cdr: ChangeDetectorRef
   ) {
     this.technician$ = this.store.select(TechnicianSelectors.selectSelectedTechnician);
@@ -309,5 +316,148 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
       id: technician.id,
       technician: { scissorLiftCertified: checked }
     }));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Skill Dialog Methods
+  // ---------------------------------------------------------------------------
+
+  openAddSkillDialog(): void {
+    if (!this.technicianId) return;
+    const dialogRef = this.dialog.open(AddSkillDialogComponent, {
+      width: '450px',
+      data: { technicianId: this.technicianId }
+    });
+
+    dialogRef.afterClosed().subscribe((result: Skill | undefined) => {
+      if (result && this.technicianId) {
+        this.technicianService.addTechnicianSkill(this.technicianId, result).subscribe({
+          next: () => {
+            this.technicianSkills = [...this.technicianSkills, result];
+            this.cdr.markForCheck();
+          },
+          error: (err) => console.error('Failed to add skill:', err)
+        });
+      }
+    });
+  }
+
+  openEditSkillDialog(skill: Skill): void {
+    if (!this.technicianId || !this.isAdmin()) return;
+    const dialogRef = this.dialog.open(AddSkillDialogComponent, {
+      width: '450px',
+      data: { technicianId: this.technicianId, existingSkill: skill }
+    });
+
+    dialogRef.afterClosed().subscribe((result: Skill | undefined) => {
+      if (result && this.technicianId) {
+        // Remove old and add updated (API doesn't have an update endpoint for skills)
+        this.technicianService.removeTechnicianSkill(this.technicianId, skill.id).subscribe({
+          next: () => {
+            this.technicianService.addTechnicianSkill(this.technicianId!, result).subscribe({
+              next: () => {
+                this.technicianSkills = this.technicianSkills.map(s => s.id === skill.id ? result : s);
+                this.cdr.markForCheck();
+              },
+              error: (err) => console.error('Failed to update skill:', err)
+            });
+          },
+          error: (err) => console.error('Failed to remove old skill:', err)
+        });
+      }
+    });
+  }
+
+  removeSkill(event: Event, skill: Skill): void {
+    event.stopPropagation();
+    if (!this.technicianId) return;
+    if (!confirm(`Remove skill "${skill.name}"?`)) return;
+
+    this.technicianService.removeTechnicianSkill(this.technicianId, skill.id).subscribe({
+      next: () => {
+        this.technicianSkills = this.technicianSkills.filter(s => s.id !== skill.id);
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Failed to remove skill:', err)
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Certification Dialog Methods
+  // ---------------------------------------------------------------------------
+
+  openAddCertificationDialog(): void {
+    if (!this.technicianId) return;
+    const dialogRef = this.dialog.open(AddCertificationDialogComponent, {
+      width: '450px',
+      data: { technicianId: this.technicianId }
+    });
+
+    dialogRef.afterClosed().subscribe((result: AddCertificationDialogResult | undefined) => {
+      if (result && this.technicianId) {
+        const { id, ...certData } = result.certification;
+        this.technicianService.addTechnicianCertification(this.technicianId, certData).subscribe({
+          next: (created) => {
+            this.technicianCertifications = [...this.technicianCertifications, {
+              ...created,
+              issueDate: new Date(created.issueDate),
+              expirationDate: new Date(created.expirationDate)
+            }];
+            this.cdr.markForCheck();
+          },
+          error: (err) => console.error('Failed to add certification:', err)
+        });
+      }
+    });
+  }
+
+  openEditCertificationDialog(cert: Certification): void {
+    if (!this.technicianId) return;
+    const dialogRef = this.dialog.open(AddCertificationDialogComponent, {
+      width: '450px',
+      data: { technicianId: this.technicianId, existingCertification: cert }
+    });
+
+    dialogRef.afterClosed().subscribe((result: AddCertificationDialogResult | undefined) => {
+      if (result && this.technicianId) {
+        this.technicianService.updateTechnicianCertification(this.technicianId, cert.id, result.certification).subscribe({
+          next: (updated) => {
+            this.technicianCertifications = this.technicianCertifications.map(c =>
+              c.id === cert.id ? { ...updated, issueDate: new Date(updated.issueDate), expirationDate: new Date(updated.expirationDate) } : c
+            );
+            this.cdr.markForCheck();
+          },
+          error: (err) => console.error('Failed to update certification:', err)
+        });
+      }
+    });
+  }
+
+  removeCertification(cert: Certification): void {
+    if (!this.technicianId) return;
+    if (!confirm(`Delete certification "${cert.name}"? This cannot be undone.`)) return;
+
+    this.technicianService.deleteTechnicianCertification(this.technicianId, cert.id).subscribe({
+      next: () => {
+        this.technicianCertifications = this.technicianCertifications.filter(c => c.id !== cert.id);
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Failed to delete certification:', err)
+    });
+  }
+
+  downloadCertDocument(cert: Certification): void {
+    if (!this.technicianId || !cert.attachmentId) return;
+    this.attachmentService.downloadTechnicianAttachment(this.technicianId, cert.attachmentId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = cert.name + '-document';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => alert('Failed to download document.')
+    });
   }
 }

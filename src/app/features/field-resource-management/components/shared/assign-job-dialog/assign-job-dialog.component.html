@@ -15,10 +15,16 @@
       <span class="assigned-chip tech-chip" *ngFor="let tech of currentlyAssigned">
         <mat-icon class="chip-icon">person</mat-icon>
         {{ tech.firstName }} {{ tech.lastName }}
+        <button mat-icon-button class="chip-remove" (click)="unassignTechnician(tech)" matTooltip="Remove assignment">
+          <mat-icon>close</mat-icon>
+        </button>
       </span>
       <span class="assigned-chip crew-chip" *ngIf="currentCrew">
         <mat-icon class="chip-icon">groups</mat-icon>
         {{ currentCrew.name }}
+        <button mat-icon-button class="chip-remove" (click)="unassignCrew()" matTooltip="Remove crew assignment">
+          <mat-icon>close</mat-icon>
+        </button>
       </span>
     </div>
     <mat-divider class="section-divider"></mat-divider>
