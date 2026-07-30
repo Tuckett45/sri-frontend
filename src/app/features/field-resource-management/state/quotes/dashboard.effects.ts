@@ -3,7 +3,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, mergeMap, tap, withLatestFrom } from 'rxjs/operators';
+import { map, catchError, switchMap, mergeMap, concatMap, tap, withLatestFrom } from 'rxjs/operators';
 import * as DashboardActions from './dashboard.actions';
 import { selectDashboardFilters } from './dashboard.selectors';
 import { RfpDashboardService } from '../../services/rfp-dashboard.service';
@@ -240,7 +240,7 @@ export class DashboardEffects {
   addNote$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.addNote),
-      switchMap(({ quoteId, content }) =>
+      concatMap(({ quoteId, content }) =>
         this.dashboardService.addNote(quoteId, content).pipe(
           map((note) => DashboardActions.addNoteSuccess({ quoteId, note })),
           catchError((error) =>
@@ -256,7 +256,7 @@ export class DashboardEffects {
   updateNote$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.updateNote),
-      switchMap(({ quoteId, noteId, content }) =>
+      concatMap(({ quoteId, noteId, content }) =>
         this.dashboardService.updateNote(quoteId, noteId, content).pipe(
           map((note) => DashboardActions.updateNoteSuccess({ quoteId, note })),
           catchError((error) =>
@@ -272,7 +272,7 @@ export class DashboardEffects {
   toggleNotePin$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.toggleNotePin),
-      switchMap(({ quoteId, noteId, isPinned }) =>
+      concatMap(({ quoteId, noteId, isPinned }) =>
         this.dashboardService.toggleNotePin(quoteId, noteId, isPinned).pipe(
           map((note) => DashboardActions.toggleNotePinSuccess({ quoteId, note })),
           catchError((error) =>
@@ -288,7 +288,7 @@ export class DashboardEffects {
   deleteNote$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.deleteNote),
-      switchMap(({ quoteId, noteId }) =>
+      concatMap(({ quoteId, noteId }) =>
         this.dashboardService.deleteNote(quoteId, noteId).pipe(
           map(() => DashboardActions.deleteNoteSuccess({ quoteId, noteId })),
           catchError((error) =>
