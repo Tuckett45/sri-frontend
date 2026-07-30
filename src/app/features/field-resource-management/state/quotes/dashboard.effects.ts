@@ -7,6 +7,7 @@ import { map, catchError, switchMap, mergeMap, concatMap, tap, withLatestFrom } 
 import * as DashboardActions from './dashboard.actions';
 import { selectDashboardFilters } from './dashboard.selectors';
 import { RfpDashboardService } from '../../services/rfp-dashboard.service';
+import { AuthService } from '../../../../services/auth.service';
 
 @Injectable()
 export class DashboardEffects {
@@ -240,9 +241,19 @@ export class DashboardEffects {
   addNote$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.addNote),
-      concatMap(({ quoteId, content }) =>
-        this.dashboardService.addNote(quoteId, content).pipe(
-          map((note) => DashboardActions.addNoteSuccess({ quoteId, note })),
+      concatMap(({ quoteId, content, authorName }) =>
+        this.dashboardService.addNote(quoteId, content, authorName).pipe(
+          map((note) => {
+            // If the backend returns "Unknown User" or empty, use the authorName we sent
+            const currentUser = this.authService.getUser();
+            const resolvedAuthorName = (!note.authorName || note.authorName === 'Unknown User')
+              ? (authorName || currentUser?.name || currentUser?.email || 'You')
+              : note.authorName;
+            return DashboardActions.addNoteSuccess({
+              quoteId,
+              note: { ...note, authorName: resolvedAuthorName }
+            });
+          }),
           catchError((error) =>
             of(DashboardActions.addNoteFailure({
               error: error?.error?.message || error.message || 'Failed to add note'
@@ -321,6 +332,7 @@ export class DashboardEffects {
     private actions$: Actions,
     private store: Store,
     private dashboardService: RfpDashboardService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService
   ) {}
 }

@@ -1,7 +1,11 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Actions, ofType } from '@ngrx/effects';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { RfpNote } from '../../../../models/quote-workflow.model';
+import { AuthService } from '../../../../../../services/auth.service';
 import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 
 /**
@@ -27,9 +31,13 @@ export class RfpNotesComponent implements OnInit, OnChanges {
   editNoteContent = '';
   isExpanded = true;
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private store: Store,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private actions$: Actions,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -38,6 +46,68 @@ export class RfpNotesComponent implements OnInit, OnChanges {
     if (this.quoteId) {
       this.store.dispatch(DashboardActions.loadNotes({ quoteId: this.quoteId }));
     }
+
+    // Listen for successful note operations to update local state
+    this.actions$.pipe(
+      ofType(DashboardActions.addNoteSuccess),
+      takeUntil(this.destroy$)
+    ).subscribe(({ quoteId, note }) => {
+      if (quoteId === this.quoteId) {
+        // Backend may return "Unknown User" if it can't resolve the author from token.
+        // Override with the current user's name if the response has a placeholder.
+        const currentUser = this.authService.getUser();
+        const resolvedNote = (!note.authorName || note.authorName === 'Unknown User')
+          ? { ...note, authorName: currentUser?.name || currentUser?.email || 'You' }
+          : note;
+        this.notes = [...this.notes, resolvedNote];
+        this.sortNotes();
+      }
+    });
+
+    this.actions$.pipe(
+      ofType(DashboardActions.updateNoteSuccess),
+      takeUntil(this.destroy$)
+    ).subscribe(({ quoteId, note }) => {
+      if (quoteId === this.quoteId) {
+        this.notes = this.notes.map(n => n.id === note.id ? note : n);
+        this.sortNotes();
+      }
+    });
+
+    this.actions$.pipe(
+      ofType(DashboardActions.deleteNoteSuccess),
+      takeUntil(this.destroy$)
+    ).subscribe(({ quoteId, noteId }) => {
+      if (quoteId === this.quoteId) {
+        this.notes = this.notes.filter(n => n.id !== noteId);
+        this.sortNotes();
+      }
+    });
+
+    this.actions$.pipe(
+      ofType(DashboardActions.toggleNotePinSuccess),
+      takeUntil(this.destroy$)
+    ).subscribe(({ quoteId, note }) => {
+      if (quoteId === this.quoteId) {
+        this.notes = this.notes.map(n => n.id === note.id ? note : n);
+        this.sortNotes();
+      }
+    });
+
+    this.actions$.pipe(
+      ofType(DashboardActions.loadNotesSuccess),
+      takeUntil(this.destroy$)
+    ).subscribe(({ quoteId, notes }) => {
+      if (quoteId === this.quoteId) {
+        this.notes = notes;
+        this.sortNotes();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -78,9 +148,13 @@ export class RfpNotesComponent implements OnInit, OnChanges {
       return;
     }
 
+    const currentUser = this.authService.getUser();
+    const authorName = currentUser?.name || currentUser?.email || 'Current User';
+
     this.store.dispatch(DashboardActions.addNote({
       quoteId: this.quoteId,
-      content
+      content,
+      authorName
     }));
 
     this.isAddingNote = false;
@@ -113,6 +187,12 @@ export class RfpNotesComponent implements OnInit, OnChanges {
         noteId: note.id,
         content
       }));
+
+      // Optimistic update
+      this.notes = this.notes.map(n =>
+        n.id === note.id ? { ...n, content, updatedAt: new Date().toISOString() } : n
+      );
+      this.sortNotes();
       this.snackBar.open('Note updated', 'Close', { duration: 2000 });
     }
 
@@ -139,6 +219,10 @@ export class RfpNotesComponent implements OnInit, OnChanges {
         quoteId: this.quoteId,
         noteId: note.id
       }));
+
+      // Optimistic removal
+      this.notes = this.notes.filter(n => n.id !== note.id);
+      this.sortNotes();
       this.snackBar.open('Note deleted', 'Close', { duration: 2000 });
     }
   }

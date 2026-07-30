@@ -167,10 +167,10 @@ export class RfpDashboardService {
   /**
    * Adds a new note to a quote.
    */
-  addNote(quoteId: string, content: string): Observable<RfpNote> {
+  addNote(quoteId: string, content: string, authorName?: string): Observable<RfpNote> {
     return this.http.post<RfpNote>(
       `${this.quotesUrl}/${quoteId}/notes`,
-      { content }
+      { content, authorName }
     );
   }
 
