@@ -19,6 +19,8 @@ export interface AssignJobDialogData {
 export interface AssignJobDialogResult {
   technicianId: string | null;
   crewId: string | null;
+  removedTechnicianIds?: string[];
+  removedCrewId?: string;
 }
 
 @Component({
@@ -37,6 +39,10 @@ export class AssignJobDialogComponent implements OnInit, OnDestroy {
 
   selectedTechnician: Technician | null = null;
   selectedCrew: Crew | null = null;
+
+  // Track removals
+  removedTechnicianIds: string[] = [];
+  removedCrewId: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -98,7 +104,9 @@ export class AssignJobDialogComponent implements OnInit, OnDestroy {
 
   get isValid(): boolean {
     const v = this.form.value;
-    return v.technicianId != null || v.crewId != null;
+    // Valid if assigning someone new OR if removing an existing assignment
+    return v.technicianId != null || v.crewId != null
+      || this.removedTechnicianIds.length > 0 || this.removedCrewId != null;
   }
 
   onCancel(): void {
@@ -109,9 +117,23 @@ export class AssignJobDialogComponent implements OnInit, OnDestroy {
     if (this.isValid) {
       const result: AssignJobDialogResult = {
         technicianId: this.form.value.technicianId || null,
-        crewId: this.form.value.crewId || null
+        crewId: this.form.value.crewId || null,
+        removedTechnicianIds: this.removedTechnicianIds.length > 0 ? this.removedTechnicianIds : undefined,
+        removedCrewId: this.removedCrewId || undefined
       };
       this.dialogRef.close(result);
+    }
+  }
+
+  unassignTechnician(tech: Technician): void {
+    this.removedTechnicianIds.push(tech.id);
+    this.currentlyAssigned = this.currentlyAssigned.filter(t => t.id !== tech.id);
+  }
+
+  unassignCrew(): void {
+    if (this.currentCrew) {
+      this.removedCrewId = this.currentCrew.id;
+      this.currentCrew = null;
     }
   }
 

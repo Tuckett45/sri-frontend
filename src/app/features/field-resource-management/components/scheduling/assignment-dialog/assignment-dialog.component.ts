@@ -9,7 +9,9 @@ import { Job } from '../../../models/job.model';
 import { Technician } from '../../../models/technician.model';
 import { TechnicianMatch, Conflict } from '../../../models/assignment.model';
 import { TechnicianDistance, PerDiemConfig } from '../../../models/travel.model';
+import { Crew } from '../../../models/crew.model';
 import { CertGateConflict, CertificationIssue } from '../../../models/dtos';
+import { CrewService } from '../../../services/crew.service';
 import * as AssignmentActions from '../../../state/assignments/assignment.actions';
 import * as TravelActions from '../../../state/travel/travel.actions';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
@@ -61,6 +63,16 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
   assignmentForm: FormGroup;
   searchText = '';
 
+  // Assignment mode: technician or crew
+  assignmentMode: 'technician' | 'crew' = 'technician';
+
+  // Crew selection state
+  availableCrews: Crew[] = [];
+  filteredCrews: Crew[] = [];
+  selectedCrew: Crew | null = null;
+  crewSearchText = '';
+  crewsLoading = false;
+
   /** Cert-gate conflict returned by the 422 response — shown as a blocking warning */
   certConflict: CertGateConflict | null = null;
 
@@ -79,7 +91,8 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
     private dialogRef: MatDialogRef<AssignmentDialogComponent>,
     private fb: FormBuilder,
     private store: Store,
-    private actions$: ActionsSubject
+    private actions$: ActionsSubject,
+    private crewService: CrewService
   ) {
     this.job = data.job;
     this.qualifiedTechnicians$ = this.store.select(selectQualifiedTechnicians);
@@ -194,6 +207,21 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe((action: any) => {
       this.certConflict = action.certConflict;
+    });
+
+    // Load available crews for crew assignment mode
+    this.crewsLoading = true;
+    this.crewService.getCrews().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (crews) => {
+        this.availableCrews = crews.filter(c => c.status !== 'UNAVAILABLE');
+        this.filteredCrews = [...this.availableCrews];
+        this.crewsLoading = false;
+      },
+      error: () => {
+        this.availableCrews = [];
+        this.filteredCrews = [];
+        this.crewsLoading = false;
+      }
     });
   }
 
@@ -326,6 +354,9 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
    * Cert conflicts block submission unless overrideCertifications is checked.
    */
   canAssign(): boolean {
+    if (this.assignmentMode === 'crew') {
+      return this.selectedCrew !== null;
+    }
     if (!this.selectedTechnician) return false;
     if (this.requiresOverride() && !this.assignmentForm.get('override')?.value) return false;
     if (this.certConflict && !this.assignmentForm.get('overrideCertifications')?.value) return false;
@@ -348,7 +379,21 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
    * the flag is forwarded so the backend skips the cert gate this time.
    */
   onAssign(): void {
-    if (!this.canAssign() || !this.selectedTechnician) return;
+    if (!this.canAssign()) return;
+
+    if (this.assignmentMode === 'crew' && this.selectedCrew) {
+      this.crewService.assignJobToCrew(this.selectedCrew.id, this.job.id).subscribe({
+        next: () => {
+          this.dialogRef.close({ assigned: true, crewId: this.selectedCrew!.id, mode: 'crew' });
+        },
+        error: (err) => {
+          console.error('Failed to assign crew:', err);
+        }
+      });
+      return;
+    }
+
+    if (!this.selectedTechnician) return;
 
     const formValue = this.assignmentForm.value;
 
@@ -360,7 +405,7 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
       overrideCertifications: formValue.overrideCertifications ?? false
     }));
 
-    this.dialogRef.close({ assigned: true, technicianId: formValue.technicianId });
+    this.dialogRef.close({ assigned: true, technicianId: formValue.technicianId, mode: 'technician' });
   }
 
   /**
@@ -407,6 +452,83 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
    */
   onCancel(): void {
     this.dialogRef.close({ assigned: false });
+  }
+
+  /**
+   * Switch assignment mode between technician and crew
+   */
+  switchAssignmentMode(mode: 'technician' | 'crew'): void {
+    this.assignmentMode = mode;
+    this.selectedTechnician = null;
+    this.selectedCrew = null;
+    this.certConflict = null;
+    this.crewSearchText = '';
+    this.assignmentForm.patchValue({
+      technicianId: '',
+      override: false,
+      justification: '',
+      overrideCertifications: false
+    });
+  }
+
+  /**
+   * Select a crew for assignment
+   */
+  onSelectCrew(crew: Crew): void {
+    if (this.selectedCrew?.id === crew.id) {
+      this.selectedCrew = null;
+      return;
+    }
+    this.selectedCrew = crew;
+  }
+
+  /**
+   * Check if crew is selected
+   */
+  isCrewSelected(crew: Crew): boolean {
+    return this.selectedCrew?.id === crew.id;
+  }
+
+  /**
+   * Filter crews by search text
+   */
+  getFilteredCrews(): Crew[] {
+    if (!this.crewSearchText.trim()) return this.filteredCrews;
+    const term = this.crewSearchText.toLowerCase();
+    return this.filteredCrews.filter(c =>
+      c.name.toLowerCase().includes(term) ||
+      c.market?.toLowerCase().includes(term) ||
+      c.company?.toLowerCase().includes(term)
+    );
+  }
+
+  /**
+   * Get crew member count display
+   */
+  getCrewMemberCount(crew: Crew): number {
+    return crew.memberIds?.length || 0;
+  }
+
+  /**
+   * Get crew status display class
+   */
+  getCrewStatusClass(crew: Crew): string {
+    switch (crew.status) {
+      case 'AVAILABLE': return 'crew-available';
+      case 'ON_JOB': return 'crew-on-job';
+      default: return 'crew-unavailable';
+    }
+  }
+
+  /**
+   * Get crew status label
+   */
+  getCrewStatusLabel(crew: Crew): string {
+    switch (crew.status) {
+      case 'AVAILABLE': return 'Available';
+      case 'ON_JOB': return 'On Job';
+      default: return 'Unavailable';
+    }
   }
 
   /**

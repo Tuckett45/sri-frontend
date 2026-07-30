@@ -179,16 +179,7 @@ export class CrewFormComponent implements OnInit, OnDestroy {
       market$
     ]).pipe(takeUntil(this.destroy$))
       .subscribe(([technicians, market]) => {
-        // Technician region format is "{Client} {Market}" (e.g., "IES OH", "FTI OH")
-        // Filter technicians whose region ends with the crew's market
-        const filtered = market
-          ? technicians.filter(t => {
-              if (!t.region) return false;
-              const regionMarket = t.region.split(' ').pop()?.toUpperCase() || '';
-              return regionMarket === market.toUpperCase();
-            })
-          : technicians;
-        this.availableTechnicians = [...filtered].sort((a, b) =>
+        this.availableTechnicians = [...technicians].sort((a, b) =>
           `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
         );
         this.availableTechnicians$.next(this.availableTechnicians);

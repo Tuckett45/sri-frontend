@@ -1,7 +1,7 @@
 <div class="assignment-dialog">
   <!-- Dialog Header -->
   <div class="dialog-header">
-    <h2 mat-dialog-title>Assign Technician to Job</h2>
+    <h2 mat-dialog-title>Assign to Job</h2>
     <button mat-icon-button (click)="onCancel()" aria-label="Close">
       <mat-icon>close</mat-icon>
     </button>
@@ -9,6 +9,20 @@
 
   <!-- Dialog Content -->
   <mat-dialog-content>
+    <!-- Assignment Mode Toggle -->
+    <div class="assignment-mode-toggle">
+      <mat-button-toggle-group [value]="assignmentMode" (change)="switchAssignmentMode($event.value)" appearance="standard">
+        <mat-button-toggle value="technician">
+          <mat-icon>person</mat-icon>
+          Technician
+        </mat-button-toggle>
+        <mat-button-toggle value="crew">
+          <mat-icon>groups</mat-icon>
+          Crew
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
     <!-- Job Details Section -->
     <div class="job-details-section">
       <h3>Job Details</h3>
@@ -49,7 +63,7 @@
     <mat-divider></mat-divider>
 
     <!-- Qualified Technicians Section -->
-    <div class="technicians-section">
+    <div class="technicians-section" *ngIf="assignmentMode === 'technician'">
       <div class="technicians-header">
         <h3>{{ showingAllTechnicians ? 'All Technicians' : 'Qualified Technicians' }}</h3>
         <button mat-button class="toggle-all-btn" (click)="toggleShowAll()">
@@ -214,6 +228,70 @@
       </div>
     </div>
 
+    <!-- Crew Selection Section -->
+    <div class="crew-section" *ngIf="assignmentMode === 'crew'">
+      <div class="crew-header">
+        <h3>Available Crews</h3>
+      </div>
+
+      <!-- Crew Search -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search crews</mat-label>
+        <input matInput [(ngModel)]="crewSearchText" [ngModelOptions]="{standalone: true}" placeholder="Name, market, or company...">
+        <mat-icon matPrefix>search</mat-icon>
+        <button mat-icon-button matSuffix *ngIf="crewSearchText" (click)="crewSearchText = ''" aria-label="Clear search">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="crewsLoading">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Loading crews...</span>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="!crewsLoading && getFilteredCrews().length === 0">
+        <mat-icon>group_off</mat-icon>
+        <p>No crews available.</p>
+      </div>
+
+      <!-- Crew List -->
+      <div class="crew-list" *ngIf="!crewsLoading && getFilteredCrews().length > 0">
+        <div
+          class="crew-card"
+          *ngFor="let crew of getFilteredCrews()"
+          [class.selected]="isCrewSelected(crew)"
+          (click)="onSelectCrew(crew)">
+
+          <div class="crew-card-header">
+            <div class="crew-info">
+              <mat-icon class="crew-icon">groups</mat-icon>
+              <div class="crew-details">
+                <div class="crew-name">{{ crew.name }}</div>
+                <div class="crew-meta">{{ crew.company }} &middot; {{ crew.market }}</div>
+              </div>
+            </div>
+            <mat-icon class="selection-indicator" *ngIf="isCrewSelected(crew)">
+              check_circle
+            </mat-icon>
+          </div>
+
+          <div class="crew-stats">
+            <div class="crew-stat">
+              <mat-icon>people</mat-icon>
+              <span>{{ getCrewMemberCount(crew) }} members</span>
+            </div>
+            <div class="crew-stat">
+              <span class="crew-status-badge" [ngClass]="getCrewStatusClass(crew)">
+                {{ getCrewStatusLabel(crew) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Override Section -->
     <div class="override-section" *ngIf="requiresOverride() && selectedTechnician">
       <mat-divider></mat-divider>
@@ -288,8 +366,8 @@
       color="primary" 
       (click)="onAssign()"
       [disabled]="!canAssign()">
-      <mat-icon>person_add</mat-icon>
-      Assign Technician
+      <mat-icon>{{ assignmentMode === 'crew' ? 'groups' : 'person_add' }}</mat-icon>
+      {{ assignmentMode === 'crew' ? 'Assign Crew' : 'Assign Technician' }}
     </button>
   </mat-dialog-actions>
 </div>

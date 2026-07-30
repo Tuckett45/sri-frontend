@@ -17,6 +17,9 @@ import { TechnicianListComponent } from './technician-list/technician-list.compo
 import { TechnicianDetailComponent } from './technician-detail/technician-detail.component';
 import { TechnicianFormComponent } from './technician-form/technician-form.component';
 import { TechnicianFinancialTabComponent } from './technician-detail/technician-financial-tab/technician-financial-tab.component';
+import { TechnicianAttachmentsSectionComponent } from './technician-detail/technician-attachments-section/technician-attachments-section.component';
+import { AddSkillDialogComponent } from './technician-detail/add-skill-dialog/add-skill-dialog.component';
+import { AddCertificationDialogComponent } from './technician-detail/add-certification-dialog/add-certification-dialog.component';
 
 const routes: Routes = [
   {
@@ -65,7 +68,10 @@ const routes: Routes = [
     TechnicianListComponent,
     TechnicianDetailComponent,
     TechnicianFormComponent,
-    TechnicianFinancialTabComponent
+    TechnicianFinancialTabComponent,
+    TechnicianAttachmentsSectionComponent,
+    AddSkillDialogComponent,
+    AddCertificationDialogComponent
   ],
   imports: [
     CommonModule,

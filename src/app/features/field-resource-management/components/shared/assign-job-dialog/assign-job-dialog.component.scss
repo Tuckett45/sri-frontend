@@ -51,6 +51,23 @@ h2[mat-dialog-title] {
     width: 16px;
     height: 16px;
   }
+
+  .chip-remove {
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    margin-left: 2px;
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover {
+      color: #c62828;
+    }
+  }
 }
 
 .section-label {

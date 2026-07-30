@@ -165,7 +165,7 @@ export const loadNotesFailure = createAction(
 // Add Note
 export const addNote = createAction(
   '[Dashboard] Add Note',
-  props<{ quoteId: string; content: string }>()
+  props<{ quoteId: string; content: string; authorName?: string }>()
 );
 
 export const addNoteSuccess = createAction(

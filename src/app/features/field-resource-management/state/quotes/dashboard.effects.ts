@@ -3,10 +3,11 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, mergeMap, tap, withLatestFrom } from 'rxjs/operators';
+import { map, catchError, switchMap, mergeMap, concatMap, tap, withLatestFrom } from 'rxjs/operators';
 import * as DashboardActions from './dashboard.actions';
 import { selectDashboardFilters } from './dashboard.selectors';
 import { RfpDashboardService } from '../../services/rfp-dashboard.service';
+import { AuthService } from '../../../../services/auth.service';
 
 @Injectable()
 export class DashboardEffects {
@@ -240,9 +241,19 @@ export class DashboardEffects {
   addNote$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.addNote),
-      switchMap(({ quoteId, content }) =>
-        this.dashboardService.addNote(quoteId, content).pipe(
-          map((note) => DashboardActions.addNoteSuccess({ quoteId, note })),
+      concatMap(({ quoteId, content, authorName }) =>
+        this.dashboardService.addNote(quoteId, content, authorName).pipe(
+          map((note) => {
+            // If the backend returns "Unknown User" or empty, use the authorName we sent
+            const currentUser = this.authService.getUser();
+            const resolvedAuthorName = (!note.authorName || note.authorName === 'Unknown User')
+              ? (authorName || currentUser?.name || currentUser?.email || 'You')
+              : note.authorName;
+            return DashboardActions.addNoteSuccess({
+              quoteId,
+              note: { ...note, authorName: resolvedAuthorName }
+            });
+          }),
           catchError((error) =>
             of(DashboardActions.addNoteFailure({
               error: error?.error?.message || error.message || 'Failed to add note'
@@ -256,7 +267,7 @@ export class DashboardEffects {
   updateNote$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.updateNote),
-      switchMap(({ quoteId, noteId, content }) =>
+      concatMap(({ quoteId, noteId, content }) =>
         this.dashboardService.updateNote(quoteId, noteId, content).pipe(
           map((note) => DashboardActions.updateNoteSuccess({ quoteId, note })),
           catchError((error) =>
@@ -272,7 +283,7 @@ export class DashboardEffects {
   toggleNotePin$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.toggleNotePin),
-      switchMap(({ quoteId, noteId, isPinned }) =>
+      concatMap(({ quoteId, noteId, isPinned }) =>
         this.dashboardService.toggleNotePin(quoteId, noteId, isPinned).pipe(
           map((note) => DashboardActions.toggleNotePinSuccess({ quoteId, note })),
           catchError((error) =>
@@ -288,7 +299,7 @@ export class DashboardEffects {
   deleteNote$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.deleteNote),
-      switchMap(({ quoteId, noteId }) =>
+      concatMap(({ quoteId, noteId }) =>
         this.dashboardService.deleteNote(quoteId, noteId).pipe(
           map(() => DashboardActions.deleteNoteSuccess({ quoteId, noteId })),
           catchError((error) =>
@@ -321,6 +332,7 @@ export class DashboardEffects {
     private actions$: Actions,
     private store: Store,
     private dashboardService: RfpDashboardService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService
   ) {}
 }

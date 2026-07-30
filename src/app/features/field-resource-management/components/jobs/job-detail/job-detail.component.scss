@@ -162,6 +162,34 @@
   }
 }
 
+// Status Change Button (inline in job info)
+.status-change-wrapper {
+  display: inline-flex;
+}
+
+.status-change-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px dashed #bdbdbd;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: #1976d2;
+    background: #f5faff;
+  }
+
+  .dropdown-arrow {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #757575;
+  }
+}
+
 .priority-badge {
   display: inline-block;
   padding: 4px 12px;

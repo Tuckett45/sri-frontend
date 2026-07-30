@@ -755,3 +755,192 @@ mat-dialog-actions {
     margin-top: 0.5rem;
   }
 }
+
+// Assignment Mode Toggle
+.assignment-mode-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+
+  mat-button-toggle-group {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #1976d2;
+  }
+
+  ::ng-deep {
+    .mat-button-toggle {
+      min-width: 140px;
+
+      .mat-button-toggle-label-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1976d2;
+        padding: 8px 16px;
+      }
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .mat-button-toggle-checked {
+      background-color: #1976d2;
+
+      .mat-button-toggle-label-content {
+        color: #ffffff;
+      }
+    }
+
+    .mat-button-toggle-appearance-standard:not(.mat-button-toggle-checked) {
+      background-color: #ffffff;
+    }
+  }
+}
+
+// Crew Section
+.crew-section {
+  margin: 1.5rem 0;
+
+  .crew-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #212121;
+    }
+  }
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 2rem;
+  color: #616161;
+  font-size: 0.875rem;
+}
+
+.crew-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.crew-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: white;
+
+  &:hover {
+    border-color: #1976d2;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
+    transform: translateY(-1px);
+  }
+
+  &.selected {
+    border-color: #1976d2;
+    background-color: #e3f2fd;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+  }
+}
+
+.crew-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.crew-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crew-icon {
+  color: #616161;
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.crew-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crew-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #212121;
+}
+
+.crew-meta {
+  font-size: 0.75rem;
+  color: #757575;
+}
+
+.crew-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 8px;
+}
+
+.crew-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  color: #616161;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #9e9e9e;
+  }
+}
+
+.crew-status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.crew-available {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.crew-on-job {
+    background: #fff3e0;
+    color: #e65100;
+  }
+
+  &.crew-unavailable {
+    background: #ffebee;
+    color: #c62828;
+  }
+}
