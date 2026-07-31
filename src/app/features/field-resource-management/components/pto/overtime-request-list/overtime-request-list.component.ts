@@ -131,11 +131,11 @@ export class OvertimeRequestListComponent implements OnInit {
   }
 
   /**
-   * Formats duration object to display string.
+   * Formats duration to display string.
    */
   formatDuration(request: OvertimeRequest): string {
-    const h = request.estimatedDuration?.hours || 0;
-    const m = request.estimatedDuration?.minutes || 0;
+    const h = request.estimatedHours || request.estimatedDuration?.hours || 0;
+    const m = request.estimatedMinutes || request.estimatedDuration?.minutes || 0;
     if (h > 0 && m > 0) {
       return `${h}h ${m}m`;
     } else if (h > 0) {

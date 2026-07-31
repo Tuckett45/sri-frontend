@@ -117,10 +117,8 @@ export class OvertimeRequestFormComponent implements OnInit {
       isPreApproved: formValue.isPreApproved === 'yes',
       submissionDate: formValue.submissionDate,
       overtimeStartDate: formValue.overtimeStartDate,
-      estimatedDuration: {
-        hours: parseInt(formValue.estimatedHours, 10) || 0,
-        minutes: parseInt(formValue.estimatedMinutes, 10) || 0
-      },
+      estimatedHours: parseInt(formValue.estimatedHours, 10) || 0,
+      estimatedMinutes: parseInt(formValue.estimatedMinutes, 10) || 0,
       justification: formValue.justification.trim()
     };
 

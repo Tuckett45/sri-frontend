@@ -69,6 +69,8 @@ export interface OvertimeRequest {
   approvalStatus: OvertimeRequestStatus;
   submissionDate: string;
   overtimeStartDate: string;
+  estimatedHours: number;
+  estimatedMinutes: number;
   estimatedDuration: OvertimeDuration;
   justification: string;
   managerId: string;
@@ -104,6 +106,7 @@ export type OvertimeApprovalAction =
 
 /**
  * DTO for creating a new overtime request
+ * NOTE: Backend expects flat estimatedHours/estimatedMinutes, not a nested object
  */
 export interface CreateOvertimeRequestDto {
   employeeFullName: string;
@@ -114,7 +117,8 @@ export interface CreateOvertimeRequestDto {
   isPreApproved: boolean;
   submissionDate: string;
   overtimeStartDate: string;
-  estimatedDuration: OvertimeDuration;
+  estimatedHours: number;
+  estimatedMinutes: number;
   justification: string;
 }
 
