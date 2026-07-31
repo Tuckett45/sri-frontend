@@ -5,6 +5,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 
+// Shared Material Module
+import { SharedMaterialModule } from '../../shared-material.module';
+
 // PTO State
 import { ptoReducer } from '../../state/pto/pto.reducer';
 import { PtoEffects } from '../../state/pto/pto.effects';
@@ -132,6 +135,7 @@ const routes: Routes = [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    SharedMaterialModule,
     RouterModule.forChild(routes),
     StoreModule.forFeature('pto', ptoReducer),
     StoreModule.forFeature('overtime', overtimeReducer),

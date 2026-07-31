@@ -35,7 +35,9 @@
       <label for="filterStatus">Status</label>
       <select id="filterStatus" [(ngModel)]="filters.status">
         <option value="">All Statuses</option>
-        <option *ngFor="let s of statusOptions" [value]="s" *ngIf="s">{{ s }}</option>
+        <ng-container *ngFor="let s of statusOptions">
+          <option *ngIf="s" [value]="s">{{ s }}</option>
+        </ng-container>
       </select>
     </div>
     <div class="filter-group">

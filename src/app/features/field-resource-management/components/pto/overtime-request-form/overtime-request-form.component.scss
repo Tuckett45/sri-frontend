@@ -1,323 +1,306 @@
-.overtime-request-form-container {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 24px;
-}
+// Overtime Request Form - Dialog-based FRM Consistent Styling
+// Matches job-form dialog pattern
 
-.form-header {
-  background-color: #00695c;
-  color: #fff;
-  padding: 24px;
-  border-radius: 8px 8px 0 0;
-  margin-bottom: 0;
-  border-top: 4px solid #004d40;
+// Dialog Header - Blue background
+.dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #144f80;
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: -24px -24px 0 -24px;
 
   h2 {
-    margin: 0 0 8px 0;
-    font-size: 1.5rem;
-    font-weight: 400;
-  }
-
-  .form-subtitle {
     margin: 0;
-    font-size: 0.875rem;
-    opacity: 0.9;
-    line-height: 1.5;
+    font-size: 24px;
+    font-weight: 500;
+    color: white;
   }
 
-  .required-notice {
-    margin: 12px 0 0 0;
-    font-size: 0.75rem;
-    color: #ffcdd2;
+  button {
+    color: white;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
   }
+}
+
+// Global dialog container styles
+::ng-deep .overtime-form-dialog {
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+    overflow: hidden !important;
+
+    .mat-mdc-dialog-surface {
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+  }
+}
+
+// Dialog content
+::ng-deep .mat-mdc-dialog-content {
+  padding: 24px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  flex: 1 1 auto !important;
+  max-height: calc(90vh - 140px) !important;
+}
+
+// Dialog actions
+::ng-deep .mat-mdc-dialog-actions {
+  padding: 16px 24px !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #f5f5f5;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
 }
 
 .overtime-form {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 20px;
+  overflow: visible;
 }
 
-.form-card {
-  background: #fff;
-  border: 1px solid #dadce0;
-  border-radius: 8px;
-  padding: 24px;
-  margin-top: 12px;
-
-  label,
-  .field-label {
-    display: block;
-    font-weight: 400;
-    font-size: 0.938rem;
-    color: #202124;
-    margin-bottom: 8px;
-
-    .required {
-      color: #d93025;
-    }
-  }
-
-  .field-hint {
-    display: block;
-    font-size: 0.75rem;
-    color: #5f6368;
-    font-weight: 400;
-    margin-top: 4px;
-  }
-
-  .field-sublabel {
-    display: block;
-    font-size: 0.75rem;
-    color: #5f6368;
-    margin-bottom: 8px;
-  }
-
-  input[type="text"],
-  input[type="date"],
-  input[type="number"],
-  select,
-  textarea {
-    width: 100%;
-    padding: 10px 0;
-    border: none;
-    border-bottom: 1px solid #dadce0;
-    font-size: 0.875rem;
-    color: #202124;
-    background: transparent;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
-
-    &:focus {
-      outline: none;
-      border-bottom: 2px solid #00695c;
-    }
-
-    &[aria-invalid="true"] {
-      border-bottom: 2px solid #d93025;
-    }
-
-    &::placeholder {
-      color: #80868b;
-    }
-  }
-
-  select {
-    appearance: auto;
-    padding: 10px 12px;
-    border: 1px solid #dadce0;
-    border-radius: 4px;
-    max-width: 200px;
-
-    &:focus {
-      border-color: #00695c;
-      outline: none;
-    }
-  }
-
-  textarea {
-    border: none;
-    border-bottom: 1px solid #dadce0;
-    resize: vertical;
-    min-height: 60px;
-    font-family: inherit;
-  }
-}
-
-.radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-left: 4px;
-}
-
-.radio-option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  font-weight: 400;
+// Card sections - matches job form pattern
+.form-section {
   margin-bottom: 0;
+  background-color: white;
 
-  input[type="radio"] {
-    width: 18px;
-    height: 18px;
-    accent-color: #00695c;
-    cursor: pointer;
+  mat-card-header {
+    margin-bottom: 16px;
+    background-color: #f8f9fa;
+    padding: 12px 16px;
+    border-radius: 4px;
+
+    mat-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #144f80;
+      margin: 0;
+    }
   }
 
-  .radio-label {
-    font-size: 0.875rem;
-    color: #202124;
+  mat-card-content {
+    padding: 16px;
   }
 }
 
-.duration-inputs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+// Form rows
+.form-row {
+  margin-bottom: 16px;
 
-  .duration-field {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  &:last-child {
+    margin-bottom: 0;
+  }
 
-    input[type="number"] {
-      width: 60px;
-      padding: 8px;
-      border: 1px solid #dadce0;
-      border-radius: 4px;
-      text-align: center;
-      border-bottom: 1px solid #dadce0;
+  &.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
 
-      &:focus {
-        border-color: #00695c;
-        border-bottom: 2px solid #00695c;
-      }
-    }
-
-    .duration-label {
-      font-size: 0.75rem;
-      color: #5f6368;
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
     }
   }
 
-  .duration-separator {
-    font-size: 1.25rem;
-    color: #5f6368;
+  mat-form-field {
+    width: 100%;
+
+    &.full-width {
+      width: 100%;
+    }
+  }
+}
+
+// Duration field group
+.duration-field-group {
+  .duration-label {
+    font-size: 14px;
     font-weight: 500;
-  }
-}
-
-.error-message {
-  color: #d93025;
-  font-size: 0.75rem;
-  margin-top: 6px;
-
-  span {
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 12px;
     display: block;
-  }
-}
-
-.char-count {
-  font-size: 0.75rem;
-  color: #5f6368;
-  text-align: right;
-  margin-top: 4px;
-
-  &.char-count-warning {
-    color: #f57c00;
-  }
-}
-
-.form-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 24px;
-  padding: 0 4px;
-}
-
-.submit-btn {
-  padding: 10px 24px;
-  background-color: #00695c;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover:not(:disabled) {
-    background-color: #004d40;
-  }
-
-  &:disabled {
-    background-color: #bdbdbd;
-    cursor: not-allowed;
-  }
-}
-
-.cancel-btn {
-  padding: 10px 24px;
-  background: transparent;
-  color: #00695c;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: rgba(0, 105, 92, 0.08);
-  }
-}
-
-.success-message {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px 24px;
-  background-color: #e8f5e9;
-  border: 1px solid #4caf50;
-  border-radius: 8px;
-  margin-top: 12px;
-
-  .success-icon {
-    font-size: 1.5rem;
-    color: #2e7d32;
-    flex-shrink: 0;
-  }
-
-  strong {
-    color: #2e7d32;
-    display: block;
-    margin-bottom: 4px;
-  }
-
-  p {
-    color: #1b5e20;
-    font-size: 0.875rem;
-    margin: 0;
-  }
-}
-
-.post-submit-actions {
-  display: flex;
-  gap: 16px;
-  margin-top: 20px;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-  .overtime-request-form-container {
-    padding: 12px;
-  }
-
-  .form-card {
-    padding: 16px;
-  }
-
-  .form-header {
-    padding: 16px;
-
-    h2 {
-      font-size: 1.25rem;
-    }
   }
 
   .duration-inputs {
-    flex-wrap: wrap;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    .duration-input {
+      width: 120px;
+    }
+
+    .duration-separator {
+      font-size: 24px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.54);
+      padding-top: 16px;
+    }
+  }
+}
+
+// Error display
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  color: #c62828;
+  font-size: 14px;
+  margin-top: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Button styling - Orange and Blue like other FRM forms
+.cancel-btn {
+  background-color: white !important;
+  color: #144f80 !important;
+  border: 2px solid #144f80 !important;
+  padding: 10px 24px !important;
+  border-radius: 5px !important;
+  font-weight: 500 !important;
+
+  &:hover {
+    background-color: #f0f4f8 !important;
+  }
+}
+
+.submit-btn {
+  background-color: #e18a25 !important;
+  color: white !important;
+  padding: 10px 24px !important;
+  border-radius: 5px !important;
+  font-weight: 500 !important;
+
+  &:hover:not(:disabled) {
+    background-color: #b86404 !important;
+    transform: scale(1.02);
   }
 
-  .form-actions,
-  .post-submit-actions {
-    flex-direction: column;
+  &:disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+  }
+}
+
+// Material form field customizations
+mat-form-field {
+  .mat-form-field-wrapper {
+    padding-bottom: 1.25em;
+  }
+}
+
+textarea.mat-input-element {
+  resize: vertical;
+  min-height: 80px;
+}
+
+mat-error {
+  font-size: 12px;
+}
+
+mat-hint {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+// Card styling
+mat-card {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+}
+
+mat-card-content {
+  overflow: visible;
+}
+
+// Material overrides for text visibility
+::ng-deep .mat-mdc-input-element {
+  color: #000000 !important;
+}
+
+::ng-deep .mat-mdc-form-field-label,
+::ng-deep .mdc-floating-label {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+::ng-deep .mdc-floating-label--float-above {
+  color: #144f80 !important;
+}
+
+::ng-deep .mat-mdc-select-value {
+  color: #000000 !important;
+}
+
+::ng-deep .mat-mdc-select-arrow {
+  color: rgba(0, 0, 0, 0.54) !important;
+}
+
+::ng-deep .mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: white;
+  }
+}
+
+// Mobile responsive
+@media (max-width: 767px) {
+  .dialog-header {
+    padding: 12px 16px;
+    margin: -16px -16px 0 -16px;
+
+    h2 {
+      font-size: 20px;
+    }
+  }
+
+  ::ng-deep .mat-mdc-dialog-content {
+    padding: 16px !important;
+  }
+
+  ::ng-deep .mat-mdc-dialog-actions {
+    padding: 12px 16px !important;
+    flex-direction: column-reverse;
 
     button {
       width: 100%;
+      margin: 4px 0 !important;
     }
+  }
+
+  .form-section {
+    mat-card-content {
+      padding: 12px;
+    }
+  }
+
+  .form-row {
+    margin-bottom: 12px;
+  }
+
+  .duration-field-group {
+    .duration-inputs {
+      flex-wrap: wrap;
+    }
+  }
+
+  mat-form-field {
+    font-size: 14px;
   }
 }

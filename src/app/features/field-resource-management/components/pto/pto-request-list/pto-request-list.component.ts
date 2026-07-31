@@ -3,11 +3,13 @@ import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
 
 import { PtoRequest, RequestStatus } from '../../../models/pto.models';
 import * as PtoActions from '../../../state/pto/pto.actions';
 import { selectAllPtoRequests } from '../../../state/pto/pto.selectors';
 import { AuthService } from '../../../../../services/auth.service';
+import { PtoRequestFormComponent } from '../pto-request-form/pto-request-form.component';
 
 /**
  * PTO Request List Component
@@ -47,7 +49,8 @@ export class PtoRequestListComponent implements OnInit {
   constructor(
     private store: Store,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -75,6 +78,25 @@ export class PtoRequestListComponent implements OnInit {
    */
   onRowClick(request: PtoRequest): void {
     this.router.navigate(['/field-resource-management/pto', request.id]);
+  }
+
+  /**
+   * Opens the PTO request form as a dialog.
+   */
+  openNewRequestDialog(): void {
+    const dialogRef = this.dialog.open(PtoRequestFormComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      panelClass: 'pto-form-dialog',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.store.dispatch(PtoActions.loadRequests());
+      }
+    });
   }
 
   /**

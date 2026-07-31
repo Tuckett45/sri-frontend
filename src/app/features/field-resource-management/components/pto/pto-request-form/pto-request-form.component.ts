@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Optional, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { LeaveType, CreatePtoRequestDto } from '../../../models/pto.models';
 import { SUPPORTED_MARKETS } from '../../../models/overtime.models';
@@ -10,19 +11,15 @@ import * as PtoActions from '../../../state/pto/pto.actions';
 import { selectLeaveTypes } from '../../../state/pto/pto.selectors';
 import { AuthService } from '../../../../../services/auth.service';
 
+export interface PtoFormDialogData {
+  requestId?: string;
+}
+
 /**
- * PTO Request Form Component (Enhanced)
+ * PTO Request Form Component (Dialog-based)
  *
  * Provides a reactive form for employees to submit new PTO/time off requests.
- * Matches the SRI Time-off Request Form (Google Form) with fields:
- * - Full name (first, last format: e.g. John Doe)
- * - Who is covering your business commitments while you are out?
- * - Have you emailed your time-off request to your SRI Lead?
- * - Is your time-off request approved?
- * - When will your approved time off start? (date)
- * - When will your approved time-off end? (date)
- * - Which Market do you support?
- * - Out of office notification checkboxes (Google Calendar, Google Chat, Google Auto Reply)
+ * Opened as a Material Dialog matching the FRM form pattern.
  *
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 8.3
  */
@@ -56,8 +53,10 @@ export class PtoRequestFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private store: Store,
-    private router: Router,
-    private authService: AuthService
+    @Optional() private router: Router,
+    private authService: AuthService,
+    @Optional() public dialogRef: MatDialogRef<PtoRequestFormComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) public data: PtoFormDialogData
   ) {}
 
   ngOnInit(): void {
@@ -65,7 +64,6 @@ export class PtoRequestFormComponent implements OnInit {
     this.leaveTypes$ = this.store.select(selectLeaveTypes);
 
     this.ptoForm = this.fb.group({
-      employeeName: ['', [Validators.required, Validators.minLength(2)]],
       coveragePerson: ['', [Validators.required, Validators.minLength(2)]],
       emailedLead: ['', [Validators.required]],
       isApproved: ['', [Validators.required]],
@@ -79,12 +77,6 @@ export class PtoRequestFormComponent implements OnInit {
     }, {
       validators: this.endDateAfterStartDateValidator
     });
-
-    // Pre-fill employee name if available
-    const user = this.authService.getUser();
-    if (user?.displayName) {
-      this.ptoForm.patchValue({ employeeName: user.displayName });
-    }
   }
 
   /**
@@ -131,7 +123,14 @@ export class PtoRequestFormComponent implements OnInit {
   }
 
   /**
-   * Handles form submission. Builds the DTO and dispatches the createRequest action.
+   * Check if end date range error is present.
+   */
+  get hasDateRangeError(): boolean {
+    return !!this.ptoForm.errors?.['endDateBeforeStart'] && !!this.ptoForm.get('endDate')?.touched;
+  }
+
+  /**
+   * Handles form submission.
    */
   onSubmit(): void {
     if (this.ptoForm.invalid) {
@@ -147,9 +146,8 @@ export class PtoRequestFormComponent implements OnInit {
       employeeId: user?.id ?? '',
       startDate: formValue.startDate,
       endDate: formValue.endDate,
-      requestType: formValue.market, // Using market as part of request context
-      // Phase 2: Enhanced form fields
-      employeeName: formValue.employeeName?.trim(),
+      requestType: formValue.market,
+      employeeName: user?.displayName?.trim() ?? '',
       coveragePerson: formValue.coveragePerson?.trim(),
       emailedSriLead: formValue.emailedLead === 'yes',
       isApprovedByLead: formValue.isApproved,
@@ -164,15 +162,25 @@ export class PtoRequestFormComponent implements OnInit {
     }
 
     this.store.dispatch(PtoActions.createRequest({ dto }));
-    this.submitted = true;
     this.submitting = false;
+
+    // Close dialog on success
+    if (this.dialogRef) {
+      this.dialogRef.close({ success: true });
+    } else {
+      this.submitted = true;
+    }
   }
 
   /**
-   * Navigate back to PTO list
+   * Cancel and close dialog or navigate back.
    */
   onCancel(): void {
-    this.router.navigate(['/field-resource-management/pto']);
+    if (this.dialogRef) {
+      this.dialogRef.close();
+    } else if (this.router) {
+      this.router.navigate(['/field-resource-management/pto']);
+    }
   }
 
   /**
@@ -181,5 +189,12 @@ export class PtoRequestFormComponent implements OnInit {
   shouldShowError(fieldName: string): boolean {
     const control = this.ptoForm.get(fieldName);
     return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  /**
+   * Helper to get a form control.
+   */
+  getControl(fieldName: string) {
+    return this.ptoForm.get(fieldName);
   }
 }

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Optional, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import {
   CreateOvertimeRequestDto,
@@ -12,24 +13,16 @@ import {
 import * as OvertimeActions from '../../../state/overtime/overtime.actions';
 import { AuthService } from '../../../../../services/auth.service';
 
+export interface OvertimeFormDialogData {
+  requestId?: string;
+}
+
 /**
- * Overtime Request Form Component
+ * Overtime Request Form Component (Dialog-based)
  *
  * Provides a reactive form for employees to submit overtime requests.
- * Based on the SRI Employee Overtime Request Form (Google Form).
+ * Opened as a Material Dialog matching the FRM form pattern.
  * All overtime must be pre-approved before using this form.
- *
- * Fields:
- * - Employee Full Name
- * - Department
- * - Which Market do you support? (radio buttons)
- * - Have you emailed your Overtime request to your SRI Lead? (Yes/No)
- * - Who is your SRI lead?
- * - Has your Overtime Request been approved? (dropdown)
- * - Date of Request Submission
- * - Date Overtime is Requested For (Start Date)
- * - Estimated Overtime Duration (Hrs, Min)
- * - Detailed Justification for Overtime
  */
 @Component({
   selector: 'app-overtime-request-form',
@@ -50,13 +43,14 @@ export class OvertimeRequestFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private store: Store,
-    private router: Router,
-    private authService: AuthService
+    @Optional() private router: Router,
+    private authService: AuthService,
+    @Optional() public dialogRef: MatDialogRef<OvertimeRequestFormComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) public data: OvertimeFormDialogData
   ) {}
 
   ngOnInit(): void {
     this.overtimeForm = this.fb.group({
-      employeeFullName: ['', [Validators.required, Validators.minLength(2)]],
       department: ['', [Validators.required]],
       market: ['', [Validators.required]],
       emailedSriLead: ['', [Validators.required]],
@@ -70,12 +64,6 @@ export class OvertimeRequestFormComponent implements OnInit {
     }, {
       validators: this.durationValidator
     });
-
-    // Pre-fill employee name if available
-    const user = this.authService.getUser();
-    if (user?.displayName) {
-      this.overtimeForm.patchValue({ employeeFullName: user.displayName });
-    }
   }
 
   /**
@@ -108,7 +96,7 @@ export class OvertimeRequestFormComponent implements OnInit {
   }
 
   /**
-   * Handles form submission
+   * Handles form submission.
    */
   onSubmit(): void {
     if (this.overtimeForm.invalid) {
@@ -118,9 +106,10 @@ export class OvertimeRequestFormComponent implements OnInit {
 
     this.submitting = true;
     const formValue = this.overtimeForm.value;
+    const user = this.authService.getUser();
 
     const dto: CreateOvertimeRequestDto = {
-      employeeFullName: formValue.employeeFullName.trim(),
+      employeeFullName: user?.displayName?.trim() ?? '',
       department: formValue.department,
       market: formValue.market as SupportedMarket,
       emailedSriLead: formValue.emailedSriLead === 'yes',
@@ -136,15 +125,25 @@ export class OvertimeRequestFormComponent implements OnInit {
     };
 
     this.store.dispatch(OvertimeActions.createOvertimeRequest({ dto }));
-    this.submitted = true;
     this.submitting = false;
+
+    // Close dialog on success
+    if (this.dialogRef) {
+      this.dialogRef.close({ success: true });
+    } else {
+      this.submitted = true;
+    }
   }
 
   /**
-   * Navigate back to overtime list
+   * Cancel and close dialog or navigate back.
    */
   onCancel(): void {
-    this.router.navigate(['/field-resource-management/pto/overtime']);
+    if (this.dialogRef) {
+      this.dialogRef.close();
+    } else if (this.router) {
+      this.router.navigate(['/field-resource-management/pto/overtime']);
+    }
   }
 
   /**

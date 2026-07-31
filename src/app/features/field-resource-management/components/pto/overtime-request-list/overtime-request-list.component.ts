@@ -3,11 +3,13 @@ import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
 
 import { OvertimeRequest, OvertimeRequestStatus } from '../../../models/overtime.models';
 import * as OvertimeActions from '../../../state/overtime/overtime.actions';
 import { selectAllOvertimeRequests, selectOvertimeLoading } from '../../../state/overtime/overtime.selectors';
 import { AuthService } from '../../../../../services/auth.service';
+import { OvertimeRequestFormComponent } from '../overtime-request-form/overtime-request-form.component';
 
 /**
  * Overtime Request List Component
@@ -48,7 +50,8 @@ export class OvertimeRequestListComponent implements OnInit {
   constructor(
     private store: Store,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -73,10 +76,22 @@ export class OvertimeRequestListComponent implements OnInit {
   }
 
   /**
-   * Navigate to new overtime request form.
+   * Open new overtime request form as dialog.
    */
   onNewRequest(): void {
-    this.router.navigate(['/field-resource-management/pto/overtime/new']);
+    const dialogRef = this.dialog.open(OvertimeRequestFormComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      panelClass: 'overtime-form-dialog',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.store.dispatch(OvertimeActions.loadOvertimeRequests());
+      }
+    });
   }
 
   /**

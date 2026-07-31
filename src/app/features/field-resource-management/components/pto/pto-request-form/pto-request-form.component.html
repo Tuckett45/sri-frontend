@@ -1,240 +1,172 @@
-<div class="pto-request-form-container">
-  <div class="form-header">
-    <h2>SRI Time-off Request Form</h2>
-    <p class="form-subtitle">
-      Please use this form to account for your time off. The goal of this form is capture
-      everyone's time-off request and ensure we are aligning our team appropriately to cover our
-      business commitments.
-    </p>
-    <p class="required-notice">* Indicates required question</p>
-  </div>
-
-  <!-- Success Message -->
-  <div *ngIf="submitted" class="success-message">
-    <div class="success-icon">&#10003;</div>
-    <div>
-      <strong>Your time-off request has been submitted successfully.</strong>
-      <p>Your request is pending manager approval. You will be notified once it has been reviewed.</p>
-    </div>
-  </div>
-
-  <form [formGroup]="ptoForm" (ngSubmit)="onSubmit()" class="pto-form" *ngIf="!submitted">
-    <!-- Employee Name -->
-    <div class="form-card">
-      <label for="employeeName">
-        Please give your name in the following format: first, last (i.e. John Doe) <span class="required">*</span>
-      </label>
-      <input
-        id="employeeName"
-        type="text"
-        formControlName="employeeName"
-        placeholder="Your answer"
-        [attr.aria-invalid]="shouldShowError('employeeName')"
-        aria-describedby="employeeName-error"
-      />
-      <div id="employeeName-error" class="error-message" *ngIf="shouldShowError('employeeName')">
-        <span *ngIf="ptoForm.get('employeeName')?.errors?.['required']">Name is required.</span>
-        <span *ngIf="ptoForm.get('employeeName')?.errors?.['minlength']">Name must be at least 2 characters.</span>
-      </div>
-    </div>
-
-    <!-- Coverage Person -->
-    <div class="form-card">
-      <label for="coveragePerson">
-        Who is covering your business commitments while you are out? <span class="required">*</span>
-      </label>
-      <input
-        id="coveragePerson"
-        type="text"
-        formControlName="coveragePerson"
-        placeholder="Your answer"
-        [attr.aria-invalid]="shouldShowError('coveragePerson')"
-        aria-describedby="coveragePerson-error"
-      />
-      <div id="coveragePerson-error" class="error-message" *ngIf="shouldShowError('coveragePerson')">
-        <span *ngIf="ptoForm.get('coveragePerson')?.errors?.['required']">Coverage person is required.</span>
-        <span *ngIf="ptoForm.get('coveragePerson')?.errors?.['minlength']">Name must be at least 2 characters.</span>
-      </div>
-    </div>
-
-    <!-- Emailed SRI Lead -->
-    <div class="form-card">
-      <label for="emailedLead">
-        Have you emailed your time-off request to your SRI Lead? <span class="required">*</span>
-      </label>
-      <select
-        id="emailedLead"
-        formControlName="emailedLead"
-        [attr.aria-invalid]="shouldShowError('emailedLead')"
-        aria-describedby="emailedLead-error"
-      >
-        <option value="" disabled>Choose</option>
-        <option *ngFor="let opt of emailedLeadOptions" [value]="opt.value">{{ opt.label }}</option>
-      </select>
-      <div id="emailedLead-error" class="error-message" *ngIf="shouldShowError('emailedLead')">
-        <span *ngIf="ptoForm.get('emailedLead')?.errors?.['required']">This field is required.</span>
-      </div>
-    </div>
-
-    <!-- Is Approved -->
-    <div class="form-card">
-      <label for="isApproved">
-        Is your time-off request approved? <span class="required">*</span>
-      </label>
-      <select
-        id="isApproved"
-        formControlName="isApproved"
-        [attr.aria-invalid]="shouldShowError('isApproved')"
-        aria-describedby="isApproved-error"
-      >
-        <option value="" disabled>Choose</option>
-        <option *ngFor="let opt of approvalOptions" [value]="opt.value">{{ opt.label }}</option>
-      </select>
-      <div id="isApproved-error" class="error-message" *ngIf="shouldShowError('isApproved')">
-        <span *ngIf="ptoForm.get('isApproved')?.errors?.['required']">This field is required.</span>
-      </div>
-    </div>
-
-    <!-- Start Date -->
-    <div class="form-card">
-      <label for="startDate">When will your approved time off start? <span class="required">*</span></label>
-      <span class="field-sublabel">Date</span>
-      <input
-        id="startDate"
-        type="date"
-        formControlName="startDate"
-        [attr.aria-invalid]="shouldShowError('startDate')"
-        aria-describedby="startDate-error"
-      />
-      <div id="startDate-error" class="error-message" *ngIf="shouldShowError('startDate')">
-        <span *ngIf="ptoForm.get('startDate')?.errors?.['required']">Start date is required.</span>
-        <span *ngIf="ptoForm.get('startDate')?.errors?.['notInPast']">Start date cannot be in the past.</span>
-      </div>
-    </div>
-
-    <!-- End Date -->
-    <div class="form-card">
-      <label for="endDate">When will your approved time-off end? <span class="required">*</span></label>
-      <span class="field-sublabel">Date</span>
-      <input
-        id="endDate"
-        type="date"
-        formControlName="endDate"
-        [attr.aria-invalid]="shouldShowError('endDate')"
-        aria-describedby="endDate-error"
-      />
-      <div id="endDate-error" class="error-message" *ngIf="shouldShowError('endDate') || ptoForm.errors?.['endDateBeforeStart']">
-        <span *ngIf="ptoForm.get('endDate')?.errors?.['required']">End date is required.</span>
-        <span *ngIf="ptoForm.errors?.['endDateBeforeStart']">End date must be on or after start date.</span>
-      </div>
-    </div>
-
-    <!-- Market Selection -->
-    <div class="form-card">
-      <label for="market">Which Market do you support? <span class="required">*</span></label>
-      <select
-        id="market"
-        formControlName="market"
-        [attr.aria-invalid]="shouldShowError('market')"
-        aria-describedby="market-error"
-      >
-        <option value="" disabled>Choose</option>
-        <option *ngFor="let m of markets" [value]="m.value">{{ m.label }}</option>
-      </select>
-      <div id="market-error" class="error-message" *ngIf="shouldShowError('market')">
-        <span *ngIf="ptoForm.get('market')?.errors?.['required']">Market is required.</span>
-      </div>
-    </div>
-
-    <!-- Out of Office Notifications -->
-    <div class="form-card">
-      <label class="field-label">
-        Have you ensured that your out of office notifications are on? If not, please
-        ensure you watch the tutorials below
-      </label>
-      <div class="checkbox-group">
-        <label class="checkbox-option">
-          <input type="checkbox" formControlName="outOfOfficeCalendar" />
-          <span class="checkbox-label">(Yes) Google Calendar Out of Office</span>
-        </label>
-        <label class="checkbox-option">
-          <input type="checkbox" formControlName="outOfOfficeChat" />
-          <span class="checkbox-label">(Yes) Google Chat Out of Office</span>
-        </label>
-        <label class="checkbox-option">
-          <input type="checkbox" formControlName="outOfOfficeEmail" />
-          <span class="checkbox-label">(Yes) Google Auto Reply - Email</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Tutorial Videos Section -->
-    <div class="form-card tutorials-card">
-      <div class="tutorial-item">
-        <p class="tutorial-title">Here is a video Tutorial on how to put an out of office notification on your Google Calendar</p>
-        <div class="tutorial-placeholder">
-          <span class="play-icon">&#9654;</span>
-          <span>How to: Create an Out of Office - Google Calendar</span>
-        </div>
-      </div>
-
-      <div class="tutorial-item">
-        <p class="tutorial-title">Here is a video Tutorial on how to put an out of office notification on your Google Chat</p>
-        <div class="tutorial-placeholder">
-          <span class="play-icon">&#9654;</span>
-          <span>How To Set Out Of Office in Google Chat</span>
-        </div>
-      </div>
-
-      <div class="tutorial-item">
-        <p class="tutorial-title">Here is a video Tutorial on how to set up an automatic email using your google email. (Gmail and google emails are set up similarly).</p>
-        <div class="tutorial-placeholder">
-          <span class="play-icon">&#9654;</span>
-          <span>How to Set Out Of Office in Gmail</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Additional Notes -->
-    <div class="form-card">
-      <label for="notes">Additional Notes (optional)</label>
-      <textarea
-        id="notes"
-        formControlName="notes"
-        rows="3"
-        maxlength="1000"
-        placeholder="Add any additional details about your request..."
-        aria-describedby="notes-info notes-error"
-      ></textarea>
-      <div id="notes-info" class="char-count" [class.char-count-warning]="notesLength > 900">
-        {{ notesLength }} / 1000
-      </div>
-      <div id="notes-error" class="error-message" *ngIf="shouldShowError('notes')">
-        <span *ngIf="ptoForm.get('notes')?.errors?.['maxlength']">Notes cannot exceed 1000 characters.</span>
-      </div>
-    </div>
-
-    <!-- Form Actions -->
-    <div class="form-actions">
-      <button
-        type="submit"
-        [disabled]="ptoForm.invalid || submitting"
-        class="submit-btn">
-        {{ submitting ? 'Submitting...' : 'Submit' }}
-      </button>
-      <button type="button" class="cancel-btn" (click)="onCancel()">
-        Clear form
-      </button>
-    </div>
-  </form>
-
-  <!-- Post Submit -->
-  <div *ngIf="submitted" class="post-submit-actions">
-    <button class="submit-btn" (click)="submitted = false; ptoForm.reset()">
-      Submit Another Request
-    </button>
-    <button class="cancel-btn" (click)="onCancel()">
-      Back to Requests
-    </button>
-  </div>
+<!-- Dialog Header -->
+<div class="dialog-header">
+  <h2 mat-dialog-title style="color: white !important;">SRI Time-off Request</h2>
+  <button mat-icon-button (click)="onCancel()" type="button" aria-label="Close dialog">
+    <mat-icon>close</mat-icon>
+  </button>
 </div>
+
+<!-- Dialog Content -->
+<mat-dialog-content>
+  <form [formGroup]="ptoForm" (ngSubmit)="onSubmit()" class="pto-form">
+
+    <!-- Employee Information Section -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Employee Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Who is covering your business commitments while you are out?</mat-label>
+            <input matInput formControlName="coveragePerson" placeholder="Coverage person name" />
+            <mat-error *ngIf="shouldShowError('coveragePerson')">
+              <span *ngIf="ptoForm.get('coveragePerson')?.errors?.['required']">Coverage person is required.</span>
+              <span *ngIf="ptoForm.get('coveragePerson')?.errors?.['minlength']">Name must be at least 2 characters.</span>
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Approval Section -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Approval Status</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Emailed time-off request to SRI Lead?</mat-label>
+            <mat-select formControlName="emailedLead">
+              <mat-option *ngFor="let opt of emailedLeadOptions" [value]="opt.value">
+                {{ opt.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="shouldShowError('emailedLead')">This field is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Is your time-off request approved?</mat-label>
+            <mat-select formControlName="isApproved">
+              <mat-option *ngFor="let opt of approvalOptions" [value]="opt.value">
+                {{ opt.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="shouldShowError('isApproved')">This field is required.</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Schedule Section -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Schedule</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Start Date</mat-label>
+            <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+            <mat-error *ngIf="shouldShowError('startDate')">
+              <span *ngIf="ptoForm.get('startDate')?.errors?.['required']">Start date is required.</span>
+              <span *ngIf="ptoForm.get('startDate')?.errors?.['notInPast']">Start date cannot be in the past.</span>
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>End Date</mat-label>
+            <input matInput [matDatepicker]="endPicker" formControlName="endDate" />
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+            <mat-error *ngIf="shouldShowError('endDate')">
+              <span *ngIf="ptoForm.get('endDate')?.errors?.['required']">End date is required.</span>
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-error" *ngIf="hasDateRangeError">
+          <mat-icon>error</mat-icon>
+          <span>End date must be on or after start date</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Market & Notifications Section -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Market &amp; Notifications</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Which Market do you support?</mat-label>
+            <mat-select formControlName="market">
+              <mat-option *ngFor="let m of markets" [value]="m.value">
+                {{ m.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="shouldShowError('market')">Market is required.</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="checkbox-group">
+          <mat-checkbox formControlName="outOfOfficeCalendar" color="primary">
+            Google Calendar Out of Office
+          </mat-checkbox>
+          <mat-checkbox formControlName="outOfOfficeChat" color="primary">
+            Google Chat Out of Office
+          </mat-checkbox>
+          <mat-checkbox formControlName="outOfOfficeEmail" color="primary">
+            Google Auto Reply - Email
+          </mat-checkbox>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Notes Section -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Additional Notes (Optional)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notes</mat-label>
+            <textarea
+              matInput
+              formControlName="notes"
+              rows="3"
+              placeholder="Add any additional details about your request..."
+            ></textarea>
+            <mat-hint align="end">{{ notesLength }} / 1000</mat-hint>
+            <mat-error *ngIf="shouldShowError('notes')">
+              <span *ngIf="ptoForm.get('notes')?.errors?.['maxlength']">Notes cannot exceed 1000 characters.</span>
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </form>
+</mat-dialog-content>
+
+<!-- Dialog Actions -->
+<mat-dialog-actions align="end">
+  <button mat-button color="warn" type="button" (click)="onCancel()" class="cancel-btn">
+    Cancel
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="submit"
+    (click)="onSubmit()"
+    [disabled]="submitting"
+    class="submit-btn"
+  >
+    {{ submitting ? 'Submitting...' : 'Submit Request' }}
+  </button>
+</mat-dialog-actions>
