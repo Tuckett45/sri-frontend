@@ -43,6 +43,14 @@ export interface PtoRequest {
   approvalHistory?: ApprovalEntry[];
   createdAt: string;
   updatedAt: string;
+  // Phase 2: Enhanced form fields
+  coveragePerson?: string | null;
+  emailedSriLead?: boolean | null;
+  isApprovedByLead?: string | null;
+  market?: string | null;
+  outOfOfficeCalendar?: boolean;
+  outOfOfficeChat?: boolean;
+  outOfOfficeEmail?: boolean;
 }
 
 /**
@@ -85,6 +93,27 @@ export interface CreatePtoRequestDto {
   endDate: string;
   requestType: string;
   reason?: string;
+  // Phase 2: Enhanced form fields
+  employeeName?: string;
+  coveragePerson?: string;
+  emailedSriLead?: boolean;
+  isApprovedByLead?: string;
+  market?: string;
+  outOfOfficeCalendar?: boolean;
+  outOfOfficeChat?: boolean;
+  outOfOfficeEmail?: boolean;
+}
+
+/**
+ * Lightweight entry for team availability timeline
+ */
+export interface TeamAvailabilityEntry {
+  id: string;
+  employeeName: string;
+  startDate: string;
+  endDate: string;
+  market: string;
+  requestType: string;
 }
 
 /**

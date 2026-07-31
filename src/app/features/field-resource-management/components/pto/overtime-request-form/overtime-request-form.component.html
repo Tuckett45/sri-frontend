@@ -1,0 +1,177 @@
+<!-- Dialog Header -->
+<div class="dialog-header">
+  <h2 mat-dialog-title style="color: white !important;">Employee Overtime Request</h2>
+  <button mat-icon-button (click)="onCancel()" type="button" aria-label="Close dialog">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- Dialog Content -->
+<mat-dialog-content>
+  <form [formGroup]="overtimeForm" (ngSubmit)="onSubmit()" class="overtime-form">
+
+    <!-- Employee Information Section -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Employee Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Department</mat-label>
+            <mat-select formControlName="department">
+              <mat-option *ngFor="let dept of departments" [value]="dept.value">
+                {{ dept.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="shouldShowError('department')">Department is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Which Market do you support?</mat-label>
+            <mat-select formControlName="market">
+              <mat-option *ngFor="let market of markets" [value]="market.value">
+                {{ market.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="shouldShowError('market')">Please select a market.</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Approval Section -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Approval Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Emailed Overtime request to SRI Lead?</mat-label>
+            <mat-select formControlName="emailedSriLead">
+              <mat-option value="yes">Yes</mat-option>
+              <mat-option value="no">No</mat-option>
+            </mat-select>
+            <mat-error *ngIf="shouldShowError('emailedSriLead')">This field is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Has your Overtime Request been approved?</mat-label>
+            <mat-select formControlName="isPreApproved">
+              <mat-option value="yes">Yes</mat-option>
+              <mat-option value="no">No</mat-option>
+            </mat-select>
+            <mat-hint>If not, please seek approval first</mat-hint>
+            <mat-error *ngIf="shouldShowError('isPreApproved')">This field is required.</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Who is your SRI lead?</mat-label>
+            <input matInput formControlName="sriLeadName" placeholder="SRI lead name" />
+            <mat-error *ngIf="shouldShowError('sriLeadName')">
+              <span *ngIf="overtimeForm.get('sriLeadName')?.errors?.['required']">SRI lead name is required.</span>
+              <span *ngIf="overtimeForm.get('sriLeadName')?.errors?.['minlength']">Name must be at least 2 characters.</span>
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Schedule Section -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Schedule &amp; Duration</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Date of Request Submission</mat-label>
+            <input matInput [matDatepicker]="submissionPicker" formControlName="submissionDate" />
+            <mat-datepicker-toggle matSuffix [for]="submissionPicker"></mat-datepicker-toggle>
+            <mat-datepicker #submissionPicker></mat-datepicker>
+            <mat-error *ngIf="shouldShowError('submissionDate')">Submission date is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Date Overtime is Requested For</mat-label>
+            <input matInput [matDatepicker]="overtimeStartPicker" formControlName="overtimeStartDate" />
+            <mat-datepicker-toggle matSuffix [for]="overtimeStartPicker"></mat-datepicker-toggle>
+            <mat-datepicker #overtimeStartPicker></mat-datepicker>
+            <mat-error *ngIf="shouldShowError('overtimeStartDate')">
+              <span *ngIf="overtimeForm.get('overtimeStartDate')?.errors?.['required']">Overtime start date is required.</span>
+              <span *ngIf="overtimeForm.get('overtimeStartDate')?.errors?.['notInPast']">Date cannot be in the past.</span>
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <div class="duration-field-group">
+            <label class="duration-label">Estimated Overtime Duration</label>
+            <div class="duration-inputs">
+              <mat-form-field appearance="outline" class="duration-input">
+                <mat-label>Hours</mat-label>
+                <input matInput type="number" formControlName="estimatedHours" min="0" max="24" />
+              </mat-form-field>
+              <span class="duration-separator">:</span>
+              <mat-form-field appearance="outline" class="duration-input">
+                <mat-label>Minutes</mat-label>
+                <input matInput type="number" formControlName="estimatedMinutes" min="0" max="59" />
+              </mat-form-field>
+            </div>
+            <div class="form-error" *ngIf="overtimeForm.errors?.['durationRequired'] && (overtimeForm.get('estimatedHours')?.touched || overtimeForm.get('estimatedMinutes')?.touched)">
+              <mat-icon>error</mat-icon>
+              <span>Duration must be at least 1 minute.</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Justification Section -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title>Justification</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Detailed Justification for Overtime (Why is this necessary?)</mat-label>
+            <textarea
+              matInput
+              formControlName="justification"
+              rows="4"
+              placeholder="Explain why overtime is needed..."
+            ></textarea>
+            <mat-hint align="end">{{ justificationLength }} / 2000</mat-hint>
+            <mat-error *ngIf="shouldShowError('justification')">
+              <span *ngIf="overtimeForm.get('justification')?.errors?.['required']">Justification is required.</span>
+              <span *ngIf="overtimeForm.get('justification')?.errors?.['minlength']">Justification must be at least 10 characters.</span>
+              <span *ngIf="overtimeForm.get('justification')?.errors?.['maxlength']">Justification cannot exceed 2000 characters.</span>
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </form>
+</mat-dialog-content>
+
+<!-- Dialog Actions -->
+<mat-dialog-actions align="end">
+  <button mat-button color="warn" type="button" (click)="onCancel()" class="cancel-btn">
+    Cancel
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="submit"
+    (click)="onSubmit()"
+    [disabled]="submitting"
+    class="submit-btn"
+  >
+    {{ submitting ? 'Submitting...' : 'Submit Request' }}
+  </button>
+</mat-dialog-actions>

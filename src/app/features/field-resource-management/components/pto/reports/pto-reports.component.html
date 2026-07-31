@@ -1,0 +1,143 @@
+<div class="pto-reports">
+  <!-- Header -->
+  <div class="reports-header">
+    <div>
+      <h2>Time-Off Reports</h2>
+      <p class="subtitle">View and export PTO and overtime request data</p>
+    </div>
+    <button
+      class="btn-export"
+      (click)="exportCsv()"
+      [disabled]="exporting || loading"
+      type="button">
+      {{ exporting ? 'Exporting...' : 'Export CSV' }}
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label for="filterStartDate">From</label>
+      <input id="filterStartDate" type="date" [(ngModel)]="filters.startDate" />
+    </div>
+    <div class="filter-group">
+      <label for="filterEndDate">To</label>
+      <input id="filterEndDate" type="date" [(ngModel)]="filters.endDate" />
+    </div>
+    <div class="filter-group">
+      <label for="filterMarket">Market</label>
+      <select id="filterMarket" [(ngModel)]="filters.market">
+        <option value="">All Markets</option>
+        <option *ngFor="let m of markets" [value]="m.value">{{ m.label }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterStatus">Status</label>
+      <select id="filterStatus" [(ngModel)]="filters.status">
+        <option value="">All Statuses</option>
+        <ng-container *ngFor="let s of statusOptions">
+          <option *ngIf="s" [value]="s">{{ s }}</option>
+        </ng-container>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterType">Type</label>
+      <select id="filterType" [(ngModel)]="filters.type">
+        <option *ngFor="let t of typeOptions" [value]="t.value">{{ t.label }}</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="btn-apply" (click)="applyFilters()" type="button">Apply</button>
+      <button class="btn-reset" (click)="resetFilters()" type="button">Reset</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading report data...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="error && !loading">
+    <p>{{ error }}</p>
+    <button class="btn-apply" (click)="loadReport()" type="button">Retry</button>
+  </div>
+
+  <!-- Data Table -->
+  <div class="table-container" *ngIf="!loading && !error">
+    <div class="table-info">
+      <span>Showing {{ reportData.length }} of {{ totalCount }} records</span>
+    </div>
+
+    <table class="report-table" *ngIf="reportData.length > 0; else emptyState">
+      <thead>
+        <tr>
+          <th *ngFor="let col of columns"
+              (click)="sortBy(col.key)"
+              class="sortable-header"
+              [title]="'Sort by ' + col.label">
+            {{ col.label }}{{ getSortIndicator(col.key) }}
+          </th>
+          <th>OOO Notifications</th>
+          <th>Coverage Person</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of reportData">
+          <td>
+            <span class="type-badge" [class.type-pto]="row.type === 'PTO'" [class.type-overtime]="row.type === 'Overtime'">
+              {{ row.type }}
+            </span>
+          </td>
+          <td>{{ row.submissionDate | date:'short' }}</td>
+          <td class="name-cell">{{ row.employeeName }}</td>
+          <td>
+            <span class="yes-no-badge" [class.yes]="row.emailedLead === 'Yes'" [class.no]="row.emailedLead === 'No'">
+              {{ row.emailedLead || '—' }}
+            </span>
+          </td>
+          <td>
+            <span class="yes-no-badge" [class.yes]="row.approved === 'Yes' || row.approved === 'yes'" [class.no]="row.approved === 'No' || row.approved === 'no'">
+              {{ row.approved || '—' }}
+            </span>
+          </td>
+          <td>{{ row.startDate | date:'mediumDate' }}</td>
+          <td>{{ row.endDate | date:'mediumDate' }}</td>
+          <td>
+            <span class="market-badge" *ngIf="row.market">{{ row.market }}</span>
+            <span *ngIf="!row.market">—</span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="'status-' + row.status.toLowerCase()">
+              {{ row.status }}
+            </span>
+          </td>
+          <td class="ooo-cell">{{ row.outOfOfficeNotifications || '—' }}</td>
+          <td>{{ row.coveragePerson || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <p>No records found matching your filters.</p>
+      </div>
+    </ng-template>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="page-btn" (click)="goToPage(1)" [disabled]="filters.page === 1">First</button>
+      <button class="page-btn" (click)="goToPage(filters.page - 1)" [disabled]="filters.page === 1">Prev</button>
+      <button
+        *ngFor="let p of getPages()"
+        class="page-btn"
+        [class.active]="p === filters.page"
+        (click)="goToPage(p)">
+        {{ p }}
+      </button>
+      <button class="page-btn" (click)="goToPage(filters.page + 1)" [disabled]="filters.page === totalPages">Next</button>
+      <button class="page-btn" (click)="goToPage(totalPages)" [disabled]="filters.page === totalPages">Last</button>
+    </div>
+  </div>
+</div>

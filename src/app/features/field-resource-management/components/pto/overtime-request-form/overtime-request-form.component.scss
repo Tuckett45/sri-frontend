@@ -1,4 +1,4 @@
-// PTO Request Form - Dialog-based FRM Consistent Styling
+// Overtime Request Form - Dialog-based FRM Consistent Styling
 // Matches job-form dialog pattern
 
 // Dialog Header - Blue background
@@ -31,7 +31,7 @@
 }
 
 // Global dialog container styles
-::ng-deep .pto-form-dialog {
+::ng-deep .overtime-form-dialog {
   .mat-mdc-dialog-container {
     padding: 0 !important;
     overflow: hidden !important;
@@ -62,7 +62,7 @@
   flex-shrink: 0 !important;
 }
 
-.pto-form {
+.overtime-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -120,6 +120,34 @@
   }
 }
 
+// Duration field group
+.duration-field-group {
+  .duration-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .duration-inputs {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    .duration-input {
+      width: 120px;
+    }
+
+    .duration-separator {
+      font-size: 24px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.54);
+      padding-top: 16px;
+    }
+  }
+}
+
 // Error display
 .form-error {
   display: flex;
@@ -137,13 +165,6 @@
     width: 20px;
     height: 20px;
   }
-}
-
-// Checkbox group
-.checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
 // Button styling - Orange and Blue like other FRM forms
@@ -187,7 +208,7 @@ mat-form-field {
 
 textarea.mat-input-element {
   resize: vertical;
-  min-height: 60px;
+  min-height: 80px;
 }
 
 mat-error {
@@ -271,6 +292,12 @@ mat-card-content {
 
   .form-row {
     margin-bottom: 12px;
+  }
+
+  .duration-field-group {
+    .duration-inputs {
+      flex-wrap: wrap;
+    }
   }
 
   mat-form-field {

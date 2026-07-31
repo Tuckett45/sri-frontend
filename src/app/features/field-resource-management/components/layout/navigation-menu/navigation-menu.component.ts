@@ -214,14 +214,14 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
       frmPermission: 'canManageOnboarding'
     },
     // DISABLED: PTO Requests - service deleted
-    // {
-    //   label: 'PTO Requests',
-    //   icon: 'event_busy',
-    //   route: '/field-resource-management/pto',
-    //   resource: 'time_entries',
-    //   action: 'read'
-    //   // Available to all authenticated users
-    // },
+    {
+      label: 'PTO Requests',
+      icon: 'event_busy',
+      route: '/field-resource-management/pto',
+      resource: 'time_entries',
+      action: 'read'
+      // Available to all authenticated users
+    },
     {
       label: 'PTO Approvals',
       icon: 'how_to_reg',
