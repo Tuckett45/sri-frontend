@@ -189,5 +189,18 @@ export const ptoReducer = createReducer(
   on(PtoActions.selectRequest, (state, { requestId }) => ({
     ...state,
     selectedRequestId: requestId
+  })),
+
+  // Delete Request
+  on(PtoActions.deleteRequestSuccess, (state, { requestId }) =>
+    adapter.removeOne(requestId, {
+      ...state,
+      error: null
+    })
+  ),
+
+  on(PtoActions.deleteRequestFailure, (state, { error }) => ({
+    ...state,
+    error
   }))
 );

@@ -70,6 +70,26 @@ export class OvertimeEffects {
     )
   );
 
+  // Delete Request Effect
+  deleteRequest$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OvertimeActions.deleteOvertimeRequest),
+      exhaustMap(({ requestId }) =>
+        this.overtimeApiService.deleteRequest(requestId).pipe(
+          map(() =>
+            OvertimeActions.deleteOvertimeRequestSuccess({ requestId })
+          ),
+          catchError((error) =>
+            of(OvertimeActions.deleteOvertimeRequestFailure({
+              requestId,
+              error: error.message || 'Failed to delete overtime request'
+            }))
+          )
+        )
+      )
+    )
+  );
+
   // Approve Effect
   approveRequest$ = createEffect(() =>
     this.actions$.pipe(

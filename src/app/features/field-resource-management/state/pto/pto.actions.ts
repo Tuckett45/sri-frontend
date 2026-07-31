@@ -167,3 +167,19 @@ export const selectRequest = createAction(
   '[PTO] Select Request',
   props<{ requestId: string | null }>()
 );
+
+// Delete Request (own request only)
+export const deleteRequest = createAction(
+  '[PTO] Delete Request',
+  props<{ requestId: string }>()
+);
+
+export const deleteRequestSuccess = createAction(
+  '[PTO] Delete Request Success',
+  props<{ requestId: string }>()
+);
+
+export const deleteRequestFailure = createAction(
+  '[PTO] Delete Request Failure',
+  props<{ requestId: string; error: string }>()
+);

@@ -144,10 +144,10 @@ export class PtoRequestFormComponent implements OnInit {
 
     const dto: CreatePtoRequestDto = {
       employeeId: user?.id ?? '',
-      startDate: formValue.startDate,
-      endDate: formValue.endDate,
+      startDate: this.toIsoDateTime(formValue.startDate),
+      endDate: this.toIsoDateTime(formValue.endDate),
       requestType: formValue.market,
-      employeeName: user?.displayName?.trim() ?? '',
+      employeeName: user?.name?.trim() || user?.displayName?.trim() || '',
       coveragePerson: formValue.coveragePerson?.trim(),
       emailedSriLead: formValue.emailedLead === 'yes',
       isApprovedByLead: formValue.isApproved,
@@ -196,5 +196,22 @@ export class PtoRequestFormComponent implements OnInit {
    */
   getControl(fieldName: string) {
     return this.ptoForm.get(fieldName);
+  }
+
+  /**
+   * Converts a date string (YYYY-MM-DD) or Date object to an ISO 8601 datetime string
+   * compatible with the backend's DateTime model binding.
+   */
+  private toIsoDateTime(dateValue: string | Date): string {
+    if (!dateValue) return '';
+    if (dateValue instanceof Date) {
+      return dateValue.toISOString();
+    }
+    if (typeof dateValue === 'string') {
+      if (dateValue.includes('T')) return dateValue;
+      return `${dateValue}T00:00:00`;
+    }
+    // Fallback: coerce to string
+    return new Date(dateValue).toISOString();
   }
 }

@@ -71,6 +71,26 @@ export class PtoEffects {
     )
   );
 
+  // Delete Request Effect
+  deleteRequest$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PtoActions.deleteRequest),
+      exhaustMap(({ requestId }) =>
+        this.ptoApiService.deleteRequest(requestId).pipe(
+          map(() =>
+            PtoActions.deleteRequestSuccess({ requestId })
+          ),
+          catchError((error) =>
+            of(PtoActions.deleteRequestFailure({
+              requestId,
+              error: error.message || 'Failed to delete request'
+            }))
+          )
+        )
+      )
+    )
+  );
+
   // Manager Approve Effect
   managerApprove$ = createEffect(() =>
     this.actions$.pipe(

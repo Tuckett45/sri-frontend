@@ -68,6 +68,13 @@
               Reject
             </button>
             <button
+              *ngIf="canDelete(request)"
+              class="btn-action btn-delete"
+              (click)="onDelete(request)"
+              title="Delete this request permanently">
+              Delete
+            </button>
+            <button
               class="btn-action btn-view"
               (click)="onRowClick(request)"
               title="View details">

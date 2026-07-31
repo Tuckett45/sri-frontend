@@ -105,3 +105,19 @@ export const selectOvertimeRequest = createAction(
   '[Overtime] Select Request',
   props<{ requestId: string | null }>()
 );
+
+// Delete Request (own request only)
+export const deleteOvertimeRequest = createAction(
+  '[Overtime] Delete Request',
+  props<{ requestId: string }>()
+);
+
+export const deleteOvertimeRequestSuccess = createAction(
+  '[Overtime] Delete Request Success',
+  props<{ requestId: string }>()
+);
+
+export const deleteOvertimeRequestFailure = createAction(
+  '[Overtime] Delete Request Failure',
+  props<{ requestId: string; error: string }>()
+);
