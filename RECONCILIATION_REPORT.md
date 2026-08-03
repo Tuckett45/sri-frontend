@@ -242,9 +242,12 @@ Columns used in WHERE clauses with no index in the SQL project:
 
 ### 7.1 Frontend Build
 
-Angular production build status: **PENDING** (running at time of report generation).
+Angular production build: **PASSED** (exit code 0).
 
-No type-level breaking changes — both `environment` and `local_environment` objects share the same interface, so the fix is a value-level correction only.
+Pre-existing warnings only (not introduced by this fix):
+- CommonJS dependency warnings (canvg, leaflet-search, jspdf-autotable)
+- 6 SCSS files exceed 16.38 kB component style budget
+- Initial bundle exceeds 4.72 MB budget by 185.91 kB (total 4.90 MB)
 
 ### 7.2 Backend
 
