@@ -21,7 +21,7 @@
       (click)="setTypeFilter(f.value)"
       type="button">
       {{ f.label }}
-      <span class="chip-count" *ngIf="f.value && summary?.byType?.[f.value]">
+      <span class="chip-count" *ngIf="f.value && summary && summary.byType[f.value]">
         {{ summary.byType[f.value] }}
       </span>
     </button>
