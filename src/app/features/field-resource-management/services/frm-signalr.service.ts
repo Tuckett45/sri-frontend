@@ -16,7 +16,7 @@ import * as ChecklistActions from '../state/deployment-checklist/checklist.actio
 import * as QuoteActions from '../state/quotes/quote.actions';
 import { DeploymentChecklist } from '../models/deployment-checklist.model';
 import { QuoteWorkflow } from '../models/quote-workflow.model';
-import { environment, local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 
 /**
  * Location update event
@@ -212,7 +212,7 @@ export class FrmSignalRService {
    */
   async connect(): Promise<void> {
     // Skip connection if SignalR is disabled in the environment config
-    if (!local_environment.enableSignalR) {
+    if (!environment.enableSignalR) {
       console.log('SignalR disabled in environment config — skipping connection');
       return;
     }
@@ -1171,7 +1171,7 @@ export class FrmSignalRService {
    * - Attempt 6+: 30s (capped)
    */
   private attemptReconnect(): void {
-    if (!local_environment.enableSignalR) {
+    if (!environment.enableSignalR) {
       return;
     }
 
