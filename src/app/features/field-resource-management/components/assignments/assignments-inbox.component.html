@@ -1,0 +1,92 @@
+<div class="assignments-inbox">
+  <div class="page-header">
+    <div>
+      <h2>My Assignments</h2>
+      <p class="subtitle">All work items requiring your attention</p>
+    </div>
+    <div class="summary-badges" *ngIf="summary">
+      <span class="summary-badge total">{{ summary.total }} pending</span>
+      <span class="summary-badge urgent" *ngIf="summary.byPriority['urgent']">
+        {{ summary.byPriority['urgent'] }} urgent
+      </span>
+    </div>
+  </div>
+
+  <!-- Type Filter Chips -->
+  <div class="filter-chips">
+    <button
+      *ngFor="let f of typeFilters"
+      class="filter-chip"
+      [class.active]="activeFilter === f.value"
+      (click)="setTypeFilter(f.value)"
+      type="button">
+      {{ f.label }}
+      <span class="chip-count" *ngIf="f.value && summary?.byType?.[f.value]">
+        {{ summary.byType[f.value] }}
+      </span>
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading assignments...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="error && !loading">
+    <p>{{ error }}</p>
+    <button class="btn-retry" (click)="loadAssignments()">Retry</button>
+  </div>
+
+  <!-- Assignment Cards -->
+  <div class="assignments-list" *ngIf="!loading && !error">
+    <div *ngIf="assignments.length === 0" class="empty-state">
+      <div class="empty-icon">&#127881;</div>
+      <h3>You're all caught up!</h3>
+      <p>No pending assignments. Check back later.</p>
+    </div>
+
+    <div
+      *ngFor="let assignment of assignments"
+      class="assignment-card"
+      [ngClass]="getPriorityClass(assignment.priority)">
+
+      <!-- Priority border is via CSS class on the card -->
+      <div class="card-header">
+        <span class="type-icon material-icons">{{ getTypeIcon(assignment.type) }}</span>
+        <span class="type-label">{{ getTypeLabel(assignment.type) }}</span>
+        <span class="time-ago">{{ getTimeSince(assignment.createdAt) }}</span>
+      </div>
+
+      <div class="card-body">
+        <h4 class="card-title">{{ assignment.title }}</h4>
+        <p class="card-description" *ngIf="assignment.description">
+          {{ assignment.description }}
+        </p>
+        <div class="card-meta" *ngIf="assignment.assignedByName">
+          <span class="from-label">From: {{ assignment.assignedByName }}</span>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-view" (click)="onView(assignment)" *ngIf="assignment.link">
+          View
+        </button>
+        <button class="btn-done" (click)="onComplete(assignment)">
+          Done
+        </button>
+        <button class="btn-dismiss" (click)="onDismiss(assignment)">
+          Dismiss
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1 && !loading">
+    <button (click)="goToPage(filters.page! - 1)" [disabled]="filters.page === 1">Prev</button>
+    <span class="page-info">Page {{ filters.page }} of {{ totalPages }}</span>
+    <button (click)="goToPage(filters.page! + 1)" [disabled]="filters.page === totalPages">Next</button>
+  </div>
+</div>

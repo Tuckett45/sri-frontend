@@ -94,6 +94,10 @@ import { DefaultDashboardComponent } from './components/home/dashboards/default-
 // My Team Page
 import { MyTeamComponent } from './components/my-team/my-team.component';
 
+// Org Structure & Assignments
+import { OrgStructureComponent } from './components/org-structure/org-structure.component';
+import { AssignmentsInboxComponent } from './components/assignments/assignments-inbox.component';
+
 // Notification Components (needed for real-time updates)
 import { NotificationPanelComponent } from './components/notifications/notification-panel/notification-panel.component';
 
@@ -193,6 +197,10 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
 
     // My Team Page
     MyTeamComponent,
+
+    // Org Structure & Assignments
+    OrgStructureComponent,
+    AssignmentsInboxComponent,
     
     // Notification Components
     NotificationPanelComponent,

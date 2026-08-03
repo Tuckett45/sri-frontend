@@ -1,0 +1,115 @@
+<div class="org-structure">
+  <div class="page-header">
+    <div>
+      <h2>Organization Structure</h2>
+      <p class="subtitle">View and manage reporting relationships</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-action" (click)="expandAll()">Expand All</button>
+      <button class="btn-action" (click)="collapseAll()">Collapse All</button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label>Market</label>
+      <select (change)="filterByMarket($any($event.target).value)">
+        <option value="">All Markets</option>
+        <option *ngFor="let m of markets" [value]="m.value">{{ m.label }}</option>
+      </select>
+    </div>
+    <div class="filter-group search-group">
+      <label>Search</label>
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Search by name..." />
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading organization structure...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="error && !loading">
+    <p>{{ error }}</p>
+    <button class="btn-action" (click)="loadTree()">Retry</button>
+  </div>
+
+  <!-- Tree -->
+  <div class="tree-container" *ngIf="!loading && !error">
+    <div *ngIf="tree.length === 0" class="empty-state">
+      <p>No organizational hierarchy configured yet.</p>
+      <p class="hint">Use the assign button to set up manager relationships.</p>
+    </div>
+
+    <ng-container *ngFor="let node of tree">
+      <ng-container *ngTemplateOutlet="treeNode; context: { $implicit: node, depth: 0 }"></ng-container>
+    </ng-container>
+  </div>
+
+  <!-- Recursive tree node template -->
+  <ng-template #treeNode let-node let-depth="depth">
+    <div class="tree-item" [style.paddingLeft.px]="depth * 28 + 12"
+         [class.hidden]="searchQuery && !(node.fullName || '').toLowerCase().includes(searchQuery.toLowerCase())">
+      <div class="node-content">
+        <!-- Expand toggle -->
+        <button class="expand-btn" *ngIf="node.directReports?.length" (click)="toggleNode(node.userId)">
+          {{ isExpanded(node.userId) ? '&#9660;' : '&#9654;' }}
+        </button>
+        <span class="expand-spacer" *ngIf="!node.directReports?.length"></span>
+
+        <!-- User info -->
+        <div class="user-info">
+          <span class="user-name">{{ node.fullName || 'Unknown' }}</span>
+          <span class="role-badge" [ngClass]="getRoleBadgeClass(node.role)">{{ node.role || 'User' }}</span>
+          <span class="market-label" *ngIf="node.market">{{ node.market }}</span>
+        </div>
+
+        <!-- Report count -->
+        <span class="report-count" *ngIf="node.directReports?.length">
+          {{ node.directReports.length }} report{{ node.directReports.length > 1 ? 's' : '' }}
+        </span>
+
+        <!-- Actions -->
+        <div class="node-actions">
+          <button class="btn-small btn-assign" (click)="openAssignModal(node)" title="Assign/change manager">
+            Assign
+          </button>
+          <button class="btn-small btn-remove" (click)="removeManager(node)" title="Remove manager">
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Children -->
+    <ng-container *ngIf="isExpanded(node.userId) && node.directReports?.length">
+      <ng-container *ngFor="let child of node.directReports">
+        <ng-container *ngTemplateOutlet="treeNode; context: { $implicit: child, depth: depth + 1 }"></ng-container>
+      </ng-container>
+    </ng-container>
+  </ng-template>
+
+  <!-- Assign Manager Modal -->
+  <div class="modal-overlay" *ngIf="showAssignModal">
+    <div class="modal">
+      <h3>Assign Manager</h3>
+      <p>Select a manager for <strong>{{ assigningEmployeeName }}</strong>:</p>
+      <select [(ngModel)]="newManagerId" class="manager-select">
+        <option value="" disabled>Select manager...</option>
+        <option *ngFor="let u of allUsers" [value]="u.userId"
+                [disabled]="u.userId === assigningEmployeeId">
+          {{ u.fullName }} ({{ u.role }})
+        </option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn-action btn-primary" (click)="confirmAssign()" [disabled]="!newManagerId">
+          Assign
+        </button>
+        <button class="btn-action" (click)="cancelAssign()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
