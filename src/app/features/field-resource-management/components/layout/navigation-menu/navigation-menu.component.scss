@@ -182,6 +182,24 @@
 
 // Responsive styles
 @media (max-width: 768px) {
+
+// Nav badge for assignment count
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background-color: #ea4335;
+  color: #fff;
+  border-radius: 9px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
   .menu-link,
   .menu-parent {
     padding: 14px 16px;

@@ -108,16 +108,16 @@ const routes: Routes = [
       //   }
       // },
 
-      // DISABLED: My Team - reduce usage
-      // {
-      //   path: 'my-team',
-      //   component: MyTeamComponent,
-      //   canActivate: [ManagerGuard],
-      //   data: {
-      //     title: 'My Team',
-      //     breadcrumb: 'My Team'
-      //   }
-      // },
+      // My Team - wired to hierarchy API
+      {
+        path: 'my-team',
+        component: MyTeamComponent,
+        canActivate: [ManagerGuard],
+        data: {
+          title: 'My Team',
+          breadcrumb: 'My Team'
+        }
+      },
 
       // DISABLED: Timecard - reduce usage
       // {
