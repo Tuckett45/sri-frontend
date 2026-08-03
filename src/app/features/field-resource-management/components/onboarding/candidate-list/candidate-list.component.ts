@@ -1047,11 +1047,11 @@ export class CandidateListComponent implements OnInit {
         };
         this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
           next: () => {
-            this.uploadCandidateFiles(candidate.candidateId, result.files, () => this.loadCandidates());
+            this.uploadCandidateFiles(candidate.candidateId, result.files, () => this.loadCandidates(true));
           },
           error: () => {
             this.errorMessage = 'Failed to update candidate. Please try again.';
-            this.loadCandidates();
+            this.loadCandidates(true);
           }
         });
       }
@@ -1121,12 +1121,12 @@ export class CandidateListComponent implements OnInit {
         this.onboardingService.createCandidate(payload).subscribe({
           next: (createdCandidate) => {
             this.submitting = false;
-            this.uploadCandidateFiles(createdCandidate.candidateId, result.files, () => this.loadCandidates());
+            this.uploadCandidateFiles(createdCandidate.candidateId, result.files, () => this.loadCandidates(true));
           },
           error: () => {
             this.submitting = false;
             this.errorMessage = 'Failed to create candidate. Please try again.';
-            this.loadCandidates();
+            this.loadCandidates(true);
           }
         });
       }
@@ -1141,7 +1141,7 @@ export class CandidateListComponent implements OnInit {
 
     this.onboardingService.deleteCandidateById(candidate.candidateId).subscribe({
       next: () => {
-        this.loadCandidates();
+        this.loadCandidates(true);
       },
       error: () => {
         this.errorMessage = 'Failed to delete candidate. Please try again.';
@@ -1295,7 +1295,7 @@ export class CandidateListComponent implements OnInit {
         this.successMessage = `Converted ${successCount} of ${results.length} candidates. ${failures.length} failed — see details below.`;
       }
 
-      this.loadCandidates();
+      this.loadCandidates(true);
     });
   }
 
@@ -1314,7 +1314,7 @@ export class CandidateListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((notesChanged: boolean) => {
       if (notesChanged) {
-        this.loadCandidates();
+        this.loadCandidates(true);
       }
     });
   }
@@ -1323,16 +1323,21 @@ export class CandidateListComponent implements OnInit {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  private loadCandidates(): void {
+  /**
+   * Reloads candidates from the API.
+   * @param preservePosition If true, preserves the current page index after reload.
+   */
+  private loadCandidates(preservePosition = false): void {
     this.loading = true;
     this.errorMessage = '';
+    const savedPageIndex = this.pageIndex;
 
     this.onboardingService.getCandidates().subscribe({
       next: (candidates) => {
         this.candidates = candidates;
         this.loading = false;
         this.updateAvailableStates();
-        this.applyFiltersAndSort();
+        this.applyFiltersAndSort(preservePosition ? savedPageIndex : undefined);
       },
       error: (err) => {
         this.loading = false;
@@ -1377,11 +1382,17 @@ export class CandidateListComponent implements OnInit {
     this.availableReferrers = [...new Set(referrers)].sort();
   }
 
-  private applyFiltersAndSort(): void {
+  /**
+   * Applies current filters and sorting to the candidates list.
+   * @param restorePageIndex If provided, restores this page index instead of resetting to 0.
+   */
+  private applyFiltersAndSort(restorePageIndex?: number): void {
     let result = [...this.candidates];
 
-    // Clear selection when filters change to avoid stale selections
-    this.selectedCandidateIds.clear();
+    // Only clear selection when filters actually change (not on data reload)
+    if (restorePageIndex === undefined) {
+      this.selectedCandidateIds.clear();
+    }
 
     // Text search filter
     if (this.searchText.trim()) {
@@ -1445,6 +1456,13 @@ export class CandidateListComponent implements OnInit {
     }
 
     this.filteredCandidates = result;
+
+    // Restore page index if specified (e.g., after data reload), otherwise keep current
+    if (restorePageIndex !== undefined) {
+      // Clamp to valid range in case filtered results have fewer pages now
+      const maxPage = Math.max(0, Math.ceil(this.filteredCandidates.length / this.pageSize) - 1);
+      this.pageIndex = Math.min(restorePageIndex, maxPage);
+    }
     this.updatePaginatedCandidates();
   }
 

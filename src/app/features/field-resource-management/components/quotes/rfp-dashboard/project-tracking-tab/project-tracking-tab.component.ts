@@ -97,8 +97,8 @@ export class ProjectTrackingTabComponent implements OnChanges {
         return matches;
       };
       setTimeout(() => {
-        if (this.sort) { this.dataSource.sort = this.sort; }
-        if (this.paginator) { this.dataSource.paginator = this.paginator; }
+        if (this.sort && !this.dataSource.sort) { this.dataSource.sort = this.sort; }
+        if (this.paginator && !this.dataSource.paginator) { this.dataSource.paginator = this.paginator; }
       });
     }
   }

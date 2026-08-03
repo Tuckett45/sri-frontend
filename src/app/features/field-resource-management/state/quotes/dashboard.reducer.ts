@@ -149,6 +149,48 @@ export const dashboardReducer = createReducer(
     error
   })),
 
+  // Update BOM Tracking
+  on(DashboardActions.updateBomTrackingSuccess, (state, { quoteId, tracking }) => {
+    const updateBomInArray = (arr: DashboardQuote[]) =>
+      arr.map(q => {
+        if (q.id === quoteId) {
+          const bomTrackings = (q.bomTrackings || []).map(b => b.id === tracking.id ? tracking : b);
+          return { ...q, bomTrackings };
+        }
+        return q;
+      });
+
+    return {
+      ...state,
+      rfpRecords: updateBomInArray(state.rfpRecords),
+      poTrackingRecords: updateBomInArray(state.poTrackingRecords),
+      projectTrackingRecords: updateBomInArray(state.projectTrackingRecords),
+      saving: false,
+      error: null
+    };
+  }),
+
+  // Delete BOM Tracking
+  on(DashboardActions.deleteBomTrackingSuccess, (state, { quoteId, trackingId }) => {
+    const removeBomFromArray = (arr: DashboardQuote[]) =>
+      arr.map(q => {
+        if (q.id === quoteId) {
+          const bomTrackings = (q.bomTrackings || []).filter(b => b.id !== trackingId);
+          return { ...q, bomTrackings };
+        }
+        return q;
+      });
+
+    return {
+      ...state,
+      rfpRecords: removeBomFromArray(state.rfpRecords),
+      poTrackingRecords: removeBomFromArray(state.poTrackingRecords),
+      projectTrackingRecords: removeBomFromArray(state.projectTrackingRecords),
+      saving: false,
+      error: null
+    };
+  }),
+
   // Delete RFP
   on(DashboardActions.deleteRfpSuccess, (state, { quoteId }) => ({
     ...state,
