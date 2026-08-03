@@ -7,7 +7,7 @@ import { PermissionService } from '../../../../../services/permission.service';
 import { FrmPermissionService, FrmPermissionKey } from '../../../services/frm-permission.service';
 import { User } from '../../../../../models/user.model';
 import { UserRole } from '../../../../../models/role.enum';
-import { AssignmentsApiService } from '../../../services/assignments-api.service';
+import { AssignmentsApiService, AssignmentCount } from '../../../services/assignments-api.service';
 
 /**
  * Navigation Menu Item Interface
@@ -295,14 +295,14 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
   private pollAssignmentCount(): void {
     // Initial load
     this.assignmentsApi.getPendingCount().subscribe({
-      next: (res) => this.assignmentBadgeCount = res.pendingCount,
+      next: (res: AssignmentCount) => this.assignmentBadgeCount = res.pendingCount,
       error: () => {} // Silently fail
     });
 
     // Poll every 60 seconds
     interval(60000).pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.assignmentsApi.getPendingCount().subscribe({
-        next: (res) => this.assignmentBadgeCount = res.pendingCount,
+        next: (res: AssignmentCount) => this.assignmentBadgeCount = res.pendingCount,
         error: () => {}
       });
     });

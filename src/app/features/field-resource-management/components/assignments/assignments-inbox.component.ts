@@ -6,7 +6,8 @@ import {
   AssignmentsApiService,
   UserAssignment,
   AssignmentFilters,
-  AssignmentSummary
+  AssignmentSummary,
+  PaginatedAssignments
 } from '../../services/assignments-api.service';
 
 @Component({
@@ -62,7 +63,7 @@ export class AssignmentsInboxComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
     this.assignmentsApi.getMyAssignments(this.filters).subscribe({
-      next: (result) => {
+      next: (result: PaginatedAssignments) => {
         this.assignments = result.items;
         this.totalCount = result.totalCount;
         this.totalPages = result.totalPages;
@@ -77,7 +78,7 @@ export class AssignmentsInboxComponent implements OnInit, OnDestroy {
 
   loadSummary(): void {
     this.assignmentsApi.getSummary().subscribe({
-      next: (summary) => this.summary = summary,
+      next: (summary: AssignmentSummary) => this.summary = summary,
       error: () => {}
     });
   }
