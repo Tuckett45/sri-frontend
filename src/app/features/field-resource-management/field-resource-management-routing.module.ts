@@ -35,6 +35,10 @@ import { FrmLayoutComponent } from './components/layout/frm-layout/frm-layout.co
 // My Team
 import { MyTeamComponent } from './components/my-team/my-team.component';
 
+// Org Structure & Assignments
+import { OrgStructureComponent } from './components/org-structure/org-structure.component';
+import { AssignmentsInboxComponent } from './components/assignments/assignments-inbox.component';
+
 /**
  * Field Resource Management Routing Module
  * 
@@ -104,16 +108,16 @@ const routes: Routes = [
       //   }
       // },
 
-      // DISABLED: My Team - reduce usage
-      // {
-      //   path: 'my-team',
-      //   component: MyTeamComponent,
-      //   canActivate: [ManagerGuard],
-      //   data: {
-      //     title: 'My Team',
-      //     breadcrumb: 'My Team'
-      //   }
-      // },
+      // My Team - wired to hierarchy API
+      {
+        path: 'my-team',
+        component: MyTeamComponent,
+        canActivate: [ManagerGuard],
+        data: {
+          title: 'My Team',
+          breadcrumb: 'My Team'
+        }
+      },
 
       // DISABLED: Timecard - reduce usage
       // {
@@ -239,6 +243,30 @@ const routes: Routes = [
         path: 'onboarding',
         loadChildren: () => import('./components/onboarding/onboarding.module').then(m => m.OnboardingModule),
         canActivate: [DispatcherGuard]
+      },
+
+      // Org Structure (Manager Hierarchy) - Admin/HR/CM only
+      {
+        path: 'org-structure',
+        component: OrgStructureComponent,
+        canActivate: [EnhancedRoleGuard],
+        data: {
+          title: 'Organization Structure',
+          breadcrumb: 'Org Structure',
+          roleGuard: {
+            allowedRoles: [UserRole.Admin]
+          }
+        }
+      },
+
+      // Unified Assignments Inbox - All users
+      {
+        path: 'assignments',
+        component: AssignmentsInboxComponent,
+        data: {
+          title: 'My Assignments',
+          breadcrumb: 'Assignments'
+        }
       },
 
       // PTO & Overtime Routes - Lazy Loaded
