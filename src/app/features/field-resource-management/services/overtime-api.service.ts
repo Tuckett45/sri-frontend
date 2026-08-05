@@ -27,7 +27,7 @@ interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class OvertimeApiService {
-  private readonly apiUrl = `${local_environment.atlasApiUrl}/overtime-requests`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/overtime-requests`;
 
   constructor(private http: HttpClient) {}
 

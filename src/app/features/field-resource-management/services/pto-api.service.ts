@@ -24,7 +24,7 @@ interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class PtoApiService {
-  private readonly apiUrl = `${local_environment.atlasApiUrl}/pto-requests`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/pto-requests`;
 
   constructor(private http: HttpClient) {}
 

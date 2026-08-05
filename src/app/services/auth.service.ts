@@ -225,10 +225,9 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<string> {
-  const url = `${environment.apiUrl}/auth/forgot-password/${encodeURIComponent(email)}`;
-    return this.http.post<string>(url, null, {
-      headers: this.httpOptions?.headers,
-      // backend returns plain text like Ok("Password email sent")
+    const url = `${environment.apiUrl}/auth/forgot-password`;
+    return this.http.post<string>(url, { email }, {
+      ...this.httpOptions,
       responseType: 'text' as 'json'
     });
   }
