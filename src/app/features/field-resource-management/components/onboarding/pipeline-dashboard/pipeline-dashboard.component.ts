@@ -236,6 +236,7 @@ export class PipelineDashboardComponent implements OnInit {
     offer_extended: 'Offer Extended',
     offer_accepted_onboarding: 'Accepted/Onboarding',
     hired_assigned: 'Hired/Assigned',
+    onboarded: 'Onboarded',
     do_not_hire: 'Do Not Hire',
     turned_down_hold: 'Turned Down/Hold for Later',
   };
