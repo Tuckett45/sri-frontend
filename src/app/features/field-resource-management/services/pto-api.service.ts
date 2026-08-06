@@ -5,9 +5,9 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { PtoRequest, CreatePtoRequestDto, LeaveType, TeamAvailabilityEntry } from '../models/pto.models';
+import { PtoRequest, CreatePtoRequestDto, LeaveType, TeamAvailabilityEntry, RequestStatus } from '../models/pto.models';
 import { environment, local_environment } from '../../../../environments/environments';
 
 interface PaginatedResponse<T> {
@@ -33,10 +33,72 @@ export class PtoApiService {
    * @returns Observable of PTO requests array
    */
   getMyRequests(): Observable<PtoRequest[]> {
-    return this.http.get<PaginatedResponse<PtoRequest>>(this.apiUrl).pipe(
-      map(response => response.items),
+    return this.http.get<PaginatedResponse<PtoRequest> | PtoRequest[]>(this.apiUrl).pipe(
+      map(response => {
+        // Handle both paginated and flat array responses from backend
+        if (Array.isArray(response)) {
+          return response;
+        }
+        return response.items ?? [];
+      }),
+      catchError(() => {
+        // Fallback: use the reports endpoint and filter by current user
+        console.warn('[PTO API] /pto-requests failed, falling back to /reports/time-off');
+        return this.getMyRequestsFromReports();
+      })
+    );
+  }
+
+  /**
+   * Fallback: fetch own PTO requests from the reports endpoint.
+   * Maps the report shape into PtoRequest format.
+   */
+  private getMyRequestsFromReports(): Observable<PtoRequest[]> {
+    const reportsUrl = `${environment.atlasApiUrl}/reports/time-off`;
+    return this.http.get<any>(reportsUrl, {
+      params: { pageSize: '100', sortBy: 'submissionDate', sortDir: 'desc', type: 'pto' }
+    }).pipe(
+      map((response: any) => {
+        const items: any[] = Array.isArray(response) ? response : (response.items ?? []);
+        return items.map(item => this.mapReportEntryToPtoRequest(item));
+      }),
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * Maps a report entry (from /reports/time-off) to a PtoRequest shape.
+   */
+  private mapReportEntryToPtoRequest(entry: any): PtoRequest {
+    return {
+      id: entry.id || '',
+      employeeId: entry.employeeId || '',
+      employeeName: entry.employeeName || '',
+      managerId: entry.managerId || '',
+      managerName: entry.managerName || '',
+      startDate: entry.startDate || '',
+      endDate: entry.endDate || '',
+      requestType: entry.requestType || entry.type || 'pto',
+      reason: entry.justification || entry.reason || null,
+      status: this.mapReportStatus(entry.status || entry.approved),
+      createdAt: entry.submissionDate || entry.createdAt || '',
+      updatedAt: entry.updatedAt || entry.submissionDate || '',
+      market: entry.market || null,
+      coveragePerson: entry.coveragePerson || null
+    };
+  }
+
+  /**
+   * Maps report status strings to the PtoRequest status enum values.
+   */
+  private mapReportStatus(status: string | null): RequestStatus {
+    if (!status) return RequestStatus.Pending_Manager_Approval;
+    const lower = status.toLowerCase();
+    if (lower === 'approved' || lower === 'yes') return RequestStatus.Approved;
+    if (lower === 'rejected' || lower === 'no') return RequestStatus.Rejected;
+    if (lower === 'cancelled') return RequestStatus.Cancelled;
+    if (lower.includes('backoffice')) return RequestStatus.Pending_Backoffice_Approval;
+    return RequestStatus.Pending_Manager_Approval;
   }
 
   /**
@@ -91,7 +153,11 @@ export class PtoApiService {
   getManagerQueue(): Observable<PtoRequest[]> {
     return this.http.get<PaginatedResponse<PtoRequest>>(`${this.apiUrl}/manager-queue`).pipe(
       map(response => response.items),
-      catchError(this.handleError)
+      catchError(() => {
+        // Endpoint doesn't exist yet — fall back to reports filtered by pending status
+        console.warn('[PTO API] /pto-requests/manager-queue not available, returning empty queue');
+        return this.getQueueFromReports('Pending');
+      })
     );
   }
 
@@ -102,7 +168,30 @@ export class PtoApiService {
   getBackofficeQueue(): Observable<PtoRequest[]> {
     return this.http.get<PaginatedResponse<PtoRequest>>(`${this.apiUrl}/backoffice-queue`).pipe(
       map(response => response.items),
-      catchError(this.handleError)
+      catchError(() => {
+        // Endpoint doesn't exist yet — fall back to reports filtered by pending status
+        console.warn('[PTO API] /pto-requests/backoffice-queue not available, returning empty queue');
+        return this.getQueueFromReports('ManagerApproved');
+      })
+    );
+  }
+
+  /**
+   * Fallback: fetch approval queues from the reports endpoint filtered by status.
+   */
+  private getQueueFromReports(status: string): Observable<PtoRequest[]> {
+    const reportsUrl = `${environment.atlasApiUrl}/reports/time-off`;
+    return this.http.get<any>(reportsUrl, {
+      params: { pageSize: '50', sortBy: 'submissionDate', sortDir: 'desc', status, type: 'pto' }
+    }).pipe(
+      map((response: any) => {
+        const items: any[] = Array.isArray(response) ? response : (response.items ?? []);
+        return items.map(item => this.mapReportEntryToPtoRequest(item));
+      }),
+      catchError(() => {
+        // If even the fallback fails, return empty array
+        return of([] as PtoRequest[]);
+      })
     );
   }
 

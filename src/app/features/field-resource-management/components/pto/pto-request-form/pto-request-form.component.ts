@@ -146,7 +146,7 @@ export class PtoRequestFormComponent implements OnInit {
       employeeId: user?.id ?? '',
       startDate: this.toIsoDateTime(formValue.startDate),
       endDate: this.toIsoDateTime(formValue.endDate),
-      requestType: formValue.market,
+      requestType: 'pto',
       employeeName: user?.name?.trim() || user?.displayName?.trim() || '',
       coveragePerson: formValue.coveragePerson?.trim(),
       emailedSriLead: formValue.emailedLead === 'yes',
