@@ -158,6 +158,10 @@ export class OvertimeRequestListComponent implements OnInit {
     return request.approvalStatus === OvertimeRequestStatus.Pending_Manager_Approval;
   }
 
+  canDelete(request: OvertimeRequest): boolean {
+    return true; // All own requests can be deleted
+  }
+
   canApprove(request: OvertimeRequest): boolean {
     const user = this.authService.getUser();
     const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'CM';
@@ -171,6 +175,12 @@ export class OvertimeRequestListComponent implements OnInit {
   onCancel(request: OvertimeRequest): void {
     if (confirm('Are you sure you want to cancel this overtime request?')) {
       this.store.dispatch(OvertimeActions.cancelOvertimeRequest({ requestId: request.id }));
+    }
+  }
+
+  onDelete(request: OvertimeRequest): void {
+    if (confirm('Are you sure you want to permanently delete this overtime request? This cannot be undone.')) {
+      this.store.dispatch(OvertimeActions.deleteOvertimeRequest({ requestId: request.id }));
     }
   }
 

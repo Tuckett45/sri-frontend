@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -6,6 +6,7 @@ import { forkJoin, Observable, from, of } from 'rxjs';
 import { concatMap, delay, catchError, toArray, tap } from 'rxjs/operators';
 import { OnboardingService } from '../../../services/onboarding.service';
 import { OnboardingLinkService } from '../../../services/onboarding-link.service';
+import { CandidateListStateService } from '../../../services/candidate-list-state.service';
 import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
 import { GenerateLinkDialogComponent } from '../generate-link-dialog/generate-link-dialog.component';
@@ -879,7 +880,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   `]
 })
 
-export class CandidateListComponent implements OnInit {
+export class CandidateListComponent implements OnInit, OnDestroy {
   candidates: Candidate[] = [];
   filteredCandidates: Candidate[] = [];
   paginatedCandidates: Candidate[] = [];
@@ -917,23 +918,61 @@ export class CandidateListComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private onboardingService: OnboardingService,
-    private onboardingLinkService: OnboardingLinkService
+    private onboardingLinkService: OnboardingLinkService,
+    private listStateService: CandidateListStateService
   ) {}
 
   ngOnInit(): void {
+    // Check for cached state from a previous visit (e.g., user returning from detail view)
+    const savedState = this.listStateService.restore();
+
     // Read query params for pre-filtering (from pipeline dashboard navigation)
     const params = this.route.snapshot.queryParams;
-    if (params['offerStatus']) {
-      this.statusFilter = params['offerStatus'];
-    }
-    if (params['search']) {
-      this.searchText = params['search'];
-    }
-    if (params['incompleteCerts'] === 'true') {
-      this.incompleteCertsFilter = true;
-    }
+    const hasQueryParams = params['offerStatus'] || params['search'] || params['incompleteCerts'];
 
-    this.loadCandidates();
+    if (savedState && !hasQueryParams) {
+      // Restore previous UI state
+      this.searchText = savedState.searchText;
+      this.statusFilter = savedState.statusFilter;
+      this.homeStateFilter = savedState.homeStateFilter;
+      this.referredByFilter = savedState.referredByFilter;
+      this.incompleteCertsFilter = savedState.incompleteCertsFilter;
+      this.sortState = savedState.sortColumn
+        ? { column: savedState.sortColumn, direction: savedState.sortDirection }
+        : null;
+      this.pageIndex = savedState.pageIndex;
+      this.pageSize = savedState.pageSize;
+
+      if (savedState.candidates.length > 0) {
+        // Use cached data — no API call needed
+        this.candidates = savedState.candidates;
+        this.updateAvailableStates();
+        this.applyFiltersAndSort(this.pageIndex);
+      } else {
+        // Data was invalidated (add/edit/delete happened) — reload but keep position
+        this.loadCandidates(true);
+      }
+    } else {
+      // Fresh load (first visit or navigating from pipeline dashboard with query params)
+      if (params['offerStatus']) {
+        this.statusFilter = params['offerStatus'];
+      }
+      if (params['search']) {
+        this.searchText = params['search'];
+      }
+      if (params['incompleteCerts'] === 'true') {
+        this.incompleteCertsFilter = true;
+      }
+
+      this.loadCandidates();
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Persist state whenever the component is destroyed (navigating away)
+    if (this.candidates.length > 0) {
+      this.saveListState();
+    }
   }
 
   onSearchChange(event: Event): void {
@@ -992,6 +1031,7 @@ export class CandidateListComponent implements OnInit {
   }
 
   onRowClick(candidate: Candidate): void {
+    this.saveListState();
     this.router.navigate(['candidates', candidate.candidateId], {
       relativeTo: this.route.parent,
     });
@@ -1048,11 +1088,11 @@ export class CandidateListComponent implements OnInit {
         };
         this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
           next: () => {
-            this.uploadCandidateFiles(candidate.candidateId, result.files, () => this.loadCandidates());
+            this.uploadCandidateFiles(candidate.candidateId, result.files, () => this.loadCandidates(true));
           },
           error: () => {
             this.errorMessage = 'Failed to update candidate. Please try again.';
-            this.loadCandidates();
+            this.loadCandidates(true);
           }
         });
       }
@@ -1122,12 +1162,12 @@ export class CandidateListComponent implements OnInit {
         this.onboardingService.createCandidate(payload).subscribe({
           next: (createdCandidate) => {
             this.submitting = false;
-            this.uploadCandidateFiles(createdCandidate.candidateId, result.files, () => this.loadCandidates());
+            this.uploadCandidateFiles(createdCandidate.candidateId, result.files, () => this.loadCandidates(true));
           },
           error: () => {
             this.submitting = false;
             this.errorMessage = 'Failed to create candidate. Please try again.';
-            this.loadCandidates();
+            this.loadCandidates(true);
           }
         });
       }
@@ -1142,7 +1182,7 @@ export class CandidateListComponent implements OnInit {
 
     this.onboardingService.deleteCandidateById(candidate.candidateId).subscribe({
       next: () => {
-        this.loadCandidates();
+        this.loadCandidates(true);
       },
       error: () => {
         this.errorMessage = 'Failed to delete candidate. Please try again.';
@@ -1296,7 +1336,7 @@ export class CandidateListComponent implements OnInit {
         this.successMessage = `Converted ${successCount} of ${results.length} candidates. ${failures.length} failed — see details below.`;
       }
 
-      this.loadCandidates();
+      this.loadCandidates(true);
     });
   }
 
@@ -1315,7 +1355,7 @@ export class CandidateListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((notesChanged: boolean) => {
       if (notesChanged) {
-        this.loadCandidates();
+        this.loadCandidates(true);
       }
     });
   }
@@ -1324,16 +1364,41 @@ export class CandidateListComponent implements OnInit {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  private loadCandidates(): void {
+  /**
+   * Persists current list UI state so it can be restored when the user navigates back.
+   */
+  private saveListState(): void {
+    this.listStateService.save({
+      searchText: this.searchText,
+      statusFilter: this.statusFilter,
+      homeStateFilter: this.homeStateFilter,
+      referredByFilter: this.referredByFilter,
+      incompleteCertsFilter: this.incompleteCertsFilter,
+      sortColumn: this.sortState?.column ?? null,
+      sortDirection: this.sortState?.direction ?? 'asc',
+      pageIndex: this.pageIndex,
+      pageSize: this.pageSize,
+      candidates: this.candidates,
+    });
+  }
+
+  /**
+   * Reloads candidates from the API.
+   * @param preservePosition If true, preserves the current page index after reload.
+   */
+  private loadCandidates(preservePosition = false): void {
     this.loading = true;
     this.errorMessage = '';
+    const savedPageIndex = this.pageIndex;
 
     this.onboardingService.getCandidates().subscribe({
       next: (candidates) => {
         this.candidates = candidates;
         this.loading = false;
         this.updateAvailableStates();
-        this.applyFiltersAndSort();
+        this.applyFiltersAndSort(preservePosition ? savedPageIndex : undefined);
+        // Update cached state with fresh data
+        this.saveListState();
       },
       error: (err) => {
         this.loading = false;
@@ -1378,11 +1443,17 @@ export class CandidateListComponent implements OnInit {
     this.availableReferrers = [...new Set(referrers)].sort();
   }
 
-  private applyFiltersAndSort(): void {
+  /**
+   * Applies current filters and sorting to the candidates list.
+   * @param restorePageIndex If provided, restores this page index instead of resetting to 0.
+   */
+  private applyFiltersAndSort(restorePageIndex?: number): void {
     let result = [...this.candidates];
 
-    // Clear selection when filters change to avoid stale selections
-    this.selectedCandidateIds.clear();
+    // Only clear selection when filters actually change (not on data reload)
+    if (restorePageIndex === undefined) {
+      this.selectedCandidateIds.clear();
+    }
 
     // Text search filter
     if (this.searchText.trim()) {
@@ -1446,6 +1517,13 @@ export class CandidateListComponent implements OnInit {
     }
 
     this.filteredCandidates = result;
+
+    // Restore page index if specified (e.g., after data reload), otherwise keep current
+    if (restorePageIndex !== undefined) {
+      // Clamp to valid range in case filtered results have fewer pages now
+      const maxPage = Math.max(0, Math.ceil(this.filteredCandidates.length / this.pageSize) - 1);
+      this.pageIndex = Math.min(restorePageIndex, maxPage);
+    }
     this.updatePaginatedCandidates();
   }
 

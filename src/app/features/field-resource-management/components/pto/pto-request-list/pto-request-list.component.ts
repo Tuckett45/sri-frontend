@@ -167,6 +167,13 @@ export class PtoRequestListComponent implements OnInit {
   }
 
   /**
+   * Whether the current user can delete this request (own requests only, any status).
+   */
+  canDelete(request: PtoRequest): boolean {
+    return true; // All own requests can be deleted
+  }
+
+  /**
    * Whether the current user can approve this request (manager/admin on pending requests).
    */
   canApprove(request: PtoRequest): boolean {
@@ -191,6 +198,15 @@ export class PtoRequestListComponent implements OnInit {
   onCancel(request: PtoRequest): void {
     if (confirm('Are you sure you want to cancel this PTO request?')) {
       this.store.dispatch(PtoActions.cancelRequest({ requestId: request.id }));
+    }
+  }
+
+  /**
+   * Delete a PTO request permanently.
+   */
+  onDelete(request: PtoRequest): void {
+    if (confirm('Are you sure you want to permanently delete this PTO request? This cannot be undone.')) {
+      this.store.dispatch(PtoActions.deleteRequest({ requestId: request.id }));
     }
   }
 

@@ -109,14 +109,14 @@ export class OvertimeRequestFormComponent implements OnInit {
     const user = this.authService.getUser();
 
     const dto: CreateOvertimeRequestDto = {
-      employeeFullName: user?.displayName?.trim() ?? '',
+      employeeFullName: user?.name?.trim() || user?.displayName?.trim() || '',
       department: formValue.department,
       market: formValue.market as SupportedMarket,
       emailedSriLead: formValue.emailedSriLead === 'yes',
       sriLeadName: formValue.sriLeadName.trim(),
       isPreApproved: formValue.isPreApproved === 'yes',
-      submissionDate: formValue.submissionDate,
-      overtimeStartDate: formValue.overtimeStartDate,
+      submissionDate: this.toIsoDateTime(formValue.submissionDate),
+      overtimeStartDate: this.toIsoDateTime(formValue.overtimeStartDate),
       estimatedHours: parseInt(formValue.estimatedHours, 10) || 0,
       estimatedMinutes: parseInt(formValue.estimatedMinutes, 10) || 0,
       justification: formValue.justification.trim()
@@ -158,6 +158,23 @@ export class OvertimeRequestFormComponent implements OnInit {
   private getTodayDate(): string {
     const today = new Date();
     return today.toISOString().split('T')[0];
+  }
+
+  /**
+   * Converts a date string (YYYY-MM-DD) or Date object to an ISO 8601 datetime string
+   * compatible with the backend's DateTime model binding.
+   */
+  private toIsoDateTime(dateValue: string | Date): string {
+    if (!dateValue) return '';
+    if (dateValue instanceof Date) {
+      return dateValue.toISOString();
+    }
+    if (typeof dateValue === 'string') {
+      if (dateValue.includes('T')) return dateValue;
+      return `${dateValue}T00:00:00`;
+    }
+    // Fallback: coerce to string
+    return new Date(dateValue).toISOString();
   }
 
   /**

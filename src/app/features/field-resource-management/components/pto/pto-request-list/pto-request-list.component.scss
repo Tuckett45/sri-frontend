@@ -235,6 +235,16 @@
   }
 }
 
+.btn-delete {
+  background-color: #fce4ec;
+  color: #b71c1c;
+  border: 1px solid #ef5350;
+
+  &:hover:not(:disabled) {
+    background-color: #ffcdd2;
+  }
+}
+
 .btn-view {
   background-color: #e3f2fd;
   color: #1565c0;

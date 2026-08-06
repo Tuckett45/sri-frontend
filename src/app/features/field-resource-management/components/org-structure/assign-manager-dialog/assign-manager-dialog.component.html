@@ -1,0 +1,205 @@
+<div class="assign-manager-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ dialogTitle }}</h2>
+    <button mat-icon-button (click)="onCancel()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <p class="dialog-description">{{ dialogDescription }}</p>
+
+    <!-- Current assignment info (for change mode) -->
+    <div class="current-assignment" *ngIf="mode === 'change' && data.currentManagerName">
+      <mat-icon>person</mat-icon>
+      <span>Current manager: <strong>{{ data.currentManagerName }}</strong></span>
+    </div>
+
+    <mat-divider *ngIf="mode === 'change'"></mat-divider>
+
+    <form [formGroup]="form" class="assign-form">
+      <!-- Employee selection (for 'create' and 'createManager' modes) -->
+      <div class="form-section" *ngIf="showEmployeeField">
+        <div class="section-label">
+          {{ mode === 'createManager' ? 'Person to promote as Manager' : 'Employee' }}
+        </div>
+
+        <div class="search-row">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search by name...</mat-label>
+            <input matInput
+                   [value]="employeeSearchText"
+                   (input)="filterEmployees($any($event.target).value)"
+                   placeholder="Type to search"
+                   autocomplete="off" />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="role-filter-field">
+            <mat-label>Role</mat-label>
+            <mat-select (selectionChange)="filterEmployeesByRole($event.value)">
+              <mat-option value="">All Roles</mat-option>
+              <mat-option *ngFor="let role of availableRoles" [value]="role">{{ role }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="user-list" *ngIf="filteredEmployees.length && (employeeSearchText || employeeRoleFilter)">
+          <div class="user-option"
+               *ngFor="let user of filteredEmployees | slice:0:10"
+               (click)="selectEmployee(user)"
+               [class.selected]="form.get('employeeUserId')?.value === user.userId">
+            <div class="user-option-info">
+              <span class="user-option-name">{{ user.fullName }}</span>
+              <span class="user-option-meta">
+                <span class="role-chip">{{ user.role || 'User' }}</span>
+                <span class="market-chip" *ngIf="user.market">{{ user.market }}</span>
+              </span>
+            </div>
+            <mat-icon *ngIf="form.get('employeeUserId')?.value === user.userId" class="check-icon">check_circle</mat-icon>
+          </div>
+        </div>
+
+        <!-- Selected employee chip -->
+        <div class="selected-chip" *ngIf="getSelectedEmployeeName()">
+          <mat-chip-listbox>
+            <mat-chip>
+              <mat-icon matChipAvatar>person</mat-icon>
+              {{ getSelectedEmployeeName() }}
+            </mat-chip>
+          </mat-chip-listbox>
+        </div>
+      </div>
+
+      <!-- Employee info (for assign/change mode) -->
+      <div class="employee-info" *ngIf="!showEmployeeField && data.employee">
+        <div class="section-label">Employee</div>
+        <div class="employee-card">
+          <mat-icon>person</mat-icon>
+          <div class="employee-details">
+            <span class="employee-name">{{ data.employee.fullName }}</span>
+            <span class="employee-meta">
+              <span class="role-chip">{{ data.employee.role || 'User' }}</span>
+              <span class="market-chip" *ngIf="data.employee.market">{{ data.employee.market }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Manager selection -->
+      <div class="form-section" *ngIf="mode !== 'createManager'">
+        <div class="section-label">{{ mode === 'change' ? 'New Manager' : 'Manager' }}</div>
+
+        <div class="search-row">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search manager...</mat-label>
+            <input matInput
+                   [value]="managerSearchText"
+                   (input)="filterManagers($any($event.target).value)"
+                   placeholder="Type to search"
+                   autocomplete="off" />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="role-filter-field">
+            <mat-label>Role</mat-label>
+            <mat-select (selectionChange)="filterManagersByRole($event.value)">
+              <mat-option value="">All Roles</mat-option>
+              <mat-option *ngFor="let role of availableRoles" [value]="role">{{ role }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="user-list" *ngIf="filteredManagers.length">
+          <div class="user-option"
+               *ngFor="let user of filteredManagers | slice:0:10"
+               (click)="selectManager(user)"
+               [class.selected]="form.get('managerUserId')?.value === user.userId">
+            <div class="user-option-info">
+              <span class="user-option-name">{{ user.fullName }}</span>
+              <span class="user-option-meta">
+                <span class="role-chip">{{ user.role || 'User' }}</span>
+                <span class="market-chip" *ngIf="user.market">{{ user.market }}</span>
+              </span>
+            </div>
+            <mat-icon *ngIf="form.get('managerUserId')?.value === user.userId" class="check-icon">check_circle</mat-icon>
+          </div>
+        </div>
+
+        <!-- Selected manager chip -->
+        <div class="selected-chip" *ngIf="getSelectedManagerName()">
+          <mat-chip-listbox>
+            <mat-chip highlighted>
+              <mat-icon matChipAvatar>supervisor_account</mat-icon>
+              {{ getSelectedManagerName() }}
+            </mat-chip>
+          </mat-chip-listbox>
+        </div>
+      </div>
+
+      <!-- Optional manager for createManager mode -->
+      <div class="form-section" *ngIf="mode === 'createManager'">
+        <div class="section-label">Reports to (optional)</div>
+        <p class="optional-hint">Leave empty to create a top-level manager with no parent.</p>
+
+        <div class="search-row">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search manager...</mat-label>
+            <input matInput
+                   [value]="managerSearchText"
+                   (input)="filterManagers($any($event.target).value)"
+                   placeholder="Type to search"
+                   autocomplete="off" />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="role-filter-field">
+            <mat-label>Role</mat-label>
+            <mat-select (selectionChange)="filterManagersByRole($event.value)">
+              <mat-option value="">All Roles</mat-option>
+              <mat-option *ngFor="let role of availableRoles" [value]="role">{{ role }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="user-list" *ngIf="filteredManagers.length && (managerSearchText || managerRoleFilter)">
+          <div class="user-option"
+               *ngFor="let user of filteredManagers | slice:0:10"
+               (click)="selectManager(user)"
+               [class.selected]="form.get('managerUserId')?.value === user.userId">
+            <div class="user-option-info">
+              <span class="user-option-name">{{ user.fullName }}</span>
+              <span class="user-option-meta">
+                <span class="role-chip">{{ user.role || 'User' }}</span>
+                <span class="market-chip" *ngIf="user.market">{{ user.market }}</span>
+              </span>
+            </div>
+            <mat-icon *ngIf="form.get('managerUserId')?.value === user.userId" class="check-icon">check_circle</mat-icon>
+          </div>
+        </div>
+
+        <!-- Selected manager chip -->
+        <div class="selected-chip" *ngIf="getSelectedManagerName()">
+          <mat-chip-listbox>
+            <mat-chip highlighted>
+              <mat-icon matChipAvatar>supervisor_account</mat-icon>
+              {{ getSelectedManagerName() }}
+              <button matChipRemove (click)="clearManagerSelection()">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+          </mat-chip-listbox>
+        </div>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary"
+            (click)="onConfirm()"
+            [disabled]="!form.get('employeeUserId')?.value || (mode !== 'createManager' && !form.get('managerUserId')?.value)">
+      <mat-icon>{{ mode === 'change' ? 'swap_horiz' : mode === 'createManager' ? 'supervisor_account' : 'person_add' }}</mat-icon>
+      {{ confirmButtonLabel }}
+    </button>
+  </mat-dialog-actions>
+</div>

@@ -62,6 +62,11 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
 
   // Pipeline view
   pipelineStatusFilter: string = '';
+  pipelineSearchControl = new FormControl('');
+  pipelineCrewFilter: string = ''; // '', 'assigned', 'unassigned', or a specific crew name
+  pipelineRegionFilter: string = '';
+  pipelineRoleFilter: string = '';
+  availableCrews: string[] = []; // Populated from technicianCrewMap
   
   private destroy$ = new Subject<void>();
   
@@ -161,6 +166,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(crewMap => {
         this.technicianCrewMap = crewMap;
+        // Extract unique crew names for the pipeline filter dropdown
+        const crewNames = new Set<string>(Object.values(crewMap));
+        this.availableCrews = Array.from(crewNames).sort();
       });
   }
   
@@ -590,6 +598,56 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.pipelineStatusFilter = '';
   }
 
+  clearPipelineFilters(): void {
+    this.pipelineSearchControl.setValue('');
+    this.pipelineCrewFilter = '';
+    this.pipelineRegionFilter = '';
+    this.pipelineRoleFilter = '';
+    this.pipelineStatusFilter = '';
+  }
+
+  get hasPipelineFilters(): boolean {
+    return !!(this.pipelineSearchControl.value || this.pipelineCrewFilter || this.pipelineRegionFilter || this.pipelineRoleFilter);
+  }
+
+  /**
+   * Apply pipeline-specific filters (search, crew, region, role) to a list of technicians
+   */
+  private applyPipelineFilters(technicians: Technician[]): Technician[] {
+    let filtered = technicians;
+
+    // Text search filter
+    const search = (this.pipelineSearchControl.value || '').toLowerCase().trim();
+    if (search) {
+      filtered = filtered.filter(t => {
+        const fullName = `${t.firstName} ${t.lastName}`.toLowerCase();
+        const crew = (this.technicianCrewMap[t.id] || '').toLowerCase();
+        return fullName.includes(search) || crew.includes(search) || (t.region || '').toLowerCase().includes(search);
+      });
+    }
+
+    // Crew filter
+    if (this.pipelineCrewFilter === 'assigned') {
+      filtered = filtered.filter(t => !!this.technicianCrewMap[t.id]);
+    } else if (this.pipelineCrewFilter === 'unassigned') {
+      filtered = filtered.filter(t => !this.technicianCrewMap[t.id]);
+    } else if (this.pipelineCrewFilter) {
+      filtered = filtered.filter(t => this.technicianCrewMap[t.id] === this.pipelineCrewFilter);
+    }
+
+    // Region filter
+    if (this.pipelineRegionFilter) {
+      filtered = filtered.filter(t => t.region === this.pipelineRegionFilter);
+    }
+
+    // Role filter
+    if (this.pipelineRoleFilter) {
+      filtered = filtered.filter(t => t.role === this.pipelineRoleFilter);
+    }
+
+    return filtered;
+  }
+
   getPipelineCount(technicians: Technician[], status: string): number {
     return technicians.filter(t => t.isActive && (t.fieldStatus || 'Available') === status).length;
   }
@@ -599,18 +657,22 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   }
 
   getAvailableTechnicians(technicians: Technician[]): Technician[] {
-    return technicians.filter(t => t.isActive && (!t.fieldStatus || t.fieldStatus === 'Available'));
+    const base = technicians.filter(t => t.isActive && (!t.fieldStatus || t.fieldStatus === 'Available'));
+    return this.applyPipelineFilters(base);
   }
 
   getEnRouteTechnicians(technicians: Technician[]): Technician[] {
-    return technicians.filter(t => t.isActive && t.fieldStatus === 'EnRoute');
+    const base = technicians.filter(t => t.isActive && t.fieldStatus === 'EnRoute');
+    return this.applyPipelineFilters(base);
   }
 
   getOnSiteTechnicians(technicians: Technician[]): Technician[] {
-    return technicians.filter(t => t.isActive && t.fieldStatus === 'OnSite');
+    const base = technicians.filter(t => t.isActive && t.fieldStatus === 'OnSite');
+    return this.applyPipelineFilters(base);
   }
 
   getClockedOutTechnicians(technicians: Technician[]): Technician[] {
-    return technicians.filter(t => t.isActive && t.fieldStatus === 'ClockedOut');
+    const base = technicians.filter(t => t.isActive && t.fieldStatus === 'ClockedOut');
+    return this.applyPipelineFilters(base);
   }
 }

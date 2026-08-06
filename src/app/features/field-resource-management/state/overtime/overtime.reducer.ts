@@ -131,5 +131,18 @@ export const overtimeReducer = createReducer(
   on(OvertimeActions.selectOvertimeRequest, (state, { requestId }) => ({
     ...state,
     selectedRequestId: requestId
+  })),
+
+  // Delete Request
+  on(OvertimeActions.deleteOvertimeRequestSuccess, (state, { requestId }) =>
+    overtimeAdapter.removeOne(requestId, {
+      ...state,
+      error: null
+    })
+  ),
+
+  on(OvertimeActions.deleteOvertimeRequestFailure, (state, { error }) => ({
+    ...state,
+    error
   }))
 );

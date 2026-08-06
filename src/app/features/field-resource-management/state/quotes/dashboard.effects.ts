@@ -1,11 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { Store } from '@ngrx/store';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, mergeMap, concatMap, tap, withLatestFrom } from 'rxjs/operators';
+import { map, catchError, switchMap, mergeMap, concatMap, tap } from 'rxjs/operators';
 import * as DashboardActions from './dashboard.actions';
-import { selectDashboardFilters } from './dashboard.selectors';
 import { RfpDashboardService } from '../../services/rfp-dashboard.service';
 import { AuthService } from '../../../../services/auth.service';
 
@@ -79,12 +77,11 @@ export class DashboardEffects {
   showUpdateSuccess$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DashboardActions.updateDashboardFieldsSuccess),
-      withLatestFrom(this.store.select(selectDashboardFilters)),
       tap(() => {
         this.snackBar.open('Record updated successfully', 'Close', { duration: 3000 });
-      }),
-      map(([_, filters]) => DashboardActions.loadDashboard({ filters }))
-    )
+      })
+    ),
+    { dispatch: false }
   );
 
   showBomTrackingSuccess$ = createEffect(() =>
@@ -94,19 +91,17 @@ export class DashboardEffects {
         DashboardActions.updateBomTrackingSuccess,
         DashboardActions.deleteBomTrackingSuccess
       ),
-      withLatestFrom(this.store.select(selectDashboardFilters)),
       tap((action) => {
-        const [a] = action;
-        if (a.type === DashboardActions.createBomTrackingSuccess.type) {
+        if (action.type === DashboardActions.createBomTrackingSuccess.type) {
           this.snackBar.open('BOM tracking entry added', 'Close', { duration: 3000 });
-        } else if (a.type === DashboardActions.updateBomTrackingSuccess.type) {
+        } else if (action.type === DashboardActions.updateBomTrackingSuccess.type) {
           this.snackBar.open('BOM tracking entry updated', 'Close', { duration: 3000 });
         } else {
           this.snackBar.open('BOM tracking entry deleted', 'Close', { duration: 3000 });
         }
-      }),
-      map(([_, filters]) => DashboardActions.loadDashboard({ filters }))
-    )
+      })
+    ),
+    { dispatch: false }
   );
 
   updateBomTracking$ = createEffect(() =>
@@ -330,7 +325,6 @@ export class DashboardEffects {
 
   constructor(
     private actions$: Actions,
-    private store: Store,
     private dashboardService: RfpDashboardService,
     private snackBar: MatSnackBar,
     private authService: AuthService

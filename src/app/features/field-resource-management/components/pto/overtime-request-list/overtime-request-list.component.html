@@ -80,6 +80,13 @@
                 title="Reject this request">
                 Reject
               </button>
+              <button
+                *ngIf="canDelete(request)"
+                class="btn-action btn-delete"
+                (click)="onDelete(request)"
+                title="Delete this request permanently">
+                Delete
+              </button>
             </td>
           </tr>
         </tbody>

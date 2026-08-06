@@ -17,7 +17,8 @@ export class DefaultDashboardComponent {
     { label: 'Onboarding', icon: 'person_add', route: '/field-resource-management/onboarding', color: 'accent', visible: true },
     { label: 'Request Time Off', icon: 'event_busy', route: '', color: 'accent', visible: true, action: 'openPtoDialog' },
     { label: 'Request Overtime', icon: 'more_time', route: '', color: 'accent', visible: true, action: 'openOvertimeDialog' },
-    { label: 'Team Availability', icon: 'groups', route: '/field-resource-management/pto/timeline', color: 'primary', visible: true }
+    { label: 'Team Availability', icon: 'groups', route: '/field-resource-management/pto/timeline', color: 'primary', visible: true },
+    { label: 'My Assignments', icon: 'assignment', route: '/field-resource-management/assignments', color: 'primary', visible: true }
   ];
 
   constructor(private dialog: MatDialog) {}

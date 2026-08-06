@@ -230,6 +230,17 @@
   border: 1px solid #ef9a9a;
 }
 
+.btn-delete {
+  background-color: #fce4ec;
+  color: #b71c1c;
+  border: 1px solid #ef5350;
+
+  &:hover {
+    opacity: 1;
+    background-color: #ffcdd2;
+  }
+}
+
 .empty-state {
   text-align: center;
   padding: 60px 20px;

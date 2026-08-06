@@ -118,7 +118,7 @@
               <th>Members</th>
               <th>Status</th>
               <th>Market</th>
-              <th>Company</th>
+              <th>Job</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -138,7 +138,7 @@
                 <span class="status-badge" [ngClass]="getStatusBadgeClass(crew.status)">{{ crew.status || '—' }}</span>
               </td>
               <td>{{ crew.market || '—' }}</td>
-              <td>{{ crew.company || '—' }}</td>
+              <td>{{ getJobName(crew) }}</td>
               <td class="actions-cell" (click)="$event.stopPropagation()">
                 <button mat-icon-button class="action-view" [routerLink]="['./', crew.id]" matTooltip="View" aria-label="View">
                   <mat-icon>visibility</mat-icon>

@@ -92,8 +92,8 @@ export class RfpTabComponent implements OnInit, OnChanges {
       this.dataSource.data = this.records;
       this.buildAssignedToOptions();
       setTimeout(() => {
-        if (this.sort) { this.dataSource.sort = this.sort; }
-        if (this.paginator) { this.dataSource.paginator = this.paginator; }
+        if (this.sort && !this.dataSource.sort) { this.dataSource.sort = this.sort; }
+        if (this.paginator && !this.dataSource.paginator) { this.dataSource.paginator = this.paginator; }
       });
     }
   }

@@ -1,12 +1,13 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, interval } from 'rxjs';
 import { takeUntil, filter } from 'rxjs/operators';
 import { AuthService } from '../../../../../services/auth.service';
 import { PermissionService } from '../../../../../services/permission.service';
 import { FrmPermissionService, FrmPermissionKey } from '../../../services/frm-permission.service';
 import { User } from '../../../../../models/user.model';
 import { UserRole } from '../../../../../models/role.enum';
+import { AssignmentsApiService, AssignmentCount } from '../../../services/assignments-api.service';
 
 /**
  * Navigation Menu Item Interface
@@ -49,6 +50,7 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   activeRoute: string = '';
   expandedItems: Set<string> = new Set();
+  assignmentBadgeCount = 0;
   
   private destroy$ = new Subject<void>();
 
@@ -184,10 +186,24 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
     {
       label: 'My Assignments',
       icon: 'assignment',
-      route: '/field-resource-management/mobile/daily',
+      route: '/field-resource-management/assignments',
       resource: 'assignments',
+      action: 'read'
+    },
+    {
+      label: 'Time Off',
+      icon: 'event_busy',
+      route: '/field-resource-management/pto',
+      resource: 'assignments',
+      action: 'read'
+    },
+    {
+      label: 'Org Structure',
+      icon: 'account_tree',
+      route: '/field-resource-management/org-structure',
+      resource: 'system_config',
       action: 'read',
-      roles: [UserRole.Admin, UserRole.Technician]
+      roles: [UserRole.Admin]
     },
     // DISABLED: CM Dashboard - service deleted
     // {
@@ -244,7 +260,8 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private permissionService: PermissionService,
     private frmPermissionService: FrmPermissionService,
-    private router: Router
+    private router: Router,
+    private assignmentsApi: AssignmentsApiService
   ) {}
 
   ngOnInit(): void {
@@ -264,11 +281,31 @@ export class NavigationMenuComponent implements OnInit, OnDestroy {
     
     this.buildMenuForCurrentUser();
     this.trackActiveRoute();
+    this.pollAssignmentCount();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Poll assignment count every 60 seconds for nav badge
+   */
+  private pollAssignmentCount(): void {
+    // Initial load
+    this.assignmentsApi.getPendingCount().subscribe({
+      next: (res: AssignmentCount) => this.assignmentBadgeCount = res.pendingCount,
+      error: () => {} // Silently fail
+    });
+
+    // Poll every 60 seconds
+    interval(60000).pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.assignmentsApi.getPendingCount().subscribe({
+        next: (res: AssignmentCount) => this.assignmentBadgeCount = res.pendingCount,
+        error: () => {}
+      });
+    });
   }
 
   /**

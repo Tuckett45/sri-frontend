@@ -12,6 +12,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { tap } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
 
 import * as OvertimeActions from './overtime.actions';
 import { NotificationService } from '../../services/notification.service';
@@ -22,19 +23,78 @@ export class OvertimeNotificationEffects {
   /**
    * Effect: notifyOnSubmission$
    *
-   * On successful overtime request creation, log and show UI feedback.
+   * On successful overtime request creation, show success toast.
    * Backend already sends in-app notification to the manager.
    */
   notifyOnSubmission$ = createEffect(() =>
     this.actions$.pipe(
       ofType(OvertimeActions.createOvertimeRequestSuccess),
       tap(({ request }) => {
-        // Backend handles notifying the manager via INotificationService.SendAsync()
-        // Frontend shows success state via the component's submitted flag
+        this.toastr.success(
+          'Your overtime request has been submitted successfully.',
+          'Overtime Request Submitted'
+        );
         console.info(
           `[Overtime Notification] Request ${request.id} submitted by ${request.employeeFullName}. ` +
           `Manager notified via backend.`
         );
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
+   * Effect: notifyOnSubmissionFailure$
+   *
+   * On failed overtime request creation, show error toast.
+   */
+  notifyOnSubmissionFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OvertimeActions.createOvertimeRequestFailure),
+      tap(({ error }) => {
+        this.toastr.error(
+          error || 'Failed to submit your overtime request. Please try again.',
+          'Overtime Request Failed'
+        );
+        console.error(`[Overtime Notification] Create request failed: ${error}`);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
+   * Effect: notifyOnDeleteSuccess$
+   *
+   * On successful overtime request deletion, show success toast.
+   */
+  notifyOnDeleteSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OvertimeActions.deleteOvertimeRequestSuccess),
+      tap(({ requestId }) => {
+        this.toastr.success(
+          'Your overtime request has been deleted.',
+          'Request Deleted'
+        );
+        console.info(`[Overtime Notification] Request ${requestId} deleted.`);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
+   * Effect: notifyOnDeleteFailure$
+   *
+   * On failed overtime request deletion, show error toast.
+   */
+  notifyOnDeleteFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OvertimeActions.deleteOvertimeRequestFailure),
+      tap(({ error }) => {
+        this.toastr.error(
+          error || 'Failed to delete overtime request. Please try again.',
+          'Delete Failed'
+        );
+        console.error(`[Overtime Notification] Delete request failed: ${error}`);
       })
     ),
     { dispatch: false }
@@ -97,6 +157,7 @@ export class OvertimeNotificationEffects {
 
   constructor(
     private actions$: Actions,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private toastr: ToastrService
   ) {}
 }

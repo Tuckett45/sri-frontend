@@ -15,6 +15,8 @@ import * as CrewActions from '../../../state/crews/crew.actions';
 import * as CrewSelectors from '../../../state/crews/crew.selectors';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
+import * as JobActions from '../../../state/jobs/job.actions';
+import { selectJobEntities } from '../../../state/jobs/job.selectors';
 import { CrewFormComponent } from '../crew-form/crew-form.component';
 import { ExportService } from '../../../services/export.service';
 import { UserRole } from '../../../../../models/role.enum';
@@ -84,6 +86,9 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   
   // Technician name lookup
   technicianNameMap: Map<string, string> = new Map();
+  
+  // Job name lookup
+  jobNameMap: Map<string, string> = new Map();
   
   // Enum references for template
   CrewStatus = CrewStatus;
@@ -194,6 +199,19 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.technicianNameMap.clear();
       technicians.forEach(t => {
         this.technicianNameMap.set(t.id, `${t.firstName} ${t.lastName}`);
+      });
+    });
+
+    // Load jobs for name lookups
+    this.store.dispatch(JobActions.loadJobs({ filters: {} }));
+    this.store.select(selectJobEntities).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(jobEntities => {
+      this.jobNameMap.clear();
+      Object.values(jobEntities).forEach(job => {
+        if (job) {
+          this.jobNameMap.set(job.id, job.title || job.jobId || job.id);
+        }
       });
     });
     
@@ -411,6 +429,11 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   getTechnicianName(technicianId: string): string {
     if (!technicianId) return '—';
     return this.technicianNameMap.get(technicianId) || technicianId.substring(0, 8) + '...';
+  }
+
+  getJobName(crew: Crew): string {
+    if (!crew.activeJobId) return '—';
+    return this.jobNameMap.get(crew.activeJobId) || crew.activeJobId.substring(0, 8) + '...';
   }
   
   getMemberCount(crew: Crew): number {

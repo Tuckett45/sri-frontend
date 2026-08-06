@@ -12,6 +12,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { tap } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
 
 import * as PtoActions from './pto.actions';
 import { NotificationService } from '../../services/notification.service';
@@ -23,7 +24,7 @@ export class PtoNotificationEffects {
    * Effect: notifyOnSubmission$
    *
    * On successful PTO request creation, the backend notifies the manager.
-   * Frontend logs the event for tracing.
+   * Frontend shows success toast and logs the event.
    *
    * Requirement 6.1
    */
@@ -31,10 +32,71 @@ export class PtoNotificationEffects {
     this.actions$.pipe(
       ofType(PtoActions.createRequestSuccess),
       tap(({ request }) => {
+        this.toastr.success(
+          'Your time off request has been submitted successfully.',
+          'PTO Request Submitted'
+        );
         console.info(
           `[PTO Notification] Request ${request.id} submitted by ${request.employeeName}. ` +
           `Manager ${request.managerName} (${request.managerId}) notified via backend.`
         );
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
+   * Effect: notifyOnSubmissionFailure$
+   *
+   * On failed PTO request creation, show error toast.
+   */
+  notifyOnSubmissionFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PtoActions.createRequestFailure),
+      tap(({ error }) => {
+        this.toastr.error(
+          error || 'Failed to submit your time off request. Please try again.',
+          'PTO Request Failed'
+        );
+        console.error(`[PTO Notification] Create request failed: ${error}`);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
+   * Effect: notifyOnDeleteSuccess$
+   *
+   * On successful PTO request deletion, show success toast.
+   */
+  notifyOnDeleteSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PtoActions.deleteRequestSuccess),
+      tap(({ requestId }) => {
+        this.toastr.success(
+          'Your PTO request has been deleted.',
+          'Request Deleted'
+        );
+        console.info(`[PTO Notification] Request ${requestId} deleted.`);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
+   * Effect: notifyOnDeleteFailure$
+   *
+   * On failed PTO request deletion, show error toast.
+   */
+  notifyOnDeleteFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PtoActions.deleteRequestFailure),
+      tap(({ error }) => {
+        this.toastr.error(
+          error || 'Failed to delete PTO request. Please try again.',
+          'Delete Failed'
+        );
+        console.error(`[PTO Notification] Delete request failed: ${error}`);
       })
     ),
     { dispatch: false }
@@ -145,6 +207,7 @@ export class PtoNotificationEffects {
 
   constructor(
     private actions$: Actions,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private toastr: ToastrService
   ) {}
 }

@@ -11,7 +11,7 @@ import {
   OvertimeRequest,
   CreateOvertimeRequestDto
 } from '../models/overtime.models';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 
 interface PaginatedResponse<T> {
   items: T[];
@@ -54,6 +54,7 @@ export class OvertimeApiService {
    * Create a new overtime request
    */
   createRequest(dto: CreateOvertimeRequestDto): Observable<OvertimeRequest> {
+    console.log('[Overtime API] POST payload:', JSON.stringify(dto, null, 2));
     return this.http.post<OvertimeRequest>(this.apiUrl, dto).pipe(
       catchError(this.handleError)
     );
@@ -64,6 +65,15 @@ export class OvertimeApiService {
    */
   cancelRequest(id: string): Observable<OvertimeRequest> {
     return this.http.post<OvertimeRequest>(`${this.apiUrl}/${id}/cancel`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Delete an overtime request (own request only)
+   */
+  deleteRequest(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
@@ -116,9 +126,19 @@ export class OvertimeApiService {
   private handleError(error: HttpErrorResponse): Observable<never> {
     let message: string;
 
+    // Try to extract server-provided error message from various response formats
+    const serverMessage = typeof error.error === 'string'
+      ? error.error
+      : (error.error?.message || error.error?.title || error.error?.detail || error.error?.errors
+        ? JSON.stringify(error.error?.errors || error.error)
+        : null);
+
     switch (error.status) {
+      case 400:
+        message = serverMessage || 'Invalid request. Please check your form data.';
+        break;
       case 401:
-        message = 'Unauthorized';
+        message = 'Unauthorized. Please log in again.';
         break;
       case 403:
         message = 'You do not have permission to perform this action';
@@ -129,12 +149,24 @@ export class OvertimeApiService {
       case 409:
         message = 'Request was updated by another user';
         break;
+      case 422:
+        message = serverMessage || 'Validation failed. Please check your form data.';
+        break;
       case 500:
+        message = serverMessage || 'Server error. Please try again later.';
+        break;
       default:
-        message = 'An unexpected error occurred. Please try again.';
+        message = serverMessage || 'An unexpected error occurred. Please try again.';
         break;
     }
 
+    console.error('[Overtime API Error]', {
+      status: error.status,
+      statusText: error.statusText,
+      url: error.url,
+      body: error.error,
+      message
+    });
     return throwError(() => new Error(message));
   }
 }
