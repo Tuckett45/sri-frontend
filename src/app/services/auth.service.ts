@@ -238,6 +238,10 @@ export class AuthService {
     return this.http.post(`${environment.apiUrl}/auth/reset-password`, payload, this.httpOptions);
   }
 
+  validateResetToken(token: string): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/auth/validate-reset-token?token=${token}`, this.httpOptions);
+  }
+
   logout(): void {
     this.clearStorage();
     this.resetCurrentUser();
