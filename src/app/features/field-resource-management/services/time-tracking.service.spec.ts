@@ -3,12 +3,12 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { TimeTrackingService } from './time-tracking.service';
 import { TimeEntry } from '../models/time-entry.model';
 import { TimeCategory, PayType, SyncStatus } from '../../../models/time-payroll.enum';
-import { local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 
 describe('TimeTrackingService', () => {
   let service: TimeTrackingService;
   let httpMock: HttpTestingController;
-  const apiUrl = `${local_environment.apiUrl}/time-entries`;
+  const apiUrl = `${environment.apiUrl}/time-entries`;
 
   const mockRawResponse: any = {
     id: 'te-1',
