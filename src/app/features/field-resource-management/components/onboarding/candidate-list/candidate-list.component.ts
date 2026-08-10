@@ -103,6 +103,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <option value="offer_extended">Offer Extended</option>
             <option value="offer_accepted_onboarding">Offer Accepted/Onboarding</option>
             <option value="hired_assigned">Hired/Assigned</option>
+            <option value="onboarded">Onboarded</option>
             <option value="do_not_hire">Do Not Hire</option>
             <option value="turned_down_hold">Turned Down/Hold for Later</option>
           </select>
@@ -258,6 +259,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
               </button>
               <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
               <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
+              <span class="badge-promoted" *ngIf="isPromoted(candidate)">Promoted</span>
               <button class="action-btn btn-convert"
                       *ngIf="canConvert(candidate)"
                       (click)="onConvertToTechnician(candidate); $event.stopPropagation()"
@@ -779,6 +781,18 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     .btn-convert:hover:not(:disabled) { background: #e1bee7; }
     .btn-convert:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    .badge-promoted {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+      margin: 2px;
+    }
+
     .icon-btn {
       display: inline-flex;
       align-items: center;
@@ -1193,9 +1207,14 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   // ─── Convert to Technician ────────────────────────────────────────────────
 
   canConvert(candidate: Candidate): boolean {
-    // Hired/Assigned candidates can always be converted to technicians
-    if (candidate.offerStatus === 'hired_assigned') return true;
-    return candidate.offerStatus === 'offer_accepted_onboarding' && candidate.oshaCertified;
+    // Already promoted candidates cannot be converted again
+    if (candidate.promotedToTechnicianId) return false;
+    // Only Hired/Assigned candidates are eligible for conversion
+    return candidate.offerStatus === 'hired_assigned';
+  }
+
+  isPromoted(candidate: Candidate): boolean {
+    return !!candidate.promotedToTechnicianId;
   }
 
   onConvertToTechnician(candidate: Candidate): void {
@@ -1307,8 +1326,16 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           delay(150), // Small delay between requests to avoid overwhelming the API
           tap(() => this.bulkConvertProgress++),
           catchError(err => {
-            // Isolate individual failures — don't abort the whole batch
             this.bulkConvertProgress++;
+            // Handle "already promoted" gracefully — backend auto-repairs the status
+            if (err?.statusCode === 400 && err?.message?.includes('already been promoted')) {
+              return of({
+                alreadyPromoted: true as const,
+                candidateId: candidate.candidateId,
+                techName: candidate.techName,
+              });
+            }
+            // Isolate individual failures — don't abort the whole batch
             return of({
               error: true as const,
               candidateId: candidate.candidateId,
@@ -1324,16 +1351,19 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       this.selectedCandidateIds.clear();
 
       const failures = results.filter((r: any) => r?.error === true) as { error: boolean; candidateId: string; techName: string; reason: string }[];
-      const successCount = results.length - failures.length;
+      const alreadyPromotedCount = results.filter((r: any) => r?.alreadyPromoted === true).length;
+      const successCount = results.length - failures.length - alreadyPromotedCount;
 
       this.bulkConvertFailures = failures;
 
-      if (failures.length === 0) {
+      if (failures.length === 0 && alreadyPromotedCount === 0) {
         this.successMessage = `Successfully converted ${successCount} candidate${successCount > 1 ? 's' : ''} to technicians.`;
-      } else if (successCount === 0) {
+      } else if (failures.length === 0) {
+        this.successMessage = `Converted ${successCount} candidate${successCount > 1 ? 's' : ''} to technicians.${alreadyPromotedCount > 0 ? ` ${alreadyPromotedCount} already promoted (status auto-repaired).` : ''}`;
+      } else if (successCount === 0 && alreadyPromotedCount === 0) {
         this.errorMessage = `All ${failures.length} conversions failed. Please review the errors below.`;
       } else {
-        this.successMessage = `Converted ${successCount} of ${results.length} candidates. ${failures.length} failed — see details below.`;
+        this.successMessage = `Converted ${successCount} of ${results.length} candidates.${alreadyPromotedCount > 0 ? ` ${alreadyPromotedCount} already promoted.` : ''} ${failures.length} failed — see details below.`;
       }
 
       this.loadCandidates(true);

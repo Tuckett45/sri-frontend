@@ -57,6 +57,10 @@ export interface Candidate {
   powerKitAssigned?: boolean;
   testingEqptAssigned?: boolean;
 
+  // Promotion tracking
+  promotedToTechnicianId?: string | null;
+  promotedAt?: string | null;
+
   createdBy: string;
   createdAt: string;          // ISO datetime
   updatedBy: string;

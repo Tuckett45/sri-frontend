@@ -27,7 +27,7 @@ export const staging_environment = {
 // Local server
 export const local_environment = {
   production: false,
-  apiUrl: 'https://localhost:44350/v1',
+  apiUrl: 'https://localhost:44376/api',
   // ATLAS platform backend (local)
   atlasApiUrl: 'https://localhost:7028/v1',
   // API subscription key and VAPID key are now fetched securely at runtime
