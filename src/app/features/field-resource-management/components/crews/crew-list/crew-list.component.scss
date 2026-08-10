@@ -579,6 +579,19 @@
     color: #1565c0;
   }
 
+  .job-cell {
+    .job-link {
+      color: #1565c0;
+      text-decoration: none;
+      font-weight: 500;
+
+      &:hover {
+        text-decoration: underline;
+        color: #0d47a1;
+      }
+    }
+  }
+
   .actions-cell {
     white-space: nowrap;
     text-align: center;

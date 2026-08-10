@@ -75,6 +75,14 @@
           </mat-select>
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+          <mat-label>Referred By</mat-label>
+          <mat-select [formControl]="referredByControl">
+            <mat-option value="">All</mat-option>
+            <mat-option *ngFor="let referrer of availableReferrers" [value]="referrer">{{ referrer }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
         <mat-checkbox [formControl]="availabilityControl" class="availability-toggle">
           Available Only
         </mat-checkbox>

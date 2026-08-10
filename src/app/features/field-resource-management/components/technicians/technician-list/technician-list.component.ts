@@ -37,6 +37,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   availabilityControl = new FormControl(false);
   regionControl = new FormControl('');
   activeStatusControl = new FormControl('');
+  referredByControl = new FormControl('');
   
   // Pagination
   pageSize = 50;
@@ -45,7 +46,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   
   // Available options for filters
   roles = Object.values(TechnicianRole);
-  availableRegions: string[] = []; // Will be populated from technicians
+  availableRegions: string[] = [];
+  availableReferrers: string[] = []; // Will be populated from technicians
   
   // Current job map (technicianId → job label)
   technicianJobMap: Record<string, string> = {};
@@ -140,18 +142,27 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.activeStatusControl.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.applyFilters());
+
+    this.referredByControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
     
-    // Extract unique regions from all technicians
+    // Extract unique regions and referrers from all technicians
     this.technicians$
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
         const regionsSet = new Set<string>();
+        const referrersSet = new Set<string>();
         technicians.forEach(tech => {
           if (tech.region) {
             regionsSet.add(tech.region);
           }
+          if (tech.referredBy) {
+            referrersSet.add(tech.referredBy);
+          }
         });
         this.availableRegions = Array.from(regionsSet).sort();
+        this.availableReferrers = Array.from(referrersSet).sort();
       });
 
     // Subscribe to technician → current job map
@@ -183,6 +194,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       role: (this.roleControl.value as TechnicianRole) || undefined,
       isAvailable: this.availabilityControl.value || undefined,
       region: this.regionControl.value || undefined,
+      referredBy: this.referredByControl.value || undefined,
       isActive: this.activeStatusControl.value === 'active' ? true 
         : this.activeStatusControl.value === 'inactive' ? false 
         : undefined,
@@ -258,6 +270,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     if (this.regionControl.value) {
       filters.push({ label: 'Region', value: this.regionControl.value, key: 'region' });
     }
+    if (this.referredByControl.value) {
+      filters.push({ label: 'Referred By', value: this.referredByControl.value, key: 'referredBy' });
+    }
     if (this.activeStatusControl.value) {
       const statusLabel = this.activeStatusControl.value === 'active' ? 'Active' : 'Inactive';
       filters.push({ label: 'Status', value: statusLabel, key: 'activeStatus' });
@@ -283,6 +298,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       case 'region':
         this.regionControl.setValue('');
         break;
+      case 'referredBy':
+        this.referredByControl.setValue('');
+        break;
       case 'activeStatus':
         this.activeStatusControl.setValue('');
         break;
@@ -295,6 +313,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.roleControl.setValue('');
     this.availabilityControl.setValue(false);
     this.regionControl.setValue('');
+    this.referredByControl.setValue('');
     this.activeStatusControl.setValue('');
     this.pageIndex = 0; // Reset to first page
     this.store.dispatch(TechnicianActions.clearTechnicianFilters());
