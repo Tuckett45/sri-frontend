@@ -210,7 +210,7 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.jobNameMap.clear();
       Object.values(jobEntities).forEach(job => {
         if (job) {
-          this.jobNameMap.set(job.id, job.title || job.jobId || job.id);
+          this.jobNameMap.set(job.id, job.siteName || job.title || job.jobId || job.id);
         }
       });
     });

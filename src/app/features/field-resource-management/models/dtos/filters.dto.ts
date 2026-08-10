@@ -12,6 +12,7 @@ export interface TechnicianFilters {
   role?: TechnicianRole;
   skills?: string[];
   region?: string;
+  referredBy?: string;
   isAvailable?: boolean;
   isActive?: boolean;
   page?: number;

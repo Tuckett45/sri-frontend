@@ -138,7 +138,12 @@
                 <span class="status-badge" [ngClass]="getStatusBadgeClass(crew.status)">{{ crew.status || '—' }}</span>
               </td>
               <td>{{ crew.market || '—' }}</td>
-              <td>{{ getJobName(crew) }}</td>
+              <td class="job-cell" (click)="$event.stopPropagation()">
+                <a *ngIf="crew.activeJobId" class="job-link" [routerLink]="['/field-resource-management/jobs', crew.activeJobId]">
+                  {{ getJobName(crew) }}
+                </a>
+                <span *ngIf="!crew.activeJobId">—</span>
+              </td>
               <td class="actions-cell" (click)="$event.stopPropagation()">
                 <button mat-icon-button class="action-view" [routerLink]="['./', crew.id]" matTooltip="View" aria-label="View">
                   <mat-icon>visibility</mat-icon>
@@ -246,6 +251,10 @@
                 <div class="pipeline-card-meta">
                   <mat-icon class="detail-icon">person</mat-icon>
                   {{ getTechnicianName(crew.leadTechnicianId) }}
+                </div>
+                <div class="pipeline-card-detail">
+                  <mat-icon class="detail-icon">work</mat-icon>
+                  <span>{{ getJobName(crew) }}</span>
                 </div>
                 <div class="pipeline-card-detail">
                   <span>{{ getMemberCount(crew) }} members</span>

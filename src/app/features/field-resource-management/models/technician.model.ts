@@ -117,6 +117,9 @@ export interface Technician {
   // Notes
   onboardingNotes?: string;
 
+  // Referral tracking (carried over from onboarding candidate)
+  referredBy?: string;
+
   lastKnownLatitude?: number;
   lastKnownLongitude?: number;
   locationUpdatedAt?: Date;

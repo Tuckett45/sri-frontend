@@ -191,7 +191,7 @@
         <app-po-tracking-tab [records]="(poTrackingRecords$ | async) || []"></app-po-tracking-tab>
       </mat-tab>
       <mat-tab label="Project Tracking">
-        <app-project-tracking-tab [records]="(projectTrackingRecords$ | async) || []"></app-project-tracking-tab>
+        <app-project-tracking-tab [records]="(projectTrackingRecords$ | async) || []" [users]="(users$ | async) || []"></app-project-tracking-tab>
       </mat-tab>
     </mat-tab-group>
   </div>

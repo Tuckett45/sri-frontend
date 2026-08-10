@@ -5,7 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
-import { DashboardQuote } from '../../../../models/quote-workflow.model';
+import { DashboardQuote, DashboardUser } from '../../../../models/quote-workflow.model';
 import { BomHistoryDialogComponent } from '../bom-history-dialog/bom-history-dialog.component';
 import { RfpDetailDialogComponent } from '../rfp-detail-dialog/rfp-detail-dialog.component';
 import { RfpIntakeFormComponent } from '../../rfp-intake/rfp-intake-form.component';
@@ -18,19 +18,23 @@ import * as DashboardActions from '../../../../state/quotes/dashboard.actions';
 })
 export class ProjectTrackingTabComponent implements OnChanges {
   @Input() records: DashboardQuote[] = [];
+  @Input() users: DashboardUser[] = [];
   @Output() selectionChanged = new EventEmitter<DashboardQuote[]>();
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   displayedColumns: string[] = [
-    'select', 'customer', 'description', 'requestorName',
+    'select', 'customer', 'description', 'requestorName', 'assignedToQuote',
     'quoteNumber', 'poNumber', 'poReceivedDate',
     'jobNumber', 'materialsOrdered', 'materialsEta', 'customerEquipment', 'jobStart', 'jobComplete', 'invoiceNumber', 'closeout', 'actions'
   ];
 
   dataSource = new MatTableDataSource<DashboardQuote>([]);
   selection = new SelectionModel<DashboardQuote>(true, []);
+
+  // Unique assignee names derived from records for the filter dropdown
+  uniqueAssignees: string[] = [];
 
   // Inline editing state
   editingId: string | null = null;
@@ -44,6 +48,7 @@ export class ProjectTrackingTabComponent implements OnChanges {
   filterPo = '';
   filterPoNumber = '';
   filterMaterials = '';
+  filterAssignee = '';
 
   constructor(private store: Store, private dialog: MatDialog) {
     this.selection.changed.subscribe(() => {
@@ -54,6 +59,24 @@ export class ProjectTrackingTabComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['records']) {
       this.dataSource.data = this.records;
+      // Extract unique assignee names from record data for the filter dropdown (case-insensitive dedup)
+      const assigneeMap = new Map<string, string>();
+      this.records.forEach(r => {
+        if (r.assignedToQuote) {
+          const key = r.assignedToQuote.toLowerCase();
+          // Keep the first capitalized version encountered
+          if (!assigneeMap.has(key)) {
+            assigneeMap.set(key, r.assignedToQuote);
+          } else {
+            // Prefer the version that starts with an uppercase letter
+            const existing = assigneeMap.get(key)!;
+            if (existing[0] !== existing[0].toUpperCase() && r.assignedToQuote[0] === r.assignedToQuote[0].toUpperCase()) {
+              assigneeMap.set(key, r.assignedToQuote);
+            }
+          }
+        }
+      });
+      this.uniqueAssignees = [...assigneeMap.values()].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
       this.dataSource.filterPredicate = (data: DashboardQuote, filter: string) => {
         const filters = JSON.parse(filter);
         let matches = true;
@@ -65,6 +88,9 @@ export class ProjectTrackingTabComponent implements OnChanges {
         }
         if (filters.poNumber) {
           matches = matches && (data.poNumber || '').toLowerCase().includes(filters.poNumber.toLowerCase());
+        }
+        if (filters.assignee) {
+          matches = matches && (data.assignedToQuote || '').toLowerCase() === filters.assignee.toLowerCase();
         }
         if (filters.po) {
           if (filters.po === 'has') {
@@ -146,7 +172,8 @@ export class ProjectTrackingTabComponent implements OnChanges {
       poNumber: this.filterPoNumber,
       status: this.filterStatus,
       po: this.filterPo,
-      materials: this.filterMaterials
+      materials: this.filterMaterials,
+      assignee: this.filterAssignee
     });
   }
 
@@ -157,11 +184,18 @@ export class ProjectTrackingTabComponent implements OnChanges {
     this.filterStatus = '';
     this.filterPo = '';
     this.filterMaterials = '';
+    this.filterAssignee = '';
     this.applyFilters();
   }
 
   hasActiveFilters(): boolean {
-    return !!(this.filterCustomer || this.filterJobNumber || this.filterPoNumber || this.filterStatus || this.filterPo || this.filterMaterials);
+    return !!(this.filterCustomer || this.filterJobNumber || this.filterPoNumber || this.filterStatus || this.filterPo || this.filterMaterials || this.filterAssignee);
+  }
+
+  getAssigneeName(userId: string | null): string {
+    if (!userId) return '-';
+    const user = this.users.find(u => u.id === userId);
+    return user ? user.fullName : userId;
   }
 
   // ─── Inline Editing ────────────────────────────────────────────────────────
