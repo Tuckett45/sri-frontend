@@ -1,304 +1,326 @@
 # ATLAS Integration Reconciliation Report
 
-**Date:** 2026-08-03  
-**Scope:** sri-frontend, atlas-platform, atlas-db  
-**Branch:** `ATLAS-segregation` (sri-frontend)  
-**Automated audit run**
+**Generated:** 2026-08-10  
+**Scope:** sri-frontend / atlas-platform / atlas-db  
+**Branch:** ATLAS-final (sri-frontend)
 
 ---
 
 ## 1. Branch Consolidation
 
-### Finding
+| Branch | Status | Unique Commits |
+|--------|--------|----------------|
+| `ATLAS-segregation` | Merged into `ATLAS-final` | 2 |
+| `ATLAS-consolidated` | Merged into `ATLAS-final` | ~90 |
+| `ATLAS-Segregation` (capital S) | Does not exist | — |
+| `ATLAS-final` | **Active** — contains all consolidated work | — |
 
-- `ATLAS-segregation` (lowercase 's') exists and is checked out.
-- `ATLAS-Segregation` (capital 'S') does **not** exist — confirmed via `git branch -a`.
-- `ATLAS-segregation` has **0 unique commits** — it is fully contained within `master`. The tip of `ATLAS-segregation` (`1a684fc6`, "Latest for PTo Requests", 2026-05-12) is the merge base; `master` was built directly on top of it.
-- **`master` has 278 commits beyond `ATLAS-segregation`**, adding: RFP Dashboard, PTO/Overtime Phase 2, Construction Integration, candidate management, public onboarding, dashboard widgets, document parsing, geofencing, and more.
-- The diff is **419 files changed** with 48,306 lines in `master` that `ATLAS-segregation` doesn't have.
-- Five prior reconciliation branches exist: `ATLAS-consolidated`, `ATLAS-consolidated-reconciliation`, `ATLAS-final-reconciliation`, `ATLAS-reconciliation-final`, `ATLAS-reconciliation-v2` — all subsets of `master` with only 1-3 unique tip commits each.
-- Two small API fixes in the consolidation branches remain unmerged into `master`: onboarding promote route (`convert-to-technician` → `promote`) and notification API URL patterns.
+**Actions taken:**
+- Created `ATLAS-final` from `ATLAS-consolidated` (the most complete branch).
+- Merged `ATLAS-segregation` into `ATLAS-final` (resolved one merge conflict in the report file).
+- Resolved merge conflict markers left in `admin-dashboard.component.html` from the merge.
+- Added missing `MyWorkWidgetComponent` import and declaration to `field-resource-management.module.ts`.
 
-### Recommendation
-
-**`master` is the canonical branch.** Cherry-pick the two API fixes from the consolidation branches (`5ead6364` and `d825f6fd`), then archive all `ATLAS-*` branches. The `local_environment` fixes from this audit are applied to `ATLAS-segregation` and should be applied to `master` instead, since that is the active branch.
-
----
-
-## 2. Frontend-to-Backend API Mapping
-
-### 2.1 Frontend Architecture
-
-- **Framework:** Angular 18
-- **HTTP Interceptors:** 5 total (ConfigurationInterceptor, AuthorizationInterceptor, MarketFilterInterceptor, ErrorHandlingInterceptor, FRM AuthTokenInterceptor)
-- **API Base URLs:** `apiUrl` (SRI legacy: `https://sri-api.azurewebsites.net/api`) and `atlasApiUrl` (ATLAS: `https://sri-backend.azure-api.net/atlas/v1`)
-- **Total HTTP call sites:** ~490+ across ~55 service/effect files
-- **Real-time:** 4 SignalR hubs (deployment events, ATLAS events, FRM events)
-
-### 2.2 FRM Services API Mapping
-
-| Frontend Service | API Base Path | Backend Controller | Status |
-|-----------------|---------------|-------------------|--------|
-| `job.service.ts` | `/jobs` | `JobsController` | OK |
-| `technician.service.ts` | `/technicians` | `TechniciansController` | OK |
-| `crew.service.ts` | `/crews` | `CrewsController` | OK |
-| `time-tracking.service.ts` | `/time-entries` | `TimeEntriesController` | OK |
-| `scheduling.service.ts` | `/scheduling` | `SchedulingController` | OK |
-| `notification.service.ts` | `/notifications` | `NotificationsController` | OK |
-| `payroll.service.ts` | `/payroll` | `PayrollController` | OK |
-| `onboarding.service.ts` | `/onboarding/candidates` | `CandidatesController` | OK |
-| `pto-api.service.ts` | `/pto-requests` | `PtoRequestsController` | OK |
-| `reporting.service.ts` | `/reports` | `ReportsController` | OK |
-| `referral.service.ts` | `/onboarding/referrals` | `ReferralsController` | OK |
-| `quote-workflow.service.ts` | `/quotes` | `QuotesController` | OK |
-| `quote-assembly.service.ts` | `/quotes` | `QuotesController` | OK |
-| `bom-validation.service.ts` | `/quotes` | `QuotesController` | OK |
-| `bom.service.ts` | `/quotes` | `QuotesController` | OK |
-| `job-summary.service.ts` | `/quotes` | `QuotesController` | OK |
-| `deployment-checklist.service.ts` | `/jobs/{jobId}/deployment-checklist` | **MISSING** | **GAP** |
-| `materials.service.ts` | `/materials`, `/purchase-orders`, `/suppliers` | **MISSING** | **GAP** |
-| `budget.service.ts` | `/budgets` | **MISSING** | **GAP** |
-| `inventory.service.ts` | `/inventory` | **MISSING** | **GAP** |
-| `client-configuration.service.ts` | `/client-configurations` | **MISSING** | **GAP** |
-| `travel.service.ts` | `/travel` | **MISSING** | **GAP** |
-
-### 2.3 Missing Backend Controllers — 6 Services With No Backend
-
-These frontend services call API endpoints with **no corresponding backend controller** — all produce HTTP 404 in production:
-
-1. **Deployment Checklists** → `/jobs/{jobId}/deployment-checklist/*` (7 endpoints)
-2. **Materials** → `/materials/*`, `/purchase-orders/*`, `/suppliers/*` (17 endpoints)
-3. **Budgets** → `/budgets/*` (4 endpoints)
-4. **Inventory** → `/inventory/*` (6 endpoints)
-5. **Client Configurations** → `/client-configurations/*` (2 endpoints)
-6. **Travel** → `/travel/profiles/*` (7 endpoints)
-
-### 2.4 Backend Controllers With No FRM Frontend Consumer
-
-| Controller | Route | Purpose |
-|-----------|-------|---------|
-| `AIAnalysisController` | `v1/ai-analysis` | Internal AI tooling |
-| `ARKIntegrationController` | `v1/integrations/ark` | External ARK integration |
-| `AdminTechnicianSyncController` | `v1/admin/technicians` | Admin sync tool |
-| `ApprovalsController` | `v1/approvals` | Deployment module |
-| `DeploymentsController` | `v1/deployments` | Deployment module |
-| `ExceptionsController` | `v1/exceptions` | Deployment module |
-| `HealthController` | `v1/health` | Infrastructure |
-| `MetricsController` | `api/Metrics` | Internal metrics |
-| `PublicOnboardingController` | `v1/public/onboarding` | Public-facing |
-| `QueryBuilderController` | `v1/query-builder` | Admin tool |
-| `SpectrumSyncAdminController` | `v1/admin/spectrum-sync` | Admin integration |
+**Build result:** Production build passes (warnings only — CSS budget overages and CommonJS dependency notices).
 
 ---
 
-## 3. Backend Architecture & Wiring
+## 2. Endpoint Mapping Report (Frontend → Backend)
 
-### 3.1 Solution Structure
+### Architecture
 
-The atlas-platform solution contains **5 API projects** and **65+ controllers** across ~180+ endpoints:
-- `atlas-api` — Main ATLAS API (34 controllers)
-- `atlas-agents` — AI agent endpoints
-- `atlas-ar-gateway` — AR gateway
-- `atlas-crm` — CRM integration
-- `sri-project-lifecycle-api` — Legacy project lifecycle
+The frontend uses **two API base URLs** configured in `src/environments/environments.ts`:
 
-### 3.2 Database Contexts
+| Key | Production URL | Purpose |
+|-----|---------------|---------|
+| `apiUrl` | `https://sri-api.azurewebsites.net/api` | Legacy SRI API + APIM gateway to atlas-api |
+| `atlasApiUrl` | `https://sri-backend.azure-api.net/atlas/v1` | Direct ATLAS platform API (deployments, AI, exceptions) |
 
-| Context | Database | Connection | Purpose |
-|---------|----------|------------|---------|
-| `AtlasDbContext` | `atlas-prod` (Azure SQL) | `DefaultConnection` | Main application (~65 DbSets) |
-| `SriDbContext` | `sri-prod` (Azure SQL) | `SriConnection` | Read-only legacy user validation |
+Azure API Management rewrites requests from `apiUrl` to atlas-api's versioned routes (`v1/...`). The backend's `ApiVersionRedirectMiddleware` also rewrites `/api/*` to `/v1/*`.
 
-### 3.3 Backend Critical Findings
+### Endpoint Coverage Summary
 
-| Severity | Finding | Location |
-|----------|---------|----------|
-| **CRITICAL** | Hardcoded Azure Blob Storage account key | `appsettings.json` → `BlobStorage.ConnectionString` |
-| **CRITICAL** | Hardcoded KeyVault password (`Ch3dd@r#21`) | `appsettings.json` → `KeyVault.SecretNames.Password` |
-| **CRITICAL** | Fire-and-forget `Task.Run` using scoped `DbContext` (8+ locations) | Multiple controllers — risks `ObjectDisposedException` and silent data loss |
-| **HIGH** | Route conflict: `TechniciansController` and `OnboardingTechniciansController` both map to `v1/technicians` | Controllers directory |
-| **HIGH** | `ApprovalsController` marked `[AllowAnonymous]` at class level | `ApprovalsController.cs` |
-| **HIGH** | `MetricsController` uses legacy route `api/[controller]` with no auth | `MetricsController.cs` |
-| **HIGH** | Empty CRM database connection string | `atlas-crm/appsettings.json` |
-| **MEDIUM** | In-memory pagination after full data load | Multiple controllers |
-| **MEDIUM** | Raw SQL bypassing EF model | Specific endpoints |
-| **MEDIUM** | No transaction wrapping on multi-step operations | Multiple locations |
-| **MEDIUM** | ~500 lines of raw SQL migrations in `Program.cs` startup | `atlas-api/Program.cs` |
+| Frontend Domain | Service File(s) | API Base | Backend Controller | Status |
+|----------------|-----------------|----------|-------------------|--------|
+| **Jobs** | `job.service.ts` | apiUrl | `JobsController` (16 endpoints) | MATCHED |
+| **Technicians** | `technician.service.ts` | apiUrl | `TechniciansController` (13 endpoints) | MATCHED |
+| **Crews** | `crew.service.ts` | apiUrl | `CrewsController` (8 endpoints) | MATCHED |
+| **Time Entries** | `time-tracking.service.ts` | apiUrl | `TimeEntriesController` (8 endpoints) | MATCHED |
+| **Assignments** | `assignment.service.ts` | apiUrl | `AssignmentsController` (5 endpoints) | MATCHED |
+| **PTO Requests** | `pto-api.service.ts` | apiUrl | `PtoRequestsController` (8 endpoints) | MATCHED |
+| **Overtime** | `overtime-api.service.ts` | apiUrl | `OvertimeRequestsController` (6 endpoints) | MATCHED |
+| **Quotes/RFP** | `quote-workflow.service.ts` | apiUrl | `QuotesController` (13 endpoints) | MATCHED |
+| **Candidates** | `onboarding.service.ts` | apiUrl | `CandidatesController` (6 endpoints) | MATCHED |
+| **Notifications** | `notification.service.ts` | apiUrl | `NotificationsController` (4 endpoints) | MATCHED |
+| **Scheduling** | `scheduling.service.ts` | apiUrl | `SchedulingController` (4 endpoints) | MATCHED |
+| **Payroll** | `payroll.service.ts` | apiUrl | `PayrollController` (7 endpoints) | MATCHED |
+| **Deployments** | ATLAS services | atlasApiUrl | `DeploymentsController` (8 endpoints) | MATCHED |
+| **AI Analysis** | ATLAS services | atlasApiUrl | `AIAnalysisController` (3 endpoints) | MATCHED |
+| **Approvals** | ATLAS services | atlasApiUrl | `ApprovalsController` (4 endpoints) | MATCHED |
+| **Exceptions** | ATLAS services | atlasApiUrl | `ExceptionsController` (7 endpoints) | MATCHED |
+| **Public Onboarding** | `public-onboarding.service.ts` | atlasApiUrl | `PublicOnboardingController` (2 endpoints) | MATCHED |
+| **Auth (login)** | `secure-auth.service.ts` | apiUrl | **Legacy SRI API** (not in atlas-platform) | LEGACY |
+| **Expenses** | `expense-api.service.ts` | apiUrl | **Legacy SRI API** (not in atlas-platform) | LEGACY |
+| **Punch Lists** | `preliminary-punch-list.service.ts` | apiUrl | **Legacy SRI API** (not in atlas-platform) | LEGACY |
+| **Role Permissions** | `role-permissions.effects.ts` | apiUrl | `PermissionsController` (implied) | MATCHED (after fix) |
+
+### Flagged Issues
+
+| # | Issue | Severity | Details |
+|---|-------|----------|---------|
+| 1 | **Hardcoded API URL** | HIGH | `role-permissions.effects.ts` hardcoded `https://sri-api.azurewebsites.net/api` instead of `environment.apiUrl`. **FIXED** — now uses environment import. |
+| 2 | **Hardcoded APIM subscription key** | HIGH | `SecureAuthService.getAuthHeaders()` and `PublicOnboardingService` both hardcode `Ocp-Apim-Subscription-Key: ffd675634ab645d7845640bb88d672d8`. Should be fetched from runtime config or backend. |
+| 3 | **Legacy flows not in atlas-platform** | MEDIUM | Auth login, Expenses, and Punch Lists route to the legacy SRI API. No corresponding controllers exist in atlas-platform. Migration path undefined. |
+| 4 | **ATLAS Config Service third URL path** | LOW | `atlas-config.service.ts` resolves a third set of URLs for deployments/AI features separate from `environment.atlasApiUrl`, adding routing complexity. |
 
 ---
 
-## 4. Database Schema Validation
+## 3. Backend → DB Wiring
 
-### 4.1 Schema Inventory
+### Write-Path Verification
 
-**34 tables** defined in `atlas-db/Tables/`:
-ApiKeys, Approvals, Assignments, AuditEvents, ContactInfoChanges, CrewLocationRecords, CrewMembers, Crews, Deployments, DirectDepositChanges, Evidence, Exceptions, GateEvaluations, IncidentReports, JobAttachments, JobNotes, JobStatusHistories, Jobs, Permissions, PrcSignatures, PayStubs, Roles, RolePermissions, StateTransitions, TechnicianAvailabilities, TechnicianCertifications, TechnicianSkills, Technicians, TimeEntries, UserPermissions, UserRoles, Users, W2Documents, W4Changes
+All critical write paths were traced from controller to `SaveChangesAsync()`:
 
-### 4.2 Missing Tables — 31 Tables in EF Core but NOT in atlas-db
+| Flow | Controller | DB Write | Verified |
+|------|-----------|----------|----------|
+| Create Job | `JobsController.CreateJob()` | `_dbContext.Jobs.Add()` → `SaveChangesAsync()` | YES |
+| Assign Technician | `JobsController.AssignTechnician()` | `_dbContext.Assignments.Add()` → `SaveChangesAsync()` | YES |
+| Clock In | `TimeEntriesController.ClockIn()` | `_dbContext.TimeEntries.Add()` → `SaveChangesAsync()` (x2) | YES |
+| Clock Out | `TimeEntriesController.ClockOut()` | Update entry → `SaveChangesAsync()` (x2) | YES |
+| Create Crew | `CrewsController.CreateCrew()` | `_dbContext.Crews.Add()` → `SaveChangesAsync()` | YES |
+| Create PTO Request | `PtoRequestsController.CreateRequest()` | via `IPtoService` → `SaveChangesAsync()` | YES |
+| Create Quote | `QuotesController` POST | `_dbContext.Quotes.Add()` → `SaveChangesAsync()` | YES |
+| Create Candidate | `CandidatesController.Create()` | via `ICandidateService` → `SaveChangesAsync()` | YES |
+| Submit Approval | `ApprovalsController` POST | `_dbContext.Approvals.Add()` → `SaveChangesAsync()` | YES |
+| Create Deployment | `DeploymentsController` POST | `_dbContext.Deployments.Add()` → `SaveChangesAsync()` | YES |
 
-| Entity | Mapped Table | Feature Area |
-|--------|-------------|-------------|
-| `PtoRequest` | PtoRequests | PTO/Leave |
-| `PtoApprovalHistory` | PtoApprovalHistories | PTO/Leave |
-| `PtoBalance` | PtoBalances | PTO/Leave |
-| `LeaveType` | LeaveTypes | PTO/Leave |
-| `OvertimeRequest` | OvertimeRequests | Overtime |
-| `OvertimeApprovalHistory` | OvertimeApprovalHistories | Overtime |
-| `Candidate` | Candidates | Onboarding |
-| `CandidateNote` | CandidateNotes | Onboarding |
-| `CandidateAttachment` | CandidateAttachments | Onboarding |
-| `TechnicianAttachment` | TechnicianAttachments | Onboarding |
-| `OnboardingLink` | OnboardingLinks | Onboarding |
-| `Referral` | Referrals | Onboarding |
-| `TypedCredential` | TechnicianCredentials | Credentials |
-| `EquipmentAssignment` | EquipmentAssignments | Equipment |
-| `TechnicalCompetency` | TechnicalCompetencies | Competencies |
-| `PerformanceReviewCycle` | PerformanceReviewCycles | Performance |
-| `PrcGoal` | PRCGoals | Performance |
-| `RoleCredentialTemplate` | RoleCredentialTemplates | Credentials |
-| `EmployeeManager` | EmployeeManagers | Org Structure |
-| `Quote` | Quotes | Quoting |
-| `QuoteBomItem` | QuoteBomItems | Quoting |
-| `QuoteAttachment` | QuoteAttachments | Quoting |
-| `QuoteNote` | rfp_notes | Quoting |
-| `BomTracking` | BomTrackings | Quoting |
-| `RfpIntake` | RfpIntakes | Quoting |
-| `UserNotification` | UserNotifications | Notifications |
-| `SpectrumSyncMetadata` | SpectrumSyncMetadata | Spectrum Sync |
-| `SpectrumIdMapping` | SpectrumIdMapping | Spectrum Sync |
-| `SpectrumWriteAuditLog` | SpectrumWriteAuditLog | Spectrum Sync |
-| `JobRequiredSkill` | JobRequiredSkills | Jobs |
-| `MasterSkill` | MasterSkills | Skills |
+### Bugs Found
 
-### 4.3 Missing Columns on Existing Tables
+| # | Bug | Severity | Location |
+|---|-----|----------|----------|
+| 1 | **Fire-and-forget with scoped DbContext** | HIGH | `CrewsController.AssignJob()`, `AddCrewMember()`, `RemoveCrewMember()` use `_ = Task.Run(async () => { ... _dbContext.FindAsync(...) ... })`. The request-scoped `DbContext` may be disposed before the background task completes, causing `ObjectDisposedException`. Fix: inject `IServiceScopeFactory` and create a new scope in the background task. |
+| 2 | **Double SaveChanges in ClockIn** | MEDIUM | `TimeEntriesController.ClockIn()` calls `SaveChangesAsync()` twice — once for the time entry, once for geolocation-based status updates. If the second fails, the entry exists without correct status/geo data. Should wrap in a transaction. |
+| 3 | **Fire-and-forget Spectrum write-back** | MEDIUM | `JobsController.UpdateJobStatus` uses `_ = Task.Run(async () => { await _spectrumWriteService.UpdateJobStatusAsync(...) })` — failures are silently swallowed with no retry mechanism. |
+| 4 | **Fire-and-forget PTO notifications** | LOW | `PtoRequestsController` approve/deny uses `_ = _notifications.SendAsync(...)` — notification failures are silently swallowed. The approval itself succeeds but the user may never be notified. |
+| 5 | **Auto-provisioning technician on ClockIn** | LOW | If `TechnicianId` is not found during clock-in, the controller auto-creates a Technician record. Could create orphan records if the ID was simply wrong. |
 
-**Technicians** — SQL has 14 columns; C# entity has ~35 (21 missing):
-`FieldStatus`, `UserId`, `ManagerId`, `CandidateId`, `WillingToTravel`, `ScissorLiftCertified`, `CurrentStatus`, `StatusUpdatedAt`, `FiberExperience`, `OshaCertified`, `OshaCertNumber`, `OshaCertExpiration`, `LiftCertifications`, `ShiftAvailability`, `BackgroundCheckStatus`, `DrugScreenStatus`, `IsVeteran`, `MilitaryBranch`, `SpectrumEmployeeId`, `SpectrumEmployeeNumber`, `LastSpectrumSync`
+---
 
-**Jobs** — SQL has 19 columns; C# entity has ~52 (33 missing):
+## 4. DB Schema Validation
+
+### Summary
+
+| Metric | Count |
+|--------|-------|
+| Tables in atlas-db SQL project | 35 |
+| Tables in AtlasDbContext (EF) | 69 |
+| **Tables missing from atlas-db** | **34** |
+| Extra columns on Technicians (EF vs SQL) | 23 |
+| Extra columns on Jobs (EF vs SQL) | 32 |
+
+### 34 Missing Tables (exist in EF migrations only)
+
+These tables are created by EF Core migrations but have no `.sql` definition in the atlas-db DACPAC project:
+
+| # | Table | Domain |
+|---|-------|--------|
+| 1 | JobRequiredSkills | FRM - Jobs |
+| 2 | MasterSkills | FRM - Skills |
+| 3 | PtoRequests | PTO Workflow |
+| 4 | PtoApprovalHistories | PTO Workflow |
+| 5 | PtoBalances | PTO Workflow |
+| 6 | LeaveTypes | PTO Workflow |
+| 7 | OvertimeRequests | Overtime |
+| 8 | OvertimeApprovalHistories | Overtime |
+| 9 | EmployeeManagers | Hierarchy |
+| 10 | ManagerHierarchies | Hierarchy |
+| 11 | UserAssignments | Assignments |
+| 12 | UserIdentityMappings | Identity |
+| 13 | Candidates | Onboarding |
+| 14 | CandidateNotes | Onboarding |
+| 15 | CandidateAttachments | Onboarding |
+| 16 | TechnicianAttachments | Onboarding |
+| 17 | TechnicianCredentials | Onboarding |
+| 18 | EquipmentAssignments | Onboarding |
+| 19 | TechnicalCompetencies | Onboarding |
+| 20 | PerformanceReviewCycles | Onboarding |
+| 21 | PRCGoals | Onboarding |
+| 22 | RoleCredentialTemplates | Onboarding |
+| 23 | OnboardingLinks | Onboarding |
+| 24 | Referrals | Referrals |
+| 25 | Quotes | Quotes/RFP |
+| 26 | QuoteBomItems | Quotes/RFP |
+| 27 | QuoteAttachments | Quotes/RFP |
+| 28 | rfp_notes | Quotes/RFP |
+| 29 | BomTrackings | Quotes/RFP |
+| 30 | RfpIntakes | Quotes/RFP |
+| 31 | UserNotifications | Notifications |
+| 32 | SpectrumSyncMetadata | Spectrum Sync |
+| 33 | SpectrumIdMapping | Spectrum Sync |
+| 34 | SpectrumWriteAuditLog | Spectrum Sync |
+
+### Column Mismatches on Existing Tables
+
+**Technicians** — 23 columns in EF entity but missing from SQL definition:
+`FieldStatus`, `UserId`, `ManagerId`, `CandidateId`, `ReferredBy`, `WillingToTravel`, `ScissorLiftCertified`, `CurrentStatus`, `StatusUpdatedAt`, `FiberExperience`, `OshaCertified`, `OshaCertNumber`, `OshaCertExpiration`, `LiftCertifications`, `ShiftAvailability`, `BackgroundCheckStatus`, `DrugScreenStatus`, `IsVeteran`, `MilitaryBranch`, `SpectrumEmployeeId`, `SpectrumEmployeeNumber`, `LastSpectrumSync`
+
+**Jobs** — 32 columns in EF entity but missing from SQL definition:
 `SiteName`, `SiteStreet`, `SiteCity`, `SiteState`, `SiteZipCode`, `SiteLatitude`, `SiteLongitude`, `ScopeDescription`, `CustomerPOCName`, `CustomerPOCPhone`, `CustomerPOCEmail`, `RequiredCrewSize`, `TargetResources`, `EstimatedLaborHours`, `RequestedHours`, `EstimatedOvertimeHours`, `OvertimeRequired`, `StandardBillRate`, `OvertimeBillRate`, `PerDiem`, `AuthorizationStatus`, `InvoicingProcess`, `HasPurchaseOrders`, `PurchaseOrderNumber`, `ProjectDirector`, `BizDevContact`, `ScheduledStartDate`, `ScheduledEndDate`, `JobReadiness`, `CustomerReady`, `SpectrumJobId`, `SpectrumJobNumber`, `LastSpectrumSync`
 
-**TimeEntries** — SQL has 15 columns; C# entity has 19 (4 missing):
-`TimeCategory`, `PayType`, `SyncStatus`, `ProximityStatus`
+### Impact
 
-### 4.4 Default Value Mismatch
-
-| Table | Column | SQL Default | C# Default | Impact |
-|-------|--------|-------------|------------|--------|
-| Jobs | Status | `'pending'` | `"NotStarted"` | Inconsistent status for SQL-inserted vs EF-inserted rows |
-
-### 4.5 Missing Indexes (13+)
-
-Columns used in WHERE clauses with no index in the SQL project:
-- `Technicians`: CurrentStatus, FieldStatus, UserId, CandidateId, SpectrumEmployeeId
-- `Jobs`: SpectrumJobId
-- `TimeEntries`: SyncStatus
-- `CrewMembers`: CrewId
-- `JobAttachments`, `JobNotes`, `JobStatusHistories`: JobId
-- `CrewLocationRecords`: CrewId
-- `Assignments`: composite (TechnicianId, IsActive)
+The atlas-db DACPAC project cannot be used for clean deployments without EF migrations applied first. If the database were recreated from the SQL project alone, 34 tables and 55+ columns would be missing, breaking all PTO, overtime, onboarding, quote, notification, and Spectrum sync functionality.
 
 ---
 
-## 5. End-to-End Flow Validation
+## 5. E2E Flow Validation
 
-### 5.1 Job Management Flow
-`job.service.ts` → `POST/GET/PUT /jobs` → `JobsController` → `AtlasDbContext.Jobs`  
-**Status:** FUNCTIONAL. 10 endpoints mapped. Response mapping handles PascalCase→camelCase and `$values` wrapper. 33 Job columns missing from SQL project but exist via EF migrations.
+### Fully Wired Flows (Frontend → Backend → DB)
 
-### 5.2 Technician Management Flow
-`technician.service.ts` → `GET/PUT /technicians` → `TechniciansController` → `AtlasDbContext.Technicians`  
-**Status:** FUNCTIONAL with schema drift. 19 endpoints mapped. Route conflict with `OnboardingTechniciansController`. 21 columns missing from SQL project.
+| # | Flow | Result |
+|---|------|--------|
+| 1 | Job Creation | COMPLETE — `JobService` → `JobsController` → `Jobs` table |
+| 2 | Technician Assignment | COMPLETE — `JobService` → `JobsController.AssignTechnician()` → `Assignments` table |
+| 3 | Clock In/Out | COMPLETE — `ClockInWidget` → `TimeEntriesController` → `TimeEntries` table |
+| 4 | Crew Management | COMPLETE — `CrewService` → `CrewsController` → `Crews`/`CrewMembers` tables |
+| 5 | PTO Request Workflow | COMPLETE — `PtoApiService` → `PtoRequestsController` → `PtoRequests` table |
+| 6 | Quote/RFP Workflow | COMPLETE — `QuoteWorkflowService` → `QuotesController` → `Quotes` table |
+| 7 | Candidate Onboarding | COMPLETE — `OnboardingService` → `CandidatesController` → `Candidates` table |
+| 8 | Public Self-Service Onboarding | COMPLETE — `PublicOnboardingService` → `PublicOnboardingController` → `OnboardingLinks`/`Candidates` |
+| 9 | Deployment Governance | COMPLETE — ATLAS services → `DeploymentsController` → `Deployments` table |
+| 10 | Notifications | COMPLETE — `NotificationService` → `NotificationsController` → `UserNotifications` table |
 
-### 5.3 Time Tracking Flow
-`time-tracking.service.ts` → `POST/GET /time-entries` → `TimeEntriesController` → `AtlasDbContext.TimeEntries`  
-**Status:** FUNCTIONAL. 5 endpoints mapped. 4 missing columns in SQL project.
+### Legacy-Only Flows (not in atlas-platform)
 
-### 5.4 Quote Workflow Flow
-`quote-workflow.service.ts` + `bom*.service.ts` + `quote-assembly.service.ts` + `job-summary.service.ts` → `/quotes/*` → `QuotesController` → `AtlasDbContext.Quotes`  
-**Status:** FUNCTIONAL via EF migrations. 15 endpoints mapped. All 6 quote tables missing from SQL project.
+| # | Flow | Frontend Service | API Target |
+|---|------|-----------------|------------|
+| 1 | User Login | `SecureAuthService` | Legacy SRI API (`/api/auth/login`) |
+| 2 | Expense Reports | `ExpenseApiService` | Legacy SRI API (`/api/expenses`) |
+| 3 | Punch Lists | `PreliminaryPunchListService` | Legacy SRI API (`/api/PunchList`) |
 
-### 5.5 PTO Request Flow
-`pto-api.service.ts` → `POST/GET /pto-requests` → `PtoRequestsController` → `AtlasDbContext.PtoRequests`  
-**Status:** FUNCTIONAL via EF migrations. 8 endpoints mapped. All 4 PTO tables missing from SQL project.
+### Risks in Wired Flows
 
----
-
-## 6. Fixes Applied
-
-### 6.1 Environment Configuration Fix (CRITICAL — 24 files)
-
-**Problem:** 24 frontend services used `local_environment.apiUrl` (pointing to `https://localhost:44350/v1`) instead of `environment.apiUrl` (pointing to production API `https://sri-api.azurewebsites.net/api`). This made all FRM API calls fail in production — requests would go to localhost and be blocked.
-
-**Fix:** Changed import and usage from `local_environment` to `environment` in all 24 files:
-
-`bom-validation.service.ts`, `bom.service.ts`, `budget.service.ts`, `client-configuration.service.ts`, `crew.service.ts`, `deployment-checklist.service.ts`, `frm-signalr.service.ts` (2 occurrences of `enableSignalR`), `inventory.service.ts`, `job-summary.service.ts`, `job.service.ts`, `materials.service.ts` (3 occurrences), `notification.service.ts`, `onboarding.service.ts`, `payroll.service.ts`, `pto-api.service.ts`, `quote-assembly.service.ts`, `quote-workflow.service.ts`, `referral.service.ts`, `reporting.service.ts`, `scheduling.service.ts`, `technician.service.ts`, `time-tracking.service.ts`, `time-tracking.service.spec.ts`, `travel.service.ts`
-
-**Not modified:** `atlas-config.service.ts` — legitimately uses `local_environment` for environment detection.
+1. **Two-phase clock-in writes** — If the second `SaveChangesAsync` fails after geolocation processing, the time entry exists but with incorrect status data.
+2. **Background DbContext use** — Crew notification tasks use the request-scoped DbContext after the HTTP response may have completed.
+3. **Proxy dependency** — All FRM frontend services use `environment.apiUrl` (legacy SRI URL). If APIM gateway routing fails, all FRM flows break silently.
+4. **Draft persistence** — Quote drafts are stored in `sessionStorage` only; lost on browser clear or device switch.
 
 ---
 
-## 7. Build & Test Results
+## 6. Security Findings
 
-### 7.1 Frontend Build
-
-Angular production build: **PASSED** (exit code 0).
-
-Pre-existing warnings only (not introduced by this fix):
-- CommonJS dependency warnings (canvg, leaflet-search, jspdf-autotable)
-- 6 SCSS files exceed 16.38 kB component style budget
-- Initial bundle exceeds 4.72 MB budget by 185.91 kB (total 4.90 MB)
-
-### 7.2 Backend
-
-No backend changes made. Existing state preserved.
-
-### 7.3 Database
-
-No SQL project changes made. Schema drift is documented but requires design decisions.
+| # | Finding | Severity | Location |
+|---|---------|----------|----------|
+| 1 | **Hardcoded APIM subscription key** | CRITICAL | `SecureAuthService.getAuthHeaders()` and `PublicOnboardingService` hardcode `Ocp-Apim-Subscription-Key`. This key is visible in client-side JavaScript bundles. |
+| 2 | **Hardcoded production API URL** | HIGH | `role-permissions.effects.ts` — **FIXED** in this reconciliation. |
+| 3 | **Connection string with password** | HIGH | `atlas-api/appsettings.json` contains `BlobStorage` connection string with plain-text account key. Should use Azure Key Vault or Managed Identity. |
+| 4 | **KeyVault secret in config** | HIGH | `atlas-api/appsettings.json` has `KeyVault.VaultUri` and a `Secret` value in plain text. |
+| 5 | **Open API endpoints** | MEDIUM | `atlas-ar-gateway` controllers have no `[Authorize]` attribute. `sri-project-lifecycle-api` also has no auth. Both are presumably internal-only. |
+| 6 | **CORS allows localhost** | LOW | Production `appsettings.json` CORS origins include localhost URLs; `appsettings.Production.json` does not override them, so they may be active in production. |
 
 ---
 
-## 8. Remaining Issues (Unfixed — Require Design Decisions)
+## 7. Fixes Applied
 
-### Priority 1 — Production Impact
-
-| # | Issue | Impact | Recommendation |
-|---|-------|--------|----------------|
-| 1 | 6 frontend services call endpoints with no backend controller | HTTP 404 on 43 endpoints | Create controllers or disable UI features |
-| 2 | Hardcoded secrets in `appsettings.json` | Security: credentials in source control | Move to Azure Key Vault / env vars |
-| 3 | Fire-and-forget `Task.Run` with scoped `DbContext` (8+ locations) | Silent data loss, `ObjectDisposedException` | Use background service / `IServiceScopeFactory` |
-| 4 | `ApprovalsController` has `[AllowAnonymous]` at class level | Unauthenticated access to approvals | Add proper auth |
-
-### Priority 2 — Architecture
-
-| # | Issue | Impact | Recommendation |
-|---|-------|--------|----------------|
-| 5 | SQL Database Project missing 31 tables | Schema reference is stale | Sync with EF Core migrations |
-| 6 | 58+ columns missing from existing SQL table definitions | Schema documentation inaccurate | Update SQL definitions |
-| 7 | `Jobs.Status` default value mismatch (`pending` vs `NotStarted`) | Data inconsistency | Align SQL default with C# |
-| 8 | Route conflict: `TechniciansController` + `OnboardingTechniciansController` | Potential routing ambiguity | Separate route prefixes |
-| 9 | `ATLAS-segregation` is 278 commits behind `master` | Stale branch | Apply fixes to `master` instead |
-
-### Priority 3 — Cleanup
-
-| # | Issue | Impact | Recommendation |
-|---|-------|--------|----------------|
-| 10 | 12 services outside FRM import `local_environment` | Unused imports / potential confusion | Audit and clean up |
-| 11 | 13+ missing database indexes | Query performance | Add indexes |
-| 12 | 5 stale `ATLAS-*` reconciliation branches | Branch clutter | Archive after cherry-picking fixes |
-| 13 | ~500 lines raw SQL in `Program.cs` startup | Maintenance burden | Move to proper migration files |
+| # | Fix | File | Description |
+|---|-----|------|-------------|
+| 1 | Resolved merge conflict markers | `admin-dashboard.component.html` | Removed `<<<<<<< HEAD`, `=======`, `>>>>>>> origin/ATLAS-segregation` markers; kept `<app-my-work-widget>` element. |
+| 2 | Added missing component import | `field-resource-management.module.ts` | Added `MyWorkWidgetComponent` import and declaration — was causing build failure (`app-my-work-widget is not a known element`). |
+| 3 | Fixed hardcoded API URL | `role-permissions.effects.ts` | Replaced `'https://sri-api.azurewebsites.net/api'` with `environment.apiUrl` import. |
 
 ---
 
-## 9. Detailed Audit Artifacts
+## 8. Recommendations
 
-Full audit data is available in the session scratchpad:
-- `scratchpad/branch_analysis.md` — Complete branch consolidation analysis
-- `scratchpad/frontend_api_calls.md` — Full catalog of ~490 HTTP call sites
-- `scratchpad/backend_audit.md` — Backend route inventory and DB wiring audit (1,122 lines)
-- `scratchpad/database_audit.md` — Complete schema cross-reference with column-level detail
+### Critical (blocking production reliability)
+
+1. **Fix fire-and-forget DbContext usage in CrewsController.** Replace `_ = Task.Run(async () => { ... _dbContext... })` with `IServiceScopeFactory`-based background tasks. This is a latent `ObjectDisposedException` bug.
+
+2. **Move APIM subscription key to runtime config.** The hardcoded key in frontend JavaScript is visible to anyone who inspects the bundle. Fetch it from a secure backend endpoint or use a backend-for-frontend proxy pattern.
+
+3. **Wrap ClockIn double-SaveChanges in a transaction.** Use `IDbContextTransaction` or `ExecutionStrategy.ExecuteInTransaction()` to make the time entry creation + geolocation update atomic.
+
+### High Priority (deployment and operational)
+
+4. **Sync atlas-db DACPAC with EF model.** Add SQL definitions for all 34 missing tables and 55+ missing columns. Until this is done, the DACPAC cannot be used for clean deployments or schema comparison tooling. Recommended approach: generate SQL from the EF migration snapshot and add corresponding `.sql` files.
+
+5. **Remove secrets from appsettings.json.** Move `BlobStorage` connection string and `KeyVault.Secret` to Azure Key Vault references or environment variables. These are currently committed to source control.
+
+6. **Add retry/outbox for Spectrum write-back.** The fire-and-forget pattern for Spectrum sync means job status updates can be silently lost. Implement a transactional outbox or at minimum a retry queue.
+
+### Medium Priority
+
+7. **Plan legacy SRI API migration.** Auth, Expenses, and Punch Lists still depend on the legacy SRI API. Document the migration path or ensure the legacy API remains supported.
+
+8. **Add auth to AR Gateway and Project Lifecycle APIs.** Both are currently open (no `[Authorize]`). If they're internal-only, add network-level restrictions. If they're externally accessible, add authentication.
+
+9. **Consolidate frontend URL configuration.** The three URL resolution paths (`environment.apiUrl`, `environment.atlasApiUrl`, `AtlasConfigService`) create unnecessary complexity. Consider unifying under a single configuration service.
+
+### Low Priority
+
+10. **Address CSS budget warnings.** Six component stylesheets exceed the 16KB budget. Consider extracting shared styles or lazy-loading heavy components.
+
+11. **Replace fire-and-forget notifications with a reliable mechanism.** PTO approval/denial notifications are silently swallowed on failure. Consider a notification outbox pattern.
 
 ---
 
-*Report generated by automated reconciliation audit on 2026-08-03.*
+## 9. Overall Architecture Summary
+
+```
++-------------------------------------------------------------+
+|                      Angular 18 Frontend                     |
+|  (sri-frontend)                                              |
+|                                                              |
+|  environment.apiUrl ----------+                              |
+|  environment.atlasApiUrl -----+                              |
+|  AtlasConfigService ----------+                              |
++-------------------------------+------------------------------+
+                                |
+                +---------------+---------------+
+                v               v               v
+    +------------------+ +--------------+ +----------------+
+    | Azure API Mgmt   | | Direct ATLAS | | Legacy SRI API |
+    | (rewrites to v1) | | API Gateway  | | (auth, expense,|
+    |                  | |              | |  punch list)   |
+    +--------+---------+ +------+-------+ +----------------+
+             |                  |
+             v                  v
+    +---------------------------------------------------------+
+    |                 atlas-platform (.NET 10)                  |
+    |                                                          |
+    |  atlas-api (37 controllers, ~180 endpoints)              |
+    |  atlas-agents (7 controllers, AI/ML)                     |
+    |  atlas-ar-gateway (6 controllers, AR/CV)                 |
+    |  atlas-crm (12 controllers, CRM)                         |
+    |  sri-project-lifecycle (6 controllers)                    |
+    +------------------------+--------------------------------+
+                             |
+                             v
+    +---------------------------------------------------------+
+    |                    Azure SQL Database                     |
+    |                                                          |
+    |  atlas-db DACPAC: 35 tables (core schema)                |
+    |  EF Migrations:   34 additional tables                   |
+    |  Total:           69 tables in AtlasDbContext             |
+    |                                                          |
+    |  + DispatchDbContext, CRMDbContext, ARGatewayDbContext    |
+    |    (separate databases)                                   |
+    +---------------------------------------------------------+
+```
+
+### Key Statistics
+
+| Metric | Value |
+|--------|-------|
+| Frontend HTTP call sites | ~530+ across ~70 service files |
+| Backend controllers | 68 across 5 API projects |
+| Backend endpoints | ~322 total |
+| Database tables (DACPAC) | 35 |
+| Database tables (actual via EF) | 69 |
+| Schema drift (missing tables) | 34 |
+| Schema drift (missing columns) | 55+ |
+| Seeded roles | 6 |
+| Seeded permissions | 32 |
+| Fixes applied this run | 3 |
+| Critical bugs found | 5 |
+| Security findings | 6 |

@@ -76,6 +76,7 @@ import { TimecardReviewWidgetComponent } from './components/home/widgets/timecar
 import { ExpensesWidgetComponent } from './components/home/widgets/expenses-widget/expenses-widget.component';
 import { TravelBreakPtoWidgetComponent } from './components/home/widgets/travel-break-pto-widget/travel-break-pto-widget.component';
 import { ClockInWidgetComponent } from './components/home/widgets/clock-in-widget/clock-in-widget.component';
+import { MyWorkWidgetComponent } from './components/home/widgets/my-work-widget/my-work-widget.component';
 
 // Role-Specific Dashboard Components
 import { TechnicianDashboardComponent } from './components/home/dashboards/technician-dashboard/technician-dashboard.component';
@@ -166,6 +167,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     ExpensesWidgetComponent,
     TravelBreakPtoWidgetComponent,
     ClockInWidgetComponent,
+    MyWorkWidgetComponent,
 
     // Role-Specific Dashboard Components
     TechnicianDashboardComponent,
