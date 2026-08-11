@@ -155,19 +155,19 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       <div class="table-wrapper" *ngIf="filteredCandidates.length > 0">
       <table class="candidate-table">
         <colgroup>
-          <col style="width: 3%;">
-          <col style="width: 9%;">
-          <col style="width: 13%;">
-          <col style="width: 8%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 7%;">
-          <col style="width: 7%;">
-          <col style="width: 10%;">
-          <col style="width: 18%;">
+          <col class="col-checkbox">
+          <col class="col-name">
+          <col class="col-email">
+          <col class="col-phone">
+          <col class="col-vest">
+          <col class="col-drug">
+          <col class="col-osha">
+          <col class="col-scissor">
+          <col class="col-state">
+          <col class="col-referred">
+          <col class="col-start">
+          <col class="col-status">
+          <col class="col-actions">
         </colgroup>
         <thead>
           <tr>
@@ -188,20 +188,20 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('techPhone')" class="sortable">
               Tech Phone <span class="sort-icon">{{ getSortIcon('techPhone') }}</span>
             </th>
-            <th (click)="onSort('vestSize')" class="sortable">
-              Vest Size <span class="sort-icon">{{ getSortIcon('vestSize') }}</span>
+            <th (click)="onSort('vestSize')" class="sortable center-col">
+              Vest <span class="sort-icon">{{ getSortIcon('vestSize') }}</span>
             </th>
-            <th (click)="onSort('drugTestComplete')" class="sortable">
-              Drug Test <span class="sort-icon">{{ getSortIcon('drugTestComplete') }}</span>
+            <th (click)="onSort('drugTestComplete')" class="sortable center-col">
+              Drug <span class="sort-icon">{{ getSortIcon('drugTestComplete') }}</span>
             </th>
-            <th (click)="onSort('oshaCertified')" class="sortable">
+            <th (click)="onSort('oshaCertified')" class="sortable center-col">
               OSHA <span class="sort-icon">{{ getSortIcon('oshaCertified') }}</span>
             </th>
-            <th (click)="onSort('scissorLiftCertified')" class="sortable">
-              Scissor Lift <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
+            <th (click)="onSort('scissorLiftCertified')" class="sortable center-col">
+              Scissor <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
             </th>
-            <th (click)="onSort('homeState')" class="sortable">
-              Home State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
+            <th (click)="onSort('homeState')" class="sortable center-col">
+              State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
             </th>
             <th (click)="onSort('referredBy')" class="sortable">
               Referred By <span class="sort-icon">{{ getSortIcon('referredBy') }}</span>
@@ -233,11 +233,11 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td>{{ candidate.techName }}</td>
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
-            <td>{{ candidate.vestSize }}</td>
-            <td class="bool-cell"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td>{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
+            <td class="center-col">{{ candidate.vestSize }}</td>
+            <td class="bool-cell center-col"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
+            <td class="bool-cell center-col"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
+            <td class="bool-cell center-col"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
+            <td class="center-col">{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
             <td>{{ candidate.referredBy || '—' }}</td>
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
@@ -257,16 +257,33 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
                       [title]="candidate.notes ? 'View/Edit Notes' : 'Add Notes'">
                 <mat-icon class="action-icon">sticky_note_2</mat-icon>
               </button>
-              <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
-              <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
+              <button class="icon-btn icon-view"
+                      (click)="onRowClick(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="'View ' + candidate.techName"
+                      title="View">
+                <mat-icon class="action-icon">visibility</mat-icon>
+              </button>
+              <button class="icon-btn icon-edit"
+                      (click)="onEditCandidate(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="'Edit ' + candidate.techName"
+                      title="Edit">
+                <mat-icon class="action-icon">edit</mat-icon>
+              </button>
               <span class="badge-promoted" *ngIf="isPromoted(candidate)">Promoted</span>
-              <button class="action-btn btn-convert"
+              <button class="icon-btn icon-convert"
                       *ngIf="canConvert(candidate)"
                       (click)="onConvertToTechnician(candidate); $event.stopPropagation()"
-                      [disabled]="convertingId === candidate.candidateId">
-                {{ convertingId === candidate.candidateId ? 'Converting...' : 'Convert to Tech' }}
+                      [disabled]="convertingId === candidate.candidateId"
+                      [attr.aria-label]="'Convert ' + candidate.techName + ' to technician'"
+                      title="Convert to Technician">
+                <mat-icon class="action-icon">person_add</mat-icon>
               </button>
-              <button class="action-btn btn-delete" (click)="onDeleteCandidate(candidate); $event.stopPropagation()">Delete</button>
+              <button class="icon-btn icon-delete"
+                      (click)="onDeleteCandidate(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="'Delete ' + candidate.techName"
+                      title="Delete">
+                <mat-icon class="action-icon">delete</mat-icon>
+              </button>
             </td>
           </tr>
         </tbody>
@@ -295,8 +312,8 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   `,
   styles: [`
     .candidate-list-container {
-      margin: 1.5rem;
-      padding: 1.5rem;
+      margin: 1rem;
+      padding: 1rem;
       background: #ffffff;
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
@@ -528,24 +545,41 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     .table-wrapper {
       overflow-x: auto;
       width: 100%;
+      -webkit-overflow-scrolling: touch;
     }
 
     .candidate-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-      table-layout: fixed;
+      width: max-content;
+      min-width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.8rem;
     }
+
+    .candidate-table colgroup .col-checkbox { width: 20px; }
+    .candidate-table colgroup .col-name { min-width: 110px; }
+    .candidate-table colgroup .col-email { min-width: 160px; }
+    .candidate-table colgroup .col-phone { min-width: 110px; }
+    .candidate-table colgroup .col-vest { min-width: 45px; }
+    .candidate-table colgroup .col-drug { min-width: 50px; }
+    .candidate-table colgroup .col-osha { min-width: 50px; }
+    .candidate-table colgroup .col-scissor { min-width: 55px; }
+    .candidate-table colgroup .col-state { min-width: 50px; }
+    .candidate-table colgroup .col-referred { min-width: 100px; }
+    .candidate-table colgroup .col-start { min-width: 90px; }
+    .candidate-table colgroup .col-status { min-width: 110px; }
+    .candidate-table colgroup .col-actions { min-width: 115px; }
 
     .candidate-table thead th {
       text-align: left;
-      padding: 0.5rem 0.5rem;
+      padding: 0.5rem 0.625rem;
       background: #f5f5f5;
       border-bottom: 2px solid #e0e0e0;
       font-weight: 600;
       color: #424242;
       white-space: nowrap;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.02em;
     }
 
     .candidate-table thead th.sortable {
@@ -558,16 +592,25 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     }
 
     .sort-icon {
-      font-size: 0.75rem;
-      margin-left: 0.25rem;
+      font-size: 0.7rem;
+      margin-left: 0.2rem;
     }
 
     .candidate-table tbody td {
-      padding: 0.4rem 0.5rem;
+      padding: 0.4rem 0.625rem;
       border-bottom: 1px solid #e0e0e0;
       color: #212121;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .candidate-table thead th.center-col,
+    .candidate-table tbody td.center-col {
+      text-align: center;
+    }
+
+    .candidate-table tbody td:last-child {
+      /* Actions — allow wrapping for buttons */
+      white-space: normal;
     }
 
     .candidate-row {
@@ -614,7 +657,6 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     .actions-cell {
       white-space: normal;
       text-align: center;
-      min-width: 180px;
     }
 
     .checkbox-col {
@@ -738,59 +780,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     }
 
     .action-btn {
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 500;
-      cursor: pointer;
-      margin: 2px;
-      transition: background-color 0.2s;
-      display: inline-block;
-    }
-
-    .btn-view {
-      background: #e3f2fd;
-      color: #1565c0;
-      border: 1px solid #90caf9;
-    }
-
-    .btn-view:hover { background: #bbdefb; }
-
-    .btn-edit-action {
-      background: #fff3e0;
-      color: #e65100;
-      border: 1px solid #ffcc80;
-    }
-
-    .btn-edit-action:hover { background: #ffe0b2; }
-
-    .btn-delete {
-      background: #ffebee;
-      color: #c62828;
-      border: 1px solid #ef9a9a;
-    }
-
-    .btn-delete:hover { background: #ffcdd2; }
-
-    .btn-convert {
-      background: #f3e5f5;
-      color: #7b1fa2;
-      border: 1px solid #ce93d8;
-    }
-
-    .btn-convert:hover:not(:disabled) { background: #e1bee7; }
-    .btn-convert:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .badge-promoted {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      background: #e8f5e9;
-      color: #2e7d32;
-      border: 1px solid #a5d6a7;
-      margin: 2px;
+      display: none;
     }
 
     .icon-btn {
@@ -803,33 +793,32 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       border: 1px solid transparent;
       background: none;
       cursor: pointer;
-      margin: 2px;
+      margin: 0px;
       transition: background-color 0.15s, opacity 0.15s, color 0.15s;
       vertical-align: middle;
-      opacity: 0.4;
-      color: #757575;
       padding: 0;
     }
 
     .icon-btn .action-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
     }
 
     .icon-btn:disabled {
       cursor: not-allowed;
-      opacity: 0.2;
+      opacity: 0.25;
     }
 
-    .icon-btn.has-file {
+    /* Resume icon */
+    .icon-btn.icon-resume {
+      color: #9e9e9e;
+      opacity: 0.5;
+    }
+
+    .icon-btn.icon-resume.has-file {
       opacity: 1;
       color: #1565c0;
-    }
-
-    .icon-btn.has-notes {
-      opacity: 1;
-      color: #e65100;
     }
 
     .icon-btn.icon-resume:not(:disabled):hover {
@@ -839,11 +828,87 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       opacity: 1;
     }
 
+    /* Notes icon */
+    .icon-btn.icon-notes {
+      color: #9e9e9e;
+      opacity: 0.5;
+    }
+
+    .icon-btn.icon-notes.has-notes {
+      opacity: 1;
+      color: #e65100;
+    }
+
     .icon-btn.icon-notes:hover {
       background: #fff3e0;
       border-color: #ffcc80;
       color: #e65100;
       opacity: 1;
+    }
+
+    /* View icon */
+    .icon-btn.icon-view {
+      color: #1976d2;
+      opacity: 1;
+    }
+
+    .icon-btn.icon-view:hover {
+      background: #e3f2fd;
+      border-color: #90caf9;
+      color: #1565c0;
+    }
+
+    /* Edit icon */
+    .icon-btn.icon-edit {
+      color: #f57c00;
+      opacity: 1;
+    }
+
+    .icon-btn.icon-edit:hover {
+      background: #fff3e0;
+      border-color: #ffcc80;
+      color: #e65100;
+    }
+
+    /* Convert icon */
+    .icon-btn.icon-convert {
+      color: #7b1fa2;
+      opacity: 1;
+    }
+
+    .icon-btn.icon-convert:hover:not(:disabled) {
+      background: #f3e5f5;
+      border-color: #ce93d8;
+      color: #6a1b9a;
+    }
+
+    .icon-btn.icon-convert:disabled {
+      opacity: 0.3;
+    }
+
+    /* Delete icon */
+    .icon-btn.icon-delete {
+      color: #d32f2f;
+      opacity: 1;
+    }
+
+    .icon-btn.icon-delete:hover {
+      background: #ffebee;
+      border-color: #ef9a9a;
+      color: #b71c1c;
+    }
+
+    .badge-promoted {
+      display: inline-block;
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.625rem;
+      font-weight: 600;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+      margin: 1px;
+      vertical-align: middle;
     }
 
     :host ::ng-deep .mat-mdc-paginator {
