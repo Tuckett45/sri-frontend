@@ -163,6 +163,12 @@ export const selectFilteredJobs = createSelector(
   }
 );
 
+// Select jobs assigned to a specific crew (via crewId field on jobs)
+export const selectJobsByCrewId = (crewId: string) => createSelector(
+  selectAllJobs,
+  (jobs) => jobs.filter(job => job.crewId === crewId)
+);
+
 // Select jobs by status
 export const selectJobsByStatus = (status: JobStatus) => createSelector(
   selectAllJobs,

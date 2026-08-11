@@ -54,6 +54,7 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
   leadTechnician$: Observable<Technician | undefined>;
   crewMembers$: Observable<Technician[]>;
   activeJob$: Observable<Job | undefined>;
+  crewJobs$: Observable<Job[]>;
   
   // Location history
   locationHistory$: Observable<LocationHistoryEntry[]>;
@@ -96,6 +97,7 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
     this.leadTechnician$ = new Observable();
     this.crewMembers$ = new Observable();
     this.activeJob$ = new Observable();
+    this.crewJobs$ = new Observable();
   }
   
   ngOnInit(): void {
@@ -140,7 +142,7 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Load related entities (lead technician, members, active job)
+   * Load related entities (lead technician, members, active job, crew jobs)
    */
   private loadRelatedEntities(crew: Crew): void {
     // Load lead technician
@@ -165,6 +167,9 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
     if (crew.activeJobId) {
       this.activeJob$ = this.store.select(JobSelectors.selectJobById(crew.activeJobId));
     }
+
+    // Load all jobs assigned to this crew
+    this.crewJobs$ = this.store.select(JobSelectors.selectJobsByCrewId(crew.id));
   }
   
   /**
@@ -321,6 +326,36 @@ export class CrewDetailComponent implements OnInit, OnDestroy {
    */
   trackByMemberId(_index: number, member: Technician): string {
     return member.id;
+  }
+
+  /**
+   * TrackBy function for job list performance
+   */
+  trackByJobId(_index: number, job: Job): string {
+    return job.id;
+  }
+
+  /**
+   * Get job status badge class
+   */
+  getJobStatusClass(status: string): string {
+    const statusLower = (status || '').toLowerCase().replace(/\s+/g, '');
+    const classMap: Record<string, string> = {
+      'notstarted': 'status-not-started',
+      'enroute': 'status-en-route',
+      'onsite': 'status-on-site',
+      'completed': 'status-completed',
+      'issue': 'status-issue',
+      'cancelled': 'status-cancelled'
+    };
+    return classMap[statusLower] || '';
+  }
+
+  /**
+   * Get priority badge class
+   */
+  getPriorityClass(priority: string): string {
+    return `priority-${(priority || '').toLowerCase()}`;
   }
 
   /**
