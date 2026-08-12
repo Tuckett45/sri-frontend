@@ -188,6 +188,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   getStatusColor(status: JobStatus): string {
     const colorMap: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'purple',
       [JobStatus.NotStarted]: 'gray',
       [JobStatus.EnRoute]: 'blue',
       [JobStatus.OnSite]: 'orange',

@@ -401,6 +401,7 @@ export const selectJobsCountByStatus = createSelector(
   selectAllJobs,
   (jobs) => {
     const counts: Record<JobStatus, number> = {
+      [JobStatus.Future]: 0,
       [JobStatus.NotStarted]: 0,
       [JobStatus.EnRoute]: 0,
       [JobStatus.OnSite]: 0,
@@ -448,6 +449,7 @@ export const selectJobsGroupedByStatus = createSelector(
   selectAllJobs,
   (jobs) => {
     const grouped: Record<JobStatus, Job[]> = {
+      [JobStatus.Future]: [],
       [JobStatus.NotStarted]: [],
       [JobStatus.EnRoute]: [],
       [JobStatus.OnSite]: [],
@@ -518,6 +520,7 @@ export const selectJobStatistics = createSelector(
     const total = jobs.length;
     
     const byStatus: Record<JobStatus, number> = {
+      [JobStatus.Future]: 0,
       [JobStatus.NotStarted]: 0,
       [JobStatus.EnRoute]: 0,
       [JobStatus.OnSite]: 0,

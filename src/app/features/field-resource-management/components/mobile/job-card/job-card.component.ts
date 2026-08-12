@@ -271,6 +271,7 @@ export class JobCardComponent implements OnInit, OnDestroy {
    */
   get statusColorClass(): string {
     const colorMap: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'status-purple',
       [JobStatus.NotStarted]: 'status-gray',
       [JobStatus.EnRoute]: 'status-blue',
       [JobStatus.OnSite]: 'status-orange',

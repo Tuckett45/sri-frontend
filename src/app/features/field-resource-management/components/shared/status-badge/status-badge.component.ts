@@ -50,6 +50,7 @@ export class StatusBadgeComponent {
    */
   get statusIcon(): string {
     const iconMap: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'event',
       [JobStatus.NotStarted]: 'schedule',
       [JobStatus.EnRoute]: 'directions_car',
       [JobStatus.OnSite]: 'location_on',
@@ -65,6 +66,7 @@ export class StatusBadgeComponent {
    */
   get statusText(): string {
     const textMap: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'Future',
       [JobStatus.NotStarted]: 'Not Started',
       [JobStatus.EnRoute]: 'En Route',
       [JobStatus.OnSite]: 'On Site',

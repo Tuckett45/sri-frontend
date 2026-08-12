@@ -139,10 +139,11 @@
               </td>
               <td>{{ crew.market || '—' }}</td>
               <td class="job-cell" (click)="$event.stopPropagation()">
-                <a *ngIf="crew.activeJobId" class="job-link" [routerLink]="['/field-resource-management/jobs', crew.activeJobId]">
+                <a *ngIf="crew.activeJobId || crewJobMap.has(crew.id)" class="job-link"
+                   [routerLink]="['/field-resource-management/jobs', crew.activeJobId || crewJobMap.get(crew.id)?.jobId]">
                   {{ getJobName(crew) }}
                 </a>
-                <span *ngIf="!crew.activeJobId">—</span>
+                <span *ngIf="!crew.activeJobId && !crewJobMap.has(crew.id)">—</span>
               </td>
               <td class="actions-cell" (click)="$event.stopPropagation()">
                 <button mat-icon-button class="action-view" [routerLink]="['./', crew.id]" matTooltip="View" aria-label="View">
