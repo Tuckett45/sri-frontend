@@ -67,10 +67,10 @@ export class StatusBadgeComponent {
   get statusText(): string {
     const textMap: Record<JobStatus, string> = {
       [JobStatus.Future]: 'Future',
-      [JobStatus.NotStarted]: 'Not Started',
-      [JobStatus.EnRoute]: 'En Route',
-      [JobStatus.OnSite]: 'On Site',
-      [JobStatus.Completed]: 'Completed',
+      [JobStatus.NotStarted]: 'Pending',
+      [JobStatus.EnRoute]: 'Active',
+      [JobStatus.OnSite]: 'Active',
+      [JobStatus.Completed]: 'Closed',
       [JobStatus.Issue]: 'Issue',
       [JobStatus.Cancelled]: 'Cancelled'
     };
