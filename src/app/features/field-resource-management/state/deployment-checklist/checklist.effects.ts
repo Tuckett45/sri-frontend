@@ -159,29 +159,24 @@ export class ChecklistEffects {
   );
 
   // Listen for job status changes to OnSite and trigger auto-creation
-  // Only dispatches autoCreateChecklist if no checklist currently exists for the job.
-  // First attempts to load the checklist from the API; if it doesn't exist (404),
-  // proceeds with creation. If it already exists, skips creation silently.
-  autoCreateOnOnSite$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(JobActions.updateJobStatusSuccess),
-      switchMap(({ job }) => {
-        if (job.status !== JobStatus.OnSite) {
-          return EMPTY;
-        }
-
-        // Try to load the checklist first to see if one already exists
-        return this.checklistService.getChecklist(job.id).pipe(
-          // Checklist already exists — skip creation
-          switchMap(() => EMPTY),
-          catchError(() => {
-            // Checklist doesn't exist (404 or other error) — create one
-            return of(ChecklistActions.autoCreateChecklist({ jobId: job.id }));
-          })
-        );
-      })
-    )
-  );
+  // DISABLED: Deployment checklist API endpoint is not yet available.
+  // Re-enable when the backend supports /jobs/{id}/deployment-checklist.
+  // autoCreateOnOnSite$ = createEffect(() =>
+  //   this.actions$.pipe(
+  //     ofType(JobActions.updateJobStatusSuccess),
+  //     switchMap(({ job }) => {
+  //       if (job.status !== JobStatus.OnSite) {
+  //         return EMPTY;
+  //       }
+  //       return this.checklistService.getChecklist(job.id).pipe(
+  //         switchMap(() => EMPTY),
+  //         catchError(() => {
+  //           return of(ChecklistActions.autoCreateChecklist({ jobId: job.id }));
+  //         })
+  //       );
+  //     })
+  //   )
+  // );
 
   // Show Save Phase Success Notification
   showSavePhaseSuccess$ = createEffect(() =>

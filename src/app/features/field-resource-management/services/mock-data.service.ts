@@ -585,6 +585,7 @@ export class MockDataService {
   } {
     // Calculate job statistics
     const jobsByStatus: Record<JobStatus, number> = {
+      [JobStatus.Future]: jobs.filter(j => j.status === JobStatus.Future).length,
       [JobStatus.NotStarted]: jobs.filter(j => j.status === JobStatus.NotStarted).length,
       [JobStatus.EnRoute]: jobs.filter(j => j.status === JobStatus.EnRoute).length,
       [JobStatus.OnSite]: jobs.filter(j => j.status === JobStatus.OnSite).length,

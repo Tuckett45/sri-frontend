@@ -16,7 +16,7 @@ import * as CrewSelectors from '../../../state/crews/crew.selectors';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import { selectAllTechnicians } from '../../../state/technicians/technician.selectors';
 import * as JobActions from '../../../state/jobs/job.actions';
-import { selectJobEntities } from '../../../state/jobs/job.selectors';
+import { selectJobEntities, selectAllJobs } from '../../../state/jobs/job.selectors';
 import { CrewFormComponent } from '../crew-form/crew-form.component';
 import { ExportService } from '../../../services/export.service';
 import { UserRole } from '../../../../../models/role.enum';
@@ -89,6 +89,9 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   
   // Job name lookup
   jobNameMap: Map<string, string> = new Map();
+  
+  // Crew-to-job lookup (maps crewId → { jobId, jobName })
+  crewJobMap: Map<string, { jobId: string; jobName: string }> = new Map();
   
   // Enum references for template
   CrewStatus = CrewStatus;
@@ -211,6 +214,21 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
       Object.values(jobEntities).forEach(job => {
         if (job) {
           this.jobNameMap.set(job.id, job.siteName || job.title || job.jobId || job.id);
+        }
+      });
+    });
+
+    // Build crew-to-job map from jobs that have a crewId assigned
+    this.store.select(selectAllJobs).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(jobs => {
+      this.crewJobMap.clear();
+      jobs.forEach(job => {
+        if (job.crewId) {
+          this.crewJobMap.set(job.crewId, {
+            jobId: job.id,
+            jobName: job.siteName || job.title || job.jobId || job.id
+          });
         }
       });
     });
@@ -432,8 +450,15 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getJobName(crew: Crew): string {
-    if (!crew.activeJobId) return '—';
-    return this.jobNameMap.get(crew.activeJobId) || crew.activeJobId.substring(0, 8) + '...';
+    if (crew.activeJobId) {
+      return this.jobNameMap.get(crew.activeJobId) || crew.activeJobId.substring(0, 8) + '...';
+    }
+    // Fallback: look up job assigned to this crew via job.crewId
+    const crewJob = this.crewJobMap.get(crew.id);
+    if (crewJob) {
+      return crewJob.jobName;
+    }
+    return '—';
   }
   
   getMemberCount(crew: Crew): number {

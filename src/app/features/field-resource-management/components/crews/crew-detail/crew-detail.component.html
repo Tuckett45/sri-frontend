@@ -249,6 +249,60 @@
       </mat-card-content>
     </mat-card>
 
+    <!-- Assigned Jobs Card -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>assignment</mat-icon>
+          Assigned Jobs ({{ (crewJobs$ | async)?.length || 0 }})
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="(crewJobs$ | async)?.length; else noAssignedJobs">
+          <div class="jobs-list" role="list" aria-label="Assigned jobs">
+            <div
+              *ngFor="let job of crewJobs$ | async; trackBy: trackByJobId"
+              class="job-card"
+              (click)="viewJob(job.id)"
+              (keydown.enter)="viewJob(job.id)"
+              (keydown.space)="viewJob(job.id)"
+              role="listitem"
+              tabindex="0"
+              [attr.aria-label]="'View job ' + job.jobId + ' - ' + job.siteName">
+              <div class="job-info">
+                <mat-icon class="job-icon">assignment</mat-icon>
+                <div class="job-details">
+                  <h3 class="job-title">{{ job.jobId }} - {{ job.siteName }}</h3>
+                  <p class="job-meta">{{ job.client }}</p>
+                  <div class="job-badges">
+                    <span class="badge" [ngClass]="getPriorityClass(job.priority)">
+                      {{ job.priority }}
+                    </span>
+                    <span class="badge" [ngClass]="getJobStatusClass(job.status)">
+                      {{ job.status }}
+                    </span>
+                    <span class="badge badge-type">{{ job.jobType }}</span>
+                  </div>
+                  <p class="job-location" *ngIf="job.siteAddress">
+                    <mat-icon inline>location_on</mat-icon>
+                    {{ job.siteAddress.street }}, {{ job.siteAddress.city }}, {{ job.siteAddress.state }}
+                  </p>
+                  <p class="job-schedule">
+                    <mat-icon inline>event</mat-icon>
+                    {{ job.scheduledStartDate | date:'mediumDate' }} &mdash; {{ job.scheduledEndDate | date:'mediumDate' }}
+                  </p>
+                </div>
+              </div>
+              <mat-icon class="nav-icon">chevron_right</mat-icon>
+            </div>
+          </div>
+        </div>
+        <ng-template #noAssignedJobs>
+          <p class="empty-state">No jobs assigned to this crew</p>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+
     <!-- Location History Card -->
     <mat-card class="info-card">
       <mat-card-header>

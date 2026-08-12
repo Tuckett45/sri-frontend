@@ -136,6 +136,7 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Pipeline view
   pipelineStatusFilter: JobStatus | null = null;
+  pipelineInProgressFilter = false;
   private allJobs: Job[] = [];
 
   // Technician names lookup by job ID
@@ -911,6 +912,107 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
+   * Simplified job statuses for inline change: Pending, Active, Closed
+   * Mapping to internal JobStatus values:
+   * - Pending → NotStarted
+   * - Active → OnSite (represents "in progress")
+   * - Closed → Completed
+   */
+  /**
+   * Simplified job statuses for inline change: Future, Pending, Active, Closed
+   */
+  readonly inlineStatusOptions: { label: string; value: JobStatus }[] = [
+    { label: 'Future', value: JobStatus.Future },
+    { label: 'Pending', value: JobStatus.NotStarted },
+    { label: 'Active', value: JobStatus.OnSite },
+    { label: 'Closed', value: JobStatus.Completed }
+  ];
+
+  /**
+   * Pre-computed transitions map keyed by the mapped status value.
+   * Each entry contains the full options array with isCurrent flags.
+   * This avoids creating new arrays on every change detection cycle.
+   */
+  readonly transitionsByMappedStatus: Record<string, { label: string; value: JobStatus; isCurrent: boolean }[]> = {
+    [JobStatus.Future]: this.inlineStatusOptions.map(opt => ({ ...opt, isCurrent: opt.value === JobStatus.Future })),
+    [JobStatus.NotStarted]: this.inlineStatusOptions.map(opt => ({ ...opt, isCurrent: opt.value === JobStatus.NotStarted })),
+    [JobStatus.OnSite]: this.inlineStatusOptions.map(opt => ({ ...opt, isCurrent: opt.value === JobStatus.OnSite })),
+    [JobStatus.Completed]: this.inlineStatusOptions.map(opt => ({ ...opt, isCurrent: opt.value === JobStatus.Completed }))
+  };
+
+  /**
+   * Get the pre-computed transitions for a given job status (template-safe, no new allocations)
+   */
+  getValidTransitions(currentStatus: JobStatus): { label: string; value: JobStatus; isCurrent: boolean }[] {
+    const mapped = this.getMappedStatusValue(currentStatus);
+    return this.transitionsByMappedStatus[mapped] || this.transitionsByMappedStatus[JobStatus.NotStarted];
+  }
+
+  /**
+   * Format a JobStatus enum value as a user-friendly label
+   */
+  formatStatusLabel(status: JobStatus): string {
+    const labels: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'Future',
+      [JobStatus.NotStarted]: 'Pending',
+      [JobStatus.EnRoute]: 'Active',
+      [JobStatus.OnSite]: 'Active',
+      [JobStatus.Completed]: 'Closed',
+      [JobStatus.Issue]: 'Issue',
+      [JobStatus.Cancelled]: 'Closed'
+    };
+    return labels[status] || status;
+  }
+
+  /**
+   * Map the actual job status to the closest inline option value.
+   * This ensures mat-select always has a valid bound value among its options.
+   */
+  getMappedStatusValue(status: JobStatus): JobStatus {
+    switch (status) {
+      case JobStatus.Future:
+        return JobStatus.Future;
+      case JobStatus.NotStarted:
+        return JobStatus.NotStarted;
+      case JobStatus.EnRoute:
+      case JobStatus.OnSite:
+        return JobStatus.OnSite;
+      case JobStatus.Completed:
+      case JobStatus.Cancelled:
+        return JobStatus.Completed;
+      case JobStatus.Issue:
+        return JobStatus.NotStarted;
+      default:
+        return JobStatus.NotStarted;
+    }
+  }
+
+  /**
+   * TrackBy function for job rows to prevent unnecessary re-renders
+   */
+  trackByJobId(_index: number, job: Job): string {
+    return job.id;
+  }
+
+  /**
+   * Handle inline status change from the table dropdown
+   */
+  onInlineStatusChange(job: Job, newStatus: JobStatus): void {
+    if (newStatus === job.status) return;
+
+    this.store.dispatch(JobActions.updateJobStatus({
+      id: job.id,
+      status: newStatus
+    }));
+
+    this.snackBar.open(
+      `Job "${job.siteName}" status updated to ${this.formatStatusLabel(newStatus)}`,
+      'OK',
+      { duration: 3000 }
+    );
+  }
+
+  /**
    * Export jobs to CSV
    */
   exportToCSV(): void {
@@ -1013,15 +1115,30 @@ export class JobListComponent implements OnInit, OnDestroy, AfterViewInit {
   // ─── Pipeline / Stats View ─────────────────────────────────────────────────
 
   filterByStatus(status: JobStatus): void {
+    this.pipelineInProgressFilter = false;
     this.pipelineStatusFilter = this.pipelineStatusFilter === status ? null : status;
+  }
+
+  filterByInProgress(): void {
+    this.pipelineStatusFilter = null;
+    this.pipelineInProgressFilter = !this.pipelineInProgressFilter;
   }
 
   clearPipelineFilter(): void {
     this.pipelineStatusFilter = null;
+    this.pipelineInProgressFilter = false;
   }
 
   getStatusCount(status: JobStatus): number {
     return this.allJobs.filter(j => j.status === status).length;
+  }
+
+  getInProgressCount(): number {
+    return this.allJobs.filter(j => j.status === JobStatus.EnRoute || j.status === JobStatus.OnSite).length;
+  }
+
+  getInProgressJobs(): Job[] {
+    return this.allJobs.filter(j => j.status === JobStatus.EnRoute || j.status === JobStatus.OnSite);
   }
 
   getJobsByStatus(status: JobStatus): Job[] {
