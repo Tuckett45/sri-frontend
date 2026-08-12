@@ -241,6 +241,7 @@ export class AddCertificationDialogComponent implements OnInit {
       certification: {
         id: this.data.existingCertification?.id || '',
         ...this.form.value,
+        credentialType: 'Certification',
         attachmentId: attachmentId || undefined
       },
       attachmentId
