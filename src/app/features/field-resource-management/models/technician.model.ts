@@ -43,6 +43,7 @@ export interface Certification {
   issueDate: Date;
   expirationDate: Date;
   status: CertificationStatus;
+  credentialType?: string; // Backend discriminator field (e.g. 'Certification')
   attachmentId?: string; // Links to an uploaded document in AttachmentService
 }
 
