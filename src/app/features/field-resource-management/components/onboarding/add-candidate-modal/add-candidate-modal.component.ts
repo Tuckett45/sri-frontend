@@ -111,6 +111,17 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
                   <mat-option value="turned_down_hold">Turned Down/Hold for Later</mat-option>
                 </mat-select>
               </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Experience Level</mat-label>
+                <mat-select formControlName="experienceLevel">
+                  <mat-option value="">None</mat-option>
+                  <mat-option value="level_1_green">Level 1/Green</mat-option>
+                  <mat-option value="level_2">Level 2</mat-option>
+                  <mat-option value="level_3">Level 3</mat-option>
+                  <mat-option value="level_4">Level 4</mat-option>
+                </mat-select>
+              </mat-form-field>
             </div>
 
             <div class="step-actions">
@@ -472,7 +483,8 @@ export class AddCandidateModalComponent {
       homeState: [candidate?.homeState || ''],
       referredBy: [candidate?.referredBy || ''],
       startDate: [this.parseStartDate(candidate?.startDate), Validators.required],
-      offerStatus: [candidate?.offerStatus || 'needs_review']
+      offerStatus: [candidate?.offerStatus || 'needs_review'],
+      experienceLevel: [candidate?.experienceLevel || '']
     });
 
     this.coreQualificationsForm = this.fb.group({

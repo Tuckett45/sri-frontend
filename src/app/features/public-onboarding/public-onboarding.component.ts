@@ -143,6 +143,7 @@ export class PublicOnboardingComponent implements OnInit {
       homeState: formValue.homeState,
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
+      experienceLevel: formValue.experienceLevel || undefined,
       drugTestComplete: false,
       oshaCertified: false,
       scissorLiftCertified: false,
@@ -362,6 +363,7 @@ export class PublicOnboardingComponent implements OnInit {
       homeState: ['', Validators.required],
       referredBy: [''],
       startDate: ['', Validators.required],
+      experienceLevel: [''],
     });
   }
 
