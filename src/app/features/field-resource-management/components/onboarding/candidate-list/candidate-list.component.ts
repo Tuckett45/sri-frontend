@@ -336,11 +336,13 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
   `,
   styles: [`
     .candidate-list-container {
-      margin: 1rem;
-      padding: 1rem;
+      margin: 0.75rem;
+      padding: 0.75rem;
       background: #ffffff;
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      max-width: 100%;
     }
 
     h2 {
@@ -577,33 +579,33 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       min-width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
     .candidate-table colgroup .col-checkbox { width: 20px; }
-    .candidate-table colgroup .col-name { min-width: 110px; }
-    .candidate-table colgroup .col-email { min-width: 160px; }
-    .candidate-table colgroup .col-phone { min-width: 110px; }
-    .candidate-table colgroup .col-vest { min-width: 45px; }
-    .candidate-table colgroup .col-drug { min-width: 50px; }
-    .candidate-table colgroup .col-osha { min-width: 50px; }
-    .candidate-table colgroup .col-scissor { min-width: 55px; }
-    .candidate-table colgroup .col-state { min-width: 50px; }
-    .candidate-table colgroup .col-referred { min-width: 100px; }
-    .candidate-table colgroup .col-start { min-width: 90px; }
-    .candidate-table colgroup .col-status { min-width: 110px; }
-    .candidate-table colgroup .col-experience { min-width: 90px; }
-    .candidate-table colgroup .col-actions { min-width: 115px; }
+    .candidate-table colgroup .col-name { min-width: 90px; }
+    .candidate-table colgroup .col-email { min-width: 120px; }
+    .candidate-table colgroup .col-phone { min-width: 100px; }
+    .candidate-table colgroup .col-vest { min-width: 32px; }
+    .candidate-table colgroup .col-drug { min-width: 36px; }
+    .candidate-table colgroup .col-osha { min-width: 38px; }
+    .candidate-table colgroup .col-scissor { min-width: 42px; }
+    .candidate-table colgroup .col-state { min-width: 36px; }
+    .candidate-table colgroup .col-referred { min-width: 75px; }
+    .candidate-table colgroup .col-start { min-width: 72px; }
+    .candidate-table colgroup .col-status { min-width: 80px; }
+    .candidate-table colgroup .col-experience { min-width: 70px; }
+    .candidate-table colgroup .col-actions { min-width: 100px; }
 
     .candidate-table thead th {
       text-align: left;
-      padding: 0.5rem 0.625rem;
+      padding: 0.375rem 0.4rem;
       background: #f5f5f5;
       border-bottom: 2px solid #e0e0e0;
       font-weight: 600;
       color: #424242;
       white-space: nowrap;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       letter-spacing: 0.02em;
     }
 
@@ -622,7 +624,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
     }
 
     .candidate-table tbody td {
-      padding: 0.4rem 0.625rem;
+      padding: 0.3rem 0.4rem;
       border-bottom: 1px solid #e0e0e0;
       color: #212121;
       white-space: nowrap;
@@ -966,8 +968,8 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
 
     @media (max-width: 768px) {
       .candidate-list-container {
-        margin: 1rem;
-        padding: 1rem;
+        margin: 0.5rem;
+        padding: 0.5rem;
         overflow-x: auto;
       }
 

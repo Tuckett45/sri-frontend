@@ -40,6 +40,11 @@ export const closeSidebar = createAction(
   '[UI] Close Sidebar'
 );
 
+// Toggle Sidebar Collapsed (desktop minimize)
+export const toggleSidebarCollapsed = createAction(
+  '[UI] Toggle Sidebar Collapsed'
+);
+
 // Toggle Mobile Menu
 export const toggleMobileMenu = createAction(
   '[UI] Toggle Mobile Menu'

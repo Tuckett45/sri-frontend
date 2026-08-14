@@ -32,6 +32,8 @@ interface OnboardingNavLink {
       flex-direction: column;
       height: 100%;
       background-color: #f5f7fa;
+      overflow: hidden;
+      max-width: 100%;
     }
 
     .onboarding-nav {
@@ -39,6 +41,7 @@ interface OnboardingNavLink {
       border-bottom: 1px solid #e0e0e0;
       padding: 0 1.5rem;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      flex-shrink: 0;
     }
 
     .onboarding-nav-links {
@@ -76,8 +79,11 @@ interface OnboardingNavLink {
 
     .onboarding-content {
       flex: 1;
+      min-height: 0;
+      min-width: 0;
       padding: 0;
       overflow-y: auto;
+      overflow-x: hidden;
     }
 
     @media (max-width: 768px) {
