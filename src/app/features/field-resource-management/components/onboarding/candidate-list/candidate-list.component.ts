@@ -7,7 +7,7 @@ import { concatMap, delay, catchError, toArray, tap } from 'rxjs/operators';
 import { OnboardingService } from '../../../services/onboarding.service';
 import { OnboardingLinkService } from '../../../services/onboarding-link.service';
 import { CandidateListStateService } from '../../../services/candidate-list-state.service';
-import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
+import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus, ExperienceLevel } from '../../../models/onboarding.models';
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
 import { GenerateLinkDialogComponent } from '../generate-link-dialog/generate-link-dialog.component';
 import { CandidateNotesDialogComponent } from '../candidate-notes-dialog/candidate-notes-dialog.component';
@@ -28,6 +28,13 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   onboarded: 'Onboarded',
   do_not_hire: 'Do Not Hire',
   turned_down_hold: 'Turned Down/Hold for Later',
+};
+
+const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
+  level_1_green: 'Level 1/Green',
+  level_2: 'Level 2',
+  level_3: 'Level 3',
+  level_4: 'Level 4',
 };
 
 @Component({
@@ -126,6 +133,18 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <option *ngFor="let referrer of availableReferrers" [value]="referrer">{{ referrer }}</option>
           </select>
         </div>
+        <div class="filter-field">
+          <label for="experienceLevelFilter">Experience Level</label>
+          <select id="experienceLevelFilter"
+                  [(ngModel)]="experienceLevelFilter"
+                  (ngModelChange)="onExperienceLevelFilterChange()">
+            <option value="">All Levels</option>
+            <option value="level_1_green">Level 1/Green</option>
+            <option value="level_2">Level 2</option>
+            <option value="level_3">Level 3</option>
+            <option value="level_4">Level 4</option>
+          </select>
+        </div>
       </div>
 
       <!-- Bulk Action Bar -->
@@ -167,6 +186,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
           <col class="col-referred">
           <col class="col-start">
           <col class="col-status">
+          <col class="col-experience">
           <col class="col-actions">
         </colgroup>
         <thead>
@@ -212,6 +232,9 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('offerStatus')" class="sortable">
               Offer Status <span class="sort-icon">{{ getSortIcon('offerStatus') }}</span>
             </th>
+            <th (click)="onSort('experienceLevel')" class="sortable">
+              Experience <span class="sort-icon">{{ getSortIcon('experienceLevel') }}</span>
+            </th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -241,6 +264,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td>{{ candidate.referredBy || '—' }}</td>
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
+            <td>{{ getExperienceLevelLabel(candidate.experienceLevel) }}</td>
             <td class="actions-cell">
               <button class="icon-btn icon-resume"
                       [class.has-file]="candidate.resumeUrl"
@@ -568,6 +592,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     .candidate-table colgroup .col-referred { min-width: 100px; }
     .candidate-table colgroup .col-start { min-width: 90px; }
     .candidate-table colgroup .col-status { min-width: 110px; }
+    .candidate-table colgroup .col-experience { min-width: 90px; }
     .candidate-table colgroup .col-actions { min-width: 115px; }
 
     .candidate-table thead th {
@@ -980,6 +1005,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   statusFilter = '';
   homeStateFilter = '';
   referredByFilter = '';
+  experienceLevelFilter = '';
   incompleteCertsFilter = false;
   sortState: SortState | null = null;
   availableStates: string[] = [];
@@ -1015,6 +1041,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       this.statusFilter = savedState.statusFilter;
       this.homeStateFilter = savedState.homeStateFilter;
       this.referredByFilter = savedState.referredByFilter;
+      this.experienceLevelFilter = savedState.experienceLevelFilter || '';
       this.incompleteCertsFilter = savedState.incompleteCertsFilter;
       this.sortState = savedState.sortColumn
         ? { column: savedState.sortColumn, direction: savedState.sortDirection }
@@ -1076,6 +1103,11 @@ export class CandidateListComponent implements OnInit, OnDestroy {
     this.applyFiltersAndSort();
   }
 
+  onExperienceLevelFilterChange(): void {
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
   onSort(column: keyof Candidate): void {
     if (this.sortState?.column === column) {
       this.sortState = {
@@ -1095,6 +1127,11 @@ export class CandidateListComponent implements OnInit, OnDestroy {
 
   getStatusLabel(status: OfferStatus): string {
     return OFFER_STATUS_LABELS[status] ?? status;
+  }
+
+  getExperienceLevelLabel(level: ExperienceLevel | undefined): string {
+    if (!level) return '\u2014';
+    return EXPERIENCE_LEVEL_LABELS[level] ?? level;
   }
 
   extractState(address: string | undefined): string {
@@ -1137,6 +1174,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           homeState: result.basicInfo.homeState || undefined,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
+          experienceLevel: result.basicInfo.experienceLevel || undefined,
           referredBy: result.basicInfo.referredBy || undefined,
           biisciCertified: result.coreQualifications.fiberExperience,
           backgroundCheckComplete: result.coreQualifications.backgroundCheckComplete,
@@ -1209,6 +1247,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           homeState: result.basicInfo.homeState || undefined,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
+          experienceLevel: result.basicInfo.experienceLevel || undefined,
           referredBy: result.basicInfo.referredBy || undefined,
           biisciCertified: result.coreQualifications.fiberExperience,
           backgroundCheckComplete: result.coreQualifications.backgroundCheckComplete,
@@ -1468,6 +1507,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       statusFilter: this.statusFilter,
       homeStateFilter: this.homeStateFilter,
       referredByFilter: this.referredByFilter,
+      experienceLevelFilter: this.experienceLevelFilter,
       incompleteCertsFilter: this.incompleteCertsFilter,
       sortColumn: this.sortState?.column ?? null,
       sortDirection: this.sortState?.direction ?? 'asc',
@@ -1576,6 +1616,11 @@ export class CandidateListComponent implements OnInit, OnDestroy {
     // Referred by filter
     if (this.referredByFilter) {
       result = result.filter((c) => c.referredBy === this.referredByFilter);
+    }
+
+    // Experience level filter
+    if (this.experienceLevelFilter) {
+      result = result.filter((c) => c.experienceLevel === this.experienceLevelFilter);
     }
 
     // Incomplete certifications filter

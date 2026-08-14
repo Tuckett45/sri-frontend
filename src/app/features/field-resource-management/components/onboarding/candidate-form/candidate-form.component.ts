@@ -9,6 +9,7 @@ import { HasUnsavedChanges } from '../../../guards/unsaved-changes.guard';
 import { getValidTransitions } from '../../../utils/offer-status.util';
 import {
   Candidate,
+  ExperienceLevel,
   OfferStatus,
   VestSize,
 } from '../../../models/onboarding.models';
@@ -20,6 +21,13 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
   { value: 'vetted_available', label: 'Vetted/Available' },
   { value: 'offer_extended', label: 'Offer Extended' },
   { value: 'offer_accepted_onboarding', label: 'Offer Accepted/Onboarding' },
+];
+
+const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string }[] = [
+  { value: 'level_1_green', label: 'Level 1/Green' },
+  { value: 'level_2', label: 'Level 2' },
+  { value: 'level_3', label: 'Level 3' },
+  { value: 'level_4', label: 'Level 4' },
 ];
 
 @Component({
@@ -207,6 +215,19 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
                 *ngIf="showError('offerStatus')">
             Offer Status is required.
           </span>
+        </div>
+
+        <!-- Experience Level -->
+        <div class="form-field">
+          <label for="experienceLevel">Experience Level</label>
+          <select id="experienceLevel"
+                  formControlName="experienceLevel"
+                  (blur)="markTouched('experienceLevel')">
+            <option value="" disabled>Select experience level</option>
+            <option *ngFor="let level of experienceLevels" [value]="level.value">
+              {{ level.label }}
+            </option>
+          </select>
         </div>
 
         <!-- Certification & Drug Test checkboxes (edit mode only) -->
@@ -485,6 +506,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
 
   vestSizes = VEST_SIZES;
   availableStatuses = ALL_OFFER_STATUSES;
+  experienceLevels = EXPERIENCE_LEVELS;
 
   // Address autocomplete
   filteredAddresses: any[] = [];
@@ -562,6 +584,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       referredBy: [''],
       startDate: ['', Validators.required],
       offerStatus: ['', Validators.required],
+      experienceLevel: [''],
       drugTestComplete: [false],
       backgroundCheckComplete: [false],
       oshaCertified: [false],
@@ -617,6 +640,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       referredBy: candidate.referredBy || '',
       startDate: candidate.startDate,
       offerStatus: candidate.offerStatus,
+      experienceLevel: candidate.experienceLevel || '',
       drugTestComplete: candidate.drugTestComplete,
       backgroundCheckComplete: candidate.backgroundCheckComplete,
       oshaCertified: candidate.oshaCertified,
@@ -654,6 +678,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
+      experienceLevel: formValue.experienceLevel || undefined,
       fiberExperience: formValue.fiberExperience,
       liftCertification: formValue.liftCertification,
       travelAvailability: formValue.travelAvailability,
@@ -691,6 +716,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       referredBy: formValue.referredBy || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
+      experienceLevel: formValue.experienceLevel || undefined,
       drugTestComplete: formValue.drugTestComplete,
       backgroundCheckComplete: formValue.backgroundCheckComplete,
       oshaCertified: formValue.oshaCertified,

@@ -4,6 +4,8 @@ export type OfferStatus = 'needs_review' | 'vetted_available' | 'offer_extended'
 
 export type VestSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
 
+export type ExperienceLevel = 'level_1_green' | 'level_2' | 'level_3' | 'level_4';
+
 // --- Candidate ---
 
 export interface Candidate {
@@ -23,6 +25,7 @@ export interface Candidate {
   homeState?: string;
   startDate: string;          // ISO date
   offerStatus: OfferStatus;
+  experienceLevel?: ExperienceLevel;
   resumeUrl?: string;
   headshotUrl?: string;
   referredBy?: string;
@@ -80,6 +83,7 @@ export interface CreateCandidatePayload {
   homeState?: string;
   startDate: string;
   offerStatus: OfferStatus;
+  experienceLevel?: ExperienceLevel;
   referredBy?: string;
   backgroundCheckComplete?: boolean;
   drugTestComplete?: boolean;
@@ -133,6 +137,7 @@ export interface UpdateCandidatePayload {
   homeState?: string;
   startDate?: string;
   offerStatus?: OfferStatus;
+  experienceLevel?: ExperienceLevel;
   referredBy?: string;
   notes?: string;
 
@@ -170,6 +175,7 @@ export interface UpdateCandidatePayload {
 
 export interface CandidateFilters {
   offerStatus?: OfferStatus;
+  experienceLevel?: ExperienceLevel;
   search?: string;
   incompleteCerts?: boolean;
 }

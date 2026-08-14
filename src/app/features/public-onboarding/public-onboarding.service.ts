@@ -22,6 +22,7 @@ export interface PublicCandidateSubmissionPayload {
   workSite?: string;
   referredBy?: string;
   startDate: string;
+  experienceLevel?: string;
   drugTestComplete: boolean;
   oshaCertified: boolean;
   scissorLiftCertified: boolean;

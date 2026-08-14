@@ -6,6 +6,7 @@ export interface CandidateListState {
   statusFilter: string;
   homeStateFilter: string;
   referredByFilter: string;
+  experienceLevelFilter: string;
   incompleteCertsFilter: boolean;
   sortColumn: keyof Candidate | null;
   sortDirection: 'asc' | 'desc';
