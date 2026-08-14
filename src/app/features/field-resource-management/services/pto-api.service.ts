@@ -3,12 +3,13 @@
  * Handles HTTP communication with backend PTO endpoints
  */
 
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, Inject, forwardRef } from '@angular/core';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { PtoRequest, CreatePtoRequestDto, LeaveType, TeamAvailabilityEntry, RequestStatus } from '../models/pto.models';
-import { environment, local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
+import { AuthService } from '../../../services/auth.service';
 
 interface PaginatedResponse<T> {
   items: T[];
@@ -26,14 +27,23 @@ interface PaginatedResponse<T> {
 export class PtoApiService {
   private readonly apiUrl = `${environment.atlasApiUrl}/pto-requests`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, @Inject(forwardRef(() => AuthService)) private authService: AuthService) {}
 
   /**
    * Get all PTO requests for the current employee
    * @returns Observable of PTO requests array
    */
   getMyRequests(): Observable<PtoRequest[]> {
-    return this.http.get<PaginatedResponse<PtoRequest> | PtoRequest[]>(this.apiUrl).pipe(
+    const user = this.authService.getUser();
+    const employeeId = user?.id;
+
+    if (!employeeId) {
+      console.error('[PTO API] No authenticated user found, cannot fetch PTO requests');
+      return of([]);
+    }
+
+    const params = new HttpParams().set('employeeId', employeeId);
+    return this.http.get<PaginatedResponse<PtoRequest> | PtoRequest[]>(this.apiUrl, { params }).pipe(
       map(response => {
         // Handle both paginated and flat array responses from backend
         if (Array.isArray(response)) {
