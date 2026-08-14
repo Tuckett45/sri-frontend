@@ -3,13 +3,13 @@
  * Handles HTTP communication with backend PTO endpoints
  */
 
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, forwardRef } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { PtoRequest, CreatePtoRequestDto, LeaveType, TeamAvailabilityEntry, RequestStatus } from '../models/pto.models';
-import { environment, local_environment } from '../../../../environments/environments';
-import { AuthService } from '../../../../services/auth.service';
+import { environment } from '../../../../environments/environments';
+import { AuthService } from '../../../services/auth.service';
 
 interface PaginatedResponse<T> {
   items: T[];
@@ -27,7 +27,7 @@ interface PaginatedResponse<T> {
 export class PtoApiService {
   private readonly apiUrl = `${environment.atlasApiUrl}/pto-requests`;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient, @Inject(forwardRef(() => AuthService)) private authService: AuthService) {}
 
   /**
    * Get all PTO requests for the current employee
