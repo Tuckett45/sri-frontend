@@ -3,15 +3,16 @@
  * Handles HTTP communication with backend overtime request endpoints
  */
 
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Injectable, Inject, forwardRef } from '@angular/core';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import {
   OvertimeRequest,
   CreateOvertimeRequestDto
 } from '../models/overtime.models';
-import { environment, local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
+import { AuthService } from '../../../services/auth.service';
 
 interface PaginatedResponse<T> {
   items: T[];
@@ -29,13 +30,22 @@ interface PaginatedResponse<T> {
 export class OvertimeApiService {
   private readonly apiUrl = `${environment.atlasApiUrl}/overtime-requests`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, @Inject(forwardRef(() => AuthService)) private authService: AuthService) {}
 
   /**
    * Get all overtime requests for the current employee
    */
   getMyRequests(): Observable<OvertimeRequest[]> {
-    return this.http.get<PaginatedResponse<OvertimeRequest>>(this.apiUrl).pipe(
+    const user = this.authService.getUser();
+    const employeeId = user?.id;
+
+    if (!employeeId) {
+      console.error('[Overtime API] No authenticated user found, cannot fetch overtime requests');
+      return of([]);
+    }
+
+    const params = new HttpParams().set('employeeId', employeeId);
+    return this.http.get<PaginatedResponse<OvertimeRequest>>(this.apiUrl, { params }).pipe(
       map(response => response.items),
       catchError(this.handleError)
     );
