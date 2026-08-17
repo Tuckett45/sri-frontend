@@ -151,7 +151,10 @@ export class QrScannerComponent implements OnInit, OnDestroy {
 
     // Initialize html5-qrcode camera
     try {
-      const { Html5Qrcode } = await import('html5-qrcode');
+      const { Html5Qrcode } = await import(
+        // @ts-ignore: html5-qrcode types resolved via src/html5-qrcode.d.ts
+        'html5-qrcode'
+      );
       this.html5QrCode = new Html5Qrcode('qr-reader-container');
 
       const cameras = await Html5Qrcode.getCameras();

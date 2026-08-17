@@ -25,9 +25,9 @@
         <span class="scan-feedback__detail-label">Type:</span>
         <span class="scan-feedback__detail-value">{{ scanResult!.scanType === 'ClockIn' ? 'Clock In' : 'Clock Out' }}</span>
       </div>
-      <div class="scan-feedback__detail-row" *ngIf="scanResult!.timeEntry!.startTime">
+      <div class="scan-feedback__detail-row" *ngIf="scanResult!.timeEntry!.clockInTime">
         <span class="scan-feedback__detail-label">Time:</span>
-        <span class="scan-feedback__detail-value">{{ scanResult!.timeEntry!.startTime | date:'shortTime' }}</span>
+        <span class="scan-feedback__detail-value">{{ scanResult!.timeEntry!.clockInTime | date:'shortTime' }}</span>
       </div>
     </div>
 

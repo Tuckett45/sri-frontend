@@ -64,7 +64,7 @@
     <h3>Select Time Category</h3>
     <app-time-category-selector
       [preselectedCategory]="selectedCategory"
-      [disabled]="scanState === 'processing'"
+      [disabled]="false"
       (categorySelected)="onCategorySelected($event)">
     </app-time-category-selector>
 
@@ -73,8 +73,7 @@
       class="btn-submit"
       [disabled]="isSubmitDisabled"
       (click)="submitScan()">
-      <span *ngIf="scanState !== 'processing'">Submit Clock-In</span>
-      <span *ngIf="scanState === 'processing'">Processing...</span>
+      Submit Clock-In
     </button>
 
     <!-- GPS Warning for clock-in -->
