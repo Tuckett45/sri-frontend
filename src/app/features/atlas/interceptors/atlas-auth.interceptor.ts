@@ -98,16 +98,22 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
    */
   private isAtlasRequest(url: string): boolean {
     const atlasBaseUrl = this.configService.getBaseUrl();
-    
-    // Check if URL contains ATLAS base path
-    if (url.includes('/atlas')) {
-      return true;
-    }
 
     // Check if URL starts with ATLAS base URL
     if (atlasBaseUrl && url.startsWith(atlasBaseUrl)) {
       return true;
     }
+
+    // Skip external domains to avoid leaking credentials
+    try {
+      const parsed = new URL(url, window.location.origin);
+      const host = parsed.hostname;
+      if (host !== window.location.hostname &&
+          !host.includes('atlas-api') &&
+          !host.includes('sri-backend')) {
+        return false;
+      }
+    } catch { /* relative URL — continue checking */ }
 
     // Check if URL matches any ATLAS endpoint patterns
     const atlasPatterns = [
