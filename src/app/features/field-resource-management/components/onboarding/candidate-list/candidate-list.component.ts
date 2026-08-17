@@ -31,11 +31,16 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 };
 
 const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
-  level_1_green: 'Level 1/Green',
-  level_2: 'Level 2',
-  level_3: 'Level 3',
-  level_4: 'Level 4',
+  experienced: 'Experienced',
+  level: 'Level',
+  it_testing: 'IT/Testing',
+  not_experienced_green: 'Not Experienced/Green',
 };
+
+interface ExperienceTab {
+  label: string;
+  value: ExperienceLevel | '';
+}
 
 @Component({
   selector: 'app-candidate-list',
@@ -133,18 +138,20 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             <option *ngFor="let referrer of availableReferrers" [value]="referrer">{{ referrer }}</option>
           </select>
         </div>
-        <div class="filter-field">
-          <label for="experienceLevelFilter">Experience Level</label>
-          <select id="experienceLevelFilter"
-                  [(ngModel)]="experienceLevelFilter"
-                  (ngModelChange)="onExperienceLevelFilterChange()">
-            <option value="">All Levels</option>
-            <option value="level_1_green">Level 1/Green</option>
-            <option value="level_2">Level 2</option>
-            <option value="level_3">Level 3</option>
-            <option value="level_4">Level 4</option>
-          </select>
-        </div>
+      </div>
+
+      <!-- Experience Level Tabs -->
+      <div class="experience-tabs" role="tablist" aria-label="Filter by experience level">
+        <button *ngFor="let tab of experienceTabs"
+                type="button"
+                role="tab"
+                class="experience-tab"
+                [class.active]="experienceLevelFilter === tab.value"
+                [attr.aria-selected]="experienceLevelFilter === tab.value"
+                (click)="onExperienceTabChange(tab.value)">
+          {{ tab.label }}
+          <span class="tab-count">{{ getTabCount(tab.value) }}</span>
+        </button>
       </div>
 
       <!-- Bulk Action Bar -->
@@ -178,10 +185,6 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
           <col class="col-name">
           <col class="col-email">
           <col class="col-phone">
-          <col class="col-vest">
-          <col class="col-drug">
-          <col class="col-osha">
-          <col class="col-scissor">
           <col class="col-state">
           <col class="col-referred">
           <col class="col-start">
@@ -207,18 +210,6 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             </th>
             <th (click)="onSort('techPhone')" class="sortable">
               Tech Phone <span class="sort-icon">{{ getSortIcon('techPhone') }}</span>
-            </th>
-            <th (click)="onSort('vestSize')" class="sortable center-col">
-              Vest <span class="sort-icon">{{ getSortIcon('vestSize') }}</span>
-            </th>
-            <th (click)="onSort('drugTestComplete')" class="sortable center-col">
-              Drug <span class="sort-icon">{{ getSortIcon('drugTestComplete') }}</span>
-            </th>
-            <th (click)="onSort('oshaCertified')" class="sortable center-col">
-              OSHA <span class="sort-icon">{{ getSortIcon('oshaCertified') }}</span>
-            </th>
-            <th (click)="onSort('scissorLiftCertified')" class="sortable center-col">
-              Scissor <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
             </th>
             <th (click)="onSort('homeState')" class="sortable center-col">
               State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
@@ -256,15 +247,22 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             <td>{{ candidate.techName }}</td>
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
-            <td class="center-col">{{ candidate.vestSize }}</td>
-            <td class="bool-cell center-col"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell center-col"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell center-col"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
             <td class="center-col">{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
             <td>{{ candidate.referredBy || '—' }}</td>
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
-            <td>{{ getExperienceLevelLabel(candidate.experienceLevel) }}</td>
+            <td class="experience-cell" (click)="$event.stopPropagation()">
+              <select class="inline-experience-select"
+                      [value]="candidate.experienceLevel || ''"
+                      (change)="onInlineExperienceChange(candidate, $event)"
+                      [attr.aria-label]="'Change experience level for ' + candidate.techName">
+                <option value="">—</option>
+                <option value="experienced">Experienced</option>
+                <option value="level">Level</option>
+                <option value="it_testing">IT/Testing</option>
+                <option value="not_experienced_green">Not Experienced/Green</option>
+              </select>
+            </td>
             <td class="actions-cell">
               <button class="icon-btn icon-resume"
                       [class.has-file]="candidate.resumeUrl"
@@ -568,6 +566,88 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
     }
 
+    .experience-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .experience-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.625rem 1.25rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #616161;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .experience-tab:hover {
+      color: #1976d2;
+      background-color: rgba(25, 118, 210, 0.04);
+    }
+
+    .experience-tab.active {
+      color: #1976d2;
+      font-weight: 600;
+      border-bottom-color: #1976d2;
+    }
+
+    .tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 0.375rem;
+      border-radius: 10px;
+      background: #e0e0e0;
+      color: #424242;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .experience-tab.active .tab-count {
+      background: #1976d2;
+      color: #ffffff;
+    }
+
+    .experience-cell {
+      padding: 0.2rem 0.25rem !important;
+    }
+
+    .inline-experience-select {
+      padding: 0.25rem 0.4rem;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      font-size: 0.75rem;
+      color: #212121;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+      max-width: 145px;
+    }
+
+    .inline-experience-select:hover {
+      border-color: #bdbdbd;
+      background: #fafafa;
+    }
+
+    .inline-experience-select:focus {
+      outline: none;
+      border-color: #1976d2;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    }
+
     .table-wrapper {
       overflow-x: auto;
       width: 100%;
@@ -586,10 +666,6 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
     .candidate-table colgroup .col-name { min-width: 90px; }
     .candidate-table colgroup .col-email { min-width: 120px; }
     .candidate-table colgroup .col-phone { min-width: 100px; }
-    .candidate-table colgroup .col-vest { min-width: 32px; }
-    .candidate-table colgroup .col-drug { min-width: 36px; }
-    .candidate-table colgroup .col-osha { min-width: 38px; }
-    .candidate-table colgroup .col-scissor { min-width: 42px; }
     .candidate-table colgroup .col-state { min-width: 36px; }
     .candidate-table colgroup .col-referred { min-width: 75px; }
     .candidate-table colgroup .col-start { min-width: 72px; }
@@ -1007,11 +1083,20 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   statusFilter = '';
   homeStateFilter = '';
   referredByFilter = '';
-  experienceLevelFilter = '';
+  experienceLevelFilter: ExperienceLevel | '' = '';
   incompleteCertsFilter = false;
   sortState: SortState | null = null;
   availableStates: string[] = [];
   availableReferrers: string[] = [];
+
+  // Experience level tabs
+  experienceTabs: ExperienceTab[] = [
+    { label: 'All', value: '' },
+    { label: 'Experienced', value: 'experienced' },
+    { label: 'Level', value: 'level' },
+    { label: 'IT/Testing', value: 'it_testing' },
+    { label: 'Not Experienced/Green', value: 'not_experienced_green' },
+  ];
 
   // Pagination
   pageSize = 10;
@@ -1043,7 +1128,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       this.statusFilter = savedState.statusFilter;
       this.homeStateFilter = savedState.homeStateFilter;
       this.referredByFilter = savedState.referredByFilter;
-      this.experienceLevelFilter = savedState.experienceLevelFilter || '';
+      this.experienceLevelFilter = (savedState.experienceLevelFilter || '') as ExperienceLevel | '';
       this.incompleteCertsFilter = savedState.incompleteCertsFilter;
       this.sortState = savedState.sortColumn
         ? { column: savedState.sortColumn, direction: savedState.sortDirection }
@@ -1108,6 +1193,35 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   onExperienceLevelFilterChange(): void {
     this.pageIndex = 0;
     this.applyFiltersAndSort();
+  }
+
+  onExperienceTabChange(value: ExperienceLevel | ''): void {
+    this.experienceLevelFilter = value;
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
+  getTabCount(value: ExperienceLevel | ''): number {
+    if (!value) {
+      return this.getFilteredWithoutExperience().length;
+    }
+    return this.getFilteredWithoutExperience().filter(c => c.experienceLevel === value).length;
+  }
+
+  onInlineExperienceChange(candidate: Candidate, event: Event): void {
+    const newValue = (event.target as HTMLSelectElement).value as ExperienceLevel | '';
+    const payload: UpdateCandidatePayload = {
+      experienceLevel: newValue || undefined,
+    };
+    this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+      next: () => {
+        candidate.experienceLevel = newValue || undefined;
+        this.applyFiltersAndSort(this.pageIndex);
+      },
+      error: () => {
+        this.errorMessage = `Failed to update experience level for ${candidate.techName}.`;
+      }
+    });
   }
 
   onSort(column: keyof Candidate): void {
@@ -1578,6 +1692,46 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       .map(c => c.referredBy || '')
       .filter(r => r.length > 0);
     this.availableReferrers = [...new Set(referrers)].sort();
+  }
+
+  /**
+   * Returns candidates filtered by all criteria EXCEPT experience level.
+   * Used for computing tab counts so each tab shows how many candidates it contains.
+   */
+  private getFilteredWithoutExperience(): Candidate[] {
+    let result = [...this.candidates];
+
+    if (this.searchText.trim()) {
+      const term = this.searchText.trim().toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.techName.toLowerCase().includes(term) ||
+          c.techEmail.toLowerCase().includes(term) ||
+          (c.homeState || this.extractState(c.homeAddress) || '').toLowerCase().includes(term)
+      );
+    }
+
+    if (this.statusFilter) {
+      result = result.filter((c) => c.offerStatus === this.statusFilter);
+    }
+
+    if (this.homeStateFilter) {
+      result = result.filter(
+        (c) => (c.homeState || this.extractState(c.homeAddress) || '') === this.homeStateFilter
+      );
+    }
+
+    if (this.referredByFilter) {
+      result = result.filter((c) => c.referredBy === this.referredByFilter);
+    }
+
+    if (this.incompleteCertsFilter) {
+      result = result.filter(
+        (c) => !c.oshaCertified || !c.scissorLiftCertified
+      );
+    }
+
+    return result;
   }
 
   /**
