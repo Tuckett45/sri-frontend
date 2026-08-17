@@ -144,6 +144,7 @@ export class JobDetailComponent implements OnInit, OnDestroy {
 
   // Valid status transitions map
   private readonly validTransitions: Record<JobStatus, JobStatus[]> = {
+    [JobStatus.Future]: [JobStatus.NotStarted, JobStatus.Cancelled],
     [JobStatus.NotStarted]: [JobStatus.EnRoute, JobStatus.Issue, JobStatus.Cancelled],
     [JobStatus.EnRoute]: [JobStatus.OnSite, JobStatus.Issue, JobStatus.Cancelled],
     [JobStatus.OnSite]: [JobStatus.Completed, JobStatus.Issue, JobStatus.Cancelled],

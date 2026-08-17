@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environments';
 import {
   BomTracking,
@@ -146,9 +147,16 @@ export class RfpDashboardService {
   /**
    * Fetches user list from the legacy API for the assignee dropdown.
    * Uses environment.apiUrl (not atlasApiUrl).
+   * Maps 'name' field from legacy User model to 'fullName' expected by DashboardUser.
    */
   getUsers(): Observable<DashboardUser[]> {
-    return this.http.get<DashboardUser[]>(this.usersUrl);
+    return this.http.get<{ id: string; name: string; email: string }[]>(this.usersUrl).pipe(
+      map(users => users.map(u => ({
+        id: u.id,
+        fullName: u.name,
+        email: u.email
+      })))
+    );
   }
 
   // ===========================================================================

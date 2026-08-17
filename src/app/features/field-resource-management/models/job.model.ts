@@ -18,6 +18,7 @@ export enum Priority {
 }
 
 export enum JobStatus {
+  Future = 'Future',
   NotStarted = 'NotStarted',
   EnRoute = 'EnRoute',
   OnSite = 'OnSite',

@@ -14,6 +14,7 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
   offer_extended: 'Offer Extended',
   offer_accepted_onboarding: 'Offer Accepted/Onboarding',
   hired_assigned: 'Hired/Assigned',
+  onboarded: 'Onboarded',
   do_not_hire: 'Do Not Hire',
   turned_down_hold: 'Turned Down/Hold for Later',
 };
@@ -53,6 +54,7 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
             <button class="btn-convert" *ngIf="canConvert(candidate)" (click)="convertToTechnician()" [disabled]="isConverting">
               {{ isConverting ? 'Converting...' : 'Convert to Technician' }}
             </button>
+            <span class="badge-promoted" *ngIf="candidate.promotedToTechnicianId">Promoted</span>
             <button class="btn-delete" (click)="deleteCandidate()">Delete</button>
           </div>
         </div>
@@ -312,6 +314,18 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
 
     .btn-convert:hover:not(:disabled) { background: #6a1b9a; }
     .btn-convert:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .badge-promoted {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.4rem 1rem;
+      border-radius: 4px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+    }
 
     .btn-delete {
       padding: 0.5rem 1.25rem;
@@ -836,9 +850,10 @@ export class CandidateDetailComponent implements OnInit {
   }
 
   canConvert(candidate: Candidate): boolean {
-    // Hired/Assigned candidates can always be converted to technicians
-    if (candidate.offerStatus === 'hired_assigned') return true;
-    return candidate.offerStatus === 'offer_accepted_onboarding' && candidate.oshaCertified;
+    // Already promoted candidates cannot be converted again
+    if (candidate.promotedToTechnicianId) return false;
+    // Only Hired/Assigned candidates are eligible for conversion
+    return candidate.offerStatus === 'hired_assigned';
   }
 
   convertToTechnician(): void {
@@ -856,9 +871,15 @@ export class CandidateDetailComponent implements OnInit {
         // Navigate to the new technician's detail page
         this.router.navigate(['/field-resource-management/onboarding/credentials', result.technicianId]);
       },
-      error: () => {
+      error: (err) => {
         this.isConverting = false;
-        alert('Failed to convert candidate to technician. Please try again.');
+        // Handle "already promoted" gracefully — reload to reflect repaired status
+        if (err?.statusCode === 400 && err?.message?.includes('already been promoted')) {
+          alert('This candidate has already been promoted to a technician. The status has been updated.');
+          this.loadCandidate();
+        } else {
+          alert('Failed to convert candidate to technician. Please try again.');
+        }
       }
     });
   }

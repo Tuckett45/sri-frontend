@@ -13,6 +13,7 @@ export const initialState: UIState = {
   scheduleViewMode: ScheduleViewMode.Technicians,
   selectedDate: new Date(),
   sidebarOpen: true,
+  sidebarCollapsed: false,
   mobileMenuOpen: false,
   mapView: {
     center: { lat: 39.8283, lng: -98.5795 }, // Center of US
@@ -66,6 +67,12 @@ export const uiReducer = createReducer(
   on(UIActions.closeSidebar, (state) => ({
     ...state,
     sidebarOpen: false
+  })),
+
+  // Sidebar Collapsed (desktop minimize)
+  on(UIActions.toggleSidebarCollapsed, (state) => ({
+    ...state,
+    sidebarCollapsed: !state.sidebarCollapsed
   })),
 
   // Mobile Menu

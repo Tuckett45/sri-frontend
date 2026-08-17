@@ -117,6 +117,17 @@ export class OnboardingService {
       .pipe(catchError(this.mapError('convertToTechnician')));
   }
 
+  /**
+   * One-time repair endpoint to fix stuck records that were promoted but never
+   * had their offerStatus updated. After calling this, those candidates will
+   * have offerStatus: "onboarded" and promotedToTechnicianId set.
+   */
+  repairPromotionStatus(): Observable<{ repairedCount: number }> {
+    return this.http
+      .post<{ repairedCount: number }>(`${this.baseUrl}/candidates/repair-promotion-status`, {})
+      .pipe(catchError(this.mapError('repairPromotionStatus')));
+  }
+
   // ---------------------------------------------------------------------------
   // File Uploads
   // ---------------------------------------------------------------------------

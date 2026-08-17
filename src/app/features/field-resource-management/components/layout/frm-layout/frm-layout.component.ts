@@ -1,9 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { selectSidebarOpen } from '../../../state/ui/ui.selectors';
-import { toggleSidebar } from '../../../state/ui/ui.actions';
+import { selectSidebarOpen, selectSidebarCollapsed } from '../../../state/ui/ui.selectors';
+import { toggleSidebar, toggleSidebarCollapsed } from '../../../state/ui/ui.actions';
 
 /**
  * FRM Layout Component
@@ -11,6 +10,7 @@ import { toggleSidebar } from '../../../state/ui/ui.actions';
  * Provides the main layout structure for the Field Resource Management module.
  * Features:
  * - Responsive sidebar navigation
+ * - Collapsible sidebar (icon-only mode) for smaller screens
  * - Main content area with router outlet
  * - Breadcrumb navigation
  * - Offline indicator
@@ -25,14 +25,19 @@ import { toggleSidebar } from '../../../state/ui/ui.actions';
 })
 export class FrmLayoutComponent implements OnInit, OnDestroy {
   sidebarOpen$: Observable<boolean>;
+  sidebarCollapsed$: Observable<boolean>;
   private destroy$ = new Subject<void>();
 
   constructor(private store: Store) {
     this.sidebarOpen$ = this.store.select(selectSidebarOpen);
+    this.sidebarCollapsed$ = this.store.select(selectSidebarCollapsed);
   }
 
   ngOnInit(): void {
-    // Component initialization
+    // Auto-collapse sidebar on smaller desktop screens (≤1440px) on initial load
+    if (window.innerWidth <= 1440) {
+      this.store.dispatch(toggleSidebarCollapsed());
+    }
   }
 
   ngOnDestroy(): void {
@@ -41,10 +46,17 @@ export class FrmLayoutComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Toggle sidebar open/closed state
+   * Toggle sidebar open/closed state (mobile)
    */
   toggleSidebar(): void {
     this.store.dispatch(toggleSidebar());
+  }
+
+  /**
+   * Toggle sidebar collapsed/expanded state (desktop)
+   */
+  toggleSidebarCollapsed(): void {
+    this.store.dispatch(toggleSidebarCollapsed());
   }
 
   /**

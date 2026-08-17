@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
   # Disabled pull_request triggers to prevent multiple staging environments
   # pull_request:
   #   types: [opened, synchronize, reopened, closed]

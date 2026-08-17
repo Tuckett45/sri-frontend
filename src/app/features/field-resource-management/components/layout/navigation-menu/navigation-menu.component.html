@@ -16,6 +16,7 @@
         (keydown.enter)="navigate(item.route)"
         role="menuitem"
         tabindex="0"
+        [title]="item.label"
         [attr.aria-current]="isActive(item.route) ? 'page' : null">
         <mat-icon class="menu-icon">{{ item.icon }}</mat-icon>
         <span class="menu-label">{{ item.label }}</span>

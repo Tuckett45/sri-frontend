@@ -59,6 +59,12 @@ export const selectSidebarOpen = createSelector(
   (state) => state.sidebarOpen
 );
 
+// Select sidebar collapsed state (desktop minimize)
+export const selectSidebarCollapsed = createSelector(
+  selectUIState,
+  (state) => state.sidebarCollapsed
+);
+
 // Select mobile menu open state
 export const selectMobileMenuOpen = createSelector(
   selectUIState,

@@ -173,6 +173,7 @@ export class DailyViewComponent implements OnInit, OnDestroy {
    */
   private getNextStatus(currentStatus: JobStatus): JobStatus | null {
     const statusFlow: Record<JobStatus, JobStatus | null> = {
+      [JobStatus.Future]: JobStatus.NotStarted,
       [JobStatus.NotStarted]: JobStatus.EnRoute,
       [JobStatus.EnRoute]: JobStatus.OnSite,
       [JobStatus.OnSite]: JobStatus.Completed,

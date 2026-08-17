@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -6,7 +6,8 @@ import { forkJoin, Observable, from, of } from 'rxjs';
 import { concatMap, delay, catchError, toArray, tap } from 'rxjs/operators';
 import { OnboardingService } from '../../../services/onboarding.service';
 import { OnboardingLinkService } from '../../../services/onboarding-link.service';
-import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus } from '../../../models/onboarding.models';
+import { CandidateListStateService } from '../../../services/candidate-list-state.service';
+import { Candidate, CreateCandidatePayload, UpdateCandidatePayload, OfferStatus, ExperienceLevel } from '../../../models/onboarding.models';
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
 import { GenerateLinkDialogComponent } from '../generate-link-dialog/generate-link-dialog.component';
 import { CandidateNotesDialogComponent } from '../candidate-notes-dialog/candidate-notes-dialog.component';
@@ -24,9 +25,22 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   offer_extended: 'Offer Extended',
   offer_accepted_onboarding: 'Offer Accepted/Onboarding',
   hired_assigned: 'Hired/Assigned',
+  onboarded: 'Onboarded',
   do_not_hire: 'Do Not Hire',
   turned_down_hold: 'Turned Down/Hold for Later',
 };
+
+const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
+  experienced: 'Experienced',
+  level: 'Level',
+  it_testing: 'IT/Testing',
+  not_experienced_green: 'Not Experienced/Green',
+};
+
+interface ExperienceTab {
+  label: string;
+  value: ExperienceLevel | '';
+}
 
 @Component({
   selector: 'app-candidate-list',
@@ -101,6 +115,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <option value="offer_extended">Offer Extended</option>
             <option value="offer_accepted_onboarding">Offer Accepted/Onboarding</option>
             <option value="hired_assigned">Hired/Assigned</option>
+            <option value="onboarded">Onboarded</option>
             <option value="do_not_hire">Do Not Hire</option>
             <option value="turned_down_hold">Turned Down/Hold for Later</option>
           </select>
@@ -123,6 +138,20 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <option *ngFor="let referrer of availableReferrers" [value]="referrer">{{ referrer }}</option>
           </select>
         </div>
+      </div>
+
+      <!-- Experience Level Tabs -->
+      <div class="experience-tabs" role="tablist" aria-label="Filter by experience level">
+        <button *ngFor="let tab of experienceTabs"
+                type="button"
+                role="tab"
+                class="experience-tab"
+                [class.active]="experienceLevelFilter === tab.value"
+                [attr.aria-selected]="experienceLevelFilter === tab.value"
+                (click)="onExperienceTabChange(tab.value)">
+          {{ tab.label }}
+          <span class="tab-count">{{ getTabCount(tab.value) }}</span>
+        </button>
       </div>
 
       <!-- Bulk Action Bar -->
@@ -152,19 +181,16 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       <div class="table-wrapper" *ngIf="filteredCandidates.length > 0">
       <table class="candidate-table">
         <colgroup>
-          <col style="width: 3%;">
-          <col style="width: 9%;">
-          <col style="width: 13%;">
-          <col style="width: 8%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 5%;">
-          <col style="width: 7%;">
-          <col style="width: 7%;">
-          <col style="width: 10%;">
-          <col style="width: 18%;">
+          <col class="col-checkbox">
+          <col class="col-name">
+          <col class="col-email">
+          <col class="col-phone">
+          <col class="col-state">
+          <col class="col-referred">
+          <col class="col-start">
+          <col class="col-status">
+          <col class="col-experience">
+          <col class="col-actions">
         </colgroup>
         <thead>
           <tr>
@@ -185,20 +211,8 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <th (click)="onSort('techPhone')" class="sortable">
               Tech Phone <span class="sort-icon">{{ getSortIcon('techPhone') }}</span>
             </th>
-            <th (click)="onSort('vestSize')" class="sortable">
-              Vest Size <span class="sort-icon">{{ getSortIcon('vestSize') }}</span>
-            </th>
-            <th (click)="onSort('drugTestComplete')" class="sortable">
-              Drug Test <span class="sort-icon">{{ getSortIcon('drugTestComplete') }}</span>
-            </th>
-            <th (click)="onSort('oshaCertified')" class="sortable">
-              OSHA <span class="sort-icon">{{ getSortIcon('oshaCertified') }}</span>
-            </th>
-            <th (click)="onSort('scissorLiftCertified')" class="sortable">
-              Scissor Lift <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
-            </th>
-            <th (click)="onSort('homeState')" class="sortable">
-              Home State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
+            <th (click)="onSort('homeState')" class="sortable center-col">
+              State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
             </th>
             <th (click)="onSort('referredBy')" class="sortable">
               Referred By <span class="sort-icon">{{ getSortIcon('referredBy') }}</span>
@@ -208,6 +222,9 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             </th>
             <th (click)="onSort('offerStatus')" class="sortable">
               Offer Status <span class="sort-icon">{{ getSortIcon('offerStatus') }}</span>
+            </th>
+            <th (click)="onSort('experienceLevel')" class="sortable">
+              Experience <span class="sort-icon">{{ getSortIcon('experienceLevel') }}</span>
             </th>
             <th>Actions</th>
           </tr>
@@ -230,14 +247,22 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
             <td>{{ candidate.techName }}</td>
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
-            <td>{{ candidate.vestSize }}</td>
-            <td class="bool-cell"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td>{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
+            <td class="center-col">{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
             <td>{{ candidate.referredBy || '—' }}</td>
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
             <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
+            <td class="experience-cell" (click)="$event.stopPropagation()">
+              <select class="inline-experience-select"
+                      [value]="candidate.experienceLevel || ''"
+                      (change)="onInlineExperienceChange(candidate, $event)"
+                      [attr.aria-label]="'Change experience level for ' + candidate.techName">
+                <option value="">—</option>
+                <option value="experienced">Experienced</option>
+                <option value="level">Level</option>
+                <option value="it_testing">IT/Testing</option>
+                <option value="not_experienced_green">Not Experienced/Green</option>
+              </select>
+            </td>
             <td class="actions-cell">
               <button class="icon-btn icon-resume"
                       [class.has-file]="candidate.resumeUrl"
@@ -254,15 +279,33 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
                       [title]="candidate.notes ? 'View/Edit Notes' : 'Add Notes'">
                 <mat-icon class="action-icon">sticky_note_2</mat-icon>
               </button>
-              <button class="action-btn btn-view" (click)="onRowClick(candidate); $event.stopPropagation()">View</button>
-              <button class="action-btn btn-edit-action" (click)="onEditCandidate(candidate); $event.stopPropagation()">Edit</button>
-              <button class="action-btn btn-convert"
+              <button class="icon-btn icon-view"
+                      (click)="onRowClick(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="'View ' + candidate.techName"
+                      title="View">
+                <mat-icon class="action-icon">visibility</mat-icon>
+              </button>
+              <button class="icon-btn icon-edit"
+                      (click)="onEditCandidate(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="'Edit ' + candidate.techName"
+                      title="Edit">
+                <mat-icon class="action-icon">edit</mat-icon>
+              </button>
+              <span class="badge-promoted" *ngIf="isPromoted(candidate)">Promoted</span>
+              <button class="icon-btn icon-convert"
                       *ngIf="canConvert(candidate)"
                       (click)="onConvertToTechnician(candidate); $event.stopPropagation()"
-                      [disabled]="convertingId === candidate.candidateId">
-                {{ convertingId === candidate.candidateId ? 'Converting...' : 'Convert to Tech' }}
+                      [disabled]="convertingId === candidate.candidateId"
+                      [attr.aria-label]="'Convert ' + candidate.techName + ' to technician'"
+                      title="Convert to Technician">
+                <mat-icon class="action-icon">person_add</mat-icon>
               </button>
-              <button class="action-btn btn-delete" (click)="onDeleteCandidate(candidate); $event.stopPropagation()">Delete</button>
+              <button class="icon-btn icon-delete"
+                      (click)="onDeleteCandidate(candidate); $event.stopPropagation()"
+                      [attr.aria-label]="'Delete ' + candidate.techName"
+                      title="Delete">
+                <mat-icon class="action-icon">delete</mat-icon>
+              </button>
             </td>
           </tr>
         </tbody>
@@ -291,11 +334,13 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   `,
   styles: [`
     .candidate-list-container {
-      margin: 1.5rem;
-      padding: 1.5rem;
+      margin: 0.75rem;
+      padding: 0.75rem;
       background: #ffffff;
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      max-width: 100%;
     }
 
     h2 {
@@ -521,27 +566,123 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
     }
 
+    .experience-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .experience-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.625rem 1.25rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #616161;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .experience-tab:hover {
+      color: #1976d2;
+      background-color: rgba(25, 118, 210, 0.04);
+    }
+
+    .experience-tab.active {
+      color: #1976d2;
+      font-weight: 600;
+      border-bottom-color: #1976d2;
+    }
+
+    .tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 0.375rem;
+      border-radius: 10px;
+      background: #e0e0e0;
+      color: #424242;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .experience-tab.active .tab-count {
+      background: #1976d2;
+      color: #ffffff;
+    }
+
+    .experience-cell {
+      padding: 0.2rem 0.25rem !important;
+    }
+
+    .inline-experience-select {
+      padding: 0.25rem 0.4rem;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      font-size: 0.75rem;
+      color: #212121;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+      max-width: 145px;
+    }
+
+    .inline-experience-select:hover {
+      border-color: #bdbdbd;
+      background: #fafafa;
+    }
+
+    .inline-experience-select:focus {
+      outline: none;
+      border-color: #1976d2;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    }
+
     .table-wrapper {
       overflow-x: auto;
       width: 100%;
+      -webkit-overflow-scrolling: touch;
     }
 
     .candidate-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-      table-layout: fixed;
+      width: max-content;
+      min-width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.75rem;
     }
+
+    .candidate-table colgroup .col-checkbox { width: 20px; }
+    .candidate-table colgroup .col-name { min-width: 90px; }
+    .candidate-table colgroup .col-email { min-width: 120px; }
+    .candidate-table colgroup .col-phone { min-width: 100px; }
+    .candidate-table colgroup .col-state { min-width: 36px; }
+    .candidate-table colgroup .col-referred { min-width: 75px; }
+    .candidate-table colgroup .col-start { min-width: 72px; }
+    .candidate-table colgroup .col-status { min-width: 80px; }
+    .candidate-table colgroup .col-experience { min-width: 70px; }
+    .candidate-table colgroup .col-actions { min-width: 100px; }
 
     .candidate-table thead th {
       text-align: left;
-      padding: 0.5rem 0.5rem;
+      padding: 0.375rem 0.4rem;
       background: #f5f5f5;
       border-bottom: 2px solid #e0e0e0;
       font-weight: 600;
       color: #424242;
       white-space: nowrap;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.02em;
     }
 
     .candidate-table thead th.sortable {
@@ -554,16 +695,25 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     }
 
     .sort-icon {
-      font-size: 0.75rem;
-      margin-left: 0.25rem;
+      font-size: 0.7rem;
+      margin-left: 0.2rem;
     }
 
     .candidate-table tbody td {
-      padding: 0.4rem 0.5rem;
+      padding: 0.3rem 0.4rem;
       border-bottom: 1px solid #e0e0e0;
       color: #212121;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .candidate-table thead th.center-col,
+    .candidate-table tbody td.center-col {
+      text-align: center;
+    }
+
+    .candidate-table tbody td:last-child {
+      /* Actions — allow wrapping for buttons */
+      white-space: normal;
     }
 
     .candidate-row {
@@ -610,7 +760,6 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     .actions-cell {
       white-space: normal;
       text-align: center;
-      min-width: 180px;
     }
 
     .checkbox-col {
@@ -734,48 +883,8 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
     }
 
     .action-btn {
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 500;
-      cursor: pointer;
-      margin: 2px;
-      transition: background-color 0.2s;
-      display: inline-block;
+      display: none;
     }
-
-    .btn-view {
-      background: #e3f2fd;
-      color: #1565c0;
-      border: 1px solid #90caf9;
-    }
-
-    .btn-view:hover { background: #bbdefb; }
-
-    .btn-edit-action {
-      background: #fff3e0;
-      color: #e65100;
-      border: 1px solid #ffcc80;
-    }
-
-    .btn-edit-action:hover { background: #ffe0b2; }
-
-    .btn-delete {
-      background: #ffebee;
-      color: #c62828;
-      border: 1px solid #ef9a9a;
-    }
-
-    .btn-delete:hover { background: #ffcdd2; }
-
-    .btn-convert {
-      background: #f3e5f5;
-      color: #7b1fa2;
-      border: 1px solid #ce93d8;
-    }
-
-    .btn-convert:hover:not(:disabled) { background: #e1bee7; }
-    .btn-convert:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .icon-btn {
       display: inline-flex;
@@ -787,33 +896,32 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       border: 1px solid transparent;
       background: none;
       cursor: pointer;
-      margin: 2px;
+      margin: 0px;
       transition: background-color 0.15s, opacity 0.15s, color 0.15s;
       vertical-align: middle;
-      opacity: 0.4;
-      color: #757575;
       padding: 0;
     }
 
     .icon-btn .action-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
     }
 
     .icon-btn:disabled {
       cursor: not-allowed;
-      opacity: 0.2;
+      opacity: 0.25;
     }
 
-    .icon-btn.has-file {
+    /* Resume icon */
+    .icon-btn.icon-resume {
+      color: #9e9e9e;
+      opacity: 0.5;
+    }
+
+    .icon-btn.icon-resume.has-file {
       opacity: 1;
       color: #1565c0;
-    }
-
-    .icon-btn.has-notes {
-      opacity: 1;
-      color: #e65100;
     }
 
     .icon-btn.icon-resume:not(:disabled):hover {
@@ -823,11 +931,87 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
       opacity: 1;
     }
 
+    /* Notes icon */
+    .icon-btn.icon-notes {
+      color: #9e9e9e;
+      opacity: 0.5;
+    }
+
+    .icon-btn.icon-notes.has-notes {
+      opacity: 1;
+      color: #e65100;
+    }
+
     .icon-btn.icon-notes:hover {
       background: #fff3e0;
       border-color: #ffcc80;
       color: #e65100;
       opacity: 1;
+    }
+
+    /* View icon */
+    .icon-btn.icon-view {
+      color: #1976d2;
+      opacity: 1;
+    }
+
+    .icon-btn.icon-view:hover {
+      background: #e3f2fd;
+      border-color: #90caf9;
+      color: #1565c0;
+    }
+
+    /* Edit icon */
+    .icon-btn.icon-edit {
+      color: #f57c00;
+      opacity: 1;
+    }
+
+    .icon-btn.icon-edit:hover {
+      background: #fff3e0;
+      border-color: #ffcc80;
+      color: #e65100;
+    }
+
+    /* Convert icon */
+    .icon-btn.icon-convert {
+      color: #7b1fa2;
+      opacity: 1;
+    }
+
+    .icon-btn.icon-convert:hover:not(:disabled) {
+      background: #f3e5f5;
+      border-color: #ce93d8;
+      color: #6a1b9a;
+    }
+
+    .icon-btn.icon-convert:disabled {
+      opacity: 0.3;
+    }
+
+    /* Delete icon */
+    .icon-btn.icon-delete {
+      color: #d32f2f;
+      opacity: 1;
+    }
+
+    .icon-btn.icon-delete:hover {
+      background: #ffebee;
+      border-color: #ef9a9a;
+      color: #b71c1c;
+    }
+
+    .badge-promoted {
+      display: inline-block;
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.625rem;
+      font-weight: 600;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+      margin: 1px;
+      vertical-align: middle;
     }
 
     :host ::ng-deep .mat-mdc-paginator {
@@ -860,8 +1044,8 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 
     @media (max-width: 768px) {
       .candidate-list-container {
-        margin: 1rem;
-        padding: 1rem;
+        margin: 0.5rem;
+        padding: 0.5rem;
         overflow-x: auto;
       }
 
@@ -878,7 +1062,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   `]
 })
 
-export class CandidateListComponent implements OnInit {
+export class CandidateListComponent implements OnInit, OnDestroy {
   candidates: Candidate[] = [];
   filteredCandidates: Candidate[] = [];
   paginatedCandidates: Candidate[] = [];
@@ -899,10 +1083,20 @@ export class CandidateListComponent implements OnInit {
   statusFilter = '';
   homeStateFilter = '';
   referredByFilter = '';
+  experienceLevelFilter: ExperienceLevel | '' = '';
   incompleteCertsFilter = false;
   sortState: SortState | null = null;
   availableStates: string[] = [];
   availableReferrers: string[] = [];
+
+  // Experience level tabs
+  experienceTabs: ExperienceTab[] = [
+    { label: 'All', value: '' },
+    { label: 'Experienced', value: 'experienced' },
+    { label: 'Level', value: 'level' },
+    { label: 'IT/Testing', value: 'it_testing' },
+    { label: 'Not Experienced/Green', value: 'not_experienced_green' },
+  ];
 
   // Pagination
   pageSize = 10;
@@ -916,23 +1110,62 @@ export class CandidateListComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private onboardingService: OnboardingService,
-    private onboardingLinkService: OnboardingLinkService
+    private onboardingLinkService: OnboardingLinkService,
+    private listStateService: CandidateListStateService
   ) {}
 
   ngOnInit(): void {
+    // Check for cached state from a previous visit (e.g., user returning from detail view)
+    const savedState = this.listStateService.restore();
+
     // Read query params for pre-filtering (from pipeline dashboard navigation)
     const params = this.route.snapshot.queryParams;
-    if (params['offerStatus']) {
-      this.statusFilter = params['offerStatus'];
-    }
-    if (params['search']) {
-      this.searchText = params['search'];
-    }
-    if (params['incompleteCerts'] === 'true') {
-      this.incompleteCertsFilter = true;
-    }
+    const hasQueryParams = params['offerStatus'] || params['search'] || params['incompleteCerts'];
 
-    this.loadCandidates();
+    if (savedState && !hasQueryParams) {
+      // Restore previous UI state
+      this.searchText = savedState.searchText;
+      this.statusFilter = savedState.statusFilter;
+      this.homeStateFilter = savedState.homeStateFilter;
+      this.referredByFilter = savedState.referredByFilter;
+      this.experienceLevelFilter = (savedState.experienceLevelFilter || '') as ExperienceLevel | '';
+      this.incompleteCertsFilter = savedState.incompleteCertsFilter;
+      this.sortState = savedState.sortColumn
+        ? { column: savedState.sortColumn, direction: savedState.sortDirection }
+        : null;
+      this.pageIndex = savedState.pageIndex;
+      this.pageSize = savedState.pageSize;
+
+      if (savedState.candidates.length > 0) {
+        // Use cached data — no API call needed
+        this.candidates = savedState.candidates;
+        this.updateAvailableStates();
+        this.applyFiltersAndSort(this.pageIndex);
+      } else {
+        // Data was invalidated (add/edit/delete happened) — reload but keep position
+        this.loadCandidates(true);
+      }
+    } else {
+      // Fresh load (first visit or navigating from pipeline dashboard with query params)
+      if (params['offerStatus']) {
+        this.statusFilter = params['offerStatus'];
+      }
+      if (params['search']) {
+        this.searchText = params['search'];
+      }
+      if (params['incompleteCerts'] === 'true') {
+        this.incompleteCertsFilter = true;
+      }
+
+      this.loadCandidates();
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Persist state whenever the component is destroyed (navigating away)
+    if (this.candidates.length > 0) {
+      this.saveListState();
+    }
   }
 
   onSearchChange(event: Event): void {
@@ -957,6 +1190,40 @@ export class CandidateListComponent implements OnInit {
     this.applyFiltersAndSort();
   }
 
+  onExperienceLevelFilterChange(): void {
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
+  onExperienceTabChange(value: ExperienceLevel | ''): void {
+    this.experienceLevelFilter = value;
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
+  getTabCount(value: ExperienceLevel | ''): number {
+    if (!value) {
+      return this.getFilteredWithoutExperience().length;
+    }
+    return this.getFilteredWithoutExperience().filter(c => c.experienceLevel === value).length;
+  }
+
+  onInlineExperienceChange(candidate: Candidate, event: Event): void {
+    const newValue = (event.target as HTMLSelectElement).value as ExperienceLevel | '';
+    const payload: UpdateCandidatePayload = {
+      experienceLevel: newValue || undefined,
+    };
+    this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+      next: () => {
+        candidate.experienceLevel = newValue || undefined;
+        this.applyFiltersAndSort(this.pageIndex);
+      },
+      error: () => {
+        this.errorMessage = `Failed to update experience level for ${candidate.techName}.`;
+      }
+    });
+  }
+
   onSort(column: keyof Candidate): void {
     if (this.sortState?.column === column) {
       this.sortState = {
@@ -978,6 +1245,11 @@ export class CandidateListComponent implements OnInit {
     return OFFER_STATUS_LABELS[status] ?? status;
   }
 
+  getExperienceLevelLabel(level: ExperienceLevel | undefined): string {
+    if (!level) return '\u2014';
+    return EXPERIENCE_LEVEL_LABELS[level] ?? level;
+  }
+
   extractState(address: string | undefined): string {
     if (!address) return '';
     const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
@@ -991,6 +1263,7 @@ export class CandidateListComponent implements OnInit {
   }
 
   onRowClick(candidate: Candidate): void {
+    this.saveListState();
     this.router.navigate(['candidates', candidate.candidateId], {
       relativeTo: this.route.parent,
     });
@@ -1017,6 +1290,7 @@ export class CandidateListComponent implements OnInit {
           homeState: result.basicInfo.homeState || undefined,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
+          experienceLevel: result.basicInfo.experienceLevel || undefined,
           referredBy: result.basicInfo.referredBy || undefined,
           biisciCertified: result.coreQualifications.fiberExperience,
           backgroundCheckComplete: result.coreQualifications.backgroundCheckComplete,
@@ -1089,6 +1363,7 @@ export class CandidateListComponent implements OnInit {
           homeState: result.basicInfo.homeState || undefined,
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
+          experienceLevel: result.basicInfo.experienceLevel || undefined,
           referredBy: result.basicInfo.referredBy || undefined,
           biisciCertified: result.coreQualifications.fiberExperience,
           backgroundCheckComplete: result.coreQualifications.backgroundCheckComplete,
@@ -1152,9 +1427,14 @@ export class CandidateListComponent implements OnInit {
   // ─── Convert to Technician ────────────────────────────────────────────────
 
   canConvert(candidate: Candidate): boolean {
-    // Hired/Assigned candidates can always be converted to technicians
-    if (candidate.offerStatus === 'hired_assigned') return true;
-    return candidate.offerStatus === 'offer_accepted_onboarding' && candidate.oshaCertified;
+    // Already promoted candidates cannot be converted again
+    if (candidate.promotedToTechnicianId) return false;
+    // Only Hired/Assigned candidates are eligible for conversion
+    return candidate.offerStatus === 'hired_assigned';
+  }
+
+  isPromoted(candidate: Candidate): boolean {
+    return !!candidate.promotedToTechnicianId;
   }
 
   onConvertToTechnician(candidate: Candidate): void {
@@ -1266,8 +1546,16 @@ export class CandidateListComponent implements OnInit {
           delay(150), // Small delay between requests to avoid overwhelming the API
           tap(() => this.bulkConvertProgress++),
           catchError(err => {
-            // Isolate individual failures — don't abort the whole batch
             this.bulkConvertProgress++;
+            // Handle "already promoted" gracefully — backend auto-repairs the status
+            if (err?.statusCode === 400 && err?.message?.includes('already been promoted')) {
+              return of({
+                alreadyPromoted: true as const,
+                candidateId: candidate.candidateId,
+                techName: candidate.techName,
+              });
+            }
+            // Isolate individual failures — don't abort the whole batch
             return of({
               error: true as const,
               candidateId: candidate.candidateId,
@@ -1283,16 +1571,19 @@ export class CandidateListComponent implements OnInit {
       this.selectedCandidateIds.clear();
 
       const failures = results.filter((r: any) => r?.error === true) as { error: boolean; candidateId: string; techName: string; reason: string }[];
-      const successCount = results.length - failures.length;
+      const alreadyPromotedCount = results.filter((r: any) => r?.alreadyPromoted === true).length;
+      const successCount = results.length - failures.length - alreadyPromotedCount;
 
       this.bulkConvertFailures = failures;
 
-      if (failures.length === 0) {
+      if (failures.length === 0 && alreadyPromotedCount === 0) {
         this.successMessage = `Successfully converted ${successCount} candidate${successCount > 1 ? 's' : ''} to technicians.`;
-      } else if (successCount === 0) {
+      } else if (failures.length === 0) {
+        this.successMessage = `Converted ${successCount} candidate${successCount > 1 ? 's' : ''} to technicians.${alreadyPromotedCount > 0 ? ` ${alreadyPromotedCount} already promoted (status auto-repaired).` : ''}`;
+      } else if (successCount === 0 && alreadyPromotedCount === 0) {
         this.errorMessage = `All ${failures.length} conversions failed. Please review the errors below.`;
       } else {
-        this.successMessage = `Converted ${successCount} of ${results.length} candidates. ${failures.length} failed — see details below.`;
+        this.successMessage = `Converted ${successCount} of ${results.length} candidates.${alreadyPromotedCount > 0 ? ` ${alreadyPromotedCount} already promoted.` : ''} ${failures.length} failed — see details below.`;
       }
 
       this.loadCandidates(true);
@@ -1324,6 +1615,25 @@ export class CandidateListComponent implements OnInit {
   // ---------------------------------------------------------------------------
 
   /**
+   * Persists current list UI state so it can be restored when the user navigates back.
+   */
+  private saveListState(): void {
+    this.listStateService.save({
+      searchText: this.searchText,
+      statusFilter: this.statusFilter,
+      homeStateFilter: this.homeStateFilter,
+      referredByFilter: this.referredByFilter,
+      experienceLevelFilter: this.experienceLevelFilter,
+      incompleteCertsFilter: this.incompleteCertsFilter,
+      sortColumn: this.sortState?.column ?? null,
+      sortDirection: this.sortState?.direction ?? 'asc',
+      pageIndex: this.pageIndex,
+      pageSize: this.pageSize,
+      candidates: this.candidates,
+    });
+  }
+
+  /**
    * Reloads candidates from the API.
    * @param preservePosition If true, preserves the current page index after reload.
    */
@@ -1338,6 +1648,8 @@ export class CandidateListComponent implements OnInit {
         this.loading = false;
         this.updateAvailableStates();
         this.applyFiltersAndSort(preservePosition ? savedPageIndex : undefined);
+        // Update cached state with fresh data
+        this.saveListState();
       },
       error: (err) => {
         this.loading = false;
@@ -1383,6 +1695,46 @@ export class CandidateListComponent implements OnInit {
   }
 
   /**
+   * Returns candidates filtered by all criteria EXCEPT experience level.
+   * Used for computing tab counts so each tab shows how many candidates it contains.
+   */
+  private getFilteredWithoutExperience(): Candidate[] {
+    let result = [...this.candidates];
+
+    if (this.searchText.trim()) {
+      const term = this.searchText.trim().toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.techName.toLowerCase().includes(term) ||
+          c.techEmail.toLowerCase().includes(term) ||
+          (c.homeState || this.extractState(c.homeAddress) || '').toLowerCase().includes(term)
+      );
+    }
+
+    if (this.statusFilter) {
+      result = result.filter((c) => c.offerStatus === this.statusFilter);
+    }
+
+    if (this.homeStateFilter) {
+      result = result.filter(
+        (c) => (c.homeState || this.extractState(c.homeAddress) || '') === this.homeStateFilter
+      );
+    }
+
+    if (this.referredByFilter) {
+      result = result.filter((c) => c.referredBy === this.referredByFilter);
+    }
+
+    if (this.incompleteCertsFilter) {
+      result = result.filter(
+        (c) => !c.oshaCertified || !c.scissorLiftCertified
+      );
+    }
+
+    return result;
+  }
+
+  /**
    * Applies current filters and sorting to the candidates list.
    * @param restorePageIndex If provided, restores this page index instead of resetting to 0.
    */
@@ -1420,6 +1772,11 @@ export class CandidateListComponent implements OnInit {
     // Referred by filter
     if (this.referredByFilter) {
       result = result.filter((c) => c.referredBy === this.referredByFilter);
+    }
+
+    // Experience level filter
+    if (this.experienceLevelFilter) {
+      result = result.filter((c) => c.experienceLevel === this.experienceLevelFilter);
     }
 
     // Incomplete certifications filter

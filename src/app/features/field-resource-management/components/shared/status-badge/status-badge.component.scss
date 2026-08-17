@@ -50,6 +50,11 @@
   }
 
   // Status color variants
+  &--future {
+    background-color: #f3e8ff;
+    color: #7c3aed;
+  }
+
   &--notstarted {
     background-color: #e0e0e0;
     color: #616161;

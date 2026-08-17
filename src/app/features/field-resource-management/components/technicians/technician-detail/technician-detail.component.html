@@ -68,6 +68,10 @@
             {{ technician.scissorLiftCertified ? 'Yes' : 'No' }}
           </span>
         </div>
+        <div class="info-item" *ngIf="technician.referredBy">
+          <label>Referred By</label>
+          <span>{{ technician.referredBy }}</span>
+        </div>
       </div>
     </mat-card-content>
   </mat-card>

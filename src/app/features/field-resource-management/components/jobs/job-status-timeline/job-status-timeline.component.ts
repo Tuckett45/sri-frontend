@@ -85,6 +85,7 @@ export class JobStatusTimelineComponent implements OnInit {
    */
   getStatusColorClass(status: JobStatus): string {
     const colorMap: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'status-future',
       [JobStatus.NotStarted]: 'status-not-started',
       [JobStatus.EnRoute]: 'status-en-route',
       [JobStatus.OnSite]: 'status-on-site',
@@ -100,6 +101,7 @@ export class JobStatusTimelineComponent implements OnInit {
    */
   getStatusIcon(status: JobStatus): string {
     const iconMap: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'event',
       [JobStatus.NotStarted]: 'schedule',
       [JobStatus.EnRoute]: 'directions_car',
       [JobStatus.OnSite]: 'location_on',
@@ -115,6 +117,7 @@ export class JobStatusTimelineComponent implements OnInit {
    */
   getStatusText(status: JobStatus): string {
     const textMap: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'Future',
       [JobStatus.NotStarted]: 'Not Started',
       [JobStatus.EnRoute]: 'En Route',
       [JobStatus.OnSite]: 'On Site',

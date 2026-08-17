@@ -1,8 +1,10 @@
 // --- Type Aliases ---
 
-export type OfferStatus = 'needs_review' | 'vetted_available' | 'offer_extended' | 'offer_accepted_onboarding' | 'hired_assigned' | 'do_not_hire' | 'turned_down_hold';
+export type OfferStatus = 'needs_review' | 'vetted_available' | 'offer_extended' | 'offer_accepted_onboarding' | 'hired_assigned' | 'onboarded' | 'do_not_hire' | 'turned_down_hold';
 
 export type VestSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
+
+export type ExperienceLevel = 'experienced' | 'level' | 'it_testing' | 'not_experienced_green';
 
 // --- Candidate ---
 
@@ -23,6 +25,7 @@ export interface Candidate {
   homeState?: string;
   startDate: string;          // ISO date
   offerStatus: OfferStatus;
+  experienceLevel?: ExperienceLevel;
   resumeUrl?: string;
   headshotUrl?: string;
   referredBy?: string;
@@ -57,6 +60,10 @@ export interface Candidate {
   powerKitAssigned?: boolean;
   testingEqptAssigned?: boolean;
 
+  // Promotion tracking
+  promotedToTechnicianId?: string | null;
+  promotedAt?: string | null;
+
   createdBy: string;
   createdAt: string;          // ISO datetime
   updatedBy: string;
@@ -76,6 +83,7 @@ export interface CreateCandidatePayload {
   homeState?: string;
   startDate: string;
   offerStatus: OfferStatus;
+  experienceLevel?: ExperienceLevel;
   referredBy?: string;
   backgroundCheckComplete?: boolean;
   drugTestComplete?: boolean;
@@ -129,6 +137,7 @@ export interface UpdateCandidatePayload {
   homeState?: string;
   startDate?: string;
   offerStatus?: OfferStatus;
+  experienceLevel?: ExperienceLevel;
   referredBy?: string;
   notes?: string;
 
@@ -166,6 +175,7 @@ export interface UpdateCandidatePayload {
 
 export interface CandidateFilters {
   offerStatus?: OfferStatus;
+  experienceLevel?: ExperienceLevel;
   search?: string;
   incompleteCerts?: boolean;
 }

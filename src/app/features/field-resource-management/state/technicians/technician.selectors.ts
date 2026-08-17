@@ -91,12 +91,14 @@ export const selectFilteredTechnicians = createSelector(
 
     // Filter by search term
     if (filters.searchTerm) {
-      const searchLower = filters.searchTerm.toLowerCase();
+      const searchLower = filters.searchTerm.toLowerCase().trim();
       filtered = filtered.filter(tech =>
         tech.firstName.toLowerCase().includes(searchLower) ||
         tech.lastName.toLowerCase().includes(searchLower) ||
+        `${tech.firstName} ${tech.lastName}`.toLowerCase().includes(searchLower) ||
         tech.id.toLowerCase().includes(searchLower) ||
-        tech.email.toLowerCase().includes(searchLower)
+        tech.email.toLowerCase().includes(searchLower) ||
+        (tech.referredBy && tech.referredBy.toLowerCase().includes(searchLower))
       );
     }
 
@@ -110,6 +112,11 @@ export const selectFilteredTechnicians = createSelector(
       filtered = filtered.filter(tech => tech.region === filters.region);
     }
 
+    // Filter by referred by
+    if (filters.referredBy) {
+      filtered = filtered.filter(tech => tech.referredBy === filters.referredBy);
+    }
+
     // Filter by active status
     if (filters.isActive !== undefined) {
       filtered = filtered.filter(tech => tech.isActive === filters.isActive);
@@ -118,8 +125,6 @@ export const selectFilteredTechnicians = createSelector(
     return filtered;
   }
 );
-
-// Select active technicians
 export const selectActiveTechnicians = createSelector(
   selectAllTechnicians,
   (technicians) => technicians.filter(tech => tech.isActive)
@@ -409,12 +414,14 @@ export const selectFilteredScopedTechnicians = (user: User, dataScopes: DataScop
     let filtered = scopedTechnicians;
 
     if (filters.searchTerm) {
-      const searchLower = filters.searchTerm.toLowerCase();
+      const searchLower = filters.searchTerm.toLowerCase().trim();
       filtered = filtered.filter(tech =>
         tech.firstName.toLowerCase().includes(searchLower) ||
         tech.lastName.toLowerCase().includes(searchLower) ||
+        `${tech.firstName} ${tech.lastName}`.toLowerCase().includes(searchLower) ||
         tech.id.toLowerCase().includes(searchLower) ||
-        tech.email.toLowerCase().includes(searchLower)
+        tech.email.toLowerCase().includes(searchLower) ||
+        (tech.referredBy && tech.referredBy.toLowerCase().includes(searchLower))
       );
     }
 
@@ -424,6 +431,10 @@ export const selectFilteredScopedTechnicians = (user: User, dataScopes: DataScop
 
     if (filters.region) {
       filtered = filtered.filter(tech => tech.region === filters.region);
+    }
+
+    if (filters.referredBy) {
+      filtered = filtered.filter(tech => tech.referredBy === filters.referredBy);
     }
 
     if (filters.isActive !== undefined) {

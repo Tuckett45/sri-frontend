@@ -166,7 +166,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let job of displayedJobs"
+            <tr *ngFor="let job of displayedJobs; trackBy: trackByJobId"
                 (click)="viewJob(job)"
                 class="job-row"
                 tabindex="0"
@@ -182,8 +182,17 @@
               </td>
               <td>{{ job.client }}</td>
               <td><span class="type-badge">{{ job.jobType }}</span></td>
-              <td>
-                <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+              <td class="status-cell" (click)="$event.stopPropagation()">
+                <mat-select [value]="getMappedStatusValue(job.status)" (selectionChange)="onInlineStatusChange(job, $event.value)"
+                            class="inline-status-select" [ngClass]="'status-select--' + job.status.toLowerCase()"
+                            panelClass="status-select-panel">
+                  <mat-select-trigger>
+                    <frm-status-badge [status]="job.status" size="small"></frm-status-badge>
+                  </mat-select-trigger>
+                  <mat-option *ngFor="let opt of getValidTransitions(job.status)" [value]="opt.value" [disabled]="opt.isCurrent">
+                    {{ opt.label }}<span *ngIf="opt.isCurrent"> ✓</span>
+                  </mat-option>
+                </mat-select>
               </td>
               <td>
                 <span class="priority-badge" [ngClass]="getPriorityClass(job.priority)">{{ job.priority }}</span>
@@ -240,21 +249,21 @@
       <div class="pipeline-view" *ngIf="!(loading$ | async)">
         <!-- Summary Cards -->
         <div class="pipeline-summary">
+          <div class="summary-card summary-future" (click)="filterByStatus(JobStatus.Future)">
+            <div class="summary-count">{{ getStatusCount(JobStatus.Future) }}</div>
+            <div class="summary-label">Future</div>
+          </div>
           <div class="summary-card summary-notstarted" (click)="filterByStatus(JobStatus.NotStarted)">
             <div class="summary-count">{{ getStatusCount(JobStatus.NotStarted) }}</div>
-            <div class="summary-label">Not Started</div>
+            <div class="summary-label">Pending</div>
           </div>
-          <div class="summary-card summary-enroute" (click)="filterByStatus(JobStatus.EnRoute)">
-            <div class="summary-count">{{ getStatusCount(JobStatus.EnRoute) }}</div>
-            <div class="summary-label">En Route</div>
-          </div>
-          <div class="summary-card summary-onsite" (click)="filterByStatus(JobStatus.OnSite)">
-            <div class="summary-count">{{ getStatusCount(JobStatus.OnSite) }}</div>
-            <div class="summary-label">On Site</div>
+          <div class="summary-card summary-inprogress" (click)="filterByInProgress()">
+            <div class="summary-count">{{ getInProgressCount() }}</div>
+            <div class="summary-label">Active</div>
           </div>
           <div class="summary-card summary-completed" (click)="filterByStatus(JobStatus.Completed)">
             <div class="summary-count">{{ getStatusCount(JobStatus.Completed) }}</div>
-            <div class="summary-label">Completed</div>
+            <div class="summary-label">Closed</div>
           </div>
           <div class="summary-card summary-issue" (click)="filterByStatus(JobStatus.Issue)">
             <div class="summary-count">{{ getStatusCount(JobStatus.Issue) }}</div>
@@ -267,8 +276,8 @@
         </div>
 
         <!-- Pipeline Filter -->
-        <div class="pipeline-filter-bar" *ngIf="pipelineStatusFilter">
-          <span class="pipeline-filter-label">Showing: <strong>{{ pipelineStatusFilter }}</strong></span>
+        <div class="pipeline-filter-bar" *ngIf="pipelineStatusFilter || pipelineInProgressFilter">
+          <span class="pipeline-filter-label">Showing: <strong>{{ pipelineInProgressFilter ? 'Active' : formatStatusLabel(pipelineStatusFilter!) }}</strong></span>
           <button mat-stroked-button (click)="clearPipelineFilter()">
             <mat-icon>close</mat-icon> Show All
           </button>
@@ -276,11 +285,35 @@
 
         <!-- Pipeline Columns -->
         <div class="pipeline-columns">
-          <!-- Not Started -->
-          <div class="pipeline-column" *ngIf="!pipelineStatusFilter || pipelineStatusFilter === JobStatus.NotStarted">
+          <!-- Future -->
+          <div class="pipeline-column" *ngIf="!pipelineStatusFilter && !pipelineInProgressFilter || pipelineStatusFilter === JobStatus.Future">
+            <div class="column-header column-future">
+              <mat-icon>event</mat-icon>
+              <span>Future</span>
+              <span class="column-count">{{ getJobsByStatus(JobStatus.Future).length }}</span>
+            </div>
+            <div class="column-cards">
+              <div class="pipeline-card" *ngFor="let job of getJobsByStatus(JobStatus.Future)"
+                   (click)="viewJob(job)" role="button" tabindex="0">
+                <div class="pipeline-card-name">{{ job.siteName }}</div>
+                <div class="pipeline-card-meta">
+                  <span class="type-badge-sm">{{ job.jobType }}</span>
+                  <span>{{ job.client }}</span>
+                </div>
+                <div class="pipeline-card-detail">
+                  <span class="priority-badge-sm" [ngClass]="getPriorityClass(job.priority)">{{ job.priority }}</span>
+                  <span>{{ formatDate(job.scheduledStartDate) }}</span>
+                </div>
+              </div>
+              <div class="column-empty" *ngIf="getJobsByStatus(JobStatus.Future).length === 0">No jobs</div>
+            </div>
+          </div>
+
+          <!-- Pending (NotStarted) -->
+          <div class="pipeline-column" *ngIf="!pipelineStatusFilter && !pipelineInProgressFilter || pipelineStatusFilter === JobStatus.NotStarted">
             <div class="column-header column-notstarted">
               <mat-icon>pending</mat-icon>
-              <span>Not Started</span>
+              <span>Pending</span>
               <span class="column-count">{{ getJobsByStatus(JobStatus.NotStarted).length }}</span>
             </div>
             <div class="column-cards">
@@ -300,15 +333,15 @@
             </div>
           </div>
 
-          <!-- En Route -->
-          <div class="pipeline-column" *ngIf="!pipelineStatusFilter || pipelineStatusFilter === JobStatus.EnRoute">
-            <div class="column-header column-enroute">
-              <mat-icon>directions_car</mat-icon>
-              <span>En Route</span>
-              <span class="column-count">{{ getJobsByStatus(JobStatus.EnRoute).length }}</span>
+          <!-- Active (EnRoute + OnSite) -->
+          <div class="pipeline-column" *ngIf="!pipelineStatusFilter && !pipelineInProgressFilter || pipelineInProgressFilter">
+            <div class="column-header column-inprogress">
+              <mat-icon>engineering</mat-icon>
+              <span>Active</span>
+              <span class="column-count">{{ getInProgressJobs().length }}</span>
             </div>
             <div class="column-cards">
-              <div class="pipeline-card" *ngFor="let job of getJobsByStatus(JobStatus.EnRoute)"
+              <div class="pipeline-card" *ngFor="let job of getInProgressJobs()"
                    (click)="viewJob(job)" role="button" tabindex="0">
                 <div class="pipeline-card-name">{{ job.siteName }}</div>
                 <div class="pipeline-card-meta">
@@ -319,38 +352,15 @@
                   <span>{{ getAssignedTechnicians(job) }}</span>
                 </div>
               </div>
-              <div class="column-empty" *ngIf="getJobsByStatus(JobStatus.EnRoute).length === 0">No jobs</div>
+              <div class="column-empty" *ngIf="getInProgressJobs().length === 0">No jobs</div>
             </div>
           </div>
 
-          <!-- On Site -->
-          <div class="pipeline-column" *ngIf="!pipelineStatusFilter || pipelineStatusFilter === JobStatus.OnSite">
-            <div class="column-header column-onsite">
-              <mat-icon>location_on</mat-icon>
-              <span>On Site</span>
-              <span class="column-count">{{ getJobsByStatus(JobStatus.OnSite).length }}</span>
-            </div>
-            <div class="column-cards">
-              <div class="pipeline-card" *ngFor="let job of getJobsByStatus(JobStatus.OnSite)"
-                   (click)="viewJob(job)" role="button" tabindex="0">
-                <div class="pipeline-card-name">{{ job.siteName }}</div>
-                <div class="pipeline-card-meta">
-                  <span class="type-badge-sm">{{ job.jobType }}</span>
-                  <span>{{ job.client }}</span>
-                </div>
-                <div class="pipeline-card-detail">
-                  <span>{{ getAssignedTechnicians(job) }}</span>
-                </div>
-              </div>
-              <div class="column-empty" *ngIf="getJobsByStatus(JobStatus.OnSite).length === 0">No jobs</div>
-            </div>
-          </div>
-
-          <!-- Completed -->
-          <div class="pipeline-column" *ngIf="!pipelineStatusFilter || pipelineStatusFilter === JobStatus.Completed">
+          <!-- Closed (Completed) -->
+          <div class="pipeline-column" *ngIf="!pipelineStatusFilter && !pipelineInProgressFilter || pipelineStatusFilter === JobStatus.Completed">
             <div class="column-header column-completed">
               <mat-icon>check_circle</mat-icon>
-              <span>Completed</span>
+              <span>Closed</span>
               <span class="column-count">{{ getJobsByStatus(JobStatus.Completed).length }}</span>
             </div>
             <div class="column-cards">
@@ -363,6 +373,29 @@
                 </div>
               </div>
               <div class="column-empty" *ngIf="getJobsByStatus(JobStatus.Completed).length === 0">No jobs</div>
+            </div>
+          </div>
+
+          <!-- Issue -->
+          <div class="pipeline-column" *ngIf="!pipelineStatusFilter && !pipelineInProgressFilter || pipelineStatusFilter === JobStatus.Issue">
+            <div class="column-header column-issue">
+              <mat-icon>warning</mat-icon>
+              <span>Issue</span>
+              <span class="column-count">{{ getJobsByStatus(JobStatus.Issue).length }}</span>
+            </div>
+            <div class="column-cards">
+              <div class="pipeline-card" *ngFor="let job of getJobsByStatus(JobStatus.Issue)"
+                   (click)="viewJob(job)" role="button" tabindex="0">
+                <div class="pipeline-card-name">{{ job.siteName }}</div>
+                <div class="pipeline-card-meta">
+                  <span class="type-badge-sm">{{ job.jobType }}</span>
+                  <span>{{ job.client }}</span>
+                </div>
+                <div class="pipeline-card-detail">
+                  <span class="priority-badge-sm" [ngClass]="getPriorityClass(job.priority)">{{ job.priority }}</span>
+                </div>
+              </div>
+              <div class="column-empty" *ngIf="getJobsByStatus(JobStatus.Issue).length === 0">No jobs</div>
             </div>
           </div>
         </div>

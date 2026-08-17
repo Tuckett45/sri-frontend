@@ -46,6 +46,15 @@ export interface AssignManagerRequest {
   managerUserId: string;
 }
 
+/** Lightweight user entry from the /hierarchy/users endpoint */
+export interface OrgUser {
+  userId: string;
+  fullName: string | null;
+  email: string | null;
+  role: string | null;
+  market: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class HierarchyApiService {
   private readonly apiUrl = `${environment.atlasApiUrl}/hierarchy`;
@@ -74,11 +83,29 @@ export class HierarchyApiService {
     return this.http.get<OrgTreeNode[]>(url);
   }
 
+  /**
+   * Get all users in the system (for assignment/manager selection).
+   * Returns the full user roster regardless of whether they are in the org tree.
+   */
+  getAllUsers(market?: string): Observable<OrgUser[]> {
+    let url = `${this.apiUrl}/users`;
+    if (market) url += `?market=${encodeURIComponent(market)}`;
+    return this.http.get<OrgUser[]>(url);
+  }
+
   assignManager(dto: AssignManagerRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/assign`, dto);
   }
 
+  /**
+   * Promote a user to a top-level manager (no parent).
+   * The backend should create a root-level node for this user.
+   */
+  createTopLevelManager(employeeUserId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/create-manager`, { employeeUserId });
+  }
+
   removeManager(employeeUserId: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${employeeUserId}`);
+    return this.http.delete(`${this.apiUrl}/assignment/${employeeUserId}`);
   }
 }

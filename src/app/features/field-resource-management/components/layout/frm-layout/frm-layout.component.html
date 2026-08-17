@@ -3,12 +3,20 @@
   <aside 
     class="frm-sidebar" 
     [class.open]="sidebarOpen$ | async"
+    [class.collapsed]="sidebarCollapsed$ | async"
     role="navigation"
     aria-label="Field Resource Management Navigation">
     
     <!-- Sidebar Header -->
     <div class="sidebar-header">
       <h2 class="sidebar-title">Field Resources</h2>
+      <button 
+        mat-icon-button 
+        class="sidebar-collapse-toggle"
+        (click)="toggleSidebarCollapsed()"
+        [attr.aria-label]="(sidebarCollapsed$ | async) ? 'Expand sidebar' : 'Collapse sidebar'">
+        <mat-icon>{{ (sidebarCollapsed$ | async) ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
       <button 
         mat-icon-button 
         class="sidebar-toggle"

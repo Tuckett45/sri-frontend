@@ -53,6 +53,7 @@ export interface UIState {
   scheduleViewMode: ScheduleViewMode;
   selectedDate: Date;
   sidebarOpen: boolean;
+  sidebarCollapsed: boolean;
   mobileMenuOpen: boolean;
   mapView: MapViewState;
   selectedFilters: FilterState;

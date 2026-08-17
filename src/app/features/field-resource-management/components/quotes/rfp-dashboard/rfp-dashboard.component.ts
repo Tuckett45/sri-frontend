@@ -52,6 +52,7 @@ export class RfpDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.store.dispatch(DashboardActions.loadDashboard({ filters: this.filters }));
+    this.store.dispatch(DashboardActions.loadUsers());
 
     this.customerFilter$.pipe(
       debounceTime(400),

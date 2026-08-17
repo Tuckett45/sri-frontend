@@ -163,6 +163,12 @@ export const selectFilteredJobs = createSelector(
   }
 );
 
+// Select jobs assigned to a specific crew (via crewId field on jobs)
+export const selectJobsByCrewId = (crewId: string) => createSelector(
+  selectAllJobs,
+  (jobs) => jobs.filter(job => job.crewId === crewId)
+);
+
 // Select jobs by status
 export const selectJobsByStatus = (status: JobStatus) => createSelector(
   selectAllJobs,
@@ -395,6 +401,7 @@ export const selectJobsCountByStatus = createSelector(
   selectAllJobs,
   (jobs) => {
     const counts: Record<JobStatus, number> = {
+      [JobStatus.Future]: 0,
       [JobStatus.NotStarted]: 0,
       [JobStatus.EnRoute]: 0,
       [JobStatus.OnSite]: 0,
@@ -442,6 +449,7 @@ export const selectJobsGroupedByStatus = createSelector(
   selectAllJobs,
   (jobs) => {
     const grouped: Record<JobStatus, Job[]> = {
+      [JobStatus.Future]: [],
       [JobStatus.NotStarted]: [],
       [JobStatus.EnRoute]: [],
       [JobStatus.OnSite]: [],
@@ -512,6 +520,7 @@ export const selectJobStatistics = createSelector(
     const total = jobs.length;
     
     const byStatus: Record<JobStatus, number> = {
+      [JobStatus.Future]: 0,
       [JobStatus.NotStarted]: 0,
       [JobStatus.EnRoute]: 0,
       [JobStatus.OnSite]: 0,

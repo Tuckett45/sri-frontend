@@ -18,6 +18,7 @@ export const OFFER_TRANSITIONS: Record<OfferStatus, OfferStatus[]> = {
   offer_extended: ['offer_accepted_onboarding', 'vetted_available', 'do_not_hire', 'turned_down_hold'],
   offer_accepted_onboarding: ['hired_assigned', 'vetted_available'],
   hired_assigned: ['vetted_available'],
+  onboarded: [],
   do_not_hire: ['needs_review'],
   turned_down_hold: ['needs_review', 'vetted_available'],
 };

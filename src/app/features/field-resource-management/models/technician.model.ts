@@ -43,6 +43,7 @@ export interface Certification {
   issueDate: Date;
   expirationDate: Date;
   status: CertificationStatus;
+  credentialType?: string; // Backend discriminator field (e.g. 'Certification')
   attachmentId?: string; // Links to an uploaded document in AttachmentService
 }
 
@@ -116,6 +117,9 @@ export interface Technician {
 
   // Notes
   onboardingNotes?: string;
+
+  // Referral tracking (carried over from onboarding candidate)
+  referredBy?: string;
 
   lastKnownLatitude?: number;
   lastKnownLongitude?: number;

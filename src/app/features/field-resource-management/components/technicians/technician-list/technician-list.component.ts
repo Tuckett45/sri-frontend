@@ -37,6 +37,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   availabilityControl = new FormControl(false);
   regionControl = new FormControl('');
   activeStatusControl = new FormControl('');
+  referredByControl = new FormControl('');
   
   // Pagination
   pageSize = 50;
@@ -45,7 +46,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   
   // Available options for filters
   roles = Object.values(TechnicianRole);
-  availableRegions: string[] = []; // Will be populated from technicians
+  availableRegions: string[] = [];
+  availableReferrers: string[] = []; // Will be populated from technicians
   
   // Current job map (technicianId → job label)
   technicianJobMap: Record<string, string> = {};
@@ -62,6 +64,11 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
 
   // Pipeline view
   pipelineStatusFilter: string = '';
+  pipelineSearchControl = new FormControl('');
+  pipelineCrewFilter: string = ''; // '', 'assigned', 'unassigned', or a specific crew name
+  pipelineRegionFilter: string = '';
+  pipelineRoleFilter: string = '';
+  availableCrews: string[] = []; // Populated from technicianCrewMap
   
   private destroy$ = new Subject<void>();
   
@@ -135,18 +142,27 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.activeStatusControl.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.applyFilters());
+
+    this.referredByControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
     
-    // Extract unique regions from all technicians
+    // Extract unique regions and referrers from all technicians
     this.technicians$
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
         const regionsSet = new Set<string>();
+        const referrersSet = new Set<string>();
         technicians.forEach(tech => {
           if (tech.region) {
             regionsSet.add(tech.region);
           }
+          if (tech.referredBy) {
+            referrersSet.add(tech.referredBy);
+          }
         });
         this.availableRegions = Array.from(regionsSet).sort();
+        this.availableReferrers = Array.from(referrersSet).sort();
       });
 
     // Subscribe to technician → current job map
@@ -161,6 +177,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(crewMap => {
         this.technicianCrewMap = crewMap;
+        // Extract unique crew names for the pipeline filter dropdown
+        const crewNames = new Set<string>(Object.values(crewMap));
+        this.availableCrews = Array.from(crewNames).sort();
       });
   }
   
@@ -175,6 +194,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       role: (this.roleControl.value as TechnicianRole) || undefined,
       isAvailable: this.availabilityControl.value || undefined,
       region: this.regionControl.value || undefined,
+      referredBy: this.referredByControl.value || undefined,
       isActive: this.activeStatusControl.value === 'active' ? true 
         : this.activeStatusControl.value === 'inactive' ? false 
         : undefined,
@@ -250,6 +270,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     if (this.regionControl.value) {
       filters.push({ label: 'Region', value: this.regionControl.value, key: 'region' });
     }
+    if (this.referredByControl.value) {
+      filters.push({ label: 'Referred By', value: this.referredByControl.value, key: 'referredBy' });
+    }
     if (this.activeStatusControl.value) {
       const statusLabel = this.activeStatusControl.value === 'active' ? 'Active' : 'Inactive';
       filters.push({ label: 'Status', value: statusLabel, key: 'activeStatus' });
@@ -275,6 +298,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       case 'region':
         this.regionControl.setValue('');
         break;
+      case 'referredBy':
+        this.referredByControl.setValue('');
+        break;
       case 'activeStatus':
         this.activeStatusControl.setValue('');
         break;
@@ -287,6 +313,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.roleControl.setValue('');
     this.availabilityControl.setValue(false);
     this.regionControl.setValue('');
+    this.referredByControl.setValue('');
     this.activeStatusControl.setValue('');
     this.pageIndex = 0; // Reset to first page
     this.store.dispatch(TechnicianActions.clearTechnicianFilters());
@@ -590,6 +617,56 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.pipelineStatusFilter = '';
   }
 
+  clearPipelineFilters(): void {
+    this.pipelineSearchControl.setValue('');
+    this.pipelineCrewFilter = '';
+    this.pipelineRegionFilter = '';
+    this.pipelineRoleFilter = '';
+    this.pipelineStatusFilter = '';
+  }
+
+  get hasPipelineFilters(): boolean {
+    return !!(this.pipelineSearchControl.value || this.pipelineCrewFilter || this.pipelineRegionFilter || this.pipelineRoleFilter);
+  }
+
+  /**
+   * Apply pipeline-specific filters (search, crew, region, role) to a list of technicians
+   */
+  private applyPipelineFilters(technicians: Technician[]): Technician[] {
+    let filtered = technicians;
+
+    // Text search filter
+    const search = (this.pipelineSearchControl.value || '').toLowerCase().trim();
+    if (search) {
+      filtered = filtered.filter(t => {
+        const fullName = `${t.firstName} ${t.lastName}`.toLowerCase();
+        const crew = (this.technicianCrewMap[t.id] || '').toLowerCase();
+        return fullName.includes(search) || crew.includes(search) || (t.region || '').toLowerCase().includes(search);
+      });
+    }
+
+    // Crew filter
+    if (this.pipelineCrewFilter === 'assigned') {
+      filtered = filtered.filter(t => !!this.technicianCrewMap[t.id]);
+    } else if (this.pipelineCrewFilter === 'unassigned') {
+      filtered = filtered.filter(t => !this.technicianCrewMap[t.id]);
+    } else if (this.pipelineCrewFilter) {
+      filtered = filtered.filter(t => this.technicianCrewMap[t.id] === this.pipelineCrewFilter);
+    }
+
+    // Region filter
+    if (this.pipelineRegionFilter) {
+      filtered = filtered.filter(t => t.region === this.pipelineRegionFilter);
+    }
+
+    // Role filter
+    if (this.pipelineRoleFilter) {
+      filtered = filtered.filter(t => t.role === this.pipelineRoleFilter);
+    }
+
+    return filtered;
+  }
+
   getPipelineCount(technicians: Technician[], status: string): number {
     return technicians.filter(t => t.isActive && (t.fieldStatus || 'Available') === status).length;
   }
@@ -599,18 +676,22 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   }
 
   getAvailableTechnicians(technicians: Technician[]): Technician[] {
-    return technicians.filter(t => t.isActive && (!t.fieldStatus || t.fieldStatus === 'Available'));
+    const base = technicians.filter(t => t.isActive && (!t.fieldStatus || t.fieldStatus === 'Available'));
+    return this.applyPipelineFilters(base);
   }
 
   getEnRouteTechnicians(technicians: Technician[]): Technician[] {
-    return technicians.filter(t => t.isActive && t.fieldStatus === 'EnRoute');
+    const base = technicians.filter(t => t.isActive && t.fieldStatus === 'EnRoute');
+    return this.applyPipelineFilters(base);
   }
 
   getOnSiteTechnicians(technicians: Technician[]): Technician[] {
-    return technicians.filter(t => t.isActive && t.fieldStatus === 'OnSite');
+    const base = technicians.filter(t => t.isActive && t.fieldStatus === 'OnSite');
+    return this.applyPipelineFilters(base);
   }
 
   getClockedOutTechnicians(technicians: Technician[]): Technician[] {
-    return technicians.filter(t => t.isActive && t.fieldStatus === 'ClockedOut');
+    const base = technicians.filter(t => t.isActive && t.fieldStatus === 'ClockedOut');
+    return this.applyPipelineFilters(base);
   }
 }

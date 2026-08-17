@@ -62,22 +62,26 @@ export class FieldResourceManagementComponent implements OnInit {
 
   getStatusClass(status: JobStatus): string {
     const map: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'status-future',
       [JobStatus.NotStarted]: 'status-not-started',
       [JobStatus.EnRoute]: 'status-en-route',
       [JobStatus.OnSite]: 'status-on-site',
       [JobStatus.Completed]: 'status-completed',
-      [JobStatus.Issue]: 'status-issue'
+      [JobStatus.Issue]: 'status-issue',
+      [JobStatus.Cancelled]: 'status-cancelled'
     };
     return map[status] ?? '';
   }
 
   getStatusLabel(status: JobStatus): string {
     const map: Record<JobStatus, string> = {
+      [JobStatus.Future]: 'Future',
       [JobStatus.NotStarted]: 'Not Started',
       [JobStatus.EnRoute]: 'En Route',
       [JobStatus.OnSite]: 'On Site',
       [JobStatus.Completed]: 'Completed',
-      [JobStatus.Issue]: 'Issue'
+      [JobStatus.Issue]: 'Issue',
+      [JobStatus.Cancelled]: 'Cancelled'
     };
     return map[status] ?? status;
   }
