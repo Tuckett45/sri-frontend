@@ -1,0 +1,133 @@
+/**
+ * Attendance Dashboard Component Styles
+ * Requirements: 9.1-9.8, 13.4
+ */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.attendance-dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// ─── Summary Cards ───────────────────────────────────────────────────────────
+
+.summary-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &.present-card {
+    border-top: 3px solid #16a34a;
+  }
+
+  &.absent-card {
+    border-top: 3px solid #dc2626;
+  }
+
+  &.incomplete-card {
+    border-top: 3px solid #d97706;
+  }
+
+  &.active-card {
+    border-top: 3px solid #2563eb;
+  }
+}
+
+// ─── Status Badges ───────────────────────────────────────────────────────────
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+
+  &.status-present {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+
+  &.status-absent {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+
+  &.status-incomplete {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+
+  &.status-active {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+}
+
+// ─── Offline Banner ──────────────────────────────────────────────────────────
+
+.offline-banner {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ─── Table ───────────────────────────────────────────────────────────────────
+
+table {
+  width: 100%;
+}
+
+th.mat-header-cell {
+  font-weight: 600;
+  color: #374151;
+  font-size: 13px;
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .attendance-dashboard-container {
+    padding: 12px;
+  }
+
+  .summary-card mat-card-content {
+    padding: 12px 8px;
+  }
+
+  // Reduce font size on summary cards for mobile
+  .summary-card {
+    .text-3xl {
+      font-size: 1.5rem;
+    }
+  }
+
+  // Horizontal scroll table container on mobile
+  table {
+    min-width: 600px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .attendance-dashboard-container {
+    padding: 16px;
+  }
+}

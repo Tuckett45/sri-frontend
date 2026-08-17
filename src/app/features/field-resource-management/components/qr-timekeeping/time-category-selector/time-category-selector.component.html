@@ -1,0 +1,50 @@
+<!--
+  Time Category Selector Component Template
+
+  Displays time categories as large, tappable buttons with icons.
+  On mobile viewports (< 768px) presents as a bottom-sheet style panel
+  anchored to the bottom of the screen.
+
+  Requirements: 4.1, 4.2, 4.3, 14.3
+-->
+
+<!-- Bottom-sheet container for mobile, inline panel for desktop -->
+<div class="time-category-selector"
+     [class.time-category-selector--disabled]="disabled"
+     role="radiogroup"
+     aria-label="Select time category">
+
+  <!-- Header -->
+  <div class="time-category-selector__header">
+    <h3 class="time-category-selector__title">Select Time Category</h3>
+  </div>
+
+  <!-- Category options using mat-button-toggle-group for accessible selection -->
+  <mat-button-toggle-group
+    [value]="selectedCategory"
+    [disabled]="disabled"
+    (change)="selectCategory($event.value)"
+    class="time-category-selector__group"
+    aria-label="Time category options">
+
+    <mat-button-toggle
+      *ngFor="let category of categories"
+      [value]="category.value"
+      [disabled]="disabled"
+      class="time-category-selector__option"
+      [class.time-category-selector__option--selected]="selectedCategory === category.value"
+      [attr.aria-label]="category.label">
+      <div class="time-category-selector__option-content">
+        <mat-icon class="time-category-selector__icon">{{ category.icon }}</mat-icon>
+        <span class="time-category-selector__label">{{ category.label }}</span>
+      </div>
+    </mat-button-toggle>
+
+  </mat-button-toggle-group>
+
+  <!-- Selected category confirmation -->
+  <div class="time-category-selector__confirmation" *ngIf="selectedCategory">
+    <mat-icon class="time-category-selector__check-icon">check_circle</mat-icon>
+    <span>Selected: <strong>{{ selectedCategory === 'Excused_Absence' ? 'Excused Absence' : selectedCategory }}</strong></span>
+  </div>
+</div>

@@ -4,6 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
+import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 
 // Shared Material Module
 import { SharedMaterialModule } from '../../shared-material.module';
@@ -13,14 +14,20 @@ import { qrTimekeepingRoutes } from './qr-timekeeping-routing';
 
 // Technician Components
 import { QrScannerComponent } from './qr-scanner/qr-scanner.component';
+import { TimeCategorySelectorComponent } from './time-category-selector/time-category-selector.component';
+import { ScanFeedbackComponent } from './scan-feedback/scan-feedback.component';
 import { QrTimeHistoryComponent } from './qr-time-history/qr-time-history.component';
 
 // Admin Components
-import { StationManagementComponent } from './station-management/station-management.component';
+import { StationManagementComponent, StationRegistrationDialogComponent, StationDeactivateConfirmDialogComponent } from './station-management/station-management.component';
 import { StationMapViewComponent } from './station-map-view/station-map-view.component';
 import { AttendanceDashboardComponent } from './attendance-dashboard/attendance-dashboard.component';
-import { ReconciliationViewComponent } from './reconciliation-view/reconciliation-view.component';
+import { ReconciliationViewComponent, ResolveDiscrepancyDialogComponent, EscalateDiscrepancyDialogComponent } from './reconciliation-view/reconciliation-view.component';
 import { ReconciliationDetailComponent } from './reconciliation-detail/reconciliation-detail.component';
+
+// Shared Components
+import { TimeCategoryBadgeComponent } from './shared/time-category-badge.component';
+import { ScanStatusIndicatorComponent } from './shared/scan-status-indicator.component';
 
 /**
  * QR Timekeeping Module
@@ -39,18 +46,28 @@ import { ReconciliationDetailComponent } from './reconciliation-detail/reconcili
   declarations: [
     // Technician Components
     QrScannerComponent,
+    TimeCategorySelectorComponent,
+    ScanFeedbackComponent,
     QrTimeHistoryComponent,
     // Admin Components
     StationManagementComponent,
+    StationRegistrationDialogComponent,
+    StationDeactivateConfirmDialogComponent,
     StationMapViewComponent,
     AttendanceDashboardComponent,
     ReconciliationViewComponent,
-    ReconciliationDetailComponent
+    ResolveDiscrepancyDialogComponent,
+    EscalateDiscrepancyDialogComponent,
+    ReconciliationDetailComponent,
+    // Shared Components
+    TimeCategoryBadgeComponent,
+    ScanStatusIndicatorComponent
   ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
     SharedMaterialModule,
+    LeafletModule,
     RouterModule.forChild(qrTimekeepingRoutes),
     StoreModule.forFeature('qrTimekeeping', {}),
     EffectsModule.forFeature([])

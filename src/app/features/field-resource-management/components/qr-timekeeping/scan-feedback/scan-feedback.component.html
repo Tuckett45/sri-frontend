@@ -1,0 +1,110 @@
+<!--
+  Scan Feedback Component Template
+
+  Displays scan result feedback: success (green checkmark with clock-in/out message),
+  error (red X with error details and retry button), or proximity warning (yellow).
+
+  Requirements: 5.5, 5.6, 5.7, 5.8
+-->
+
+<div class="scan-feedback" *ngIf="scanResult || error">
+
+  <!-- Success Feedback -->
+  <div class="scan-feedback__panel scan-feedback__panel--success" *ngIf="isSuccess">
+    <div class="scan-feedback__icon-container scan-feedback__icon-container--success">
+      <mat-icon class="scan-feedback__icon">check_circle</mat-icon>
+    </div>
+
+    <h2 class="scan-feedback__title scan-feedback__title--success">
+      {{ successMessage }}
+    </h2>
+
+    <!-- Time entry details -->
+    <div class="scan-feedback__details" *ngIf="scanResult?.timeEntry">
+      <div class="scan-feedback__detail-row">
+        <span class="scan-feedback__detail-label">Type:</span>
+        <span class="scan-feedback__detail-value">{{ scanResult!.scanType === 'ClockIn' ? 'Clock In' : 'Clock Out' }}</span>
+      </div>
+      <div class="scan-feedback__detail-row" *ngIf="scanResult!.timeEntry!.startTime">
+        <span class="scan-feedback__detail-label">Time:</span>
+        <span class="scan-feedback__detail-value">{{ scanResult!.timeEntry!.startTime | date:'shortTime' }}</span>
+      </div>
+    </div>
+
+    <!-- Proximity Warning (shown alongside success) -->
+    <div class="scan-feedback__warning" *ngIf="hasProximityWarning">
+      <mat-icon class="scan-feedback__warning-icon">warning</mat-icon>
+      <span class="scan-feedback__warning-text">
+        You appear to be far from the station site. Your supervisor may be notified.
+      </span>
+    </div>
+
+    <button mat-raised-button
+            color="primary"
+            class="scan-feedback__action-btn"
+            (click)="onDismiss()">
+      Done
+    </button>
+  </div>
+
+  <!-- Error Feedback -->
+  <div class="scan-feedback__panel scan-feedback__panel--error" *ngIf="!isSuccess">
+    <div class="scan-feedback__icon-container scan-feedback__icon-container--error">
+      <mat-icon class="scan-feedback__icon">cancel</mat-icon>
+    </div>
+
+    <h2 class="scan-feedback__title scan-feedback__title--error">
+      Scan Failed
+    </h2>
+
+    <p class="scan-feedback__message">
+      {{ errorMessage }}
+    </p>
+
+    <!-- Auto-reset countdown for 404 errors -->
+    <p class="scan-feedback__auto-reset" *ngIf="errorCode === '404'">
+      Scanner will reset automatically...
+    </p>
+
+    <!-- Action buttons -->
+    <div class="scan-feedback__actions">
+      <button mat-raised-button
+              color="primary"
+              class="scan-feedback__action-btn"
+              *ngIf="showRetryButton"
+              (click)="onRetry()">
+        <mat-icon>refresh</mat-icon>
+        Try Again
+      </button>
+
+      <button mat-button
+              class="scan-feedback__action-btn"
+              (click)="onDismiss()">
+        Dismiss
+      </button>
+    </div>
+  </div>
+
+  <!-- Standalone Proximity Warning (no scan result, just a warning) -->
+  <div class="scan-feedback__panel scan-feedback__panel--warning"
+       *ngIf="!isSuccess && hasProximityWarning && !error">
+    <div class="scan-feedback__icon-container scan-feedback__icon-container--warning">
+      <mat-icon class="scan-feedback__icon">warning_amber</mat-icon>
+    </div>
+
+    <h2 class="scan-feedback__title scan-feedback__title--warning">
+      Proximity Warning
+    </h2>
+
+    <p class="scan-feedback__message">
+      You appear to be far from the station site. Please move closer and try again.
+    </p>
+
+    <button mat-raised-button
+            color="warn"
+            class="scan-feedback__action-btn"
+            (click)="onRetry()">
+      Scan Again
+    </button>
+  </div>
+</div>

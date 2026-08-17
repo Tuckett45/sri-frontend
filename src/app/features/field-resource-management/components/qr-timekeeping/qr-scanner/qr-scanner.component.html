@@ -1,0 +1,90 @@
+<!-- QR Scanner Component Template -->
+<!-- Requirements: 1.1-1.7, 2.1-2.4, 3.1-3.2, 5.1-5.4, 13.1-13.2, 14.1-14.3 -->
+
+<div class="qr-scanner-container">
+  <!-- Camera Error / Permission Denied Banner -->
+  <div *ngIf="cameraError" class="camera-error-banner">
+    <div class="error-icon">
+      <i class="material-icons">videocam_off</i>
+    </div>
+    <p class="error-text">{{ cameraError }}</p>
+    <p class="error-instructions">Please enable camera access in your browser settings.</p>
+    <button class="btn-retry" (click)="initializeScanner()">Retry Camera Access</button>
+  </div>
+
+  <!-- GPS Status Indicator -->
+  <div class="gps-status" [ngClass]="{
+    'gps-acquiring': gpsStatus === 'acquiring',
+    'gps-acquired': gpsStatus === 'acquired',
+    'gps-failed': gpsStatus === 'failed'
+  }">
+    <i class="material-icons" *ngIf="gpsStatus === 'acquiring'">gps_not_fixed</i>
+    <i class="material-icons" *ngIf="gpsStatus === 'acquired'">gps_fixed</i>
+    <i class="material-icons" *ngIf="gpsStatus === 'failed'">gps_off</i>
+    <span *ngIf="gpsStatus === 'acquiring'">Acquiring GPS...</span>
+    <span *ngIf="gpsStatus === 'acquired'">GPS Acquired</span>
+    <span *ngIf="gpsStatus === 'failed'">Location unavailable</span>
+  </div>
+
+  <!-- QR Scanner Viewport -->
+  <div class="scanner-viewport" *ngIf="!cameraError">
+    <div id="qr-reader-container" class="qr-reader"></div>
+    <div class="scanner-overlay" *ngIf="scanState === 'scanning'">
+      <div class="scan-area-frame"></div>
+      <p class="scan-instruction">Point camera at QR code</p>
+    </div>
+  </div>
+
+  <!-- Scan State: Processing -->
+  <div class="scan-processing" *ngIf="scanState === 'processing'">
+    <div class="spinner"></div>
+    <p>Processing scan...</p>
+  </div>
+
+  <!-- Error Message (temporary) -->
+  <div class="scan-error-message" *ngIf="errorMessage && scanState !== 'error'">
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <!-- Scan State: Error -->
+  <div class="scan-result error" *ngIf="scanState === 'error'">
+    <i class="material-icons">error_outline</i>
+    <p>{{ errorMessage }}</p>
+    <button class="btn-reset" (click)="resetScanner()">Try Again</button>
+  </div>
+
+  <!-- Scan State: Success -->
+  <div class="scan-result success" *ngIf="scanState === 'success'">
+    <i class="material-icons">check_circle</i>
+    <p>{{ feedbackMessage }}</p>
+  </div>
+
+  <!-- Category Selection (clock-in flow) -->
+  <div class="category-selection" *ngIf="scanState === 'category-select' && showCategorySelector">
+    <h3>Select Time Category</h3>
+    <app-time-category-selector
+      [preselectedCategory]="selectedCategory"
+      [disabled]="scanState === 'processing'"
+      (categorySelected)="onCategorySelected($event)">
+    </app-time-category-selector>
+
+    <!-- Submit Button -->
+    <button
+      class="btn-submit"
+      [disabled]="isSubmitDisabled"
+      (click)="submitScan()">
+      <span *ngIf="scanState !== 'processing'">Submit Clock-In</span>
+      <span *ngIf="scanState === 'processing'">Processing...</span>
+    </button>
+
+    <!-- GPS Warning for clock-in -->
+    <p class="gps-warning" *ngIf="gpsStatus !== 'acquired'">
+      GPS is required for clock-in. Please wait for location acquisition.
+    </p>
+  </div>
+
+  <!-- Camera Switch Button -->
+  <button class="btn-camera-switch" *ngIf="cameraActive && scanState === 'scanning'" (click)="switchCamera()">
+    <i class="material-icons">flip_camera_ios</i>
+  </button>
+</div>
