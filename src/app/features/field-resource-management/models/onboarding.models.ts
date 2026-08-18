@@ -137,7 +137,7 @@ export interface UpdateCandidatePayload {
   homeState?: string;
   startDate?: string;
   offerStatus?: OfferStatus;
-  experienceLevel?: ExperienceLevel | null;
+  experienceLevel?: ExperienceLevel | null | '';
   referredBy?: string;
   notes?: string;
 

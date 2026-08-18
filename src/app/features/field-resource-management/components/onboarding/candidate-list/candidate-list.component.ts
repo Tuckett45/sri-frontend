@@ -1261,7 +1261,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
 
       const payload: UpdateCandidatePayload = {
         offerStatus: newStatus,
-        experienceLevel: null,
+        experienceLevel: '',  // Send empty string to trigger backend clearing (null is ignored as "not provided")
       };
 
       // Optimistically update UI
