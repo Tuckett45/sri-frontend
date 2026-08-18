@@ -243,9 +243,9 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             <td class="status-cell" (click)="$event.stopPropagation()">
               <select class="inline-status-select"
                       [class.needs-review]="candidate.offerStatus === 'needs_review'"
-                      [value]="candidate.offerStatus"
-                      (change)="onInlineStatusChange(candidate, $event)"
-                      [attr.aria-label]="'Change offer status for ' + candidate.techName">
+                      [value]="getCombinedStatusValue(candidate)"
+                      (change)="onCombinedStatusChange(candidate, $event)"
+                      [attr.aria-label]="'Change status/experience for ' + candidate.techName">
                 <option value="needs_review">Needs Review</option>
                 <option value="vetted_available">Vetted/Available</option>
                 <option value="offer_extended">Offer Extended</option>
@@ -254,19 +254,14 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
                 <option value="onboarded">Onboarded</option>
                 <option value="do_not_hire">Do Not Hire</option>
                 <option value="turned_down_hold">Turned Down/Hold</option>
-              </select>
-              <select class="inline-experience-select"
-                      [value]="candidate.experienceLevel || ''"
-                      (change)="onInlineExperienceChange(candidate, $event)"
-                      [attr.aria-label]="'Change experience level for ' + candidate.techName">
-                <option value="">— Level —</option>
-                <option value="management">Management</option>
-                <option value="no_experience_green">No Experience</option>
-                <option value="level_1_green">Level 1/Green</option>
-                <option value="level_2">Level 2</option>
-                <option value="level_3">Level 3</option>
-                <option value="level_4">Level 4</option>
-                <option value="it_testing">IT/Testing</option>
+                <option disabled>───────────────</option>
+                <option value="exp:management">Management</option>
+                <option value="exp:no_experience_green">No Experience</option>
+                <option value="exp:level_1_green">Level 1/Green</option>
+                <option value="exp:level_2">Level 2</option>
+                <option value="exp:level_3">Level 3</option>
+                <option value="exp:level_4">Level 4</option>
+                <option value="exp:it_testing">IT/Testing</option>
               </select>
             </td>
             <td class="actions-cell">
@@ -574,32 +569,6 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
 
     .status-cell {
       padding: 0.2rem 0.25rem !important;
-    }
-
-    .inline-experience-select {
-      padding: 0.25rem 0.4rem;
-      border: 1px solid transparent;
-      border-radius: 4px;
-      background: transparent;
-      font-size: 0.75rem;
-      color: #212121;
-      cursor: pointer;
-      transition: border-color 0.15s, background-color 0.15s;
-      max-width: 145px;
-      display: block;
-      margin-top: 0.25rem;
-    }
-
-    .inline-experience-select:hover {
-      border-color: #bdbdbd;
-      background: #fafafa;
-    }
-
-    .inline-experience-select:focus {
-      outline: none;
-      border-color: #1976d2;
-      background: #ffffff;
-      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
     }
 
     .inline-status-select {
@@ -1231,6 +1200,85 @@ export class CandidateListComponent implements OnInit, OnDestroy {
         this.errorMessage = `Failed to update offer status for ${candidate.techName}.`;
       }
     });
+  }
+
+  /**
+   * Returns the combined dropdown value for a candidate.
+   * If an experience level is set, returns the exp:-prefixed value;
+   * otherwise returns the offerStatus.
+   */
+  getCombinedStatusValue(candidate: Candidate): string {
+    if (candidate.experienceLevel) {
+      return 'exp:' + candidate.experienceLevel;
+    }
+    return candidate.offerStatus;
+  }
+
+  /**
+   * Handles the combined status/experience dropdown change.
+   * Determines whether the user selected an offer status or experience level
+   * and sends the appropriate update(s) to the API.
+   */
+  onCombinedStatusChange(candidate: Candidate, event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+
+    if (value.startsWith('exp:')) {
+      // User selected an experience level
+      const newLevel = value.substring(4) as ExperienceLevel;
+      const previousLevel = candidate.experienceLevel;
+      const previousStatus = candidate.offerStatus;
+
+      const payload: UpdateCandidatePayload = {
+        experienceLevel: newLevel,
+      };
+
+      // Auto-transition: setting experience level moves out of "needs_review"
+      if (candidate.offerStatus === 'needs_review') {
+        payload.offerStatus = 'vetted_available';
+      }
+
+      // Optimistically update UI
+      candidate.experienceLevel = newLevel;
+      if (payload.offerStatus) {
+        candidate.offerStatus = payload.offerStatus;
+      }
+      this.applyFiltersAndSort(this.pageIndex);
+
+      this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+        error: () => {
+          // Revert on failure
+          candidate.experienceLevel = previousLevel;
+          candidate.offerStatus = previousStatus;
+          this.applyFiltersAndSort(this.pageIndex);
+          this.errorMessage = `Failed to update status for ${candidate.techName}.`;
+        }
+      });
+    } else {
+      // User selected an offer status — also clear experience level
+      const newStatus = value as OfferStatus;
+      const previousStatus = candidate.offerStatus;
+      const previousLevel = candidate.experienceLevel;
+
+      const payload: UpdateCandidatePayload = {
+        offerStatus: newStatus,
+        experienceLevel: null,
+      };
+
+      // Optimistically update UI
+      candidate.offerStatus = newStatus;
+      candidate.experienceLevel = undefined;
+      this.applyFiltersAndSort(this.pageIndex);
+
+      this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+        error: () => {
+          // Revert on failure
+          candidate.offerStatus = previousStatus;
+          candidate.experienceLevel = previousLevel;
+          this.applyFiltersAndSort(this.pageIndex);
+          this.errorMessage = `Failed to update status for ${candidate.techName}.`;
+        }
+      });
+    }
   }
 
   onSort(column: keyof Candidate): void {
