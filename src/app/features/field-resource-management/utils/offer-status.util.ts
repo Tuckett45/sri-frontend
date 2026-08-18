@@ -11,6 +11,9 @@ import { OfferStatus } from '../models/onboarding.models';
  *   hired_assigned → vetted_available (for reassignment)
  *   do_not_hire → needs_review (can be reconsidered)
  *   turned_down_hold → needs_review | vetted_available (can be reconsidered later)
+ *
+ * Automatic transitions:
+ *   needs_review → vetted_available  (triggered when an experience level is assigned)
  */
 export const OFFER_TRANSITIONS: Record<OfferStatus, OfferStatus[]> = {
   needs_review: ['vetted_available', 'do_not_hire', 'turned_down_hold'],
