@@ -182,7 +182,6 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
           <col class="col-referred">
           <col class="col-start">
           <col class="col-status">
-          <col class="col-experience">
           <col class="col-actions">
         </colgroup>
         <thead>
@@ -214,10 +213,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
               Start Date <span class="sort-icon">{{ getSortIcon('startDate') }}</span>
             </th>
             <th (click)="onSort('offerStatus')" class="sortable">
-              Offer Status <span class="sort-icon">{{ getSortIcon('offerStatus') }}</span>
-            </th>
-            <th (click)="onSort('experienceLevel')" class="sortable">
-              Experience <span class="sort-icon">{{ getSortIcon('experienceLevel') }}</span>
+              Status / Experience <span class="sort-icon">{{ getSortIcon('offerStatus') }}</span>
             </th>
             <th>Actions</th>
           </tr>
@@ -259,13 +255,11 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
                 <option value="do_not_hire">Do Not Hire</option>
                 <option value="turned_down_hold">Turned Down/Hold</option>
               </select>
-            </td>
-            <td class="experience-cell" (click)="$event.stopPropagation()">
               <select class="inline-experience-select"
                       [value]="candidate.experienceLevel || ''"
                       (change)="onInlineExperienceChange(candidate, $event)"
                       [attr.aria-label]="'Change experience level for ' + candidate.techName">
-                <option value="">—</option>
+                <option value="">— Level —</option>
                 <option value="management">Management</option>
                 <option value="no_experience_green">No Experience</option>
                 <option value="level_1_green">Level 1/Green</option>
@@ -578,7 +572,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
     }
 
-    .experience-cell {
+    .status-cell {
       padding: 0.2rem 0.25rem !important;
     }
 
@@ -592,6 +586,8 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       cursor: pointer;
       transition: border-color 0.15s, background-color 0.15s;
       max-width: 145px;
+      display: block;
+      margin-top: 0.25rem;
     }
 
     .inline-experience-select:hover {
@@ -604,10 +600,6 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       border-color: #1976d2;
       background: #ffffff;
       box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
-    }
-
-    .status-cell {
-      padding: 0.2rem 0.25rem !important;
     }
 
     .inline-status-select {
@@ -668,7 +660,6 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
     .candidate-table colgroup .col-referred { min-width: 75px; }
     .candidate-table colgroup .col-start { min-width: 72px; }
     .candidate-table colgroup .col-status { min-width: 80px; }
-    .candidate-table colgroup .col-experience { min-width: 70px; }
     .candidate-table colgroup .col-actions { min-width: 100px; }
 
     .candidate-table thead th {
@@ -1201,9 +1192,19 @@ export class CandidateListComponent implements OnInit, OnDestroy {
     const payload: UpdateCandidatePayload = {
       experienceLevel: newValue || null,
     };
+
+    // Auto-transition: setting an experience level moves candidate out of "needs_review"
+    const shouldAutoTransition = newValue && candidate.offerStatus === 'needs_review';
+    if (shouldAutoTransition) {
+      payload.offerStatus = 'vetted_available';
+    }
+
     this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
       next: () => {
         candidate.experienceLevel = newValue || undefined;
+        if (shouldAutoTransition) {
+          candidate.offerStatus = 'vetted_available';
+        }
         this.applyFiltersAndSort(this.pageIndex);
       },
       error: () => {
@@ -1727,7 +1728,12 @@ export class CandidateListComponent implements OnInit, OnDestroy {
 
     // Offer status filter (skip if an experience level is selected via exp: prefix)
     if (this.statusFilter && !this.statusFilter.startsWith('exp:')) {
-      result = result.filter((c) => c.offerStatus === this.statusFilter);
+      if (this.statusFilter === 'needs_review') {
+        // Candidates with an experience level set are no longer "Needs Review"
+        result = result.filter((c) => c.offerStatus === 'needs_review' && !c.experienceLevel);
+      } else {
+        result = result.filter((c) => c.offerStatus === this.statusFilter);
+      }
     }
 
     // Home state filter
