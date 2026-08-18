@@ -273,6 +273,13 @@ const routes: Routes = [
       {
         path: 'pto',
         loadChildren: () => import('./components/pto/pto.module').then(m => m.PtoModule)
+      },
+
+      // QR Timekeeping Routes - Lazy Loaded
+      // Requirements: 15.1, 12.1, 12.2, 12.3
+      {
+        path: 'qr-timekeeping',
+        loadChildren: () => import('./components/qr-timekeeping/qr-timekeeping.module').then(m => m.QrTimekeepingModule)
       }
     ]
   }
