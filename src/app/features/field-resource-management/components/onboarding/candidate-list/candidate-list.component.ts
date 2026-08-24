@@ -31,10 +31,13 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
 };
 
 const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
+  management: 'Management',
+  no_experience_green: 'No Experience',
   level_1_green: 'Level 1/Green',
   level_2: 'Level 2',
   level_3: 'Level 3',
   level_4: 'Level 4',
+  it_testing: 'IT/Testing',
 };
 
 @Component({
@@ -113,6 +116,15 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             <option value="onboarded">Onboarded</option>
             <option value="do_not_hire">Do Not Hire</option>
             <option value="turned_down_hold">Turned Down/Hold for Later</option>
+            <option disabled>───────────────</option>
+            <option value="exp:management">Management</option>
+            <option value="exp:no_experience_green">No Experience</option>
+            <option value="exp:level_1_green">Level 1/Green</option>
+            <option value="exp:level_2">Level 2</option>
+            <option value="exp:level_3">Level 3</option>
+            <option value="exp:level_4">Level 4</option>
+            <option value="exp:it_testing">IT/Testing</option>
+            <option value="exp:none">— (No Level Set)</option>
           </select>
         </div>
         <div class="filter-field">
@@ -131,18 +143,6 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
                   (ngModelChange)="onReferredByFilterChange()">
             <option value="">All Referrers</option>
             <option *ngFor="let referrer of availableReferrers" [value]="referrer">{{ referrer }}</option>
-          </select>
-        </div>
-        <div class="filter-field">
-          <label for="experienceLevelFilter">Experience Level</label>
-          <select id="experienceLevelFilter"
-                  [(ngModel)]="experienceLevelFilter"
-                  (ngModelChange)="onExperienceLevelFilterChange()">
-            <option value="">All Levels</option>
-            <option value="level_1_green">Level 1/Green</option>
-            <option value="level_2">Level 2</option>
-            <option value="level_3">Level 3</option>
-            <option value="level_4">Level 4</option>
           </select>
         </div>
       </div>
@@ -178,15 +178,10 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
           <col class="col-name">
           <col class="col-email">
           <col class="col-phone">
-          <col class="col-vest">
-          <col class="col-drug">
-          <col class="col-osha">
-          <col class="col-scissor">
           <col class="col-state">
           <col class="col-referred">
           <col class="col-start">
           <col class="col-status">
-          <col class="col-experience">
           <col class="col-actions">
         </colgroup>
         <thead>
@@ -208,18 +203,6 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             <th (click)="onSort('techPhone')" class="sortable">
               Tech Phone <span class="sort-icon">{{ getSortIcon('techPhone') }}</span>
             </th>
-            <th (click)="onSort('vestSize')" class="sortable center-col">
-              Vest <span class="sort-icon">{{ getSortIcon('vestSize') }}</span>
-            </th>
-            <th (click)="onSort('drugTestComplete')" class="sortable center-col">
-              Drug <span class="sort-icon">{{ getSortIcon('drugTestComplete') }}</span>
-            </th>
-            <th (click)="onSort('oshaCertified')" class="sortable center-col">
-              OSHA <span class="sort-icon">{{ getSortIcon('oshaCertified') }}</span>
-            </th>
-            <th (click)="onSort('scissorLiftCertified')" class="sortable center-col">
-              Scissor <span class="sort-icon">{{ getSortIcon('scissorLiftCertified') }}</span>
-            </th>
             <th (click)="onSort('homeState')" class="sortable center-col">
               State <span class="sort-icon">{{ getSortIcon('homeState') }}</span>
             </th>
@@ -230,10 +213,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
               Start Date <span class="sort-icon">{{ getSortIcon('startDate') }}</span>
             </th>
             <th (click)="onSort('offerStatus')" class="sortable">
-              Offer Status <span class="sort-icon">{{ getSortIcon('offerStatus') }}</span>
-            </th>
-            <th (click)="onSort('experienceLevel')" class="sortable">
-              Experience <span class="sort-icon">{{ getSortIcon('experienceLevel') }}</span>
+              Status / Experience <span class="sort-icon">{{ getSortIcon('offerStatus') }}</span>
             </th>
             <th>Actions</th>
           </tr>
@@ -243,6 +223,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
               (click)="onRowClick(candidate)"
               class="candidate-row"
               [class.selected-row]="selectedCandidateIds.has(candidate.candidateId)"
+              [class.needs-review-row]="candidate.offerStatus === 'needs_review'"
               tabindex="0"
               (keydown.enter)="onRowClick(candidate)"
               [attr.aria-label]="'Edit candidate ' + candidate.techName">
@@ -256,15 +237,33 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             <td>{{ candidate.techName }}</td>
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
-            <td class="center-col">{{ candidate.vestSize }}</td>
-            <td class="bool-cell center-col"><span [class]="candidate.drugTestComplete ? 'yn-yes' : 'yn-no'">{{ candidate.drugTestComplete ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell center-col"><span [class]="candidate.oshaCertified ? 'yn-yes' : 'yn-no'">{{ candidate.oshaCertified ? '\u2714' : '\u2014' }}</span></td>
-            <td class="bool-cell center-col"><span [class]="candidate.scissorLiftCertified ? 'yn-yes' : 'yn-no'">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span></td>
             <td class="center-col">{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
             <td>{{ candidate.referredBy || '—' }}</td>
             <td>{{ candidate.startDate | date:'MMM d, yyyy' }}</td>
-            <td>{{ getStatusLabel(candidate.offerStatus) }}</td>
-            <td>{{ getExperienceLevelLabel(candidate.experienceLevel) }}</td>
+            <td class="status-cell" (click)="$event.stopPropagation()">
+              <select class="inline-status-select"
+                      [class.needs-review]="candidate.offerStatus === 'needs_review'"
+                      [value]="getCombinedStatusValue(candidate)"
+                      (change)="onCombinedStatusChange(candidate, $event)"
+                      [attr.aria-label]="'Change status/experience for ' + candidate.techName">
+                <option value="needs_review">Needs Review</option>
+                <option value="vetted_available">Vetted/Available</option>
+                <option value="offer_extended">Offer Extended</option>
+                <option value="offer_accepted_onboarding">Offer Accepted/Onboarding</option>
+                <option value="hired_assigned">Hired/Assigned</option>
+                <option value="onboarded">Onboarded</option>
+                <option value="do_not_hire">Do Not Hire</option>
+                <option value="turned_down_hold">Turned Down/Hold</option>
+                <option disabled>───────────────</option>
+                <option value="exp:management">Management</option>
+                <option value="exp:no_experience_green">No Experience</option>
+                <option value="exp:level_1_green">Level 1/Green</option>
+                <option value="exp:level_2">Level 2</option>
+                <option value="exp:level_3">Level 3</option>
+                <option value="exp:level_4">Level 4</option>
+                <option value="exp:it_testing">IT/Testing</option>
+              </select>
+            </td>
             <td class="actions-cell">
               <button class="icon-btn icon-resume"
                       [class.has-file]="candidate.resumeUrl"
@@ -568,6 +567,46 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
     }
 
+    .status-cell {
+      padding: 0.2rem 0.25rem !important;
+    }
+
+    .inline-status-select {
+      padding: 0.25rem 0.4rem;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      font-size: 0.75rem;
+      color: #212121;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+      max-width: 170px;
+    }
+
+    .inline-status-select:hover {
+      border-color: #bdbdbd;
+      background: #fafafa;
+    }
+
+    .inline-status-select:focus {
+      outline: none;
+      border-color: #1976d2;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    }
+
+    .inline-status-select.needs-review {
+      background: #fff3e0;
+      border-color: #ffb74d;
+      color: #e65100;
+      font-weight: 600;
+    }
+
+    .inline-status-select.needs-review:hover {
+      background: #ffe0b2;
+      border-color: #ff9800;
+    }
+
     .table-wrapper {
       overflow-x: auto;
       width: 100%;
@@ -586,15 +625,10 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
     .candidate-table colgroup .col-name { min-width: 90px; }
     .candidate-table colgroup .col-email { min-width: 120px; }
     .candidate-table colgroup .col-phone { min-width: 100px; }
-    .candidate-table colgroup .col-vest { min-width: 32px; }
-    .candidate-table colgroup .col-drug { min-width: 36px; }
-    .candidate-table colgroup .col-osha { min-width: 38px; }
-    .candidate-table colgroup .col-scissor { min-width: 42px; }
     .candidate-table colgroup .col-state { min-width: 36px; }
     .candidate-table colgroup .col-referred { min-width: 75px; }
     .candidate-table colgroup .col-start { min-width: 72px; }
     .candidate-table colgroup .col-status { min-width: 80px; }
-    .candidate-table colgroup .col-experience { min-width: 70px; }
     .candidate-table colgroup .col-actions { min-width: 100px; }
 
     .candidate-table thead th {
@@ -652,6 +686,15 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
     .candidate-row:focus {
       outline: 2px solid #1976d2;
       outline-offset: -2px;
+    }
+
+    .candidate-row.needs-review-row {
+      border-left: 3px solid #ff9800;
+      background-color: rgba(255, 152, 0, 0.04);
+    }
+
+    .candidate-row.needs-review-row:hover {
+      background-color: rgba(255, 152, 0, 0.08);
     }
 
     .bool-cell {
@@ -1007,9 +1050,9 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   statusFilter = '';
   homeStateFilter = '';
   referredByFilter = '';
-  experienceLevelFilter = '';
+  experienceLevelFilter: ExperienceLevel | 'none' | '' = '';
   incompleteCertsFilter = false;
-  sortState: SortState | null = null;
+  sortState: SortState | null = { column: 'createdAt', direction: 'desc' };
   availableStates: string[] = [];
   availableReferrers: string[] = [];
 
@@ -1043,7 +1086,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       this.statusFilter = savedState.statusFilter;
       this.homeStateFilter = savedState.homeStateFilter;
       this.referredByFilter = savedState.referredByFilter;
-      this.experienceLevelFilter = savedState.experienceLevelFilter || '';
+      this.experienceLevelFilter = (savedState.experienceLevelFilter || '') as ExperienceLevel | 'none' | '';
       this.incompleteCertsFilter = savedState.incompleteCertsFilter;
       this.sortState = savedState.sortColumn
         ? { column: savedState.sortColumn, direction: savedState.sortDirection }
@@ -1090,7 +1133,15 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   }
 
   onStatusFilterChange(event: Event): void {
-    this.statusFilter = (event.target as HTMLSelectElement).value;
+    const value = (event.target as HTMLSelectElement).value;
+    if (value.startsWith('exp:')) {
+      // Experience level filter selected from the combined dropdown
+      this.statusFilter = value;
+      this.experienceLevelFilter = value.substring(4) as ExperienceLevel | 'none';
+    } else {
+      this.statusFilter = value;
+      this.experienceLevelFilter = '';
+    }
     this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
@@ -1105,9 +1156,129 @@ export class CandidateListComponent implements OnInit, OnDestroy {
     this.applyFiltersAndSort();
   }
 
-  onExperienceLevelFilterChange(): void {
-    this.pageIndex = 0;
-    this.applyFiltersAndSort();
+  onInlineExperienceChange(candidate: Candidate, event: Event): void {
+    const newValue = (event.target as HTMLSelectElement).value as ExperienceLevel | '';
+    const payload: UpdateCandidatePayload = {
+      experienceLevel: newValue || null,
+    };
+
+    // Auto-transition: setting an experience level moves candidate out of "needs_review"
+    const shouldAutoTransition = newValue && candidate.offerStatus === 'needs_review';
+    if (shouldAutoTransition) {
+      payload.offerStatus = 'vetted_available';
+    }
+
+    this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+      next: () => {
+        candidate.experienceLevel = newValue || undefined;
+        if (shouldAutoTransition) {
+          candidate.offerStatus = 'vetted_available';
+        }
+        this.applyFiltersAndSort(this.pageIndex);
+      },
+      error: () => {
+        this.errorMessage = `Failed to update experience level for ${candidate.techName}.`;
+      }
+    });
+  }
+
+  onInlineStatusChange(candidate: Candidate, event: Event): void {
+    const newValue = (event.target as HTMLSelectElement).value as OfferStatus;
+    const previousValue = candidate.offerStatus;
+    const payload: UpdateCandidatePayload = {
+      offerStatus: newValue,
+    };
+    // Optimistically update UI
+    candidate.offerStatus = newValue;
+    this.applyFiltersAndSort(this.pageIndex);
+
+    this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+      error: () => {
+        // Revert on failure
+        candidate.offerStatus = previousValue;
+        this.applyFiltersAndSort(this.pageIndex);
+        this.errorMessage = `Failed to update offer status for ${candidate.techName}.`;
+      }
+    });
+  }
+
+  /**
+   * Returns the combined dropdown value for a candidate.
+   * If an experience level is set, returns the exp:-prefixed value;
+   * otherwise returns the offerStatus.
+   */
+  getCombinedStatusValue(candidate: Candidate): string {
+    if (candidate.experienceLevel) {
+      return 'exp:' + candidate.experienceLevel;
+    }
+    return candidate.offerStatus;
+  }
+
+  /**
+   * Handles the combined status/experience dropdown change.
+   * Determines whether the user selected an offer status or experience level
+   * and sends the appropriate update(s) to the API.
+   */
+  onCombinedStatusChange(candidate: Candidate, event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+
+    if (value.startsWith('exp:')) {
+      // User selected an experience level
+      const newLevel = value.substring(4) as ExperienceLevel;
+      const previousLevel = candidate.experienceLevel;
+      const previousStatus = candidate.offerStatus;
+
+      const payload: UpdateCandidatePayload = {
+        experienceLevel: newLevel,
+      };
+
+      // Auto-transition: setting experience level moves out of "needs_review"
+      if (candidate.offerStatus === 'needs_review') {
+        payload.offerStatus = 'vetted_available';
+      }
+
+      // Optimistically update UI
+      candidate.experienceLevel = newLevel;
+      if (payload.offerStatus) {
+        candidate.offerStatus = payload.offerStatus;
+      }
+      this.applyFiltersAndSort(this.pageIndex);
+
+      this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+        error: () => {
+          // Revert on failure
+          candidate.experienceLevel = previousLevel;
+          candidate.offerStatus = previousStatus;
+          this.applyFiltersAndSort(this.pageIndex);
+          this.errorMessage = `Failed to update status for ${candidate.techName}.`;
+        }
+      });
+    } else {
+      // User selected an offer status — also clear experience level
+      const newStatus = value as OfferStatus;
+      const previousStatus = candidate.offerStatus;
+      const previousLevel = candidate.experienceLevel;
+
+      const payload: UpdateCandidatePayload = {
+        offerStatus: newStatus,
+        experienceLevel: '',  // Send empty string to trigger backend clearing (null is ignored as "not provided")
+      };
+
+      // Optimistically update UI
+      candidate.offerStatus = newStatus;
+      candidate.experienceLevel = undefined;
+      this.applyFiltersAndSort(this.pageIndex);
+
+      this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
+        error: () => {
+          // Revert on failure
+          candidate.offerStatus = previousStatus;
+          candidate.experienceLevel = previousLevel;
+          this.applyFiltersAndSort(this.pageIndex);
+          this.errorMessage = `Failed to update status for ${candidate.techName}.`;
+        }
+      });
+    }
   }
 
   onSort(column: keyof Candidate): void {
@@ -1603,9 +1774,14 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       );
     }
 
-    // Offer status filter
-    if (this.statusFilter) {
-      result = result.filter((c) => c.offerStatus === this.statusFilter);
+    // Offer status filter (skip if an experience level is selected via exp: prefix)
+    if (this.statusFilter && !this.statusFilter.startsWith('exp:')) {
+      if (this.statusFilter === 'needs_review') {
+        // Candidates with an experience level set are no longer "Needs Review"
+        result = result.filter((c) => c.offerStatus === 'needs_review' && !c.experienceLevel);
+      } else {
+        result = result.filter((c) => c.offerStatus === this.statusFilter);
+      }
     }
 
     // Home state filter
@@ -1622,7 +1798,11 @@ export class CandidateListComponent implements OnInit, OnDestroy {
 
     // Experience level filter
     if (this.experienceLevelFilter) {
-      result = result.filter((c) => c.experienceLevel === this.experienceLevelFilter);
+      if (this.experienceLevelFilter === 'none') {
+        result = result.filter((c) => !c.experienceLevel);
+      } else {
+        result = result.filter((c) => c.experienceLevel === this.experienceLevelFilter);
+      }
     }
 
     // Incomplete certifications filter

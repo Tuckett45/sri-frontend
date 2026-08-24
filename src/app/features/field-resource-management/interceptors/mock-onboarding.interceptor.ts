@@ -126,9 +126,15 @@ export class MockOnboardingInterceptor implements HttpInterceptor {
       const idx = this.candidates.findIndex(c => c.candidateId === putMatch[1]);
       if (idx === -1) return notFound(putMatch[1]);
 
+      const body = { ...req.body };
+      // Mirror backend behavior: empty string clears experienceLevel
+      if (body.experienceLevel === '') {
+        body.experienceLevel = undefined;
+      }
+
       this.candidates[idx] = {
         ...this.candidates[idx],
-        ...req.body,
+        ...body,
         updatedAt: new Date().toISOString(),
       };
       return ok(this.candidates[idx]);

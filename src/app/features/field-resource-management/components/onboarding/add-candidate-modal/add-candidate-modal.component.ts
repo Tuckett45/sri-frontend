@@ -116,10 +116,13 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
                 <mat-label>Experience Level</mat-label>
                 <mat-select formControlName="experienceLevel">
                   <mat-option value="">None</mat-option>
+                  <mat-option value="management">Management</mat-option>
+                  <mat-option value="no_experience_green">No Experience</mat-option>
                   <mat-option value="level_1_green">Level 1/Green</mat-option>
                   <mat-option value="level_2">Level 2</mat-option>
                   <mat-option value="level_3">Level 3</mat-option>
                   <mat-option value="level_4">Level 4</mat-option>
+                  <mat-option value="it_testing">IT/Testing</mat-option>
                 </mat-select>
               </mat-form-field>
             </div>

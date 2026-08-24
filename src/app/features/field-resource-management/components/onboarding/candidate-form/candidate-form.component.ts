@@ -24,10 +24,13 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
 ];
 
 const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string }[] = [
+  { value: 'management', label: 'Management' },
+  { value: 'no_experience_green', label: 'No Experience' },
   { value: 'level_1_green', label: 'Level 1/Green' },
   { value: 'level_2', label: 'Level 2' },
   { value: 'level_3', label: 'Level 3' },
   { value: 'level_4', label: 'Level 4' },
+  { value: 'it_testing', label: 'IT/Testing' },
 ];
 
 @Component({

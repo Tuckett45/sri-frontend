@@ -325,7 +325,7 @@ export class PipelineDashboardComponent implements OnInit {
   }
 
   private computeCounts(candidates: Candidate[]): void {
-    this.needsReviewCount = candidates.filter(c => c.offerStatus === 'needs_review').length;
+    this.needsReviewCount = candidates.filter(c => c.offerStatus === 'needs_review' && !c.experienceLevel).length;
     this.vettedAvailableCount = candidates.filter(c => c.offerStatus === 'vetted_available').length;
     this.offerExtendedCount = candidates.filter(c => c.offerStatus === 'offer_extended').length;
     this.offerAcceptedOnboardingCount = candidates.filter(c => c.offerStatus === 'offer_accepted_onboarding').length;

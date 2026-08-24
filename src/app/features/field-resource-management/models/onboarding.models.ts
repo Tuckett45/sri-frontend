@@ -4,7 +4,7 @@ export type OfferStatus = 'needs_review' | 'vetted_available' | 'offer_extended'
 
 export type VestSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
 
-export type ExperienceLevel = 'level_1_green' | 'level_2' | 'level_3' | 'level_4';
+export type ExperienceLevel = 'management' | 'no_experience_green' | 'level_1_green' | 'level_2' | 'level_3' | 'level_4' | 'it_testing';
 
 // --- Candidate ---
 
@@ -137,7 +137,7 @@ export interface UpdateCandidatePayload {
   homeState?: string;
   startDate?: string;
   offerStatus?: OfferStatus;
-  experienceLevel?: ExperienceLevel;
+  experienceLevel?: ExperienceLevel | null | '';
   referredBy?: string;
   notes?: string;
 
