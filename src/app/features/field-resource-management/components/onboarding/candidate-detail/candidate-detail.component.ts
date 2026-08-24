@@ -10,6 +10,7 @@ import { getValidTransitions } from '../../../utils/offer-status.util';
 
 const STATUS_LABELS: Record<OfferStatus, string> = {
   needs_review: 'Needs Review',
+  application_reviewed: 'Application Reviewed',
   vetted_available: 'Vetted/Available',
   offer_extended: 'Offer Extended',
   offer_accepted_onboarding: 'Offer Accepted/Onboarding',
@@ -690,7 +691,7 @@ export class CandidateDetailComponent implements OnInit {
   showStatusMenu = false;
 
   allStatuses: OfferStatus[] = [
-    'needs_review', 'vetted_available', 'offer_extended',
+    'needs_review', 'application_reviewed', 'vetted_available', 'offer_extended',
     'offer_accepted_onboarding', 'hired_assigned',
     'do_not_hire', 'turned_down_hold'
   ];

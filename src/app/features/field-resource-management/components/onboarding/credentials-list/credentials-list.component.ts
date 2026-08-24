@@ -133,6 +133,7 @@ interface SortState {
           >
             <option value="">All Offer Statuses</option>
             <option value="needs_review">Needs Review</option>
+            <option value="application_reviewed">Application Reviewed</option>
             <option value="vetted_available">Vetted/Available</option>
             <option value="offer_extended">Offer Extended</option>
             <option value="offer_accepted_onboarding">Offer Accepted/Onboarding</option>

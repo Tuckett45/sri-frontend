@@ -75,7 +75,7 @@
       <!-- Search -->
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Search technicians</mat-label>
-        <input matInput [value]="searchText" (input)="searchText = $any($event.target).value" placeholder="Name, role, or region...">
+        <input matInput [(ngModel)]="searchText" [ngModelOptions]="{standalone: true}" placeholder="Name, role, or region...">
         <mat-icon matPrefix>search</mat-icon>
         <button mat-icon-button matSuffix *ngIf="searchText" (click)="searchText = ''" aria-label="Clear search">
           <mat-icon>close</mat-icon>
@@ -100,7 +100,7 @@
       <div class="technicians-list" *ngIf="getDisplayedTechnicians().length > 0">
         <div 
           class="technician-card"
-          *ngFor="let techMatch of getDisplayedTechnicians()"
+          *ngFor="let techMatch of getDisplayedTechnicians(); trackBy: trackByTechnicianId"
           [class.selected]="isSelected(techMatch)"
           [class.has-conflicts]="techMatch.hasConflicts"
           (click)="onSelectTechnician(techMatch)">

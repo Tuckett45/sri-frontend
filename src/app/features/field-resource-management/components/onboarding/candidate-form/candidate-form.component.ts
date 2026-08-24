@@ -18,6 +18,7 @@ const VEST_SIZES: VestSize[] = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
   { value: 'needs_review', label: 'Needs Review' },
+  { value: 'application_reviewed', label: 'Application Reviewed' },
   { value: 'vetted_available', label: 'Vetted/Available' },
   { value: 'offer_extended', label: 'Offer Extended' },
   { value: 'offer_accepted_onboarding', label: 'Offer Accepted/Onboarding' },

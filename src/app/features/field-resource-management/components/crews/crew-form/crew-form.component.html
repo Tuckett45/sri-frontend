@@ -92,20 +92,40 @@
       <mat-form-field appearance="outline" class="full-width" style="padding-top: 18px;">
         <mat-label>Lead Technician*</mat-label>
         <input matInput
+               #leadTechInput
                [formControl]="leadTechSearch"
                [matAutocomplete]="leadTechAuto"
-               (focus)="onLeadTechFocus()"
+               (input)="onLeadTechSearchInput($event)"
+               (focus)="leadTechInput.select()"
                required>
         <mat-icon matSuffix>search</mat-icon>
         <mat-autocomplete #leadTechAuto="matAutocomplete"
-                          [displayWith]="displayLeadTechnician"
                           (optionSelected)="onLeadTechnicianSelected($event)">
-          <mat-option *ngFor="let tech of filteredLeadTechnicians$ | async" [value]="tech.id">
+          <mat-option *ngFor="let tech of filteredLeadTechnicians" [value]="tech.id">
             {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }}) — {{ tech.role }}
           </mat-option>
         </mat-autocomplete>
         <mat-error *ngIf="hasError('leadTechnicianId', 'required')">Lead technician is required</mat-error>
       </mat-form-field>
+
+      <!-- Selected Lead Technician Display -->
+      <mat-card class="selected-lead-card" *ngIf="getSelectedLeadTechnician() as leadTech">
+        <mat-card-content>
+          <div class="member-info">
+            <mat-icon class="member-icon">star</mat-icon>
+            <div class="member-details">
+              <div class="member-name">{{ leadTech.firstName }} {{ leadTech.lastName }}</div>
+              <div class="member-meta">
+                <span class="tech-id">ID: {{ leadTech.id }}</span>
+                <span class="tech-role" *ngIf="leadTech.role">{{ leadTech.role }}</span>
+              </div>
+            </div>
+            <button mat-icon-button type="button" color="warn" (click)="clearLeadTechnician()" matTooltip="Remove lead technician" class="remove-member-btn">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
     </div>
 
     <!-- Crew Members Section -->
@@ -115,13 +135,15 @@
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Add Crew Members</mat-label>
         <input matInput
+               #memberSearchInput
                [formControl]="memberSearch"
                [matAutocomplete]="memberTechAuto"
-               (focus)="onMemberSearchFocus()">
+               (input)="onMemberSearchInput($event)"
+               (focus)="memberSearchInput.select()">
         <mat-icon matSuffix>search</mat-icon>
         <mat-autocomplete #memberTechAuto="matAutocomplete"
                           (optionSelected)="onMemberTechnicianSelected($event)">
-          <mat-option *ngFor="let tech of filteredMemberTechnicians$ | async" [value]="tech.id">
+          <mat-option *ngFor="let tech of filteredMemberTechnicians" [value]="tech.id">
             {{ tech.firstName }} {{ tech.lastName }} ({{ tech.id }}) — {{ tech.role }}
           </mat-option>
         </mat-autocomplete>

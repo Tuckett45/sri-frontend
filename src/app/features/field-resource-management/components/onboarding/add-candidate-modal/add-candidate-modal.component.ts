@@ -103,6 +103,7 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
                 <mat-label>Offer Status</mat-label>
                 <mat-select formControlName="offerStatus">
                   <mat-option value="needs_review">Needs Review</mat-option>
+                  <mat-option value="application_reviewed">Application Reviewed</mat-option>
                   <mat-option value="vetted_available">Vetted/Available</mat-option>
                   <mat-option value="offer_extended">Offer Extended</mat-option>
                   <mat-option value="offer_accepted_onboarding">Offer Accepted/Onboarding</mat-option>

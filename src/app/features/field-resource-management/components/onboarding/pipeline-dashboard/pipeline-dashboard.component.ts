@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { OnboardingService } from '../../../services/onboarding.service';
-import { Candidate, OfferStatus } from '../../../models/onboarding.models';
+import { Candidate, OfferStatus, ExperienceLevel } from '../../../models/onboarding.models';
 
 @Component({
   selector: 'app-pipeline-dashboard',
@@ -27,6 +27,13 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
                (keydown.enter)="navigateToStatus('needs_review')">
             <span class="card-count">{{ needsReviewCount }}</span>
             <span class="card-label">Needs Review</span>
+          </div>
+          <div class="card clickable" tabindex="0" role="button"
+               aria-label="View Application Reviewed candidates"
+               (click)="navigateToStatus('application_reviewed')"
+               (keydown.enter)="navigateToStatus('application_reviewed')">
+            <span class="card-count">{{ applicationReviewedCount }}</span>
+            <span class="card-label">Application Reviewed</span>
           </div>
           <div class="card clickable" tabindex="0" role="button"
                aria-label="View Vetted/Available candidates"
@@ -86,6 +93,28 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
             <span class="card-label">Starting Within 14 Days</span>
           </div>
         </div>
+
+        <!-- Experience Breakdown -->
+        <section class="panel experience-panel">
+          <h3>Experience Levels</h3>
+          <div class="experience-tabs">
+            <div class="exp-tab clickable" tabindex="0" role="button"
+                 *ngFor="let exp of experienceLevelCounts"
+                 [attr.aria-label]="'View ' + exp.label + ' candidates: ' + exp.count"
+                 (click)="navigateToExperience(exp.value)"
+                 (keydown.enter)="navigateToExperience(exp.value)">
+              <span class="exp-count">{{ exp.count }}</span>
+              <span class="exp-label">{{ exp.label }}</span>
+            </div>
+            <div class="exp-tab clickable" tabindex="0" role="button"
+                 aria-label="View candidates with no experience level set"
+                 (click)="navigateToExperience('none')"
+                 (keydown.enter)="navigateToExperience('none')">
+              <span class="exp-count warn">{{ noExperienceLevelCount }}</span>
+              <span class="exp-label">Not Set</span>
+            </div>
+          </div>
+        </section>
 
         <!-- Pipeline Funnel + Upcoming Starts -->
         <div class="two-col">
@@ -171,6 +200,15 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
     .card-count.warn { color: #e65100; }
     .card-label { font-size: 0.8125rem; font-weight: 500; color: #424242; }
 
+    .experience-panel { margin-bottom: 1.5rem; }
+    .experience-tabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem; }
+    .exp-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem 0.5rem; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; text-align: center; cursor: pointer; transition: box-shadow 0.15s, background-color 0.15s, border-color 0.15s; }
+    .exp-tab:hover { background: #e8eaf6; border-color: #9fa8da; box-shadow: 0 2px 8px rgba(92,107,192,0.12); }
+    .exp-tab:focus { outline: 2px solid #5c6bc0; outline-offset: 2px; }
+    .exp-count { font-size: 1.5rem; font-weight: 700; color: #5c6bc0; line-height: 1; margin-bottom: 0.375rem; }
+    .exp-count.warn { color: #e65100; }
+    .exp-label { font-size: 0.75rem; font-weight: 500; color: #424242; }
+
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
     .panel { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.25rem; }
     .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
@@ -179,6 +217,7 @@ import { Candidate, OfferStatus } from '../../../models/onboarding.models';
     .funnel { display: flex; flex-direction: column; gap: 0.5rem; }
     .funnel-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 1rem; border-radius: 6px; min-width: 80px; font-size: 0.875rem; font-weight: 500; color: #fff; transition: width 0.4s ease; }
     .stage-needs-review { background: #42a5f5; }
+    .stage-application-reviewed { background: #5c6bc0; }
     .stage-vetted-available { background: #66bb6a; }
     .stage-offer-extended { background: #ffa726; }
     .stage-accepted { background: #7b1fa2; }
@@ -216,6 +255,7 @@ export class PipelineDashboardComponent implements OnInit {
   errorMessage = '';
 
   needsReviewCount = 0;
+  applicationReviewedCount = 0;
   vettedAvailableCount = 0;
   offerExtendedCount = 0;
   offerAcceptedOnboardingCount = 0;
@@ -227,11 +267,14 @@ export class PipelineDashboardComponent implements OnInit {
   startingWithin14DaysCount = 0;
 
   funnelStages: { label: string; count: number; pct: number; cls: string }[] = [];
+  experienceLevelCounts: { value: ExperienceLevel; label: string; count: number }[] = [];
+  noExperienceLevelCount = 0;
   upcomingStarts: Candidate[] = [];
   recentCandidates: Candidate[] = [];
 
   private readonly STATUS_LABELS: Record<OfferStatus, string> = {
     needs_review: 'Needs Review',
+    application_reviewed: 'Application Reviewed',
     vetted_available: 'Vetted/Available',
     offer_extended: 'Offer Extended',
     offer_accepted_onboarding: 'Accepted/Onboarding',
@@ -263,6 +306,13 @@ export class PipelineDashboardComponent implements OnInit {
 
   navigateToCandidateList(): void {
     this.router.navigate(['candidates'], { relativeTo: this.route.parent });
+  }
+
+  navigateToExperience(level: ExperienceLevel | 'none'): void {
+    this.router.navigate(['candidates'], {
+      relativeTo: this.route.parent,
+      queryParams: { experienceLevel: level }
+    });
   }
 
   statusLabel(status: OfferStatus): string { return this.STATUS_LABELS[status] ?? status; }
@@ -297,6 +347,7 @@ export class PipelineDashboardComponent implements OnInit {
   private populateDashboard(candidates: Candidate[]): void {
     this.computeCounts(candidates);
     this.buildFunnel();
+    this.buildExperienceCounts(candidates);
     this.buildUpcomingStarts(candidates);
     this.buildRecentCandidates(candidates);
     this.loading = false;
@@ -325,7 +376,8 @@ export class PipelineDashboardComponent implements OnInit {
   }
 
   private computeCounts(candidates: Candidate[]): void {
-    this.needsReviewCount = candidates.filter(c => c.offerStatus === 'needs_review' && !c.experienceLevel).length;
+    this.needsReviewCount = candidates.filter(c => c.offerStatus === 'needs_review').length;
+    this.applicationReviewedCount = candidates.filter(c => c.offerStatus === 'application_reviewed').length;
     this.vettedAvailableCount = candidates.filter(c => c.offerStatus === 'vetted_available').length;
     this.offerExtendedCount = candidates.filter(c => c.offerStatus === 'offer_extended').length;
     this.offerAcceptedOnboardingCount = candidates.filter(c => c.offerStatus === 'offer_accepted_onboarding').length;
@@ -344,10 +396,11 @@ export class PipelineDashboardComponent implements OnInit {
   }
 
   private buildFunnel(): void {
-    const total = this.needsReviewCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount + this.doNotHireCount + this.turnedDownHoldCount;
+    const total = this.needsReviewCount + this.applicationReviewedCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount + this.doNotHireCount + this.turnedDownHoldCount;
     const pct = (n: number) => total > 0 ? Math.max(20, Math.round((n / total) * 100)) : 20;
     this.funnelStages = [
       { label: 'Needs Review', count: this.needsReviewCount, pct: pct(this.needsReviewCount), cls: 'stage-needs-review' },
+      { label: 'Application Reviewed', count: this.applicationReviewedCount, pct: pct(this.applicationReviewedCount), cls: 'stage-application-reviewed' },
       { label: 'Vetted/Available', count: this.vettedAvailableCount, pct: pct(this.vettedAvailableCount), cls: 'stage-vetted-available' },
       { label: 'Offer Extended', count: this.offerExtendedCount, pct: pct(this.offerExtendedCount), cls: 'stage-offer-extended' },
       { label: 'Accepted/Onboarding', count: this.offerAcceptedOnboardingCount, pct: pct(this.offerAcceptedOnboardingCount), cls: 'stage-accepted' },
@@ -355,6 +408,25 @@ export class PipelineDashboardComponent implements OnInit {
       { label: 'Do Not Hire', count: this.doNotHireCount, pct: pct(this.doNotHireCount), cls: 'stage-do-not-hire' },
       { label: 'Turned Down/Hold', count: this.turnedDownHoldCount, pct: pct(this.turnedDownHoldCount), cls: 'stage-turned-down-hold' },
     ];
+  }
+
+  private buildExperienceCounts(candidates: Candidate[]): void {
+    const levels: { value: ExperienceLevel; label: string }[] = [
+      { value: 'management', label: 'Management' },
+      { value: 'no_experience_green', label: 'No Experience' },
+      { value: 'level_1_green', label: 'Level 1/Green' },
+      { value: 'level_2', label: 'Level 2' },
+      { value: 'level_3', label: 'Level 3' },
+      { value: 'level_4', label: 'Level 4' },
+      { value: 'it_testing', label: 'IT/Testing' },
+    ];
+
+    this.experienceLevelCounts = levels.map(l => ({
+      ...l,
+      count: candidates.filter(c => c.experienceLevel === l.value).length,
+    }));
+
+    this.noExperienceLevelCount = candidates.filter(c => !c.experienceLevel).length;
   }
 
   private buildUpcomingStarts(candidates: Candidate[]): void {

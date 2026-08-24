@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, Inject, Optional } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, Inject, Optional } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
-import { Observable, Subject, combineLatest, BehaviorSubject } from 'rxjs';
-import { takeUntil, filter, take, startWith, map } from 'rxjs/operators';
+import { Observable, Subject, combineLatest } from 'rxjs';
+import { takeUntil, filter, take, startWith } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
@@ -44,8 +44,7 @@ import { AuthService } from '../../../../../services/auth.service';
 @Component({
   selector: 'frm-crew-form',
   templateUrl: './crew-form.component.html',
-  styleUrls: ['./crew-form.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./crew-form.component.scss']
 })
 export class CrewFormComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -62,16 +61,14 @@ export class CrewFormComponent implements OnInit, OnDestroy {
   
   // Available technicians for selection
   availableTechnicians: Technician[] = [];
-  private availableTechnicians$ = new BehaviorSubject<Technician[]>([]);
   selectedMemberIds: string[] = [];
   
   // Autocomplete search controls
   leadTechSearch = new FormControl('');
   memberSearch = new FormControl('');
-  filteredLeadTechnicians$!: Observable<Technician[]>;
-  filteredMemberTechnicians$!: Observable<Technician[]>;
-  private leadTechSearchTrigger$ = new BehaviorSubject<string>('');
-  private memberSearchTrigger$ = new BehaviorSubject<string>('');
+  filteredLeadTechnicians: Technician[] = [];
+  filteredMemberTechnicians: Technician[] = [];
+  private isSelectingLead = false;
   
   // Role-based fields
   isAdmin = false;
@@ -91,6 +88,7 @@ export class CrewFormComponent implements OnInit, OnDestroy {
     private actions$: Actions,
     private snackBar: MatSnackBar,
     private authService: AuthService,
+    private cdr: ChangeDetectorRef,
     @Optional() public dialogRef: MatDialogRef<CrewFormComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) public dialogData: { crewId?: string }
   ) {}
@@ -182,7 +180,21 @@ export class CrewFormComponent implements OnInit, OnDestroy {
         this.availableTechnicians = [...technicians].sort((a, b) =>
           `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
         );
-        this.availableTechnicians$.next(this.availableTechnicians);
+
+        // Refresh filtered lists with current search text
+        const leadSearchText = this.leadTechSearch.value || '';
+        const leadIsId = this.availableTechnicians.some(t => t.id === leadSearchText);
+        this.filteredLeadTechnicians = this.filterTechnicians(
+          leadIsId ? '' : leadSearchText, this.availableTechnicians
+        );
+
+        const leadTechnicianId = this.crewForm.get('leadTechnicianId')?.value;
+        const memberPool = this.availableTechnicians.filter(tech => tech.id !== leadTechnicianId);
+        const memberSearchText = this.memberSearch.value || '';
+        const memberIsId = this.availableTechnicians.some(t => t.id === memberSearchText);
+        this.filteredMemberTechnicians = this.filterTechnicians(
+          memberIsId ? '' : memberSearchText, memberPool
+        );
 
         // Update or clear lead technician display based on filtered list
         const leadId = this.crewForm.get('leadTechnicianId')?.value;
@@ -190,7 +202,9 @@ export class CrewFormComponent implements OnInit, OnDestroy {
           const leadTech = this.availableTechnicians.find(t => t.id === leadId);
           if (leadTech) {
             // Update display text in case it wasn't set yet (race condition on edit)
+            this.isSelectingLead = true;
             this.leadTechSearch.setValue(`${leadTech.firstName} ${leadTech.lastName}`, { emitEvent: false });
+            this.isSelectingLead = false;
           } else {
             this.crewForm.patchValue({ leadTechnicianId: '' });
             this.leadTechSearch.setValue('');
@@ -203,46 +217,41 @@ export class CrewFormComponent implements OnInit, OnDestroy {
           this.selectedMemberIds = validMemberIds;
           this.crewForm.patchValue({ memberIds: validMemberIds });
         }
+
+        this.cdr.markForCheck();
       });
 
-    // Setup filtered observables for autocomplete
-    // Use combineLatest with availableTechnicians$ so the list updates when technicians change
-    // leadTechSearchTrigger$ emits on both valueChanges and focus events
+    // Lead technician search: clear selection when user modifies text
     this.leadTechSearch.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe(value => this.leadTechSearchTrigger$.next(value || ''));
+      .subscribe(value => {
+        if (this.isSelectingLead) return;
+        // If the user modifies the text and it no longer matches the selected lead, clear the selection
+        const currentLeadId = this.crewForm.get('leadTechnicianId')?.value;
+        if (currentLeadId) {
+          const leadTech = this.availableTechnicians.find(t => t.id === currentLeadId);
+          const expectedName = leadTech ? `${leadTech.firstName} ${leadTech.lastName}` : '';
+          if (value !== expectedName && value !== currentLeadId) {
+            this.crewForm.patchValue({ leadTechnicianId: '' });
+          }
+        }
+      });
 
-    this.memberSearch.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe(value => this.memberSearchTrigger$.next(value || ''));
-
-    this.filteredLeadTechnicians$ = combineLatest([
-      this.leadTechSearchTrigger$,
-      this.availableTechnicians$
-    ]).pipe(
-      map(([value, technicians]) => this.filterTechnicians(value || '', technicians))
-    );
-
-    this.filteredMemberTechnicians$ = combineLatest([
-      this.memberSearchTrigger$,
-      this.availableTechnicians$
-    ]).pipe(
-      map(([value, technicians]) => {
-        const leadTechnicianId = this.crewForm.get('leadTechnicianId')?.value;
-        const members = technicians.filter(tech => tech.id !== leadTechnicianId);
-        return this.filterTechnicians(value || '', members);
-      })
-    );
+    // Initialize filtered lists with all technicians
+    this.filteredLeadTechnicians = [...this.availableTechnicians];
+    this.filteredMemberTechnicians = [...this.availableTechnicians];
   }
 
   /**
-   * Filter technicians by search text (name, id, or role)
+   * Filter technicians by search text (name or role; ID only for longer/specific terms)
    */
   private filterTechnicians(searchText: string, technicians: Technician[]): Technician[] {
     if (!searchText) return technicians;
     const term = searchText.toLowerCase();
     return technicians.filter(t =>
-      `${t.firstName} ${t.lastName}`.toLowerCase().includes(term) ||
-      t.id.toLowerCase().includes(term) ||
-      t.role.toLowerCase().includes(term)
+      `${t.firstName ?? ''} ${t.lastName ?? ''}`.toLowerCase().includes(term) ||
+      (t.role && t.role.toLowerCase().includes(term)) ||
+      // Only match against ID if term is 8+ chars (avoid matching random UUID substrings)
+      (term.length >= 8 && t.id?.toLowerCase().includes(term))
     );
   }
 
@@ -288,17 +297,39 @@ export class CrewFormComponent implements OnInit, OnDestroy {
 
 
   /**
-   * Handle lead technician search field focus — triggers dropdown to show
+   * Handle input event on lead technician search field — direct DOM event filtering
    */
-  onLeadTechFocus(): void {
-    this.leadTechSearchTrigger$.next(this.leadTechSearch.value || '');
+  onLeadTechSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value || '';
+    this.filteredLeadTechnicians = this.filterTechnicians(value, this.availableTechnicians);
   }
 
   /**
-   * Handle member search field focus — triggers dropdown to show
+   * Handle input event on member search field — direct DOM event filtering
    */
-  onMemberSearchFocus(): void {
-    this.memberSearchTrigger$.next(this.memberSearch.value || '');
+  onMemberSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value || '';
+    const leadTechnicianId = this.crewForm.get('leadTechnicianId')?.value;
+    const members = this.availableTechnicians.filter(tech => tech.id !== leadTechnicianId);
+    this.filteredMemberTechnicians = this.filterTechnicians(value, members);
+  }
+
+  /**
+   * Get the currently selected lead technician object
+   */
+  getSelectedLeadTechnician(): Technician | null {
+    const leadId = this.crewForm.get('leadTechnicianId')?.value;
+    if (!leadId) return null;
+    return this.availableTechnicians.find(t => t.id === leadId) || null;
+  }
+
+  /**
+   * Clear the selected lead technician
+   */
+  clearLeadTechnician(): void {
+    this.crewForm.patchValue({ leadTechnicianId: '' });
+    this.leadTechSearch.setValue('');
+    this.filteredLeadTechnicians = [...this.availableTechnicians];
   }
 
   /**
@@ -316,12 +347,17 @@ export class CrewFormComponent implements OnInit, OnDestroy {
    * Handle lead technician selected from autocomplete
    */
   onLeadTechnicianSelected(event: any): void {
+    this.isSelectingLead = true;
     const technicianId = event.option.value;
     this.crewForm.patchValue({ leadTechnicianId: technicianId });
     this.onLeadTechnicianChange(technicianId);
     // Update the display text
     const tech = this.availableTechnicians.find(t => t.id === technicianId);
-    this.leadTechSearch.setValue(tech ? `${tech.firstName} ${tech.lastName}` : '', { emitEvent: false });
+    const displayName = tech ? `${tech.firstName} ${tech.lastName}` : '';
+    this.leadTechSearch.setValue(displayName, { emitEvent: false });
+    // Reset filtered list to show all for next search
+    this.filteredLeadTechnicians = [...this.availableTechnicians];
+    this.isSelectingLead = false;
   }
 
   /**
@@ -334,12 +370,15 @@ export class CrewFormComponent implements OnInit, OnDestroy {
     // Don't add if it's the lead or already selected
     if (technicianId === leadTechnicianId || this.selectedMemberIds.includes(technicianId)) {
       this.memberSearch.setValue('');
+      this.filteredMemberTechnicians = this.availableTechnicians.filter(tech => tech.id !== leadTechnicianId);
       return;
     }
     
     this.selectedMemberIds = [...this.selectedMemberIds, technicianId];
     this.crewForm.patchValue({ memberIds: this.selectedMemberIds });
     this.memberSearch.setValue('');
+    // Reset filtered list to show all after selection
+    this.filteredMemberTechnicians = this.availableTechnicians.filter(tech => tech.id !== leadTechnicianId);
   }
 
   /**

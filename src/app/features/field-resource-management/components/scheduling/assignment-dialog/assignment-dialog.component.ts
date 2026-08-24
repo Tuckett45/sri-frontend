@@ -146,30 +146,48 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
         const jobClient = this.job.client?.toUpperCase() || '';
         const jobMarket = this.job.market?.toUpperCase() || '';
 
-        this.allTechnicianMatches = technicians
-          .filter(t => {
-            if (!t.isActive) return false;
-            if (!t.region) return false;
-            // Technician region format: "{Client} {Market}" (e.g., "IES OH")
-            const regionUpper = t.region.toUpperCase();
-            const regionMarket = regionUpper.split(' ').pop() || '';
-            const regionClient = regionUpper.replace(/ [^ ]+$/, '');
-            // Match by client + market
-            if (jobClient && jobMarket) {
-              return regionClient === jobClient && regionMarket === jobMarket;
-            }
-            // Fallback to market only
-            if (jobMarket) {
-              return regionMarket === jobMarket;
-            }
-            return true;
-          })
-          .map(t => this.toTechnicianMatch(t))
-          .sort((a, b) => {
-            const nameA = `${a.technician.firstName} ${a.technician.lastName}`;
-            const nameB = `${b.technician.firstName} ${b.technician.lastName}`;
-            return nameA.localeCompare(nameB);
-          });
+        // Separate technicians into matching and non-matching groups
+        const matching: Technician[] = [];
+        const nonMatching: Technician[] = [];
+
+        technicians.forEach(t => {
+          if (!t.isActive) return;
+
+          // If no region or no job client/market, include the technician
+          if (!t.region || (!jobClient && !jobMarket)) {
+            nonMatching.push(t);
+            return;
+          }
+
+          const regionUpper = t.region.toUpperCase();
+          const regionParts = regionUpper.split(' ');
+          const regionMarket = regionParts.pop() || '';
+          const regionClient = regionParts.join(' ');
+
+          // Check if technician matches job's client + market
+          let matches = false;
+          if (jobClient && jobMarket) {
+            matches = regionClient === jobClient && regionMarket === jobMarket;
+          } else if (jobMarket) {
+            matches = regionMarket === jobMarket;
+          }
+
+          if (matches) {
+            matching.push(t);
+          } else {
+            nonMatching.push(t);
+          }
+        });
+
+        // Show matching technicians first, then non-matching
+        const sortByName = (a: Technician, b: Technician) =>
+          `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+
+        this.allTechnicianMatches = [
+          ...matching.sort(sortByName).map(t => this.toTechnicianMatch(t)),
+          ...nonMatching.sort(sortByName).map(t => this.toTechnicianMatch(t))
+        ];
+
         // Auto-show all if qualified list is empty and we have technicians
         if (this.qualifiedTechnicians.length === 0 && this.allTechnicianMatches.length > 0) {
           this.showingAllTechnicians = true;
@@ -416,10 +434,11 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
     if (!this.searchText.trim()) return list;
     const term = this.searchText.toLowerCase();
     return list.filter(tm => {
-      const name = `${tm.technician.firstName} ${tm.technician.lastName}`.toLowerCase();
-      return name.includes(term) || tm.technician.role.toLowerCase().includes(term)
-        || tm.technician.id?.toLowerCase().includes(term)
-        || tm.technician.region?.toLowerCase().includes(term);
+      const name = `${tm.technician.firstName ?? ''} ${tm.technician.lastName ?? ''}`.toLowerCase();
+      return name.includes(term)
+        || (tm.technician.role && tm.technician.role.toLowerCase().includes(term))
+        || (tm.technician.id && tm.technician.id.toLowerCase().includes(term))
+        || (tm.technician.region && tm.technician.region.toLowerCase().includes(term));
     });
   }
 
@@ -452,6 +471,13 @@ export class AssignmentDialogComponent implements OnInit, OnDestroy {
    */
   onCancel(): void {
     this.dialogRef.close({ assigned: false });
+  }
+
+  /**
+   * TrackBy function for technician list to prevent DOM thrashing during search
+   */
+  trackByTechnicianId(_index: number, techMatch: TechnicianMatch): string {
+    return techMatch.technician.id;
   }
 
   /**
