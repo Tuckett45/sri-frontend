@@ -18,6 +18,7 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
   onboarded: 'Onboarded',
   do_not_hire: 'Do Not Hire',
   turned_down_hold: 'Turned Down/Hold for Later',
+  needs_sponsorship: 'Needs Sponsorship',
 };
 
 @Component({
@@ -693,7 +694,7 @@ export class CandidateDetailComponent implements OnInit {
   allStatuses: OfferStatus[] = [
     'needs_review', 'application_reviewed', 'vetted_available', 'offer_extended',
     'offer_accepted_onboarding', 'hired_assigned',
-    'do_not_hire', 'turned_down_hold'
+    'do_not_hire', 'turned_down_hold', 'needs_sponsorship'
   ];
 
   // Notes inline editing state

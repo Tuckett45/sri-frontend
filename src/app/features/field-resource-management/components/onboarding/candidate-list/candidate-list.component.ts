@@ -29,6 +29,7 @@ const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   onboarded: 'Onboarded',
   do_not_hire: 'Do Not Hire',
   turned_down_hold: 'Turned Down/Hold for Later',
+  needs_sponsorship: 'Needs Sponsorship',
 };
 
 const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
@@ -118,6 +119,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             <option value="onboarded">Onboarded</option>
             <option value="do_not_hire">Do Not Hire</option>
             <option value="turned_down_hold">Turned Down/Hold for Later</option>
+            <option value="needs_sponsorship">Needs Sponsorship</option>
           </select>
         </div>
         <div class="filter-field">
@@ -268,6 +270,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
                 <option value="onboarded">Onboarded</option>
                 <option value="do_not_hire">Do Not Hire</option>
                 <option value="turned_down_hold">Turned Down/Hold</option>
+                <option value="needs_sponsorship">Needs Sponsorship</option>
               </select>
             </td>
             <td class="experience-cell" (click)="$event.stopPropagation()">
@@ -1209,9 +1212,18 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       experienceLevel: newValue || null,
     };
 
+    // Auto-transition: setting an experience level moves candidate from "needs_review" to "application_reviewed"
+    const shouldAutoTransition = newValue && candidate.offerStatus === 'needs_review';
+    if (shouldAutoTransition) {
+      payload.offerStatus = 'application_reviewed';
+    }
+
     this.onboardingService.updateCandidate(candidate.candidateId, payload).subscribe({
       next: () => {
         candidate.experienceLevel = newValue || undefined;
+        if (shouldAutoTransition) {
+          candidate.offerStatus = 'application_reviewed';
+        }
         this.applyFiltersAndSort(this.pageIndex);
       },
       error: () => {

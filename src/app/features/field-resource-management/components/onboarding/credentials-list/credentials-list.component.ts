@@ -141,6 +141,7 @@ interface SortState {
             <option value="onboarded">Onboarded</option>
             <option value="do_not_hire">Do Not Hire</option>
             <option value="turned_down_hold">Turned Down/Hold</option>
+            <option value="needs_sponsorship">Needs Sponsorship</option>
           </select>
         </div>
       </div>

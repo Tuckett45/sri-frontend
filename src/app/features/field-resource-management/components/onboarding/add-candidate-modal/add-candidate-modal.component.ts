@@ -110,6 +110,7 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
                   <mat-option value="hired_assigned">Hired/Assigned</mat-option>
                   <mat-option value="do_not_hire">Do Not Hire</mat-option>
                   <mat-option value="turned_down_hold">Turned Down/Hold for Later</mat-option>
+                  <mat-option value="needs_sponsorship">Needs Sponsorship</mat-option>
                 </mat-select>
               </mat-form-field>
 

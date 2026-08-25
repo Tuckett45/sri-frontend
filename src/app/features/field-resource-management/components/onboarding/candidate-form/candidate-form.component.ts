@@ -22,6 +22,7 @@ const ALL_OFFER_STATUSES: { value: OfferStatus; label: string }[] = [
   { value: 'vetted_available', label: 'Vetted/Available' },
   { value: 'offer_extended', label: 'Offer Extended' },
   { value: 'offer_accepted_onboarding', label: 'Offer Accepted/Onboarding' },
+  { value: 'needs_sponsorship', label: 'Needs Sponsorship' },
 ];
 
 const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string }[] = [

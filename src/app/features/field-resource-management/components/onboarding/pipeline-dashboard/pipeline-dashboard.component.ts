@@ -78,6 +78,13 @@ import { Candidate, OfferStatus, ExperienceLevel } from '../../../models/onboard
             <span class="card-label">Turned Down/Hold</span>
           </div>
           <div class="card clickable" tabindex="0" role="button"
+               aria-label="View Needs Sponsorship candidates"
+               (click)="navigateToStatus('needs_sponsorship')"
+               (keydown.enter)="navigateToStatus('needs_sponsorship')">
+            <span class="card-count warn">{{ needsSponsorshipCount }}</span>
+            <span class="card-label">Needs Sponsorship</span>
+          </div>
+          <div class="card clickable" tabindex="0" role="button"
                aria-label="View candidates with incomplete certifications"
                (click)="navigateToIncompleteCerts()"
                (keydown.enter)="navigateToIncompleteCerts()">
@@ -224,6 +231,7 @@ import { Candidate, OfferStatus, ExperienceLevel } from '../../../models/onboard
     .stage-hired-assigned { background: #2e7d32; }
     .stage-do-not-hire { background: #c62828; }
     .stage-turned-down-hold { background: #6d4c41; }
+    .stage-needs-sponsorship { background: #f4511e; }
     .funnel-label { white-space: nowrap; }
     .funnel-value { font-weight: 700; }
 
@@ -262,6 +270,7 @@ export class PipelineDashboardComponent implements OnInit {
   hiredAssignedCount = 0;
   doNotHireCount = 0;
   turnedDownHoldCount = 0;
+  needsSponsorshipCount = 0;
   incompleteCertsCount = 0;
   incompleteDrugTestCount = 0;
   startingWithin14DaysCount = 0;
@@ -282,6 +291,7 @@ export class PipelineDashboardComponent implements OnInit {
     onboarded: 'Onboarded',
     do_not_hire: 'Do Not Hire',
     turned_down_hold: 'Turned Down/Hold for Later',
+    needs_sponsorship: 'Needs Sponsorship',
   };
 
   constructor(
@@ -384,6 +394,7 @@ export class PipelineDashboardComponent implements OnInit {
     this.hiredAssignedCount = candidates.filter(c => c.offerStatus === 'hired_assigned').length;
     this.doNotHireCount = candidates.filter(c => c.offerStatus === 'do_not_hire').length;
     this.turnedDownHoldCount = candidates.filter(c => c.offerStatus === 'turned_down_hold').length;
+    this.needsSponsorshipCount = candidates.filter(c => c.offerStatus === 'needs_sponsorship').length;
     this.incompleteCertsCount = candidates.filter(c => !c.oshaCertified || !c.scissorLiftCertified).length;
     this.incompleteDrugTestCount = candidates.filter(c => !c.drugTestComplete).length;
 
@@ -396,7 +407,7 @@ export class PipelineDashboardComponent implements OnInit {
   }
 
   private buildFunnel(): void {
-    const total = this.needsReviewCount + this.applicationReviewedCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount + this.doNotHireCount + this.turnedDownHoldCount;
+    const total = this.needsReviewCount + this.applicationReviewedCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount + this.doNotHireCount + this.turnedDownHoldCount + this.needsSponsorshipCount;
     const pct = (n: number) => total > 0 ? Math.max(20, Math.round((n / total) * 100)) : 20;
     this.funnelStages = [
       { label: 'Needs Review', count: this.needsReviewCount, pct: pct(this.needsReviewCount), cls: 'stage-needs-review' },
@@ -407,6 +418,7 @@ export class PipelineDashboardComponent implements OnInit {
       { label: 'Hired/Assigned', count: this.hiredAssignedCount, pct: pct(this.hiredAssignedCount), cls: 'stage-hired-assigned' },
       { label: 'Do Not Hire', count: this.doNotHireCount, pct: pct(this.doNotHireCount), cls: 'stage-do-not-hire' },
       { label: 'Turned Down/Hold', count: this.turnedDownHoldCount, pct: pct(this.turnedDownHoldCount), cls: 'stage-turned-down-hold' },
+      { label: 'Needs Sponsorship', count: this.needsSponsorshipCount, pct: pct(this.needsSponsorshipCount), cls: 'stage-needs-sponsorship' },
     ];
   }
 

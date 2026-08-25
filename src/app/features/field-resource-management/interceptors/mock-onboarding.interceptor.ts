@@ -670,7 +670,7 @@ function buildMockCandidates(): Candidate[] {
   const dateOnly = (daysOffset: number) => iso(daysOffset).split('T')[0];
 
   const vestSizes: VestSize[] = ['S', 'M', 'L', 'XL', '2XL'];
-  const statuses: OfferStatus[] = ['needs_review', 'application_reviewed', 'vetted_available', 'offer_extended', 'offer_accepted_onboarding', 'hired_assigned', 'do_not_hire', 'turned_down_hold'];
+  const statuses: OfferStatus[] = ['needs_review', 'application_reviewed', 'vetted_available', 'offer_extended', 'offer_accepted_onboarding', 'hired_assigned', 'do_not_hire', 'turned_down_hold', 'needs_sponsorship'];
 
   const raw: Array<{
     name: string; email: string; phone: string; vest: VestSize;
