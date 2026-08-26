@@ -117,6 +117,29 @@ export class OvertimeApiService {
   }
 
   /**
+   * Fetch overtime requests for a set of employee IDs (team view).
+   * @param employeeIds List of 1–200 employee IDs
+   * @param department Optional department filter
+   */
+  getTeamRequests(employeeIds: string[], department?: string): Observable<OvertimeRequest[]> {
+    if (employeeIds.length === 0) {
+      return of([]);
+    }
+
+    let params = new HttpParams().set('employeeIds', employeeIds.join(','));
+    if (department && department !== 'All Departments') {
+      params = params.set('department', department);
+    }
+
+    return this.http.get<PaginatedResponse<OvertimeRequest>>(
+      `${this.apiUrl}/team`, { params }
+    ).pipe(
+      map(response => response.items),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Get all approved time-off entries for the team availability timeline
    * Returns approved PTO and overtime for a date range
    */

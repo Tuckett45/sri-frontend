@@ -12,3 +12,6 @@ export * from './date-range-picker/date-range-picker.component';
 export * from './confirm-dialog/confirm-dialog.component';
 export * from './loading-spinner/loading-spinner.component';
 export * from './empty-state/empty-state.component';
+
+export * from './team-view-toggle/team-view-toggle.component';
+export * from './department-filter/department-filter.component';

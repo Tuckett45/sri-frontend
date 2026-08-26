@@ -1,10 +1,17 @@
 <div class="pto-request-list">
   <div class="list-header">
-    <h2>My PTO Requests</h2>
+    <h2>{{ viewMode === 'team' ? 'Team PTO Requests' : 'My PTO Requests' }}</h2>
     <a class="btn-new-request" (click)="openNewRequestDialog()" aria-label="Submit a new PTO request">
       + New Request
     </a>
   </div>
+
+  <!-- Team View Toggle (managers only) -->
+  <frm-team-view-toggle
+    *ngIf="isManager"
+    [viewMode]="viewMode"
+    (viewModeChange)="$event === 'team' ? switchToTeamView() : switchToEmployeeView()">
+  </frm-team-view-toggle>
 
   <!-- Status Filter Chips -->
   <div class="filter-chips">
@@ -19,11 +26,32 @@
     </button>
   </div>
 
+  <!-- Department Filter (Team View only) -->
+  <frm-department-filter
+    *ngIf="isManager && viewMode === 'team'"
+    [departments]="departmentOptions$ | async"
+    [selected]="selectedDepartment"
+    (departmentChange)="setDepartmentFilter($event)">
+  </frm-department-filter>
+
+  <!-- Team Loading State -->
+  <div class="loading-state" *ngIf="viewMode === 'team' && (teamLoading$ | async)">
+    <div class="spinner"></div>
+    <p>Loading team requests...</p>
+  </div>
+
+  <!-- Team Error Banner -->
+  <div class="error-banner" *ngIf="viewMode === 'team' && (teamError$ | async) as teamError">
+    <p class="error-message">{{ teamError }}</p>
+    <button class="btn-action" (click)="switchToEmployeeView()">Show My Requests</button>
+  </div>
+
   <!-- Request Table -->
   <div class="request-table" *ngIf="filteredRequests$ | async as requests">
     <table *ngIf="requests.length > 0; else emptyState">
       <thead>
         <tr>
+          <th *ngIf="viewMode === 'team'">Employee</th>
           <th>Status</th>
           <th>Start Date</th>
           <th>End Date</th>
@@ -36,6 +64,7 @@
         <tr
           *ngFor="let request of requests; trackBy: trackByRequest"
           class="request-row">
+          <td *ngIf="viewMode === 'team'">{{ request.employeeName }}</td>
           <td>
             <span class="status-badge" [ngClass]="getStatusBadgeClass(request.status)">
               {{ getStatusLabel(request.status) }}
@@ -87,7 +116,15 @@
 
     <ng-template #emptyState>
       <div class="empty-state">
-        <p>No PTO requests found for the selected filter.</p>
+        <p *ngIf="viewMode === 'team' && activeFilter === 'All' && selectedDepartment === 'All Departments'">
+          No PTO requests found for your team.
+        </p>
+        <p *ngIf="viewMode === 'team' && (activeFilter !== 'All' || selectedDepartment !== 'All Departments')">
+          No requests match the current filters.
+        </p>
+        <p *ngIf="viewMode !== 'team'">
+          No PTO requests found for the selected filter.
+        </p>
       </div>
     </ng-template>
   </div>

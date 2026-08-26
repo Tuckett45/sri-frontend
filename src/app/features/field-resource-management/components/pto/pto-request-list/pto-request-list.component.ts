@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 
 import { PtoRequest, RequestStatus } from '../../../models/pto.models';
@@ -10,6 +10,25 @@ import * as PtoActions from '../../../state/pto/pto.actions';
 import { selectAllPtoRequests } from '../../../state/pto/pto.selectors';
 import { AuthService } from '../../../../../services/auth.service';
 import { PtoRequestFormComponent } from '../pto-request-form/pto-request-form.component';
+import { ViewMode } from '../mixins/team-view.mixin';
+import { UserRole } from '../../../../../models/role.enum';
+import * as TeamRequestsActions from '../../../state/team-requests/team-requests.actions';
+import {
+  selectAllTeamPtoRequests,
+  selectTeamPtoByDepartment,
+  selectTeamPtoDepartments,
+  selectTeamPtoLoading,
+  selectTeamPtoError
+} from '../../../state/team-requests/team-requests.selectors';
+
+/** Roles that grant access to Team View */
+const MANAGER_ROLES: string[] = [
+  UserRole.Admin,
+  UserRole.Manager,
+  UserRole.CM,
+  UserRole.PM,
+  UserRole.DCOps
+];
 
 /**
  * PTO Request List Component
@@ -18,7 +37,10 @@ import { PtoRequestFormComponent } from '../pto-request-form/pto-request-form.co
  * Supports filter chips for All, Pending, Approved, Rejected, and Cancelled statuses.
  * Navigates to the detail view when a row is clicked.
  *
- * Requirements: 2.1, 2.2, 2.4
+ * For managers (Admin, Manager, CM, PM, DCOps), provides a Team View toggle
+ * that shows PTO requests from all direct reports alongside the manager's own.
+ *
+ * Requirements: 1.1, 1.2, 2.1, 2.2, 2.4, 3.1
  */
 @Component({
   selector: 'app-pto-request-list',
@@ -46,6 +68,32 @@ export class PtoRequestListComponent implements OnInit {
   /** Filtered requests based on active filter */
   filteredRequests$!: Observable<PtoRequest[]>;
 
+  // ─── Team View Properties (from TeamViewMixin pattern) ────────────────────────
+
+  /** Current view mode: 'employee' (default) or 'team' */
+  viewMode: ViewMode = 'employee';
+
+  /** Whether the current user has a manager role that enables Team View */
+  isManager = false;
+
+  /** Currently selected department filter (default 'All Departments') */
+  selectedDepartment = 'All Departments';
+
+  /** Observable of available department options derived from loaded team data */
+  departmentOptions$: Observable<string[]> = of([]);
+
+  /** Observable indicating whether team data is currently loading */
+  teamLoading$: Observable<boolean> = of(false);
+
+  /** Observable containing error message if team data load failed, or null */
+  teamError$: Observable<string | null> = of(null);
+
+  /** Subject to drive department filter changes */
+  private departmentSubject$ = new BehaviorSubject<string>('All Departments');
+
+  /** Subject to drive view mode changes */
+  private viewModeSubject$ = new BehaviorSubject<ViewMode>('employee');
+
   constructor(
     private store: Store,
     private router: Router,
@@ -54,14 +102,43 @@ export class PtoRequestListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Load personal PTO requests
     this.store.dispatch(PtoActions.loadRequests());
     this.requests$ = this.store.select(selectAllPtoRequests);
 
+    // Detect manager role for team view access
+    this.isManager = this._detectManagerRole();
+
+    // Wire up team view observables if the user is a manager
+    if (this.isManager) {
+      this.departmentOptions$ = this.store.select(selectTeamPtoDepartments);
+      this.teamLoading$ = this.store.select(selectTeamPtoLoading);
+      this.teamError$ = this.store.select(selectTeamPtoError);
+    }
+
+    // Build filtered requests pipeline that responds to view mode, status filter, and department filter
     this.filteredRequests$ = combineLatest([
-      this.requests$,
-      this.filterSubject$
+      this.viewModeSubject$,
+      this.filterSubject$,
+      this.departmentSubject$
     ]).pipe(
-      map(([requests, filter]) => this.applyFilter(requests, filter))
+      switchMap(([viewMode, statusFilter, department]) => {
+        if (viewMode === 'team' && this.isManager) {
+          // In Team View: use team PTO requests with department + status filtering
+          const teamRequests$ = department === 'All Departments'
+            ? this.store.select(selectAllTeamPtoRequests)
+            : this.store.select(selectTeamPtoByDepartment(department));
+
+          return teamRequests$.pipe(
+            map(requests => this.applyFilter(requests, statusFilter))
+          );
+        } else {
+          // In Employee View: use personal PTO requests with status filtering only
+          return this.requests$.pipe(
+            map(requests => this.applyFilter(requests, statusFilter))
+          );
+        }
+      })
     );
   }
 
@@ -248,6 +325,68 @@ export class PtoRequestListComponent implements OnInit {
     this.showRejectModal = false;
     this.rejectingRequestId = null;
     this.rejectReason = '';
+  }
+
+  // ─── Team View Methods ────────────────────────────────────────────────────────
+
+  /**
+   * Switch to Team View.
+   * Sets view mode to 'team' and dispatches loadTeamPtoRequests to fetch
+   * direct reports' PTO data. Per Requirement 6.5, this triggers a fresh
+   * data fetch each time (no caching between activations).
+   */
+  switchToTeamView(): void {
+    this.viewMode = 'team';
+    this.viewModeSubject$.next('team');
+    this.onTeamViewActivated();
+  }
+
+  /**
+   * Switch back to Employee View.
+   * Resets view mode to 'employee' and clears the department filter
+   * back to 'All Departments' per Requirement 3.7 / 5.8.
+   */
+  switchToEmployeeView(): void {
+    this.viewMode = 'employee';
+    this.selectedDepartment = 'All Departments';
+    this.viewModeSubject$.next('employee');
+    this.departmentSubject$.next('All Departments');
+  }
+
+  /**
+   * Update the selected department filter value.
+   * @param department The department to filter by, or 'All Departments' for no filtering
+   */
+  setDepartmentFilter(department: string): void {
+    this.selectedDepartment = department;
+    this.departmentSubject$.next(department);
+  }
+
+  /**
+   * Called when Team View is activated. Dispatches the loadTeamPtoRequests
+   * action with the current user's ID as the managerId.
+   * Re-fetches on each activation per Requirement 6.5.
+   */
+  onTeamViewActivated(): void {
+    const user = this.authService.getUser();
+    if (user?.id) {
+      this.store.dispatch(TeamRequestsActions.loadTeamPtoRequests({ managerId: user.id }));
+    }
+  }
+
+  // ─── Private Helpers ──────────────────────────────────────────────────────────
+
+  /**
+   * Detects whether the current user has a manager role.
+   * Manager roles: Admin, Manager, CM, PM, DCOps
+   */
+  private _detectManagerRole(): boolean {
+    const user = this.authService.getUser();
+    if (!user) {
+      return false;
+    }
+    const userRole = user.role || '';
+    return MANAGER_ROLES.includes(userRole);
   }
 
   /**

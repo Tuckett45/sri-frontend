@@ -1,0 +1,16 @@
+<div class="department-filter">
+  <mat-form-field appearance="outline" class="department-filter__field">
+    <mat-label>Department</mat-label>
+    <mat-select
+      [value]="selected"
+      (selectionChange)="onSelectionChange($event.value)"
+      aria-label="Filter by department">
+      <mat-option [value]="allDepartmentsOption">
+        {{ allDepartmentsOption }}
+      </mat-option>
+      <mat-option *ngFor="let department of departments" [value]="department">
+        {{ department }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>

@@ -18,6 +18,9 @@ import { overtimeReducer } from '../../state/overtime/overtime.reducer';
 import { OvertimeEffects } from '../../state/overtime/overtime.effects';
 import { OvertimeNotificationEffects } from '../../state/overtime/overtime-notification.effects';
 
+// Team Requests State
+import { teamRequestsReducer, TeamRequestsEffects } from '../../state/team-requests';
+
 // Guards
 import { ManagerGuard } from '../../guards/manager.guard';
 import { PayrollGuard } from '../../guards/payroll.guard';
@@ -139,7 +142,8 @@ const routes: Routes = [
     RouterModule.forChild(routes),
     StoreModule.forFeature('pto', ptoReducer),
     StoreModule.forFeature('overtime', overtimeReducer),
-    EffectsModule.forFeature([PtoEffects, PtoNotificationEffects, OvertimeEffects, OvertimeNotificationEffects])
+    StoreModule.forFeature('teamRequests', teamRequestsReducer),
+    EffectsModule.forFeature([PtoEffects, PtoNotificationEffects, OvertimeEffects, OvertimeNotificationEffects, TeamRequestsEffects])
   ]
 })
 export class PtoModule { }

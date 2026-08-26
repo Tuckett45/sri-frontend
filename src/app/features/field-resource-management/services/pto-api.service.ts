@@ -112,6 +112,36 @@ export class PtoApiService {
   }
 
   /**
+   * Fetch PTO requests for a set of employee IDs (team view).
+   * Returns all PTO requests belonging to the specified employees.
+   * @param employeeIds List of 1–200 employee IDs
+   * @param department Optional department filter
+   * @returns Observable of PTO requests array
+   */
+  getTeamRequests(employeeIds: string[], department?: string): Observable<PtoRequest[]> {
+    if (employeeIds.length === 0) {
+      return of([]);
+    }
+
+    let params = new HttpParams().set('employeeIds', employeeIds.join(','));
+    if (department && department !== 'All Departments') {
+      params = params.set('department', department);
+    }
+
+    return this.http.get<PaginatedResponse<PtoRequest> | PtoRequest[]>(
+      `${this.apiUrl}/team`, { params }
+    ).pipe(
+      map(response => {
+        if (Array.isArray(response)) {
+          return response;
+        }
+        return response.items ?? [];
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Get a single PTO request by ID
    * @param id Request ID
    * @returns Observable of PTO request

@@ -1,0 +1,14 @@
+<mat-button-toggle-group
+  [value]="viewMode"
+  (change)="onViewModeChange($event.value)"
+  aria-label="View mode toggle"
+  class="team-view-toggle">
+  <mat-button-toggle value="employee">
+    <mat-icon>person</mat-icon>
+    <span class="toggle-label">My Requests</span>
+  </mat-button-toggle>
+  <mat-button-toggle value="team">
+    <mat-icon>group</mat-icon>
+    <span class="toggle-label">Team Requests</span>
+  </mat-button-toggle>
+</mat-button-toggle-group>
