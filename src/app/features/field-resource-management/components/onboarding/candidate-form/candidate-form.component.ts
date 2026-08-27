@@ -192,6 +192,14 @@ const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string }[] = [
                  placeholder="Referral source (optional)" />
         </div>
 
+        <!-- Facebook Profile URL (used for META site badging) -->
+        <div class="form-field">
+          <label for="facebookProfileUrl">Facebook Profile URL</label>
+          <input id="facebookProfileUrl"
+                 formControlName="facebookProfileUrl"
+                 placeholder="https://www.facebook.com/your.profile" />
+        </div>
+
         <!-- Start Date -->
         <div class="form-field">
           <label for="startDate">Start Date *</label>
@@ -587,6 +595,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       homeState: [''],
       workSite: ['', Validators.required],
       referredBy: [''],
+      facebookProfileUrl: [''],
       startDate: ['', Validators.required],
       offerStatus: ['', Validators.required],
       experienceLevel: [''],
@@ -643,6 +652,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       homeState: candidate.homeState || '',
       workSite: candidate.workSite,
       referredBy: candidate.referredBy || '',
+      facebookProfileUrl: candidate.facebookProfileUrl || '',
       startDate: candidate.startDate,
       offerStatus: candidate.offerStatus,
       experienceLevel: candidate.experienceLevel || '',
@@ -681,6 +691,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
+      facebookProfileUrl: formValue.facebookProfileUrl || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
       experienceLevel: formValue.experienceLevel || undefined,
@@ -719,6 +730,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
+      facebookProfileUrl: formValue.facebookProfileUrl || undefined,
       startDate: formValue.startDate,
       offerStatus: formValue.offerStatus,
       experienceLevel: formValue.experienceLevel || undefined,

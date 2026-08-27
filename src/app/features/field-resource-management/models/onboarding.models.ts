@@ -29,6 +29,7 @@ export interface Candidate {
   resumeUrl?: string;
   headshotUrl?: string;
   referredBy?: string;
+  facebookProfileUrl?: string;   // Personal Facebook profile URL (used for META site badging)
   notes?: string;
 
   // Core Qualifications
@@ -85,6 +86,7 @@ export interface CreateCandidatePayload {
   offerStatus: OfferStatus;
   experienceLevel?: ExperienceLevel;
   referredBy?: string;
+  facebookProfileUrl?: string;
   backgroundCheckComplete?: boolean;
   drugTestComplete?: boolean;
   oshaCertified?: boolean;
@@ -139,6 +141,7 @@ export interface UpdateCandidatePayload {
   offerStatus?: OfferStatus;
   experienceLevel?: ExperienceLevel | null | '';
   referredBy?: string;
+  facebookProfileUrl?: string;
   notes?: string;
 
   // Core Qualifications

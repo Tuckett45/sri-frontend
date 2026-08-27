@@ -101,6 +101,13 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
                 <span>{{ candidate.referredBy || '—' }}</span>
               </div>
               <div class="detail-row">
+                <span class="label">Facebook Profile</span>
+                <a *ngIf="candidate.facebookProfileUrl" [href]="candidate.facebookProfileUrl" target="_blank" rel="noopener noreferrer">
+                  {{ candidate.facebookProfileUrl }}
+                </a>
+                <span *ngIf="!candidate.facebookProfileUrl">—</span>
+              </div>
+              <div class="detail-row">
                 <span class="label">Start Date</span>
                 <span>{{ candidate.startDate | date:'mediumDate' }}</span>
               </div>
