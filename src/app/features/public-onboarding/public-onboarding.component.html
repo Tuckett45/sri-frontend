@@ -171,8 +171,8 @@
         <fieldset class="facebook-section">
           <legend>Facebook Profile</legend>
           <p class="facebook-instructions">
-            If you will be working on a <strong>META site</strong>, we need the link to your
-            personal Facebook profile for badging. Here's how to find it:
+            We need the link to your personal Facebook profile for badging purposes.
+            Here's how to find it:
           </p>
           <div class="facebook-how-to">
             <div class="how-to-column">
@@ -195,14 +195,18 @@
           </div>
 
           <div class="form-field">
-            <label for="facebookProfileUrl">Facebook Profile URL</label>
+            <label for="facebookProfileUrl">Facebook Profile URL *</label>
             <input id="facebookProfileUrl"
                    formControlName="facebookProfileUrl"
                    placeholder="https://www.facebook.com/your.profile"
                    (blur)="markTouched('facebookProfileUrl')" />
-            <span class="field-hint">Optional — required only for META site badging.</span>
             <span class="field-error" *ngIf="showError('facebookProfileUrl')">
-              Please enter a valid Facebook profile URL (e.g. https://www.facebook.com/your.profile).
+              <ng-container *ngIf="candidateForm.get('facebookProfileUrl')?.hasError('required')">
+                Facebook Profile URL is required.
+              </ng-container>
+              <ng-container *ngIf="!candidateForm.get('facebookProfileUrl')?.hasError('required') && candidateForm.get('facebookProfileUrl')?.hasError('invalidFacebookUrl')">
+                Please enter a valid Facebook profile URL (e.g. https://www.facebook.com/your.profile).
+              </ng-container>
             </span>
           </div>
         </fieldset>

@@ -363,7 +363,7 @@ export class PublicOnboardingComponent implements OnInit {
       homeAddress: ['', Validators.required],
       homeState: ['', Validators.required],
       referredBy: [''],
-      facebookProfileUrl: ['', PublicOnboardingComponent.facebookUrlValidator],
+      facebookProfileUrl: ['', [Validators.required, PublicOnboardingComponent.facebookUrlValidator]],
       startDate: ['', Validators.required],
       experienceLevel: ['no_experience_green'],
     });
@@ -385,7 +385,7 @@ export class PublicOnboardingComponent implements OnInit {
   static facebookUrlValidator(control: AbstractControl): ValidationErrors | null {
     const value = control.value;
     if (!value || !value.trim()) {
-      return null; // optional field
+      return null; // let required validator handle empty
     }
     // Accept facebook.com / fb.com profile URLs, with or without protocol / www / m / web.
     const pattern = /^(https?:\/\/)?(www\.|m\.|web\.)?(facebook|fb)\.com\/.+/i;
