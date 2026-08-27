@@ -102,10 +102,28 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
               </div>
               <div class="detail-row">
                 <span class="label">Facebook Profile</span>
-                <a *ngIf="candidate.facebookProfileUrl" [href]="candidate.facebookProfileUrl" target="_blank" rel="noopener noreferrer">
-                  {{ candidate.facebookProfileUrl }}
-                </a>
-                <span *ngIf="!candidate.facebookProfileUrl">—</span>
+                <div class="inline-edit-value" *ngIf="!isEditingFacebookUrl">
+                  <a *ngIf="candidate.facebookProfileUrl" [href]="candidate.facebookProfileUrl" target="_blank" rel="noopener noreferrer">
+                    {{ candidate.facebookProfileUrl }}
+                  </a>
+                  <span *ngIf="!candidate.facebookProfileUrl">—</span>
+                  <button class="btn-inline-edit" (click)="startEditingFacebookUrl()" title="Edit Facebook URL">&#9998;</button>
+                </div>
+                <div class="inline-edit-form" *ngIf="isEditingFacebookUrl">
+                  <input
+                    class="inline-edit-input"
+                    [(ngModel)]="editedFacebookUrl"
+                    placeholder="https://www.facebook.com/your.profile"
+                    (keyup.enter)="saveFacebookUrl()"
+                    (keyup.escape)="cancelEditingFacebookUrl()" />
+                  <span class="inline-edit-error" *ngIf="facebookUrlError">{{ facebookUrlError }}</span>
+                  <div class="inline-edit-actions">
+                    <button class="btn-inline-save" (click)="saveFacebookUrl()" [disabled]="isSavingFacebookUrl">
+                      {{ isSavingFacebookUrl ? 'Saving...' : 'Save' }}
+                    </button>
+                    <button class="btn-inline-cancel" (click)="cancelEditingFacebookUrl()" [disabled]="isSavingFacebookUrl">Cancel</button>
+                  </div>
+                </div>
               </div>
               <div class="detail-row">
                 <span class="label">Start Date</span>
@@ -684,6 +702,99 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
     .btn-notes-cancel:hover:not(:disabled) { background: #f5f5f5; }
     .btn-notes-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    /* --- Inline Edit (Facebook URL) --- */
+
+    .inline-edit-value {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .inline-edit-value a {
+      color: #1976d2;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .inline-edit-value a:hover { text-decoration: underline; }
+
+    .btn-inline-edit {
+      padding: 0.125rem 0.375rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      font-size: 0.8125rem;
+      color: #9e9e9e;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .btn-inline-edit:hover {
+      color: #1976d2;
+      border-color: #bbdefb;
+    }
+
+    .inline-edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .inline-edit-input {
+      padding: 0.375rem 0.5rem;
+      font-size: 0.8125rem;
+      border: 1px solid #1976d2;
+      border-radius: 4px;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .inline-edit-input:focus {
+      border-color: #1565c0;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.15);
+    }
+
+    .inline-edit-error {
+      color: #d32f2f;
+      font-size: 0.6875rem;
+    }
+
+    .inline-edit-actions {
+      display: flex;
+      gap: 0.375rem;
+    }
+
+    .btn-inline-save {
+      padding: 0.25rem 0.625rem;
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-inline-save:hover:not(:disabled) { background: #1565c0; }
+    .btn-inline-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-inline-cancel {
+      padding: 0.25rem 0.625rem;
+      background: transparent;
+      color: #616161;
+      border: 1px solid #bdbdbd;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-inline-cancel:hover:not(:disabled) { background: #f5f5f5; }
+    .btn-inline-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
+
     @media (max-width: 768px) {
       .detail-grid { grid-template-columns: 1fr; }
       .detail-header { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
@@ -708,6 +819,12 @@ export class CandidateDetailComponent implements OnInit {
   isEditingNotes = false;
   isSavingNotes = false;
   editedNotes = '';
+
+  // Facebook URL inline editing state
+  isEditingFacebookUrl = false;
+  isSavingFacebookUrl = false;
+  editedFacebookUrl = '';
+  facebookUrlError = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -941,6 +1058,52 @@ export class CandidateDetailComponent implements OnInit {
         alert('Failed to save notes. Please try again.');
       }
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Facebook URL inline editing
+  // ---------------------------------------------------------------------------
+
+  startEditingFacebookUrl(): void {
+    this.editedFacebookUrl = this.candidate?.facebookProfileUrl || '';
+    this.facebookUrlError = '';
+    this.isEditingFacebookUrl = true;
+  }
+
+  cancelEditingFacebookUrl(): void {
+    this.isEditingFacebookUrl = false;
+    this.editedFacebookUrl = '';
+    this.facebookUrlError = '';
+  }
+
+  saveFacebookUrl(): void {
+    if (this.isSavingFacebookUrl) return;
+
+    const trimmed = this.editedFacebookUrl.trim();
+    if (trimmed && !this.isValidFacebookUrl(trimmed)) {
+      this.facebookUrlError = 'Please enter a valid Facebook profile URL (e.g. https://www.facebook.com/your.profile)';
+      return;
+    }
+
+    this.facebookUrlError = '';
+    this.isSavingFacebookUrl = true;
+
+    this.onboardingService.updateCandidate(this.candidateId, { facebookProfileUrl: trimmed || undefined }).subscribe({
+      next: () => {
+        this.isSavingFacebookUrl = false;
+        this.isEditingFacebookUrl = false;
+        this.loadCandidate();
+      },
+      error: () => {
+        this.isSavingFacebookUrl = false;
+        alert('Failed to save Facebook URL. Please try again.');
+      }
+    });
+  }
+
+  private isValidFacebookUrl(url: string): boolean {
+    const pattern = /^(https?:\/\/)?(www\.|m\.|web\.)?(facebook|fb)\.com\/.+/i;
+    return pattern.test(url);
   }
 
   private uploadCandidateFiles(candidateId: string, files: { resume?: File | null; headshot?: File | null }, reloadFn: () => void): void {
