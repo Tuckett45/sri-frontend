@@ -87,6 +87,15 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 
             <div class="form-row">
               <mat-form-field appearance="outline">
+                <mat-label>Facebook Profile URL</mat-label>
+                <input matInput formControlName="facebookProfileUrl"
+                       placeholder="https://www.facebook.com/your.profile" />
+                <mat-hint>Used for META site badging (optional)</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline">
                 <mat-label>Home State</mat-label>
                 <input matInput formControlName="homeState" placeholder="e.g. TX, CA, FL" />
               </mat-form-field>
@@ -487,6 +496,7 @@ export class AddCandidateModalComponent {
       workSite: [candidate?.workSite || ''],
       homeState: [candidate?.homeState || ''],
       referredBy: [candidate?.referredBy || ''],
+      facebookProfileUrl: [candidate?.facebookProfileUrl || ''],
       startDate: [this.parseStartDate(candidate?.startDate), Validators.required],
       offerStatus: [candidate?.offerStatus || 'needs_review'],
       experienceLevel: [candidate?.experienceLevel || '']

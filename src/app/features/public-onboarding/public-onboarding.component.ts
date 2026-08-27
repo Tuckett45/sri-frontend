@@ -142,6 +142,7 @@ export class PublicOnboardingComponent implements OnInit {
       homeAddress: formValue.homeAddress,
       homeState: formValue.homeState,
       referredBy: formValue.referredBy || undefined,
+      facebookProfileUrl: formValue.facebookProfileUrl?.trim() || undefined,
       startDate: formValue.startDate,
       experienceLevel: 'no_experience_green',
       drugTestComplete: false,
@@ -362,6 +363,7 @@ export class PublicOnboardingComponent implements OnInit {
       homeAddress: ['', Validators.required],
       homeState: ['', Validators.required],
       referredBy: [''],
+      facebookProfileUrl: ['', PublicOnboardingComponent.facebookUrlValidator],
       startDate: ['', Validators.required],
       experienceLevel: ['no_experience_green'],
     });
@@ -378,6 +380,16 @@ export class PublicOnboardingComponent implements OnInit {
       return { invalidPhone: true };
     }
     return null;
+  }
+
+  static facebookUrlValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!value || !value.trim()) {
+      return null; // optional field
+    }
+    // Accept facebook.com / fb.com profile URLs, with or without protocol / www / m / web.
+    const pattern = /^(https?:\/\/)?(www\.|m\.|web\.)?(facebook|fb)\.com\/.+/i;
+    return pattern.test(value.trim()) ? null : { invalidFacebookUrl: true };
   }
 
   private validateToken(): void {
