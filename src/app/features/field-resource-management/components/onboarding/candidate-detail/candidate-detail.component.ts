@@ -768,6 +768,7 @@ export class CandidateDetailComponent implements OnInit {
           startDate: result.basicInfo.startDate,
           offerStatus: result.basicInfo.offerStatus,
           referredBy: result.basicInfo.referredBy || undefined,
+          facebookProfileUrl: result.basicInfo.facebookProfileUrl || undefined,
           biisciCertified: result.coreQualifications.fiberExperience,
           backgroundCheckComplete: result.coreQualifications.backgroundCheckComplete,
           drugTestComplete: result.coreQualifications.drugScreenComplete,
