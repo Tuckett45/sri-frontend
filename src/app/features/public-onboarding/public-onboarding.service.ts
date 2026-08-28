@@ -21,6 +21,7 @@ export interface PublicCandidateSubmissionPayload {
   homeState: string;
   workSite?: string;
   referredBy?: string;
+  facebookProfileUrl?: string;
   startDate: string;
   experienceLevel?: string;
   drugTestComplete: boolean;

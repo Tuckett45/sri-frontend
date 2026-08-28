@@ -121,6 +121,9 @@ export interface Technician {
   // Referral tracking (carried over from onboarding candidate)
   referredBy?: string;
 
+  // Personal Facebook profile URL (carried over from candidate on promotion; used for META site badging)
+  facebookProfileUrl?: string;
+
   lastKnownLatitude?: number;
   lastKnownLongitude?: number;
   locationUpdatedAt?: Date;

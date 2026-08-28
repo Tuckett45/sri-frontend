@@ -167,6 +167,50 @@
                  placeholder="Who referred you? (optional)" />
         </div>
 
+        <!-- Facebook Profile Section (required for META site badging) -->
+        <fieldset class="facebook-section">
+          <legend>Facebook Profile</legend>
+          <p class="facebook-instructions">
+            We need the link to your personal Facebook profile for badging purposes.
+            Here's how to find it:
+          </p>
+          <div class="facebook-how-to">
+            <div class="how-to-column">
+              <h4>On Mobile</h4>
+              <ol>
+                <li>Open the Facebook app and tap your profile photo.</li>
+                <li>Tap the three dots (•••) below your name.</li>
+                <li>Tap <strong>Copy link to profile</strong>.</li>
+                <li>Paste the link in the box below.</li>
+              </ol>
+            </div>
+            <div class="how-to-column">
+              <h4>On PC / Web</h4>
+              <ol>
+                <li>Go to <strong>facebook.com</strong> and open your profile.</li>
+                <li>Copy the full web address from your browser's address bar.</li>
+                <li>Paste the link in the box below.</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="facebookProfileUrl">Facebook Profile URL *</label>
+            <input id="facebookProfileUrl"
+                   formControlName="facebookProfileUrl"
+                   placeholder="https://www.facebook.com/your.profile"
+                   (blur)="markTouched('facebookProfileUrl')" />
+            <span class="field-error" *ngIf="showError('facebookProfileUrl')">
+              <ng-container *ngIf="candidateForm.get('facebookProfileUrl')?.hasError('required')">
+                Facebook Profile URL is required.
+              </ng-container>
+              <ng-container *ngIf="!candidateForm.get('facebookProfileUrl')?.hasError('required') && candidateForm.get('facebookProfileUrl')?.hasError('invalidFacebookUrl')">
+                Please enter a valid Facebook profile URL (e.g. https://www.facebook.com/your.profile).
+              </ng-container>
+            </span>
+          </div>
+        </fieldset>
+
         <!-- Start Date -->
         <div class="form-field">
           <label for="startDate">Start Date *</label>

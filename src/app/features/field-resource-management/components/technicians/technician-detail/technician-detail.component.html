@@ -72,6 +72,10 @@
           <label>Referred By</label>
           <span>{{ technician.referredBy }}</span>
         </div>
+        <div class="info-item" *ngIf="technician.facebookProfileUrl">
+          <label>Facebook Profile</label>
+          <a [href]="technician.facebookProfileUrl" target="_blank" rel="noopener noreferrer">{{ technician.facebookProfileUrl }}</a>
+        </div>
       </div>
     </mat-card-content>
   </mat-card>
