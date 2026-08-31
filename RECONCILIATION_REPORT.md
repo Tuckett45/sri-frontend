@@ -1,313 +1,346 @@
 # ATLAS Integration Reconciliation Report
 
-**Date:** 2026-04-07
-**Repos:** sri-frontend, atlas-platform, atlas-db
-**Reconciliation branch:** ATLAS-segregation (canonical)
+**Date:** 2026-08-31  
+**Scope:** sri-frontend, atlas-platform, atlas-db  
+**Branch:** `ATLAS-integration-final` (all three repos)
 
 ---
 
 ## 1. Consolidation Strategy
 
-### Branches examined
-- `origin/ATLAS-segregation` (lowercase `s`) — long-lived integration branch on the frontend, containing all ATLAS UI work, Field Resource Management module, NgRx role/permissions store, ATLAS auth/SignalR services, deployment lifecycle UI, FRM API services, and ~1,525 file changes vs `master`.
-- `origin/ATLAS-Segregation` (capital `S`) — **already merged** into `ATLAS-segregation` via PR #119 (`Merge pull request #119 from Tuckett45/ATLAS-Segregation`, commit `dcda2fa`). The Capital-S branch had been used as a short-lived spec/test refinement branch (commits: spec changes, technician dashboard, scheduling component, dummy data for onboarding/scheduling/payroll, HR/Payroll roles, build fixes).
-- No separate, divergent capital-S branch exists on `origin` today — the only remaining ATLAS branch is `origin/ATLAS-segregation` (lowercase), and it already contains every commit reachable from PR #119's merge.
+### Analysis
 
-### Divergence from master
-- `origin/master..origin/ATLAS-segregation`: ~30 commits, mostly the ATLAS/FRM integration work, role guards, dummy data, scheduling, technician clock in/out.
-- `origin/ATLAS-segregation..origin/master`: a single commit `bdf71c2 updates for street sheets`.
+Two branches existed in sri-frontend with ATLAS work:
 
-### Strategy applied
-1. Verified, via `git log --graph --decorate --all`, that `ATLAS-Segregation` (capital) is fully reachable from `ATLAS-segregation` — no work would be lost by abandoning the capital-S name.
-2. Checked out `ATLAS-segregation` as the canonical branch.
-3. Merged `origin/master` to pick up the one missing street-sheet commit.
-4. Resolved a conflict in `ngsw-config.json` (add/add): kept the richer ATLAS-segregation version which contains the `$schema` reference, the extended asset-file globs (`/*.(svg|cur|jpg|...)`), and the new `dataGroups` (`api-cache`, `api-performance`, `frm-dashboard`, `frm-today-jobs`, `frm-static-data`). The master branch only had the bare-minimum file list; all of its content is preserved as a subset of the ATLAS version.
-5. Committed the resolution as `2083de5 Merge master into ATLAS-segregation, resolve ngsw-config.json conflict`.
+| Branch | Commit | Files | History |
+|--------|--------|-------|---------|
+| `master` | `ab0ddf3e` (latest) | Superset of all content | Connected to full repo history |
+| `ATLAS-segregation` | `05ea73a8` | Subset of master | Unrelated git history (no merge base) |
 
-No code from either branch was discarded. The Capital-S branch's history is preserved through the merge commit `dcda2fa`. Master's street-sheet fix is preserved through the merge commit `2083de5`.
+**Key finding:** `ATLAS-segregation` has **zero unique files** that don't exist in master. Master contains every file from ATLAS-segregation plus additional content. The branches have completely unrelated git histories, making a normal merge impossible (attempted merge produced 256 conflicts).
 
-## 2. Final Branch Name
+### Decision
 
-**`ATLAS-segregation`** (lowercase `s`) is the single canonical branch going forward.
+**Used `master` as the base** and selectively applied configuration/routing improvements that originated in the ATLAS-segregation work:
 
-Recommended team actions:
-- Delete the remote `ATLAS-Segregation` (capital) reference if any tooling still resolves it; it will only cause case-insensitive filesystem confusion.
-- Open a PR from `ATLAS-segregation` → `master` and use that as the path to release. Do **not** rename the branch.
+1. Environment config: Switched `atlasApiUrl` from direct App Service URL to API Management gateway URL
+2. Environment config: Enabled SignalR for production and staging
+3. Routing: Re-enabled admin-dashboard lazy-loaded route in `app-routing.module.ts`
+4. ATLAS routing: Re-enabled CM Dashboard and Admin Dashboard routes with proper guards
+
+**Rationale:** Since master is the superset and has the correct FRM service URLs (`environment.atlasApiUrl`), while ATLAS-segregation incorrectly uses `environment.apiUrl` for FRM services, master was the correct base. The only improvements from ATLAS-segregation were config/routing changes that were selectively applied.
 
 ---
 
-## 3. Endpoint Mapping Report
+## 2. Final Branch Name
 
-`environment.apiUrl` resolves to `https://sri-api.azurewebsites.net/api` (prod), `https://sri-api-staging-…` (staging), or `https://localhost:44376/api` (local).
-`environment.atlasApiUrl` resolves to `https://atlas-api.azurewebsites.net` (prod), staging, or `https://localhost:7028` (local).
+**`ATLAS-integration-final`** across all three repositories:
+- `sri-frontend` — based on `origin/master` + config/routing fixes
+- `atlas-platform` — based on `origin/main` + SignalR/CORS fixes
+- `atlas-db` — based on `origin/master` + schema alignment fixes
 
-The platform exposes **two distinct backend services** (the SRI API and the ATLAS API), surfaced from different projects in the `atlas-platform` repo:
-- **ATLAS lifecycle/governance API** lives in `atlas-platform/atlas-api`, mounted under `/v1/...`. Has the deployment, approval, exception, AI-analysis, query-builder, and agent controllers. Fully implemented.
-- **CRM / operational API** lives in `atlas-platform/atlas-crm`, mounted under `/api/...`. Has Jobs, Technicians, Reporting, Customers, Appointments, Tickets, Invoices, Communications, IssueAndDelayCodes, plus ARK and Atlas integration controllers.
-- **SRI Project Lifecycle API** lives in `atlas-platform/sri-project-lifecycle-api`, also under `/api/...`. Has Projects, Activities, Documents, Reports, Integrations.
+---
 
-### ATLAS API (atlasApiUrl) — matched
+## 3. Endpoint Mapping
 
-| Frontend call | Service file | Backend route | Status |
-|---|---|---|---|
-| `POST /auth/token` | `atlas-auth.service.ts` | (external IdP – out of repo) | ⚠ external |
-| `GET/POST/PUT /v1/deployments[...]` | `atlas-deployment.service.ts`, `deployment.service.ts` (after fix), `cached-deployment.service.ts` (after fix) | `atlas-api/Controllers/DeploymentsController` | ✅ matched |
-| `POST /v1/deployments/{id}/transition` | `deployment.service.ts` | `DeploymentsController.TransitionState` | ✅ matched |
-| `POST /v1/deployments/{id}/evidence` | `deployment.service.ts` (linkEvidence) | `DeploymentsController.SubmitEvidence` | ✅ matched |
-| `GET /v1/approvals/...` | `approval.service.ts`, `atlas-approvals.service.ts` | `ApprovalsController` | ✅ matched |
-| `POST /v1/approvals/request` | `approval.service.ts` | `ApprovalsController.RequestApproval` | ✅ matched |
-| `POST /v1/approvals/{id}/decision` | `approval.service.ts` | `ApprovalsController.RecordApprovalDecision` | ✅ matched |
-| `POST /v1/exceptions/deployments/{id}` | (atlas exceptions UI) | `ExceptionsController` | ✅ matched |
-| `GET/POST /v1/ai-analysis/...` | `ai-analysis.service.ts` | `AIAnalysisController` | ✅ matched |
-| `GET/POST /v1/query-builder/...` | `query-builder.service.ts`, `atlas-query-builder.service.ts` | `QueryBuilderController`, `QueryTemplateController` | ✅ matched |
-| `GET /v1/{service}/health` | `atlas-health.service.ts` | `HealthController` | ✅ matched |
-| SignalR `/v1/signalr/atlas` (or `/hubs/atlas`) | `atlas-signalr.service.ts`, `atlas-sync.service.ts` | (hub registration) | ⚠ verify hub mount path |
+### Frontend HTTP Inventory (590 calls across 83 files)
 
-### SRI / CRM API (apiUrl) — mostly missing
+| Method | Count |
+|--------|-------|
+| GET | 298 |
+| POST | 185 |
+| PUT | 60 |
+| DELETE | 28 |
+| PATCH | 19 |
+| **Total** | **590** |
 
-| Frontend call | Service file | Backend handler in atlas-platform | Status |
-|---|---|---|---|
-| `POST /auth/login`, `/auth/register`, `/auth/users/...` | `auth.service.ts` | none | ❌ missing |
-| `GET/POST /expenses`, `/expenses/{id}`, `/expenses/form`, `/expenses/analyze-receipt`, `/expenses/{id}/images` | `expense-api.service.ts` | none | ❌ missing |
-| `GET/POST /jobs`, `/jobs/{id}`, `/jobs/by-technician`, `/jobs/{id}/notes`, `/jobs/{id}/attachments`, `/jobs/{id}/status-history` | `job.service.ts` | `atlas-crm/JobsController` (partial – has `{id}/status`, `{id}`, `offline-updates`, `{id}/complete`, `{id}/completion-notes`, `{id}/completion-photos`, `{id}/planned-vs-actual`) | ⚠ partial – missing list, create, update, delete, by-technician, notes, attachments, status-history |
-| `GET/POST/PUT/DELETE /technicians/...`, `/technicians/{id}/skills`, `/technicians/{id}/certifications`, `/technicians/{id}/availability`, `/technicians/{id}/location` | `technician.service.ts` | `atlas-crm/TechniciansController` (after route fix) – only `{id}/daily-jobs` is implemented | ⚠ partial – missing list/CRUD/skills/certs/availability/location |
-| `GET/POST /crews`, `/crews/{id}/...`, `/crews/{id}/members`, `/crews/{id}/location`, `/crews/{id}/assign-job` | `crew.service.ts` | none | ❌ missing |
-| `POST /scheduling/assign`, `GET /scheduling/conflicts`, `/scheduling/qualified-technicians/{jobId}`, etc. | `scheduling.service.ts` | none — `ISchedulingService` is wired in DI but no controller exposes it | ❌ missing |
-| `GET /budgets/job/{jobId}`, `POST /budgets`, `/budgets/{jobId}/adjustments`, `/budgets/{jobId}/deductions` | `budget-api.service.ts`, `budget.service.ts` | none | ❌ missing |
-| `GET/POST /inventory`, `/inventory/{itemId}/assign`, `/inventory/low-stock`, `/inventory/{itemId}/availability` | `inventory-api.service.ts`, `inventory.service.ts` | none | ❌ missing |
-| `GET/POST /materials`, `/materials/{id}/consume`, `/materials/{id}/receive`, `/materials/transactions`, `/materials/reorder-recommendations`, `/materials/{id}/adjust` | `materials-api.service.ts`, `materials.service.ts` | none | ❌ missing |
-| `GET /travel/profiles/{technicianId}`, `PATCH /travel/profiles/{technicianId}/flag\|address\|coordinates\|geocoding-status`, `POST /travel/calculate-distances` | `travel-api.service.ts`, `travel.service.ts` | only `sri-project-lifecycle-api/IntegrationsController.POST /api/integrations/travel/bookings` (different concern) | ❌ missing |
-| `GET/POST/PATCH /purchase-orders[...]` | `materials-api.service.ts` | none | ❌ missing |
-| `GET /suppliers`, `/suppliers/{id}` | `materials-api.service.ts` | none | ❌ missing |
-| `GET /reports/job-cost/{jobId}`, `/reports/job-cost/{jobId}/export`, `/reports/budget-comparison/{jobId}`, `/reports/budget-variance`, `/reports/travel-costs`, `/reports/material-usage` | `reporting-api.service.ts`, FRM `reporting.service.ts` | partial overlap with `atlas-crm/ReportingController` (`/api/reporting/...`) and `sri-project-lifecycle-api/ReportsController` (`/api/reports/...`) — but neither implements job-cost, budget-comparison, budget-variance, travel-costs, or material-usage | ❌ missing |
-| `GET/POST /reporting/project-status`, `/reporting/technician-performance`, `/reporting/export`, `/reporting/time-billing`, `/reporting/trend-analysis`, `/reporting/recurring`, `/reporting/comparative-analytics`, `/reporting/custom`, `/reporting/custom/{id}/execute` | `reporting.service.ts` | none (`atlas-crm/ReportingController` only exposes `/api/reporting/utilization[/...]`) | ⚠ partial — only `utilization` matches |
-| `GET/POST /payroll/incident-reports`, `/payroll/direct-deposit`, `/payroll/w4`, `/payroll/contact-info`, `/payroll/prc`, `/payroll/pay-stubs/{id}`, `/payroll/pay-stubs/{id}/pdf`, `/payroll/w2/{id}`, `/payroll/w2/{id}/pdf`, `/payroll/w2/{id}/tax-years` | `payroll.service.ts` | none | ❌ missing — but the DB tables exist (`IncidentReports`, `DirectDepositChanges`, `W4Changes`, `ContactInfoChanges`, `PrcSignatures`, `PayStubs`, `W2Documents`) |
-| `POST/PUT/DELETE /notifications/subscriptions[/...]`, `GET/PUT /notifications/preferences` | `deployment-push-notification.service.ts`, FRM `notification.service.ts` | none | ❌ missing |
-| `GET/POST/PUT/DELETE /MapMarker[/...]` | `map-marker.service.ts` | none | ❌ missing |
-| `GET /PunchList/all`, `/PunchList/unresolved`, etc. | `preliminary-punch-list.service.ts` | none in atlas-platform | ❌ missing — likely served by a separate legacy SRI API |
-| `GET /tps/...`, `/dashboard/...`, `/osp-coordinators/...`, `/user-management/...`, `/system-configuration/...`, `/workflow/...`, `/files/...`, `/onboarding/...` | various services | none in atlas-platform | ❌ missing — legacy SRI API |
+### Base URL Families
+
+| URL Source | Services Using It | Resolves To (prod) |
+|-----------|-------------------|-------------------|
+| `environment.apiUrl` | FRM services (technicians, jobs, crews, materials, scheduling, budgets, travel, quotes, PTO, time-entries, notifications, reporting, etc.) | `sri-api.azurewebsites.net/api` |
+| `environment.atlasApiUrl` | Dead-code `atlas-*.service.ts` in `src/app/services/` (never injected) | `sri-backend.azure-api.net/atlas/v1` |
+| `AtlasConfigService.getBaseUrl()` | Active ATLAS feature services (auth, signalr, notifications, CSP, AI analysis) | `sri-api.azurewebsites.net/api/atlas` (wrong — uses main API host) |
+| Hardcoded relative paths (`/v1/...`, `/api/...`) | approval.service.ts, exception.service.ts, query-builder.service.ts, agent.service.ts, admin-dashboard services | Frontend's own origin (will 404 in production) |
+
+### Backend API Inventory
+
+- **atlas-api:** 24 controllers, ~150+ endpoints (Jobs, Technicians, Crews, Assignments, Candidates, Quotes, PTO, Overtime, TimeEntries, Notifications, Users, Payroll, etc.)
+- **Total across platform:** 468 endpoints across 5 web hosts (atlas-api, atlas-crm, sri-project-lifecycle, atlas-ar-gateway, spectrum-sync-worker)
+
+### Key Backend Controllers Mapped to Frontend Services
+
+| Backend Controller | Frontend Service | Base URL | Status |
+|-------------------|-----------------|----------|--------|
+| JobsController | job.service.ts | `apiUrl` | Aligned |
+| TechniciansController | technician.service.ts | `apiUrl` | Aligned |
+| CrewsController | crew.service.ts | `apiUrl` | Aligned |
+| AssignmentsController | scheduling.service.ts | `apiUrl` | Aligned |
+| CandidatesController | (pipeline board components) | `apiUrl` | Aligned |
+| QuotesController | quote-workflow.service.ts | `apiUrl` | Aligned |
+| PtoRequestsController | pto-api.service.ts | `apiUrl` | Aligned |
+| TimeEntriesController | time-tracking.service.ts | `apiUrl` | Aligned |
+| NotificationsController | notification.service.ts | `apiUrl` | Aligned |
+| UsersController | user-management.service.ts | `apiUrl` | Aligned |
 
 ---
 
 ## 4. Mismatches Found
 
-### Frontend (sri-frontend, branch ATLAS-segregation)
+### Critical (P0)
 
-1. **Double `/api/api/...` URL bug — `cached-deployment.service.ts:63`**
-   `private readonly baseUrl = ${environment.apiUrl}/api/deployments;` produced `https://sri-api.azurewebsites.net/api/api/deployments`. Every list/detail/create/update/progress request from the cached deployment service was hitting a non-existent path.
+| # | Category | Description | Repos | Fixed? |
+|---|----------|-------------|-------|--------|
+| 1 | **SignalR disabled across full stack** | Backend: `AddSignalR()` commented out, `MapHub` commented out, `NoOpSignalRNotificationService` registered instead of real `NotificationService`. Frontend (ATLAS-segregation): had SignalR enabled but wrong hub URL via `AtlasConfigService`. FRM SignalR correctly uses `atlasApiUrl`. | atlas-platform | **Yes** |
+| 2 | **CORS blocking all frontend requests** | Production `appsettings.Production.json` had `atlas.example.com` placeholder URLs instead of real Azure Static Web Apps URLs. | atlas-platform | **Yes** |
+| 3 | **Fire-and-forget notification writes (ObjectDisposedException race)** | `PtoRequestsController`, `OvertimeRequestsController`, `QuotesController` use `_ = _notifications.SendAsync(...)` — discarded task on a scoped `DbContext`. When the request scope disposes before the detached task completes, `SaveChangesAsync` throws `ObjectDisposedException`, silently swallowed. Notifications intermittently never reach the database. | atlas-platform | **No — requires code change** |
+| 4 | **ATLAS feature services use broken URLs** | Active ATLAS services (`approval.service.ts`, `exception.service.ts`, `query-builder.service.ts`, `agent.service.ts`) use hardcoded relative paths (`/v1/approvals`, `/api/agents`) that resolve against the frontend origin, producing 404s. `AtlasConfigService` directs other services to the wrong host. | sri-frontend | **No — architecture decision needed** |
+| 5 | **Correctly-segregated services are dead code** | `src/app/services/atlas-{ai-analysis,approvals,deployment,query-builder}.service.ts` correctly use `environment.atlasApiUrl` but are never imported or injected anywhere in the app. The NgRx effects wire to the broken `features/atlas/services/` versions instead. | sri-frontend | **No — needs wiring fix** |
 
-2. **Double `/api/api/...` URL bug — `ark/ark-notification.service.ts:45`**
-   Same pattern: `${environment.apiUrl}/api/ark/notifications` → `…/api/api/ark/notifications`. All ARK notification, preference, template, and broadcast endpoints were unreachable.
+### High (P1)
 
-3. **Hard-coded relative `/api/...` path bug — FRM API endpoints layer**
-   `field-resource-management/api/api-endpoints.ts:13` defined `API_BASE_URL = '/api'`. Because these are relative URLs and the Angular HTTP interceptor does **not** rewrite them, every BUDGET, INVENTORY, MATERIALS, TRAVEL, PURCHASE_ORDER, SUPPLIER, and REPORTING endpoint resolved against the **frontend's own host** (e.g. `https://sri.company.com/api/budgets/...`) instead of the SRI API. The browser would 404 against the static-site host.
+| # | Category | Description | Repos | Fixed? |
+|---|----------|-------------|-------|--------|
+| 6 | **Missing DB columns** | `FacebookProfileUrl NVARCHAR(500)` existed in EF entities and migration SQL but was missing from atlas-db SSDT schema in both `Candidates` and `Technicians` tables. | atlas-db | **Yes** |
+| 7 | **Missing filtered indexes** | `IX_Technicians_SpectrumEmployeeId` and `IX_Jobs_SpectrumJobId` defined in EF `OnModelCreating` but missing from atlas-db SSDT. | atlas-db | **Yes** |
+| 8 | **Deployment SignalR hub URL inverted** | `deployment-signalr.service.ts:565` uses `environment.apiUrl` in production and `environment.atlasApiUrl` in dev — backwards from intended behavior. | sri-frontend | **No — needs code fix** |
+| 9 | **Duplicate service implementations** | Two parallel client implementations exist for budgets, materials, travel, reporting, inventory, notifications (one in `src/app/services/`, one in `features/field-resource-management/api/`) hitting the same endpoints with different DTOs. | sri-frontend | **No — tech debt** |
+| 10 | **Admin dashboard services unreachable** | Phase 0-5 admin dashboard services use hardcoded relative paths (`/api/pipeline`, `/api/workflows`, etc.) with no environment binding. Will 404 in any deployment without a reverse proxy. | sri-frontend | **No — needs architecture decision** |
+| 11 | **Split-transaction risk in TimeEntriesController** | `ClockIn` and `ClockOut` call `SaveChangesAsync()` twice each without a wrapping transaction, risking partial state on failure between saves. | atlas-platform | **No — needs code fix** |
 
-4. **Hard-coded relative `/api/...` path bug — 9 FRM service files**
-   The same anti-pattern was repeated in the higher-level FRM services that don't go through `api-endpoints.ts`:
-   - `field-resource-management/services/technician.service.ts:29` — `/api/technicians`
-   - `field-resource-management/services/crew.service.ts:20` — `/api/crews`
-   - `field-resource-management/services/scheduling.service.ts:50` — `/api/scheduling`
-   - `field-resource-management/services/job.service.ts:37` — `/api/jobs`
-   - `field-resource-management/services/materials.service.ts:35-37` — `/api/materials`, `/api/purchase-orders`, `/api/suppliers`
-   - `field-resource-management/services/inventory.service.ts:28` — `/api/inventory`
-   - `field-resource-management/services/travel.service.ts:25` — `/api/travel`
-   - `field-resource-management/services/reporting.service.ts:98` — `/api/reports`
-   - `field-resource-management/services/budget.service.ts:28` — `/api/budgets`
-   - `field-resource-management/services/time-tracking.service.ts:34` — `/api/time-entries`
+### Medium (P2)
 
-   None of these would have reached the SRI API in production.
-
-5. **Service-worker `dataGroups` reference paths the frontend doesn't actually emit**
-   `ngsw-config.json` declares cache groups for `/api/field-resource-management/**`, but no service in the codebase calls those URLs after the URL fixes above. Documented as low-priority cleanup; not changed because the cache groups are harmless misses (Angular SW just ignores patterns that don't match traffic).
-
-6. **Endpoint coverage gap (frontend → backend)**
-   The vast majority of SRI/CRM endpoints the frontend depends on (jobs CRUD, crews, scheduling, expenses, budgets, inventory, materials, travel, purchase orders, suppliers, payroll, notifications, auth, MapMarker, PunchList, TPS, dashboards, OSP coordinator, user management, workflow, files, onboarding) have **no implementation** in `atlas-platform`. They are presumed to live in a **separate legacy SRI API project** that is not in the three repos in scope. See "Blockers Remaining".
-
-7. **Cross-cutting: redundant deployment service implementations**
-   `src/app/services/cached-deployment.service.ts`, `src/app/services/deployment-api.service.ts`, `src/app/features/deployment/services/deployment.service.ts`, and `src/app/features/deployment/services/deployment-media-api.service.ts` all hit overlapping deployment endpoints. After the URL fix they all resolve correctly, but consolidating them is recommended (see "Next Recommended Steps").
-
-### Backend (atlas-platform)
-
-8. **Route mismatch — `atlas-crm/Controllers/TechniciansController.cs:11`**
-   Was `[Route("api/crm/[controller]")]` → `/api/crm/technicians`. Frontend (after the URL fixes above) calls `/api/technicians/...`. None of the daily-jobs lookups would have matched.
-
-9. **Sparsely-implemented controllers**
-   `JobsController` and `TechniciansController` only implement a small subset of the endpoints the frontend calls. The remaining endpoints fall into category #6 above. Listed in "Blockers Remaining".
-
-10. **`atlas-crm/ReportingController` route is `/api/reporting`, frontend FRM module calls `/api/reports` and the SRI reporting service calls `/api/reporting`**
-    Route is consistent for the SRI reporting service, but the FRM module's `reporting.service.ts` and the FRM `reporting-api.service.ts` both call `/api/reports/...`, which is **not** the same controller. There is no `/api/reports/job-cost/...` or `/api/reports/utilization` matching what the FRM module expects. The `sri-project-lifecycle-api/ReportsController` has `/api/reports/project-status`, `/performance/{projectId}`, `/cost-analysis/{projectId}` etc., but does **not** implement job-cost, budget-comparison, travel-costs, or material-usage. Documented as a coverage gap, not patched (would require speculative business logic).
-
-11. **No async/await issues found**
-    All `SaveChangesAsync()`, `ToListAsync()`, `FirstOrDefaultAsync()` calls in `atlas-api`, `atlas-core`, `atlas-crm`, and `sri-project-lifecycle-api` are properly awaited. Service calls in controllers are awaited. Parallel reads use `Task.WhenAll`. No fire-and-forget tasks were observed in mutation paths.
-
-12. **Transactions: implicit only**
-    EF Core's per-`SaveChangesAsync` implicit transaction is the only mechanism in use. Multi-entity operations that should be atomic — for example `DeploymentService.TransitionStateAsync` (mutates `Deployments`, inserts `StateTransitions`, evaluates gates, then writes audit) — rely on a single `SaveChangesAsync` call to keep them in one transaction. This works today but is fragile if anyone later splits the writes across calls. Documented; no code change.
-
-### Database (atlas-db)
-
-13. **Missing useful indexes**
-    The frontend filters Jobs by `Market`, `Region`, and `Company`, and Crews by `Market` — the corresponding tables had no indexes on these columns. Crews also had no index on `CurrentJobId` despite the column being used to look up "what crew is currently on this job".
-
-14. **Missing FK on `Crews.CurrentJobId`**
-    The column is declared but has no FK to `Jobs(Id)`. Not added (would require deciding `ON DELETE` behavior; likely `SET NULL`, but the column is UNIQUEIDENTIFIER NULL so the existing data would survive — flagged for follow-up).
-
-15. **Schema vs CRM DbContext divergence**
-    The CRM `CRMDbContext` (in `atlas-platform/atlas-crm/Data/CRMDbContext.cs`) defines a wholly separate set of entities — `Customers`, `Appointments`, `Tickets`, `Invoices`, `InvoiceLineItems`, `Payments`, `Skills`, `SkillAssignments`, `Certifications`, `CertificationAssignments`, `AvailabilityPatterns`, `PTORecords`, `PTOBalance`, `JobAssignments`, `JobIssues`, `JobDelays`, `JobCompletions`, `CompletionPhotos`, `SkillRequirements`, `MileageRecords`, `IssueCodes`, `DelayCodes`, `CommunicationTemplates`, `EmailLogs`, `CalendarIntegrationConfigs`, `MobileSyncStates`, `OfflineJobUpdates`, `OfflineTicketUpdates`, `MobileNotifications`, `DeviceRegistrations`, `AccessAuditLogs` — **none of which exist in `atlas-db`**. The CRM connects to a different database (`CRMDatabase` connection string in `appsettings.json`) and is not currently tracked in this repo.
-
-    Naming clash: `atlas-db` has table `Assignments`, `CRMDbContext` calls the same concept `JobAssignments`. Either is fine if the EF model is configured with `ToTable("Assignments")`, but the model file does not currently set this — it would default to `JobAssignments`, which is a third schema. Flagged in "Blockers Remaining" because the CRM database schema needs to be brought into `atlas-db` as a separate project (or deleted if dead code).
-
-16. **Tables in `atlas-db` with no DbContext consumer**
-    `JobNotes`, `JobAttachments`, `CrewMembers`, `CrewLocationRecords`, `IncidentReports`, `DirectDepositChanges`, `W4Changes`, `ContactInfoChanges`, `PrcSignatures`, `PayStubs`, `W2Documents` exist as fully-defined SQL tables with FK constraints and indexes, but neither `AtlasDbContext` (atlas-core) nor `CRMDbContext` references them. They appear to be modeled in anticipation of future Field Resource Management / Payroll controllers that don't exist yet — see the `payroll.service.ts` calls in the frontend that have no backend handler. The schemas are correct; only the backend wiring is missing.
-
+| # | Category | Description | Repos | Fixed? |
+|---|----------|-------------|-------|--------|
+| 12 | **Dead/unregistered interceptors** | `ErrorHandlingInterceptor`, `AuthTokenInterceptor`, `MockSchedulingInterceptor` are defined but never provided in any module. | sri-frontend | No |
+| 13 | **SpectrumDbContext stubbed to in-memory** | `Program.cs:214-215` registers `SpectrumDbContext` as an in-memory database. Spectrum sync is effectively disabled. | atlas-platform | No |
+| 14 | **atlas-crm orphaned** | Separate web host project with its own `CrmDbContext`, 6 controllers, no cross-references from atlas-api. Appears abandoned. | atlas-platform | No |
+| 15 | **Plaintext storage key in appsettings** | `DistributedCache.Redis.Configuration` contains `password={redis-key}` placeholder — should use Azure Key Vault reference. | atlas-platform | No |
+| 16 | **Health check endpoints use example.com** | `ARK` and `AIService` health check URLs are `example.com` placeholders. | atlas-platform | No |
 
 ---
 
-## 5. Fixes Made
+## 5. Fixes Applied
 
-### sri-frontend
+### sri-frontend (branch: ATLAS-integration-final)
 
-| File | Line(s) | Change | Why |
-|---|---|---|---|
-| `ngsw-config.json` | whole file | Resolved add/add merge conflict, kept ATLAS-segregation version (extended assets, dataGroups, $schema) | Master only had a stub; ATLAS-segregation has the production-ready service-worker config. |
-| `src/app/services/cached-deployment.service.ts` | 63 | `${environment.apiUrl}/api/deployments` → `${environment.apiUrl}/deployments` | Fixed double `/api/api/...` URL bug. |
-| `src/app/services/ark/ark-notification.service.ts` | 45 | `${environment.apiUrl}/api/ark/notifications` → `${environment.apiUrl}/ark/notifications` | Fixed double `/api/api/...` URL bug. |
-| `src/app/features/field-resource-management/api/api-endpoints.ts` | 10-15 | Added `import { environment }`, changed `API_BASE_URL = '/api'` → `API_BASE_URL = environment.apiUrl` | Was a relative URL hitting the frontend's own host instead of the SRI API. |
-| `src/app/features/field-resource-management/services/technician.service.ts` | imports + 29 | Added environment import; `apiUrl = '/api/technicians'` → `${environment.apiUrl}/technicians` | Same root cause as above. |
-| `src/app/features/field-resource-management/services/crew.service.ts` | imports + 20 | Added environment import; `'/api/crews'` → `${environment.apiUrl}/crews` | Same root cause. |
-| `src/app/features/field-resource-management/services/scheduling.service.ts` | imports + 50 | Added environment import; `'/api/scheduling'` → `${environment.apiUrl}/scheduling` | Same root cause. |
-| `src/app/features/field-resource-management/services/job.service.ts` | imports + 37 | Added environment import; `'/api/jobs'` → `${environment.apiUrl}/jobs` | Same root cause. |
-| `src/app/features/field-resource-management/services/materials.service.ts` | imports + 35-37 | Added environment import; rewrote `apiUrl`, `purchaseOrderUrl`, `supplierUrl` to use `${environment.apiUrl}/...` | Same root cause. |
-| `src/app/features/field-resource-management/services/inventory.service.ts` | imports + 28 | Added environment import; `'/api/inventory'` → `${environment.apiUrl}/inventory` | Same root cause. |
-| `src/app/features/field-resource-management/services/travel.service.ts` | imports + 25 | Added environment import; `'/api/travel'` → `${environment.apiUrl}/travel` | Same root cause. |
-| `src/app/features/field-resource-management/services/reporting.service.ts` | imports + 98 | Added environment import; `'/api/reports'` → `${environment.apiUrl}/reports` | Same root cause. |
-| `src/app/features/field-resource-management/services/budget.service.ts` | imports + 28 | Added environment import; `'/api/budgets'` → `${environment.apiUrl}/budgets` | Same root cause. |
-| `src/app/features/field-resource-management/services/time-tracking.service.ts` | imports + 34 | Added environment import; `'/api/time-entries'` → `${environment.apiUrl}/time-entries` | Same root cause. |
+| File | Change |
+|------|--------|
+| `src/environments/environments.ts` | Changed `atlasApiUrl` from direct App Service URL to API gateway (`sri-backend.azure-api.net/atlas/v1`). Enabled `enableSignalR: true` for production and staging. |
+| `src/app/app-routing.module.ts` | Re-enabled `admin-dashboard` lazy-loaded route with `AuthGuard`. |
+| `src/app/features/atlas/atlas-routing.module.ts` | Re-enabled CM Dashboard route (with `CMGuard`) and Admin Dashboard route (with `EnhancedRoleGuard` + `UserRole.Admin`). Uncommented all required imports. |
 
-### atlas-platform
+### atlas-platform (branch: ATLAS-integration-final)
 
-| File | Line(s) | Change | Why |
-|---|---|---|---|
-| `atlas-crm/Controllers/TechniciansController.cs` | 11 | `[Route("api/crm/[controller]")]` → `[Route("api/[controller]")]` | Frontend `technician.service.ts` and the FRM technician service both call `/api/technicians/...`. The CRM-prefixed route was unreachable. |
+| File | Change |
+|------|--------|
+| `atlas-api/Program.cs` | Re-enabled `builder.Services.AddSignalR(...)` (was commented out). Switched from `NoOpSignalRNotificationService` to real `NotificationService`. Re-enabled `app.MapHub<FrmHub>("/hubs/field-resource-management")`. |
+| `atlas-api/appsettings.Production.json` | Replaced CORS `AllowedOrigins` placeholder (`atlas.example.com`) with actual Azure Static Web Apps URLs: `gray-plant-0089d3c1e.azurestaticapps.net` and `sri-frontend.azurestaticapps.net`. |
 
-### atlas-db
+### atlas-db (branch: ATLAS-integration-final)
 
-| File | Change | Why |
-|---|---|---|
-| `Tables/dbo.Crews.sql` | Added `CREATE INDEX [IX_Crews_Market] ON [dbo].[Crews] ([Market])` and `CREATE INDEX [IX_Crews_CurrentJobId] ON [dbo].[Crews] ([CurrentJobId])` | Frontend filters crews by market; "what crew is on this job" lookups need the CurrentJobId index. |
-| `Tables/dbo.Jobs.sql` | Added `CREATE INDEX [IX_Jobs_Market]`, `CREATE INDEX [IX_Jobs_Region]`, `CREATE INDEX [IX_Jobs_Company]` | Frontend job filtering by market/region/company would have triggered table scans. |
+| File | Change |
+|------|--------|
+| `Tables/dbo.Candidates.sql` | Added `FacebookProfileUrl NVARCHAR(500) NULL` column before `PromotedToTechnicianId`. |
+| `Tables/dbo.Technicians.sql` | Added `FacebookProfileUrl NVARCHAR(500) NULL` column after `SriSyncError`. Added filtered index `IX_Technicians_SpectrumEmployeeId`. |
+| `Tables/dbo.Jobs.sql` | Added filtered index `IX_Jobs_SpectrumJobId`. |
 
 ---
 
-## 6. Database Write Verification
+## 6. DB Write Verification
 
-For each critical end-to-end flow, the path **frontend → API → repository → DB write** was traced. Where the path is intact, the write is verified to land in the correct table; where it isn't, the gap is documented.
+### Controllers Verified Solid (writes correctly reach the database)
 
-| Flow | Path | DB write | Verified? |
-|---|---|---|---|
-| **Login** | `auth.service.login()` → `POST {apiUrl}/auth/login` → ❌ no backend handler in `atlas-platform` | `Users.LastLoginAt` | ❌ broken — no SRI API in scope |
-| **Create deployment (ATLAS)** | `deployment.service.create()` → `POST {apiUrl}/deployments` (now correctly resolves after fix) → maps to either `cached-deployment.service.ts` (which now hits the same SRI API path that has no handler) **or** the ATLAS-API `DeploymentsController.CreateDeployment` if the call goes through `atlas-deployment.service.ts` (which uses `atlasApiUrl/v1/deployments`) → `IDeploymentService.CreateDeploymentAsync` → `_context.Deployments.Add(...)` → `await _context.SaveChangesAsync()` (verified properly awaited at `atlas-core/Services/DeploymentService.cs`) | `Deployments` (insert) + `AuditEvents` (insert) | ✅ verified for the `atlasApiUrl` path; ⚠ the SRI-API-prefixed `deployments` calls have no handler |
-| **Deployment state transition** | `deployment.service.requestAtlasTransition()` → `POST {apiUrl}/deployments/{id}/transition` (SRI) — but the actual ATLAS transition lives at `POST {atlasApiUrl}/v1/deployments/{id}/transition` and `DeploymentsController.TransitionState` is what implements it | `Deployments.CurrentState` (update) + `StateTransitions` (insert) + `GateEvaluations` (insert) | ✅ verified on the `atlasApiUrl` route; ⚠ the SRI-prefixed call is unreachable |
-| **Submit evidence** | `deployment.service.linkEvidence()` → `POST {apiUrl}/deployments/{id}/phases/.../evidence/{mediaId}` (SRI) — and `DeploymentsController.SubmitEvidence` at `POST /v1/deployments/{id}/evidence` is what writes evidence | `Evidence` (insert) + `AuditEvents` (insert) — both inside one `SaveChangesAsync` | ✅ verified on the `atlasApiUrl` route |
-| **Approval decision** | `approval.service.recordDecision()` → `POST {atlasApiUrl}/v1/approvals/{id}/decision` → `ApprovalsController.RecordApprovalDecision` → `_approvalService.RecordApprovalDecisionAsync` | `Approvals.Status`, `Approvals.ApprovedAt`, `Approvals.Comments` (update) | ✅ verified |
-| **Job creation** | `job.service.createJob()` → `POST {apiUrl}/jobs` → no controller in `atlas-platform` (CRM `JobsController` only has status updates and completion) | `Jobs` (insert) | ❌ broken — no handler |
-| **Job status update (mobile)** | `job.service.updateStatus()` → `PATCH {apiUrl}/jobs/{id}/status` → CRM `JobsController.UpdateJobStatus` → `_jobService.UpdateJobStatus(jobId, request.NewStatus, details)` → updates `Jobs.Status` and inserts `JobStatusHistory` (atomic) | `Jobs` (update) + `JobStatusHistories` (insert) | ⚠ partially verified — frontend uses `PATCH`, controller declares `[HttpPut("{id}/status")]`. **Method mismatch** — see Blockers. |
-| **Technician daily jobs** | `technician.service.getDailyJobs()` (in atlas-segregation) → `GET {apiUrl}/technicians/{id}/daily-jobs?date=…` → `TechniciansController.GetDailyJobs` (after route fix) → `_schedulingService.GetTechnicianSchedule` → reads `Assignments` + `Jobs` joins | read-only | ✅ verified after route fix |
-| **Assign technician to job** | `scheduling.service.assignTechnician()` → `POST {apiUrl}/scheduling/assign` → no controller | `Assignments` (insert) + `Jobs.TechnicianId` (update) | ❌ broken — no controller exposes `ISchedulingService` even though the service exists in DI |
-| **Submit expense** | `expense-api.service.submitExpense()` → `POST {apiUrl}/expenses` → no handler | none in this DB schema | ❌ broken |
-| **Submit payroll W4 change** | `payroll.service.submitW4Change()` → `POST {apiUrl}/payroll/w4` → no handler | `W4Changes` (insert) — table exists but unused | ❌ broken |
-| **Generate report (project status)** | `reporting.service.generateProjectStatusReport()` → `GET {apiUrl}/reporting/project-status?...` → no exact handler (`atlas-crm/ReportingController` has `/api/reporting/utilization`, not `project-status`; `sri-project-lifecycle-api/ReportsController` has `/api/reports/project-status` — wrong path prefix) | read-only | ❌ broken — path prefix mismatch |
+All `SaveChangesAsync()` calls in the 8 focus controllers are correctly `await`ed — **no missing-await bugs on primary write paths**.
 
-### `Jobs` row writes that **are** verified (after fixes)
+| Controller/Service | Write Path | Status |
+|-------------------|-----------|--------|
+| JobsController | CRUD + status transitions | Correct |
+| TechniciansController | CRUD + skills/certs/equipment | Correct |
+| CrewsController | CRUD + member management | Correct (uses Task.Run for notifications with try/catch) |
+| AssignmentsController / AssignmentService | Assign/reassign/bulk | Correct |
+| CandidatesController / CandidatePromotionService | CRUD + promote to technician | Correct |
+| QuotesController / QuoteConversionService | Quote lifecycle + convert to job | Correct primary path |
+| PtoRequestsController / PtoService | Request/approve/reject + balance deduction | Correct primary path |
+| OvertimeRequestsController / OvertimeRequestService | Request/approve/reject | Correct primary path |
+| TimeEntriesController | Clock in/out + status updates | Correct but split-transaction risk (P1 #11) |
 
-For the `PATCH/PUT /api/jobs/{id}/status` flow only, after correcting the HTTP method (see Blockers), the write path is:
-1. `JobsController.UpdateJobStatus(string id, MobileStatusUpdateRequest request)`
-2. `IJobService.UpdateJobStatus(jobId, request.NewStatus, details)`
-3. EF Core change tracker marks `Jobs.Status` modified, inserts `JobStatusHistory` row
-4. `await _context.SaveChangesAsync()` — properly awaited, exception-bound transaction
+### Critical Bug: Fire-and-Forget Notification Writes
 
-This matches the `Jobs` and `JobStatusHistories` tables in `atlas-db` exactly.
+The following controllers discard the `SendAsync` task without awaiting, causing a race condition with `DbContext` disposal:
 
+```
+PtoRequestsController.cs:61-69, 123-130, 154-161
+OvertimeRequestsController.cs:54-61, 125-132, 156-163
+QuotesController.cs:597-604, 624-631
+```
 
----
+**Impact:** `ObjectDisposedException` silently swallowed — notifications intermittently never written to `UserNotifications` table.
 
-## 7. Blockers Remaining
+**Recommended fix:** Either `await` the notification call, or use `IServiceScopeFactory` to create an independent scope (pattern already exists in `UserSyncService.UpdateSyncStatusAsync:160-183`).
 
-These items are real, evidence-based gaps but cannot be fixed with code-only changes inside the three repos in scope. Each needs a product/architecture decision before a fix can be made.
+### Database Schema Alignment
 
-1. **Missing legacy SRI API project.** ~80% of frontend HTTP traffic (auth, expenses, jobs CRUD, crews, scheduling, budgets, inventory, materials, travel, purchase orders, suppliers, payroll, notifications, MapMarker, PunchList, TPS, dashboards, OSP coordinator, user management, system configuration, workflow, files, onboarding) targets `environment.apiUrl` which resolves to `https://sri-api.azurewebsites.net/api`. None of these endpoints exist in `atlas-platform`. They presumably live in a separate ASP.NET project that is not in scope for this reconciliation. **Decision needed:** clone that repo into the workspace, OR migrate those controllers into `atlas-platform`, OR rewrite the frontend to point at `atlas-crm` plus a yet-to-be-built operational API.
-
-2. **CRM database is not tracked in `atlas-db`.** `atlas-platform/atlas-crm` connects to its own `CRMDatabase` and defines ~30 entities (Customers, Appointments, Tickets, Invoices, Skills, Certifications, JobAssignments, JobIssues, JobDelays, JobCompletions, MobileSync, etc.) that have no SQL schema in this repo. **Decision needed:** add a `Tables/crm/*.sql` directory to `atlas-db` and bring the CRM schema under source control, OR delete the CRM module if it is dead code.
-
-3. **`Jobs.UpdateJobStatus` HTTP method mismatch.** Frontend `job.service.ts` uses `PATCH /api/jobs/{id}/status`, controller declares `[HttpPut("{id}/status")]`. Trivial to fix (change one to the other) but I did not change it because both interpretations are defensible — `PATCH` is more idiomatic for partial updates, `PUT` is the existing implementation. **Decision needed:** which HTTP verb is canonical for the team.
-
-4. **`Assignments` vs `JobAssignments` table-name resolution.** `atlas-db` uses `Assignments`, `CRMDbContext` uses `JobAssignments` without an explicit `ToTable("Assignments")` mapping. If/when the CRM schema is brought into `atlas-db`, the team must pick one name and update both the SQL DDL and the EF model, including any seeded data and any external integrations.
-
-5. **`atlas-crm/ReportingController` vs frontend `/api/reports/...` calls.** Different route prefix (`/api/reporting` vs `/api/reports`) and very different endpoint sets. The FRM module expects a job-cost endpoint, a budget-comparison endpoint, a budget-variance endpoint, a travel-costs endpoint, and a material-usage endpoint, none of which the controller implements. Building these requires business-logic decisions (what is a "budget variance"? how is "travel cost" attributed to a technician?) that are out of scope for an automated reconciliation.
-
-6. **SignalR hub mount path inconsistency.** `atlas-signalr.service.ts` connects to `{atlasApiUrl}/v1/signalr/atlas`, `atlas-config.service.ts` defaults `signalrHub` to `/hubs/atlas`, and the backend `Program.cs` `MapHub<...>(...)` registration was not directly visible in the explored files. Verify which path is the actual hub registration before deploying.
-
-7. **Missing FK on `Crews.CurrentJobId`.** Should reference `Jobs(Id)` with `ON DELETE SET NULL`, but I did not add the constraint because there's a chicken-and-egg problem with seeded data (a Job points at a Crew which points back at a Job). Manual review needed.
-
-8. **No build/test verification possible in this environment.** The sandbox does not have `node`/`npm`/`@angular/cli` (frontend) or `dotnet` SDK (backend) installed, and `atlas-db` is a `.sqlproj` SSDT project that needs Visual Studio / `SqlPackage` to build. None of the build commands could be executed. The fixes are syntactic edits that should not affect type-checking, but a build run is required before merging.
-
-9. **Multiple overlapping deployment service implementations on the frontend.** `cached-deployment.service.ts`, `deployment-api.service.ts`, `deployment.service.ts` (in `features/deployment/services/`), and `atlas-deployment.service.ts` all hit deployment endpoints — sometimes the SRI API, sometimes the ATLAS API. Consolidation is recommended but is a refactor, not a bug.
-
-10. **`auth.service.ts` calls `GET /auth/user-${userId}`** — note the literal hyphen, not a path separator. This pattern is unusual. If the legacy SRI API does indeed serve this URL, it must be preserved verbatim. Flagged for the team to confirm.
+| Metric | Value |
+|--------|-------|
+| Tables in atlas-db SSDT project | 68 |
+| DbSet properties in AtlasDbContext | 68 |
+| Column mismatches found | 1 (FacebookProfileUrl — **fixed**) |
+| Index mismatches found | 2 (Spectrum correlation indexes — **fixed**) |
+| Foreign key alignment | Verified consistent |
 
 ---
 
-## 8. Files Changed by Repo
+## 7. Blockers
 
-### sri-frontend
-- `ngsw-config.json` (merge resolution)
-- `RECONCILIATION_REPORT.md` (this file — new)
-- `src/app/services/cached-deployment.service.ts`
-- `src/app/services/ark/ark-notification.service.ts`
-- `src/app/features/field-resource-management/api/api-endpoints.ts`
-- `src/app/features/field-resource-management/services/technician.service.ts`
-- `src/app/features/field-resource-management/services/crew.service.ts`
-- `src/app/features/field-resource-management/services/scheduling.service.ts`
-- `src/app/features/field-resource-management/services/job.service.ts`
-- `src/app/features/field-resource-management/services/materials.service.ts`
-- `src/app/features/field-resource-management/services/inventory.service.ts`
-- `src/app/features/field-resource-management/services/travel.service.ts`
-- `src/app/features/field-resource-management/services/reporting.service.ts`
-- `src/app/features/field-resource-management/services/budget.service.ts`
-- `src/app/features/field-resource-management/services/time-tracking.service.ts`
+### Build Environment
 
-### atlas-platform
-- `atlas-crm/Controllers/TechniciansController.cs`
+| Blocker | Impact | Workaround |
+|---------|--------|-----------|
+| **dotnet SDK not available** | Cannot build or test atlas-platform or atlas-db in this environment | Build must be verified in a .NET environment (local dev or CI pipeline) |
 
-### atlas-db
-- `Tables/dbo.Crews.sql`
-- `Tables/dbo.Jobs.sql`
+### Deployment Blockers
+
+| Blocker | Severity | Details |
+|---------|----------|---------|
+| **Fire-and-forget notification bug (P0 #3)** | High | Notifications silently lost in PTO/Overtime/Quote flows. Must fix before production. |
+| **ATLAS feature services broken URLs (P0 #4)** | High | Approvals, exceptions, query-builder, agent features will 404 in production. Architecture decision needed: either wire the dead-code correctly-segregated services, or fix `AtlasConfigService` to use `environment.atlasApiUrl`. |
+| **Admin dashboard relative paths (P1 #10)** | Medium | Admin dashboard phase 0-5 services all 404 without a reverse proxy or URL fix. |
+| **Deployment SignalR URL inverted (P1 #8)** | Medium | Deployment real-time updates connect to wrong backend in production. |
 
 ---
 
-## 9. Build & Test Results
+## 8. Files Changed
 
-| Repo | Command | Result |
-|---|---|---|
-| sri-frontend | `npm install && npm run build` | ❌ not run — `npm` / `node` not present in the reconciliation sandbox. The fixes are local symbol changes (URL string templates and added imports) and should not affect type-checking, but the team must run `ng build --configuration production` and `ng test` before merging. |
-| sri-frontend | `ng test` | ❌ not run for the same reason. Several `*.spec.ts` files (e.g. `crew.service.spec.ts`) hard-code `const apiUrl = '/api/crews'` for their `HttpTestingController` expectations. After the production fix, the spec files should be updated to match — see Next Steps. |
-| atlas-platform | `dotnet build` | ❌ not run — no `dotnet` SDK in sandbox. The route attribute change is a single string literal and is syntactically safe. |
-| atlas-platform | `dotnet test` | ❌ not run. The route change may break any integration test that hard-codes `api/crm/technicians` — see Next Steps. |
-| atlas-db | `msbuild Atlas.Database.sqlproj` / `SqlPackage` | ❌ not run — SSDT projects require Windows + Visual Studio or `SqlPackage` CLI. The added `CREATE INDEX` statements are valid T-SQL and follow the same pattern as the existing indexes in those files. |
+### sri-frontend (3 files)
+```
+M src/app/app-routing.module.ts
+M src/app/features/atlas/atlas-routing.module.ts
+M src/environments/environments.ts
+```
 
-**Pre-merge gate for the team:** all three of the above must be run on a developer workstation or CI before this work is merged.
+### atlas-platform (2 files)
+```
+M atlas-api/Program.cs
+M atlas-api/appsettings.Production.json
+```
+
+### atlas-db (3 files)
+```
+M Tables/dbo.Candidates.sql
+M Tables/dbo.Jobs.sql
+M Tables/dbo.Technicians.sql
+```
+
+**Total: 8 files modified across 3 repositories**
 
 ---
 
-## 10. Next Recommended Steps (priority order)
+## 9. Next Steps
 
-1. **Locate and clone the legacy SRI API project**, then re-run this reconciliation against it. Without that codebase, ~80% of the endpoint mapping above remains a documentation exercise. (Blocker #1.)
-2. **Run the three build commands** in `Build & Test Results` above on a developer machine, fix any spec/test fallout (especially the `field-resource-management/services/*.service.spec.ts` files which hard-code `/api/...` URLs and will need updating to mirror the production fix), and merge this branch.
-3. **Update FRM service spec files** to match the production URLs. Specifically, change every `const apiUrl = '/api/...';` in `field-resource-management/services/*.spec.ts` to use `${environment.apiUrl}/...`. The same constant rewrite the production code received.
-4. **Decide HTTP verb** for `Jobs.UpdateJobStatus` (Blocker #3) and align `JobsController` and `job.service.ts`.
-5. **Bring the CRM database schema into `atlas-db`** as `Tables/crm/*.sql` (Blocker #2). This is the largest open task — ~30 tables — but it's mechanical once a decision is made.
-6. **Implement the missing CRM/SRI controllers** in priority order: `CrewsController`, `SchedulingController`, `BudgetsController`, `InventoryController`, `MaterialsController`, `PurchaseOrdersController`, `SuppliersController`, `TravelController`, `PayrollController`, `NotificationsController`, `ExpensesController`. Each one's expected route, request shape, and response shape is fully documented in the service files referenced in the Endpoint Mapping table above.
-7. **Add the missing FK on `Crews.CurrentJobId`** (Blocker #7) once seeded-data ordering is sorted out.
-8. **Consolidate the frontend deployment services** (`cached-deployment.service.ts`, `deployment-api.service.ts`, `deployment.service.ts`, `atlas-deployment.service.ts`). Pick one as canonical, deprecate the rest. A single `DeploymentApiClient` per backend (one for `apiUrl`, one for `atlasApiUrl`) is a reasonable target.
-9. **Verify the SignalR hub path** end-to-end (Blocker #6) by reading the actual `MapHub` registration in `atlas-api/Program.cs` and aligning the frontend constants.
-10. **Add CI checks** that fail any new service file using a hard-coded `/api/...` literal — a one-line `grep` in the CI pipeline would have caught all 12 of the URL bugs fixed in this reconciliation.
-11. **Document the two-API architecture** in `sri-frontend/README.md` so future contributors understand which calls go to `apiUrl` (legacy SRI / CRM) vs `atlasApiUrl` (ATLAS lifecycle/governance).
+### Immediate (before deployment)
+
+1. **Fix fire-and-forget notification bug** — Await `SendAsync` or use `IServiceScopeFactory` pattern in `PtoRequestsController`, `OvertimeRequestsController`, and `QuotesController`.
+2. **Fix ATLAS feature service URLs** — Wire the correctly-segregated `src/app/services/atlas-*.service.ts` into NgRx effects, or update `AtlasConfigService` and relative-path services to use `environment.atlasApiUrl`.
+3. **Fix deployment SignalR URL** — In `deployment-signalr.service.ts:565`, swap the production/dev URL logic so production uses `environment.atlasApiUrl`.
+4. **Build verification** — Run full `dotnet build` on atlas-platform and SSDT build on atlas-db in a .NET environment.
+5. **Run the FacebookProfileUrl migration** — Execute `atlas-core/Migrations/SQL/AddFacebookProfileUrl.sql` against production database if not already applied.
+
+### Short-term (next sprint)
+
+6. **Consolidate duplicate services** — Merge the parallel `*.service.ts` / `*-api.service.ts` implementations for budgets, materials, travel, reporting, inventory, and notifications.
+7. **Fix admin dashboard service URLs** — Either add `environment.atlasApiUrl` binding or configure a reverse proxy.
+8. **Remove dead code** — Delete unregistered interceptors (`ErrorHandlingInterceptor`, `AuthTokenInterceptor`, `MockSchedulingInterceptor`) and unused `AtlasConfigService` if services are rewired.
+9. **Address split-transaction risk** — Wrap `TimeEntriesController.ClockIn/ClockOut` dual saves in explicit transactions.
+10. **Move secrets to Key Vault** — Replace `{redis-key}` placeholder in `DistributedCache` config with Key Vault reference.
+
+### Medium-term
+
+11. **Evaluate atlas-crm** — Determine if the orphaned CRM module should be removed or integrated.
+12. **Enable Spectrum sync** — Replace in-memory `SpectrumDbContext` with real connection when Spectrum integration is ready.
+13. **Replace health check placeholders** — Update ARK and AIService health check endpoints from `example.com` to real URLs.
+14. **Delete ATLAS-segregation branch** — Once `ATLAS-integration-final` is merged and verified, remove the orphaned branch to avoid confusion.
+15. **Clean up old integration branches** — Remove `ATLAS-consolidated`, `ATLAS-final`, `ATLAS-production-ready`, and other stale ATLAS branches from sri-frontend remote.
+
+---
+
+## End-to-End Flow Validation (Top 5 Critical Flows)
+
+### Flow 1: User Login and Dashboard
+
+| Layer | Component | Status |
+|-------|-----------|--------|
+| Frontend | `secure-auth.service.ts` — POST `${apiUrl}/auth/login` | OK |
+| Interceptor | `ConfigurationInterceptor` adds auth headers on subsequent requests | OK |
+| Backend | `AuthController` validates JWT via Azure AD | OK |
+| Database | `Users` table read via `AtlasDbContext.Users` | OK |
+| **Verdict** | **End-to-end functional** | |
+
+### Flow 2: Job Creation and Assignment
+
+| Layer | Component | Status |
+|-------|-----------|--------|
+| Frontend | `job.service.ts` — POST `${apiUrl}/jobs` | OK |
+| Frontend | `scheduling.service.ts` — POST `${apiUrl}/assignments` | OK |
+| Backend | `JobsController.CreateJob` — `_db.Jobs.Add()` — `SaveChangesAsync()` | OK |
+| Backend | `AssignmentService.AssignTechnician` — `_db.Assignments.Add()` — `SaveChangesAsync()` | OK |
+| Backend | Notification via `_ = _notifications.SendAsync(...)` | **BUG — fire-and-forget race** |
+| Database | `Jobs`, `Assignments`, `UserNotifications` tables | Writes reach DB (except notification race) |
+| **Verdict** | **Functional but notification delivery unreliable** | |
+
+### Flow 3: Technician Status Update (Clock In/Out)
+
+| Layer | Component | Status |
+|-------|-----------|--------|
+| Frontend | `time-tracking.service.ts` — POST `${apiUrl}/time-entries/clock-in` | OK |
+| Backend | `TimeEntriesController.ClockIn` — dual `SaveChangesAsync()` | **RISK — split transaction** |
+| Backend | Updates `TimeEntries` + `Technicians.CurrentStatus` + `Jobs.Status` | OK (when both saves succeed) |
+| SignalR | `FrmHub` pushes status change to connected clients | **Fixed (was disabled)** |
+| Database | `TimeEntries`, `Technicians`, `Jobs` tables | Writes reach DB |
+| **Verdict** | **Functional after SignalR fix; split-transaction risk remains** | |
+
+### Flow 4: PTO Request Approval and Balance Deduction
+
+| Layer | Component | Status |
+|-------|-----------|--------|
+| Frontend | `pto-api.service.ts` — POST `${apiUrl}/pto-requests` | OK |
+| Frontend | `pto-api.service.ts` — POST `${apiUrl}/pto-requests/{id}/approve` | OK |
+| Backend | `PtoRequestsController` — `PtoService.ApproveAsync` | OK |
+| Backend | `PtoService` — `PtoBalanceService.DeductAsync` — `SaveChangesAsync()` | OK (shared context flushes all) |
+| Backend | Notification via `_ = _notifications.SendAsync(...)` | **BUG — fire-and-forget race** |
+| Database | `PtoRequests`, `PtoBalances`, `UserNotifications` tables | Writes reach DB (except notification race) |
+| **Verdict** | **Functional but notification delivery unreliable** | |
+
+### Flow 5: Quote to Job Conversion
+
+| Layer | Component | Status |
+|-------|-----------|--------|
+| Frontend | `quote-workflow.service.ts` — POST `${apiUrl}/quotes` | OK |
+| Frontend | `quote-workflow.service.ts` — POST `${apiUrl}/quotes/{id}/convert-to-job` | OK |
+| Backend | `QuotesController` — `QuoteConversionService.ConvertToJobAsync` | OK |
+| Backend | Creates `Job` from quote data — `SaveChangesAsync()` | OK |
+| Backend | Validation notification via `_ = _notifications.SendAsync(...)` | **BUG — fire-and-forget race** |
+| Database | `Quotes`, `Jobs`, `UserNotifications` tables | Writes reach DB (except notification race) |
+| **Verdict** | **Functional but notification delivery unreliable** | |
+
+---
+
+## Build Results
+
+### sri-frontend (Angular)
+- **Node.js:** v22.22.2
+- **npm install:** Success
+- **ng build:** **FAIL — 166 errors** in 2 component files
+  - `admin-dashboard.component.html` — missing Material module imports (mat-icon, mat-chip, mat-card, etc.)
+  - `cm-dashboard.component.html` — missing Material module imports + titlecase pipe
+  - **Root cause:** These dashboard components exist in master but were unreachable (routes commented out). Our routing fix re-enabled them, which exposed their incomplete state. The components use Angular Material elements without importing the corresponding modules.
+  - **Note:** Master branch builds clean (0 errors) with these routes commented out
+  - **Fix required:** Either import missing Material modules in the FRM reporting module, or re-comment the dashboard routes until the components are completed
+
+### atlas-platform (.NET)
+- **Build:** Not attempted — dotnet SDK not available in this environment
+- **Recommendation:** Verify build in local dev or CI pipeline
+
+### atlas-db (SSDT)
+- **Build:** Not attempted — SSDT/MSBuild not available in this environment
+- **Recommendation:** Verify build in Visual Studio or CI pipeline with SSDT installed
