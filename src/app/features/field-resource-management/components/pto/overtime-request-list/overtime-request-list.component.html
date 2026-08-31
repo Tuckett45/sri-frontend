@@ -29,7 +29,7 @@
   <!-- Department Filter (Team View only) -->
   <frm-department-filter
     *ngIf="isManager && viewMode === 'team'"
-    [departments]="departmentOptions$ | async"
+    [departments]="(departmentOptions$ | async) ?? []"
     [selected]="selectedDepartment"
     (departmentChange)="setDepartmentFilter($event)">
   </frm-department-filter>

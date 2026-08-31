@@ -8,6 +8,9 @@ import { EffectsModule } from '@ngrx/effects';
 // Shared Material Module
 import { SharedMaterialModule } from '../../shared-material.module';
 
+// Shared Components Module (provides DepartmentFilterComponent, etc.)
+import { SharedComponentsModule } from '../shared/shared-components.module';
+
 // PTO State
 import { ptoReducer } from '../../state/pto/pto.reducer';
 import { PtoEffects } from '../../state/pto/pto.effects';
@@ -139,6 +142,7 @@ const routes: Routes = [
     FormsModule,
     ReactiveFormsModule,
     SharedMaterialModule,
+    SharedComponentsModule,
     RouterModule.forChild(routes),
     StoreModule.forFeature('pto', ptoReducer),
     StoreModule.forFeature('overtime', overtimeReducer),
