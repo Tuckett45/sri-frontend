@@ -8,6 +8,9 @@ import { EffectsModule } from '@ngrx/effects';
 // Shared Material Module
 import { SharedMaterialModule } from '../../shared-material.module';
 
+// Shared Components Module (provides DepartmentFilterComponent, etc.)
+import { SharedComponentsModule } from '../shared/shared-components.module';
+
 // PTO State
 import { ptoReducer } from '../../state/pto/pto.reducer';
 import { PtoEffects } from '../../state/pto/pto.effects';
@@ -17,6 +20,9 @@ import { PtoNotificationEffects } from '../../state/pto/pto-notification.effects
 import { overtimeReducer } from '../../state/overtime/overtime.reducer';
 import { OvertimeEffects } from '../../state/overtime/overtime.effects';
 import { OvertimeNotificationEffects } from '../../state/overtime/overtime-notification.effects';
+
+// Team Requests State
+import { teamRequestsReducer, TeamRequestsEffects } from '../../state/team-requests';
 
 // Guards
 import { ManagerGuard } from '../../guards/manager.guard';
@@ -136,10 +142,12 @@ const routes: Routes = [
     FormsModule,
     ReactiveFormsModule,
     SharedMaterialModule,
+    SharedComponentsModule,
     RouterModule.forChild(routes),
     StoreModule.forFeature('pto', ptoReducer),
     StoreModule.forFeature('overtime', overtimeReducer),
-    EffectsModule.forFeature([PtoEffects, PtoNotificationEffects, OvertimeEffects, OvertimeNotificationEffects])
+    StoreModule.forFeature('teamRequests', teamRequestsReducer),
+    EffectsModule.forFeature([PtoEffects, PtoNotificationEffects, OvertimeEffects, OvertimeNotificationEffects, TeamRequestsEffects])
   ]
 })
 export class PtoModule { }

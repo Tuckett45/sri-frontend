@@ -40,6 +40,11 @@
     "src/app/features/field-resource-management/services/job.service.spec.ts",
     "src/app/features/field-resource-management/components/shared/skill-selector/skill-selector.component.spec.ts",
     "src/app/features/field-resource-management/components/**/*.spec.ts",
-    "src/app/features/field-resource-management/integration-tests/**/*.spec.ts"
+    "src/app/features/field-resource-management/integration-tests/**/*.spec.ts",
+    "src/app/features/field-resource-management/services/onboarding.service.spec.ts",
+    "src/app/features/field-resource-management/state/ui/ui.reducer.spec.ts",
+    "src/app/features/field-resource-management/state/ui/ui.selectors.spec.ts",
+    "src/app/features/field-resource-management/state/reporting/reporting.actions.spec.ts",
+    "src/app/features/field-resource-management/state/reporting/reporting.reducer.spec.ts"
   ]
 }

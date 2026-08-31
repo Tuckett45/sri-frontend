@@ -21,6 +21,8 @@ import { AssignJobDialogComponent } from './assign-job-dialog/assign-job-dialog.
 import { FrmNavMenuComponent } from './frm-nav-menu/frm-nav-menu.component';
 import { BreadcrumbComponent } from './breadcrumb/breadcrumb.component';
 import { StartTimeEntryModalComponent } from './start-time-entry-modal/start-time-entry-modal.component';
+import { TeamViewToggleComponent } from './team-view-toggle/team-view-toggle.component';
+import { DepartmentFilterComponent } from './department-filter/department-filter.component';
 
 // Pipes
 import { HighlightPipe } from '../../pipes/highlight.pipe';
@@ -48,6 +50,8 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
     FrmNavMenuComponent,
     BreadcrumbComponent,
     StartTimeEntryModalComponent,
+    TeamViewToggleComponent,
+    DepartmentFilterComponent,
     HighlightPipe
   ],
   imports: [
@@ -72,6 +76,8 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
     FrmNavMenuComponent,
     BreadcrumbComponent,
     StartTimeEntryModalComponent,
+    TeamViewToggleComponent,
+    DepartmentFilterComponent,
     HighlightPipe,
     FormsModule,
     RouterModule

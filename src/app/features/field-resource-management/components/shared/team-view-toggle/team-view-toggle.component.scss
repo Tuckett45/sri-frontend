@@ -1,0 +1,22 @@
+:host {
+  display: inline-block;
+}
+
+.team-view-toggle {
+  .mat-button-toggle {
+    display: inline-flex;
+    align-items: center;
+
+    .mat-icon {
+      margin-right: 4px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+}

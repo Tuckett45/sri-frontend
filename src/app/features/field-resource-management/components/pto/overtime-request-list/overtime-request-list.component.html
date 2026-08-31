@@ -1,10 +1,17 @@
 <div class="overtime-request-list">
   <div class="list-header">
-    <h2>My Overtime Requests</h2>
+    <h2>{{ viewMode === 'team' ? 'Team Overtime Requests' : 'My Overtime Requests' }}</h2>
     <button class="btn-new-request" (click)="onNewRequest()" aria-label="Submit a new overtime request">
       + New Overtime Request
     </button>
   </div>
+
+  <!-- Team View Toggle (managers only) -->
+  <frm-team-view-toggle
+    *ngIf="isManager"
+    [viewMode]="viewMode"
+    (viewModeChange)="$event === 'team' ? switchToTeamView() : switchToEmployeeView()">
+  </frm-team-view-toggle>
 
   <!-- Status Filter Chips -->
   <div class="filter-chips">
@@ -19,14 +26,34 @@
     </button>
   </div>
 
-  <!-- Loading State -->
-  <div class="loading-state" *ngIf="loading$ | async">
+  <!-- Department Filter (Team View only) -->
+  <frm-department-filter
+    *ngIf="isManager && viewMode === 'team'"
+    [departments]="(departmentOptions$ | async) ?? []"
+    [selected]="selectedDepartment"
+    (departmentChange)="setDepartmentFilter($event)">
+  </frm-department-filter>
+
+  <!-- Team Loading State -->
+  <div class="loading-state" *ngIf="viewMode === 'team' && (teamLoading$ | async)">
+    <div class="spinner"></div>
+    <p>Loading team overtime requests...</p>
+  </div>
+
+  <!-- Team Error Banner -->
+  <div class="error-banner" *ngIf="viewMode === 'team' && (teamError$ | async) as teamError">
+    <p class="error-message">{{ teamError }}</p>
+    <button class="btn-action" (click)="switchToEmployeeView()">Show My Requests</button>
+  </div>
+
+  <!-- Loading State (Employee View) -->
+  <div class="loading-state" *ngIf="viewMode === 'employee' && (loading$ | async)">
     <div class="spinner"></div>
     <p>Loading overtime requests...</p>
   </div>
 
   <!-- Request Table -->
-  <div class="request-table" *ngIf="(loading$ | async) === false">
+  <div class="request-table" *ngIf="(viewMode === 'employee' ? (loading$ | async) : (teamLoading$ | async)) === false && !(viewMode === 'team' && (teamError$ | async))">
     <ng-container *ngIf="filteredRequests$ | async as requests">
       <table *ngIf="requests.length > 0; else emptyState">
         <thead>
@@ -95,8 +122,9 @@
       <ng-template #emptyState>
         <div class="empty-state">
           <div class="empty-icon">&#128337;</div>
-          <p>No overtime requests found for the selected filter.</p>
-          <button class="btn-new-request" (click)="onNewRequest()">Submit Your First Overtime Request</button>
+          <p *ngIf="viewMode === 'team'">No overtime requests found for your team with the current filters.</p>
+          <p *ngIf="viewMode === 'employee'">No overtime requests found for the selected filter.</p>
+          <button *ngIf="viewMode === 'employee'" class="btn-new-request" (click)="onNewRequest()">Submit Your First Overtime Request</button>
         </div>
       </ng-template>
     </ng-container>

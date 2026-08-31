@@ -1,0 +1,26 @@
+.department-filter {
+  display: inline-flex;
+  align-items: center;
+
+  &__field {
+    min-width: 200px;
+    max-width: 280px;
+
+    // Reduce vertical spacing for compact inline usage
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+}
+
+// Mobile responsive adjustments
+@media (max-width: 767px) {
+  .department-filter {
+    width: 100%;
+
+    &__field {
+      width: 100%;
+      max-width: none;
+    }
+  }
+}
