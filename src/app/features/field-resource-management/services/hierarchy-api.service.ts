@@ -106,6 +106,6 @@ export class HierarchyApiService {
   }
 
   removeManager(employeeUserId: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/assignment/${employeeUserId}`);
+    return this.http.delete(`${this.apiUrl}/${employeeUserId}`);
   }
 }
