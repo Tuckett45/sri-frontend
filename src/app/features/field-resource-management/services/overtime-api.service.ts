@@ -9,7 +9,8 @@ import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import {
   OvertimeRequest,
-  CreateOvertimeRequestDto
+  CreateOvertimeRequestDto,
+  OvertimeRequestStatus
 } from '../models/overtime.models';
 import { environment } from '../../../../environments/environments';
 import { AuthService } from '../../../services/auth.service';
@@ -33,6 +34,55 @@ export class OvertimeApiService {
   constructor(private http: HttpClient, @Inject(forwardRef(() => AuthService)) private authService: AuthService) {}
 
   /**
+   * Normalizes a raw overtime request from the backend into the shape the
+   * frontend expects.
+   *
+   * The Atlas API returns the backend enum values directly ('Pending',
+   * 'Approved', 'Rejected', 'Cancelled') and only the flat estimatedHours/
+   * estimatedMinutes fields. The frontend, however, keys off
+   * OvertimeRequestStatus.Pending_Manager_Approval and a nested
+   * estimatedDuration object. Map both here so the store, selectors,
+   * badges, and duration display all work off a single consistent shape.
+   */
+  private normalizeRequest(raw: any): OvertimeRequest {
+    if (!raw) {
+      return raw;
+    }
+
+    const hours = raw.estimatedHours ?? raw.estimatedDuration?.hours ?? 0;
+    const minutes = raw.estimatedMinutes ?? raw.estimatedDuration?.minutes ?? 0;
+
+    return {
+      ...raw,
+      approvalStatus: this.mapApprovalStatus(raw.approvalStatus),
+      estimatedHours: hours,
+      estimatedMinutes: minutes,
+      estimatedDuration: { hours, minutes }
+    } as OvertimeRequest;
+  }
+
+  /**
+   * Maps a backend approval status string to the frontend OvertimeRequestStatus enum.
+   * The backend's 'Pending' corresponds to the frontend's Pending_Manager_Approval.
+   */
+  private mapApprovalStatus(status: string | null | undefined): OvertimeRequestStatus {
+    switch (status) {
+      case 'Pending':
+      case 'Pending_Manager_Approval':
+        return OvertimeRequestStatus.Pending_Manager_Approval;
+      case 'Approved':
+        return OvertimeRequestStatus.Approved;
+      case 'Rejected':
+        return OvertimeRequestStatus.Rejected;
+      case 'Cancelled':
+        return OvertimeRequestStatus.Cancelled;
+      default:
+        // Unknown/absent status defaults to pending so it still surfaces in queues.
+        return OvertimeRequestStatus.Pending_Manager_Approval;
+    }
+  }
+
+  /**
    * Get all overtime requests for the current employee
    */
   getMyRequests(): Observable<OvertimeRequest[]> {
@@ -46,7 +96,7 @@ export class OvertimeApiService {
 
     const params = new HttpParams().set('employeeId', employeeId);
     return this.http.get<PaginatedResponse<OvertimeRequest>>(this.apiUrl, { params }).pipe(
-      map(response => response.items),
+      map(response => (response.items ?? []).map(item => this.normalizeRequest(item))),
       catchError(this.handleError)
     );
   }
@@ -56,6 +106,7 @@ export class OvertimeApiService {
    */
   getRequestById(id: string): Observable<OvertimeRequest> {
     return this.http.get<OvertimeRequest>(`${this.apiUrl}/${id}`).pipe(
+      map(request => this.normalizeRequest(request)),
       catchError(this.handleError)
     );
   }
@@ -66,6 +117,7 @@ export class OvertimeApiService {
   createRequest(dto: CreateOvertimeRequestDto): Observable<OvertimeRequest> {
     console.log('[Overtime API] POST payload:', JSON.stringify(dto, null, 2));
     return this.http.post<OvertimeRequest>(this.apiUrl, dto).pipe(
+      map(request => this.normalizeRequest(request)),
       catchError(this.handleError)
     );
   }
@@ -75,6 +127,7 @@ export class OvertimeApiService {
    */
   cancelRequest(id: string): Observable<OvertimeRequest> {
     return this.http.post<OvertimeRequest>(`${this.apiUrl}/${id}/cancel`, {}).pipe(
+      map(request => this.normalizeRequest(request)),
       catchError(this.handleError)
     );
   }
@@ -93,7 +146,7 @@ export class OvertimeApiService {
    */
   getManagerQueue(): Observable<OvertimeRequest[]> {
     return this.http.get<PaginatedResponse<OvertimeRequest>>(`${this.apiUrl}/manager-queue`).pipe(
-      map(response => response.items),
+      map(response => (response.items ?? []).map(item => this.normalizeRequest(item))),
       catchError(this.handleError)
     );
   }
@@ -103,6 +156,7 @@ export class OvertimeApiService {
    */
   approve(id: string, comments?: string): Observable<OvertimeRequest> {
     return this.http.post<OvertimeRequest>(`${this.apiUrl}/${id}/approve`, { comments: comments || null }).pipe(
+      map(request => this.normalizeRequest(request)),
       catchError(this.handleError)
     );
   }
@@ -112,6 +166,7 @@ export class OvertimeApiService {
    */
   reject(id: string, reason: string): Observable<OvertimeRequest> {
     return this.http.post<OvertimeRequest>(`${this.apiUrl}/${id}/reject`, { reason }).pipe(
+      map(request => this.normalizeRequest(request)),
       catchError(this.handleError)
     );
   }
@@ -134,7 +189,7 @@ export class OvertimeApiService {
     return this.http.get<PaginatedResponse<OvertimeRequest>>(
       `${this.apiUrl}/team`, { params }
     ).pipe(
-      map(response => response.items),
+      map(response => (response.items ?? []).map(item => this.normalizeRequest(item))),
       catchError(this.handleError)
     );
   }
@@ -149,6 +204,7 @@ export class OvertimeApiService {
       url += `&market=${market}`;
     }
     return this.http.get<OvertimeRequest[]>(url).pipe(
+      map(items => (items ?? []).map(item => this.normalizeRequest(item))),
       catchError(this.handleError)
     );
   }
