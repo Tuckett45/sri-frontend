@@ -39,6 +39,12 @@
     }
   }
 
+  // Team View Toggle — add breathing room before the filter chips
+  frm-team-view-toggle {
+    display: inline-block;
+    margin-bottom: 16px;
+  }
+
   // Filter Chips
   .filter-chips {
     display: flex;

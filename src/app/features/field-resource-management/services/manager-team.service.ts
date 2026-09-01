@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 import { map, tap, catchError, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../../environments/environments';
+import { HierarchyApiService, DirectReport as HierarchyDirectReport } from './hierarchy-api.service';
 
 /**
  * Lightweight technician info returned by the direct-reports endpoint.
@@ -106,7 +107,10 @@ export class ManagerTeamService {
   private readonly _myTeamEnabled = new BehaviorSubject<boolean>(this.loadToggleState());
   public readonly myTeamEnabled$ = this._myTeamEnabled.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private hierarchyApi: HierarchyApiService
+  ) {}
 
   /**
    * Get whether the "My Team" filter is currently active.
@@ -131,7 +135,64 @@ export class ManagerTeamService {
     if (includeInactive) params = params.set('includeInactive', 'true');
     return this.http.get<DirectReportsResponse>(
       `${this.baseUrl}/${managerId}/direct-reports`, { params }
+    ).pipe(
+      catchError((err: HttpErrorResponse) => {
+        // The /managers/{id}/direct-reports endpoint isn't available on all
+        // environments. Fall back to the hierarchy service, which resolves
+        // reports via /hierarchy/reports/{userId}.
+        if (err.status === 404) {
+          console.warn(
+            '[ManagerTeam] /managers/%s/direct-reports returned 404, falling back to /hierarchy/reports',
+            managerId
+          );
+          return this.getDirectReportsFromHierarchy(managerId);
+        }
+        throw err;
+      })
     );
+  }
+
+  /**
+   * Fallback resolver: builds a DirectReportsResponse from the hierarchy
+   * service when the dedicated managers endpoint is unavailable.
+   */
+  private getDirectReportsFromHierarchy(managerId: string): Observable<DirectReportsResponse> {
+    return this.hierarchyApi.getReportsForUser(managerId).pipe(
+      map(reports => this.mapHierarchyReports(managerId, reports)),
+      catchError((err: HttpErrorResponse) => {
+        // Propagate 404 so callers can distinguish "not a manager / no hierarchy"
+        // from a genuine empty team and show the appropriate message.
+        if (err.status === 404) {
+          throw err;
+        }
+        console.error('[ManagerTeam] Hierarchy fallback failed:', err);
+        return of<DirectReportsResponse>({ managerId, directReports: [], totalCount: 0 });
+      })
+    );
+  }
+
+  /**
+   * Maps hierarchy DirectReport entries into the DirectReportsResponse shape.
+   */
+  private mapHierarchyReports(
+    managerId: string,
+    reports: HierarchyDirectReport[]
+  ): DirectReportsResponse {
+    const directReports: DirectReport[] = reports.map(r => {
+      const [firstName, ...rest] = (r.fullName ?? '').trim().split(' ');
+      return {
+        id: r.userId,
+        userId: r.userId,
+        firstName: firstName || '',
+        lastName: rest.join(' '),
+        email: r.email ?? '',
+        role: r.role ?? undefined,
+        region: r.market ?? undefined,
+        isAvailable: true,
+        isActive: true
+      };
+    });
+    return { managerId, directReports, totalCount: directReports.length };
   }
 
   /**

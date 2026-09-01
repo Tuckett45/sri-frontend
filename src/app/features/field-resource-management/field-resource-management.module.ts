@@ -56,7 +56,7 @@ import { SharedComponentsModule } from './components/shared/shared-components.mo
 import { FrmLayoutComponent } from './components/layout/frm-layout/frm-layout.component';
 import { NavigationMenuComponent } from './components/layout/navigation-menu/navigation-menu.component';
 import { OfflineIndicatorComponent } from './components/layout/offline-indicator/offline-indicator.component';
-import { BreadcrumbComponent } from './components/layout/breadcrumb/breadcrumb.component';
+import { FrmBreadcrumbComponent } from './components/layout/breadcrumb/breadcrumb.component';
 
 // Home Dashboard Component (eagerly loaded as landing page)
 import { HomeDashboardComponent } from './components/home/home-dashboard.component';
@@ -161,7 +161,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     FrmLayoutComponent,
     NavigationMenuComponent,
     OfflineIndicatorComponent,
-    BreadcrumbComponent,
+    FrmBreadcrumbComponent,
     
     // Home Dashboard (landing page)
     HomeDashboardComponent,

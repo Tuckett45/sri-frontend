@@ -10,6 +10,16 @@
     ::ng-deep .mat-mdc-form-field-subscript-wrapper {
       display: none;
     }
+
+    // Improve value contrast (default theme renders this too light)
+    ::ng-deep .mat-mdc-select-value,
+    ::ng-deep .mat-mdc-select-value-text {
+      color: #111827; // gray-900
+    }
+
+    ::ng-deep .mat-mdc-select-arrow {
+      color: #4b5563; // gray-600
+    }
   }
 }
 

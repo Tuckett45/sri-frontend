@@ -9,6 +9,7 @@ import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
 import { map, catchError, switchMap, timeout } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
 import * as TeamRequestsActions from './team-requests.actions';
 import { ManagerTeamService } from '../../services/manager-team.service';
 import { PtoApiService } from '../../services/pto-api.service';
@@ -19,6 +20,21 @@ import { TimeoutError } from 'rxjs';
 export class TeamRequestsEffects {
   /** Timeout duration for hierarchy API calls (10 seconds per requirement 6.1) */
   private readonly HIERARCHY_TIMEOUT_MS = 10_000;
+
+  /**
+   * Maps a hierarchy-resolution error to a user-friendly message.
+   * A 404 means the current user isn't set up as a manager (no team hierarchy),
+   * so we show a clear explanation rather than a raw HTTP error.
+   */
+  private resolveHierarchyErrorMessage(error: unknown): string {
+    if (error instanceof TimeoutError) {
+      return 'Team hierarchy request timed out. Please try again.';
+    }
+    if (error instanceof HttpErrorResponse && error.status === 404) {
+      return "You don't have any direct reports. Team view is only available to managers.";
+    }
+    return (error as { message?: string })?.message || 'Failed to load team hierarchy';
+  }
 
   /**
    * Effect: Load Team PTO Requests
@@ -54,12 +70,11 @@ export class TeamRequestsEffects {
               )
             );
           }),
-          catchError(error => {
-            const errorMessage = error instanceof TimeoutError
-              ? 'Team hierarchy request timed out. Please try again.'
-              : error.message || 'Failed to load team hierarchy';
-            return of(TeamRequestsActions.loadTeamPtoRequestsFailure({ error: errorMessage }));
-          })
+          catchError(error =>
+            of(TeamRequestsActions.loadTeamPtoRequestsFailure({
+              error: this.resolveHierarchyErrorMessage(error)
+            }))
+          )
         )
       )
     )
@@ -99,12 +114,11 @@ export class TeamRequestsEffects {
               )
             );
           }),
-          catchError(error => {
-            const errorMessage = error instanceof TimeoutError
-              ? 'Team hierarchy request timed out. Please try again.'
-              : error.message || 'Failed to load team hierarchy';
-            return of(TeamRequestsActions.loadTeamOvertimeRequestsFailure({ error: errorMessage }));
-          })
+          catchError(error =>
+            of(TeamRequestsActions.loadTeamOvertimeRequestsFailure({
+              error: this.resolveHierarchyErrorMessage(error)
+            }))
+          )
         )
       )
     )

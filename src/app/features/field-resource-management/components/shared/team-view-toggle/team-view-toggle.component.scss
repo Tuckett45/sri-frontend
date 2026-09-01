@@ -15,6 +15,20 @@
     }
   }
 
+  // Unselected toggle text renders too light in the default theme — darken it
+  // so "My Requests" / "Team Requests" are readable when not selected.
+  ::ng-deep .mat-button-toggle-appearance-standard .mat-button-toggle-label-content {
+    color: #374151; // gray-700
+  }
+
+  // Selected toggle has a dark background — use white text/icon for contrast
+  ::ng-deep .mat-button-toggle-checked {
+    .mat-button-toggle-label-content,
+    .mat-icon {
+      color: #ffffff;
+    }
+  }
+
   .toggle-label {
     font-size: 14px;
     font-weight: 500;

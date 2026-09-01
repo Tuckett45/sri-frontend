@@ -3,11 +3,11 @@ import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Subject } from 'rxjs';
-import { BreadcrumbComponent, BreadcrumbItem } from './breadcrumb.component';
+import { FrmBreadcrumbComponent, BreadcrumbItem } from './breadcrumb.component';
 
-describe('BreadcrumbComponent', () => {
-  let component: BreadcrumbComponent;
-  let fixture: ComponentFixture<BreadcrumbComponent>;
+describe('FrmBreadcrumbComponent', () => {
+  let component: FrmBreadcrumbComponent;
+  let fixture: ComponentFixture<FrmBreadcrumbComponent>;
   let router: Router;
   let routerEventsSubject: Subject<any>;
 
@@ -15,14 +15,14 @@ describe('BreadcrumbComponent', () => {
     routerEventsSubject = new Subject();
 
     await TestBed.configureTestingModule({
-      declarations: [BreadcrumbComponent],
+      declarations: [FrmBreadcrumbComponent],
       imports: [
         MatIconModule,
         RouterTestingModule
       ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(BreadcrumbComponent);
+    fixture = TestBed.createComponent(FrmBreadcrumbComponent);
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
 

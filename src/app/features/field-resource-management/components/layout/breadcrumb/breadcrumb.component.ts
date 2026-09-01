@@ -31,7 +31,7 @@ export interface BreadcrumbItem {
   styleUrls: ['./breadcrumb.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class BreadcrumbComponent implements OnInit, OnDestroy {
+export class FrmBreadcrumbComponent implements OnInit, OnDestroy {
   breadcrumbs: BreadcrumbItem[] = [];
   private destroy$ = new Subject<void>();
 
