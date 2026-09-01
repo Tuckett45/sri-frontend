@@ -4,6 +4,8 @@ import { Observable, from, switchMap } from 'rxjs';
 import { AtlasAuthService } from '../services/atlas-auth.service';
 import { AtlasConfigService } from '../services/atlas-config.service';
 import { ApiHeadersService } from '../../../services/api-headers.service';
+import { AuthService } from '../../../services/auth.service';
+import { environment } from '../../../../environments/environments';
 
 /**
  * AtlasAuthInterceptor
@@ -24,6 +26,7 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
   private readonly authService = inject(AtlasAuthService);
   private readonly configService = inject(AtlasConfigService);
   private readonly apiHeadersService = inject(ApiHeadersService);
+  private readonly appAuthService = inject(AuthService);
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Only intercept ATLAS API requests
@@ -32,15 +35,17 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
     }
 
     // Get access token and add ATLAS-specific headers
-    return from(this.authService.getAccessToken()).pipe(
+    return from(this.resolveAccessToken()).pipe(
       switchMap(accessToken => {
         let modifiedReq = req;
 
-        // Add authentication token if available (Requirement 2.5)
-        if (accessToken) {
+        // Add authentication token if available (Requirement 2.5).
+        // Only set it when the request doesn't already carry an Authorization
+        // header from an earlier interceptor, so we never clobber an existing one.
+        if (accessToken && !modifiedReq.headers.has('Authorization')) {
           const authState = this.authService.currentAuthState;
           const tokenType = authState.token?.tokenType || 'Bearer';
-          
+
           modifiedReq = modifiedReq.clone({
             setHeaders: {
               'Authorization': `${tokenType} ${accessToken}`
@@ -91,6 +96,34 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
   }
 
   /**
+   * Resolve the access token for an ATLAS request.
+   *
+   * Prefers the dedicated ATLAS token (AtlasAuthService) when present, but
+   * falls back to the main application login token (AuthService). In this app,
+   * users authenticate through the primary AuthService (/auth/login) and the
+   * ATLAS platform API accepts that token, while AtlasAuthService's separate
+   * token store is typically empty — which previously left ATLAS feature calls
+   * (pto-requests, overtime-requests, hierarchy, managers) unauthenticated and
+   * caused 401s / empty team, timeline, and approval views.
+   */
+  private async resolveAccessToken(): Promise<string | null> {
+    try {
+      const atlasToken = await this.authService.getAccessToken();
+      if (atlasToken) {
+        return atlasToken;
+      }
+    } catch {
+      // Ignore and fall back to the app token below.
+    }
+
+    try {
+      return await this.appAuthService.getAccessToken();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Check if the request URL is for an ATLAS endpoint
    * 
    * @param url - Request URL
@@ -98,7 +131,7 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
    */
   private isAtlasRequest(url: string): boolean {
     const atlasBaseUrl = this.configService.getBaseUrl();
-    
+
     // Check if URL contains ATLAS base path
     if (url.includes('/atlas')) {
       return true;
@@ -109,12 +142,27 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
       return true;
     }
 
+    // Check if the URL targets the configured ATLAS platform API base URL.
+    // This is the authoritative check: every ATLAS API call (pto-requests,
+    // overtime-requests, hierarchy, managers, etc.) hits environment.atlasApiUrl,
+    // and all of them require the Bearer token / userId claim server-side.
+    // Without this, feature endpoints like /v1/pto-requests and
+    // /v1/overtime-requests went out unauthenticated and the API returned 401.
+    if (environment.atlasApiUrl && url.startsWith(environment.atlasApiUrl)) {
+      return true;
+    }
+
     // Check if URL matches any ATLAS endpoint patterns
     const atlasPatterns = [
       '/v1/deployments',
       '/v1/ai-analysis',
       '/v1/approvals',
       '/v1/exceptions',
+      '/v1/pto-requests',
+      '/v1/overtime-requests',
+      '/v1/hierarchy',
+      '/v1/managers',
+      '/v1/reports',
       '/api/agents',
       '/v1/query-builder',
       '/hubs/atlas'
