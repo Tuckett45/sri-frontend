@@ -1280,7 +1280,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
 
   extractState(address: string | undefined): string {
     if (!address) return '';
-    const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5})?[.\s]*$/);
+    const match = address.match(/,\s*([A-Z]{2})[\s.]*(\d{5}(?:-\d{4})?)?[.\s]*$/);
     return match ? match[1] : '';
   }
 

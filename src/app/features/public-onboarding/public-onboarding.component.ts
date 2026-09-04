@@ -139,7 +139,7 @@ export class PublicOnboardingComponent implements OnInit {
       techEmail: formValue.techEmail,
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
-      homeAddress: formValue.homeAddress,
+      homeAddress: this.composeAddress(formValue),
       homeState: formValue.homeState,
       referredBy: formValue.referredBy || undefined,
       facebookProfileUrl: formValue.facebookProfileUrl?.trim() || undefined,
@@ -335,11 +335,32 @@ export class PublicOnboardingComponent implements OnInit {
 
   selectAddress(suggestion: any): void {
     this.candidateForm.patchValue({
-      homeAddress: suggestion.formattedAddress,
-      homeState: suggestion.state
+      streetAddress: suggestion.streetAddress,
+      homeCity: suggestion.city,
+      homeState: suggestion.state,
+      homeZip: suggestion.zip
     });
     this.filteredAddresses = [];
     this.showAddressSuggestions = false;
+  }
+
+  /**
+   * Combine the split address parts into a single string for the backend
+   * `homeAddress` field, e.g. "123 Main St, Austin, TX 78701".
+   */
+  private composeAddress(formValue: {
+    streetAddress?: string;
+    homeCity?: string;
+    homeState?: string;
+    homeZip?: string;
+  }): string {
+    const street = (formValue.streetAddress || '').trim();
+    const city = (formValue.homeCity || '').trim();
+    const state = (formValue.homeState || '').trim();
+    const zip = (formValue.homeZip || '').trim();
+
+    const stateZip = [state, zip].filter(Boolean).join(' ');
+    return [street, city, stateZip].filter(Boolean).join(', ');
   }
 
   hideAddressSuggestions(): void {
@@ -360,8 +381,10 @@ export class PublicOnboardingComponent implements OnInit {
       techEmail: ['', [Validators.required, Validators.email]],
       techPhone: ['', [Validators.required, PublicOnboardingComponent.phoneValidator]],
       vestSize: ['', Validators.required],
-      homeAddress: ['', Validators.required],
+      streetAddress: ['', Validators.required],
+      homeCity: ['', Validators.required],
       homeState: ['', Validators.required],
+      homeZip: ['', Validators.required],
       referredBy: [''],
       facebookProfileUrl: ['', [Validators.required, PublicOnboardingComponent.facebookUrlValidator]],
       startDate: ['', Validators.required],
