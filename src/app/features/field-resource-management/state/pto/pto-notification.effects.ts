@@ -144,6 +144,46 @@ export class PtoNotificationEffects {
   );
 
   /**
+   * Effect: notifyOnApprovalFailure$
+   *
+   * On failed manager/backoffice approval (e.g. 403 permission denied),
+   * show an error toast with the server-provided message.
+   */
+  notifyOnApprovalFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PtoActions.managerApproveFailure, PtoActions.backofficeApproveFailure),
+      tap(({ error }) => {
+        this.toastr.error(
+          error || 'Failed to approve the PTO request. Please try again.',
+          'Approval Failed'
+        );
+        console.error(`[PTO Notification] Approve request failed: ${error}`);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
+   * Effect: notifyOnRejectionFailure$
+   *
+   * On failed manager/backoffice rejection (e.g. 403 permission denied),
+   * show an error toast with the server-provided message.
+   */
+  notifyOnRejectionFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PtoActions.managerRejectFailure, PtoActions.backofficeRejectFailure),
+      tap(({ error }) => {
+        this.toastr.error(
+          error || 'Failed to reject the PTO request. Please try again.',
+          'Rejection Failed'
+        );
+        console.error(`[PTO Notification] Reject request failed: ${error}`);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
    * Effect: notifyOnBackofficeApproval$
    *
    * On successful backoffice approval (final approval), employee and manager

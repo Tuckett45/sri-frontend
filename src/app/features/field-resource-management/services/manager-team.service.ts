@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 import { map, tap, catchError, shareReplay } from 'rxjs/operators';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 import { HierarchyApiService, DirectReport as HierarchyDirectReport } from './hierarchy-api.service';
 
 /**
@@ -97,7 +97,7 @@ export interface TeamStatusResponse {
   providedIn: 'root'
 })
 export class ManagerTeamService {
-  private readonly baseUrl = `${environment.atlasApiUrl}/managers`;
+  private readonly baseUrl = `${local_environment.atlasApiUrl}/managers`;
 
   /** Cached team technician IDs (invalidated on toggle or page refresh) */
   private cachedTeamIds: string[] | null = null;

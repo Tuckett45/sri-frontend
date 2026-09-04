@@ -12,7 +12,7 @@ import {
   CreateOvertimeRequestDto,
   OvertimeRequestStatus
 } from '../models/overtime.models';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 import { AuthService } from '../../../services/auth.service';
 
 interface PaginatedResponse<T> {
@@ -29,7 +29,7 @@ interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class OvertimeApiService {
-  private readonly apiUrl = `${environment.atlasApiUrl}/overtime-requests`;
+  private readonly apiUrl = `${local_environment.atlasApiUrl}/overtime-requests`;
 
   constructor(private http: HttpClient, @Inject(forwardRef(() => AuthService)) private authService: AuthService) {}
 
@@ -181,7 +181,9 @@ export class OvertimeApiService {
       return of([]);
     }
 
-    let params = new HttpParams().set('employeeIds', employeeIds.join(','));
+    // De-duplicate IDs so the joined query string never contains the same ID twice
+    const uniqueEmployeeIds = [...new Set(employeeIds)];
+    let params = new HttpParams().set('employeeIds', uniqueEmployeeIds.join(','));
     if (department && department !== 'All Departments') {
       params = params.set('department', department);
     }

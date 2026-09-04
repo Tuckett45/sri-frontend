@@ -139,6 +139,46 @@ export class OvertimeNotificationEffects {
   );
 
   /**
+   * Effect: notifyOnApprovalFailure$
+   *
+   * On failed approval (e.g. 403 permission denied), show an error toast
+   * with the server-provided message.
+   */
+  notifyOnApprovalFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OvertimeActions.approveOvertimeRequestFailure),
+      tap(({ error }) => {
+        this.toastr.error(
+          error || 'Failed to approve the overtime request. Please try again.',
+          'Approval Failed'
+        );
+        console.error(`[Overtime Notification] Approve request failed: ${error}`);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
+   * Effect: notifyOnRejectionFailure$
+   *
+   * On failed rejection (e.g. 403 permission denied), show an error toast
+   * with the server-provided message.
+   */
+  notifyOnRejectionFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OvertimeActions.rejectOvertimeRequestFailure),
+      tap(({ error }) => {
+        this.toastr.error(
+          error || 'Failed to reject the overtime request. Please try again.',
+          'Rejection Failed'
+        );
+        console.error(`[Overtime Notification] Reject request failed: ${error}`);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  /**
    * Effect: notifyOnCancellation$
    *
    * On successful cancellation, log confirmation.

@@ -58,8 +58,10 @@ export class TeamRequestsEffects {
               return of(TeamRequestsActions.loadTeamPtoRequestsSuccess({ requests: [] }));
             }
             const employeeIds = [
-              managerId,
-              ...response.directReports.map(dr => dr.id)
+              ...new Set([
+                managerId,
+                ...response.directReports.map(dr => dr.id)
+              ])
             ];
             return this.ptoApiService.getTeamRequests(employeeIds).pipe(
               map(requests => TeamRequestsActions.loadTeamPtoRequestsSuccess({ requests })),
@@ -102,8 +104,10 @@ export class TeamRequestsEffects {
               return of(TeamRequestsActions.loadTeamOvertimeRequestsSuccess({ requests: [] }));
             }
             const employeeIds = [
-              managerId,
-              ...response.directReports.map(dr => dr.id)
+              ...new Set([
+                managerId,
+                ...response.directReports.map(dr => dr.id)
+              ])
             ];
             return this.overtimeApiService.getTeamRequests(employeeIds).pipe(
               map(requests => TeamRequestsActions.loadTeamOvertimeRequestsSuccess({ requests })),

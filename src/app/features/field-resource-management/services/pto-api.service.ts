@@ -8,7 +8,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { PtoRequest, CreatePtoRequestDto, LeaveType, TeamAvailabilityEntry, RequestStatus } from '../models/pto.models';
-import { environment } from '../../../../environments/environments';
+import { environment, local_environment } from '../../../../environments/environments';
 import { AuthService } from '../../../services/auth.service';
 
 interface PaginatedResponse<T> {
@@ -25,7 +25,7 @@ interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class PtoApiService {
-  private readonly apiUrl = `${environment.atlasApiUrl}/pto-requests`;
+  private readonly apiUrl = `${local_environment.atlasApiUrl}/pto-requests`;
 
   constructor(private http: HttpClient, @Inject(forwardRef(() => AuthService)) private authService: AuthService) {}
 
@@ -64,7 +64,7 @@ export class PtoApiService {
    * Maps the report shape into PtoRequest format.
    */
   private getMyRequestsFromReports(): Observable<PtoRequest[]> {
-    const reportsUrl = `${environment.atlasApiUrl}/reports/time-off`;
+    const reportsUrl = `${local_environment.atlasApiUrl}/reports/time-off`;
     return this.http.get<any>(reportsUrl, {
       params: { pageSize: '100', sortBy: 'submissionDate', sortDir: 'desc', type: 'pto' }
     }).pipe(
@@ -123,7 +123,9 @@ export class PtoApiService {
       return of([]);
     }
 
-    let params = new HttpParams().set('employeeIds', employeeIds.join(','));
+    // De-duplicate IDs so the joined query string never contains the same ID twice
+    const uniqueEmployeeIds = [...new Set(employeeIds)];
+    let params = new HttpParams().set('employeeIds', uniqueEmployeeIds.join(','));
     if (department && department !== 'All Departments') {
       params = params.set('department', department);
     }

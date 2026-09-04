@@ -80,6 +80,9 @@ export class OrgStructureComponent implements OnInit {
             // Fallback: use users from the tree itself
             this.allUsers = this.flattenTree(tree);
           }
+          // Ensure the current Admin user is always available as a manager
+          // candidate, even if the users endpoint omits admin-role accounts.
+          this.ensureCurrentAdminIncluded();
         });
       },
       error: () => {
@@ -293,6 +296,31 @@ export class OrgStructureComponent implements OnInit {
       return null;
     };
     return search(this.tree, null);
+  }
+
+  /**
+   * Guarantees the currently logged-in Admin appears in the manager-candidate
+   * list. The backend users endpoint sometimes omits admin-role accounts, which
+   * prevents Admins from being assigned as managers in the org structure.
+   */
+  private ensureCurrentAdminIncluded(): void {
+    const user = this.authService.getUser();
+    if (!user?.id || user.role !== 'Admin') {
+      return;
+    }
+    const alreadyPresent = this.allUsers.some(u => u.userId === user.id);
+    if (alreadyPresent) {
+      return;
+    }
+    this.allUsers = [
+      ...this.allUsers,
+      {
+        userId: user.id,
+        fullName: user.name || 'Admin',
+        role: user.role,
+        market: user.market ?? null
+      }
+    ].sort((a, b) => a.fullName.localeCompare(b.fullName));
   }
 
   private flattenTree(nodes: OrgTreeNode[]): { userId: string; fullName: string; role: string; market: string | null }[] {
