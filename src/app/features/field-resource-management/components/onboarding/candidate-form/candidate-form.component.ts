@@ -154,15 +154,15 @@ const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string }[] = [
           </span>
         </div>
 
-        <!-- Home Address -->
+        <!-- Street Address -->
         <div class="form-field address-field">
-          <label for="homeAddress">Home Address *</label>
-          <input id="homeAddress"
-                 formControlName="homeAddress"
+          <label for="streetAddress">Street Address *</label>
+          <input id="streetAddress"
+                 formControlName="streetAddress"
                  placeholder="Start typing an address..."
                  (input)="onAddressInput($event)"
                  [matAutocomplete]="addressAuto"
-                 (blur)="markTouched('homeAddress')" />
+                 (blur)="markTouched('streetAddress')" />
           <mat-spinner *ngIf="isAddressLoading" diameter="18" class="address-spinner"></mat-spinner>
           <mat-autocomplete #addressAuto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)">
             <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
@@ -170,18 +170,48 @@ const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string }[] = [
             </mat-option>
           </mat-autocomplete>
           <span class="field-error"
-                *ngIf="showError('homeAddress')">
-            Home Address is required.
+                *ngIf="showError('streetAddress')">
+            Street Address is required.
           </span>
         </div>
 
-        <!-- Home State -->
+        <!-- City -->
         <div class="form-field">
-          <label for="homeState">Home State</label>
+          <label for="homeCity">City *</label>
+          <input id="homeCity"
+                 formControlName="homeCity"
+                 placeholder="Enter city"
+                 (blur)="markTouched('homeCity')" />
+          <span class="field-error"
+                *ngIf="showError('homeCity')">
+            City is required.
+          </span>
+        </div>
+
+        <!-- State -->
+        <div class="form-field">
+          <label for="homeState">State *</label>
           <input id="homeState"
                  formControlName="homeState"
                  placeholder="e.g. TX, CA, FL"
                  (blur)="markTouched('homeState')" />
+          <span class="field-error"
+                *ngIf="showError('homeState')">
+            State is required.
+          </span>
+        </div>
+
+        <!-- Zipcode -->
+        <div class="form-field">
+          <label for="homeZip">Zipcode *</label>
+          <input id="homeZip"
+                 formControlName="homeZip"
+                 placeholder="e.g. 78701"
+                 (blur)="markTouched('homeZip')" />
+          <span class="field-error"
+                *ngIf="showError('homeZip')">
+            Zipcode is required.
+          </span>
         </div>
 
         <!-- Referred By -->
@@ -591,8 +621,10 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techEmail: ['', [Validators.required, Validators.email]],
       techPhone: ['', [Validators.required, CandidateFormComponent.phoneValidator]],
       vestSize: ['', Validators.required],
-      homeAddress: ['', Validators.required],
-      homeState: [''],
+      streetAddress: ['', Validators.required],
+      homeCity: ['', Validators.required],
+      homeState: ['', Validators.required],
+      homeZip: ['', Validators.required],
       workSite: ['', Validators.required],
       referredBy: [''],
       facebookProfileUrl: [''],
@@ -642,14 +674,17 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
   }
 
   private populateForm(candidate: Candidate): void {
+    const parsed = CandidateFormComponent.parseAddress(candidate.homeAddress, candidate.homeState);
     this.candidateForm.patchValue({
       techName: candidate.techName,
       middleName: candidate.middleName || '',
       techEmail: candidate.techEmail,
       techPhone: candidate.techPhone,
       vestSize: candidate.vestSize,
-      homeAddress: candidate.homeAddress || '',
-      homeState: candidate.homeState || '',
+      streetAddress: parsed.streetAddress,
+      homeCity: parsed.city,
+      homeState: parsed.state,
+      homeZip: parsed.zip,
       workSite: candidate.workSite,
       referredBy: candidate.referredBy || '',
       facebookProfileUrl: candidate.facebookProfileUrl || '',
@@ -687,7 +722,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techEmail: formValue.techEmail,
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
-      homeAddress: formValue.homeAddress,
+      homeAddress: CandidateFormComponent.composeAddress(formValue),
       homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
@@ -726,7 +761,7 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
       techEmail: formValue.techEmail,
       techPhone: formValue.techPhone,
       vestSize: formValue.vestSize,
-      homeAddress: formValue.homeAddress,
+      homeAddress: CandidateFormComponent.composeAddress(formValue),
       homeState: formValue.homeState || undefined,
       workSite: formValue.workSite,
       referredBy: formValue.referredBy || undefined,
@@ -804,9 +839,84 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
 
   selectAddress(suggestion: any): void {
     this.candidateForm.patchValue({
-      homeAddress: suggestion.formattedAddress,
-      homeState: suggestion.state
+      streetAddress: suggestion.streetAddress,
+      homeCity: suggestion.city,
+      homeState: suggestion.state,
+      homeZip: suggestion.zip
     });
     this.filteredAddresses = [];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Address compose / parse helpers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Combine the split address parts into a single string for the backend
+   * `homeAddress` field, e.g. "123 Main St, Austin, TX 78701".
+   */
+  static composeAddress(formValue: {
+    streetAddress?: string;
+    homeCity?: string;
+    homeState?: string;
+    homeZip?: string;
+  }): string {
+    const street = (formValue.streetAddress || '').trim();
+    const city = (formValue.homeCity || '').trim();
+    const state = (formValue.homeState || '').trim();
+    const zip = (formValue.homeZip || '').trim();
+
+    const stateZip = [state, zip].filter(Boolean).join(' ');
+    return [street, city, stateZip].filter(Boolean).join(', ');
+  }
+
+  /**
+   * Parse a stored combined address ("Street, City, State Zip") back into its
+   * parts. Falls back gracefully for addresses that don't match the format.
+   */
+  static parseAddress(
+    homeAddress?: string,
+    homeState?: string
+  ): { streetAddress: string; city: string; state: string; zip: string } {
+    const result = { streetAddress: '', city: '', state: homeState || '', zip: '' };
+    const raw = (homeAddress || '').trim();
+    if (!raw) {
+      return result;
+    }
+
+    const parts = raw.split(',').map((p) => p.trim()).filter(Boolean);
+
+    // Last segment may contain "STATE ZIP" (e.g. "TX 78701") or just one of them.
+    if (parts.length >= 3) {
+      result.streetAddress = parts[0];
+      result.city = parts[1];
+      const tail = parts.slice(2).join(', ');
+      const { state, zip } = CandidateFormComponent.splitStateZip(tail);
+      result.state = state || result.state;
+      result.zip = zip;
+    } else if (parts.length === 2) {
+      result.streetAddress = parts[0];
+      const { state, zip } = CandidateFormComponent.splitStateZip(parts[1]);
+      if (state || zip) {
+        result.state = state || result.state;
+        result.zip = zip;
+      } else {
+        result.city = parts[1];
+      }
+    } else {
+      result.streetAddress = parts[0];
+    }
+
+    return result;
+  }
+
+  private static splitStateZip(text: string): { state: string; zip: string } {
+    const trimmed = (text || '').trim();
+    // Match "TX 78701", "TX 78701-1234", or a trailing zip only.
+    const match = trimmed.match(/^([A-Za-z .]+?)?\s*(\d{5}(?:-\d{4})?)?$/);
+    if (match) {
+      return { state: (match[1] || '').trim(), zip: (match[2] || '').trim() };
+    }
+    return { state: trimmed, zip: '' };
   }
 }

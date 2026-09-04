@@ -121,16 +121,16 @@
           </span>
         </div>
 
-        <!-- Home Address -->
+        <!-- Street Address -->
         <div class="form-field address-autocomplete-wrapper">
-          <label for="homeAddress">Home Address *</label>
+          <label for="streetAddress">Street Address *</label>
           <div class="address-input-wrapper">
-            <input id="homeAddress"
-                   formControlName="homeAddress"
+            <input id="streetAddress"
+                   formControlName="streetAddress"
                    placeholder="Start typing your address..."
                    autocomplete="off"
                    (input)="onAddressInput($event)"
-                   (blur)="hideAddressSuggestions(); markTouched('homeAddress')" />
+                   (blur)="hideAddressSuggestions(); markTouched('streetAddress')" />
             <span class="address-loading" *ngIf="isAddressLoading">&#8987;</span>
           </div>
           <ul class="address-suggestions" *ngIf="showAddressSuggestions && filteredAddresses.length > 0">
@@ -140,14 +140,26 @@
               {{ suggestion.formattedAddress }}
             </li>
           </ul>
-          <span class="field-error" *ngIf="showError('homeAddress')">
-            Home Address is required.
+          <span class="field-error" *ngIf="showError('streetAddress')">
+            Street Address is required.
           </span>
         </div>
 
-        <!-- Home State -->
+        <!-- City -->
         <div class="form-field">
-          <label for="homeState">Home State *</label>
+          <label for="homeCity">City *</label>
+          <input id="homeCity"
+                 formControlName="homeCity"
+                 placeholder="Enter your city"
+                 (blur)="markTouched('homeCity')" />
+          <span class="field-error" *ngIf="showError('homeCity')">
+            City is required.
+          </span>
+        </div>
+
+        <!-- State -->
+        <div class="form-field">
+          <label for="homeState">State *</label>
           <select id="homeState"
                   formControlName="homeState"
                   (blur)="markTouched('homeState')">
@@ -155,7 +167,20 @@
             <option *ngFor="let state of usStates" [value]="state.abbreviation">{{ state.name }}</option>
           </select>
           <span class="field-error" *ngIf="showError('homeState')">
-            Home State is required.
+            State is required.
+          </span>
+        </div>
+
+        <!-- Zipcode -->
+        <div class="form-field">
+          <label for="homeZip">Zipcode *</label>
+          <input id="homeZip"
+                 formControlName="homeZip"
+                 placeholder="e.g. 78701"
+                 inputmode="numeric"
+                 (blur)="markTouched('homeZip')" />
+          <span class="field-error" *ngIf="showError('homeZip')">
+            Zipcode is required.
           </span>
         </div>
 
