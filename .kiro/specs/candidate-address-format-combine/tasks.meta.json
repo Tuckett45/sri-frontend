@@ -1,0 +1,187 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "passed",
+      "failingExample": "Bug confirmed on unfixed code. TOTAL: 8 FAILED, 3 SUCCESS across candidate-form.component.spec.ts and candidate-list.component.spec.ts.\n\nRound-trip (candidate-form.component.spec.ts):\n- Empty street {street:'', city:'Austin', state:'TX', zip:'78701'} -> composed \"Austin, TX 78701\", parsed.streetAddress='Austin' (expected ''), parsed.city='' (expected 'Austin'). filter(Boolean) dropped the empty street slot.\n- Comma in street {street:'123 Main St, Apt 4', city:'Austin', state:'TX', zip:'78701'} -> composed \"123 Main St, Apt 4, Austin, TX 78701\", parsed.streetAddress='123 Main St' (expected '123 Main St, Apt 4'), parsed.city='Apt 4' (expected 'Austin'). Whole-string split(',') shifted fields.\n- Full-name/lowercase state {street:'123 Main St', city:'Austin', state:'Texas', zip:'78701'} -> parsed.state='Texas' (expected 'TX'); no normalization applied.\n- PBT counterexample: street='\"bCBK, D|uM=DTb' parsed.streetAddress='\"bCBK', city='D|uM=DTb', zip=''.\n\nState consistency (candidate-list.component.spec.ts):\n- Comma street: extractState(\"123 Main St, Apt 4, Austin, TX 78701\") returned 'Austin, TX 78701' vs parsed 'TX'.\n- Full-name state: extractState(\"123 Main St, Austin, Texas 78701\") returned '' (regex requires [A-Z]{2}) while parseAddress returned 'Texas'; neither equals 'TX'.\n- PBT counterexample: state='ca' -> extractState='' while parsed='ca'; state='Texas' -> extractState='' vs parsed 'Texas'.\n\nRoot cause confirmed: lossy filter(Boolean) compose, whole-string split(',') in parse, and no shared state normalization between splitStateZip and extractState.",
+      "lastRunTimestamp": 1788557186831
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555705511
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555721291
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788557213438
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555705582
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788557216792
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788558328735
+      }
+    ],
+    "3.1 Add `normalizeState` state normalizer": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555705648
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788558332437
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788558441865
+      }
+    ],
+    "3.2 Make `composeAddress` positionally stable": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555705711
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788558448715
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788558603611
+      }
+    ],
+    "3.3 Make `parseAddress` position-aware and comma-safe": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555705765
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788558607895
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788559180824
+      }
+    ],
+    "3.4 Confirm `extractState` compatibility (apply change only if a test requires it)": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555705826
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788559547030
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788559707802
+      }
+    ],
+    "3.5 Verify bug condition exploration test now passes": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555705894
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788559717859
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788559883573
+      }
+    ],
+    "3.6 Verify preservation tests still pass": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555705962
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788559888914
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788559982271
+      }
+    ],
+    "4. Add unit tests for the address helpers": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555706014
+      },
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788559997112
+      }
+    ],
+    "5. Add property-based tests with `fast-check` for state agreement": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555706065
+      }
+    ],
+    "6. Add integration tests for edit flow, candidate list, and autocomplete": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555706116
+      }
+    ],
+    "7. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788555706167
+      }
+    ],
+    "3. Fix for inconsistent compose/parse round-trip and state format mismatch": [
+      {
+        "executionId": "27bfbddd-f84c-4efa-9190-097de495a4a6",
+        "chatSessionId": "sess_cd337aa6-37a2-4274-ba97-182c8927e7a8",
+        "timestamp": 1788559982403
+      }
+    ]
+  }
+}

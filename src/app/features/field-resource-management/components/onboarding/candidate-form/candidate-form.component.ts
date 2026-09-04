@@ -866,8 +866,33 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
     const state = (formValue.homeState || '').trim();
     const zip = (formValue.homeZip || '').trim();
 
-    const stateZip = [state, zip].filter(Boolean).join(' ');
-    return [street, city, stateZip].filter(Boolean).join(', ');
+    // Normalize the state to a two-letter uppercase code so the composed
+    // segment is always readable by CandidateListComponent.extractState.
+    const normalizedState = CandidateFormComponent.normalizeState(state);
+    const stateZip = [normalizedState, zip].filter(Boolean).join(' ');
+
+    // Emit exactly THREE positional segments joined by ", " WITHOUT
+    // filter(Boolean), so parseAddress can recover an empty street or empty
+    // city from the retained empty slot rather than a silently removed comma.
+    //
+    //   well-formed all-four : "123 Main St, Austin, TX 78701"  (unchanged)
+    //   empty street         : ", Austin, TX 78701"
+    //   empty city           : "123 Main St, , TX 78701"
+    //   comma street         : "123 Main St, Apt 4, Austin, TX 78701"
+    //
+    // The street is emitted verbatim (including any internal commas). parse
+    // strips the trailing stateZip segment first, then splits off the LAST
+    // remaining comma segment as the city, leaving everything before it as the
+    // full street.
+    //
+    // Preservation: when all four parts are present with a two-letter
+    // uppercase state and comma-free street, this is byte-for-byte identical to
+    // the previous [street, city, stateZip].filter(Boolean).join(', ') output.
+    if (!street && !city && !stateZip) {
+      return '';
+    }
+
+    return [street, city, stateZip].join(', ');
   }
 
   /**
@@ -881,33 +906,136 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
     const result = { streetAddress: '', city: '', state: homeState || '', zip: '' };
     const raw = (homeAddress || '').trim();
     if (!raw) {
+      // Preservation (3.3): empty/undefined address yields empty parts, no
+      // error. When no homeState is supplied the state is left empty.
       return result;
     }
 
-    const parts = raw.split(',').map((p) => p.trim()).filter(Boolean);
+    // Split into positional segments WITHOUT filter(Boolean) so retained empty
+    // slots (e.g. an empty street or empty city emitted by composeAddress)
+    // survive and are not shifted forward. Each segment is trimmed.
+    const segments = raw.split(',').map((p) => p.trim());
 
-    // Last segment may contain "STATE ZIP" (e.g. "TX 78701") or just one of them.
-    if (parts.length >= 3) {
-      result.streetAddress = parts[0];
-      result.city = parts[1];
-      const tail = parts.slice(2).join(', ');
-      const { state, zip } = CandidateFormComponent.splitStateZip(tail);
-      result.state = state || result.state;
-      result.zip = zip;
-    } else if (parts.length === 2) {
-      result.streetAddress = parts[0];
-      const { state, zip } = CandidateFormComponent.splitStateZip(parts[1]);
-      if (state || zip) {
-        result.state = state || result.state;
-        result.zip = zip;
-      } else {
-        result.city = parts[1];
+    // 1) Identify the trailing state/zip segment FIRST. Run the LAST segment
+    //    through splitStateZip; if it yields a state or zip, treat it as the
+    //    stateZip tail and remove it so state/zip is never confused with the
+    //    street or city positional slots.
+    let leading = segments;
+    const lastSegment = segments[segments.length - 1] ?? '';
+    const { state: tailState, zip: tailZip } = CandidateFormComponent.splitStateZip(lastSegment);
+    if (tailState || tailZip) {
+      leading = segments.slice(0, -1);
+      result.zip = tailZip;
+      if (tailState) {
+        result.state = tailState;
       }
-    } else {
-      result.streetAddress = parts[0];
     }
 
+    // 2) From the remaining leading segments: the LAST remaining segment is the
+    //    city (may be an empty string), and everything BEFORE it, rejoined with
+    //    ", ", is the full street (preserves comma-containing streets). If only
+    //    one leading segment remains, it is the street and the city is ''.
+    if (leading.length >= 2) {
+      result.city = leading[leading.length - 1];
+      result.streetAddress = leading.slice(0, -1).join(', ');
+    } else if (leading.length === 1) {
+      result.streetAddress = leading[0];
+    }
+
+    // 3) Normalize the resolved state so parseAddress and extractState agree.
+    //    Fall back to normalizeState(homeState) when the parsed tail has no
+    //    state.
+    result.state = CandidateFormComponent.normalizeState(result.state);
+
     return result;
+  }
+
+  /**
+   * Map a US state value to a two-letter uppercase USPS code recognized by
+   * `CandidateListComponent.extractState`.
+   *
+   * - If the input is already a two-letter code (`[A-Za-z]{2}`), it is
+   *   uppercased and returned.
+   * - If the input is a full US state name (case-insensitive), it is mapped to
+   *   its USPS two-letter code via the lookup table below (all 50 states + DC).
+   * - Otherwise the trimmed, uppercased input is returned unchanged
+   *   (best-effort, no data loss) so unknown values still round-trip through
+   *   compose/parse.
+   */
+  private static normalizeState(raw: string): string {
+    const trimmed = (raw || '').trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    // Already a two-letter code: uppercase and return.
+    if (/^[A-Za-z]{2}$/.test(trimmed)) {
+      return trimmed.toUpperCase();
+    }
+
+    // Full state name (case-insensitive) -> USPS two-letter code.
+    const nameToCode: { [name: string]: string } = {
+      'alabama': 'AL',
+      'alaska': 'AK',
+      'arizona': 'AZ',
+      'arkansas': 'AR',
+      'california': 'CA',
+      'colorado': 'CO',
+      'connecticut': 'CT',
+      'delaware': 'DE',
+      'district of columbia': 'DC',
+      'florida': 'FL',
+      'georgia': 'GA',
+      'hawaii': 'HI',
+      'idaho': 'ID',
+      'illinois': 'IL',
+      'indiana': 'IN',
+      'iowa': 'IA',
+      'kansas': 'KS',
+      'kentucky': 'KY',
+      'louisiana': 'LA',
+      'maine': 'ME',
+      'maryland': 'MD',
+      'massachusetts': 'MA',
+      'michigan': 'MI',
+      'minnesota': 'MN',
+      'mississippi': 'MS',
+      'missouri': 'MO',
+      'montana': 'MT',
+      'nebraska': 'NE',
+      'nevada': 'NV',
+      'new hampshire': 'NH',
+      'new jersey': 'NJ',
+      'new mexico': 'NM',
+      'new york': 'NY',
+      'north carolina': 'NC',
+      'north dakota': 'ND',
+      'ohio': 'OH',
+      'oklahoma': 'OK',
+      'oregon': 'OR',
+      'pennsylvania': 'PA',
+      'rhode island': 'RI',
+      'south carolina': 'SC',
+      'south dakota': 'SD',
+      'tennessee': 'TN',
+      'texas': 'TX',
+      'utah': 'UT',
+      'vermont': 'VT',
+      'virginia': 'VA',
+      'washington': 'WA',
+      'west virginia': 'WV',
+      'wisconsin': 'WI',
+      'wyoming': 'WY'
+    };
+
+    const key = trimmed.toLowerCase().replace(/\s+/g, ' ');
+    const code = nameToCode[key];
+    if (code) {
+      return code;
+    }
+
+    // Unknown value: best-effort, no data loss.
+    return trimmed.toUpperCase();
   }
 
   private static splitStateZip(text: string): { state: string; zip: string } {
