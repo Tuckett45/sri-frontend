@@ -12,7 +12,7 @@ import {
   CreateOvertimeRequestDto,
   OvertimeRequestStatus
 } from '../models/overtime.models';
-import { environment, local_environment } from '../../../../environments/environments';
+import { environment } from '../../../../environments/environments';
 import { AuthService } from '../../../services/auth.service';
 
 interface PaginatedResponse<T> {
@@ -29,7 +29,7 @@ interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class OvertimeApiService {
-  private readonly apiUrl = `${local_environment.atlasApiUrl}/overtime-requests`;
+  private readonly apiUrl = `${environment.atlasApiUrl}/overtime-requests`;
 
   constructor(private http: HttpClient, @Inject(forwardRef(() => AuthService)) private authService: AuthService) {}
 
