@@ -51,7 +51,7 @@ export class PtoSubNavComponent implements OnInit {
 
     this.tabs = [
       {
-        label: 'My Requests',
+        label: 'PTO Requests',
         route: '/field-resource-management/pto',
         icon: 'event_note',
         visible: true
