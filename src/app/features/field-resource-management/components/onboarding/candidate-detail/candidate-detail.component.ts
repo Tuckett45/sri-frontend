@@ -907,6 +907,7 @@ export class CandidateDetailComponent implements OnInit {
           osha10: result.trainingCerts.osha10,
           osha30: result.trainingCerts.osha30,
           techHandTools: result.trainingCerts.techHandTools,
+          amaMetaTraining: result.trainingCerts.amaMetaTraining,
           ciKitAssigned: result.equipmentKits.ciKitAssigned,
           fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
           labelingKitAssigned: result.equipmentKits.labelingKitAssigned,
