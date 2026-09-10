@@ -156,6 +156,24 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             <option *ngFor="let referrer of availableReferrers" [value]="referrer">{{ referrer }}</option>
           </select>
         </div>
+        <div class="filter-field">
+          <label for="certFilter">Certification</label>
+          <select id="certFilter"
+                  [(ngModel)]="certFilter"
+                  (ngModelChange)="onCertFilterChange()">
+            <option value="">All Certifications</option>
+            <option *ngFor="let opt of certOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="trainingFilter">Training</label>
+          <select id="trainingFilter"
+                  [(ngModel)]="trainingFilter"
+                  (ngModelChange)="onTrainingFilterChange()">
+            <option value="">All Trainings</option>
+            <option *ngFor="let opt of trainingOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
       </div>
 
       <!-- Bulk Action Bar -->
@@ -1115,9 +1133,29 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   referredByFilter = '';
   experienceLevelFilter: ExperienceLevel | 'none' | '' = '';
   incompleteCertsFilter = false;
+  trainingFilter = '';
+  certFilter = '';
   sortState: SortState | null = { column: 'createdAt', direction: 'desc' };
   availableStates: string[] = [];
   availableReferrers: string[] = [];
+
+  // Certification / training filter options. Each value is a boolean field on Candidate.
+  readonly certOptions: { value: keyof Candidate; label: string }[] = [
+    { value: 'oshaCertified', label: 'OSHA Certified' },
+    { value: 'scissorLiftCertified', label: 'Scissor Lift' },
+    { value: 'biisciCertified', label: 'BIISCI Certified' },
+    { value: 'backgroundCheckComplete', label: 'Background Check' },
+    { value: 'drugTestComplete', label: 'Drug Test' },
+  ];
+  readonly trainingOptions: { value: keyof Candidate; label: string }[] = [
+    { value: 'amaMetaTraining', label: 'AMA/META Training' },
+    { value: 'obsTraining', label: 'OBS Training' },
+    { value: 'techHandTools', label: 'Tech Hand Tools' },
+    { value: 'osha10', label: 'OSHA 10' },
+    { value: 'osha30', label: 'OSHA 30' },
+    { value: 'attSupplierTraining', label: 'AT&T Supplier Training' },
+    { value: 'cienaBasicTraining', label: 'Ciena Basic Training' },
+  ];
 
   // Pagination
   pageSize = 10;
@@ -1151,6 +1189,8 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       this.referredByFilter = savedState.referredByFilter;
       this.experienceLevelFilter = (savedState.experienceLevelFilter || '') as ExperienceLevel | 'none' | '';
       this.incompleteCertsFilter = savedState.incompleteCertsFilter;
+      this.trainingFilter = savedState.trainingFilter || '';
+      this.certFilter = savedState.certFilter || '';
       this.sortState = savedState.sortColumn
         ? { column: savedState.sortColumn, direction: savedState.sortDirection }
         : null;
@@ -1216,6 +1256,16 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   }
 
   onExperienceLevelFilterChange(): void {
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
+  onCertFilterChange(): void {
+    this.pageIndex = 0;
+    this.applyFiltersAndSort();
+  }
+
+  onTrainingFilterChange(): void {
     this.pageIndex = 0;
     this.applyFiltersAndSort();
   }
@@ -1671,6 +1721,8 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       referredByFilter: this.referredByFilter,
       experienceLevelFilter: this.experienceLevelFilter,
       incompleteCertsFilter: this.incompleteCertsFilter,
+      trainingFilter: this.trainingFilter,
+      certFilter: this.certFilter,
       sortColumn: this.sortState?.column ?? null,
       sortDirection: this.sortState?.direction ?? 'asc',
       pageIndex: this.pageIndex,
@@ -1794,6 +1846,18 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       result = result.filter(
         (c) => !c.oshaCertified || !c.scissorLiftCertified
       );
+    }
+
+    // Certification filter (candidate must have the selected certification)
+    if (this.certFilter) {
+      const key = this.certFilter as keyof Candidate;
+      result = result.filter((c) => !!c[key]);
+    }
+
+    // Training filter (candidate must have the selected training)
+    if (this.trainingFilter) {
+      const key = this.trainingFilter as keyof Candidate;
+      result = result.filter((c) => !!c[key]);
     }
 
     // Sort

@@ -8,6 +8,8 @@ export interface CandidateListState {
   referredByFilter: string;
   experienceLevelFilter: string;
   incompleteCertsFilter: boolean;
+  trainingFilter: string;
+  certFilter: string;
   sortColumn: keyof Candidate | null;
   sortDirection: 'asc' | 'desc';
   pageIndex: number;
