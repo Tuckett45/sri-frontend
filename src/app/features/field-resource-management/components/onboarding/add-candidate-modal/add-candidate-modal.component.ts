@@ -274,6 +274,10 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
                 <span>Tech Hand Tools</span>
                 <mat-slide-toggle formControlName="techHandTools"></mat-slide-toggle>
               </div>
+              <div class="toggle-item">
+                <span>AMA/META Training</span>
+                <mat-slide-toggle formControlName="amaMetaTraining"></mat-slide-toggle>
+              </div>
             </div>
 
             <div class="step-actions">
@@ -528,7 +532,8 @@ export class AddCandidateModalComponent {
       scissorLift: [this.toBool(candidate?.scissorLiftCertified)],
       osha10: [this.toBool(candidate?.osha10)],
       osha30: [this.toBool(candidate?.osha30)],
-      techHandTools: [this.toBool(candidate?.techHandTools)]
+      techHandTools: [this.toBool(candidate?.techHandTools)],
+      amaMetaTraining: [this.toBool(candidate?.amaMetaTraining)]
     });
 
     this.equipmentKitsForm = this.fb.group({

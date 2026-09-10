@@ -249,7 +249,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
                      (change)="onToggleSelect(candidate, $event)"
                      [attr.aria-label]="'Select ' + candidate.techName + ' for bulk conversion'" />
             </td>
-            <td>{{ candidate.techName }}</td>
+            <td>{{ candidate.techName }}<span class="badge-meta" *ngIf="candidate.amaMetaTraining" title="AMA/META Training">META</span></td>
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
             <td class="center-col">{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
@@ -1030,6 +1030,20 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       vertical-align: middle;
     }
 
+    .badge-meta {
+      display: inline-block;
+      padding: 0.125rem 0.4rem;
+      border-radius: 9999px;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      background: #1976d2;
+      color: #ffffff;
+      margin-left: 0.375rem;
+      vertical-align: middle;
+      line-height: 1.3;
+    }
+
     :host ::ng-deep .mat-mdc-paginator {
       border-top: 1px solid #e0e0e0;
       background: #fafafa;
@@ -1342,6 +1356,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           osha10: result.trainingCerts.osha10,
           osha30: result.trainingCerts.osha30,
           techHandTools: result.trainingCerts.techHandTools,
+          amaMetaTraining: result.trainingCerts.amaMetaTraining,
           ciKitAssigned: result.equipmentKits.ciKitAssigned,
           fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
           labelingKitAssigned: result.equipmentKits.labelingKitAssigned,
@@ -1416,6 +1431,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           osha10: result.trainingCerts.osha10,
           osha30: result.trainingCerts.osha30,
           techHandTools: result.trainingCerts.techHandTools,
+          amaMetaTraining: result.trainingCerts.amaMetaTraining,
           ciKitAssigned: result.equipmentKits.ciKitAssigned,
           fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
           labelingKitAssigned: result.equipmentKits.labelingKitAssigned,

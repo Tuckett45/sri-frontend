@@ -99,6 +99,10 @@ import { Candidate, OfferStatus, ExperienceLevel } from '../../../models/onboard
             <span class="card-count">{{ startingWithin14DaysCount }}</span>
             <span class="card-label">Starting Within 14 Days</span>
           </div>
+          <div class="card">
+            <span class="card-count">{{ amaMetaTrainingCount }}</span>
+            <span class="card-label">AMA/META Training</span>
+          </div>
         </div>
 
         <!-- Experience Breakdown -->
@@ -274,6 +278,7 @@ export class PipelineDashboardComponent implements OnInit {
   incompleteCertsCount = 0;
   incompleteDrugTestCount = 0;
   startingWithin14DaysCount = 0;
+  amaMetaTrainingCount = 0;
 
   funnelStages: { label: string; count: number; pct: number; cls: string }[] = [];
   experienceLevelCounts: { value: ExperienceLevel; label: string; count: number }[] = [];
@@ -404,6 +409,8 @@ export class PipelineDashboardComponent implements OnInit {
       const s = new Date(c.startDate); s.setHours(0, 0, 0, 0);
       return s >= today && s <= in14;
     }).length;
+
+    this.amaMetaTrainingCount = candidates.filter(c => c.amaMetaTraining).length;
   }
 
   private buildFunnel(): void {
