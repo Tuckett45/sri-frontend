@@ -1035,7 +1035,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       padding: 0.125rem 0.4rem;
       border-radius: 9999px;
       font-size: 0.625rem;
-      font-weight: 700;
+      font-weight: 400;
       letter-spacing: 0.02em;
       background: #1976d2;
       color: #ffffff;

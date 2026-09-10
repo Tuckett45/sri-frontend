@@ -151,6 +151,10 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
                 <span class="cert-icon">{{ candidate.scissorLiftCertified ? '\u2714' : '\u2014' }}</span>
                 <span class="cert-label">Scissor Lift</span>
               </div>
+              <div class="cert-item" [class.complete]="candidate.amaMetaTraining" [class.incomplete]="!candidate.amaMetaTraining">
+                <span class="cert-icon">{{ candidate.amaMetaTraining ? '\u2714' : '\u2014' }}</span>
+                <span class="cert-label">AMA/META Training</span>
+              </div>
             </div>
           </div>
 
