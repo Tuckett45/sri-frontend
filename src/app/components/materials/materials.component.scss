@@ -175,3 +175,69 @@ button {
   font-style: italic;
   padding: 0.75rem 0;
 }
+
+
+/* ---- VIMS expansion styles ---- */
+.materials-tabs {
+  flex-wrap: wrap;
+}
+
+h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1rem;
+  color: #374151;
+}
+
+label.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.scan-btn {
+  float: right;
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+}
+
+td.pos { color: #166534; font-weight: 600; }
+td.neg { color: #b91c1c; font-weight: 600; }
+
+.count-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.scanner-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.scanner-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.25rem;
+  width: min(480px, 92vw);
+
+  h3 { margin-top: 0; }
+
+  zxing-scanner {
+    display: block;
+    width: 100%;
+    max-height: 60vh;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+}

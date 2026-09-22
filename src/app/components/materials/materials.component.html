@@ -1,52 +1,38 @@
 <div class="materials-container">
   <header class="materials-header">
     <h1>Materials</h1>
-    <p class="subtitle">Track materials across sites, manage intake/export orders, and issue items to technicians.</p>
+    <p class="subtitle">Inventory across sites, orders, technician issuance, transfers, serialized assets, cycle counts, and reporting.</p>
   </header>
 
   <nav class="materials-tabs">
-    <button type="button"
-            [class.active]="activeTab === 'inventory'"
-            (click)="setTab('inventory')">Inventory</button>
-    <button type="button"
-            [class.active]="activeTab === 'orders'"
-            (click)="setTab('orders')">Orders</button>
-    <button type="button"
-            [class.active]="activeTab === 'assignments'"
-            (click)="setTab('assignments')">Assignments</button>
+    <button type="button" [class.active]="activeTab === 'inventory'" (click)="setTab('inventory')">Inventory</button>
+    <button type="button" [class.active]="activeTab === 'stock'" (click)="setTab('stock')">Stock &amp; Ledger</button>
+    <button type="button" [class.active]="activeTab === 'orders'" (click)="setTab('orders')">Orders</button>
+    <button type="button" [class.active]="activeTab === 'assignments'" (click)="setTab('assignments')">Assignments</button>
+    <button type="button" [class.active]="activeTab === 'transfers'" (click)="setTab('transfers')">Transfers</button>
+    <button type="button" [class.active]="activeTab === 'assets'" (click)="setTab('assets')">Assets</button>
+    <button type="button" [class.active]="activeTab === 'counts'" (click)="setTab('counts')">Counts</button>
+    <button type="button" [class.active]="activeTab === 'reports'" (click)="setTab('reports')">Reports</button>
   </nav>
 
   <!-- ============================ INVENTORY ============================ -->
   <section *ngIf="activeTab === 'inventory'" class="tab-panel">
     <form class="entry-form" (ngSubmit)="saveMaterial()">
-      <h2>Add / update material</h2>
+      <h2>Add / update material
+        <button type="button" class="scan-btn" (click)="openScanner('material')" title="Scan SKU/serial">Scan</button>
+      </h2>
       <div class="form-grid">
-        <label>Name*
-          <input type="text" name="name" [(ngModel)]="newMaterial.name" required />
-        </label>
-        <label>SKU
-          <input type="text" name="sku" [(ngModel)]="newMaterial.sku" />
-        </label>
-        <label>Category
-          <input type="text" name="category" [(ngModel)]="newMaterial.category" />
-        </label>
-        <label>Unit
-          <input type="text" name="unit" [(ngModel)]="newMaterial.unit" />
-        </label>
-        <label>Site
-          <input type="text" name="site" [(ngModel)]="newMaterial.site" />
-        </label>
-        <label>Market
-          <input type="text" name="market" [(ngModel)]="newMaterial.market" maxlength="16" />
-        </label>
-        <label>Qty on hand
-          <input type="number" name="qtyOnHand" [(ngModel)]="newMaterial.quantityOnHand" min="0" />
-        </label>
-        <label>Reorder level
-          <input type="number" name="reorderLevel" [(ngModel)]="newMaterial.reorderLevel" min="0" />
-        </label>
-        <label>Unit cost
-          <input type="number" name="unitCost" [(ngModel)]="newMaterial.unitCost" min="0" step="0.01" />
+        <label>Name*<input type="text" name="name" [(ngModel)]="newMaterial.name" required /></label>
+        <label>SKU<input type="text" name="sku" [(ngModel)]="newMaterial.sku" /></label>
+        <label>Category<input type="text" name="category" [(ngModel)]="newMaterial.category" /></label>
+        <label>Unit<input type="text" name="unit" [(ngModel)]="newMaterial.unit" /></label>
+        <label>Site<input type="text" name="site" [(ngModel)]="newMaterial.site" /></label>
+        <label>Market<input type="text" name="market" [(ngModel)]="newMaterial.market" maxlength="16" /></label>
+        <label>Opening qty<input type="number" name="qtyOnHand" [(ngModel)]="newMaterial.quantityOnHand" min="0" /></label>
+        <label>Reorder level<input type="number" name="reorderLevel" [(ngModel)]="newMaterial.reorderLevel" min="0" /></label>
+        <label>Unit cost<input type="number" name="unitCost" [(ngModel)]="newMaterial.unitCost" min="0" step="0.01" /></label>
+        <label class="checkbox">
+          <input type="checkbox" name="isSerialized" [(ngModel)]="newMaterial.isSerialized" /> Serialized item
         </label>
       </div>
       <button type="submit" class="primary">Save material</button>
@@ -62,10 +48,7 @@
 
     <table *ngIf="!loadingMaterials && materials.length > 0" class="data-table">
       <thead>
-        <tr>
-          <th>Name</th><th>SKU</th><th>Category</th><th>Site</th><th>Market</th>
-          <th>On hand</th><th>Reorder</th><th></th>
-        </tr>
+        <tr><th>Name</th><th>SKU</th><th>Category</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th><th>Type</th><th></th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let m of materials" [class.low-stock]="isLowStock(m)">
@@ -74,21 +57,86 @@
           <td>{{ m.category }}</td>
           <td>{{ m.site }}</td>
           <td>{{ m.market }}</td>
-          <td>
-            {{ m.quantityOnHand }} {{ m.unit }}
-            <span *ngIf="isLowStock(m)" class="badge warn" title="At or below reorder level">low</span>
-          </td>
+          <td>{{ m.quantityOnHand }} {{ m.unit }}<span *ngIf="isLowStock(m)" class="badge warn">low</span></td>
           <td>{{ m.reorderLevel }}</td>
+          <td><span *ngIf="m.isSerialized" class="badge">serial</span></td>
           <td><button type="button" class="danger" (click)="deleteMaterial(m)">Delete</button></td>
         </tr>
       </tbody>
     </table>
   </section>
 
+  <!-- ======================== STOCK & LEDGER ======================== -->
+  <section *ngIf="activeTab === 'stock'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="adjustStock()">
+      <h2>Manual stock adjustment
+        <button type="button" class="scan-btn" (click)="openScanner('adjust')">Scan</button>
+      </h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="adjMaterial" [(ngModel)]="newAdjust.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>Site*<input type="text" name="adjSite" [(ngModel)]="newAdjust.site" /></label>
+        <label>Qty change (+/-)*<input type="number" name="adjDelta" [(ngModel)]="newAdjust.quantityDelta" /></label>
+        <label>Reason<input type="text" name="adjReason" [(ngModel)]="newAdjust.reason" /></label>
+      </div>
+      <button type="submit" class="primary">Apply adjustment</button>
+    </form>
+
+    <h3>On-hand by site</h3>
+    <button type="button" (click)="loadStock()">Refresh stock</button>
+    <p *ngIf="loadingStock" class="loading">Loading stock…</p>
+    <table *ngIf="!loadingStock && stock.length > 0" class="data-table">
+      <thead><tr><th>Material</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let s of stock">
+          <td>{{ materialName(s.materialId) }}</td>
+          <td>{{ s.site }}</td>
+          <td>{{ s.market }}</td>
+          <td>{{ s.quantityOnHand }}</td>
+          <td>{{ s.reorderLevel }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!loadingStock && stock.length === 0" class="empty">No stock rows loaded. Click “Refresh stock”.</p>
+
+    <h3>Audit ledger</h3>
+    <div class="list-toolbar">
+      <select name="ledgerMaterial" [(ngModel)]="ledgerMaterialId">
+        <option value="">All materials</option>
+        <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+      </select>
+      <button type="button" (click)="loadTransactions()">Load ledger</button>
+      <button type="button" (click)="exportLedgerCsv()">Export CSV</button>
+    </div>
+    <p *ngIf="loadingTransactions" class="loading">Loading ledger…</p>
+    <table *ngIf="!loadingTransactions && transactions.length > 0" class="data-table">
+      <thead><tr><th>When</th><th>Material</th><th>Site</th><th>Type</th><th>Δ</th><th>On hand after</th><th>Reason</th><th>By</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let t of transactions">
+          <td>{{ t.performedAt | date:'short' }}</td>
+          <td>{{ materialName(t.materialId) }}</td>
+          <td>{{ t.site }}</td>
+          <td><span class="badge">{{ t.txnType }}</span></td>
+          <td [class.neg]="t.quantityDelta < 0" [class.pos]="t.quantityDelta > 0">{{ t.quantityDelta }}</td>
+          <td>{{ t.quantityAfter }}</td>
+          <td>{{ t.reason }}</td>
+          <td>{{ t.performedBy }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!loadingTransactions && transactions.length === 0" class="empty">No ledger rows loaded.</p>
+  </section>
+
   <!-- ============================ ORDERS ============================ -->
   <section *ngIf="activeTab === 'orders'" class="tab-panel">
     <form class="entry-form" (ngSubmit)="saveOrder()">
-      <h2>New order (intake / export)</h2>
+      <h2>New order (intake / export)
+        <button type="button" class="scan-btn" (click)="openScanner('order')">Scan</button>
+      </h2>
       <div class="form-grid">
         <label>Material*
           <select name="orderMaterial" [(ngModel)]="newOrder.materialId" required>
@@ -101,54 +149,30 @@
             <option *ngFor="let d of directions" [value]="d">{{ d }}</option>
           </select>
         </label>
-        <label>Quantity*
-          <input type="number" name="orderQty" [(ngModel)]="newOrder.quantity" min="1" required />
-        </label>
-        <label>Order #
-          <input type="text" name="orderNumber" [(ngModel)]="newOrder.orderNumber" />
-        </label>
-        <label>Vendor
-          <input type="text" name="vendor" [(ngModel)]="newOrder.vendor" />
-        </label>
-        <label>Site
-          <input type="text" name="orderSite" [(ngModel)]="newOrder.site" />
-        </label>
-        <label>Market
-          <input type="text" name="orderMarket" [(ngModel)]="newOrder.market" maxlength="16" />
-        </label>
-        <label>Notes
-          <input type="text" name="orderNotes" [(ngModel)]="newOrder.notes" />
-        </label>
+        <label>Quantity*<input type="number" name="orderQty" [(ngModel)]="newOrder.quantity" min="1" required /></label>
+        <label>Order #<input type="text" name="orderNumber" [(ngModel)]="newOrder.orderNumber" /></label>
+        <label>Vendor<input type="text" name="vendor" [(ngModel)]="newOrder.vendor" /></label>
+        <label>Site<input type="text" name="orderSite" [(ngModel)]="newOrder.site" /></label>
+        <label>Market<input type="text" name="orderMarket" [(ngModel)]="newOrder.market" maxlength="16" /></label>
+        <label>Notes<input type="text" name="orderNotes" [(ngModel)]="newOrder.notes" /></label>
       </div>
       <button type="submit" class="primary">Save order</button>
     </form>
 
     <p *ngIf="loadingOrders" class="loading">Loading orders…</p>
     <p *ngIf="!loadingOrders && orders.length === 0" class="empty">No orders yet.</p>
-
     <table *ngIf="!loadingOrders && orders.length > 0" class="data-table">
-      <thead>
-        <tr>
-          <th>Order #</th><th>Material</th><th>Direction</th><th>Qty</th>
-          <th>Vendor</th><th>Status</th><th></th>
-        </tr>
-      </thead>
+      <thead><tr><th>Order #</th><th>Material</th><th>Direction</th><th>Qty</th><th>Vendor</th><th>Status</th><th></th></tr></thead>
       <tbody>
         <tr *ngFor="let o of orders">
           <td>{{ o.orderNumber }}</td>
           <td>{{ materialName(o.materialId) }}</td>
-          <td>
-            <span class="badge" [class.intake]="o.direction === 'Intake'" [class.export]="o.direction === 'Export'">
-              {{ o.direction }}
-            </span>
-          </td>
+          <td><span class="badge" [class.intake]="o.direction === 'Intake'" [class.export]="o.direction === 'Export'">{{ o.direction }}</span></td>
           <td>{{ o.quantity }}</td>
           <td>{{ o.vendor }}</td>
           <td>{{ o.status }}</td>
           <td class="row-actions">
-            <button type="button" *ngIf="!isFulfilled(o)" class="primary" (click)="fulfillOrder(o)">
-              {{ o.direction === 'Intake' ? 'Receive' : 'Ship' }}
-            </button>
+            <button type="button" *ngIf="!isFulfilled(o)" class="primary" (click)="fulfillOrder(o)">{{ o.direction === 'Intake' ? 'Receive' : 'Ship' }}</button>
             <button type="button" class="danger" (click)="deleteOrder(o)">Delete</button>
           </td>
         </tr>
@@ -159,44 +183,29 @@
   <!-- ========================== ASSIGNMENTS ========================== -->
   <section *ngIf="activeTab === 'assignments'" class="tab-panel">
     <form class="entry-form" (ngSubmit)="issueMaterial()">
-      <h2>Issue material to technician</h2>
+      <h2>Issue material to technician
+        <button type="button" class="scan-btn" (click)="openScanner('assignment')">Scan</button>
+      </h2>
       <div class="form-grid">
         <label>Material*
           <select name="assignMaterial" [(ngModel)]="newAssignment.materialId" required>
             <option value="">— select —</option>
-            <option *ngFor="let m of materials" [value]="m.id">
-              {{ m.name }} ({{ m.quantityOnHand }} {{ m.unit }} on hand)
-            </option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }} ({{ m.quantityOnHand }} {{ m.unit }} on hand)</option>
           </select>
         </label>
-        <label>Quantity*
-          <input type="number" name="assignQty" [(ngModel)]="newAssignment.quantityIssued" min="1" required />
-        </label>
-        <label>Technician name
-          <input type="text" name="techName" [(ngModel)]="newAssignment.technicianName" />
-        </label>
-        <label>Technician ID
-          <input type="text" name="techId" [(ngModel)]="newAssignment.technicianId" />
-        </label>
-        <label>Site
-          <input type="text" name="assignSite" [(ngModel)]="newAssignment.site" />
-        </label>
-        <label>Notes
-          <input type="text" name="assignNotes" [(ngModel)]="newAssignment.notes" />
-        </label>
+        <label>Quantity*<input type="number" name="assignQty" [(ngModel)]="newAssignment.quantityIssued" min="1" required /></label>
+        <label>Technician name<input type="text" name="techName" [(ngModel)]="newAssignment.technicianName" /></label>
+        <label>Technician ID<input type="text" name="techId" [(ngModel)]="newAssignment.technicianId" /></label>
+        <label>Site<input type="text" name="assignSite" [(ngModel)]="newAssignment.site" /></label>
+        <label>Notes<input type="text" name="assignNotes" [(ngModel)]="newAssignment.notes" /></label>
       </div>
       <button type="submit" class="primary">Issue material</button>
     </form>
 
     <p *ngIf="loadingAssignments" class="loading">Loading assignments…</p>
     <p *ngIf="!loadingAssignments && assignments.length === 0" class="empty">No assignments yet.</p>
-
     <table *ngIf="!loadingAssignments && assignments.length > 0" class="data-table">
-      <thead>
-        <tr>
-          <th>Material</th><th>Technician</th><th>Issued</th><th>Returned</th><th>Status</th><th></th>
-        </tr>
-      </thead>
+      <thead><tr><th>Material</th><th>Technician</th><th>Issued</th><th>Returned</th><th>Status</th><th></th></tr></thead>
       <tbody>
         <tr *ngFor="let a of assignments">
           <td>{{ materialName(a.materialId) }}</td>
@@ -205,13 +214,213 @@
           <td>{{ a.quantityReturned }}</td>
           <td>{{ a.status }}</td>
           <td class="row-actions">
-            <button type="button" *ngIf="a.status !== 'Returned'" class="primary" (click)="returnMaterial(a)">
-              Return remaining
-            </button>
+            <button type="button" *ngIf="a.status !== 'Returned'" class="primary" (click)="returnMaterial(a)">Return remaining</button>
             <button type="button" class="danger" (click)="deleteAssignment(a)">Delete</button>
           </td>
         </tr>
       </tbody>
     </table>
   </section>
+
+  <!-- =========================== TRANSFERS =========================== -->
+  <section *ngIf="activeTab === 'transfers'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="createTransfer()">
+      <h2>New site-to-site transfer
+        <button type="button" class="scan-btn" (click)="openScanner('transfer')">Scan</button>
+      </h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="xferMaterial" [(ngModel)]="newTransfer.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>From site*<input type="text" name="fromSite" [(ngModel)]="newTransfer.fromSite" /></label>
+        <label>To site*<input type="text" name="toSite" [(ngModel)]="newTransfer.toSite" /></label>
+        <label>Quantity*<input type="number" name="xferQty" [(ngModel)]="newTransfer.quantity" min="1" /></label>
+        <label>Notes<input type="text" name="xferNotes" [(ngModel)]="newTransfer.notes" /></label>
+      </div>
+      <button type="submit" class="primary">Create transfer</button>
+    </form>
+
+    <p *ngIf="loadingTransfers" class="loading">Loading transfers…</p>
+    <p *ngIf="!loadingTransfers && transfers.length === 0" class="empty">No transfers yet.</p>
+    <table *ngIf="!loadingTransfers && transfers.length > 0" class="data-table">
+      <thead><tr><th>Material</th><th>From</th><th>To</th><th>Qty</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let t of transfers">
+          <td>{{ materialName(t.materialId) }}</td>
+          <td>{{ t.fromSite }}</td>
+          <td>{{ t.toSite }}</td>
+          <td>{{ t.quantity }}</td>
+          <td>{{ t.status }}</td>
+          <td class="row-actions">
+            <button type="button" *ngIf="t.status === 'Pending'" class="primary" (click)="completeTransfer(t)">Complete</button>
+            <button type="button" class="danger" (click)="deleteTransfer(t)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================= ASSETS ============================= -->
+  <section *ngIf="activeTab === 'assets'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="saveAsset()">
+      <h2>Register serialized / lot-tracked unit
+        <button type="button" class="scan-btn" (click)="openScanner('asset')">Scan</button>
+      </h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="assetMaterial" [(ngModel)]="newAsset.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>Serial #<input type="text" name="serial" [(ngModel)]="newAsset.serialNumber" /></label>
+        <label>Lot #<input type="text" name="lot" [(ngModel)]="newAsset.lotNumber" /></label>
+        <label>Status
+          <select name="assetStatus" [(ngModel)]="newAsset.status">
+            <option value="InStock">InStock</option>
+            <option value="Issued">Issued</option>
+            <option value="Retired">Retired</option>
+            <option value="Lost">Lost</option>
+          </select>
+        </label>
+        <label>Site<input type="text" name="assetSite" [(ngModel)]="newAsset.site" /></label>
+        <label>Assigned tech<input type="text" name="assetTech" [(ngModel)]="newAsset.assignedTechnicianName" /></label>
+      </div>
+      <button type="submit" class="primary">Save asset</button>
+    </form>
+
+    <div class="list-toolbar">
+      <input type="text" placeholder="Search serial / lot…" [(ngModel)]="assetSearch" (keyup.enter)="loadAssets()" />
+      <button type="button" (click)="loadAssets()">Search</button>
+    </div>
+    <p *ngIf="loadingAssets" class="loading">Loading assets…</p>
+    <p *ngIf="!loadingAssets && assets.length === 0" class="empty">No assets yet.</p>
+    <table *ngIf="!loadingAssets && assets.length > 0" class="data-table">
+      <thead><tr><th>Material</th><th>Serial</th><th>Lot</th><th>Status</th><th>Site</th><th>Assigned</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let a of assets">
+          <td>{{ materialName(a.materialId) }}</td>
+          <td>{{ a.serialNumber }}</td>
+          <td>{{ a.lotNumber }}</td>
+          <td><span class="badge">{{ a.status }}</span></td>
+          <td>{{ a.site }}</td>
+          <td>{{ a.assignedTechnicianName || a.assignedTechnicianId }}</td>
+          <td><button type="button" class="danger" (click)="deleteAsset(a)">Delete</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================= COUNTS ============================= -->
+  <section *ngIf="activeTab === 'counts'" class="tab-panel">
+    <ng-container *ngIf="!activeCount">
+      <form class="entry-form" (ngSubmit)="createCount()">
+        <h2>Start a cycle count</h2>
+        <div class="form-grid">
+          <label>Site*<input type="text" name="countSite" [(ngModel)]="newCountSite" /></label>
+          <label class="checkbox"><input type="checkbox" name="prefill" [(ngModel)]="newCountPrefill" /> Pre-fill from current stock</label>
+        </div>
+        <button type="submit" class="primary">Start count</button>
+      </form>
+
+      <p *ngIf="loadingCounts" class="loading">Loading counts…</p>
+      <p *ngIf="!loadingCounts && counts.length === 0" class="empty">No count sessions yet.</p>
+      <table *ngIf="!loadingCounts && counts.length > 0" class="data-table">
+        <thead><tr><th>Site</th><th>Status</th><th>Created</th><th>Posted</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of counts">
+            <td>{{ c.site }}</td>
+            <td><span class="badge">{{ c.status }}</span></td>
+            <td>{{ c.createdDate | date:'short' }}</td>
+            <td>{{ c.postedDate | date:'short' }}</td>
+            <td><button type="button" class="primary" (click)="openCount(c)">Open</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+
+    <ng-container *ngIf="activeCount">
+      <div class="count-header">
+        <h2>Count — {{ activeCount.site }} <span class="badge">{{ activeCount.status }}</span></h2>
+        <button type="button" (click)="closeCount()">Back to list</button>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Material</th><th>System qty</th><th>Counted qty</th><th>Variance</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let line of activeCount.lines">
+            <td>{{ materialName(line.materialId) }}</td>
+            <td>{{ line.systemQuantity }}</td>
+            <td>
+              <input *ngIf="activeCount.status === 'Open'" type="number" [(ngModel)]="line.countedQuantity" [name]="'count-' + line.materialId" />
+              <span *ngIf="activeCount.status !== 'Open'">{{ line.countedQuantity }}</span>
+            </td>
+            <td [class.neg]="(lineVariance(line) || 0) < 0" [class.pos]="(lineVariance(line) || 0) > 0">
+              {{ line.variance !== null && line.variance !== undefined ? line.variance : lineVariance(line) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="row-actions" *ngIf="activeCount.status === 'Open'">
+        <button type="button" (click)="saveCount()">Save counts</button>
+        <button type="button" class="primary" (click)="postCount()">Post &amp; adjust inventory</button>
+      </div>
+    </ng-container>
+  </section>
+
+  <!-- ============================= REPORTS ============================= -->
+  <section *ngIf="activeTab === 'reports'" class="tab-panel">
+    <div class="list-toolbar">
+      <label class="checkbox"><input type="checkbox" [(ngModel)]="reportLowStockOnly" name="lowOnly" (change)="loadReports()" /> Low stock only</label>
+      <button type="button" (click)="loadReports()">Refresh</button>
+      <button type="button" (click)="exportStockReportCsv()">Export stock CSV</button>
+      <button type="button" (click)="exportTechnicianBalancesCsv()">Export tech balances CSV</button>
+    </div>
+
+    <p *ngIf="loadingReports" class="loading">Loading report…</p>
+
+    <h3>Stock on hand ({{ stockReport.length }} rows)</h3>
+    <table *ngIf="stockReport.length > 0" class="data-table">
+      <thead><tr><th>Material</th><th>SKU</th><th>Site</th><th>On hand</th><th>Reorder</th><th>Low?</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let r of stockReport" [class.low-stock]="r.isLowStock">
+          <td>{{ r.name }}</td>
+          <td>{{ r.sku }}</td>
+          <td>{{ r.site }}</td>
+          <td>{{ r.quantityOnHand }} {{ r.unit }}</td>
+          <td>{{ r.reorderLevel }}</td>
+          <td>{{ r.isLowStock ? 'Yes' : '' }}</td>
+          <td>{{ r.extendedValue | currency }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Outstanding with technicians ({{ technicianBalances.length }} rows)</h3>
+    <table *ngIf="technicianBalances.length > 0" class="data-table">
+      <thead><tr><th>Technician</th><th>Material</th><th>Outstanding</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let b of technicianBalances">
+          <td>{{ b.technicianName || b.technicianId }}</td>
+          <td>{{ b.name }}</td>
+          <td>{{ b.quantityOutstanding }} {{ b.unit }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================ SCANNER ============================ -->
+  <div *ngIf="scannerOpen" class="scanner-overlay" (click)="closeScanner()">
+    <div class="scanner-box" (click)="$event.stopPropagation()">
+      <h3>Scan barcode / QR</h3>
+      <zxing-scanner
+        [enable]="scannerEnabled"
+        [formats]="allowedScanFormats"
+        (scanSuccess)="onScanSuccess($event)"
+        (scanError)="onScanError($event)">
+      </zxing-scanner>
+      <button type="button" (click)="closeScanner()">Cancel</button>
+    </div>
+  </div>
 </div>
