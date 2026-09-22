@@ -56,6 +56,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isTemp() || this.authService.isEngineeringFieldSupport() || this.authService.isMaterialsManager()
     },
     {
+      label: 'Materials',
+      route: '/materials',
+      shouldShow: () => this.authService.isMaterialsManager() || this.authService.isAdmin() || this.authService.isCM()
+    },
+    {
       label: 'OSP Coordinator',
       route: '/osp-coordinator-tracker',
       shouldShow: () => this.authService.isCoordinator() || this.authService.isAdmin()

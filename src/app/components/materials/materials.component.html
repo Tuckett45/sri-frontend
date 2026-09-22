@@ -1,0 +1,217 @@
+<div class="materials-container">
+  <header class="materials-header">
+    <h1>Materials</h1>
+    <p class="subtitle">Track materials across sites, manage intake/export orders, and issue items to technicians.</p>
+  </header>
+
+  <nav class="materials-tabs">
+    <button type="button"
+            [class.active]="activeTab === 'inventory'"
+            (click)="setTab('inventory')">Inventory</button>
+    <button type="button"
+            [class.active]="activeTab === 'orders'"
+            (click)="setTab('orders')">Orders</button>
+    <button type="button"
+            [class.active]="activeTab === 'assignments'"
+            (click)="setTab('assignments')">Assignments</button>
+  </nav>
+
+  <!-- ============================ INVENTORY ============================ -->
+  <section *ngIf="activeTab === 'inventory'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="saveMaterial()">
+      <h2>Add / update material</h2>
+      <div class="form-grid">
+        <label>Name*
+          <input type="text" name="name" [(ngModel)]="newMaterial.name" required />
+        </label>
+        <label>SKU
+          <input type="text" name="sku" [(ngModel)]="newMaterial.sku" />
+        </label>
+        <label>Category
+          <input type="text" name="category" [(ngModel)]="newMaterial.category" />
+        </label>
+        <label>Unit
+          <input type="text" name="unit" [(ngModel)]="newMaterial.unit" />
+        </label>
+        <label>Site
+          <input type="text" name="site" [(ngModel)]="newMaterial.site" />
+        </label>
+        <label>Market
+          <input type="text" name="market" [(ngModel)]="newMaterial.market" maxlength="16" />
+        </label>
+        <label>Qty on hand
+          <input type="number" name="qtyOnHand" [(ngModel)]="newMaterial.quantityOnHand" min="0" />
+        </label>
+        <label>Reorder level
+          <input type="number" name="reorderLevel" [(ngModel)]="newMaterial.reorderLevel" min="0" />
+        </label>
+        <label>Unit cost
+          <input type="number" name="unitCost" [(ngModel)]="newMaterial.unitCost" min="0" step="0.01" />
+        </label>
+      </div>
+      <button type="submit" class="primary">Save material</button>
+    </form>
+
+    <div class="list-toolbar">
+      <input type="text" placeholder="Search materials…" [(ngModel)]="searchTerm" (keyup.enter)="loadMaterials()" />
+      <button type="button" (click)="loadMaterials()">Search</button>
+    </div>
+
+    <p *ngIf="loadingMaterials" class="loading">Loading materials…</p>
+    <p *ngIf="!loadingMaterials && materials.length === 0" class="empty">No materials found.</p>
+
+    <table *ngIf="!loadingMaterials && materials.length > 0" class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th><th>SKU</th><th>Category</th><th>Site</th><th>Market</th>
+          <th>On hand</th><th>Reorder</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let m of materials" [class.low-stock]="isLowStock(m)">
+          <td>{{ m.name }}</td>
+          <td>{{ m.sku }}</td>
+          <td>{{ m.category }}</td>
+          <td>{{ m.site }}</td>
+          <td>{{ m.market }}</td>
+          <td>
+            {{ m.quantityOnHand }} {{ m.unit }}
+            <span *ngIf="isLowStock(m)" class="badge warn" title="At or below reorder level">low</span>
+          </td>
+          <td>{{ m.reorderLevel }}</td>
+          <td><button type="button" class="danger" (click)="deleteMaterial(m)">Delete</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================ ORDERS ============================ -->
+  <section *ngIf="activeTab === 'orders'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="saveOrder()">
+      <h2>New order (intake / export)</h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="orderMaterial" [(ngModel)]="newOrder.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>Direction
+          <select name="direction" [(ngModel)]="newOrder.direction">
+            <option *ngFor="let d of directions" [value]="d">{{ d }}</option>
+          </select>
+        </label>
+        <label>Quantity*
+          <input type="number" name="orderQty" [(ngModel)]="newOrder.quantity" min="1" required />
+        </label>
+        <label>Order #
+          <input type="text" name="orderNumber" [(ngModel)]="newOrder.orderNumber" />
+        </label>
+        <label>Vendor
+          <input type="text" name="vendor" [(ngModel)]="newOrder.vendor" />
+        </label>
+        <label>Site
+          <input type="text" name="orderSite" [(ngModel)]="newOrder.site" />
+        </label>
+        <label>Market
+          <input type="text" name="orderMarket" [(ngModel)]="newOrder.market" maxlength="16" />
+        </label>
+        <label>Notes
+          <input type="text" name="orderNotes" [(ngModel)]="newOrder.notes" />
+        </label>
+      </div>
+      <button type="submit" class="primary">Save order</button>
+    </form>
+
+    <p *ngIf="loadingOrders" class="loading">Loading orders…</p>
+    <p *ngIf="!loadingOrders && orders.length === 0" class="empty">No orders yet.</p>
+
+    <table *ngIf="!loadingOrders && orders.length > 0" class="data-table">
+      <thead>
+        <tr>
+          <th>Order #</th><th>Material</th><th>Direction</th><th>Qty</th>
+          <th>Vendor</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of orders">
+          <td>{{ o.orderNumber }}</td>
+          <td>{{ materialName(o.materialId) }}</td>
+          <td>
+            <span class="badge" [class.intake]="o.direction === 'Intake'" [class.export]="o.direction === 'Export'">
+              {{ o.direction }}
+            </span>
+          </td>
+          <td>{{ o.quantity }}</td>
+          <td>{{ o.vendor }}</td>
+          <td>{{ o.status }}</td>
+          <td class="row-actions">
+            <button type="button" *ngIf="!isFulfilled(o)" class="primary" (click)="fulfillOrder(o)">
+              {{ o.direction === 'Intake' ? 'Receive' : 'Ship' }}
+            </button>
+            <button type="button" class="danger" (click)="deleteOrder(o)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ========================== ASSIGNMENTS ========================== -->
+  <section *ngIf="activeTab === 'assignments'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="issueMaterial()">
+      <h2>Issue material to technician</h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="assignMaterial" [(ngModel)]="newAssignment.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">
+              {{ m.name }} ({{ m.quantityOnHand }} {{ m.unit }} on hand)
+            </option>
+          </select>
+        </label>
+        <label>Quantity*
+          <input type="number" name="assignQty" [(ngModel)]="newAssignment.quantityIssued" min="1" required />
+        </label>
+        <label>Technician name
+          <input type="text" name="techName" [(ngModel)]="newAssignment.technicianName" />
+        </label>
+        <label>Technician ID
+          <input type="text" name="techId" [(ngModel)]="newAssignment.technicianId" />
+        </label>
+        <label>Site
+          <input type="text" name="assignSite" [(ngModel)]="newAssignment.site" />
+        </label>
+        <label>Notes
+          <input type="text" name="assignNotes" [(ngModel)]="newAssignment.notes" />
+        </label>
+      </div>
+      <button type="submit" class="primary">Issue material</button>
+    </form>
+
+    <p *ngIf="loadingAssignments" class="loading">Loading assignments…</p>
+    <p *ngIf="!loadingAssignments && assignments.length === 0" class="empty">No assignments yet.</p>
+
+    <table *ngIf="!loadingAssignments && assignments.length > 0" class="data-table">
+      <thead>
+        <tr>
+          <th>Material</th><th>Technician</th><th>Issued</th><th>Returned</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of assignments">
+          <td>{{ materialName(a.materialId) }}</td>
+          <td>{{ a.technicianName || a.technicianId }}</td>
+          <td>{{ a.quantityIssued }}</td>
+          <td>{{ a.quantityReturned }}</td>
+          <td>{{ a.status }}</td>
+          <td class="row-actions">
+            <button type="button" *ngIf="a.status !== 'Returned'" class="primary" (click)="returnMaterial(a)">
+              Return remaining
+            </button>
+            <button type="button" class="danger" (click)="deleteAssignment(a)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>

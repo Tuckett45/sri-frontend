@@ -32,6 +32,12 @@ const routes: Routes = [
     data: { preload: true }
   },
   {
+    path: 'materials',
+    loadChildren: () => import('./components/materials/materials.module').then(m => m.MaterialsModule),
+    canActivate: [AuthGuard],
+    data: { preload: false }
+  },
+  {
     path: 'expenses',
     loadChildren: () => import('./components/expense/expense.module').then(m => m.ExpenseModule),
     canActivate: [AuthGuard],
