@@ -124,6 +124,25 @@ export interface MaterialAssignmentReturn {
   returnedDate?: string | Date | null;
 }
 
+// ---- Bulk import ----
+
+/** A single row that could not be imported, with a 1-based row number. */
+export interface MaterialImportRowError {
+  rowNumber: number;
+  message: string;
+  sku?: string | null;
+  name?: string | null;
+}
+
+/** Result of a bulk material CSV import. */
+export interface MaterialImportSummary {
+  totalRows: number;
+  inserted: number;
+  updated: number;
+  skipped: number;
+  errors: MaterialImportRowError[];
+}
+
 
 // ============================================================
 // Multi-site stock + audit ledger

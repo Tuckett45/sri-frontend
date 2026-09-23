@@ -7,6 +7,7 @@ import {
   MaterialAssignment,
   MaterialAssignmentCreate,
   MaterialAssignmentReturn,
+  MaterialImportSummary,
   MaterialAsset,
   MaterialAssetUpsert,
   MaterialCount,
@@ -62,6 +63,19 @@ export class MaterialsService {
 
   deleteMaterial(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`, this.httpOptions);
+  }
+
+  /**
+   * Bulk-import materials from a CSV file. Existing materials (matched by SKU, else by
+   * name) are updated; new rows are inserted. Returns a summary with per-row errors.
+   *
+   * Note: sends multipart FormData with NO explicit Content-Type so the browser sets the
+   * multipart boundary; ConfigurationInterceptor deliberately leaves FormData bodies alone.
+   */
+  importMaterials(file: File): Observable<MaterialImportSummary> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post<MaterialImportSummary>(`${this.baseUrl}/import`, formData);
   }
 
   // ---------------- Orders (intake / export) ----------------

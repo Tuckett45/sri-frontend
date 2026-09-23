@@ -41,6 +41,49 @@
     <div class="list-toolbar">
       <input type="text" placeholder="Search materials…" [(ngModel)]="searchTerm" (keyup.enter)="loadMaterials()" />
       <button type="button" (click)="loadMaterials()">Search</button>
+
+      <span class="toolbar-spacer"></span>
+
+      <!-- CSV import -->
+      <input #importFileInput type="file" accept=".csv,text/csv" hidden (change)="onImportFileSelected($event)" />
+      <button type="button" (click)="importFileInput.click()" [disabled]="importing" title="Import materials from a CSV file">
+        {{ importing ? 'Importing…' : 'Import CSV' }}
+      </button>
+      <button type="button" class="link-btn" (click)="downloadImportTemplate()" [disabled]="importing" title="Download a blank CSV template">
+        Template
+      </button>
+    </div>
+
+    <!-- Import result summary -->
+    <div class="import-result" *ngIf="importResult" [class.has-errors]="importResult.errors.length > 0">
+      <div class="import-result-header">
+        <strong>Import summary</strong>
+        <button type="button" class="link-btn" (click)="dismissImportResult()">Dismiss</button>
+      </div>
+      <ul class="import-stats">
+        <li><span class="stat added">{{ importResult.inserted }}</span> added</li>
+        <li><span class="stat updated">{{ importResult.updated }}</span> updated</li>
+        <li><span class="stat skipped">{{ importResult.skipped }}</span> skipped</li>
+        <li><span class="stat errored">{{ importResult.errors.length }}</span> errors</li>
+        <li class="muted">of {{ importResult.totalRows }} rows</li>
+      </ul>
+
+      <div *ngIf="importResult.errors.length > 0">
+        <button type="button" class="link-btn" (click)="showImportErrors = !showImportErrors">
+          {{ showImportErrors ? 'Hide' : 'Show' }} {{ importResult.errors.length }} error row(s)
+        </button>
+        <table *ngIf="showImportErrors" class="data-table import-errors">
+          <thead><tr><th>Row</th><th>SKU</th><th>Name</th><th>Problem</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let e of importResult.errors">
+              <td>{{ e.rowNumber }}</td>
+              <td>{{ e.sku }}</td>
+              <td>{{ e.name }}</td>
+              <td>{{ e.message }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <p *ngIf="loadingMaterials" class="loading">Loading materials…</p>

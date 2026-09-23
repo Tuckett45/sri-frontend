@@ -15,6 +15,7 @@ import {
   MaterialAssignmentCreate,
   MaterialCount,
   MaterialCountLineInput,
+  MaterialImportSummary,
   MaterialOrder,
   MaterialOrderDirection,
   MaterialOrderUpsert,
@@ -86,6 +87,15 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   assetSearch = '';
   ledgerMaterialId = '';
   reportLowStockOnly = false;
+
+  // --- CSV import (Inventory) ---
+  importing = false;
+  importResult: MaterialImportSummary | null = null;
+  showImportErrors = false;
+  readonly importTemplateColumns = [
+    'Name', 'Sku', 'Category', 'Description', 'Unit',
+    'Site', 'Market', 'QuantityOnHand', 'ReorderLevel', 'UnitCost', 'IsSerialized'
+  ];
 
   // --- form models ---
   newMaterial: MaterialUpsert = this.emptyMaterial();
@@ -182,6 +192,81 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   isLowStock(material: Material): boolean {
     return material.reorderLevel > 0 && material.quantityOnHand <= material.reorderLevel;
+  }
+
+  // ---------------- CSV import ----------------
+
+  /** Triggered by the hidden file input. Validates and uploads the chosen CSV. */
+  onImportFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    // Reset the input so selecting the same file again re-triggers change.
+    input.value = '';
+    if (!file) return;
+
+    const validationError = this.validateImportFile(file);
+    if (validationError) {
+      this.toastr.warning(validationError, 'Cannot import file');
+      return;
+    }
+
+    this.importing = true;
+    this.importResult = null;
+    this.showImportErrors = false;
+
+    this.materialsService.importMaterials(file)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: summary => {
+          this.importing = false;
+          this.importResult = summary;
+          const changed = summary.inserted + summary.updated;
+          if (summary.errors.length === 0) {
+            this.toastr.success(
+              `${summary.inserted} added, ${summary.updated} updated${summary.skipped ? `, ${summary.skipped} skipped` : ''}.`,
+              'Import complete'
+            );
+          } else {
+            this.toastr.warning(
+              `${changed} imported, ${summary.errors.length} row(s) had errors.`,
+              'Import finished with errors'
+            );
+            this.showImportErrors = true;
+          }
+          this.loadMaterials();
+        },
+        error: err => {
+          this.importing = false;
+          this.toastr.error(this.errorText(err), 'Import failed');
+        }
+      });
+  }
+
+  /** Downloads a blank CSV template with the supported column headers. */
+  downloadImportTemplate(): void {
+    const csv = Papa.unparse({ fields: this.importTemplateColumns, data: [] });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'materials-import-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  dismissImportResult(): void {
+    this.importResult = null;
+    this.showImportErrors = false;
+  }
+
+  private validateImportFile(file: File): string | null {
+    const isCsv = file.name.toLowerCase().endsWith('.csv')
+      || file.type === 'text/csv'
+      || file.type === 'application/vnd.ms-excel';
+    if (!isCsv) return 'Please choose a .csv file. Export your spreadsheet as CSV first.';
+    if (file.size === 0) return 'The selected file is empty.';
+    if (file.size > 10 * 1024 * 1024) return 'File is too large. Maximum size is 10 MB.';
+    return null;
   }
 
   // ---------------- Orders (intake / export) ----------------

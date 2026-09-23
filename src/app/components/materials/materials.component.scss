@@ -453,3 +453,76 @@ h3 {
     }
   }
 }
+
+
+// ---------------- CSV import (Inventory) ----------------
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #00A8E8;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.import-result {
+  border: 1px solid var(--surface-border, #e0e0e0);
+  border-left: 4px solid #2e7d32;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: #fafafa;
+
+  &.has-errors {
+    border-left-color: #ed6c02;
+  }
+
+  .import-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .import-stats {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    font-size: 0.9rem;
+
+    .stat {
+      font-weight: 700;
+      margin-right: 0.25rem;
+
+      &.added { color: #2e7d32; }
+      &.updated { color: #0277bd; }
+      &.skipped { color: #757575; }
+      &.errored { color: #c62828; }
+    }
+
+    .muted {
+      color: #757575;
+    }
+  }
+
+  .import-errors {
+    margin-top: 0.5rem;
+    font-size: 0.82rem;
+  }
+}
