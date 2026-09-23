@@ -51,7 +51,7 @@
         <tr><th>Name</th><th>SKU</th><th>Category</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th><th>Type</th><th></th></tr>
       </thead>
       <tbody>
-        <tr *ngFor="let m of materials" [class.low-stock]="isLowStock(m)">
+        <tr *ngFor="let m of materialsPager.items" [class.low-stock]="isLowStock(m)">
           <td>{{ m.name }}</td>
           <td>{{ m.sku }}</td>
           <td>{{ m.category }}</td>
@@ -64,6 +64,14 @@
         </tr>
       </tbody>
     </table>
+    <div class="pager" *ngIf="!loadingMaterials && materialsPager.total > 0">
+      <span class="pager-info">{{ materialsPager.firstItemIndex }}–{{ materialsPager.lastItemIndex }} of {{ materialsPager.total }}</span>
+      <div class="pager-controls" *ngIf="materialsPager.isPaged">
+        <button type="button" (click)="materialsPager.prev()" [disabled]="!materialsPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ materialsPager.page }} / {{ materialsPager.totalPages }}</span>
+        <button type="button" (click)="materialsPager.next()" [disabled]="!materialsPager.hasNext">Next</button>
+      </div>
+    </div>
   </section>
 
   <!-- ======================== STOCK & LEDGER ======================== -->
@@ -92,7 +100,7 @@
     <table *ngIf="!loadingStock && stock.length > 0" class="data-table">
       <thead><tr><th>Material</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th></tr></thead>
       <tbody>
-        <tr *ngFor="let s of stock">
+        <tr *ngFor="let s of stockPager.items">
           <td>{{ materialName(s.materialId) }}</td>
           <td>{{ s.site }}</td>
           <td>{{ s.market }}</td>
@@ -101,6 +109,14 @@
         </tr>
       </tbody>
     </table>
+    <div class="pager" *ngIf="!loadingStock && stockPager.total > 0">
+      <span class="pager-info">{{ stockPager.firstItemIndex }}–{{ stockPager.lastItemIndex }} of {{ stockPager.total }}</span>
+      <div class="pager-controls" *ngIf="stockPager.isPaged">
+        <button type="button" (click)="stockPager.prev()" [disabled]="!stockPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ stockPager.page }} / {{ stockPager.totalPages }}</span>
+        <button type="button" (click)="stockPager.next()" [disabled]="!stockPager.hasNext">Next</button>
+      </div>
+    </div>
     <p *ngIf="!loadingStock && stock.length === 0" class="empty">No stock rows loaded. Click “Refresh stock”.</p>
 
     <h3>Audit ledger</h3>
@@ -116,7 +132,7 @@
     <table *ngIf="!loadingTransactions && transactions.length > 0" class="data-table">
       <thead><tr><th>When</th><th>Material</th><th>Site</th><th>Type</th><th>Δ</th><th>On hand after</th><th>Reason</th><th>By</th></tr></thead>
       <tbody>
-        <tr *ngFor="let t of transactions">
+        <tr *ngFor="let t of transactionsPager.items">
           <td>{{ t.performedAt | date:'short' }}</td>
           <td>{{ materialName(t.materialId) }}</td>
           <td>{{ t.site }}</td>
@@ -128,6 +144,14 @@
         </tr>
       </tbody>
     </table>
+    <div class="pager" *ngIf="!loadingTransactions && transactionsPager.total > 0">
+      <span class="pager-info">{{ transactionsPager.firstItemIndex }}–{{ transactionsPager.lastItemIndex }} of {{ transactionsPager.total }}</span>
+      <div class="pager-controls" *ngIf="transactionsPager.isPaged">
+        <button type="button" (click)="transactionsPager.prev()" [disabled]="!transactionsPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ transactionsPager.page }} / {{ transactionsPager.totalPages }}</span>
+        <button type="button" (click)="transactionsPager.next()" [disabled]="!transactionsPager.hasNext">Next</button>
+      </div>
+    </div>
     <p *ngIf="!loadingTransactions && transactions.length === 0" class="empty">No ledger rows loaded.</p>
   </section>
 
@@ -164,7 +188,7 @@
     <table *ngIf="!loadingOrders && orders.length > 0" class="data-table">
       <thead><tr><th>Order #</th><th>Material</th><th>Direction</th><th>Qty</th><th>Vendor</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        <tr *ngFor="let o of orders">
+        <tr *ngFor="let o of ordersPager.items">
           <td>{{ o.orderNumber }}</td>
           <td>{{ materialName(o.materialId) }}</td>
           <td><span class="badge" [class.intake]="o.direction === 'Intake'" [class.export]="o.direction === 'Export'">{{ o.direction }}</span></td>
@@ -178,6 +202,14 @@
         </tr>
       </tbody>
     </table>
+    <div class="pager" *ngIf="!loadingOrders && ordersPager.total > 0">
+      <span class="pager-info">{{ ordersPager.firstItemIndex }}–{{ ordersPager.lastItemIndex }} of {{ ordersPager.total }}</span>
+      <div class="pager-controls" *ngIf="ordersPager.isPaged">
+        <button type="button" (click)="ordersPager.prev()" [disabled]="!ordersPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ ordersPager.page }} / {{ ordersPager.totalPages }}</span>
+        <button type="button" (click)="ordersPager.next()" [disabled]="!ordersPager.hasNext">Next</button>
+      </div>
+    </div>
   </section>
 
   <!-- ========================== ASSIGNMENTS ========================== -->
@@ -207,7 +239,7 @@
     <table *ngIf="!loadingAssignments && assignments.length > 0" class="data-table">
       <thead><tr><th>Material</th><th>Technician</th><th>Issued</th><th>Returned</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        <tr *ngFor="let a of assignments">
+        <tr *ngFor="let a of assignmentsPager.items">
           <td>{{ materialName(a.materialId) }}</td>
           <td>{{ a.technicianName || a.technicianId }}</td>
           <td>{{ a.quantityIssued }}</td>
@@ -220,6 +252,14 @@
         </tr>
       </tbody>
     </table>
+    <div class="pager" *ngIf="!loadingAssignments && assignmentsPager.total > 0">
+      <span class="pager-info">{{ assignmentsPager.firstItemIndex }}–{{ assignmentsPager.lastItemIndex }} of {{ assignmentsPager.total }}</span>
+      <div class="pager-controls" *ngIf="assignmentsPager.isPaged">
+        <button type="button" (click)="assignmentsPager.prev()" [disabled]="!assignmentsPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ assignmentsPager.page }} / {{ assignmentsPager.totalPages }}</span>
+        <button type="button" (click)="assignmentsPager.next()" [disabled]="!assignmentsPager.hasNext">Next</button>
+      </div>
+    </div>
   </section>
 
   <!-- =========================== TRANSFERS =========================== -->
@@ -248,7 +288,7 @@
     <table *ngIf="!loadingTransfers && transfers.length > 0" class="data-table">
       <thead><tr><th>Material</th><th>From</th><th>To</th><th>Qty</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        <tr *ngFor="let t of transfers">
+        <tr *ngFor="let t of transfersPager.items">
           <td>{{ materialName(t.materialId) }}</td>
           <td>{{ t.fromSite }}</td>
           <td>{{ t.toSite }}</td>
@@ -261,6 +301,14 @@
         </tr>
       </tbody>
     </table>
+    <div class="pager" *ngIf="!loadingTransfers && transfersPager.total > 0">
+      <span class="pager-info">{{ transfersPager.firstItemIndex }}–{{ transfersPager.lastItemIndex }} of {{ transfersPager.total }}</span>
+      <div class="pager-controls" *ngIf="transfersPager.isPaged">
+        <button type="button" (click)="transfersPager.prev()" [disabled]="!transfersPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ transfersPager.page }} / {{ transfersPager.totalPages }}</span>
+        <button type="button" (click)="transfersPager.next()" [disabled]="!transfersPager.hasNext">Next</button>
+      </div>
+    </div>
   </section>
 
   <!-- ============================= ASSETS ============================= -->
@@ -301,7 +349,7 @@
     <table *ngIf="!loadingAssets && assets.length > 0" class="data-table">
       <thead><tr><th>Material</th><th>Serial</th><th>Lot</th><th>Status</th><th>Site</th><th>Assigned</th><th></th></tr></thead>
       <tbody>
-        <tr *ngFor="let a of assets">
+        <tr *ngFor="let a of assetsPager.items">
           <td>{{ materialName(a.materialId) }}</td>
           <td>{{ a.serialNumber }}</td>
           <td>{{ a.lotNumber }}</td>
@@ -312,6 +360,14 @@
         </tr>
       </tbody>
     </table>
+    <div class="pager" *ngIf="!loadingAssets && assetsPager.total > 0">
+      <span class="pager-info">{{ assetsPager.firstItemIndex }}–{{ assetsPager.lastItemIndex }} of {{ assetsPager.total }}</span>
+      <div class="pager-controls" *ngIf="assetsPager.isPaged">
+        <button type="button" (click)="assetsPager.prev()" [disabled]="!assetsPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ assetsPager.page }} / {{ assetsPager.totalPages }}</span>
+        <button type="button" (click)="assetsPager.next()" [disabled]="!assetsPager.hasNext">Next</button>
+      </div>
+    </div>
   </section>
 
   <!-- ============================= COUNTS ============================= -->
@@ -331,7 +387,7 @@
       <table *ngIf="!loadingCounts && counts.length > 0" class="data-table">
         <thead><tr><th>Site</th><th>Status</th><th>Created</th><th>Posted</th><th></th></tr></thead>
         <tbody>
-          <tr *ngFor="let c of counts">
+          <tr *ngFor="let c of countsPager.items">
             <td>{{ c.site }}</td>
             <td><span class="badge">{{ c.status }}</span></td>
             <td>{{ c.createdDate | date:'short' }}</td>
@@ -340,6 +396,14 @@
           </tr>
         </tbody>
       </table>
+      <div class="pager" *ngIf="!loadingCounts && countsPager.total > 0">
+        <span class="pager-info">{{ countsPager.firstItemIndex }}–{{ countsPager.lastItemIndex }} of {{ countsPager.total }}</span>
+        <div class="pager-controls" *ngIf="countsPager.isPaged">
+          <button type="button" (click)="countsPager.prev()" [disabled]="!countsPager.hasPrev">Prev</button>
+          <span class="pager-page">Page {{ countsPager.page }} / {{ countsPager.totalPages }}</span>
+          <button type="button" (click)="countsPager.next()" [disabled]="!countsPager.hasNext">Next</button>
+        </div>
+      </div>
     </ng-container>
 
     <ng-container *ngIf="activeCount">
@@ -385,7 +449,7 @@
     <table *ngIf="stockReport.length > 0" class="data-table">
       <thead><tr><th>Material</th><th>SKU</th><th>Site</th><th>On hand</th><th>Reorder</th><th>Low?</th><th>Value</th></tr></thead>
       <tbody>
-        <tr *ngFor="let r of stockReport" [class.low-stock]="r.isLowStock">
+        <tr *ngFor="let r of stockReportPager.items" [class.low-stock]="r.isLowStock">
           <td>{{ r.name }}</td>
           <td>{{ r.sku }}</td>
           <td>{{ r.site }}</td>
@@ -396,18 +460,34 @@
         </tr>
       </tbody>
     </table>
+    <div class="pager" *ngIf="stockReportPager.total > 0">
+      <span class="pager-info">{{ stockReportPager.firstItemIndex }}–{{ stockReportPager.lastItemIndex }} of {{ stockReportPager.total }}</span>
+      <div class="pager-controls" *ngIf="stockReportPager.isPaged">
+        <button type="button" (click)="stockReportPager.prev()" [disabled]="!stockReportPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ stockReportPager.page }} / {{ stockReportPager.totalPages }}</span>
+        <button type="button" (click)="stockReportPager.next()" [disabled]="!stockReportPager.hasNext">Next</button>
+      </div>
+    </div>
 
     <h3>Outstanding with technicians ({{ technicianBalances.length }} rows)</h3>
     <table *ngIf="technicianBalances.length > 0" class="data-table">
       <thead><tr><th>Technician</th><th>Material</th><th>Outstanding</th></tr></thead>
       <tbody>
-        <tr *ngFor="let b of technicianBalances">
+        <tr *ngFor="let b of technicianBalancesPager.items">
           <td>{{ b.technicianName || b.technicianId }}</td>
           <td>{{ b.name }}</td>
           <td>{{ b.quantityOutstanding }} {{ b.unit }}</td>
         </tr>
       </tbody>
     </table>
+    <div class="pager" *ngIf="technicianBalancesPager.total > 0">
+      <span class="pager-info">{{ technicianBalancesPager.firstItemIndex }}–{{ technicianBalancesPager.lastItemIndex }} of {{ technicianBalancesPager.total }}</span>
+      <div class="pager-controls" *ngIf="technicianBalancesPager.isPaged">
+        <button type="button" (click)="technicianBalancesPager.prev()" [disabled]="!technicianBalancesPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ technicianBalancesPager.page }} / {{ technicianBalancesPager.totalPages }}</span>
+        <button type="button" (click)="technicianBalancesPager.next()" [disabled]="!technicianBalancesPager.hasNext">Next</button>
+      </div>
+    </div>
   </section>
 
   <!-- ============================ SCANNER ============================ -->

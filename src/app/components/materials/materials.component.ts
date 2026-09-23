@@ -6,6 +6,7 @@ import * as Papa from 'papaparse';
 import { BarcodeFormat } from '@zxing/library';
 import { AuthService } from 'src/app/services/auth.service';
 import { MaterialsService } from 'src/app/services/materials.service';
+import { Pager } from './pager';
 import {
   Material,
   MaterialAsset,
@@ -58,6 +59,18 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   stockReport: MaterialStockReportRow[] = [];
   technicianBalances: TechnicianBalanceRow[] = [];
+
+  // --- pagination (client-side; lists are already loaded into memory) ---
+  readonly materialsPager = new Pager<Material>(10);
+  readonly ordersPager = new Pager<MaterialOrder>(10);
+  readonly assignmentsPager = new Pager<MaterialAssignment>(10);
+  readonly stockPager = new Pager<MaterialStock>(10);
+  readonly transactionsPager = new Pager<MaterialTransaction>(25);
+  readonly transfersPager = new Pager<MaterialTransfer>(10);
+  readonly assetsPager = new Pager<MaterialAsset>(10);
+  readonly countsPager = new Pager<MaterialCount>(10);
+  readonly stockReportPager = new Pager<MaterialStockReportRow>(15);
+  readonly technicianBalancesPager = new Pager<TechnicianBalanceRow>(15);
 
   loadingMaterials = false;
   loadingOrders = false;
@@ -136,7 +149,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialsService.getMaterials({ search: this.searchTerm || undefined })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.materials = data ?? []; this.loadingMaterials = false; },
+        next: data => { this.materials = data ?? []; this.materialsPager.setItems(this.materials); this.loadingMaterials = false; },
         error: err => { this.loadingMaterials = false; this.toastr.error(this.errorText(err), 'Could not load materials'); }
       });
   }
@@ -178,7 +191,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialsService.getOrders()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.orders = data ?? []; this.loadingOrders = false; },
+        next: data => { this.orders = data ?? []; this.ordersPager.setItems(this.orders); this.loadingOrders = false; },
         error: err => { this.loadingOrders = false; this.toastr.error(this.errorText(err), 'Could not load orders'); }
       });
   }
@@ -231,7 +244,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialsService.getAssignments()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.assignments = data ?? []; this.loadingAssignments = false; },
+        next: data => { this.assignments = data ?? []; this.assignmentsPager.setItems(this.assignments); this.loadingAssignments = false; },
         error: err => { this.loadingAssignments = false; this.toastr.error(this.errorText(err), 'Could not load assignments'); }
       });
   }
@@ -288,7 +301,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialsService.getStock()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.stock = data ?? []; this.loadingStock = false; },
+        next: data => { this.stock = data ?? []; this.stockPager.setItems(this.stock); this.loadingStock = false; },
         error: err => { this.loadingStock = false; this.toastr.error(this.errorText(err), 'Could not load stock'); }
       });
   }
@@ -298,7 +311,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialsService.getTransactions({ materialId: this.ledgerMaterialId || undefined, limit: 500 })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.transactions = data ?? []; this.loadingTransactions = false; },
+        next: data => { this.transactions = data ?? []; this.transactionsPager.setItems(this.transactions); this.loadingTransactions = false; },
         error: err => { this.loadingTransactions = false; this.toastr.error(this.errorText(err), 'Could not load ledger'); }
       });
   }
@@ -327,7 +340,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialsService.getTransfers()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.transfers = data ?? []; this.loadingTransfers = false; },
+        next: data => { this.transfers = data ?? []; this.transfersPager.setItems(this.transfers); this.loadingTransfers = false; },
         error: err => { this.loadingTransfers = false; this.toastr.error(this.errorText(err), 'Could not load transfers'); }
       });
   }
@@ -375,7 +388,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialsService.getAssets({ search: this.assetSearch || undefined })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.assets = data ?? []; this.loadingAssets = false; },
+        next: data => { this.assets = data ?? []; this.assetsPager.setItems(this.assets); this.loadingAssets = false; },
         error: err => { this.loadingAssets = false; this.toastr.error(this.errorText(err), 'Could not load assets'); }
       });
   }
@@ -410,7 +423,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialsService.getCounts()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.counts = data ?? []; this.loadingCounts = false; },
+        next: data => { this.counts = data ?? []; this.countsPager.setItems(this.counts); this.loadingCounts = false; },
         error: err => { this.loadingCounts = false; this.toastr.error(this.errorText(err), 'Could not load counts'); }
       });
   }
@@ -486,13 +499,13 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialsService.getStockReport({ lowStockOnly: this.reportLowStockOnly })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.stockReport = data ?? []; this.loadingReports = false; },
+        next: data => { this.stockReport = data ?? []; this.stockReportPager.setItems(this.stockReport); this.loadingReports = false; },
         error: err => { this.loadingReports = false; this.toastr.error(this.errorText(err), 'Could not load report'); }
       });
     this.materialsService.getTechnicianBalances()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => this.technicianBalances = data ?? [],
+        next: data => { this.technicianBalances = data ?? []; this.technicianBalancesPager.setItems(this.technicianBalances); },
         error: () => { /* non-fatal */ }
       });
   }

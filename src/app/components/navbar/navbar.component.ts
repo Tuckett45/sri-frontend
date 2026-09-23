@@ -26,7 +26,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   readonly exactMatchOptions = { exact: true };
   readonly partialMatchOptions = { exact: false };
   private readonly maxInlineLinks = 5;
-  private readonly pinnedRoutes: ReadonlyArray<string> = ['/notifications'];
+  private readonly pinnedRoutes: ReadonlyArray<string> = ['/notifications', '/materials'];
   private readonly featureFlags = inject(FeatureFlagService);
 
   public readonly navLinksConfig: NavLink[] = [
