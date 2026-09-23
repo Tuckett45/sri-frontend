@@ -8,6 +8,8 @@ import {
   MaterialAssignmentCreate,
   MaterialAssignmentReturn,
   MaterialImportSummary,
+  MaterialsWorkbookImport,
+  WorkbookImportSummary,
   MaterialAsset,
   MaterialAssetUpsert,
   MaterialCount,
@@ -76,6 +78,15 @@ export class MaterialsService {
     const formData = new FormData();
     formData.append('file', file, file.name);
     return this.http.post<MaterialImportSummary>(`${this.baseUrl}/import`, formData);
+  }
+
+  /**
+   * Combined multi-sheet import. The workbook is parsed in the browser into one array per
+   * entity and posted here as JSON. Rows are applied in their stated status server-side so
+   * balances and the audit ledger stay consistent. Returns a per-sheet summary.
+   */
+  importWorkbook(payload: MaterialsWorkbookImport): Observable<WorkbookImportSummary> {
+    return this.http.post<WorkbookImportSummary>(`${this.baseUrl}/import/workbook`, payload, this.httpOptions);
   }
 
   // ---------------- Orders (intake / export) ----------------

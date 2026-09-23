@@ -143,6 +143,115 @@ export interface MaterialImportSummary {
   errors: MaterialImportRowError[];
 }
 
+// ---- Combined multi-sheet workbook import ----
+// Rows are parsed in-browser (SheetJS) into these arrays and posted as JSON. Every
+// dependent row references its material by SKU; the backend resolves SKU -> id.
+
+export interface WorkbookMaterialRow {
+  name: string;
+  sku?: string | null;
+  category?: string | null;
+  description?: string | null;
+  unit?: string | null;
+  site?: string | null;
+  market?: string | null;
+  quantityOnHand?: number;
+  reorderLevel?: number;
+  unitCost?: number | null;
+  isSerialized?: boolean;
+}
+
+export interface WorkbookStockRow {
+  sku: string;
+  site: string;
+  quantityOnHand: number;
+  reorderLevel?: number | null;
+  market?: string | null;
+}
+
+export interface WorkbookOrderRow {
+  sku: string;
+  direction: string;          // Intake | Export
+  quantity: number;
+  orderNumber?: string | null;
+  status?: string | null;     // Received/Shipped => moves stock
+  vendor?: string | null;
+  site?: string | null;
+  market?: string | null;
+  unitCost?: number | null;
+  notes?: string | null;
+}
+
+export interface WorkbookAssignmentRow {
+  sku: string;
+  quantityIssued: number;
+  quantityReturned?: number;
+  technicianId?: string | null;
+  technicianName?: string | null;
+  site?: string | null;
+  market?: string | null;
+  notes?: string | null;
+}
+
+export interface WorkbookTransferRow {
+  sku: string;
+  fromSite: string;
+  toSite: string;
+  quantity: number;
+  status?: string | null;     // Completed => moves stock
+  market?: string | null;
+  notes?: string | null;
+}
+
+export interface WorkbookAssetRow {
+  sku: string;
+  serialNumber?: string | null;
+  lotNumber?: string | null;
+  status?: string | null;
+  site?: string | null;
+  market?: string | null;
+  assignedTechnicianId?: string | null;
+  assignedTechnicianName?: string | null;
+  notes?: string | null;
+}
+
+export interface WorkbookCountRow {
+  site: string;
+  sku: string;
+  countedQuantity?: number | null;
+  countRef?: string | null;   // groups lines into one count session
+  market?: string | null;
+  notes?: string | null;
+  post?: boolean;             // any true row posts the session
+}
+
+export interface MaterialsWorkbookImport {
+  materials?: WorkbookMaterialRow[];
+  stock?: WorkbookStockRow[];
+  orders?: WorkbookOrderRow[];
+  assignments?: WorkbookAssignmentRow[];
+  transfers?: WorkbookTransferRow[];
+  assets?: WorkbookAssetRow[];
+  counts?: WorkbookCountRow[];
+}
+
+export interface SheetImportResult {
+  sheet: string;
+  totalRows: number;
+  inserted: number;
+  updated: number;
+  skipped: number;
+  errors: MaterialImportRowError[];
+}
+
+export interface WorkbookImportSummary {
+  sheets: SheetImportResult[];
+  totalInserted: number;
+  totalUpdated: number;
+  totalSkipped: number;
+  totalErrors: number;
+}
+
 
 // ============================================================
 // Multi-site stock + audit ledger

@@ -16,6 +16,7 @@ import {
   MaterialCount,
   MaterialCountLineInput,
   MaterialImportSummary,
+  MaterialsWorkbookImport,
   MaterialOrder,
   MaterialOrderDirection,
   MaterialOrderUpsert,
@@ -26,7 +27,8 @@ import {
   MaterialTransfer,
   MaterialTransferCreate,
   MaterialUpsert,
-  TechnicianBalanceRow
+  TechnicianBalanceRow,
+  WorkbookImportSummary
 } from 'src/app/models/materials.model';
 
 type MaterialsTab =
@@ -88,14 +90,37 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   ledgerMaterialId = '';
   reportLowStockOnly = false;
 
-  // --- CSV import (Inventory) ---
+  // --- Import (Inventory): single-sheet CSV or combined multi-sheet workbook ---
   importing = false;
-  importResult: MaterialImportSummary | null = null;
+  importResult: MaterialImportSummary | null = null;      // CSV (materials only)
+  workbookResult: WorkbookImportSummary | null = null;    // combined workbook
   showImportErrors = false;
   readonly importTemplateColumns = [
     'Name', 'Sku', 'Category', 'Description', 'Unit',
     'Site', 'Market', 'QuantityOnHand', 'ReorderLevel', 'UnitCost', 'IsSerialized'
   ];
+
+  /** Column headers for each sheet of the combined workbook template. */
+  private readonly workbookTemplate: Record<string, string[]> = {
+    Materials: ['Name', 'Sku', 'Category', 'Description', 'Unit', 'Site', 'Market', 'QuantityOnHand', 'ReorderLevel', 'UnitCost', 'IsSerialized'],
+    Stock: ['Sku', 'Site', 'QuantityOnHand', 'ReorderLevel', 'Market'],
+    Orders: ['Sku', 'Direction', 'Quantity', 'OrderNumber', 'Status', 'Vendor', 'Site', 'Market', 'UnitCost', 'Notes'],
+    Assignments: ['Sku', 'QuantityIssued', 'QuantityReturned', 'TechnicianId', 'TechnicianName', 'Site', 'Market', 'Notes'],
+    Transfers: ['Sku', 'FromSite', 'ToSite', 'Quantity', 'Status', 'Market', 'Notes'],
+    Assets: ['Sku', 'SerialNumber', 'LotNumber', 'Status', 'Site', 'Market', 'AssignedTechnicianId', 'AssignedTechnicianName', 'Notes'],
+    Counts: ['Site', 'Sku', 'CountedQuantity', 'CountRef', 'Market', 'Notes', 'Post']
+  };
+
+  /** Maps a worksheet name (any case) to the workbook entity key. */
+  private readonly sheetAliases: Record<string, keyof MaterialsWorkbookImport> = {
+    materials: 'materials', inventory: 'materials',
+    stock: 'stock', 'stock & ledger': 'stock', ledger: 'stock',
+    orders: 'orders',
+    assignments: 'assignments',
+    transfers: 'transfers',
+    assets: 'assets',
+    counts: 'counts'
+  };
 
   // --- form models ---
   newMaterial: MaterialUpsert = this.emptyMaterial();
@@ -194,14 +219,16 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     return material.reorderLevel > 0 && material.quantityOnHand <= material.reorderLevel;
   }
 
-  // ---------------- CSV import ----------------
+  // ---------------- Import (CSV or combined workbook) ----------------
 
-  /** Triggered by the hidden file input. Validates and uploads the chosen CSV. */
+  /**
+   * Triggered by the hidden file input. A single-sheet CSV is imported as materials only;
+   * a multi-sheet .xlsx workbook is parsed in-browser and imported across every tab.
+   */
   onImportFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    // Reset the input so selecting the same file again re-triggers change.
-    input.value = '';
+    input.value = ''; // allow re-selecting the same file
     if (!file) return;
 
     const validationError = this.validateImportFile(file);
@@ -210,17 +237,23 @@ export class MaterialsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.importing = true;
-    this.importResult = null;
-    this.showImportErrors = false;
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'xlsx' || ext === 'xls') {
+      void this.importWorkbookFile(file);
+    } else {
+      this.importCsvFile(file);
+    }
+  }
 
+  /** Single-sheet CSV → materials catalog only. */
+  private importCsvFile(file: File): void {
+    this.beginImport();
     this.materialsService.importMaterials(file)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: summary => {
           this.importing = false;
           this.importResult = summary;
-          const changed = summary.inserted + summary.updated;
           if (summary.errors.length === 0) {
             this.toastr.success(
               `${summary.inserted} added, ${summary.updated} updated${summary.skipped ? `, ${summary.skipped} skipped` : ''}.`,
@@ -228,42 +261,130 @@ export class MaterialsComponent implements OnInit, OnDestroy {
             );
           } else {
             this.toastr.warning(
-              `${changed} imported, ${summary.errors.length} row(s) had errors.`,
+              `${summary.inserted + summary.updated} imported, ${summary.errors.length} row(s) had errors.`,
               'Import finished with errors'
             );
             this.showImportErrors = true;
           }
           this.loadMaterials();
         },
-        error: err => {
-          this.importing = false;
-          this.toastr.error(this.errorText(err), 'Import failed');
-        }
+        error: err => { this.importing = false; this.toastr.error(this.errorText(err), 'Import failed'); }
       });
   }
 
-  /** Downloads a blank CSV template with the supported column headers. */
-  downloadImportTemplate(): void {
-    const csv = Papa.unparse({ fields: this.importTemplateColumns, data: [] });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'materials-import-template.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+  /** Multi-sheet workbook → parse every recognized sheet and import across all tabs. */
+  private async importWorkbookFile(file: File): Promise<void> {
+    this.beginImport();
+    let payload: MaterialsWorkbookImport;
+    try {
+      payload = await this.parseWorkbook(file);
+    } catch (e: any) {
+      this.importing = false;
+      this.toastr.error(e?.message || 'Could not read the workbook.', 'Import failed');
+      return;
+    }
+
+    const sheetCount = Object.values(payload).filter(a => Array.isArray(a) && a.length > 0).length;
+    if (sheetCount === 0) {
+      this.importing = false;
+      this.toastr.warning('No recognized sheets with data were found. Use the template as a guide.', 'Nothing to import');
+      return;
+    }
+
+    this.materialsService.importWorkbook(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: summary => {
+          this.importing = false;
+          this.workbookResult = summary;
+          const changed = summary.totalInserted + summary.totalUpdated;
+          if (summary.totalErrors === 0) {
+            this.toastr.success(`${changed} record(s) imported across ${summary.sheets.length} sheet(s).`, 'Import complete');
+          } else {
+            this.toastr.warning(`${changed} imported, ${summary.totalErrors} row(s) had errors.`, 'Import finished with errors');
+            this.showImportErrors = true;
+          }
+          this.refreshAllTabs();
+        },
+        error: err => { this.importing = false; this.toastr.error(this.errorText(err), 'Import failed'); }
+      });
+  }
+
+  /** Parses an .xlsx/.xls workbook into the per-entity JSON payload (SheetJS, dynamically imported). */
+  private async parseWorkbook(file: File): Promise<MaterialsWorkbookImport> {
+    const XLSX = await import('xlsx');
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const result: MaterialsWorkbookImport = {};
+
+    for (const sheetName of workbook.SheetNames) {
+      const entity = this.sheetAliases[sheetName.trim().toLowerCase()];
+      if (!entity) continue; // ignore unrecognized sheets (notes, legends, etc.)
+      const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: true, defval: null }) as Record<string, any>[];
+      const mapped = rawRows
+        .filter(r => Object.values(r).some(v => v !== null && v !== ''))
+        .map(r => this.normalizeRowKeys(r));
+      if (mapped.length > 0) (result[entity] as any[]) = mapped;
+    }
+    return result;
+  }
+
+  /**
+   * Lower-cases the first letter of each header so spreadsheet columns ("Sku", "QuantityOnHand")
+   * map onto the JSON DTO property names the backend expects ("sku", "quantityOnHand").
+   */
+  private normalizeRowKeys(raw: Record<string, any>): Record<string, any> {
+    const out: Record<string, any> = {};
+    for (const key of Object.keys(raw)) {
+      const trimmed = key.trim();
+      if (!trimmed) continue;
+      const camel = trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+      out[camel] = raw[key];
+    }
+    return out;
+  }
+
+  /** Downloads a multi-sheet .xlsx template (one sheet per tab) with the supported headers. */
+  async downloadImportTemplate(): Promise<void> {
+    const XLSX = await import('xlsx');
+    const wb = XLSX.utils.book_new();
+    for (const [sheet, headers] of Object.entries(this.workbookTemplate)) {
+      const ws = XLSX.utils.aoa_to_sheet([headers]);
+      XLSX.utils.book_append_sheet(wb, ws, sheet);
+    }
+    XLSX.writeFile(wb, 'materials-import-template.xlsx');
   }
 
   dismissImportResult(): void {
     this.importResult = null;
+    this.workbookResult = null;
     this.showImportErrors = false;
   }
 
+  private beginImport(): void {
+    this.importing = true;
+    this.importResult = null;
+    this.workbookResult = null;
+    this.showImportErrors = false;
+  }
+
+  /** After a workbook import, reload whatever tabs already have data loaded. */
+  private refreshAllTabs(): void {
+    this.loadMaterials();
+    if (this.orders.length || this.activeTab === 'orders') this.loadOrders();
+    if (this.assignments.length || this.activeTab === 'assignments') this.loadAssignments();
+    if (this.stock.length || this.activeTab === 'stock') this.loadStock();
+    if (this.transfers.length || this.activeTab === 'transfers') this.loadTransfers();
+    if (this.assets.length || this.activeTab === 'assets') this.loadAssets();
+    if (this.counts.length || this.activeTab === 'counts') this.loadCounts();
+    if (this.activeTab === 'reports') this.loadReports();
+  }
+
   private validateImportFile(file: File): string | null {
-    const isCsv = file.name.toLowerCase().endsWith('.csv')
-      || file.type === 'text/csv'
-      || file.type === 'application/vnd.ms-excel';
-    if (!isCsv) return 'Please choose a .csv file. Export your spreadsheet as CSV first.';
+    const name = file.name.toLowerCase();
+    const isCsv = name.endsWith('.csv') || file.type === 'text/csv' || file.type === 'application/vnd.ms-excel';
+    const isXlsx = name.endsWith('.xlsx') || name.endsWith('.xls');
+    if (!isCsv && !isXlsx) return 'Please choose a .csv or .xlsx file.';
     if (file.size === 0) return 'The selected file is empty.';
     if (file.size > 10 * 1024 * 1024) return 'File is too large. Maximum size is 10 MB.';
     return null;

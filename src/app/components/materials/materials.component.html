@@ -44,17 +44,17 @@
 
       <span class="toolbar-spacer"></span>
 
-      <!-- CSV import -->
-      <input #importFileInput type="file" accept=".csv,text/csv" hidden (change)="onImportFileSelected($event)" />
-      <button type="button" (click)="importFileInput.click()" [disabled]="importing" title="Import materials from a CSV file">
-        {{ importing ? 'Importing…' : 'Import CSV' }}
+      <!-- Import: single-sheet CSV (materials) or combined multi-sheet .xlsx workbook -->
+      <input #importFileInput type="file" accept=".csv,.xlsx,.xls,text/csv" hidden (change)="onImportFileSelected($event)" />
+      <button type="button" (click)="importFileInput.click()" [disabled]="importing" title="Import from a CSV (materials) or multi-sheet Excel workbook (all tabs)">
+        {{ importing ? 'Importing…' : 'Import' }}
       </button>
-      <button type="button" class="link-btn" (click)="downloadImportTemplate()" [disabled]="importing" title="Download a blank CSV template">
+      <button type="button" class="link-btn" (click)="downloadImportTemplate()" [disabled]="importing" title="Download a multi-sheet Excel template (one sheet per tab)">
         Template
       </button>
     </div>
 
-    <!-- Import result summary -->
+    <!-- CSV (materials-only) import summary -->
     <div class="import-result" *ngIf="importResult" [class.has-errors]="importResult.errors.length > 0">
       <div class="import-result-header">
         <strong>Import summary</strong>
@@ -81,6 +81,55 @@
               <td>{{ e.name }}</td>
               <td>{{ e.message }}</td>
             </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Combined workbook import summary (per sheet) -->
+    <div class="import-result" *ngIf="workbookResult" [class.has-errors]="workbookResult.totalErrors > 0">
+      <div class="import-result-header">
+        <strong>Workbook import summary</strong>
+        <button type="button" class="link-btn" (click)="dismissImportResult()">Dismiss</button>
+      </div>
+      <ul class="import-stats">
+        <li><span class="stat added">{{ workbookResult.totalInserted }}</span> added</li>
+        <li><span class="stat updated">{{ workbookResult.totalUpdated }}</span> updated</li>
+        <li><span class="stat skipped">{{ workbookResult.totalSkipped }}</span> skipped</li>
+        <li><span class="stat errored">{{ workbookResult.totalErrors }}</span> errors</li>
+      </ul>
+
+      <table class="data-table workbook-sheets">
+        <thead>
+          <tr><th>Sheet</th><th>Rows</th><th>Added</th><th>Updated</th><th>Skipped</th><th>Errors</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of workbookResult.sheets" [class.low-stock]="s.errors.length > 0">
+            <td>{{ s.sheet }}</td>
+            <td>{{ s.totalRows }}</td>
+            <td>{{ s.inserted }}</td>
+            <td>{{ s.updated }}</td>
+            <td>{{ s.skipped }}</td>
+            <td>{{ s.errors.length }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="workbookResult.totalErrors > 0">
+        <button type="button" class="link-btn" (click)="showImportErrors = !showImportErrors">
+          {{ showImportErrors ? 'Hide' : 'Show' }} {{ workbookResult.totalErrors }} error row(s)
+        </button>
+        <table *ngIf="showImportErrors" class="data-table import-errors">
+          <thead><tr><th>Sheet</th><th>Row</th><th>SKU</th><th>Problem</th></tr></thead>
+          <tbody>
+            <ng-container *ngFor="let s of workbookResult.sheets">
+              <tr *ngFor="let e of s.errors">
+                <td>{{ s.sheet }}</td>
+                <td>{{ e.rowNumber }}</td>
+                <td>{{ e.sku }}</td>
+                <td>{{ e.message }}</td>
+              </tr>
+            </ng-container>
           </tbody>
         </table>
       </div>
