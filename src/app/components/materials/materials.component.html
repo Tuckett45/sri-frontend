@@ -1,0 +1,598 @@
+<div class="materials-container">
+  <header class="materials-header">
+    <h1>Materials</h1>
+    <p class="subtitle">Inventory across sites, orders, technician issuance, transfers, serialized assets, cycle counts, and reporting.</p>
+  </header>
+
+  <nav class="materials-tabs">
+    <button type="button" [class.active]="activeTab === 'inventory'" (click)="setTab('inventory')">Inventory</button>
+    <button type="button" [class.active]="activeTab === 'stock'" (click)="setTab('stock')">Stock &amp; Ledger</button>
+    <button type="button" [class.active]="activeTab === 'orders'" (click)="setTab('orders')">Orders</button>
+    <button type="button" [class.active]="activeTab === 'assignments'" (click)="setTab('assignments')">Assignments</button>
+    <button type="button" [class.active]="activeTab === 'transfers'" (click)="setTab('transfers')">Transfers</button>
+    <button type="button" [class.active]="activeTab === 'assets'" (click)="setTab('assets')">Assets</button>
+    <button type="button" [class.active]="activeTab === 'counts'" (click)="setTab('counts')">Counts</button>
+    <button type="button" [class.active]="activeTab === 'reports'" (click)="setTab('reports')">Reports</button>
+  </nav>
+
+  <!-- ============================ INVENTORY ============================ -->
+  <section *ngIf="activeTab === 'inventory'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="saveMaterial()">
+      <h2>Add / update material
+        <button type="button" class="scan-btn" (click)="openScanner('material')" title="Scan SKU/serial">Scan</button>
+      </h2>
+      <div class="form-grid">
+        <label>Name*<input type="text" name="name" [(ngModel)]="newMaterial.name" required /></label>
+        <label>SKU<input type="text" name="sku" [(ngModel)]="newMaterial.sku" /></label>
+        <label>Category<input type="text" name="category" [(ngModel)]="newMaterial.category" /></label>
+        <label>Unit<input type="text" name="unit" [(ngModel)]="newMaterial.unit" /></label>
+        <label>Site<input type="text" name="site" [(ngModel)]="newMaterial.site" /></label>
+        <label>Market<input type="text" name="market" [(ngModel)]="newMaterial.market" maxlength="16" /></label>
+        <label>Opening qty<input type="number" name="qtyOnHand" [(ngModel)]="newMaterial.quantityOnHand" min="0" /></label>
+        <label>Reorder level<input type="number" name="reorderLevel" [(ngModel)]="newMaterial.reorderLevel" min="0" /></label>
+        <label>Unit cost<input type="number" name="unitCost" [(ngModel)]="newMaterial.unitCost" min="0" step="0.01" /></label>
+        <label class="checkbox">
+          <input type="checkbox" name="isSerialized" [(ngModel)]="newMaterial.isSerialized" /> Serialized item
+        </label>
+      </div>
+      <button type="submit" class="primary">Save material</button>
+    </form>
+
+    <div class="list-toolbar">
+      <input type="text" placeholder="Search materials…" [(ngModel)]="searchTerm" (keyup.enter)="loadMaterials()" />
+      <button type="button" (click)="loadMaterials()">Search</button>
+
+      <span class="toolbar-spacer"></span>
+
+      <!-- Import: single-sheet CSV (materials) or combined multi-sheet .xlsx workbook -->
+      <input #importFileInput type="file" accept=".csv,.xlsx,.xls,text/csv" hidden (change)="onImportFileSelected($event)" />
+      <button type="button" (click)="importFileInput.click()" [disabled]="importing" title="Import from a CSV (materials) or multi-sheet Excel workbook (all tabs)">
+        {{ importing ? 'Importing…' : 'Import' }}
+      </button>
+      <button type="button" class="link-btn" (click)="downloadImportTemplate()" [disabled]="importing" title="Download a multi-sheet Excel template (one sheet per tab)">
+        Template
+      </button>
+    </div>
+
+    <!-- CSV (materials-only) import summary -->
+    <div class="import-result" *ngIf="importResult" [class.has-errors]="importResult.errors.length > 0">
+      <div class="import-result-header">
+        <strong>Import summary</strong>
+        <button type="button" class="link-btn" (click)="dismissImportResult()">Dismiss</button>
+      </div>
+      <ul class="import-stats">
+        <li><span class="stat added">{{ importResult.inserted }}</span> added</li>
+        <li><span class="stat updated">{{ importResult.updated }}</span> updated</li>
+        <li><span class="stat skipped">{{ importResult.skipped }}</span> skipped</li>
+        <li><span class="stat errored">{{ importResult.errors.length }}</span> errors</li>
+        <li class="muted">of {{ importResult.totalRows }} rows</li>
+      </ul>
+
+      <div *ngIf="importResult.errors.length > 0">
+        <button type="button" class="link-btn" (click)="showImportErrors = !showImportErrors">
+          {{ showImportErrors ? 'Hide' : 'Show' }} {{ importResult.errors.length }} error row(s)
+        </button>
+        <table *ngIf="showImportErrors" class="data-table import-errors">
+          <thead><tr><th>Row</th><th>SKU</th><th>Name</th><th>Problem</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let e of importResult.errors">
+              <td>{{ e.rowNumber }}</td>
+              <td>{{ e.sku }}</td>
+              <td>{{ e.name }}</td>
+              <td>{{ e.message }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Combined workbook import summary (per sheet) -->
+    <div class="import-result" *ngIf="workbookResult" [class.has-errors]="workbookResult.totalErrors > 0">
+      <div class="import-result-header">
+        <strong>Workbook import summary</strong>
+        <button type="button" class="link-btn" (click)="dismissImportResult()">Dismiss</button>
+      </div>
+      <ul class="import-stats">
+        <li><span class="stat added">{{ workbookResult.totalInserted }}</span> added</li>
+        <li><span class="stat updated">{{ workbookResult.totalUpdated }}</span> updated</li>
+        <li><span class="stat skipped">{{ workbookResult.totalSkipped }}</span> skipped</li>
+        <li><span class="stat errored">{{ workbookResult.totalErrors }}</span> errors</li>
+      </ul>
+
+      <table class="data-table workbook-sheets">
+        <thead>
+          <tr><th>Sheet</th><th>Rows</th><th>Added</th><th>Updated</th><th>Skipped</th><th>Errors</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of workbookResult.sheets" [class.low-stock]="s.errors.length > 0">
+            <td>{{ s.sheet }}</td>
+            <td>{{ s.totalRows }}</td>
+            <td>{{ s.inserted }}</td>
+            <td>{{ s.updated }}</td>
+            <td>{{ s.skipped }}</td>
+            <td>{{ s.errors.length }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="workbookResult.totalErrors > 0">
+        <button type="button" class="link-btn" (click)="showImportErrors = !showImportErrors">
+          {{ showImportErrors ? 'Hide' : 'Show' }} {{ workbookResult.totalErrors }} error row(s)
+        </button>
+        <table *ngIf="showImportErrors" class="data-table import-errors">
+          <thead><tr><th>Sheet</th><th>Row</th><th>SKU</th><th>Problem</th></tr></thead>
+          <tbody>
+            <ng-container *ngFor="let s of workbookResult.sheets">
+              <tr *ngFor="let e of s.errors">
+                <td>{{ s.sheet }}</td>
+                <td>{{ e.rowNumber }}</td>
+                <td>{{ e.sku }}</td>
+                <td>{{ e.message }}</td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p *ngIf="loadingMaterials" class="loading">Loading materials…</p>
+    <p *ngIf="!loadingMaterials && materials.length === 0" class="empty">No materials found.</p>
+
+    <table *ngIf="!loadingMaterials && materials.length > 0" class="data-table">
+      <thead>
+        <tr><th>Name</th><th>SKU</th><th>Category</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th><th>Type</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let m of materialsPager.items" [class.low-stock]="isLowStock(m)">
+          <td>{{ m.name }}</td>
+          <td>{{ m.sku }}</td>
+          <td>{{ m.category }}</td>
+          <td>{{ m.site }}</td>
+          <td>{{ m.market }}</td>
+          <td>{{ m.quantityOnHand }} {{ m.unit }}<span *ngIf="isLowStock(m)" class="badge warn">low</span></td>
+          <td>{{ m.reorderLevel }}</td>
+          <td><span *ngIf="m.isSerialized" class="badge">serial</span></td>
+          <td><button type="button" class="danger" (click)="deleteMaterial(m)">Delete</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pager" *ngIf="!loadingMaterials && materialsPager.total > 0">
+      <span class="pager-info">{{ materialsPager.firstItemIndex }}–{{ materialsPager.lastItemIndex }} of {{ materialsPager.total }}</span>
+      <div class="pager-controls" *ngIf="materialsPager.isPaged">
+        <button type="button" (click)="materialsPager.prev()" [disabled]="!materialsPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ materialsPager.page }} / {{ materialsPager.totalPages }}</span>
+        <button type="button" (click)="materialsPager.next()" [disabled]="!materialsPager.hasNext">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== STOCK & LEDGER ======================== -->
+  <section *ngIf="activeTab === 'stock'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="adjustStock()">
+      <h2>Manual stock adjustment
+        <button type="button" class="scan-btn" (click)="openScanner('adjust')">Scan</button>
+      </h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="adjMaterial" [(ngModel)]="newAdjust.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>Site*<input type="text" name="adjSite" [(ngModel)]="newAdjust.site" /></label>
+        <label>Qty change (+/-)*<input type="number" name="adjDelta" [(ngModel)]="newAdjust.quantityDelta" /></label>
+        <label>Reason<input type="text" name="adjReason" [(ngModel)]="newAdjust.reason" /></label>
+      </div>
+      <button type="submit" class="primary">Apply adjustment</button>
+    </form>
+
+    <h3>On-hand by site</h3>
+    <button type="button" (click)="loadStock()">Refresh stock</button>
+    <p *ngIf="loadingStock" class="loading">Loading stock…</p>
+    <table *ngIf="!loadingStock && stock.length > 0" class="data-table">
+      <thead><tr><th>Material</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let s of stockPager.items">
+          <td>{{ materialName(s.materialId) }}</td>
+          <td>{{ s.site }}</td>
+          <td>{{ s.market }}</td>
+          <td>{{ s.quantityOnHand }}</td>
+          <td>{{ s.reorderLevel }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pager" *ngIf="!loadingStock && stockPager.total > 0">
+      <span class="pager-info">{{ stockPager.firstItemIndex }}–{{ stockPager.lastItemIndex }} of {{ stockPager.total }}</span>
+      <div class="pager-controls" *ngIf="stockPager.isPaged">
+        <button type="button" (click)="stockPager.prev()" [disabled]="!stockPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ stockPager.page }} / {{ stockPager.totalPages }}</span>
+        <button type="button" (click)="stockPager.next()" [disabled]="!stockPager.hasNext">Next</button>
+      </div>
+    </div>
+    <p *ngIf="!loadingStock && stock.length === 0" class="empty">No stock rows loaded. Click “Refresh stock”.</p>
+
+    <h3>Audit ledger</h3>
+    <div class="list-toolbar">
+      <select name="ledgerMaterial" [(ngModel)]="ledgerMaterialId">
+        <option value="">All materials</option>
+        <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+      </select>
+      <button type="button" (click)="loadTransactions()">Load ledger</button>
+      <button type="button" (click)="exportLedgerCsv()">Export CSV</button>
+    </div>
+    <p *ngIf="loadingTransactions" class="loading">Loading ledger…</p>
+    <table *ngIf="!loadingTransactions && transactions.length > 0" class="data-table">
+      <thead><tr><th>When</th><th>Material</th><th>Site</th><th>Type</th><th>Δ</th><th>On hand after</th><th>Reason</th><th>By</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let t of transactionsPager.items">
+          <td>{{ t.performedAt | date:'short' }}</td>
+          <td>{{ materialName(t.materialId) }}</td>
+          <td>{{ t.site }}</td>
+          <td><span class="badge">{{ t.txnType }}</span></td>
+          <td [class.neg]="t.quantityDelta < 0" [class.pos]="t.quantityDelta > 0">{{ t.quantityDelta }}</td>
+          <td>{{ t.quantityAfter }}</td>
+          <td>{{ t.reason }}</td>
+          <td>{{ t.performedBy }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pager" *ngIf="!loadingTransactions && transactionsPager.total > 0">
+      <span class="pager-info">{{ transactionsPager.firstItemIndex }}–{{ transactionsPager.lastItemIndex }} of {{ transactionsPager.total }}</span>
+      <div class="pager-controls" *ngIf="transactionsPager.isPaged">
+        <button type="button" (click)="transactionsPager.prev()" [disabled]="!transactionsPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ transactionsPager.page }} / {{ transactionsPager.totalPages }}</span>
+        <button type="button" (click)="transactionsPager.next()" [disabled]="!transactionsPager.hasNext">Next</button>
+      </div>
+    </div>
+    <p *ngIf="!loadingTransactions && transactions.length === 0" class="empty">No ledger rows loaded.</p>
+  </section>
+
+  <!-- ============================ ORDERS ============================ -->
+  <section *ngIf="activeTab === 'orders'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="saveOrder()">
+      <h2>New order (intake / export)
+        <button type="button" class="scan-btn" (click)="openScanner('order')">Scan</button>
+      </h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="orderMaterial" [(ngModel)]="newOrder.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>Direction
+          <select name="direction" [(ngModel)]="newOrder.direction">
+            <option *ngFor="let d of directions" [value]="d">{{ d }}</option>
+          </select>
+        </label>
+        <label>Quantity*<input type="number" name="orderQty" [(ngModel)]="newOrder.quantity" min="1" required /></label>
+        <label>Order #<input type="text" name="orderNumber" [(ngModel)]="newOrder.orderNumber" /></label>
+        <label>Vendor<input type="text" name="vendor" [(ngModel)]="newOrder.vendor" /></label>
+        <label>Site<input type="text" name="orderSite" [(ngModel)]="newOrder.site" /></label>
+        <label>Market<input type="text" name="orderMarket" [(ngModel)]="newOrder.market" maxlength="16" /></label>
+        <label>Notes<input type="text" name="orderNotes" [(ngModel)]="newOrder.notes" /></label>
+      </div>
+      <button type="submit" class="primary">Save order</button>
+    </form>
+
+    <p *ngIf="loadingOrders" class="loading">Loading orders…</p>
+    <p *ngIf="!loadingOrders && orders.length === 0" class="empty">No orders yet.</p>
+    <table *ngIf="!loadingOrders && orders.length > 0" class="data-table">
+      <thead><tr><th>Order #</th><th>Material</th><th>Direction</th><th>Qty</th><th>Vendor</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let o of ordersPager.items">
+          <td>{{ o.orderNumber }}</td>
+          <td>{{ materialName(o.materialId) }}</td>
+          <td><span class="badge" [class.intake]="o.direction === 'Intake'" [class.export]="o.direction === 'Export'">{{ o.direction }}</span></td>
+          <td>{{ o.quantity }}</td>
+          <td>{{ o.vendor }}</td>
+          <td>{{ o.status }}</td>
+          <td class="row-actions">
+            <button type="button" *ngIf="!isFulfilled(o)" class="primary" (click)="fulfillOrder(o)">{{ o.direction === 'Intake' ? 'Receive' : 'Ship' }}</button>
+            <button type="button" class="danger" (click)="deleteOrder(o)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pager" *ngIf="!loadingOrders && ordersPager.total > 0">
+      <span class="pager-info">{{ ordersPager.firstItemIndex }}–{{ ordersPager.lastItemIndex }} of {{ ordersPager.total }}</span>
+      <div class="pager-controls" *ngIf="ordersPager.isPaged">
+        <button type="button" (click)="ordersPager.prev()" [disabled]="!ordersPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ ordersPager.page }} / {{ ordersPager.totalPages }}</span>
+        <button type="button" (click)="ordersPager.next()" [disabled]="!ordersPager.hasNext">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================== ASSIGNMENTS ========================== -->
+  <section *ngIf="activeTab === 'assignments'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="issueMaterial()">
+      <h2>Issue material to technician
+        <button type="button" class="scan-btn" (click)="openScanner('assignment')">Scan</button>
+      </h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="assignMaterial" [(ngModel)]="newAssignment.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }} ({{ m.quantityOnHand }} {{ m.unit }} on hand)</option>
+          </select>
+        </label>
+        <label>Quantity*<input type="number" name="assignQty" [(ngModel)]="newAssignment.quantityIssued" min="1" required /></label>
+        <label>Technician name<input type="text" name="techName" [(ngModel)]="newAssignment.technicianName" /></label>
+        <label>Technician ID<input type="text" name="techId" [(ngModel)]="newAssignment.technicianId" /></label>
+        <label>Site<input type="text" name="assignSite" [(ngModel)]="newAssignment.site" /></label>
+        <label>Notes<input type="text" name="assignNotes" [(ngModel)]="newAssignment.notes" /></label>
+      </div>
+      <button type="submit" class="primary">Issue material</button>
+    </form>
+
+    <p *ngIf="loadingAssignments" class="loading">Loading assignments…</p>
+    <p *ngIf="!loadingAssignments && assignments.length === 0" class="empty">No assignments yet.</p>
+    <table *ngIf="!loadingAssignments && assignments.length > 0" class="data-table">
+      <thead><tr><th>Material</th><th>Technician</th><th>Issued</th><th>Returned</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let a of assignmentsPager.items">
+          <td>{{ materialName(a.materialId) }}</td>
+          <td>{{ a.technicianName || a.technicianId }}</td>
+          <td>{{ a.quantityIssued }}</td>
+          <td>{{ a.quantityReturned }}</td>
+          <td>{{ a.status }}</td>
+          <td class="row-actions">
+            <button type="button" *ngIf="a.status !== 'Returned'" class="primary" (click)="returnMaterial(a)">Return remaining</button>
+            <button type="button" class="danger" (click)="deleteAssignment(a)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pager" *ngIf="!loadingAssignments && assignmentsPager.total > 0">
+      <span class="pager-info">{{ assignmentsPager.firstItemIndex }}–{{ assignmentsPager.lastItemIndex }} of {{ assignmentsPager.total }}</span>
+      <div class="pager-controls" *ngIf="assignmentsPager.isPaged">
+        <button type="button" (click)="assignmentsPager.prev()" [disabled]="!assignmentsPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ assignmentsPager.page }} / {{ assignmentsPager.totalPages }}</span>
+        <button type="button" (click)="assignmentsPager.next()" [disabled]="!assignmentsPager.hasNext">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================== TRANSFERS =========================== -->
+  <section *ngIf="activeTab === 'transfers'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="createTransfer()">
+      <h2>New site-to-site transfer
+        <button type="button" class="scan-btn" (click)="openScanner('transfer')">Scan</button>
+      </h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="xferMaterial" [(ngModel)]="newTransfer.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>From site*<input type="text" name="fromSite" [(ngModel)]="newTransfer.fromSite" /></label>
+        <label>To site*<input type="text" name="toSite" [(ngModel)]="newTransfer.toSite" /></label>
+        <label>Quantity*<input type="number" name="xferQty" [(ngModel)]="newTransfer.quantity" min="1" /></label>
+        <label>Notes<input type="text" name="xferNotes" [(ngModel)]="newTransfer.notes" /></label>
+      </div>
+      <button type="submit" class="primary">Create transfer</button>
+    </form>
+
+    <p *ngIf="loadingTransfers" class="loading">Loading transfers…</p>
+    <p *ngIf="!loadingTransfers && transfers.length === 0" class="empty">No transfers yet.</p>
+    <table *ngIf="!loadingTransfers && transfers.length > 0" class="data-table">
+      <thead><tr><th>Material</th><th>From</th><th>To</th><th>Qty</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let t of transfersPager.items">
+          <td>{{ materialName(t.materialId) }}</td>
+          <td>{{ t.fromSite }}</td>
+          <td>{{ t.toSite }}</td>
+          <td>{{ t.quantity }}</td>
+          <td>{{ t.status }}</td>
+          <td class="row-actions">
+            <button type="button" *ngIf="t.status === 'Pending'" class="primary" (click)="completeTransfer(t)">Complete</button>
+            <button type="button" class="danger" (click)="deleteTransfer(t)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pager" *ngIf="!loadingTransfers && transfersPager.total > 0">
+      <span class="pager-info">{{ transfersPager.firstItemIndex }}–{{ transfersPager.lastItemIndex }} of {{ transfersPager.total }}</span>
+      <div class="pager-controls" *ngIf="transfersPager.isPaged">
+        <button type="button" (click)="transfersPager.prev()" [disabled]="!transfersPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ transfersPager.page }} / {{ transfersPager.totalPages }}</span>
+        <button type="button" (click)="transfersPager.next()" [disabled]="!transfersPager.hasNext">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= ASSETS ============================= -->
+  <section *ngIf="activeTab === 'assets'" class="tab-panel">
+    <form class="entry-form" (ngSubmit)="saveAsset()">
+      <h2>Register serialized / lot-tracked unit
+        <button type="button" class="scan-btn" (click)="openScanner('asset')">Scan</button>
+      </h2>
+      <div class="form-grid">
+        <label>Material*
+          <select name="assetMaterial" [(ngModel)]="newAsset.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>Serial #<input type="text" name="serial" [(ngModel)]="newAsset.serialNumber" /></label>
+        <label>Lot #<input type="text" name="lot" [(ngModel)]="newAsset.lotNumber" /></label>
+        <label>Status
+          <select name="assetStatus" [(ngModel)]="newAsset.status">
+            <option value="InStock">InStock</option>
+            <option value="Issued">Issued</option>
+            <option value="Retired">Retired</option>
+            <option value="Lost">Lost</option>
+          </select>
+        </label>
+        <label>Site<input type="text" name="assetSite" [(ngModel)]="newAsset.site" /></label>
+        <label>Assigned tech<input type="text" name="assetTech" [(ngModel)]="newAsset.assignedTechnicianName" /></label>
+      </div>
+      <button type="submit" class="primary">Save asset</button>
+    </form>
+
+    <div class="list-toolbar">
+      <input type="text" placeholder="Search serial / lot…" [(ngModel)]="assetSearch" (keyup.enter)="loadAssets()" />
+      <button type="button" (click)="loadAssets()">Search</button>
+    </div>
+    <p *ngIf="loadingAssets" class="loading">Loading assets…</p>
+    <p *ngIf="!loadingAssets && assets.length === 0" class="empty">No assets yet.</p>
+    <table *ngIf="!loadingAssets && assets.length > 0" class="data-table">
+      <thead><tr><th>Material</th><th>Serial</th><th>Lot</th><th>Status</th><th>Site</th><th>Assigned</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let a of assetsPager.items">
+          <td>{{ materialName(a.materialId) }}</td>
+          <td>{{ a.serialNumber }}</td>
+          <td>{{ a.lotNumber }}</td>
+          <td><span class="badge">{{ a.status }}</span></td>
+          <td>{{ a.site }}</td>
+          <td>{{ a.assignedTechnicianName || a.assignedTechnicianId }}</td>
+          <td><button type="button" class="danger" (click)="deleteAsset(a)">Delete</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pager" *ngIf="!loadingAssets && assetsPager.total > 0">
+      <span class="pager-info">{{ assetsPager.firstItemIndex }}–{{ assetsPager.lastItemIndex }} of {{ assetsPager.total }}</span>
+      <div class="pager-controls" *ngIf="assetsPager.isPaged">
+        <button type="button" (click)="assetsPager.prev()" [disabled]="!assetsPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ assetsPager.page }} / {{ assetsPager.totalPages }}</span>
+        <button type="button" (click)="assetsPager.next()" [disabled]="!assetsPager.hasNext">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= COUNTS ============================= -->
+  <section *ngIf="activeTab === 'counts'" class="tab-panel">
+    <ng-container *ngIf="!activeCount">
+      <form class="entry-form" (ngSubmit)="createCount()">
+        <h2>Start a cycle count</h2>
+        <div class="form-grid">
+          <label>Site*<input type="text" name="countSite" [(ngModel)]="newCountSite" /></label>
+          <label class="checkbox"><input type="checkbox" name="prefill" [(ngModel)]="newCountPrefill" /> Pre-fill from current stock</label>
+        </div>
+        <button type="submit" class="primary">Start count</button>
+      </form>
+
+      <p *ngIf="loadingCounts" class="loading">Loading counts…</p>
+      <p *ngIf="!loadingCounts && counts.length === 0" class="empty">No count sessions yet.</p>
+      <table *ngIf="!loadingCounts && counts.length > 0" class="data-table">
+        <thead><tr><th>Site</th><th>Status</th><th>Created</th><th>Posted</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of countsPager.items">
+            <td>{{ c.site }}</td>
+            <td><span class="badge">{{ c.status }}</span></td>
+            <td>{{ c.createdDate | date:'short' }}</td>
+            <td>{{ c.postedDate | date:'short' }}</td>
+            <td><button type="button" class="primary" (click)="openCount(c)">Open</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pager" *ngIf="!loadingCounts && countsPager.total > 0">
+        <span class="pager-info">{{ countsPager.firstItemIndex }}–{{ countsPager.lastItemIndex }} of {{ countsPager.total }}</span>
+        <div class="pager-controls" *ngIf="countsPager.isPaged">
+          <button type="button" (click)="countsPager.prev()" [disabled]="!countsPager.hasPrev">Prev</button>
+          <span class="pager-page">Page {{ countsPager.page }} / {{ countsPager.totalPages }}</span>
+          <button type="button" (click)="countsPager.next()" [disabled]="!countsPager.hasNext">Next</button>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="activeCount">
+      <div class="count-header">
+        <h2>Count — {{ activeCount.site }} <span class="badge">{{ activeCount.status }}</span></h2>
+        <button type="button" (click)="closeCount()">Back to list</button>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Material</th><th>System qty</th><th>Counted qty</th><th>Variance</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let line of activeCount.lines">
+            <td>{{ materialName(line.materialId) }}</td>
+            <td>{{ line.systemQuantity }}</td>
+            <td>
+              <input *ngIf="activeCount.status === 'Open'" type="number" [(ngModel)]="line.countedQuantity" [name]="'count-' + line.materialId" />
+              <span *ngIf="activeCount.status !== 'Open'">{{ line.countedQuantity }}</span>
+            </td>
+            <td [class.neg]="(lineVariance(line) || 0) < 0" [class.pos]="(lineVariance(line) || 0) > 0">
+              {{ line.variance !== null && line.variance !== undefined ? line.variance : lineVariance(line) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="row-actions" *ngIf="activeCount.status === 'Open'">
+        <button type="button" (click)="saveCount()">Save counts</button>
+        <button type="button" class="primary" (click)="postCount()">Post &amp; adjust inventory</button>
+      </div>
+    </ng-container>
+  </section>
+
+  <!-- ============================= REPORTS ============================= -->
+  <section *ngIf="activeTab === 'reports'" class="tab-panel">
+    <div class="list-toolbar">
+      <label class="checkbox"><input type="checkbox" [(ngModel)]="reportLowStockOnly" name="lowOnly" (change)="loadReports()" /> Low stock only</label>
+      <button type="button" (click)="loadReports()">Refresh</button>
+      <button type="button" (click)="exportStockReportCsv()">Export stock CSV</button>
+      <button type="button" (click)="exportTechnicianBalancesCsv()">Export tech balances CSV</button>
+    </div>
+
+    <p *ngIf="loadingReports" class="loading">Loading report…</p>
+
+    <h3>Stock on hand ({{ stockReport.length }} rows)</h3>
+    <table *ngIf="stockReport.length > 0" class="data-table">
+      <thead><tr><th>Material</th><th>SKU</th><th>Site</th><th>On hand</th><th>Reorder</th><th>Low?</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let r of stockReportPager.items" [class.low-stock]="r.isLowStock">
+          <td>{{ r.name }}</td>
+          <td>{{ r.sku }}</td>
+          <td>{{ r.site }}</td>
+          <td>{{ r.quantityOnHand }} {{ r.unit }}</td>
+          <td>{{ r.reorderLevel }}</td>
+          <td>{{ r.isLowStock ? 'Yes' : '' }}</td>
+          <td>{{ r.extendedValue | currency }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pager" *ngIf="stockReportPager.total > 0">
+      <span class="pager-info">{{ stockReportPager.firstItemIndex }}–{{ stockReportPager.lastItemIndex }} of {{ stockReportPager.total }}</span>
+      <div class="pager-controls" *ngIf="stockReportPager.isPaged">
+        <button type="button" (click)="stockReportPager.prev()" [disabled]="!stockReportPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ stockReportPager.page }} / {{ stockReportPager.totalPages }}</span>
+        <button type="button" (click)="stockReportPager.next()" [disabled]="!stockReportPager.hasNext">Next</button>
+      </div>
+    </div>
+
+    <h3>Outstanding with technicians ({{ technicianBalances.length }} rows)</h3>
+    <table *ngIf="technicianBalances.length > 0" class="data-table">
+      <thead><tr><th>Technician</th><th>Material</th><th>Outstanding</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let b of technicianBalancesPager.items">
+          <td>{{ b.technicianName || b.technicianId }}</td>
+          <td>{{ b.name }}</td>
+          <td>{{ b.quantityOutstanding }} {{ b.unit }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pager" *ngIf="technicianBalancesPager.total > 0">
+      <span class="pager-info">{{ technicianBalancesPager.firstItemIndex }}–{{ technicianBalancesPager.lastItemIndex }} of {{ technicianBalancesPager.total }}</span>
+      <div class="pager-controls" *ngIf="technicianBalancesPager.isPaged">
+        <button type="button" (click)="technicianBalancesPager.prev()" [disabled]="!technicianBalancesPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ technicianBalancesPager.page }} / {{ technicianBalancesPager.totalPages }}</span>
+        <button type="button" (click)="technicianBalancesPager.next()" [disabled]="!technicianBalancesPager.hasNext">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ SCANNER ============================ -->
+  <div *ngIf="scannerOpen" class="scanner-overlay" (click)="closeScanner()">
+    <div class="scanner-box" (click)="$event.stopPropagation()">
+      <h3>Scan barcode / QR</h3>
+      <zxing-scanner
+        [enable]="scannerEnabled"
+        [formats]="allowedScanFormats"
+        (scanSuccess)="onScanSuccess($event)"
+        (scanError)="onScanError($event)">
+      </zxing-scanner>
+      <button type="button" (click)="closeScanner()">Cancel</button>
+    </div>
+  </div>
+</div>
