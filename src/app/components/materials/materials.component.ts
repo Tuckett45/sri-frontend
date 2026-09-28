@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -7,6 +7,7 @@ import { BarcodeFormat } from '@zxing/library';
 import { AuthService } from 'src/app/services/auth.service';
 import { MaterialsService } from 'src/app/services/materials.service';
 import { Pager } from './pager';
+import { MaterialsEditKind, MaterialsEditModalComponent, MaterialsEditPayload } from './materials-edit-modal/materials-edit-modal.component';
 import {
   Material,
   MaterialAsset,
@@ -14,11 +15,13 @@ import {
   MaterialAssignment,
   MaterialAssignmentCreate,
   MaterialCount,
+  MaterialCountCreate,
   MaterialCountLineInput,
   MaterialImportSummary,
   MaterialsWorkbookImport,
   MaterialOrder,
   MaterialOrderDirection,
+  MaterialOrderStatus,
   MaterialOrderUpsert,
   MaterialStock,
   MaterialStockAdjust,
@@ -40,6 +43,20 @@ type MaterialsTab =
   | 'assets'
   | 'counts'
   | 'reports';
+
+/** Per-sheet classification collected while parsing an import workbook, used to explain empty imports. */
+interface WorkbookDiagnostics {
+  allSheets: string[];
+  recognizedSheets: string[];
+  unrecognizedSheets: string[];
+  emptySheets: string[];
+}
+
+/** Result of parsing an import workbook: the payload plus why it may be empty. */
+interface ParsedWorkbook {
+  data: MaterialsWorkbookImport;
+  diagnostics: WorkbookDiagnostics;
+}
 
 @Component({
   selector: 'app-materials',
@@ -74,6 +91,18 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   readonly countsPager = new Pager<MaterialCount>(10);
   readonly stockReportPager = new Pager<MaterialStockReportRow>(15);
   readonly technicianBalancesPager = new Pager<TechnicianBalanceRow>(15);
+
+  // --- add/edit modal ---
+  @ViewChild('editModal') editModal?: MaterialsEditModalComponent;
+
+  // --- inline editing (one row at a time per list) ---
+  editingMaterialId: string | null = null;
+  editingOrderId: string | null = null;
+  editingAssetId: string | null = null;
+  private materialDraft: MaterialUpsert | null = null;
+  private orderDraft: MaterialOrderUpsert | null = null;
+  private assetDraft: MaterialAssetUpsert | null = null;
+  savingInline = false;
 
   loadingMaterials = false;
   loadingOrders = false;
@@ -114,12 +143,36 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   /** Maps a worksheet name (any case) to the workbook entity key. */
   private readonly sheetAliases: Record<string, keyof MaterialsWorkbookImport> = {
     materials: 'materials', inventory: 'materials',
+    // Master price/GPN catalog export. Only the Active Price List is treated as the
+    // source of truth; the other two GPN tabs overlap and would create duplicate SKUs,
+    // so they are intentionally left unrecognized (reported as skipped on import).
+    'copy of active price list': 'materials', 'active price list': 'materials',
     stock: 'stock', 'stock & ledger': 'stock', ledger: 'stock',
     orders: 'orders',
     assignments: 'assignments',
     transfers: 'transfers',
     assets: 'assets',
     counts: 'counts'
+  };
+
+  /**
+   * Per-entity column-header aliases. Maps a normalized (lower-cased, underscores
+   * stripped) source header onto the DTO property the backend expects. This lets us
+   * ingest exported master catalogs whose column names differ from the template.
+   * Keys are matched after normalizeHeader() so "Commodity_Code", "commodity_code",
+   * and "Commodity Code" all collapse to "commoditycode".
+   */
+  private readonly columnAliases: Partial<Record<keyof MaterialsWorkbookImport, Record<string, keyof MaterialUpsert>>> = {
+    materials: {
+      gpn: 'sku',
+      sku: 'sku',
+      name: 'name',
+      description: 'description',
+      commoditycode: 'category',
+      category: 'category',
+      price: 'unitCost',
+      unitcost: 'unitCost'
+    }
   };
 
   // --- form models ---
@@ -275,7 +328,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   /** Multi-sheet workbook → parse every recognized sheet and import across all tabs. */
   private async importWorkbookFile(file: File): Promise<void> {
     this.beginImport();
-    let payload: MaterialsWorkbookImport;
+    let payload: ParsedWorkbook;
     try {
       payload = await this.parseWorkbook(file);
     } catch (e: any) {
@@ -284,14 +337,14 @@ export class MaterialsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const sheetCount = Object.values(payload).filter(a => Array.isArray(a) && a.length > 0).length;
+    const sheetCount = Object.values(payload.data).filter(a => Array.isArray(a) && a.length > 0).length;
     if (sheetCount === 0) {
       this.importing = false;
-      this.toastr.warning('No recognized sheets with data were found. Use the template as a guide.', 'Nothing to import');
+      this.toastr.warning(this.buildNoDataMessage(payload.diagnostics), 'Nothing to import');
       return;
     }
 
-    this.materialsService.importWorkbook(payload)
+    this.materialsService.importWorkbook(payload.data)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: summary => {
@@ -311,37 +364,129 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   }
 
   /** Parses an .xlsx/.xls workbook into the per-entity JSON payload (SheetJS, dynamically imported). */
-  private async parseWorkbook(file: File): Promise<MaterialsWorkbookImport> {
+  private async parseWorkbook(file: File): Promise<ParsedWorkbook> {
     const XLSX = await import('xlsx');
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
     const result: MaterialsWorkbookImport = {};
 
+    const allSheets = workbook.SheetNames.map(s => s.trim()).filter(s => s.length > 0);
+    const recognizedSheets: string[] = [];
+    const unrecognizedSheets: string[] = [];
+    const emptySheets: string[] = [];
+
     for (const sheetName of workbook.SheetNames) {
       const entity = this.sheetAliases[sheetName.trim().toLowerCase()];
-      if (!entity) continue; // ignore unrecognized sheets (notes, legends, etc.)
+      if (!entity) {
+        if (sheetName.trim()) unrecognizedSheets.push(sheetName.trim());
+        continue; // ignore unrecognized sheets (notes, legends, etc.)
+      }
+      recognizedSheets.push(sheetName.trim());
       const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: true, defval: null }) as Record<string, any>[];
       const mapped = rawRows
         .filter(r => Object.values(r).some(v => v !== null && v !== ''))
-        .map(r => this.normalizeRowKeys(r));
-      if (mapped.length > 0) (result[entity] as any[]) = mapped;
+        .map(r => this.normalizeRowKeys(r, entity));
+      if (mapped.length > 0) {
+        (result[entity] as any[]) = mapped;
+      } else {
+        emptySheets.push(sheetName.trim());
+      }
     }
-    return result;
+
+    return {
+      data: result,
+      diagnostics: { allSheets, recognizedSheets, unrecognizedSheets, emptySheets }
+    };
+  }
+
+  /** Builds a specific, actionable message explaining why a workbook produced no rows. */
+  private buildNoDataMessage(d: WorkbookDiagnostics): string {
+    const known = Object.keys(this.workbookTemplate).join(', ');
+    if (d.allSheets.length === 0) {
+      return 'The workbook has no worksheets. Download the template and fill in at least one tab.';
+    }
+    if (d.recognizedSheets.length === 0) {
+      return `None of the tabs matched a supported sheet. Found: ${d.allSheets.join(', ')}. ` +
+        `Rename a tab to one of: ${known}.`;
+    }
+    // We recognized tabs but every one was empty (header row only, or no non-blank cells).
+    return `Recognized tab(s) ${d.recognizedSheets.join(', ')} but found no data rows. ` +
+      'Add at least one row of data below the header row, then import again.';
   }
 
   /**
-   * Lower-cases the first letter of each header so spreadsheet columns ("Sku", "QuantityOnHand")
-   * map onto the JSON DTO property names the backend expects ("sku", "quantityOnHand").
+   * Maps spreadsheet columns onto the JSON DTO property names the backend expects.
+   *
+   * Resolution order per header:
+   *   1. If the entity has a column-alias entry (e.g. materials: "GPN" -> "sku"),
+   *      use the aliased DTO field.
+   *   2. Otherwise fall back to lower-casing the first letter ("Sku" -> "sku",
+   *      "QuantityOnHand" -> "quantityOnHand") to preserve template behavior.
+   *
+   * A per-entity finalizer then runs to enforce required fields and fold extra
+   * source columns (MPN, Manufacturer) that have no DTO field into a text field.
    */
-  private normalizeRowKeys(raw: Record<string, any>): Record<string, any> {
+  private normalizeRowKeys(raw: Record<string, any>, entity: keyof MaterialsWorkbookImport): Record<string, any> {
+    const aliases = this.columnAliases[entity];
     const out: Record<string, any> = {};
     for (const key of Object.keys(raw)) {
       const trimmed = key.trim();
       if (!trimmed) continue;
-      const camel = trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
-      out[camel] = raw[key];
+      const aliased = aliases?.[this.normalizeHeader(trimmed)];
+      const target = aliased ?? (trimmed.charAt(0).toLowerCase() + trimmed.slice(1));
+      out[target] = raw[key];
     }
-    return out;
+    return entity === 'materials' ? this.finalizeMaterialRow(out, raw) : out;
+  }
+
+  /** Collapses a header to a comparison key: lower-case, no spaces/underscores. */
+  private normalizeHeader(header: string): string {
+    return header.trim().toLowerCase().replace(/[\s_]+/g, '');
+  }
+
+  /**
+   * Ensures an imported material row satisfies MaterialUpsert:
+   * - name is required, so fall back to Description when Name is absent.
+   * - MPN and Manufacturer have no DTO field; append them to description so the
+   *   catalog detail is not lost. Currency/Procurement_Method are dropped (all USD).
+   */
+  private finalizeMaterialRow(row: Record<string, any>, raw: Record<string, any>): Record<string, any> {
+    if ((row['name'] === undefined || row['name'] === null || row['name'] === '') && row['description']) {
+      row['name'] = row['description'];
+    }
+
+    const extras: string[] = [];
+    const mpn = this.findRawValue(raw, 'mpn');
+    const manufacturer = this.findRawValue(raw, 'manufacturer');
+    if (manufacturer) extras.push(`Mfr: ${manufacturer}`);
+    if (mpn) extras.push(`MPN: ${mpn}`);
+    if (extras.length > 0) {
+      const base = row['description'] ? `${row['description']} ` : '';
+      row['description'] = `${base}(${extras.join(', ')})`.trim();
+    }
+
+    // Strip columns with no DTO home so they don't ride along as junk properties.
+    for (const key of Object.keys(row)) {
+      if (!this.isMaterialField(key)) delete row[key];
+    }
+    return row;
+  }
+
+  /** Looks up a raw cell value by normalized header name, regardless of casing. */
+  private findRawValue(raw: Record<string, any>, normalizedName: string): any {
+    for (const key of Object.keys(raw)) {
+      if (this.normalizeHeader(key) === normalizedName) return raw[key];
+    }
+    return null;
+  }
+
+  private readonly materialFieldNames = new Set<keyof MaterialUpsert>([
+    'id', 'name', 'sku', 'category', 'description', 'unit',
+    'site', 'market', 'quantityOnHand', 'reorderLevel', 'unitCost', 'isSerialized'
+  ]);
+
+  private isMaterialField(key: string): key is keyof MaterialUpsert {
+    return this.materialFieldNames.has(key as keyof MaterialUpsert);
   }
 
   /** Downloads a multi-sheet .xlsx template (one sheet per tab) with the supported headers. */
@@ -821,6 +966,185 @@ export class MaterialsComponent implements OnInit, OnDestroy {
       case 'asset': this.newAsset.materialId = material.id; break;
     }
   }
+
+  // ---------------- Add / edit modal ----------------
+
+  /** Open the modal in "add new" mode for the given entity. */
+  openAdd(kind: MaterialsEditKind): void {
+    this.editModal?.openForCreate(kind);
+  }
+
+  /** Open the modal pre-filled to edit an existing material / order / asset. */
+  openEditModal(kind: MaterialsEditKind, record: Material | MaterialOrder | MaterialAsset): void {
+    this.editModal?.openForEdit(kind, record);
+  }
+
+  /** Persist the payload emitted by the modal (create or update, depending on kind/id). */
+  onModalSave(payload: MaterialsEditPayload): void {
+    const kind = this.editModal?.kind ?? 'material';
+    if (kind === 'material') {
+      this.materialsService.saveMaterial(payload as MaterialUpsert)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => { this.toastr.success('Material saved'); this.closeModal(); this.loadMaterials(); },
+          error: err => this.toastr.error(this.errorText(err), 'Could not save material')
+        });
+    } else if (kind === 'order') {
+      this.materialsService.saveOrder(payload as MaterialOrderUpsert)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => { this.toastr.success('Order saved'); this.closeModal(); this.loadOrders(); },
+          error: err => this.toastr.error(this.errorText(err), 'Could not save order')
+        });
+    } else if (kind === 'asset') {
+      this.materialsService.saveAsset(payload as MaterialAssetUpsert)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => { this.toastr.success('Asset saved'); this.closeModal(); this.loadAssets(); },
+          error: err => this.toastr.error(this.errorText(err), 'Could not save asset')
+        });
+    } else if (kind === 'assignment') {
+      this.materialsService.issueMaterial(payload as MaterialAssignmentCreate)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.toastr.success('Material issued to technician');
+            this.closeModal();
+            this.loadAssignments();
+            this.loadMaterials();
+            this.stock = [];
+          },
+          error: err => this.toastr.error(this.errorText(err), 'Could not issue material')
+        });
+    } else if (kind === 'transfer') {
+      this.materialsService.createTransfer(payload as MaterialTransferCreate)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => { this.toastr.success('Transfer created'); this.closeModal(); this.loadTransfers(); },
+          error: err => this.toastr.error(this.errorText(err), 'Could not create transfer')
+        });
+    } else if (kind === 'count') {
+      this.materialsService.createCount(payload as MaterialCountCreate)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: count => {
+            this.toastr.success('Count session started');
+            this.closeModal();
+            this.loadCounts();
+            this.openCount(count);
+          },
+          error: err => this.toastr.error(this.errorText(err), 'Could not start count')
+        });
+    }
+  }
+
+  closeModal(): void {
+    if (this.editModal) this.editModal.open = false;
+  }
+
+  // ---------------- Inline editing ----------------
+
+  startEditMaterial(m: Material): void {
+    this.cancelInlineEdits();
+    this.editingMaterialId = m.id;
+    this.materialDraft = {
+      id: m.id, name: m.name, sku: m.sku, category: m.category, description: m.description,
+      unit: m.unit, site: m.site, market: m.market, quantityOnHand: m.quantityOnHand,
+      reorderLevel: m.reorderLevel, unitCost: m.unitCost, isSerialized: m.isSerialized
+    };
+  }
+
+  materialField<K extends keyof MaterialUpsert>(key: K): MaterialUpsert[K] | undefined {
+    return this.materialDraft ? this.materialDraft[key] : undefined;
+  }
+
+  setMaterialField<K extends keyof MaterialUpsert>(key: K, value: MaterialUpsert[K]): void {
+    if (this.materialDraft) this.materialDraft[key] = value;
+  }
+
+  saveInlineMaterial(): void {
+    if (!this.materialDraft?.name?.trim()) { this.toastr.warning('Material name is required.'); return; }
+    this.savingInline = true;
+    this.materialsService.saveMaterial(this.materialDraft)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => { this.savingInline = false; this.toastr.success('Material updated'); this.cancelInlineEdits(); this.loadMaterials(); },
+        error: err => { this.savingInline = false; this.toastr.error(this.errorText(err), 'Could not update material'); }
+      });
+  }
+
+  startEditOrder(o: MaterialOrder): void {
+    this.cancelInlineEdits();
+    this.editingOrderId = o.id;
+    this.orderDraft = {
+      id: o.id, materialId: o.materialId, direction: o.direction, quantity: o.quantity,
+      orderNumber: o.orderNumber, status: o.status, vendor: o.vendor, site: o.site,
+      market: o.market, unitCost: o.unitCost, notes: o.notes
+    };
+  }
+
+  orderField<K extends keyof MaterialOrderUpsert>(key: K): MaterialOrderUpsert[K] | undefined {
+    return this.orderDraft ? this.orderDraft[key] : undefined;
+  }
+
+  setOrderField<K extends keyof MaterialOrderUpsert>(key: K, value: MaterialOrderUpsert[K]): void {
+    if (this.orderDraft) this.orderDraft[key] = value;
+  }
+
+  saveInlineOrder(): void {
+    if (!this.orderDraft) return;
+    if (!this.orderDraft.quantity || this.orderDraft.quantity <= 0) { this.toastr.warning('Quantity must be greater than zero.'); return; }
+    this.savingInline = true;
+    this.materialsService.saveOrder(this.orderDraft)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => { this.savingInline = false; this.toastr.success('Order updated'); this.cancelInlineEdits(); this.loadOrders(); },
+        error: err => { this.savingInline = false; this.toastr.error(this.errorText(err), 'Could not update order'); }
+      });
+  }
+
+  startEditAsset(a: MaterialAsset): void {
+    this.cancelInlineEdits();
+    this.editingAssetId = a.id;
+    this.assetDraft = {
+      id: a.id, materialId: a.materialId, serialNumber: a.serialNumber, lotNumber: a.lotNumber,
+      status: a.status, site: a.site, market: a.market,
+      assignedTechnicianId: a.assignedTechnicianId, assignedTechnicianName: a.assignedTechnicianName, notes: a.notes
+    };
+  }
+
+  assetField<K extends keyof MaterialAssetUpsert>(key: K): MaterialAssetUpsert[K] | undefined {
+    return this.assetDraft ? this.assetDraft[key] : undefined;
+  }
+
+  setAssetField<K extends keyof MaterialAssetUpsert>(key: K, value: MaterialAssetUpsert[K]): void {
+    if (this.assetDraft) this.assetDraft[key] = value;
+  }
+
+  saveInlineAsset(): void {
+    if (!this.assetDraft) return;
+    if (!this.assetDraft.serialNumber && !this.assetDraft.lotNumber) { this.toastr.warning('Enter a serial or lot number.'); return; }
+    this.savingInline = true;
+    this.materialsService.saveAsset(this.assetDraft)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => { this.savingInline = false; this.toastr.success('Asset updated'); this.cancelInlineEdits(); this.loadAssets(); },
+        error: err => { this.savingInline = false; this.toastr.error(this.errorText(err), 'Could not update asset'); }
+      });
+  }
+
+  /** Clear any in-progress inline edit across all lists. */
+  cancelInlineEdits(): void {
+    this.editingMaterialId = null;
+    this.editingOrderId = null;
+    this.editingAssetId = null;
+    this.materialDraft = null;
+    this.orderDraft = null;
+    this.assetDraft = null;
+  }
+
+  readonly assetStatuses = ['InStock', 'Issued', 'Retired', 'Lost'] as const;
+  readonly orderStatuses: MaterialOrderStatus[] = ['Pending', 'Ordered', 'Received', 'Shipped', 'Cancelled'];
 
   // ---------------- Helpers ----------------
 

@@ -1,0 +1,147 @@
+// Add/edit modal for Materials entities. Matches the SRI/ATLAS design language and
+// the existing scanner overlay pattern used in the Materials component.
+
+.edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4vh 1rem;
+  background: rgba(13, 58, 95, 0.55);
+  overflow-y: auto;
+}
+
+.edit-box {
+  width: 100%;
+  max-width: 640px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(13, 58, 95, 0.35);
+  overflow: hidden;
+}
+
+.edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  color: #fff;
+  background: linear-gradient(120deg, #0D3A5F 0%, #1E5A8E 60%, #00A8E8 130%);
+
+  h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .icon-close {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.25rem;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
+
+form {
+  padding: 1.25rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-color-secondary, #616161);
+
+    &.full {
+      grid-column: 1 / -1;
+    }
+
+    &.checkbox {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+    }
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--surface-border, #e0e0e0);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--text-color, #212121);
+    background: #fff;
+
+    &:focus {
+      outline: none;
+      border-color: #00A8E8;
+      box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.18);
+    }
+  }
+
+  input[type='checkbox'] {
+    width: auto;
+    padding: 0;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+
+  button {
+    cursor: pointer;
+    border: 1px solid var(--surface-border, #e0e0e0);
+    border-radius: 8px;
+    padding: 0.55rem 1.15rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: #fff;
+    color: var(--text-color, #212121);
+
+    &:hover {
+      background: var(--surface-hover, #f5f5f5);
+    }
+
+    &.primary {
+      background: linear-gradient(120deg, #1E5A8E, #00A8E8);
+      border-color: transparent;
+      color: #fff;
+
+      &:hover {
+        opacity: 0.92;
+      }
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

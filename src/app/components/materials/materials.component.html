@@ -41,6 +41,7 @@
     <div class="list-toolbar">
       <input type="text" placeholder="Search materials…" [(ngModel)]="searchTerm" (keyup.enter)="loadMaterials()" />
       <button type="button" (click)="loadMaterials()">Search</button>
+      <button type="button" class="primary" (click)="openAdd('material')">+ Add material</button>
 
       <span class="toolbar-spacer"></span>
 
@@ -143,16 +144,38 @@
         <tr><th>Name</th><th>SKU</th><th>Category</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th><th>Type</th><th></th></tr>
       </thead>
       <tbody>
-        <tr *ngFor="let m of materialsPager.items" [class.low-stock]="isLowStock(m)">
-          <td>{{ m.name }}</td>
-          <td>{{ m.sku }}</td>
-          <td>{{ m.category }}</td>
-          <td>{{ m.site }}</td>
-          <td>{{ m.market }}</td>
-          <td>{{ m.quantityOnHand }} {{ m.unit }}<span *ngIf="isLowStock(m)" class="badge warn">low</span></td>
-          <td>{{ m.reorderLevel }}</td>
-          <td><span *ngIf="m.isSerialized" class="badge">serial</span></td>
-          <td><button type="button" class="danger" (click)="deleteMaterial(m)">Delete</button></td>
+        <tr *ngFor="let m of materialsPager.items" [class.low-stock]="isLowStock(m)" [class.editing]="editingMaterialId === m.id">
+          <!-- read mode -->
+          <ng-container *ngIf="editingMaterialId !== m.id">
+            <td>{{ m.name }}</td>
+            <td>{{ m.sku }}</td>
+            <td>{{ m.category }}</td>
+            <td>{{ m.site }}</td>
+            <td>{{ m.market }}</td>
+            <td>{{ m.quantityOnHand }} {{ m.unit }}<span *ngIf="isLowStock(m)" class="badge warn">low</span></td>
+            <td>{{ m.reorderLevel }}</td>
+            <td><span *ngIf="m.isSerialized" class="badge">serial</span></td>
+            <td class="row-actions">
+              <button type="button" (click)="startEditMaterial(m)">Edit</button>
+              <button type="button" (click)="openEditModal('material', m)">Details</button>
+              <button type="button" class="danger" (click)="deleteMaterial(m)">Delete</button>
+            </td>
+          </ng-container>
+          <!-- inline edit mode -->
+          <ng-container *ngIf="editingMaterialId === m.id">
+            <td><input type="text" class="inline-input" [ngModel]="materialField('name')" (ngModelChange)="setMaterialField('name', $event)" [name]="'m-name-' + m.id" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="materialField('sku')" (ngModelChange)="setMaterialField('sku', $event)" [name]="'m-sku-' + m.id" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="materialField('category')" (ngModelChange)="setMaterialField('category', $event)" [name]="'m-cat-' + m.id" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="materialField('site')" (ngModelChange)="setMaterialField('site', $event)" [name]="'m-site-' + m.id" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="materialField('market')" (ngModelChange)="setMaterialField('market', $event)" [name]="'m-mkt-' + m.id" maxlength="16" /></td>
+            <td><input type="number" class="inline-input" [ngModel]="materialField('quantityOnHand')" (ngModelChange)="setMaterialField('quantityOnHand', $event)" [name]="'m-qty-' + m.id" min="0" /></td>
+            <td><input type="number" class="inline-input" [ngModel]="materialField('reorderLevel')" (ngModelChange)="setMaterialField('reorderLevel', $event)" [name]="'m-re-' + m.id" min="0" /></td>
+            <td><span *ngIf="m.isSerialized" class="badge">serial</span></td>
+            <td class="row-actions">
+              <button type="button" class="primary" [disabled]="savingInline" (click)="saveInlineMaterial()">Save</button>
+              <button type="button" [disabled]="savingInline" (click)="cancelInlineEdits()">Cancel</button>
+            </td>
+          </ng-container>
         </tr>
       </tbody>
     </table>
@@ -275,22 +298,52 @@
       <button type="submit" class="primary">Save order</button>
     </form>
 
+    <div class="list-toolbar">
+      <button type="button" class="primary" (click)="openAdd('order')">+ Add order</button>
+    </div>
+
     <p *ngIf="loadingOrders" class="loading">Loading orders…</p>
     <p *ngIf="!loadingOrders && orders.length === 0" class="empty">No orders yet.</p>
     <table *ngIf="!loadingOrders && orders.length > 0" class="data-table">
       <thead><tr><th>Order #</th><th>Material</th><th>Direction</th><th>Qty</th><th>Vendor</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        <tr *ngFor="let o of ordersPager.items">
-          <td>{{ o.orderNumber }}</td>
-          <td>{{ materialName(o.materialId) }}</td>
-          <td><span class="badge" [class.intake]="o.direction === 'Intake'" [class.export]="o.direction === 'Export'">{{ o.direction }}</span></td>
-          <td>{{ o.quantity }}</td>
-          <td>{{ o.vendor }}</td>
-          <td>{{ o.status }}</td>
-          <td class="row-actions">
-            <button type="button" *ngIf="!isFulfilled(o)" class="primary" (click)="fulfillOrder(o)">{{ o.direction === 'Intake' ? 'Receive' : 'Ship' }}</button>
-            <button type="button" class="danger" (click)="deleteOrder(o)">Delete</button>
-          </td>
+        <tr *ngFor="let o of ordersPager.items" [class.editing]="editingOrderId === o.id">
+          <!-- read mode -->
+          <ng-container *ngIf="editingOrderId !== o.id">
+            <td>{{ o.orderNumber }}</td>
+            <td>{{ materialName(o.materialId) }}</td>
+            <td><span class="badge" [class.intake]="o.direction === 'Intake'" [class.export]="o.direction === 'Export'">{{ o.direction }}</span></td>
+            <td>{{ o.quantity }}</td>
+            <td>{{ o.vendor }}</td>
+            <td>{{ o.status }}</td>
+            <td class="row-actions">
+              <button type="button" *ngIf="!isFulfilled(o)" class="primary" (click)="fulfillOrder(o)">{{ o.direction === 'Intake' ? 'Receive' : 'Ship' }}</button>
+              <button type="button" (click)="startEditOrder(o)">Edit</button>
+              <button type="button" (click)="openEditModal('order', o)">Details</button>
+              <button type="button" class="danger" (click)="deleteOrder(o)">Delete</button>
+            </td>
+          </ng-container>
+          <!-- inline edit mode -->
+          <ng-container *ngIf="editingOrderId === o.id">
+            <td><input type="text" class="inline-input" [ngModel]="orderField('orderNumber')" (ngModelChange)="setOrderField('orderNumber', $event)" [name]="'o-num-' + o.id" /></td>
+            <td>{{ materialName(o.materialId) }}</td>
+            <td>
+              <select class="inline-input" [ngModel]="orderField('direction')" (ngModelChange)="setOrderField('direction', $event)" [name]="'o-dir-' + o.id">
+                <option *ngFor="let d of directions" [value]="d">{{ d }}</option>
+              </select>
+            </td>
+            <td><input type="number" class="inline-input" [ngModel]="orderField('quantity')" (ngModelChange)="setOrderField('quantity', $event)" [name]="'o-qty-' + o.id" min="1" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="orderField('vendor')" (ngModelChange)="setOrderField('vendor', $event)" [name]="'o-ven-' + o.id" /></td>
+            <td>
+              <select class="inline-input" [ngModel]="orderField('status')" (ngModelChange)="setOrderField('status', $event)" [name]="'o-stat-' + o.id">
+                <option *ngFor="let s of orderStatuses" [value]="s">{{ s }}</option>
+              </select>
+            </td>
+            <td class="row-actions">
+              <button type="button" class="primary" [disabled]="savingInline" (click)="saveInlineOrder()">Save</button>
+              <button type="button" [disabled]="savingInline" (click)="cancelInlineEdits()">Cancel</button>
+            </td>
+          </ng-container>
         </tr>
       </tbody>
     </table>
@@ -325,6 +378,10 @@
       </div>
       <button type="submit" class="primary">Issue material</button>
     </form>
+
+    <div class="list-toolbar">
+      <button type="button" class="primary" (click)="openAdd('assignment')">+ Issue material</button>
+    </div>
 
     <p *ngIf="loadingAssignments" class="loading">Loading assignments…</p>
     <p *ngIf="!loadingAssignments && assignments.length === 0" class="empty">No assignments yet.</p>
@@ -374,6 +431,10 @@
       </div>
       <button type="submit" class="primary">Create transfer</button>
     </form>
+
+    <div class="list-toolbar">
+      <button type="button" class="primary" (click)="openAdd('transfer')">+ Add transfer</button>
+    </div>
 
     <p *ngIf="loadingTransfers" class="loading">Loading transfers…</p>
     <p *ngIf="!loadingTransfers && transfers.length === 0" class="empty">No transfers yet.</p>
@@ -435,20 +496,45 @@
     <div class="list-toolbar">
       <input type="text" placeholder="Search serial / lot…" [(ngModel)]="assetSearch" (keyup.enter)="loadAssets()" />
       <button type="button" (click)="loadAssets()">Search</button>
+      <button type="button" class="primary" (click)="openAdd('asset')">+ Add asset</button>
     </div>
     <p *ngIf="loadingAssets" class="loading">Loading assets…</p>
     <p *ngIf="!loadingAssets && assets.length === 0" class="empty">No assets yet.</p>
     <table *ngIf="!loadingAssets && assets.length > 0" class="data-table">
       <thead><tr><th>Material</th><th>Serial</th><th>Lot</th><th>Status</th><th>Site</th><th>Assigned</th><th></th></tr></thead>
       <tbody>
-        <tr *ngFor="let a of assetsPager.items">
-          <td>{{ materialName(a.materialId) }}</td>
-          <td>{{ a.serialNumber }}</td>
-          <td>{{ a.lotNumber }}</td>
-          <td><span class="badge">{{ a.status }}</span></td>
-          <td>{{ a.site }}</td>
-          <td>{{ a.assignedTechnicianName || a.assignedTechnicianId }}</td>
-          <td><button type="button" class="danger" (click)="deleteAsset(a)">Delete</button></td>
+        <tr *ngFor="let a of assetsPager.items" [class.editing]="editingAssetId === a.id">
+          <!-- read mode -->
+          <ng-container *ngIf="editingAssetId !== a.id">
+            <td>{{ materialName(a.materialId) }}</td>
+            <td>{{ a.serialNumber }}</td>
+            <td>{{ a.lotNumber }}</td>
+            <td><span class="badge">{{ a.status }}</span></td>
+            <td>{{ a.site }}</td>
+            <td>{{ a.assignedTechnicianName || a.assignedTechnicianId }}</td>
+            <td class="row-actions">
+              <button type="button" (click)="startEditAsset(a)">Edit</button>
+              <button type="button" (click)="openEditModal('asset', a)">Details</button>
+              <button type="button" class="danger" (click)="deleteAsset(a)">Delete</button>
+            </td>
+          </ng-container>
+          <!-- inline edit mode -->
+          <ng-container *ngIf="editingAssetId === a.id">
+            <td>{{ materialName(a.materialId) }}</td>
+            <td><input type="text" class="inline-input" [ngModel]="assetField('serialNumber')" (ngModelChange)="setAssetField('serialNumber', $event)" [name]="'a-ser-' + a.id" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="assetField('lotNumber')" (ngModelChange)="setAssetField('lotNumber', $event)" [name]="'a-lot-' + a.id" /></td>
+            <td>
+              <select class="inline-input" [ngModel]="assetField('status')" (ngModelChange)="setAssetField('status', $event)" [name]="'a-stat-' + a.id">
+                <option *ngFor="let s of assetStatuses" [value]="s">{{ s }}</option>
+              </select>
+            </td>
+            <td><input type="text" class="inline-input" [ngModel]="assetField('site')" (ngModelChange)="setAssetField('site', $event)" [name]="'a-site-' + a.id" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="assetField('assignedTechnicianName')" (ngModelChange)="setAssetField('assignedTechnicianName', $event)" [name]="'a-tech-' + a.id" /></td>
+            <td class="row-actions">
+              <button type="button" class="primary" [disabled]="savingInline" (click)="saveInlineAsset()">Save</button>
+              <button type="button" [disabled]="savingInline" (click)="cancelInlineEdits()">Cancel</button>
+            </td>
+          </ng-container>
         </tr>
       </tbody>
     </table>
@@ -473,6 +559,10 @@
         </div>
         <button type="submit" class="primary">Start count</button>
       </form>
+
+      <div class="list-toolbar">
+        <button type="button" class="primary" (click)="openAdd('count')">+ Start count</button>
+      </div>
 
       <p *ngIf="loadingCounts" class="loading">Loading counts…</p>
       <p *ngIf="!loadingCounts && counts.length === 0" class="empty">No count sessions yet.</p>
@@ -595,4 +685,12 @@
       <button type="button" (click)="closeScanner()">Cancel</button>
     </div>
   </div>
+
+  <!-- ======================= ADD / EDIT MODAL ======================= -->
+  <app-materials-edit-modal
+    #editModal
+    [materials]="materials"
+    (save)="onModalSave($event)"
+    (cancel)="closeModal()">
+  </app-materials-edit-modal>
 </div>

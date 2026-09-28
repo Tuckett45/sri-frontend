@@ -526,3 +526,35 @@ h3 {
     font-size: 0.82rem;
   }
 }
+
+/* ======================= INLINE EDITING ======================= */
+.data-table tr.editing {
+  background: rgba(0, 168, 232, 0.06);
+}
+
+.inline-input {
+  width: 100%;
+  min-width: 60px;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--surface-border, #e0e0e0);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: #fff;
+  color: var(--text-color, #212121);
+
+  &:focus {
+    outline: none;
+    border-color: #00A8E8;
+    box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.18);
+  }
+}
+
+/* Keep the action buttons compact when a row is in edit mode. */
+.data-table td.row-actions {
+  white-space: nowrap;
+
+  button {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.82rem;
+  }
+}
