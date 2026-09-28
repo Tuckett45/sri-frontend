@@ -1,0 +1,118 @@
+<div *ngIf="open" class="edit-overlay" (click)="onCancel()">
+  <div class="edit-box" (click)="$event.stopPropagation()">
+    <div class="edit-header">
+      <h3>{{ title }}</h3>
+      <button type="button" class="icon-close" (click)="onCancel()" aria-label="Close">&times;</button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()">
+      <!-- ===================== MATERIAL ===================== -->
+      <div *ngIf="kind === 'material'" class="form-grid">
+        <label>Name*<input type="text" name="mName" [(ngModel)]="material.name" required /></label>
+        <label>SKU<input type="text" name="mSku" [(ngModel)]="material.sku" /></label>
+        <label>Category<input type="text" name="mCategory" [(ngModel)]="material.category" /></label>
+        <label>Unit<input type="text" name="mUnit" [(ngModel)]="material.unit" /></label>
+        <label>Site<input type="text" name="mSite" [(ngModel)]="material.site" /></label>
+        <label>Market<input type="text" name="mMarket" [(ngModel)]="material.market" maxlength="16" /></label>
+        <label>On hand<input type="number" name="mQty" [(ngModel)]="material.quantityOnHand" min="0" /></label>
+        <label>Reorder level<input type="number" name="mReorder" [(ngModel)]="material.reorderLevel" min="0" /></label>
+        <label>Unit cost<input type="number" name="mCost" [(ngModel)]="material.unitCost" min="0" step="0.01" /></label>
+        <label class="checkbox"><input type="checkbox" name="mSerial" [(ngModel)]="material.isSerialized" /> Serialized item</label>
+        <label class="full">Description<textarea name="mDesc" rows="2" [(ngModel)]="material.description"></textarea></label>
+      </div>
+
+      <!-- ===================== ORDER ===================== -->
+      <div *ngIf="kind === 'order'" class="form-grid">
+        <label>Material*
+          <select name="oMaterial" [(ngModel)]="order.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>Direction
+          <select name="oDirection" [(ngModel)]="order.direction">
+            <option *ngFor="let d of directions" [value]="d">{{ d }}</option>
+          </select>
+        </label>
+        <label>Status
+          <select name="oStatus" [(ngModel)]="order.status">
+            <option *ngFor="let s of orderStatuses" [value]="s">{{ s }}</option>
+          </select>
+        </label>
+        <label>Quantity*<input type="number" name="oQty" [(ngModel)]="order.quantity" min="1" required /></label>
+        <label>Order #<input type="text" name="oNumber" [(ngModel)]="order.orderNumber" /></label>
+        <label>Vendor<input type="text" name="oVendor" [(ngModel)]="order.vendor" /></label>
+        <label>Site<input type="text" name="oSite" [(ngModel)]="order.site" /></label>
+        <label>Market<input type="text" name="oMarket" [(ngModel)]="order.market" maxlength="16" /></label>
+        <label>Unit cost<input type="number" name="oCost" [(ngModel)]="order.unitCost" min="0" step="0.01" /></label>
+        <label class="full">Notes<textarea name="oNotes" rows="2" [(ngModel)]="order.notes"></textarea></label>
+      </div>
+
+      <!-- ===================== ASSET ===================== -->
+      <div *ngIf="kind === 'asset'" class="form-grid">
+        <label>Material*
+          <select name="aMaterial" [(ngModel)]="asset.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>Serial #<input type="text" name="aSerial" [(ngModel)]="asset.serialNumber" /></label>
+        <label>Lot #<input type="text" name="aLot" [(ngModel)]="asset.lotNumber" /></label>
+        <label>Status
+          <select name="aStatus" [(ngModel)]="asset.status">
+            <option *ngFor="let s of assetStatuses" [value]="s">{{ s }}</option>
+          </select>
+        </label>
+        <label>Site<input type="text" name="aSite" [(ngModel)]="asset.site" /></label>
+        <label>Market<input type="text" name="aMarket" [(ngModel)]="asset.market" maxlength="16" /></label>
+        <label>Assigned tech ID<input type="text" name="aTechId" [(ngModel)]="asset.assignedTechnicianId" /></label>
+        <label>Assigned tech<input type="text" name="aTechName" [(ngModel)]="asset.assignedTechnicianName" /></label>
+        <label class="full">Notes<textarea name="aNotes" rows="2" [(ngModel)]="asset.notes"></textarea></label>
+      </div>
+
+      <!-- ===================== ASSIGNMENT (create only) ===================== -->
+      <div *ngIf="kind === 'assignment'" class="form-grid">
+        <label>Material*
+          <select name="asMaterial" [(ngModel)]="assignment.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }} ({{ m.quantityOnHand }} {{ m.unit }} on hand)</option>
+          </select>
+        </label>
+        <label>Quantity*<input type="number" name="asQty" [(ngModel)]="assignment.quantityIssued" min="1" required /></label>
+        <label>Technician name<input type="text" name="asTechName" [(ngModel)]="assignment.technicianName" /></label>
+        <label>Technician ID<input type="text" name="asTechId" [(ngModel)]="assignment.technicianId" /></label>
+        <label>Site<input type="text" name="asSite" [(ngModel)]="assignment.site" /></label>
+        <label>Market<input type="text" name="asMarket" [(ngModel)]="assignment.market" maxlength="16" /></label>
+        <label class="full">Notes<textarea name="asNotes" rows="2" [(ngModel)]="assignment.notes"></textarea></label>
+      </div>
+
+      <!-- ===================== TRANSFER (create only) ===================== -->
+      <div *ngIf="kind === 'transfer'" class="form-grid">
+        <label>Material*
+          <select name="trMaterial" [(ngModel)]="transfer.materialId" required>
+            <option value="">— select —</option>
+            <option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+        <label>Quantity*<input type="number" name="trQty" [(ngModel)]="transfer.quantity" min="1" required /></label>
+        <label>From site*<input type="text" name="trFrom" [(ngModel)]="transfer.fromSite" required /></label>
+        <label>To site*<input type="text" name="trTo" [(ngModel)]="transfer.toSite" required /></label>
+        <label>Market<input type="text" name="trMarket" [(ngModel)]="transfer.market" maxlength="16" /></label>
+        <label class="full">Notes<textarea name="trNotes" rows="2" [(ngModel)]="transfer.notes"></textarea></label>
+      </div>
+
+      <!-- ===================== COUNT (create only) ===================== -->
+      <div *ngIf="kind === 'count'" class="form-grid">
+        <label>Site*<input type="text" name="cSite" [(ngModel)]="count.site" required /></label>
+        <label>Market<input type="text" name="cMarket" [(ngModel)]="count.market" maxlength="16" /></label>
+        <label class="checkbox"><input type="checkbox" name="cPrefill" [(ngModel)]="count.prefillFromStock" /> Pre-fill from current stock</label>
+        <label class="full">Notes<textarea name="cNotes" rows="2" [(ngModel)]="count.notes"></textarea></label>
+      </div>
+
+      <div class="edit-actions">
+        <button type="button" (click)="onCancel()">Cancel</button>
+        <button type="submit" class="primary">{{ isEditing ? 'Save changes' : 'Create' }}</button>
+      </div>
+    </form>
+  </div>
+</div>

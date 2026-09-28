@@ -26,7 +26,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   readonly exactMatchOptions = { exact: true };
   readonly partialMatchOptions = { exact: false };
   private readonly maxInlineLinks = 5;
-  private readonly pinnedRoutes: ReadonlyArray<string> = ['/notifications'];
+  private readonly pinnedRoutes: ReadonlyArray<string> = ['/notifications', '/materials'];
   private readonly featureFlags = inject(FeatureFlagService);
 
   public readonly navLinksConfig: NavLink[] = [
@@ -54,6 +54,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       label: 'Street Sheet',
       route: '/street-sheet',
       shouldShow: () => this.authService.isCM() || this.authService.isAdmin() || this.authService.isTemp() || this.authService.isEngineeringFieldSupport() || this.authService.isMaterialsManager()
+    },
+    {
+      label: 'Materials',
+      route: '/materials',
+      shouldShow: () => this.authService.isMaterialsManager() || this.authService.isAdmin() || this.authService.isCM()
     },
     {
       label: 'OSP Coordinator',
