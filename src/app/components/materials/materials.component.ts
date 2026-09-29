@@ -173,13 +173,15 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     Counts: ['Site', 'Sku', 'CountedQuantity', 'CountRef', 'Market', 'Notes', 'Post']
   };
 
-  /** Maps a worksheet name (any case) to the workbook entity key. */
+  /**
+   * Maps a worksheet name (any case) to the workbook entity key.
+   *
+   * Note: GPN pricing worksheets (Active Price List, All market GPN List, Complete GPN List)
+   * are intentionally NOT mapped here — they have their own lossless import on the GPN Pricing
+   * tab (/api/GpnPricing). Coercing them into inventory materials dropped ~25 catalog columns.
+   */
   private readonly sheetAliases: Record<string, keyof MaterialsWorkbookImport> = {
     materials: 'materials', inventory: 'materials',
-    // Master price/GPN catalog export. Only the Active Price List is treated as the
-    // source of truth; the other two GPN tabs overlap and would create duplicate SKUs,
-    // so they are intentionally left unrecognized (reported as skipped on import).
-    'copy of active price list': 'materials', 'active price list': 'materials',
     stock: 'stock', 'stock & ledger': 'stock', ledger: 'stock',
     orders: 'orders',
     assignments: 'assignments',
@@ -191,19 +193,15 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   /**
    * Per-entity column-header aliases. Maps a normalized (lower-cased, underscores
    * stripped) source header onto the DTO property the backend expects. This lets us
-   * ingest exported master catalogs whose column names differ from the template.
-   * Keys are matched after normalizeHeader() so "Commodity_Code", "commodity_code",
-   * and "Commodity Code" all collapse to "commoditycode".
+   * ingest workbooks whose column names differ slightly from the template.
+   * Keys are matched after normalizeHeader().
    */
   private readonly columnAliases: Partial<Record<keyof MaterialsWorkbookImport, Record<string, keyof MaterialUpsert>>> = {
     materials: {
-      gpn: 'sku',
       sku: 'sku',
       name: 'name',
       description: 'description',
-      commoditycode: 'category',
       category: 'category',
-      price: 'unitCost',
       unitcost: 'unitCost'
     }
   };
@@ -468,13 +466,12 @@ export class MaterialsComponent implements OnInit, OnDestroy {
    * Maps spreadsheet columns onto the JSON DTO property names the backend expects.
    *
    * Resolution order per header:
-   *   1. If the entity has a column-alias entry (e.g. materials: "GPN" -> "sku"),
-   *      use the aliased DTO field.
+   *   1. If the entity has a column-alias entry, use the aliased DTO field.
    *   2. Otherwise fall back to lower-casing the first letter ("Sku" -> "sku",
    *      "QuantityOnHand" -> "quantityOnHand") to preserve template behavior.
    *
-   * A per-entity finalizer then runs to enforce required fields and fold extra
-   * source columns (MPN, Manufacturer) that have no DTO field into a text field.
+   * A per-entity finalizer then runs to enforce required fields and drop columns
+   * that have no DTO home.
    */
   private normalizeRowKeys(raw: Record<string, any>, entity: keyof MaterialsWorkbookImport): Record<string, any> {
     const aliases = this.columnAliases[entity];
@@ -486,7 +483,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
       const target = aliased ?? (trimmed.charAt(0).toLowerCase() + trimmed.slice(1));
       out[target] = raw[key];
     }
-    return entity === 'materials' ? this.finalizeMaterialRow(out, raw) : out;
+    return entity === 'materials' ? this.finalizeMaterialRow(out) : out;
   }
 
   /** Collapses a header to a comparison key: lower-case, no spaces/underscores. */
@@ -497,37 +494,17 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   /**
    * Ensures an imported material row satisfies MaterialUpsert:
    * - name is required, so fall back to Description when Name is absent.
-   * - MPN and Manufacturer have no DTO field; append them to description so the
-   *   catalog detail is not lost. Currency/Procurement_Method are dropped (all USD).
+   * - columns with no DTO home are dropped so they don't ride along as junk properties.
    */
-  private finalizeMaterialRow(row: Record<string, any>, raw: Record<string, any>): Record<string, any> {
+  private finalizeMaterialRow(row: Record<string, any>): Record<string, any> {
     if ((row['name'] === undefined || row['name'] === null || row['name'] === '') && row['description']) {
       row['name'] = row['description'];
     }
 
-    const extras: string[] = [];
-    const mpn = this.findRawValue(raw, 'mpn');
-    const manufacturer = this.findRawValue(raw, 'manufacturer');
-    if (manufacturer) extras.push(`Mfr: ${manufacturer}`);
-    if (mpn) extras.push(`MPN: ${mpn}`);
-    if (extras.length > 0) {
-      const base = row['description'] ? `${row['description']} ` : '';
-      row['description'] = `${base}(${extras.join(', ')})`.trim();
-    }
-
-    // Strip columns with no DTO home so they don't ride along as junk properties.
     for (const key of Object.keys(row)) {
       if (!this.isMaterialField(key)) delete row[key];
     }
     return row;
-  }
-
-  /** Looks up a raw cell value by normalized header name, regardless of casing. */
-  private findRawValue(raw: Record<string, any>, normalizedName: string): any {
-    for (const key of Object.keys(raw)) {
-      if (this.normalizeHeader(key) === normalizedName) return raw[key];
-    }
-    return null;
   }
 
   private readonly materialFieldNames = new Set<keyof MaterialUpsert>([
