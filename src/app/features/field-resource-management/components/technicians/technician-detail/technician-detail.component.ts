@@ -11,6 +11,10 @@ import { TechnicianService } from '../../../services/technician.service';
 import { AttachmentService } from '../../../services/attachment.service';
 import { AddSkillDialogComponent } from './add-skill-dialog/add-skill-dialog.component';
 import { AddCertificationDialogComponent, AddCertificationDialogResult } from './add-certification-dialog/add-certification-dialog.component';
+import {
+  AddTechnicianModalComponent,
+  AddTechnicianModalResult
+} from '../add-technician-modal/add-technician-modal.component';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 import { selectTravelProfile } from '../../../state/travel/travel.selectors';
@@ -280,9 +284,39 @@ export class TechnicianDetailComponent implements OnInit, OnDestroy {
   }
   
   editTechnician(): void {
-    if (this.technicianId) {
-      this.router.navigate(['../', this.technicianId, 'edit'], { relativeTo: this.route });
-    }
+    if (!this.technicianId) return;
+
+    this.technician$.pipe(take(1)).subscribe(technician => {
+      if (!technician) return;
+
+      // Reconstruct availability records from the calendar's unavailable dates
+      const availability: Availability[] = this.unavailableDates.map(date => ({
+        id: '',
+        technicianId: this.technicianId!,
+        date,
+        isAvailable: false,
+        reason: 'PTO'
+      }));
+
+      const dialogRef = this.dialog.open(AddTechnicianModalComponent, {
+        width: '780px',
+        maxWidth: '90vw',
+        disableClose: true,
+        data: {
+          technician,
+          skills: this.technicianSkills,
+          certifications: this.technicianCertifications,
+          availability
+        }
+      });
+
+      dialogRef.afterClosed().subscribe((result: AddTechnicianModalResult) => {
+        if (result) {
+          const dto = AddTechnicianModalComponent.toDto(result, this.technicianId!);
+          this.store.dispatch(TechnicianActions.updateTechnician({ id: this.technicianId!, technician: dto }));
+        }
+      });
+    });
   }
   
   deleteTechnician(technician: Technician): void {

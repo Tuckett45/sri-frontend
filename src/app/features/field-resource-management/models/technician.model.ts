@@ -68,6 +68,7 @@ export interface Technician {
   id: string;
   firstName: string;
   lastName: string;
+  middleName?: string;
   email: string;
   phone: string;
   role: TechnicianRole;
@@ -80,12 +81,22 @@ export interface Technician {
   willingToTravel?: boolean;
   scissorLiftCertified?: boolean;
 
+  // Personal / logistics (carried over from onboarding candidate)
+  vestSize?: string;
+  homeAddress?: string;
+  homeState?: string;
+  workSite?: string;
+  startDate?: string;
+
   // Onboarding tracking fields
   fiberExperience?: FiberExperienceLevel;
   oshaCertified?: boolean;
   oshaCertNumber?: string;
   oshaCertExpiration?: string;
   liftCertifications?: LiftCertificationType[];
+  liftCertification?: boolean;
+  travelAvailability?: boolean;
+  militaryBackground?: boolean;
   shiftAvailability?: ShiftType[];
   backgroundCheckStatus?: ScreeningStatus;
   drugScreenStatus?: ScreeningStatus;
@@ -95,6 +106,7 @@ export interface Technician {
   // Badges & Access
   attBadge?: boolean;
   comcastBadge?: boolean;
+  lumenBadge?: boolean;
   attSupplierTraining?: boolean;
   cienaBasicTraining?: boolean;
   googleRedBadge?: boolean;
@@ -107,6 +119,7 @@ export interface Technician {
   osha30?: boolean;
   techHandTools?: boolean;
   biisciCertified?: boolean;
+  amaMetaTraining?: boolean;
   iesNeoTraining?: boolean;
 
   // Equipment Kits

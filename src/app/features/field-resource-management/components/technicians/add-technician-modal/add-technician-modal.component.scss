@@ -1,0 +1,167 @@
+:host {
+  display: block;
+}
+
+mat-dialog-content {
+  min-width: 700px;
+  max-height: 70vh;
+  padding: 0 24px;
+}
+
+::ng-deep .mat-horizontal-stepper-header-container {
+  margin-bottom: 8px;
+}
+
+::ng-deep .mat-step-label {
+  font-size: 12px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+::ng-deep .mat-horizontal-stepper-header {
+  padding: 0 12px !important;
+}
+
+.step-form {
+  padding: 16px 0;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.form-row mat-form-field {
+  flex: 1;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.toggle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #fafafa;
+}
+
+.toggle-item span {
+  font-size: 0.875rem;
+  color: #424242;
+}
+
+.inline-toggle {
+  flex: 1;
+}
+
+.certs-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.certs-section h4 {
+  margin: 8px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #424242;
+}
+
+.cert-item .form-row {
+  align-items: flex-start;
+}
+
+.instruction {
+  font-size: 0.875rem;
+  color: #616161;
+  margin-bottom: 8px;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.selected-dates h4 {
+  margin: 12px 0 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 12px;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: inline-block;
+
+      &.selected {
+        background-color: #ffcdd2;
+      }
+
+      &.available {
+        background-color: #fff3e0;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  mat-dialog-content {
+    min-width: unset;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .toggle-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+::ng-deep {
+  .selected-unavailable-date {
+    .mat-calendar-body-cell-content {
+      background-color: #ffcdd2 !important;
+      border-radius: 50%;
+    }
+  }
+
+  .available-work-date {
+    .mat-calendar-body-cell-content {
+      background-color: #fff3e0 !important;
+    }
+  }
+}
