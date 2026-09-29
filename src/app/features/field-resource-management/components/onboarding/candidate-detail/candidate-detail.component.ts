@@ -155,6 +155,10 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
                 <span class="cert-icon">{{ candidate.amaMetaTraining ? '\u2714' : '\u2014' }}</span>
                 <span class="cert-label">AMA/META Training</span>
               </div>
+              <div class="cert-item" [class.complete]="candidate.iesNeoTraining" [class.incomplete]="!candidate.iesNeoTraining">
+                <span class="cert-icon">{{ candidate.iesNeoTraining ? '\u2714' : '\u2014' }}</span>
+                <span class="cert-label">IES NEO Training</span>
+              </div>
             </div>
           </div>
 
@@ -912,6 +916,7 @@ export class CandidateDetailComponent implements OnInit {
           osha30: result.trainingCerts.osha30,
           techHandTools: result.trainingCerts.techHandTools,
           amaMetaTraining: result.trainingCerts.amaMetaTraining,
+          iesNeoTraining: result.trainingCerts.iesNeoTraining,
           ciKitAssigned: result.equipmentKits.ciKitAssigned,
           fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
           labelingKitAssigned: result.equipmentKits.labelingKitAssigned,

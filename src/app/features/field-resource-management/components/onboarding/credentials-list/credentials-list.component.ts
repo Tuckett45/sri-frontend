@@ -144,6 +144,17 @@ interface SortState {
             <option value="needs_sponsorship">Needs Sponsorship</option>
           </select>
         </div>
+        <div class="filter-field">
+          <select
+            class="filter-select"
+            [value]="trainingFilter"
+            (change)="onTrainingFilterChange($event)"
+            aria-label="Filter by training"
+          >
+            <option value="">All Trainings</option>
+            <option *ngFor="let opt of trainingOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
       </div>
 
       <!-- Toggle Filters -->
@@ -319,6 +330,7 @@ interface SortState {
                 <th class="center-col">OSHA 30</th>
                 <th class="center-col">Hand Tools</th>
                 <th class="center-col">BIISCI</th>
+                <th class="center-col">IES NEO</th>
                 <th class="center-col">Actions</th>
               </tr>
             </thead>
@@ -332,6 +344,7 @@ interface SortState {
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.osha30)">{{ getYesNoIcon(summary.technician.osha30) }}</span></td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.techHandTools)">{{ getYesNoIcon(summary.technician.techHandTools) }}</span></td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.biisciCertified)">{{ getYesNoIcon(summary.technician.biisciCertified) }}</span></td>
+                <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.iesNeoTraining)">{{ getYesNoIcon(summary.technician.iesNeoTraining) }}</span></td>
                 <td class="actions-cell" (click)="$event.stopPropagation()">
                   <button class="icon-action-btn" (click)="openOnboardingInfoModal(summary)" title="Edit" aria-label="Edit training">
                     <mat-icon>edit</mat-icon>
@@ -962,6 +975,17 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
   regionFilter = '';
   completionFilter = '';
   offerStatusFilter = '';
+  trainingFilter = '';
+  // Training filter options. Each value is a boolean field on the technician view.
+  readonly trainingOptions: { value: string; label: string }[] = [
+    { value: 'iesNeoTraining', label: 'IES NEO Training' },
+    { value: 'obsTraining', label: 'OBS Training' },
+    { value: 'techHandTools', label: 'Tech Hand Tools' },
+    { value: 'osha10', label: 'OSHA 10' },
+    { value: 'osha30', label: 'OSHA 30' },
+    { value: 'scissorLiftCertified', label: 'Scissor Lift' },
+    { value: 'biisciCertified', label: 'BIISCI Certified' },
+  ];
   isLoading = false;
   errorMessage = '';
   activeSubTab: 'core' | 'badges' | 'training' | 'equipment' = 'core';
@@ -1136,6 +1160,7 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
       this.regionFilter ||
       this.completionFilter ||
       this.offerStatusFilter ||
+      this.trainingFilter ||
       this.filters.incompleteOnboarding ||
       this.filters.missingEquipment ||
       this.filters.overduePRC
@@ -1155,6 +1180,7 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
     this.regionFilter = '';
     this.completionFilter = '';
     this.offerStatusFilter = '';
+    this.trainingFilter = '';
     this.applyFilters();
   }
 
@@ -1184,6 +1210,12 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
   onOfferStatusFilterChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
     this.offerStatusFilter = select.value;
+    this.applyFilters();
+  }
+
+  onTrainingFilterChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.trainingFilter = select.value;
     this.applyFilters();
   }
 
@@ -1255,6 +1287,12 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
     // Offer status filter
     if (this.offerStatusFilter) {
       filtered = filtered.filter(summary => summary.offerStatus === this.offerStatusFilter);
+    }
+
+    // Training filter (technician must have the selected training)
+    if (this.trainingFilter) {
+      const key = this.trainingFilter as keyof TechnicianCredentialSummary['technician'];
+      filtered = filtered.filter(summary => !!summary.technician[key]);
     }
 
     // Toggle filters
@@ -1344,6 +1382,7 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
         osha30: candidate.osha30 || false,
         techHandTools: candidate.techHandTools || false,
         biisciCertified: candidate.biisciCertified || false,
+        iesNeoTraining: candidate.iesNeoTraining || false,
         ciKitAssigned: candidate.ciKitAssigned || false,
         fiberKitAssigned: candidate.fiberKitAssigned || false,
         labelingKitAssigned: candidate.labelingKitAssigned || false,

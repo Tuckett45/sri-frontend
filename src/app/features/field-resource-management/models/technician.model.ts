@@ -107,6 +107,7 @@ export interface Technician {
   osha30?: boolean;
   techHandTools?: boolean;
   biisciCertified?: boolean;
+  iesNeoTraining?: boolean;
 
   // Equipment Kits
   ciKitAssigned?: boolean;

@@ -267,7 +267,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
                      (change)="onToggleSelect(candidate, $event)"
                      [attr.aria-label]="'Select ' + candidate.techName + ' for bulk conversion'" />
             </td>
-            <td>{{ candidate.techName }}<span class="badge-meta" *ngIf="candidate.amaMetaTraining" title="AMA/META Training">META</span></td>
+            <td>{{ candidate.techName }}<span class="badge-meta" *ngIf="candidate.amaMetaTraining" title="AMA/META Training">META</span><span class="badge-ies" *ngIf="candidate.iesNeoTraining" title="IES NEO Training">IES</span></td>
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
             <td class="center-col">{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
@@ -1062,6 +1062,20 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       line-height: 1.3;
     }
 
+    .badge-ies {
+      display: inline-block;
+      padding: 0.125rem 0.4rem;
+      border-radius: 9999px;
+      font-size: 0.625rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      background: #2e7d32;
+      color: #ffffff;
+      margin-left: 0.375rem;
+      vertical-align: middle;
+      line-height: 1.3;
+    }
+
     :host ::ng-deep .mat-mdc-paginator {
       border-top: 1px solid #e0e0e0;
       background: #fafafa;
@@ -1149,6 +1163,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   ];
   readonly trainingOptions: { value: keyof Candidate; label: string }[] = [
     { value: 'amaMetaTraining', label: 'AMA/META Training' },
+    { value: 'iesNeoTraining', label: 'IES NEO Training' },
     { value: 'obsTraining', label: 'OBS Training' },
     { value: 'techHandTools', label: 'Tech Hand Tools' },
     { value: 'osha10', label: 'OSHA 10' },
@@ -1407,6 +1422,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           osha30: result.trainingCerts.osha30,
           techHandTools: result.trainingCerts.techHandTools,
           amaMetaTraining: result.trainingCerts.amaMetaTraining,
+          iesNeoTraining: result.trainingCerts.iesNeoTraining,
           ciKitAssigned: result.equipmentKits.ciKitAssigned,
           fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
           labelingKitAssigned: result.equipmentKits.labelingKitAssigned,
@@ -1482,6 +1498,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           osha30: result.trainingCerts.osha30,
           techHandTools: result.trainingCerts.techHandTools,
           amaMetaTraining: result.trainingCerts.amaMetaTraining,
+          iesNeoTraining: result.trainingCerts.iesNeoTraining,
           ciKitAssigned: result.equipmentKits.ciKitAssigned,
           fiberKitAssigned: result.equipmentKits.fiberKitAssigned,
           labelingKitAssigned: result.equipmentKits.labelingKitAssigned,

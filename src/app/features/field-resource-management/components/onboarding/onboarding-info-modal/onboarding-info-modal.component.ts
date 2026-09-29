@@ -113,6 +113,10 @@ export interface OnboardingInfoDialogData {
             <span class="toggle-label">BIISCI</span>
             <mat-slide-toggle formControlName="biisciCertified" color="primary"></mat-slide-toggle>
           </div>
+          <div class="toggle-row">
+            <span class="toggle-label">IES NEO Training</span>
+            <mat-slide-toggle formControlName="iesNeoTraining" color="primary"></mat-slide-toggle>
+          </div>
         </div>
 
         <!-- Equipment Kits -->
@@ -253,6 +257,7 @@ export class OnboardingInfoModalComponent implements OnInit {
       osha30: [tech.osha30 || false],
       techHandTools: [tech.techHandTools || false],
       biisciCertified: [tech.biisciCertified || false],
+      iesNeoTraining: [tech.iesNeoTraining || false],
 
       // Equipment Kits
       ciKitAssigned: [tech.ciKitAssigned || false],
@@ -300,6 +305,7 @@ export class OnboardingInfoModalComponent implements OnInit {
       osha30: v.osha30,
       techHandTools: v.techHandTools,
       biisciCertified: v.biisciCertified,
+      iesNeoTraining: v.iesNeoTraining,
 
       // Equipment Kits
       ciKitAssigned: v.ciKitAssigned,
