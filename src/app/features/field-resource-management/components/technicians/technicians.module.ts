@@ -15,7 +15,6 @@ import { TravelSharedModule } from '../travel/travel.module';
 // Technician Components
 import { TechnicianListComponent } from './technician-list/technician-list.component';
 import { TechnicianDetailComponent } from './technician-detail/technician-detail.component';
-import { TechnicianFormComponent } from './technician-form/technician-form.component';
 import { AddTechnicianModalComponent } from './add-technician-modal/add-technician-modal.component';
 import { TechnicianFinancialTabComponent } from './technician-detail/technician-financial-tab/technician-financial-tab.component';
 import { TechnicianAttachmentsSectionComponent } from './technician-detail/technician-attachments-section/technician-attachments-section.component';
@@ -35,27 +34,11 @@ const routes: Routes = [
     }
   },
   {
-    path: 'new',
-    component: TechnicianFormComponent,
-    data: { 
-      title: 'New Technician',
-      breadcrumb: 'New'
-    }
-  },
-  {
     path: ':id',
     component: TechnicianDetailComponent,
     data: { 
       title: 'Technician Detail',
       breadcrumb: 'Detail'
-    }
-  },
-  {
-    path: ':id/edit',
-    component: TechnicianFormComponent,
-    data: { 
-      title: 'Edit Technician',
-      breadcrumb: 'Edit'
     }
   }
 ];
@@ -64,14 +47,13 @@ const routes: Routes = [
  * Technicians Feature Module
  * 
  * Lazy-loaded module for technician management functionality.
- * Includes list, detail, and form components for managing technician profiles,
- * skills, certifications, and availability.
+ * Includes list and detail components plus the add/edit modal for managing
+ * technician profiles, skills, certifications, and availability.
  */
 @NgModule({
   declarations: [
     TechnicianListComponent,
     TechnicianDetailComponent,
-    TechnicianFormComponent,
     AddTechnicianModalComponent,
     TechnicianFinancialTabComponent,
     TechnicianAttachmentsSectionComponent,
