@@ -80,6 +80,29 @@
     </mat-card-content>
   </mat-card>
 
+  <!-- Resume & Headshot Card (carried over from onboarding) -->
+  <mat-card class="info-card" *ngIf="technician.resumeUrl || technician.headshotUrl">
+    <mat-card-header>
+      <mat-card-title>Resume &amp; Headshot</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="files-grid">
+        <div class="file-item">
+          <label>Resume</label>
+          <a *ngIf="technician.resumeUrl" [href]="technician.resumeUrl" target="_blank" rel="noopener noreferrer" class="file-link">
+            <mat-icon>description</mat-icon> Download Resume
+          </a>
+          <span *ngIf="!technician.resumeUrl" class="no-data">No resume on file</span>
+        </div>
+        <div class="file-item">
+          <label>Headshot</label>
+          <img *ngIf="technician.headshotUrl" [src]="technician.headshotUrl" alt="Technician headshot" class="headshot-thumbnail" />
+          <span *ngIf="!technician.headshotUrl" class="no-data">No headshot on file</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
   <!-- Tabbed Content -->
   <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="detail-tabs">
     <!-- Profile Tab -->

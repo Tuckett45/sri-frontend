@@ -498,3 +498,55 @@ mat-calendar {
 .financial-tab-content {
   padding: 8px 0;
 }
+
+// Resume & Headshot card
+.files-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  .file-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #6b7280;
+    }
+
+    .file-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 500;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .headshot-thumbnail {
+      max-width: 140px;
+      max-height: 140px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid #e0e0e0;
+    }
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
