@@ -12,6 +12,7 @@
     <button type="button" [class.active]="activeTab === 'transfers'" (click)="setTab('transfers')">Transfers</button>
     <button type="button" [class.active]="activeTab === 'assets'" (click)="setTab('assets')">Assets</button>
     <button type="button" [class.active]="activeTab === 'counts'" (click)="setTab('counts')">Counts</button>
+    <button type="button" [class.active]="activeTab === 'gpn'" (click)="setTab('gpn')">GPN Pricing</button>
     <button type="button" [class.active]="activeTab === 'reports'" (click)="setTab('reports')">Reports</button>
   </nav>
 
@@ -668,6 +669,103 @@
         <button type="button" (click)="technicianBalancesPager.prev()" [disabled]="!technicianBalancesPager.hasPrev">Prev</button>
         <span class="pager-page">Page {{ technicianBalancesPager.page }} / {{ technicianBalancesPager.totalPages }}</span>
         <button type="button" (click)="technicianBalancesPager.next()" [disabled]="!technicianBalancesPager.hasNext">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ GPN PRICING ============================ -->
+  <section *ngIf="activeTab === 'gpn'" class="tab-panel">
+    <p class="subtitle">
+      GPN pricing catalog — the Active Price List, All market GPN List, and Complete GPN List worksheets.
+      Column mapping and type parsing are handled server-side, so imports pass each sheet through untouched.
+    </p>
+
+    <div class="list-toolbar">
+      <select [(ngModel)]="gpnSourceFilter" name="gpnSource" (change)="loadGpnPrices()" title="Filter by source worksheet">
+        <option value="">All sources</option>
+        <option value="ActivePriceList">Active Price List</option>
+        <option value="AllMarket">All market GPN List</option>
+        <option value="Complete">Complete GPN List</option>
+      </select>
+      <input type="text" placeholder="Search GPN / MPN / description…" [(ngModel)]="gpnSearchTerm" name="gpnSearch" (keyup.enter)="searchGpn()" />
+      <button type="button" (click)="searchGpn()">Search</button>
+
+      <span class="toolbar-spacer"></span>
+
+      <input #gpnFileInput type="file" accept=".xlsx,.xls" hidden (change)="onGpnImportFileSelected($event)" />
+      <button type="button" (click)="gpnFileInput.click()" [disabled]="importingGpn" title="Import a GPN pricing workbook (.xlsx) with one or more of the three worksheets">
+        {{ importingGpn ? 'Importing…' : 'Import' }}
+      </button>
+      <button type="button" class="link-btn" (click)="downloadGpnTemplate()" [disabled]="importingGpn" title="Download an Excel template with the three GPN worksheets and their columns">
+        Template
+      </button>
+    </div>
+
+    <!-- GPN import summary -->
+    <div class="import-result" *ngIf="gpnImportResult" [class.has-errors]="gpnImportResult.errors.length > 0">
+      <div class="import-result-header">
+        <strong>Import summary</strong>
+        <button type="button" class="link-btn" (click)="dismissGpnImportResult()">Dismiss</button>
+      </div>
+      <ul class="import-stats">
+        <li><span class="stat added">{{ gpnImportResult.inserted }}</span> added</li>
+        <li><span class="stat updated">{{ gpnImportResult.updated }}</span> updated</li>
+        <li><span class="stat skipped">{{ gpnImportResult.skipped }}</span> skipped</li>
+        <li><span class="stat errored">{{ gpnImportResult.errors.length }}</span> errors</li>
+      </ul>
+
+      <div *ngIf="gpnImportResult.errors.length > 0">
+        <button type="button" class="link-btn" (click)="showGpnImportErrors = !showGpnImportErrors">
+          {{ showGpnImportErrors ? 'Hide' : 'Show' }} {{ gpnImportResult.errors.length }} error row(s)
+        </button>
+        <table *ngIf="showGpnImportErrors" class="data-table import-errors">
+          <thead><tr><th>Row</th><th>Source</th><th>Message</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let e of gpnImportResult.errors">
+              <td>{{ e.rowNumber }}</td>
+              <td>{{ e.sourceList }}</td>
+              <td>{{ e.message }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p *ngIf="loadingGpn" class="loading">Loading catalog…</p>
+
+    <table *ngIf="!loadingGpn && gpnPrices.length > 0" class="data-table">
+      <thead>
+        <tr>
+          <th>GPN</th><th>Source</th><th>Description</th><th>MPN</th><th>Manufacturer</th>
+          <th>Supplier</th><th>Price</th><th>Currency</th><th>UOM</th><th>Commodity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of gpnPricesPager.items">
+          <td>{{ p.gpn }}</td>
+          <td>{{ p.sourceList }}</td>
+          <td>{{ p.description }}</td>
+          <td>{{ p.mpn }}</td>
+          <td>{{ p.manufacturer }}</td>
+          <td>{{ p.supplierName || p.supplierId }}</td>
+          <td>{{ p.price != null ? (p.price | number:'1.2-4') : '' }}</td>
+          <td>{{ p.currency }}</td>
+          <td>{{ p.uom }}</td>
+          <td>{{ p.commodityCode }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p *ngIf="!loadingGpn && gpnPrices.length === 0" class="empty">
+      No GPN catalog entries yet. Import a workbook to populate the catalog.
+    </p>
+
+    <div class="pager" *ngIf="gpnPricesPager.total > 0">
+      <span class="pager-info">{{ gpnPricesPager.firstItemIndex }}–{{ gpnPricesPager.lastItemIndex }} of {{ gpnPricesPager.total }}</span>
+      <div class="pager-controls" *ngIf="gpnPricesPager.isPaged">
+        <button type="button" (click)="gpnPricesPager.prev()" [disabled]="!gpnPricesPager.hasPrev">Prev</button>
+        <span class="pager-page">Page {{ gpnPricesPager.page }} / {{ gpnPricesPager.totalPages }}</span>
+        <button type="button" (click)="gpnPricesPager.next()" [disabled]="!gpnPricesPager.hasNext">Next</button>
       </div>
     </div>
   </section>
