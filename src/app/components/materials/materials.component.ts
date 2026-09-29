@@ -6,6 +6,13 @@ import * as Papa from 'papaparse';
 import { BarcodeFormat } from '@zxing/library';
 import { AuthService } from 'src/app/services/auth.service';
 import { MaterialsService } from 'src/app/services/materials.service';
+import { GpnPricingService } from 'src/app/services/gpn-pricing.service';
+import {
+  GpnImportSummary,
+  GpnPrice,
+  GpnWorkbookImport,
+  GpnWorksheetImport
+} from 'src/app/models/gpn-pricing.model';
 import { Pager } from './pager';
 import { MaterialsEditKind, MaterialsEditModalComponent, MaterialsEditPayload } from './materials-edit-modal/materials-edit-modal.component';
 import {
@@ -42,7 +49,23 @@ type MaterialsTab =
   | 'transfers'
   | 'assets'
   | 'counts'
+  | 'gpn'
   | 'reports';
+
+/**
+ * Recognized GPN worksheet titles → the backend `sourceList` discriminator. Matching is done
+ * on a normalized key (lower-case, spaces/underscores stripped) so casing/spacing variants of
+ * the tab names all resolve. The backend also accepts these friendly names directly, but we
+ * map here so unrecognized tabs in a GPN workbook can be reported rather than silently sent.
+ */
+const GPN_SHEET_SOURCES: Record<string, string> = {
+  activepricelist: 'Active Price List',
+  copyofactivepricelist: 'Active Price List',
+  allmarketgpnlist: 'All market GPN List',
+  allmarket: 'All market GPN List',
+  completegpnlist: 'Complete GPN List',
+  complete: 'Complete GPN List'
+};
 
 /** Per-sheet classification collected while parsing an import workbook, used to explain empty imports. */
 interface WorkbookDiagnostics {
@@ -80,6 +103,15 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   stockReport: MaterialStockReportRow[] = [];
   technicianBalances: TechnicianBalanceRow[] = [];
 
+  // --- GPN pricing catalog ---
+  gpnPrices: GpnPrice[] = [];
+  loadingGpn = false;
+  gpnSearchTerm = '';
+  gpnSourceFilter = '';
+  importingGpn = false;
+  gpnImportResult: GpnImportSummary | null = null;
+  showGpnImportErrors = false;
+
   // --- pagination (client-side; lists are already loaded into memory) ---
   readonly materialsPager = new Pager<Material>(10);
   readonly ordersPager = new Pager<MaterialOrder>(10);
@@ -91,6 +123,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   readonly countsPager = new Pager<MaterialCount>(10);
   readonly stockReportPager = new Pager<MaterialStockReportRow>(15);
   readonly technicianBalancesPager = new Pager<TechnicianBalanceRow>(15);
+  readonly gpnPricesPager = new Pager<GpnPrice>(15);
 
   // --- add/edit modal ---
   @ViewChild('editModal') editModal?: MaterialsEditModalComponent;
@@ -204,6 +237,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   constructor(
     private materialsService: MaterialsService,
+    private gpnPricingService: GpnPricingService,
     private toastr: ToastrService,
     public authService: AuthService
   ) {}
@@ -226,6 +260,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
       case 'transfers': if (!this.transfers.length) this.loadTransfers(); break;
       case 'assets': if (!this.assets.length) this.loadAssets(); break;
       case 'counts': if (!this.counts.length) this.loadCounts(); break;
+      case 'gpn': if (!this.gpnPrices.length) this.loadGpnPrices(); break;
       case 'reports': this.loadReports(); break;
     }
   }
@@ -296,6 +331,21 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     } else {
       this.importCsvFile(file);
     }
+  }
+
+  /** Triggered by the GPN tab's hidden file input. Only .xlsx/.xls workbooks are supported. */
+  onGpnImportFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // allow re-selecting the same file
+    if (!file) return;
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'xlsx' && ext !== 'xls') {
+      this.toastr.warning('Please choose an .xlsx or .xls GPN workbook.', 'Cannot import file');
+      return;
+    }
+    void this.importGpnWorkbook(file);
   }
 
   /** Single-sheet CSV → materials catalog only. */
@@ -487,6 +537,174 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   private isMaterialField(key: string): key is keyof MaterialUpsert {
     return this.materialFieldNames.has(key as keyof MaterialUpsert);
+  }
+
+  // ---------------- GPN pricing catalog ----------------
+
+  loadGpnPrices(): void {
+    this.loadingGpn = true;
+    this.gpnPricingService.getPrices({
+      sourceList: this.gpnSourceFilter || undefined,
+      search: this.gpnSearchTerm || undefined
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: data => {
+          this.gpnPrices = data ?? [];
+          this.gpnPricesPager.setItems(this.gpnPrices);
+          this.loadingGpn = false;
+        },
+        error: err => { this.loadingGpn = false; this.toastr.error(this.errorText(err), 'Could not load GPN catalog'); }
+      });
+  }
+
+  searchGpn(): void {
+    this.loadGpnPrices();
+  }
+
+  /**
+   * Imports a GPN pricing workbook. Each recognized worksheet is passed through as its raw
+   * header row + positional cell values; the backend owns all column mapping and type parsing,
+   * so nothing is renamed or coerced here.
+   */
+  async importGpnWorkbook(file: File): Promise<void> {
+    this.importingGpn = true;
+    this.gpnImportResult = null;
+    this.showGpnImportErrors = false;
+
+    let worksheets: GpnWorksheetImport[];
+    let unrecognized: string[];
+    try {
+      ({ worksheets, unrecognized } = await this.parseGpnWorkbook(file));
+    } catch (e: any) {
+      this.importingGpn = false;
+      this.toastr.error(e?.message || 'Could not read the workbook.', 'Import failed');
+      return;
+    }
+
+    if (worksheets.length === 0) {
+      this.importingGpn = false;
+      const found = unrecognized.length ? ` Found tab(s): ${unrecognized.join(', ')}.` : '';
+      this.toastr.warning(
+        `No GPN worksheets recognized.${found} Expected: Active Price List, All market GPN List, or Complete GPN List.`,
+        'Nothing to import'
+      );
+      return;
+    }
+
+    const payload: GpnWorkbookImport = { worksheets };
+    this.gpnPricingService.importWorkbook(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: summary => {
+          this.importingGpn = false;
+          this.gpnImportResult = summary;
+          const changed = summary.inserted + summary.updated;
+          if (summary.errors.length === 0) {
+            this.toastr.success(
+              `${changed} record(s) imported across ${worksheets.length} worksheet(s)${summary.skipped ? `, ${summary.skipped} skipped` : ''}.`,
+              'Import complete'
+            );
+          } else {
+            this.toastr.warning(
+              `${changed} imported, ${summary.errors.length} row(s) had errors.`,
+              'Import finished with errors'
+            );
+            this.showGpnImportErrors = true;
+          }
+          this.loadGpnPrices();
+        },
+        error: err => { this.importingGpn = false; this.toastr.error(this.errorText(err), 'Import failed'); }
+      });
+  }
+
+  /**
+   * Parses a GPN .xlsx/.xls workbook into one {@link GpnWorksheetImport} per recognized tab.
+   * Reads each sheet as raw rows (header row 1 + positional cells) with no column renaming —
+   * the backend normalizes headers and parses types. Returns unrecognized tab names so the
+   * caller can explain a no-op import.
+   */
+  private async parseGpnWorkbook(file: File): Promise<{ worksheets: GpnWorksheetImport[]; unrecognized: string[] }> {
+    const XLSX = await import('xlsx');
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+
+    const worksheets: GpnWorksheetImport[] = [];
+    const unrecognized: string[] = [];
+
+    for (const sheetName of workbook.SheetNames) {
+      const key = sheetName.trim().toLowerCase().replace(/[\s_]+/g, '');
+      const sourceList = GPN_SHEET_SOURCES[key];
+      if (!sourceList) {
+        if (sheetName.trim()) unrecognized.push(sheetName.trim());
+        continue;
+      }
+
+      // header: 1 => array-of-arrays; every cell stringified so the backend parses types.
+      const aoa = XLSX.utils.sheet_to_json<any[]>(workbook.Sheets[sheetName], {
+        header: 1,
+        raw: false,
+        defval: null,
+        blankrows: false
+      });
+      if (aoa.length < 2) continue; // need a header row + at least one data row
+
+      const header = (aoa[0] ?? []).map(h => (h == null ? '' : String(h).trim()));
+      const rows: (string | null)[][] = [];
+      for (let i = 1; i < aoa.length; i++) {
+        const raw = aoa[i] ?? [];
+        // Skip fully-blank rows.
+        if (!raw.some(c => c != null && String(c).trim() !== '')) continue;
+        const cells: (string | null)[] = header.map((_, c) => {
+          const v = raw[c];
+          return v == null || String(v).trim() === '' ? null : String(v).trim();
+        });
+        rows.push(cells);
+      }
+
+      if (rows.length > 0) {
+        worksheets.push({ sourceList, header, rows });
+      }
+    }
+
+    return { worksheets, unrecognized };
+  }
+
+  dismissGpnImportResult(): void {
+    this.gpnImportResult = null;
+    this.showGpnImportErrors = false;
+  }
+
+  /** Downloads an .xlsx template with one sheet per GPN worksheet and its column headers. */
+  async downloadGpnTemplate(): Promise<void> {
+    const XLSX = await import('xlsx');
+    const wb = XLSX.utils.book_new();
+    const sheets: Record<string, string[]> = {
+      'Active Price List': [
+        'Commodity_Code', 'Procurement_Method', 'GPN', 'Description', 'Price', 'Currency', 'Mpn',
+        'Manufacturer', 'Supplier_name', 'UOM', 'MOQ', 'Standard_Package_Qty', 'master_reel',
+        'Lead_time_in_Days', 'Alternate', 'Purchase_order_text', 'GPN_Barcode'
+      ],
+      'All market GPN List': [
+        'Commodity_Code', 'Procurement_Method', 'GPN', 'Description', 'Price', 'Currency', 'Mpn',
+        'Manufacturer', 'Supplier_name', 'UOM', 'MOQ', 'Standard_Package_Qty', 'master_reel',
+        'lead_time_in_Days', 'Alternate', 'mpn_lifecycle_phase', 'lifecycle_phase',
+        'validity_start_date', 'validity_end_date', 'pir_number', 'pricing_table',
+        'pricing_table_desc', 'Purchase_order_text', 'start_date_validation'
+      ],
+      'Complete GPN List': [
+        'Commodity_Code', 'Secondary_Commodity_Code', 'GPN', 'Description', 'Price', 'Currency', 'Mpn',
+        'Manufacturer', 'supplier_id', 'UOM', 'Standard_Quantity', 'moq', 'lead_time', 'Alternate',
+        'MPN_PIR', 'mpn_lifecycle_phase', 'lifecycle_phase', 'validity_start_date', 'validity_end_date',
+        'pir_number', 'pricing_table', 'pricing_table_desc', 'oracle_commodity_code', 'info_record_note',
+        'purchase_order_text', 'provider_class'
+      ]
+    };
+    for (const [sheet, headers] of Object.entries(sheets)) {
+      const ws = XLSX.utils.aoa_to_sheet([headers]);
+      XLSX.utils.book_append_sheet(wb, ws, sheet);
+    }
+    XLSX.writeFile(wb, 'gpn-pricing-template.xlsx');
   }
 
   /** Downloads a multi-sheet .xlsx template (one sheet per tab) with the supported headers. */
