@@ -17,31 +17,11 @@
 
   <!-- ============================ INVENTORY ============================ -->
   <section *ngIf="activeTab === 'inventory'" class="tab-panel">
-    <form class="entry-form" (ngSubmit)="saveMaterial()">
-      <h2>Add / update material
-        <button type="button" class="scan-btn" (click)="openScanner('material')" title="Scan SKU/serial">Scan</button>
-      </h2>
-      <div class="form-grid">
-        <label>Name*<input type="text" name="name" [(ngModel)]="newMaterial.name" required /></label>
-        <label>SKU<input type="text" name="sku" [(ngModel)]="newMaterial.sku" /></label>
-        <label>Category<input type="text" name="category" [(ngModel)]="newMaterial.category" /></label>
-        <label>Unit<input type="text" name="unit" [(ngModel)]="newMaterial.unit" /></label>
-        <label>Site<input type="text" name="site" [(ngModel)]="newMaterial.site" /></label>
-        <label>Market<input type="text" name="market" [(ngModel)]="newMaterial.market" maxlength="16" /></label>
-        <label>Opening qty<input type="number" name="qtyOnHand" [(ngModel)]="newMaterial.quantityOnHand" min="0" /></label>
-        <label>Reorder level<input type="number" name="reorderLevel" [(ngModel)]="newMaterial.reorderLevel" min="0" /></label>
-        <label>Unit cost<input type="number" name="unitCost" [(ngModel)]="newMaterial.unitCost" min="0" step="0.01" /></label>
-        <label class="checkbox">
-          <input type="checkbox" name="isSerialized" [(ngModel)]="newMaterial.isSerialized" /> Serialized item
-        </label>
-      </div>
-      <button type="submit" class="primary">Save material</button>
-    </form>
-
     <div class="list-toolbar">
       <input type="text" placeholder="Search materials…" [(ngModel)]="searchTerm" (keyup.enter)="loadMaterials()" />
       <button type="button" (click)="loadMaterials()">Search</button>
-      <button type="button" class="primary" (click)="openAdd('material')">+ Add material</button>
+      <button type="button" class="primary" (click)="openAdd('material')">+ Add new material</button>
+      <button type="button" class="scan-btn" (click)="openScanner('material')" title="Scan a SKU or serial to add / look up a material">Scan</button>
 
       <span class="toolbar-spacer"></span>
 
@@ -53,6 +33,33 @@
       <button type="button" class="link-btn" (click)="downloadImportTemplate()" [disabled]="importing" title="Download a multi-sheet Excel template (one sheet per tab)">
         Template
       </button>
+    </div>
+
+    <div class="filter-bar">
+      <label>Category
+        <select [(ngModel)]="invFilterCategory" name="invCategory" (ngModelChange)="applyInventoryFilters()">
+          <option value="">All</option>
+          <option *ngFor="let c of materialCategories" [value]="c">{{ c }}</option>
+        </select>
+      </label>
+      <label>Site
+        <input type="text" name="invSite" placeholder="Any site" [(ngModel)]="invFilterSite" (keyup.enter)="loadMaterials()" />
+      </label>
+      <label>Market
+        <input type="text" name="invMarket" placeholder="Any market" maxlength="16" [(ngModel)]="invFilterMarket" (keyup.enter)="loadMaterials()" />
+      </label>
+      <label>Serialized
+        <select [(ngModel)]="invFilterSerialized" name="invSerialized" (ngModelChange)="applyInventoryFilters()">
+          <option value="">All</option>
+          <option value="yes">Serialized only</option>
+          <option value="no">Non-serialized</option>
+        </select>
+      </label>
+      <label class="checkbox">
+        <input type="checkbox" name="invLowStock" [(ngModel)]="invFilterLowStockOnly" (ngModelChange)="applyInventoryFilters()" /> Low stock only
+      </label>
+      <button type="button" (click)="loadMaterials()">Apply</button>
+      <button type="button" class="link-btn" (click)="clearInventoryFilters()">Clear</button>
     </div>
 
     <!-- CSV (materials-only) import summary -->
@@ -141,7 +148,7 @@
 
     <table *ngIf="!loadingMaterials && materials.length > 0" class="data-table">
       <thead>
-        <tr><th>Name</th><th>SKU</th><th>Category</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th><th>Type</th><th></th></tr>
+        <tr><th>Name</th><th>SKU</th><th>Category</th><th>MPN</th><th>Manufacturer</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th><th>Type</th><th></th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let m of materialsPager.items" [class.low-stock]="isLowStock(m)" [class.editing]="editingMaterialId === m.id">
@@ -150,6 +157,8 @@
             <td>{{ m.name }}</td>
             <td>{{ m.sku }}</td>
             <td>{{ m.category }}</td>
+            <td>{{ m.mpn }}</td>
+            <td>{{ m.manufacturer }}</td>
             <td>{{ m.site }}</td>
             <td>{{ m.market }}</td>
             <td>{{ m.quantityOnHand }} {{ m.unit }}<span *ngIf="isLowStock(m)" class="badge warn">low</span></td>
@@ -166,6 +175,8 @@
             <td><input type="text" class="inline-input" [ngModel]="materialField('name')" (ngModelChange)="setMaterialField('name', $event)" [name]="'m-name-' + m.id" /></td>
             <td><input type="text" class="inline-input" [ngModel]="materialField('sku')" (ngModelChange)="setMaterialField('sku', $event)" [name]="'m-sku-' + m.id" /></td>
             <td><input type="text" class="inline-input" [ngModel]="materialField('category')" (ngModelChange)="setMaterialField('category', $event)" [name]="'m-cat-' + m.id" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="materialField('mpn')" (ngModelChange)="setMaterialField('mpn', $event)" [name]="'m-mpn-' + m.id" maxlength="100" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="materialField('manufacturer')" (ngModelChange)="setMaterialField('manufacturer', $event)" [name]="'m-mfr-' + m.id" maxlength="100" /></td>
             <td><input type="text" class="inline-input" [ngModel]="materialField('site')" (ngModelChange)="setMaterialField('site', $event)" [name]="'m-site-' + m.id" /></td>
             <td><input type="text" class="inline-input" [ngModel]="materialField('market')" (ngModelChange)="setMaterialField('market', $event)" [name]="'m-mkt-' + m.id" maxlength="16" /></td>
             <td><input type="number" class="inline-input" [ngModel]="materialField('quantityOnHand')" (ngModelChange)="setMaterialField('quantityOnHand', $event)" [name]="'m-qty-' + m.id" min="0" /></td>
@@ -210,7 +221,17 @@
     </form>
 
     <h3>On-hand by site</h3>
-    <button type="button" (click)="loadStock()">Refresh stock</button>
+    <div class="filter-bar">
+      <label>Site
+        <input type="text" name="stkSite" placeholder="Any site" [(ngModel)]="stockFilterSite" (keyup.enter)="loadStock()" />
+      </label>
+      <label>Market
+        <input type="text" name="stkMarket" placeholder="Any market" maxlength="16" [(ngModel)]="stockFilterMarket" (keyup.enter)="loadStock()" />
+      </label>
+      <button type="button" (click)="loadStock()">Apply</button>
+      <button type="button" class="link-btn" (click)="clearStockFilters()">Clear</button>
+      <button type="button" (click)="loadStock()">Refresh stock</button>
+    </div>
     <p *ngIf="loadingStock" class="loading">Loading stock…</p>
     <table *ngIf="!loadingStock && stock.length > 0" class="data-table">
       <thead><tr><th>Material</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th></tr></thead>
@@ -302,6 +323,26 @@
       <button type="button" class="primary" (click)="openAdd('order')">+ Add order</button>
     </div>
 
+    <div class="filter-bar">
+      <label>Direction
+        <select [(ngModel)]="orderFilterDirection" name="ordDir" (ngModelChange)="loadOrders()">
+          <option value="">All</option>
+          <option *ngFor="let d of directions" [value]="d">{{ d }}</option>
+        </select>
+      </label>
+      <label>Status
+        <select [(ngModel)]="orderFilterStatus" name="ordStatus" (ngModelChange)="loadOrders()">
+          <option value="">All</option>
+          <option *ngFor="let s of orderStatuses" [value]="s">{{ s }}</option>
+        </select>
+      </label>
+      <label>Market
+        <input type="text" name="ordMarket" placeholder="Any market" maxlength="16" [(ngModel)]="orderFilterMarket" (keyup.enter)="loadOrders()" />
+      </label>
+      <button type="button" (click)="loadOrders()">Apply</button>
+      <button type="button" class="link-btn" (click)="clearOrderFilters()">Clear</button>
+    </div>
+
     <p *ngIf="loadingOrders" class="loading">Loading orders…</p>
     <p *ngIf="!loadingOrders && orders.length === 0" class="empty">No orders yet.</p>
     <table *ngIf="!loadingOrders && orders.length > 0" class="data-table">
@@ -383,6 +424,23 @@
       <button type="button" class="primary" (click)="openAdd('assignment')">+ Issue material</button>
     </div>
 
+    <div class="filter-bar">
+      <label>Status
+        <select [(ngModel)]="assignmentFilterStatus" name="asgStatus" (ngModelChange)="loadAssignments()">
+          <option value="">All</option>
+          <option *ngFor="let s of assignmentStatuses" [value]="s">{{ s }}</option>
+        </select>
+      </label>
+      <label>Technician ID
+        <input type="text" name="asgTech" placeholder="Any technician" [(ngModel)]="assignmentFilterTechnicianId" (keyup.enter)="loadAssignments()" />
+      </label>
+      <label>Market
+        <input type="text" name="asgMarket" placeholder="Any market" maxlength="16" [(ngModel)]="assignmentFilterMarket" (keyup.enter)="loadAssignments()" />
+      </label>
+      <button type="button" (click)="loadAssignments()">Apply</button>
+      <button type="button" class="link-btn" (click)="clearAssignmentFilters()">Clear</button>
+    </div>
+
     <p *ngIf="loadingAssignments" class="loading">Loading assignments…</p>
     <p *ngIf="!loadingAssignments && assignments.length === 0" class="empty">No assignments yet.</p>
     <table *ngIf="!loadingAssignments && assignments.length > 0" class="data-table">
@@ -434,6 +492,20 @@
 
     <div class="list-toolbar">
       <button type="button" class="primary" (click)="openAdd('transfer')">+ Add transfer</button>
+    </div>
+
+    <div class="filter-bar">
+      <label>Status
+        <select [(ngModel)]="transferFilterStatus" name="trfStatus" (ngModelChange)="loadTransfers()">
+          <option value="">All</option>
+          <option *ngFor="let s of transferStatuses" [value]="s">{{ s }}</option>
+        </select>
+      </label>
+      <label>Market
+        <input type="text" name="trfMarket" placeholder="Any market" maxlength="16" [(ngModel)]="transferFilterMarket" (keyup.enter)="loadTransfers()" />
+      </label>
+      <button type="button" (click)="loadTransfers()">Apply</button>
+      <button type="button" class="link-btn" (click)="clearTransferFilters()">Clear</button>
     </div>
 
     <p *ngIf="loadingTransfers" class="loading">Loading transfers…</p>
@@ -498,6 +570,21 @@
       <button type="button" (click)="loadAssets()">Search</button>
       <button type="button" class="primary" (click)="openAdd('asset')">+ Add asset</button>
     </div>
+
+    <div class="filter-bar">
+      <label>Status
+        <select [(ngModel)]="assetFilterStatus" name="astStatus" (ngModelChange)="loadAssets()">
+          <option value="">All</option>
+          <option *ngFor="let s of assetStatuses" [value]="s">{{ s }}</option>
+        </select>
+      </label>
+      <label>Technician ID
+        <input type="text" name="astTech" placeholder="Any technician" [(ngModel)]="assetFilterTechnicianId" (keyup.enter)="loadAssets()" />
+      </label>
+      <button type="button" (click)="loadAssets()">Apply</button>
+      <button type="button" class="link-btn" (click)="clearAssetFilters()">Clear</button>
+    </div>
+
     <p *ngIf="loadingAssets" class="loading">Loading assets…</p>
     <p *ngIf="!loadingAssets && assets.length === 0" class="empty">No assets yet.</p>
     <table *ngIf="!loadingAssets && assets.length > 0" class="data-table">
@@ -564,6 +651,23 @@
         <button type="button" class="primary" (click)="openAdd('count')">+ Start count</button>
       </div>
 
+      <div class="filter-bar">
+        <label>Site
+          <input type="text" name="cntSite" placeholder="Any site" [(ngModel)]="countFilterSite" (keyup.enter)="loadCounts()" />
+        </label>
+        <label>Status
+          <select [(ngModel)]="countFilterStatus" name="cntStatus" (ngModelChange)="loadCounts()">
+            <option value="">All</option>
+            <option *ngFor="let s of countStatuses" [value]="s">{{ s }}</option>
+          </select>
+        </label>
+        <label>Market
+          <input type="text" name="cntMarket" placeholder="Any market" maxlength="16" [(ngModel)]="countFilterMarket" (keyup.enter)="loadCounts()" />
+        </label>
+        <button type="button" (click)="loadCounts()">Apply</button>
+        <button type="button" class="link-btn" (click)="clearCountFilters()">Clear</button>
+      </div>
+
       <p *ngIf="loadingCounts" class="loading">Loading counts…</p>
       <p *ngIf="!loadingCounts && counts.length === 0" class="empty">No count sessions yet.</p>
       <table *ngIf="!loadingCounts && counts.length > 0" class="data-table">
@@ -623,6 +727,17 @@
       <button type="button" (click)="loadReports()">Refresh</button>
       <button type="button" (click)="exportStockReportCsv()">Export stock CSV</button>
       <button type="button" (click)="exportTechnicianBalancesCsv()">Export tech balances CSV</button>
+    </div>
+
+    <div class="filter-bar">
+      <label>Site
+        <input type="text" name="rptSite" placeholder="Any site" [(ngModel)]="reportFilterSite" (keyup.enter)="loadReports()" />
+      </label>
+      <label>Market
+        <input type="text" name="rptMarket" placeholder="Any market" maxlength="16" [(ngModel)]="reportFilterMarket" (keyup.enter)="loadReports()" />
+      </label>
+      <button type="button" (click)="loadReports()">Apply</button>
+      <button type="button" class="link-btn" (click)="clearReportFilters()">Clear</button>
     </div>
 
     <p *ngIf="loadingReports" class="loading">Loading report…</p>

@@ -17,6 +17,8 @@
         <label>On hand<input type="number" name="mQty" [(ngModel)]="material.quantityOnHand" min="0" /></label>
         <label>Reorder level<input type="number" name="mReorder" [(ngModel)]="material.reorderLevel" min="0" /></label>
         <label>Unit cost<input type="number" name="mCost" [(ngModel)]="material.unitCost" min="0" step="0.01" /></label>
+        <label>MPN<input type="text" name="mMpn" [(ngModel)]="material.mpn" maxlength="100" /></label>
+        <label>Manufacturer<input type="text" name="mManufacturer" [(ngModel)]="material.manufacturer" maxlength="100" /></label>
         <label class="checkbox"><input type="checkbox" name="mSerial" [(ngModel)]="material.isSerialized" /> Serialized item</label>
         <label class="full">Description<textarea name="mDesc" rows="2" [(ngModel)]="material.description"></textarea></label>
       </div>

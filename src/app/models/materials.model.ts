@@ -29,6 +29,8 @@ export interface Material {
   reorderLevel: number;
   unitCost?: number | null;
   isSerialized?: boolean;
+  mpn?: string | null;
+  manufacturer?: string | null;
   createdBy?: string | null;
   createdDate?: string | Date | null;
   updatedBy?: string | null;
@@ -91,6 +93,10 @@ export interface MaterialUpsert {
   reorderLevel?: number;
   unitCost?: number | null;
   isSerialized?: boolean;
+  // GPN master-catalog fields. Kept as dedicated columns rather than folded into
+  // description so the manufacturer part number and manufacturer survive import.
+  mpn?: string | null;
+  manufacturer?: string | null;
 }
 
 export interface MaterialOrderUpsert {
@@ -159,6 +165,8 @@ export interface WorkbookMaterialRow {
   reorderLevel?: number;
   unitCost?: number | null;
   isSerialized?: boolean;
+  mpn?: string | null;
+  manufacturer?: string | null;
 }
 
 export interface WorkbookStockRow {

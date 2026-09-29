@@ -558,3 +558,54 @@ h3 {
     font-size: 0.82rem;
   }
 }
+
+// ---------------- Per-tab filter bar ----------------
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface-hover, #f6f8fa);
+  border: 1px solid var(--surface-border, #e0e0e0);
+  border-radius: 8px;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary, #556);
+    white-space: nowrap;
+
+    &.checkbox {
+      font-weight: 500;
+    }
+  }
+
+  input:not([type='checkbox']),
+  select {
+    flex: 0 0 auto;
+    width: 150px;
+    height: 34px;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--surface-border, #e0e0e0);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    background: #fff;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: #00A8E8;
+      box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.18);
+    }
+  }
+
+  button {
+    height: 34px;
+  }
+}

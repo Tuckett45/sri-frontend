@@ -21,37 +21,23 @@ const sheetAliases = {
 const columnAliases = {
   materials: {
     gpn: 'sku', sku: 'sku', name: 'name', description: 'description',
-    commoditycode: 'category', category: 'category', price: 'unitCost', unitcost: 'unitCost'
+    commoditycode: 'category', category: 'category', price: 'unitCost', unitcost: 'unitCost',
+    uom: 'unit', unit: 'unit', mpn: 'mpn', manufacturer: 'manufacturer'
   }
 };
 
 const materialFieldNames = new Set([
   'id', 'name', 'sku', 'category', 'description', 'unit',
-  'site', 'market', 'quantityOnHand', 'reorderLevel', 'unitCost', 'isSerialized'
+  'site', 'market', 'quantityOnHand', 'reorderLevel', 'unitCost', 'isSerialized',
+  'mpn', 'manufacturer'
 ]);
 
 const normalizeHeader = h => h.trim().toLowerCase().replace(/[\s_]+/g, '');
 const isMaterialField = k => materialFieldNames.has(k);
 
-function findRawValue(raw, normalizedName) {
-  for (const key of Object.keys(raw)) {
-    if (normalizeHeader(key) === normalizedName) return raw[key];
-  }
-  return null;
-}
-
-function finalizeMaterialRow(row, raw) {
+function finalizeMaterialRow(row) {
   if ((row['name'] === undefined || row['name'] === null || row['name'] === '') && row['description']) {
     row['name'] = row['description'];
-  }
-  const extras = [];
-  const mpn = findRawValue(raw, 'mpn');
-  const manufacturer = findRawValue(raw, 'manufacturer');
-  if (manufacturer) extras.push(`Mfr: ${manufacturer}`);
-  if (mpn) extras.push(`MPN: ${mpn}`);
-  if (extras.length > 0) {
-    const base = row['description'] ? `${row['description']} ` : '';
-    row['description'] = `${base}(${extras.join(', ')})`.trim();
   }
   for (const key of Object.keys(row)) {
     if (!isMaterialField(key)) delete row[key];
@@ -69,7 +55,7 @@ function normalizeRowKeys(raw, entity) {
     const target = aliased ?? (trimmed.charAt(0).toLowerCase() + trimmed.slice(1));
     out[target] = raw[key];
   }
-  return entity === 'materials' ? finalizeMaterialRow(out, raw) : out;
+  return entity === 'materials' ? finalizeMaterialRow(out) : out;
 }
 
 // --- parse ---

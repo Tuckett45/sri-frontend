@@ -68,6 +68,8 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   activeTab: MaterialsTab = 'inventory';
 
   materials: Material[] = [];
+  /** Full materials response before client-side inventory filters (category/serialized/low-stock). */
+  private allMaterials: Material[] = [];
   orders: MaterialOrder[] = [];
   assignments: MaterialAssignment[] = [];
   stock: MaterialStock[] = [];
@@ -119,6 +121,46 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   ledgerMaterialId = '';
   reportLowStockOnly = false;
 
+  // --- Per-tab filters (server-side unless noted). Applied on load; changing a
+  //     dropdown re-queries the API for that tab. ---
+
+  // Inventory: search/site/market go to the API; category/serialized/lowStock are
+  // client-side refinements on the returned list (the materials endpoint has no
+  // server param for them).
+  invFilterSite = '';
+  invFilterMarket = '';
+  invFilterCategory = '';
+  invFilterSerialized: '' | 'yes' | 'no' = '';
+  invFilterLowStockOnly = false;
+
+  orderFilterDirection = '';
+  orderFilterStatus = '';
+  orderFilterMarket = '';
+
+  assignmentFilterStatus = '';
+  assignmentFilterTechnicianId = '';
+  assignmentFilterMarket = '';
+
+  stockFilterSite = '';
+  stockFilterMarket = '';
+
+  transferFilterStatus = '';
+  transferFilterMarket = '';
+
+  assetFilterStatus = '';
+  assetFilterTechnicianId = '';
+
+  countFilterSite = '';
+  countFilterStatus = '';
+  countFilterMarket = '';
+
+  reportFilterSite = '';
+  reportFilterMarket = '';
+
+  readonly assignmentStatuses = ['Issued', 'PartiallyReturned', 'Returned'] as const;
+  readonly transferStatuses = ['Pending', 'Completed', 'Cancelled'] as const;
+  readonly countStatuses = ['Open', 'Posted', 'Cancelled'] as const;
+
   // --- Import (Inventory): single-sheet CSV or combined multi-sheet workbook ---
   importing = false;
   importResult: MaterialImportSummary | null = null;      // CSV (materials only)
@@ -126,12 +168,12 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   showImportErrors = false;
   readonly importTemplateColumns = [
     'Name', 'Sku', 'Category', 'Description', 'Unit',
-    'Site', 'Market', 'QuantityOnHand', 'ReorderLevel', 'UnitCost', 'IsSerialized'
+    'Site', 'Market', 'QuantityOnHand', 'ReorderLevel', 'UnitCost', 'IsSerialized', 'Mpn', 'Manufacturer'
   ];
 
   /** Column headers for each sheet of the combined workbook template. */
   private readonly workbookTemplate: Record<string, string[]> = {
-    Materials: ['Name', 'Sku', 'Category', 'Description', 'Unit', 'Site', 'Market', 'QuantityOnHand', 'ReorderLevel', 'UnitCost', 'IsSerialized'],
+    Materials: ['Name', 'Sku', 'Category', 'Description', 'Unit', 'Site', 'Market', 'QuantityOnHand', 'ReorderLevel', 'UnitCost', 'IsSerialized', 'Mpn', 'Manufacturer'],
     Stock: ['Sku', 'Site', 'QuantityOnHand', 'ReorderLevel', 'Market'],
     Orders: ['Sku', 'Direction', 'Quantity', 'OrderNumber', 'Status', 'Vendor', 'Site', 'Market', 'UnitCost', 'Notes'],
     Assignments: ['Sku', 'QuantityIssued', 'QuantityReturned', 'TechnicianId', 'TechnicianName', 'Site', 'Market', 'Notes'],
@@ -171,7 +213,11 @@ export class MaterialsComponent implements OnInit, OnDestroy {
       commoditycode: 'category',
       category: 'category',
       price: 'unitCost',
-      unitcost: 'unitCost'
+      unitcost: 'unitCost',
+      uom: 'unit',
+      unit: 'unit',
+      mpn: 'mpn',
+      manufacturer: 'manufacturer'
     }
   };
 
@@ -234,12 +280,51 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   loadMaterials(): void {
     this.loadingMaterials = true;
-    this.materialsService.getMaterials({ search: this.searchTerm || undefined })
+    this.materialsService.getMaterials({
+      search: this.searchTerm || undefined,
+      site: this.invFilterSite || undefined,
+      market: this.invFilterMarket || undefined
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.materials = data ?? []; this.materialsPager.setItems(this.materials); this.loadingMaterials = false; },
+        next: data => {
+          this.allMaterials = data ?? [];
+          this.materials = this.applyInventoryClientFilters(this.allMaterials);
+          this.materialsPager.setItems(this.materials);
+          this.loadingMaterials = false;
+        },
         error: err => { this.loadingMaterials = false; this.toastr.error(this.errorText(err), 'Could not load materials'); }
       });
+  }
+
+  /**
+   * Client-side refinements for the inventory list. Category, serialized flag and
+   * low-stock have no server-side query param on the materials endpoint, so they are
+   * applied to the rows the API returns.
+   */
+  private applyInventoryClientFilters(rows: Material[]): Material[] {
+    return rows.filter(m => {
+      if (this.invFilterCategory && (m.category ?? '') !== this.invFilterCategory) return false;
+      if (this.invFilterSerialized === 'yes' && !m.isSerialized) return false;
+      if (this.invFilterSerialized === 'no' && m.isSerialized) return false;
+      if (this.invFilterLowStockOnly && !this.isLowStock(m)) return false;
+      return true;
+    });
+  }
+
+  /** Distinct, sorted category values from the full loaded set (before client filters), for the dropdown. */
+  get materialCategories(): string[] {
+    const set = new Set<string>();
+    for (const m of this.allMaterials) {
+      if (m.category) set.add(m.category);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }
+
+  /** Re-apply client-side inventory filters without re-querying the API. */
+  applyInventoryFilters(): void {
+    this.materials = this.applyInventoryClientFilters(this.allMaterials);
+    this.materialsPager.setItems(this.materials);
   }
 
   saveMaterial(): void {
@@ -447,22 +532,13 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   /**
    * Ensures an imported material row satisfies MaterialUpsert:
    * - name is required, so fall back to Description when Name is absent.
-   * - MPN and Manufacturer have no DTO field; append them to description so the
-   *   catalog detail is not lost. Currency/Procurement_Method are dropped (all USD).
+   * - MPN and Manufacturer map to dedicated DTO fields (see columnAliases), so the
+   *   catalog detail is preserved without overloading the description text.
+   *   Currency/Procurement_Method and other GPN columns without a DTO home are dropped.
    */
-  private finalizeMaterialRow(row: Record<string, any>, raw: Record<string, any>): Record<string, any> {
+  private finalizeMaterialRow(row: Record<string, any>, _raw: Record<string, any>): Record<string, any> {
     if ((row['name'] === undefined || row['name'] === null || row['name'] === '') && row['description']) {
       row['name'] = row['description'];
-    }
-
-    const extras: string[] = [];
-    const mpn = this.findRawValue(raw, 'mpn');
-    const manufacturer = this.findRawValue(raw, 'manufacturer');
-    if (manufacturer) extras.push(`Mfr: ${manufacturer}`);
-    if (mpn) extras.push(`MPN: ${mpn}`);
-    if (extras.length > 0) {
-      const base = row['description'] ? `${row['description']} ` : '';
-      row['description'] = `${base}(${extras.join(', ')})`.trim();
     }
 
     // Strip columns with no DTO home so they don't ride along as junk properties.
@@ -472,17 +548,10 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     return row;
   }
 
-  /** Looks up a raw cell value by normalized header name, regardless of casing. */
-  private findRawValue(raw: Record<string, any>, normalizedName: string): any {
-    for (const key of Object.keys(raw)) {
-      if (this.normalizeHeader(key) === normalizedName) return raw[key];
-    }
-    return null;
-  }
-
   private readonly materialFieldNames = new Set<keyof MaterialUpsert>([
     'id', 'name', 'sku', 'category', 'description', 'unit',
-    'site', 'market', 'quantityOnHand', 'reorderLevel', 'unitCost', 'isSerialized'
+    'site', 'market', 'quantityOnHand', 'reorderLevel', 'unitCost', 'isSerialized',
+    'mpn', 'manufacturer'
   ]);
 
   private isMaterialField(key: string): key is keyof MaterialUpsert {
@@ -539,7 +608,11 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   loadOrders(): void {
     this.loadingOrders = true;
-    this.materialsService.getOrders()
+    this.materialsService.getOrders({
+      direction: this.orderFilterDirection || undefined,
+      status: this.orderFilterStatus || undefined,
+      market: this.orderFilterMarket || undefined
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: data => { this.orders = data ?? []; this.ordersPager.setItems(this.orders); this.loadingOrders = false; },
@@ -592,7 +665,11 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   loadAssignments(): void {
     this.loadingAssignments = true;
-    this.materialsService.getAssignments()
+    this.materialsService.getAssignments({
+      status: this.assignmentFilterStatus || undefined,
+      technicianId: this.assignmentFilterTechnicianId || undefined,
+      market: this.assignmentFilterMarket || undefined
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: data => { this.assignments = data ?? []; this.assignmentsPager.setItems(this.assignments); this.loadingAssignments = false; },
@@ -649,7 +726,10 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   loadStock(): void {
     this.loadingStock = true;
-    this.materialsService.getStock()
+    this.materialsService.getStock({
+      site: this.stockFilterSite || undefined,
+      market: this.stockFilterMarket || undefined
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: data => { this.stock = data ?? []; this.stockPager.setItems(this.stock); this.loadingStock = false; },
@@ -688,7 +768,10 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   loadTransfers(): void {
     this.loadingTransfers = true;
-    this.materialsService.getTransfers()
+    this.materialsService.getTransfers({
+      status: this.transferFilterStatus || undefined,
+      market: this.transferFilterMarket || undefined
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: data => { this.transfers = data ?? []; this.transfersPager.setItems(this.transfers); this.loadingTransfers = false; },
@@ -736,7 +819,11 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   loadAssets(): void {
     this.loadingAssets = true;
-    this.materialsService.getAssets({ search: this.assetSearch || undefined })
+    this.materialsService.getAssets({
+      search: this.assetSearch || undefined,
+      status: this.assetFilterStatus || undefined,
+      technicianId: this.assetFilterTechnicianId || undefined
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: data => { this.assets = data ?? []; this.assetsPager.setItems(this.assets); this.loadingAssets = false; },
@@ -771,7 +858,11 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   loadCounts(): void {
     this.loadingCounts = true;
-    this.materialsService.getCounts()
+    this.materialsService.getCounts({
+      site: this.countFilterSite || undefined,
+      status: this.countFilterStatus || undefined,
+      market: this.countFilterMarket || undefined
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: data => { this.counts = data ?? []; this.countsPager.setItems(this.counts); this.loadingCounts = false; },
@@ -847,13 +938,17 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   loadReports(): void {
     this.loadingReports = true;
-    this.materialsService.getStockReport({ lowStockOnly: this.reportLowStockOnly })
+    this.materialsService.getStockReport({
+      lowStockOnly: this.reportLowStockOnly,
+      site: this.reportFilterSite || undefined,
+      market: this.reportFilterMarket || undefined
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: data => { this.stockReport = data ?? []; this.stockReportPager.setItems(this.stockReport); this.loadingReports = false; },
         error: err => { this.loadingReports = false; this.toastr.error(this.errorText(err), 'Could not load report'); }
       });
-    this.materialsService.getTechnicianBalances()
+    this.materialsService.getTechnicianBalances({ market: this.reportFilterMarket || undefined })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: data => { this.technicianBalances = data ?? []; this.technicianBalancesPager.setItems(this.technicianBalances); },
@@ -958,7 +1053,8 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   private applyScannedMaterial(material: Material): void {
     switch (this.scanTarget) {
-      case 'material': this.newMaterial = { ...this.newMaterial, id: material.id, name: material.name, sku: material.sku }; break;
+      // A scan match means the material already exists — open the modal to review/edit it.
+      case 'material': this.openEditModal('material', material); break;
       case 'order': this.newOrder.materialId = material.id; break;
       case 'assignment': this.newAssignment.materialId = material.id; break;
       case 'adjust': this.newAdjust.materialId = material.id; break;
@@ -1141,6 +1237,65 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.materialDraft = null;
     this.orderDraft = null;
     this.assetDraft = null;
+  }
+
+  // ---------------- Filter reset helpers ----------------
+
+  clearInventoryFilters(): void {
+    this.searchTerm = '';
+    this.invFilterSite = '';
+    this.invFilterMarket = '';
+    this.invFilterCategory = '';
+    this.invFilterSerialized = '';
+    this.invFilterLowStockOnly = false;
+    this.loadMaterials();
+  }
+
+  clearOrderFilters(): void {
+    this.orderFilterDirection = '';
+    this.orderFilterStatus = '';
+    this.orderFilterMarket = '';
+    this.loadOrders();
+  }
+
+  clearAssignmentFilters(): void {
+    this.assignmentFilterStatus = '';
+    this.assignmentFilterTechnicianId = '';
+    this.assignmentFilterMarket = '';
+    this.loadAssignments();
+  }
+
+  clearStockFilters(): void {
+    this.stockFilterSite = '';
+    this.stockFilterMarket = '';
+    this.loadStock();
+  }
+
+  clearTransferFilters(): void {
+    this.transferFilterStatus = '';
+    this.transferFilterMarket = '';
+    this.loadTransfers();
+  }
+
+  clearAssetFilters(): void {
+    this.assetSearch = '';
+    this.assetFilterStatus = '';
+    this.assetFilterTechnicianId = '';
+    this.loadAssets();
+  }
+
+  clearCountFilters(): void {
+    this.countFilterSite = '';
+    this.countFilterStatus = '';
+    this.countFilterMarket = '';
+    this.loadCounts();
+  }
+
+  clearReportFilters(): void {
+    this.reportLowStockOnly = false;
+    this.reportFilterSite = '';
+    this.reportFilterMarket = '';
+    this.loadReports();
   }
 
   readonly assetStatuses = ['InStock', 'Issued', 'Retired', 'Lost'] as const;

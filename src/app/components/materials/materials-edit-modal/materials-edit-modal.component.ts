@@ -145,7 +145,7 @@ export class MaterialsEditModalComponent {
   }
 
   private emptyMaterial(): MaterialUpsert {
-    return { name: '', sku: '', category: '', description: '', unit: 'ea', site: '', market: '', quantityOnHand: 0, reorderLevel: 0, unitCost: null, isSerialized: false };
+    return { name: '', sku: '', category: '', description: '', unit: 'ea', site: '', market: '', quantityOnHand: 0, reorderLevel: 0, unitCost: null, isSerialized: false, mpn: '', manufacturer: '' };
   }
 
   private emptyOrder(): MaterialOrderUpsert {
