@@ -1,0 +1,337 @@
+<h2 mat-dialog-title>{{ isEditMode ? 'Edit Technician' : 'Add New Technician' }}</h2>
+<mat-dialog-content>
+  <mat-horizontal-stepper linear #stepper>
+    <!-- Step 1: Basic Info -->
+    <mat-step [stepControl]="basicInfoForm" label="Basic Info">
+      <form [formGroup]="basicInfoForm" class="step-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>First Name</mat-label>
+            <input matInput formControlName="firstName" appNameCapitalize required />
+            <mat-error *ngIf="basicInfoForm.get('firstName')?.hasError('required')">First name is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Middle Name</mat-label>
+            <input matInput formControlName="middleName" appNameCapitalize placeholder="Enter middle name (optional)" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Last Name</mat-label>
+            <input matInput formControlName="lastName" appNameCapitalize required />
+            <mat-error *ngIf="basicInfoForm.get('lastName')?.hasError('required')">Last name is required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" type="email" required />
+            <mat-error *ngIf="basicInfoForm.get('email')?.hasError('required')">Email is required</mat-error>
+            <mat-error *ngIf="basicInfoForm.get('email')?.hasError('email')">Invalid email format</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" appPhoneMask placeholder="(555) 555-5555" required />
+            <mat-error *ngIf="basicInfoForm.get('phone')?.hasError('required')">Phone is required</mat-error>
+            <mat-error *ngIf="basicInfoForm.get('phone')?.hasError('invalidPhone')">Invalid phone number</mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Technician-specific: role / region / availability -->
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="role" required>
+              <mat-option *ngFor="let role of roles" [value]="role">{{ role }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="basicInfoForm.get('role')?.hasError('required')">Role is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Region</mat-label>
+            <input matInput formControlName="region" required />
+            <mat-error *ngIf="basicInfoForm.get('region')?.hasError('required')">Region is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Vest Size</mat-label>
+            <mat-select formControlName="vestSize">
+              <mat-option *ngFor="let size of vestSizes" [value]="size">{{ size }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Home Address</mat-label>
+            <input matInput formControlName="homeAddress"
+                   placeholder="Start typing an address..."
+                   [matAutocomplete]="addressAuto"
+                   (input)="onAddressInput($event)" />
+            <mat-spinner *ngIf="isAddressLoading" matSuffix diameter="20"></mat-spinner>
+            <mat-autocomplete #addressAuto="matAutocomplete" (optionSelected)="selectAddress($event.option.value)">
+              <mat-option *ngFor="let suggestion of filteredAddresses" [value]="suggestion">
+                {{ suggestion.formattedAddress }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Referred By</mat-label>
+            <input matInput formControlName="referredBy" placeholder="Referral source (optional)" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Work Site</mat-label>
+            <input matInput formControlName="workSite" placeholder="Assigned work site (optional)" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Facebook Profile URL</mat-label>
+            <input matInput formControlName="facebookProfileUrl"
+                   placeholder="https://www.facebook.com/your.profile" />
+            <mat-hint>Used for META site badging (optional)</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Home State</mat-label>
+            <input matInput formControlName="homeState" placeholder="e.g. TX, CA, FL" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Start Date</mat-label>
+            <input matInput [matDatepicker]="startDatePicker" formControlName="startDate" />
+            <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #startDatePicker></mat-datepicker>
+          </mat-form-field>
+
+          <div class="toggle-item inline-toggle">
+            <span>Available</span>
+            <mat-slide-toggle formControlName="isAvailable"></mat-slide-toggle>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button mat-dialog-close type="button">Cancel</button>
+          <button mat-raised-button color="primary" matStepperNext type="button">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 2: Core Qualifications -->
+    <mat-step label="Core">
+      <form [formGroup]="coreQualificationsForm" class="step-form">
+        <div class="toggle-grid">
+          <div class="toggle-item">
+            <span>Fiber Experience</span>
+            <mat-slide-toggle formControlName="fiberExperience"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>OSHA Certification</span>
+            <mat-slide-toggle formControlName="oshaCertification"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Lift Certification</span>
+            <mat-slide-toggle formControlName="liftCertification"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Travel Availability</span>
+            <mat-slide-toggle formControlName="travelAvailability"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Shift Availability</span>
+            <mat-slide-toggle formControlName="shiftAvailability"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Background Check Complete</span>
+            <mat-slide-toggle formControlName="backgroundCheckComplete"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Drug Screen Complete</span>
+            <mat-slide-toggle formControlName="drugScreenComplete"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Military Background</span>
+            <mat-slide-toggle formControlName="militaryBackground"></mat-slide-toggle>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-raised-button color="primary" matStepperNext type="button">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 3: Badges & Access -->
+    <mat-step label="Badges">
+      <form [formGroup]="badgesAccessForm" class="step-form">
+        <div class="toggle-grid">
+          <div class="toggle-item">
+            <span>AT&amp;T Badge</span>
+            <mat-slide-toggle formControlName="attBadge"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Lumen Badge</span>
+            <mat-slide-toggle formControlName="lumenBadge"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>AT&amp;T Supplier Training</span>
+            <mat-slide-toggle formControlName="attSupplierTraining"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Ciena Basic Training</span>
+            <mat-slide-toggle formControlName="cienaBasicTraining"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Google Red Badge</span>
+            <mat-slide-toggle formControlName="googleRedBadge"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Google LDAP</span>
+            <mat-slide-toggle formControlName="googleLdap"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Meta Green Listing</span>
+            <mat-slide-toggle formControlName="metaGreenListing"></mat-slide-toggle>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-raised-button color="primary" matStepperNext type="button">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 4: Training & Certs -->
+    <mat-step label="Training">
+      <form [formGroup]="trainingCertsForm" class="step-form">
+        <div class="toggle-grid">
+          <div class="toggle-item">
+            <span>OBS Training</span>
+            <mat-slide-toggle formControlName="obsTraining"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Scissor Lift</span>
+            <mat-slide-toggle formControlName="scissorLift"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>OSHA 10</span>
+            <mat-slide-toggle formControlName="osha10"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>OSHA 30</span>
+            <mat-slide-toggle formControlName="osha30"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>Tech Hand Tools</span>
+            <mat-slide-toggle formControlName="techHandTools"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>AMA/META Training</span>
+            <mat-slide-toggle formControlName="amaMetaTraining"></mat-slide-toggle>
+          </div>
+          <div class="toggle-item">
+            <span>IES NEO Training</span>
+            <mat-slide-toggle formControlName="iesNeoTraining"></mat-slide-toggle>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-raised-button color="primary" matStepperNext type="button">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 5: Skills & Certifications (technician-specific) -->
+    <mat-step label="Skills &amp; Certs">
+      <div class="step-form">
+        <form [formGroup]="skillsForm">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Skills</mat-label>
+            <mat-select formControlName="selectedSkills" multiple [compareWith]="compareSkills">
+              <mat-option *ngFor="let skill of availableSkills" [value]="skill">
+                {{ skill.name }} ({{ skill.category }})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+
+        <div class="certs-section" [formGroup]="certsFormGroup">
+          <h4>Certifications</h4>
+          <div formArrayName="certifications">
+            <div *ngFor="let cert of certificationsArray.controls; let i = index" [formGroupName]="i" class="cert-item">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Certification Name</mat-label>
+                  <input matInput formControlName="name" />
+                  <mat-error *ngIf="cert.get('name')?.hasError('required')">Name is required</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Issue Date</mat-label>
+                  <input matInput [matDatepicker]="issuePicker" formControlName="issueDate" />
+                  <mat-datepicker-toggle matSuffix [for]="issuePicker"></mat-datepicker-toggle>
+                  <mat-datepicker #issuePicker></mat-datepicker>
+                  <mat-error *ngIf="cert.get('issueDate')?.hasError('required')">Required</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Expiration Date</mat-label>
+                  <input matInput [matDatepicker]="expPicker" formControlName="expirationDate" />
+                  <mat-datepicker-toggle matSuffix [for]="expPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #expPicker></mat-datepicker>
+                  <mat-error *ngIf="cert.get('expirationDate')?.hasError('required')">Required</mat-error>
+                </mat-form-field>
+                <button mat-icon-button color="warn" type="button" (click)="removeCertification(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+          <button mat-stroked-button type="button" (click)="addCertification()">
+            <mat-icon>add</mat-icon> Add Certification
+          </button>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-raised-button color="primary" matStepperNext type="button">Next</button>
+        </div>
+      </div>
+    </mat-step>
+
+    <!-- Step 6: Availability (technician-specific) -->
+    <mat-step label="Availability">
+      <div class="step-form">
+        <p class="instruction">Click on dates to mark them as unavailable (PTO, sick days, etc.)</p>
+        <mat-calendar (selectedChange)="onDateSelected($event)" [dateClass]="dateClass"></mat-calendar>
+        <div class="calendar-legend">
+          <div class="legend-item"><span class="legend-color selected"></span><span>Unavailable</span></div>
+          <div class="legend-item"><span class="legend-color available"></span><span>Available</span></div>
+        </div>
+        <div class="selected-dates" *ngIf="selectedUnavailableDates.length > 0">
+          <h4>Unavailable Dates:</h4>
+          <mat-chip-set>
+            <mat-chip *ngFor="let date of selectedUnavailableDates">{{ date | date:'shortDate' }}</mat-chip>
+          </mat-chip-set>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="submitting" type="button">
+            {{ isEditMode ? 'Update' : 'Create' }} Technician
+          </button>
+        </div>
+      </div>
+    </mat-step>
+  </mat-horizontal-stepper>
+</mat-dialog-content>

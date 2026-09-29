@@ -7,14 +7,21 @@ import { FormControl } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { Technician, TechnicianRole, TechnicianStatus } from '../../../models/technician.model';
+import { Technician, TechnicianRole, TechnicianStatus, Skill, Certification, Availability } from '../../../models/technician.model';
 import { TechnicianFilters } from '../../../models/dtos/filters.dto';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 import { selectTechnicianCurrentJobMap, selectTechnicianCrewMap } from '../../../state/technicians/technician.selectors';
 import { ExportService } from '../../../services/export.service';
+import { TechnicianService } from '../../../services/technician.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
+import {
+  AddTechnicianModalComponent,
+  AddTechnicianModalResult
+} from '../add-technician-modal/add-technician-modal.component';
 import { UserRole } from '../../../../../models/role.enum';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-technician-list',
@@ -78,7 +85,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private technicianService: TechnicianService
   ) {
     this.technicians$ = this.store.select(TechnicianSelectors.selectFilteredTechnicians);
     this.loading$ = this.store.select(TechnicianSelectors.selectTechniciansLoading);
@@ -330,9 +338,56 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.router.navigate(['./', technician.id], { relativeTo: this.route });
   }
   
+  /**
+   * Opens the technician modal in "add" mode and dispatches a create on submit.
+   */
+  onAddTechnician(): void {
+    const dialogRef = this.dialog.open(AddTechnicianModalComponent, {
+      width: '780px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {}
+    });
+
+    dialogRef.afterClosed().subscribe((result: AddTechnicianModalResult) => {
+      if (result) {
+        const dto = AddTechnicianModalComponent.toDto(result);
+        this.store.dispatch(TechnicianActions.createTechnician({ technician: dto }));
+        this.snackBar.open('Creating technician...', 'Close', { duration: 2000 });
+      }
+    });
+  }
+
   editTechnician(technician: Technician): void {
     this.store.dispatch(TechnicianActions.selectTechnician({ id: technician.id }));
-    // Navigation will be handled by routing
+
+    // Fetch skills / certifications / availability so they can be edited in the modal
+    const now = new Date();
+    const dateRange = {
+      startDate: now,
+      endDate: new Date(now.getFullYear(), now.getMonth() + 6, now.getDate())
+    };
+
+    forkJoin({
+      skills: this.technicianService.getTechnicianSkills(technician.id).pipe(catchError(() => of([] as Skill[]))),
+      certifications: this.technicianService.getTechnicianCertifications(technician.id).pipe(catchError(() => of([] as Certification[]))),
+      availability: this.technicianService.getTechnicianAvailability(technician.id, dateRange).pipe(catchError(() => of([] as Availability[])))
+    }).subscribe(({ skills, certifications, availability }) => {
+      const dialogRef = this.dialog.open(AddTechnicianModalComponent, {
+        width: '780px',
+        maxWidth: '90vw',
+        disableClose: true,
+        data: { technician, skills, certifications, availability }
+      });
+
+      dialogRef.afterClosed().subscribe((result: AddTechnicianModalResult) => {
+        if (result) {
+          const dto = AddTechnicianModalComponent.toDto(result, technician.id);
+          this.store.dispatch(TechnicianActions.updateTechnician({ id: technician.id, technician: dto }));
+          this.snackBar.open('Updating technician...', 'Close', { duration: 2000 });
+        }
+      });
+    });
   }
   
   toggleTechnicianStatus(technician: Technician): void {

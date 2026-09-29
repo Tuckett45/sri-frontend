@@ -21,7 +21,7 @@
           <span>Export to PDF</span>
         </button>
       </mat-menu>
-      <button mat-raised-button class="btn-orange" routerLink="./new">
+      <button mat-raised-button class="btn-orange" (click)="onAddTechnician()">
         <mat-icon>add</mat-icon>
         Add Technician
       </button>
@@ -188,7 +188,7 @@
                   <button mat-icon-button class="action-view" [routerLink]="['./', technician.id]" matTooltip="View" aria-label="View">
                     <mat-icon>visibility</mat-icon>
                   </button>
-                  <button mat-icon-button class="action-edit" [routerLink]="['./', technician.id, 'edit']" matTooltip="Edit" aria-label="Edit">
+                  <button mat-icon-button class="action-edit" (click)="editTechnician(technician)" matTooltip="Edit" aria-label="Edit">
                     <mat-icon>edit</mat-icon>
                   </button>
                   <button mat-icon-button [matMenuTriggerFor]="techMenu" matTooltip="More" aria-label="More actions">
