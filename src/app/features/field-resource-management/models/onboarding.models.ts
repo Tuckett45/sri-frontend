@@ -54,6 +54,7 @@ export interface Candidate {
   osha10?: boolean;
   osha30?: boolean;
   amaMetaTraining?: boolean;
+  iesNeoTraining?: boolean;
 
   // Equipment Kits
   ciKitAssigned?: boolean;
@@ -116,6 +117,7 @@ export interface CreateCandidatePayload {
   osha30?: boolean;
   techHandTools?: boolean;
   amaMetaTraining?: boolean;
+  iesNeoTraining?: boolean;
 
   // Equipment Kits
   ciKitAssigned?: boolean;
@@ -168,6 +170,7 @@ export interface UpdateCandidatePayload {
   osha30?: boolean;
   techHandTools?: boolean;
   amaMetaTraining?: boolean;
+  iesNeoTraining?: boolean;
 
   // Equipment Kits
   ciKitAssigned?: boolean;
