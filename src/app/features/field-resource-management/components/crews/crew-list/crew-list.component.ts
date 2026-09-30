@@ -10,6 +10,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { Crew, CrewStatus } from '../../../models/crew.model';
+import { Technician } from '../../../models/technician.model';
 import { CrewFilters } from '../../../models/dtos/filters.dto';
 import * as CrewActions from '../../../state/crews/crew.actions';
 import * as CrewSelectors from '../../../state/crews/crew.selectors';
@@ -86,6 +87,9 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   
   // Technician name lookup
   technicianNameMap: Map<string, string> = new Map();
+
+  // Full technician lookup (id → Technician) for contact-detail exports
+  technicianMap: Map<string, Technician> = new Map();
   
   // Job name lookup
   jobNameMap: Map<string, string> = new Map();
@@ -200,8 +204,10 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
       takeUntil(this.destroy$)
     ).subscribe(technicians => {
       this.technicianNameMap.clear();
+      this.technicianMap.clear();
       technicians.forEach(t => {
         this.technicianNameMap.set(t.id, `${t.firstName} ${t.lastName}`);
+        this.technicianMap.set(t.id, t);
       });
     });
 
@@ -559,6 +565,135 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
         });
 
         this.snackBar.open('Crews exported to PDF successfully', 'Close', { duration: 3000 });
+      } catch (error) {
+        this.snackBar.open('Failed to export to PDF', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  /**
+   * Build the crew-member roster rows, grouped by the project (job) each crew is
+   * assigned to. Emits one row per crew member with their contact details.
+   * Crew/technician IDs are intentionally excluded from the export.
+   *
+   * @returns rows of [Project, Crew Name, Member Name, Email, Phone, Facebook URL]
+   */
+  private buildCrewByProjectRows(crews: Crew[]): string[][] {
+    const rows: string[][] = [];
+
+    // Group crews by the project (job) they are assigned to so the export is
+    // organized by project. Crews with no assigned project are grouped last.
+    const sortedCrews = [...crews].sort((a, b) =>
+      this.getJobName(a).localeCompare(this.getJobName(b)) ||
+      a.name.localeCompare(b.name)
+    );
+
+    sortedCrews.forEach(crew => {
+      const projectName = this.getJobName(crew);
+
+      // Resolve the crew's members (plus its lead) to full technician records.
+      const memberIds = new Set<string>(crew.memberIds || []);
+      if (crew.leadTechnicianId) {
+        memberIds.add(crew.leadTechnicianId);
+      }
+
+      memberIds.forEach(techId => {
+        const tech = this.technicianMap.get(techId);
+        if (!tech) {
+          return;
+        }
+        rows.push([
+          projectName,
+          crew.name,
+          `${tech.firstName} ${tech.lastName}`.trim(),
+          tech.email || '',
+          tech.phone || '',
+          tech.facebookProfileUrl || ''
+        ]);
+      });
+    });
+
+    return rows;
+  }
+
+  /**
+   * Export crew members grouped by their assigned project to CSV.
+   * Includes each member's name, email, phone, and Facebook URL (no IDs).
+   */
+  exportCrewByProjectToCSV(): void {
+    this.crews$.pipe(takeUntil(this.destroy$)).subscribe(crews => {
+      const headers = [
+        'Project',
+        'Crew Name',
+        'Name',
+        'Email',
+        'Phone',
+        'Facebook URL'
+      ];
+
+      const data = this.buildCrewByProjectRows(crews);
+
+      if (data.length === 0) {
+        this.snackBar.open('No crew members to export', 'Close', { duration: 3000 });
+        return;
+      }
+
+      const activeFilters = this.getActiveFilters();
+      const filterSummary = activeFilters.length > 0
+        ? `Filters Applied: ${activeFilters.map(f => `${f.label}: ${f.value}`).join(', ')}`
+        : 'No filters applied';
+
+      const filename = this.exportService.generateTimestampFilename('crew-by-project', 'csv');
+
+      this.exportService.generateCSV({
+        filename,
+        headers: [filterSummary, '', ...headers],
+        data: [[], [], ...data]
+      });
+
+      this.snackBar.open('Crew by project exported to CSV successfully', 'Close', { duration: 3000 });
+    });
+  }
+
+  /**
+   * Export crew members grouped by their assigned project to PDF.
+   * Includes each member's name, email, phone, and Facebook URL (no IDs).
+   */
+  async exportCrewByProjectToPDF(): Promise<void> {
+    this.crews$.pipe(takeUntil(this.destroy$)).subscribe(async crews => {
+      const headers = [
+        'Project',
+        'Crew Name',
+        'Name',
+        'Email',
+        'Phone',
+        'Facebook URL'
+      ];
+
+      const data = this.buildCrewByProjectRows(crews);
+
+      if (data.length === 0) {
+        this.snackBar.open('No crew members to export', 'Close', { duration: 3000 });
+        return;
+      }
+
+      const activeFilters = this.getActiveFilters();
+      const filterSummary = activeFilters.length > 0
+        ? ` (Filters: ${activeFilters.map(f => `${f.label}: ${f.value}`).join(', ')})`
+        : '';
+
+      const filename = this.exportService.generateTimestampFilename('crew-by-project', 'pdf');
+
+      try {
+        await this.exportService.generatePDF({
+          filename,
+          title: `Crew by Project${filterSummary}`,
+          headers,
+          data,
+          orientation: 'landscape'
+        });
+
+        this.snackBar.open('Crew by project exported to PDF successfully', 'Close', { duration: 3000 });
       } catch (error) {
         this.snackBar.open('Failed to export to PDF', 'Close', { duration: 5000 });
       }
