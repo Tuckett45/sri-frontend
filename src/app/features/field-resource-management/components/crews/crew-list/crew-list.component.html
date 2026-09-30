@@ -20,6 +20,15 @@
           <mat-icon>picture_as_pdf</mat-icon>
           <span>Export to PDF</span>
         </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="exportCrewByProjectToCSV()">
+          <mat-icon>groups</mat-icon>
+          <span>Crew by Project (CSV)</span>
+        </button>
+        <button mat-menu-item (click)="exportCrewByProjectToPDF()">
+          <mat-icon>groups</mat-icon>
+          <span>Crew by Project (PDF)</span>
+        </button>
       </mat-menu>
       <button mat-raised-button class="btn-orange" (click)="openCrewDialog()">
         <mat-icon>add</mat-icon>
