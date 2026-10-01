@@ -139,7 +139,9 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
             next: (mapMarkers: MapMarker[]) => {
               sheet.marker = mapMarkers;
               this.refreshMapMarkers();
-              this.getReversedAddress(mapMarkers[0]).catch(() => {});
+              if (mapMarkers && mapMarkers.length > 0) {
+                this.getReversedAddress(mapMarkers[0]).catch(() => {});
+              }
             },
             error: () => {
               sheet.marker = [];
@@ -155,11 +157,23 @@ export class StreetSheetComponent implements OnInit, AfterViewInit {
   }
   
   getReversedAddress(marker: MapMarker): Promise<any> {
+    const emptyAddress = { street: '', city: '', state: '' };
+
+    // Guard against missing markers or coordinates so we never throw synchronously.
+    if (!marker || marker.latitude == null || marker.longitude == null) {
+      return Promise.resolve(emptyAddress);
+    }
+
     return this.geocodingService.reverseGeocode(marker.latitude, marker.longitude).toPromise()
         .then(suggestion => {
-            let bestResult = suggestion.results[0];
-            for (let result of suggestion.results) {
-                if (result.geometry.location_type === 'ROOFTOP') {
+            const results = suggestion?.results || [];
+            if (results.length === 0) {
+                return emptyAddress;
+            }
+
+            let bestResult = results[0];
+            for (let result of results) {
+                if (result?.geometry?.location_type === 'ROOFTOP') {
                     bestResult = result;
                     break;
                 }
