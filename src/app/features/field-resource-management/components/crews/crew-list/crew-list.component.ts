@@ -613,10 +613,19 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
         return;
       }
 
-      memberIds.forEach(id => {
+      // Resolve each member and sort by member name alphabetically (case-insensitive).
+      const members = memberIds.map(id => {
         const tech = this.technicianMap.get(id);
         const isLead = id === crew.leadTechnicianId;
         const name = tech ? `${tech.firstName} ${tech.lastName}`.trim() : (this.technicianNameMap.get(id) || id);
+        return { tech, isLead, name };
+      });
+
+      members.sort((a, b) =>
+        (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })
+      );
+
+      members.forEach(({ tech, isLead, name }) => {
         rows.push([
           crew.name,
           market,
@@ -703,11 +712,20 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
         memberIds.add(crew.leadTechnicianId);
       }
 
-      memberIds.forEach(techId => {
-        const tech = this.technicianMap.get(techId);
-        if (!tech) {
-          return;
-        }
+      // Resolve members to technician records, then sort by member name
+      // alphabetically (case-insensitive).
+      const resolvedMembers = Array.from(memberIds)
+        .map(techId => this.technicianMap.get(techId))
+        .filter((tech): tech is NonNullable<typeof tech> => !!tech)
+        .sort((a, b) =>
+          `${a.firstName} ${a.lastName}`.trim().localeCompare(
+            `${b.firstName} ${b.lastName}`.trim(),
+            undefined,
+            { sensitivity: 'base' }
+          )
+        );
+
+      resolvedMembers.forEach(tech => {
         rows.push([
           projectName,
           crew.name,
