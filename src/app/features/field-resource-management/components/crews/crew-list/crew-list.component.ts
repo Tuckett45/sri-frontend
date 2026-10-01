@@ -587,7 +587,12 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   private buildCrewMemberRows(crews: Crew[]): string[][] {
     const rows: string[][] = [];
 
-    crews.forEach(crew => {
+    // Export crews in alphabetical order by crew name (case-insensitive).
+    const sortedCrews = [...crews].sort((a, b) =>
+      (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })
+    );
+
+    sortedCrews.forEach(crew => {
       const market = crew.market || '—';
       const jobName = this.getJobName(crew);
       const jobStatus = this.getJobStatusForCrew(crew);
