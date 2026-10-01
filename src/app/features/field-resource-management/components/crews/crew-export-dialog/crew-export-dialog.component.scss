@@ -1,0 +1,69 @@
+.crew-export-dialog {
+  display: flex;
+  flex-direction: column;
+  min-width: 360px;
+  max-width: 100%;
+
+  h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .search-field {
+    width: 100%;
+  }
+
+  .select-all-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    margin-bottom: 8px;
+
+    .selection-count {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .crew-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 360px;
+    overflow-y: auto;
+
+    .crew-select-item {
+      padding: 4px 0;
+
+      .crew-item-name {
+        font-weight: 500;
+        margin-right: 8px;
+      }
+
+      .crew-item-meta {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .empty-list {
+      padding: 24px 8px;
+      text-align: center;
+      color: rgba(0, 0, 0, 0.5);
+      font-size: 14px;
+    }
+  }
+
+  mat-dialog-actions {
+    gap: 8px;
+  }
+
+  .btn-orange {
+    background-color: #f57c00;
+    color: #fff;
+  }
+}

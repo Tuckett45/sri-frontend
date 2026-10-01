@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subject, combineLatest } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, map, filter } from 'rxjs/operators';
+import { takeUntil, debounceTime, distinctUntilChanged, map, filter, take } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -10,6 +10,8 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { Crew, CrewStatus } from '../../../models/crew.model';
+import { Technician } from '../../../models/technician.model';
+import { Job } from '../../../models/job.model';
 import { CrewFilters } from '../../../models/dtos/filters.dto';
 import * as CrewActions from '../../../state/crews/crew.actions';
 import * as CrewSelectors from '../../../state/crews/crew.selectors';
@@ -18,6 +20,7 @@ import { selectAllTechnicians } from '../../../state/technicians/technician.sele
 import * as JobActions from '../../../state/jobs/job.actions';
 import { selectJobEntities, selectAllJobs } from '../../../state/jobs/job.selectors';
 import { CrewFormComponent } from '../crew-form/crew-form.component';
+import { CrewExportDialogComponent, CrewExportDialogResult } from '../crew-export-dialog/crew-export-dialog.component';
 import { ExportService } from '../../../services/export.service';
 import { UserRole } from '../../../../../models/role.enum';
 import { PermissionService } from '../../../../../services/permission.service';
@@ -86,9 +89,15 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   
   // Technician name lookup
   technicianNameMap: Map<string, string> = new Map();
+
+  // Full technician record lookup (for export: phone, email, name)
+  private technicianMap: Map<string, Technician> = new Map();
   
   // Job name lookup
   jobNameMap: Map<string, string> = new Map();
+
+  // Full job record lookup (for export: name + status)
+  private jobMap: Map<string, Job> = new Map();
   
   // Crew-to-job lookup (maps crewId → { jobId, jobName })
   crewJobMap: Map<string, { jobId: string; jobName: string }> = new Map();
@@ -200,20 +209,26 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
       takeUntil(this.destroy$)
     ).subscribe(technicians => {
       this.technicianNameMap.clear();
+      this.technicianMap.clear();
       technicians.forEach(t => {
         this.technicianNameMap.set(t.id, `${t.firstName} ${t.lastName}`);
+        this.technicianMap.set(t.id, t);
       });
     });
 
-    // Load jobs for name lookups
-    this.store.dispatch(JobActions.loadJobs({ filters: {} }));
+    // Load jobs for name/status lookups. Request a large page so crew-linked jobs
+    // are actually present client-side (the API defaults to only 20 per page),
+    // otherwise the crew→job join (and job status column in the export) comes up empty.
+    this.store.dispatch(JobActions.loadJobs({ filters: { page: 1, pageSize: 1000 } }));
     this.store.select(selectJobEntities).pipe(
       takeUntil(this.destroy$)
     ).subscribe(jobEntities => {
       this.jobNameMap.clear();
+      this.jobMap.clear();
       Object.values(jobEntities).forEach(job => {
         if (job) {
           this.jobNameMap.set(job.id, job.siteName || job.title || job.jobId || job.id);
+          this.jobMap.set(job.id, job);
         }
       });
     });
@@ -460,6 +475,29 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     return '—';
   }
+
+  /**
+   * Resolve the full Job record associated with a crew, if any.
+   * Prefers the crew's activeJobId, falling back to a job that references this crew.
+   */
+  private getJobForCrew(crew: Crew): Job | undefined {
+    if (crew.activeJobId && this.jobMap.has(crew.activeJobId)) {
+      return this.jobMap.get(crew.activeJobId);
+    }
+    const crewJob = this.crewJobMap.get(crew.id);
+    if (crewJob) {
+      return this.jobMap.get(crewJob.jobId);
+    }
+    return undefined;
+  }
+
+  /**
+   * Human-readable job status for a crew ("—" when no job is assigned).
+   */
+  private getJobStatusForCrew(crew: Crew): string {
+    const job = this.getJobForCrew(crew);
+    return job?.status || '—';
+  }
   
   getMemberCount(crew: Crew): number {
     return crew.memberIds?.length || 0;
@@ -474,95 +512,164 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Export crews to CSV
+   * Open the crew-selection dialog, then run the given export with the chosen crews.
    */
-  exportToCSV(): void {
-    this.crews$.pipe(takeUntil(this.destroy$)).subscribe(crews => {
-      const headers = [
-        'Crew ID',
-        'Crew Name',
-        'Lead Technician ID',
-        'Member Count',
-        'Status',
-        'Market',
-        'Company',
-        'Active Job ID',
-        'Has Location'
-      ];
+  private selectCrewsThenExport(
+    format: 'csv' | 'pdf',
+    exportFn: (crews: Crew[]) => void
+  ): void {
+    this.crews$.pipe(take(1), takeUntil(this.destroy$)).subscribe(crews => {
+      if (!crews || crews.length === 0) {
+        this.snackBar.open('No crews available to export', 'Close', { duration: 3000 });
+        return;
+      }
 
-      const data = crews.map(crew => [
-        crew.id,
-        crew.name,
-        crew.leadTechnicianId,
-        this.getMemberCount(crew).toString(),
-        crew.status,
-        crew.market,
-        crew.company,
-        crew.activeJobId || 'N/A',
-        crew.currentLocation ? 'Yes' : 'No'
-      ]);
-
-      // Add filter summary as comment
-      const activeFilters = this.getActiveFilters();
-      const filterSummary = activeFilters.length > 0
-        ? `Filters Applied: ${activeFilters.map(f => `${f.label}: ${f.value}`).join(', ')}`
-        : 'No filters applied';
-
-      const filename = this.exportService.generateTimestampFilename('crews', 'csv');
-
-      this.exportService.generateCSV({
-        filename,
-        headers: [filterSummary, '', ...headers],
-        data: [[], [], ...data]
+      const dialogRef = this.dialog.open<
+        CrewExportDialogComponent,
+        { crews: Crew[]; format: 'csv' | 'pdf' },
+        CrewExportDialogResult
+      >(CrewExportDialogComponent, {
+        width: '560px',
+        maxWidth: '95vw',
+        maxHeight: '90vh',
+        autoFocus: false,
+        data: { crews, format }
       });
 
-      this.snackBar.open('Crews exported to CSV successfully', 'Close', { duration: 3000 });
+      dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+        if (result?.selectedCrews?.length) {
+          exportFn(result.selectedCrews);
+        }
+      });
     });
   }
 
   /**
-   * Export crews to PDF
+   * Export crews to CSV (prompts the user to choose which crews first).
    */
-  async exportToPDF(): Promise<void> {
-    this.crews$.pipe(takeUntil(this.destroy$)).subscribe(async crews => {
-      const headers = [
-        'Crew Name',
-        'Members',
-        'Status',
-        'Market',
-        'Company'
-      ];
+  exportToCSV(): void {
+    this.selectCrewsThenExport('csv', crews => this.generateCrewsCSV(crews));
+  }
 
-      const data = crews.map(crew => [
-        crew.name,
-        this.getMemberCount(crew).toString(),
-        crew.status,
-        crew.market,
-        crew.company
-      ]);
+  private generateCrewsCSV(crews: Crew[]): void {
+    const headers = [
+      'Crew Name',
+      'Market',
+      'Job',
+      'Job Status',
+      'Member Name',
+      'Role',
+      'Phone',
+      'Email'
+    ];
 
-      // Add filter summary to title
-      const activeFilters = this.getActiveFilters();
-      const filterSummary = activeFilters.length > 0
-        ? ` (Filters: ${activeFilters.map(f => `${f.label}: ${f.value}`).join(', ')})`
-        : '';
+    const data = this.buildCrewMemberRows(crews);
 
-      const filename = this.exportService.generateTimestampFilename('crews', 'pdf');
+    const filename = this.exportService.generateTimestampFilename('crews', 'csv');
 
-      try {
-        await this.exportService.generatePDF({
-          filename,
-          title: `Crews Report${filterSummary}`,
-          headers,
-          data,
-          orientation: 'portrait'
-        });
-
-        this.snackBar.open('Crews exported to PDF successfully', 'Close', { duration: 3000 });
-      } catch (error) {
-        this.snackBar.open('Failed to export to PDF', 'Close', { duration: 5000 });
-      }
+    this.exportService.generateCSV({
+      filename,
+      headers,
+      data
     });
+
+    this.snackBar.open('Crews exported to CSV successfully', 'Close', { duration: 3000 });
+  }
+
+  /**
+   * Build one export row per crew member.
+   *
+   * Each row carries the crew-level context (name, market, job, job status)
+   * repeated alongside the member's details (name, role label, phone, email).
+   * The crew lead is included and labeled "Lead"; other members are labeled "Member".
+   * Crews with no resolvable members still produce a single row so they are not lost.
+   */
+  private buildCrewMemberRows(crews: Crew[]): string[][] {
+    const rows: string[][] = [];
+
+    crews.forEach(crew => {
+      const market = crew.market || '—';
+      const jobName = this.getJobName(crew);
+      const jobStatus = this.getJobStatusForCrew(crew);
+
+      // Collect member IDs: lead first (if present), then the remaining members (deduped).
+      const memberIds: string[] = [];
+      if (crew.leadTechnicianId) {
+        memberIds.push(crew.leadTechnicianId);
+      }
+      (crew.memberIds || []).forEach(id => {
+        if (id && !memberIds.includes(id)) {
+          memberIds.push(id);
+        }
+      });
+
+      if (memberIds.length === 0) {
+        rows.push([crew.name, market, jobName, jobStatus, '—', '—', '—', '—']);
+        return;
+      }
+
+      memberIds.forEach(id => {
+        const tech = this.technicianMap.get(id);
+        const isLead = id === crew.leadTechnicianId;
+        const name = tech ? `${tech.firstName} ${tech.lastName}`.trim() : (this.technicianNameMap.get(id) || id);
+        rows.push([
+          crew.name,
+          market,
+          jobName,
+          jobStatus,
+          name,
+          isLead ? 'Lead' : 'Member',
+          tech?.phone || '—',
+          tech?.email || '—'
+        ]);
+      });
+    });
+
+    return rows;
+  }
+
+  /**
+   * Export crews to PDF (prompts the user to choose which crews first).
+   */
+  exportToPDF(): void {
+    this.selectCrewsThenExport('pdf', crews => { void this.generateCrewsPDF(crews); });
+  }
+
+  private async generateCrewsPDF(crews: Crew[]): Promise<void> {
+    const headers = [
+      'Crew Name',
+      'Market',
+      'Job',
+      'Job Status',
+      'Member Name',
+      'Role',
+      'Phone',
+      'Email'
+    ];
+
+    const data = this.buildCrewMemberRows(crews);
+
+    // Add filter summary to title
+    const activeFilters = this.getActiveFilters();
+    const filterSummary = activeFilters.length > 0
+      ? ` (Filters: ${activeFilters.map(f => `${f.label}: ${f.value}`).join(', ')})`
+      : '';
+
+    const filename = this.exportService.generateTimestampFilename('crews', 'pdf');
+
+    try {
+      await this.exportService.generatePDF({
+        filename,
+        title: `Crews Report${filterSummary}`,
+        headers,
+        data,
+        orientation: 'landscape'
+      });
+
+      this.snackBar.open('Crews exported to PDF successfully', 'Close', { duration: 3000 });
+    } catch (error) {
+      this.snackBar.open('Failed to export to PDF', 'Close', { duration: 5000 });
+    }
   }
 
   // ─── Pipeline View ─────────────────────────────────────────────────────────

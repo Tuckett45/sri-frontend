@@ -1,0 +1,53 @@
+<div class="crew-export-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon>download</mat-icon>
+    Select Crews to Export ({{ data.format | uppercase }})
+  </h2>
+
+  <mat-dialog-content>
+    <!-- Search -->
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search crews</mat-label>
+      <input matInput [(ngModel)]="searchTerm" placeholder="Name, market or company">
+      <mat-icon matPrefix>search</mat-icon>
+      <button mat-icon-button matSuffix *ngIf="searchTerm" (click)="searchTerm = ''" aria-label="Clear search">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <!-- Select all + counter -->
+    <div class="select-all-row">
+      <mat-checkbox
+        [checked]="allSelected"
+        [indeterminate]="someSelected"
+        (change)="toggleAll($event.checked)">
+        Select all
+      </mat-checkbox>
+      <span class="selection-count">{{ selectedCount }} of {{ data.crews.length }} selected</span>
+    </div>
+
+    <!-- Crew list -->
+    <div class="crew-select-list">
+      <mat-checkbox
+        *ngFor="let crew of filteredCrews"
+        class="crew-select-item"
+        [checked]="isSelected(crew)"
+        (change)="toggleCrew(crew, $event.checked)">
+        <span class="crew-item-name">{{ crew.name }}</span>
+        <span class="crew-item-meta">{{ crew.market || '—' }} · {{ crew.company || '—' }}</span>
+      </mat-checkbox>
+
+      <div class="empty-list" *ngIf="filteredCrews.length === 0">
+        No crews match your search.
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-stroked-button (click)="cancel()">Cancel</button>
+    <button mat-raised-button class="btn-orange" [disabled]="selectedCount === 0" (click)="confirm()">
+      <mat-icon>download</mat-icon>
+      Export {{ selectedCount }}
+    </button>
+  </mat-dialog-actions>
+</div>

@@ -159,12 +159,22 @@ export class TechnicianService {
           return of(technicians);
         }),
         map(technicians => {
-          // Normalize: default isActive/isAvailable to true if not provided by API
-          technicians = technicians.map(t => ({
-            ...t,
-            isActive: t.isActive ?? true,
-            isAvailable: t.isAvailable ?? true
-          }));
+          // Normalize: default isActive/isAvailable to true if not provided by API,
+          // and reconcile common key-casing / aliasing variants from the API so
+          // contact fields survive regardless of how the list endpoint serializes them.
+          technicians = technicians.map(t => {
+            const raw = t as any;
+            return {
+              ...t,
+              id: t.id ?? raw.Id ?? raw.technicianId ?? raw.TechnicianId,
+              firstName: t.firstName ?? raw.FirstName ?? raw.firstname,
+              lastName: t.lastName ?? raw.LastName ?? raw.lastname,
+              email: t.email ?? raw.Email ?? raw.emailAddress ?? raw.EmailAddress,
+              phone: t.phone ?? raw.Phone ?? raw.phoneNumber ?? raw.PhoneNumber ?? raw.mobile ?? raw.Mobile,
+              isActive: t.isActive ?? true,
+              isAvailable: t.isAvailable ?? true
+            };
+          });
           return this.applyRoleBasedFiltering(technicians);
         }),
         catchError(this.handleError)

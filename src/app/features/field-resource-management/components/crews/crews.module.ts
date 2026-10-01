@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
 // Shared Material Module
@@ -13,6 +13,7 @@ import { SharedComponentsModule } from '../shared/shared-components.module';
 import { CrewListComponent } from './crew-list/crew-list.component';
 import { CrewFormComponent } from './crew-form/crew-form.component';
 import { CrewDetailComponent } from './crew-detail/crew-detail.component';
+import { CrewExportDialogComponent } from './crew-export-dialog/crew-export-dialog.component';
 
 const routes: Routes = [
   {
@@ -60,10 +61,12 @@ const routes: Routes = [
   declarations: [
     CrewListComponent,
     CrewFormComponent,
-    CrewDetailComponent
+    CrewDetailComponent,
+    CrewExportDialogComponent
   ],
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     SharedMaterialModule,
     SharedComponentsModule,
