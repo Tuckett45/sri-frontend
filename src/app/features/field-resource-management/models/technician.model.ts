@@ -87,6 +87,11 @@ export interface Technician {
   homeState?: string;
   workSite?: string;
   startDate?: string;
+  experienceLevel?: string;
+
+  // File uploads (carried over from onboarding candidate on promotion)
+  resumeUrl?: string;
+  headshotUrl?: string;
 
   // Onboarding tracking fields
   fiberExperience?: FiberExperienceLevel;
