@@ -65,8 +65,12 @@ export class ConfigurationInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         // Handle authentication errors
         if (error.status === 401) {
-          console.warn('🚨 Authentication failed - token may be expired');
-          // The SecureAuthService will handle logout automatically
+          console.warn('🚨 Authentication failed - session may be invalid');
+          // If the backend signalled a server-side session end (idle/expired),
+          // let SecureAuthService terminate the client session with the reason.
+          if (error.error?.error === 'session_invalid') {
+            void this.authService.notifyUnauthorized(error);
+          }
         } else if (error.status === 403) {
           console.warn('🚨 Access forbidden - insufficient permissions');
         } else if (error.status === 0) {

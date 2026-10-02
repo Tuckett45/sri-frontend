@@ -54,6 +54,8 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   private idleCheckTimer?: number;
   /** Whether the idle warning is currently showing (prevents duplicate emissions). */
   private idleWarningActive = false;
+  /** Guards against concurrent/duplicate session-end flows (e.g. two 401s). */
+  private sessionEnding = false;
   /** DOM activity event names we listen to in order to reset the idle timer. */
   private readonly activityEvents = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'] as const;
   /** Bound handler reference so listeners can be added and removed symmetrically. */
@@ -62,8 +64,20 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   private readonly visibilityHandler = (): void => {
     if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
       void this.checkIdleState();
+      // Also confirm with the server, which is authoritative on idle/expiry.
+      void this.validateServerSession();
     }
   };
+
+  // --- Server-side session sync ---
+  /** Interval that periodically validates the session with the backend. */
+  private serverValidationTimer?: number;
+  /** How often (ms) to validate the session against the server. */
+  private readonly serverValidationInterval = 60 * 1000;
+  /** Epoch ms at which a throttled server heartbeat may fire again. */
+  private nextHeartbeatAt = 0;
+  /** Minimum interval (ms) between server heartbeats triggered by activity. */
+  private readonly heartbeatThrottle = 60 * 1000;
 
   constructor(
     router: Router, 
@@ -220,6 +234,7 @@ export class SecureAuthService extends AuthService implements OnDestroy {
       this.loggedInStatus.next(true);
 
       // Start token validation + idle monitoring
+      this.sessionEnding = false;
       this.startTokenValidation();
       this.recordActivity(true);
       this.startIdleMonitoring();
@@ -261,6 +276,10 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   override async logout(): Promise<void> {
     try {
       console.log('🔐 Starting secure logout process...');
+
+      // Revoke the server-side session before clearing local state (needs the
+      // current sessionId). Best-effort — never blocks local logout.
+      await this.revokeServerSession();
 
       // Clear timers
       this.clearTimers();
@@ -793,6 +812,14 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   }
 
   /**
+   * Entry point for the HTTP interceptor to report a 401 on any API call so a
+   * server-invalidated session (idle/expired) ends the client session too.
+   */
+  async notifyUnauthorized(error: HttpErrorResponse): Promise<void> {
+    await this.handleServerSessionError(error);
+  }
+
+  /**
    * Record user activity and reset the idle countdown. Throttled via
    * `activityThrottle` so high-frequency events (mousemove/scroll) are cheap.
    * @param force bypass the throttle (used on login / explicit extend).
@@ -815,6 +842,139 @@ export class SecureAuthService extends AuthService implements OnDestroy {
     if (this.idleWarningActive) {
       this.idleWarningActive = false;
       this.clearSessionWarning();
+    }
+
+    // Inform the server of activity (throttled) so its LastActivityAt tracks
+    // genuine use. Forced calls (login / explicit extend) always send one.
+    if (force || now >= this.nextHeartbeatAt) {
+      this.nextHeartbeatAt = now + this.heartbeatThrottle;
+      void this.sendHeartbeat();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Server-side session synchronisation
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Resolve the API base URL from runtime configuration, with a sensible default.
+   */
+  private getApiBaseUrl(): string {
+    const config = this.configService.getCurrentConfig();
+    return config?.apiBaseUrl || 'https://sri-api.azurewebsites.net/api';
+  }
+
+  /**
+   * Whether the server round-trips make sense: we must be authenticated and
+   * hold a real server-issued session id (not the cookie placeholder).
+   */
+  private hasServerSession(): boolean {
+    const state = this.authState$.value;
+    return state.isAuthenticated && !!state.sessionId;
+  }
+
+  /**
+   * Send an activity heartbeat to the backend. The X-Session-ID header is added
+   * by the HTTP interceptor from the current auth state. A 401 means the server
+   * already ended the session (idle/expired); we end it locally with its reason.
+   */
+  private async sendHeartbeat(): Promise<void> {
+    if (!this.hasServerSession()) {
+      return;
+    }
+    try {
+      await firstValueFrom(
+        this.http.post(`${this.getApiBaseUrl()}/auth/session/heartbeat`, {}, { withCredentials: true })
+      );
+    } catch (error) {
+      await this.handleServerSessionError(error);
+    }
+  }
+
+  /**
+   * Validate the session with the backend without recording activity. On a
+   * session_invalid 401 the server-provided reason drives the local logout.
+   */
+  private async validateServerSession(): Promise<void> {
+    if (!this.hasServerSession()) {
+      return;
+    }
+    try {
+      await firstValueFrom(
+        this.http.get(`${this.getApiBaseUrl()}/auth/session/validate`, { withCredentials: true })
+      );
+    } catch (error) {
+      await this.handleServerSessionError(error);
+    }
+  }
+
+  /**
+   * Map a failed session API call to a local session end. Only a 401 is treated
+   * as the server ending the session; transient/network errors are ignored so a
+   * blip doesn't log the user out.
+   */
+  private async handleServerSessionError(error: unknown): Promise<void> {
+    const status = (error as HttpErrorResponse)?.status;
+    if (status !== 401) {
+      // Network / server hiccup — don't force a logout on a transient failure.
+      return;
+    }
+
+    const body: any = (error as HttpErrorResponse)?.error;
+    const reason = this.mapServerReason(body?.reason);
+    console.warn('🔐 Server reported session invalid:', body?.reason ?? 'unknown');
+    await this.endSession(reason);
+  }
+
+  /**
+   * Translate a backend session reason ('Idle' | 'Expired' | 'Logout') into the
+   * client SessionEndReason used for messaging.
+   */
+  private mapServerReason(reason: string | undefined): SessionEndReason {
+    switch (reason) {
+      case 'Idle':
+        return SessionEndReason.IDLE;
+      case 'Expired':
+        return SessionEndReason.STALE_LOGIN;
+      default:
+        return SessionEndReason.TOKEN_EXPIRED;
+    }
+  }
+
+  /**
+   * Tell the backend to revoke the current session. Best-effort: failures are
+   * swallowed so local logout always proceeds.
+   */
+  private async revokeServerSession(): Promise<void> {
+    if (!this.hasServerSession()) {
+      return;
+    }
+    try {
+      await firstValueFrom(
+        this.http.post(`${this.getApiBaseUrl()}/auth/session/logout`, {}, { withCredentials: true })
+      );
+    } catch {
+      // Ignore — the session will expire server-side regardless.
+    }
+  }
+
+  /**
+   * Start periodic server-side session validation.
+   */
+  private startServerValidation(): void {
+    this.stopServerValidation();
+    if (typeof window === 'undefined') {
+      return;
+    }
+    this.serverValidationTimer = window.setInterval(() => {
+      void this.validateServerSession();
+    }, this.serverValidationInterval);
+  }
+
+  private stopServerValidation(): void {
+    if (this.serverValidationTimer) {
+      clearInterval(this.serverValidationTimer);
+      this.serverValidationTimer = undefined;
     }
   }
 
@@ -842,6 +1002,9 @@ export class SecureAuthService extends AuthService implements OnDestroy {
     this.idleCheckTimer = window.setInterval(() => {
       void this.checkIdleState();
     }, pollInterval);
+
+    // The backend is authoritative on idle/expiry — poll it periodically too.
+    this.startServerValidation();
   }
 
   /**
@@ -860,6 +1023,7 @@ export class SecureAuthService extends AuthService implements OnDestroy {
       clearInterval(this.idleCheckTimer);
       this.idleCheckTimer = undefined;
     }
+    this.stopServerValidation();
     this.idleWarningActive = false;
   }
 
@@ -942,6 +1106,12 @@ export class SecureAuthService extends AuthService implements OnDestroy {
    * detection. Records the reason as an auth error and performs a full logout.
    */
   private async endSession(reason: SessionEndReason): Promise<void> {
+    // Guard against duplicate end flows (e.g. heartbeat and an API call both 401).
+    if (this.sessionEnding || !this.authState$.value.isAuthenticated) {
+      return;
+    }
+    this.sessionEnding = true;
+
     const message = reason === SessionEndReason.IDLE
       ? 'You were signed out due to inactivity. Please log in again.'
       : 'Your previous session expired. Please log in again.';
@@ -955,7 +1125,11 @@ export class SecureAuthService extends AuthService implements OnDestroy {
     });
 
     this.clearSessionWarning();
-    await this.logout();
+    try {
+      await this.logout();
+    } finally {
+      this.sessionEnding = false;
+    }
   }
 
   /**
