@@ -37,6 +37,36 @@ export interface SecureAuthConfig {
   maxSessionDuration: number; // milliseconds
   enableAutoRefresh: boolean;
   secureStoragePrefix: string;
+  /** Idle duration (ms) with no user activity before the session is terminated. */
+  idleTimeout: number;
+  /** How long (ms) before the idle timeout to show the countdown warning dialog. */
+  idleWarningDuration: number;
+  /** Minimum interval (ms) between recorded activity events, to throttle listeners. */
+  activityThrottle: number;
+}
+
+/**
+ * Reason a session warning / termination was raised.
+ */
+export enum SessionEndReason {
+  /** User has been inactive for the configured idle period. */
+  IDLE = 'IDLE',
+  /** The auth token / backend session has expired (absolute lifetime reached). */
+  TOKEN_EXPIRED = 'TOKEN_EXPIRED',
+  /** A persisted login was found but is stale (idle window elapsed while away). */
+  STALE_LOGIN = 'STALE_LOGIN'
+}
+
+/**
+ * Emitted while a session is about to end so the UI can warn the user and
+ * optionally let them extend it.
+ */
+export interface SessionWarning {
+  reason: SessionEndReason;
+  /** Milliseconds remaining until the session is terminated automatically. */
+  msUntilLogout: number;
+  /** Whether the user is allowed to extend / keep the session alive. */
+  canExtend: boolean;
 }
 
 export interface TokenValidationResult {
@@ -84,7 +114,10 @@ export const DEFAULT_SECURE_AUTH_CONFIG: SecureAuthConfig = {
   sessionTimeoutWarning: 10 * 60 * 1000, // 10 minutes before expiry
   maxSessionDuration: 8 * 60 * 60 * 1000, // 8 hours
   enableAutoRefresh: true,
-  secureStoragePrefix: 'sri_secure_'
+  secureStoragePrefix: 'sri_secure_',
+  idleTimeout: 30 * 60 * 1000, // 30 minutes of inactivity
+  idleWarningDuration: 60 * 1000, // warn 60 seconds before logout
+  activityThrottle: 1000 // record activity at most once per second
 };
 
 /**
