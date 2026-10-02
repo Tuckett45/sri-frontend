@@ -11,6 +11,7 @@ import { getValidTransitions } from '../../../utils/offer-status.util';
 const STATUS_LABELS: Record<OfferStatus, string> = {
   needs_review: 'Needs Review',
   application_reviewed: 'Application Reviewed',
+  prescreened: 'Prescreened',
   vetted_available: 'Vetted/Available',
   offer_extended: 'Offer Extended',
   offer_accepted_onboarding: 'Offer Accepted/Onboarding',
@@ -407,6 +408,7 @@ const STATUS_LABELS: Record<OfferStatus, string> = {
     }
 
     .status-chip.status-needs-review { background: #e3f2fd; color: #1565c0; }
+    .status-chip.status-prescreened { background: #e0f7fa; color: #00838f; }
     .status-chip.status-vetted-available { background: #e8f5e9; color: #2e7d32; }
     .status-chip.status-offer-extended { background: #fff3e0; color: #e65100; }
     .status-chip.status-offer-accepted { background: #f3e5f5; color: #6a1b9a; }
@@ -818,7 +820,7 @@ export class CandidateDetailComponent implements OnInit {
   showStatusMenu = false;
 
   allStatuses: OfferStatus[] = [
-    'needs_review', 'application_reviewed', 'vetted_available', 'offer_extended',
+    'needs_review', 'application_reviewed', 'prescreened', 'vetted_available', 'offer_extended',
     'offer_accepted_onboarding', 'hired_assigned',
     'do_not_hire', 'turned_down_hold', 'needs_sponsorship'
   ];
@@ -970,6 +972,7 @@ export class CandidateDetailComponent implements OnInit {
   getStatusClass(status: OfferStatus): string {
     switch (status) {
       case 'needs_review': return 'status-needs-review';
+      case 'prescreened': return 'status-prescreened';
       case 'vetted_available': return 'status-vetted-available';
       case 'offer_extended': return 'status-offer-extended';
       case 'offer_accepted_onboarding': return 'status-offer-accepted';
