@@ -22,6 +22,7 @@ interface SortState {
 const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   needs_review: 'Needs Review',
   application_reviewed: 'Application Reviewed',
+  prescreened: 'Prescreened',
   vetted_available: 'Vetted/Available',
   offer_extended: 'Offer Extended',
   offer_accepted_onboarding: 'Offer Accepted/Onboarding',
@@ -112,6 +113,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
             <option value="">All Statuses</option>
             <option value="needs_review">Needs Review</option>
             <option value="application_reviewed">Application Reviewed</option>
+            <option value="prescreened">Prescreened</option>
             <option value="vetted_available">Vetted/Available</option>
             <option value="offer_extended">Offer Extended</option>
             <option value="offer_accepted_onboarding">Offer Accepted/Onboarding</option>
@@ -281,6 +283,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
                       [attr.aria-label]="'Change offer status for ' + candidate.techName">
                 <option value="needs_review">Needs Review</option>
                 <option value="application_reviewed">Application Reviewed</option>
+                <option value="prescreened">Prescreened</option>
                 <option value="vetted_available">Vetted/Available</option>
                 <option value="offer_extended">Offer Extended</option>
                 <option value="offer_accepted_onboarding">Offer Accepted/Onboarding</option>

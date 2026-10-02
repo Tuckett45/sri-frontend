@@ -5,8 +5,9 @@ import { OfferStatus } from '../models/onboarding.models';
  *
  * State machine:
  *   needs_review → application_reviewed | needs_sponsorship | do_not_hire | turned_down_hold
- *   application_reviewed → vetted_available | needs_review | needs_sponsorship | do_not_hire | turned_down_hold
- *   vetted_available → offer_extended | application_reviewed | needs_sponsorship | do_not_hire | turned_down_hold
+ *   application_reviewed → prescreened | vetted_available | needs_review | needs_sponsorship | do_not_hire | turned_down_hold
+ *   prescreened → vetted_available | application_reviewed | needs_sponsorship | do_not_hire | turned_down_hold
+ *   vetted_available → offer_extended | prescreened | application_reviewed | needs_sponsorship | do_not_hire | turned_down_hold
  *   offer_extended → offer_accepted_onboarding | vetted_available | do_not_hire | turned_down_hold
  *   offer_accepted_onboarding → hired_assigned | vetted_available (for reassignment)
  *   hired_assigned → vetted_available (for reassignment)
@@ -19,8 +20,9 @@ import { OfferStatus } from '../models/onboarding.models';
  */
 export const OFFER_TRANSITIONS: Record<OfferStatus, OfferStatus[]> = {
   needs_review: ['application_reviewed', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold'],
-  application_reviewed: ['vetted_available', 'needs_review', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold'],
-  vetted_available: ['offer_extended', 'application_reviewed', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold'],
+  application_reviewed: ['prescreened', 'vetted_available', 'needs_review', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold'],
+  prescreened: ['vetted_available', 'application_reviewed', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold'],
+  vetted_available: ['offer_extended', 'prescreened', 'application_reviewed', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold'],
   offer_extended: ['offer_accepted_onboarding', 'vetted_available', 'do_not_hire', 'turned_down_hold'],
   offer_accepted_onboarding: ['hired_assigned', 'vetted_available'],
   hired_assigned: ['vetted_available'],

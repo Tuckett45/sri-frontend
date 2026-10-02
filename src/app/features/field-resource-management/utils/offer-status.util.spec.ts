@@ -3,7 +3,7 @@ import { OfferStatus } from '../models/onboarding.models';
 
 describe('offer-status.util', () => {
   const allStatuses: OfferStatus[] = [
-    'needs_review', 'application_reviewed', 'vetted_available', 'offer_extended',
+    'needs_review', 'application_reviewed', 'prescreened', 'vetted_available', 'offer_extended',
     'offer_accepted_onboarding', 'hired_assigned',
     'do_not_hire', 'turned_down_hold', 'needs_sponsorship'
   ];
@@ -21,12 +21,16 @@ describe('offer-status.util', () => {
       expect(getValidTransitions('needs_review')).toEqual(['application_reviewed', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold']);
     });
 
-    it('should return vetted_available, needs_review, needs_sponsorship, do_not_hire, turned_down_hold for application_reviewed', () => {
-      expect(getValidTransitions('application_reviewed')).toEqual(['vetted_available', 'needs_review', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold']);
+    it('should return prescreened, vetted_available, needs_review, needs_sponsorship, do_not_hire, turned_down_hold for application_reviewed', () => {
+      expect(getValidTransitions('application_reviewed')).toEqual(['prescreened', 'vetted_available', 'needs_review', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold']);
     });
 
-    it('should return offer_extended, application_reviewed, needs_sponsorship, do_not_hire, turned_down_hold for vetted_available', () => {
-      expect(getValidTransitions('vetted_available')).toEqual(['offer_extended', 'application_reviewed', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold']);
+    it('should return vetted_available, application_reviewed, needs_sponsorship, do_not_hire, turned_down_hold for prescreened', () => {
+      expect(getValidTransitions('prescreened')).toEqual(['vetted_available', 'application_reviewed', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold']);
+    });
+
+    it('should return offer_extended, prescreened, application_reviewed, needs_sponsorship, do_not_hire, turned_down_hold for vetted_available', () => {
+      expect(getValidTransitions('vetted_available')).toEqual(['offer_extended', 'prescreened', 'application_reviewed', 'needs_sponsorship', 'do_not_hire', 'turned_down_hold']);
     });
 
     it('should return offer_accepted_onboarding, vetted_available, do_not_hire, turned_down_hold for offer_extended', () => {
@@ -76,7 +80,7 @@ describe('offer-status.util', () => {
     });
 
     it('should reject do_not_hire → any status except needs_review', () => {
-      const blocked: OfferStatus[] = ['application_reviewed', 'vetted_available', 'offer_extended', 'offer_accepted_onboarding', 'hired_assigned', 'do_not_hire', 'turned_down_hold', 'needs_sponsorship'];
+      const blocked: OfferStatus[] = ['application_reviewed', 'prescreened', 'vetted_available', 'offer_extended', 'offer_accepted_onboarding', 'hired_assigned', 'do_not_hire', 'turned_down_hold', 'needs_sponsorship'];
       for (const status of blocked) {
         expect(isValidTransition('do_not_hire', status)).toBeFalse();
       }

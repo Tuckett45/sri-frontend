@@ -36,6 +36,13 @@ import { Candidate, OfferStatus, ExperienceLevel } from '../../../models/onboard
             <span class="card-label">Application Reviewed</span>
           </div>
           <div class="card clickable" tabindex="0" role="button"
+               aria-label="View Prescreened candidates"
+               (click)="navigateToStatus('prescreened')"
+               (keydown.enter)="navigateToStatus('prescreened')">
+            <span class="card-count">{{ prescreenedCount }}</span>
+            <span class="card-label">Prescreened</span>
+          </div>
+          <div class="card clickable" tabindex="0" role="button"
                aria-label="View Vetted/Available candidates"
                (click)="navigateToStatus('vetted_available')"
                (keydown.enter)="navigateToStatus('vetted_available')">
@@ -233,6 +240,7 @@ import { Candidate, OfferStatus, ExperienceLevel } from '../../../models/onboard
     .funnel-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 1rem; border-radius: 6px; min-width: 80px; font-size: 0.875rem; font-weight: 500; color: #fff; transition: width 0.4s ease; }
     .stage-needs-review { background: #42a5f5; }
     .stage-application-reviewed { background: #5c6bc0; }
+    .stage-prescreened { background: #26c6da; }
     .stage-vetted-available { background: #66bb6a; }
     .stage-offer-extended { background: #ffa726; }
     .stage-accepted { background: #7b1fa2; }
@@ -272,6 +280,7 @@ export class PipelineDashboardComponent implements OnInit {
 
   needsReviewCount = 0;
   applicationReviewedCount = 0;
+  prescreenedCount = 0;
   vettedAvailableCount = 0;
   offerExtendedCount = 0;
   offerAcceptedOnboardingCount = 0;
@@ -294,6 +303,7 @@ export class PipelineDashboardComponent implements OnInit {
   private readonly STATUS_LABELS: Record<OfferStatus, string> = {
     needs_review: 'Needs Review',
     application_reviewed: 'Application Reviewed',
+    prescreened: 'Prescreened',
     vetted_available: 'Vetted/Available',
     offer_extended: 'Offer Extended',
     offer_accepted_onboarding: 'Accepted/Onboarding',
@@ -398,6 +408,7 @@ export class PipelineDashboardComponent implements OnInit {
   private computeCounts(candidates: Candidate[]): void {
     this.needsReviewCount = candidates.filter(c => c.offerStatus === 'needs_review').length;
     this.applicationReviewedCount = candidates.filter(c => c.offerStatus === 'application_reviewed').length;
+    this.prescreenedCount = candidates.filter(c => c.offerStatus === 'prescreened').length;
     this.vettedAvailableCount = candidates.filter(c => c.offerStatus === 'vetted_available').length;
     this.offerExtendedCount = candidates.filter(c => c.offerStatus === 'offer_extended').length;
     this.offerAcceptedOnboardingCount = candidates.filter(c => c.offerStatus === 'offer_accepted_onboarding').length;
@@ -420,11 +431,12 @@ export class PipelineDashboardComponent implements OnInit {
   }
 
   private buildFunnel(): void {
-    const total = this.needsReviewCount + this.applicationReviewedCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount + this.doNotHireCount + this.turnedDownHoldCount + this.needsSponsorshipCount;
+    const total = this.needsReviewCount + this.applicationReviewedCount + this.prescreenedCount + this.vettedAvailableCount + this.offerExtendedCount + this.offerAcceptedOnboardingCount + this.hiredAssignedCount + this.doNotHireCount + this.turnedDownHoldCount + this.needsSponsorshipCount;
     const pct = (n: number) => total > 0 ? Math.max(20, Math.round((n / total) * 100)) : 20;
     this.funnelStages = [
       { label: 'Needs Review', count: this.needsReviewCount, pct: pct(this.needsReviewCount), cls: 'stage-needs-review' },
       { label: 'Application Reviewed', count: this.applicationReviewedCount, pct: pct(this.applicationReviewedCount), cls: 'stage-application-reviewed' },
+      { label: 'Prescreened', count: this.prescreenedCount, pct: pct(this.prescreenedCount), cls: 'stage-prescreened' },
       { label: 'Vetted/Available', count: this.vettedAvailableCount, pct: pct(this.vettedAvailableCount), cls: 'stage-vetted-available' },
       { label: 'Offer Extended', count: this.offerExtendedCount, pct: pct(this.offerExtendedCount), cls: 'stage-offer-extended' },
       { label: 'Accepted/Onboarding', count: this.offerAcceptedOnboardingCount, pct: pct(this.offerAcceptedOnboardingCount), cls: 'stage-accepted' },
