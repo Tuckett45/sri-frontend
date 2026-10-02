@@ -1,0 +1,24 @@
+<div mat-dialog-title class="modal-header">
+  <h5 class="modal-title">{{ title }}</h5>
+</div>
+
+<mat-dialog-content class="modal-body">
+  <p class="message">{{ message }}</p>
+
+  <div class="countdown" role="timer" aria-live="assertive"
+       [attr.aria-label]="'Logging out in ' + secondsRemaining + ' seconds'">
+    <span class="count">{{ secondsRemaining }}</span>
+    <span class="unit">second{{ secondsRemaining === 1 ? '' : 's' }}</span>
+  </div>
+
+  <p class="sub-message" *ngIf="canExtend">
+    Click <strong>Stay logged in</strong> to continue your session.
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions class="modal-footer">
+  <button mat-raised-button class="logout-btn" (click)="logoutNow()">Log out now</button>
+  <button *ngIf="canExtend" mat-raised-button class="stay-btn" cdkFocusInitial (click)="stay()">
+    Stay logged in
+  </button>
+</mat-dialog-actions>

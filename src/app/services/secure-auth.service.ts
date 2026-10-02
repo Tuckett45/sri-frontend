@@ -15,6 +15,8 @@ import {
   AuthMethod,
   AuthError,
   AuthErrorType,
+  SessionEndReason,
+  SessionWarning,
   DEFAULT_SECURE_AUTH_CONFIG,
   STORAGE_SECURITY_LEVELS
 } from '../models/auth.model';
@@ -38,6 +40,44 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   private sessionWarningTimer?: number;
   private memoryOnlyToken: string | null = null;
   private currentAuthMethod: AuthMethod = AuthMethod.MEMORY_ONLY;
+
+  // --- Idle / inactivity tracking ---
+  /** Storage key for persisting the last-activity timestamp across tabs/reloads. */
+  private static readonly LAST_ACTIVITY_KEY = 'sri_last_activity';
+  /** Emits a warning when the session is about to end; null clears any active warning. */
+  private sessionWarning$ = new BehaviorSubject<SessionWarning | null>(null);
+  /** Epoch ms of the most recent user activity. */
+  private lastActivity = Date.now();
+  /** Epoch ms at which the throttled activity recorder may fire again. */
+  private nextActivityRecordAt = 0;
+  /** Interval that polls idle time and drives the warning/logout flow. */
+  private idleCheckTimer?: number;
+  /** Whether the idle warning is currently showing (prevents duplicate emissions). */
+  private idleWarningActive = false;
+  /** Guards against concurrent/duplicate session-end flows (e.g. two 401s). */
+  private sessionEnding = false;
+  /** DOM activity event names we listen to in order to reset the idle timer. */
+  private readonly activityEvents = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'] as const;
+  /** Bound handler reference so listeners can be added and removed symmetrically. */
+  private readonly activityHandler = (): void => this.recordActivity();
+  /** Bound handler that re-checks for a stale session when a tab regains focus. */
+  private readonly visibilityHandler = (): void => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      void this.checkIdleState();
+      // Also confirm with the server, which is authoritative on idle/expiry.
+      void this.validateServerSession();
+    }
+  };
+
+  // --- Server-side session sync ---
+  /** Interval that periodically validates the session with the backend. */
+  private serverValidationTimer?: number;
+  /** How often (ms) to validate the session against the server. */
+  private readonly serverValidationInterval = 60 * 1000;
+  /** Epoch ms at which a throttled server heartbeat may fire again. */
+  private nextHeartbeatAt = 0;
+  /** Minimum interval (ms) between server heartbeats triggered by activity. */
+  private readonly heartbeatThrottle = 60 * 1000;
 
   constructor(
     router: Router, 
@@ -78,9 +118,18 @@ export class SecureAuthService extends AuthService implements OnDestroy {
       // Load existing authentication state
       await this.loadExistingAuthState();
 
-      // Start token validation if authenticated
+      // Reject stale logins: a persisted session whose last activity is older
+      // than the idle window should not be silently restored.
+      if (this.authState$.value.isAuthenticated && this.isPersistedSessionStale()) {
+        console.warn('🔐 Persisted session is stale (idle window elapsed). Terminating.');
+        await this.endSession(SessionEndReason.STALE_LOGIN);
+        return;
+      }
+
+      // Start validation + idle monitoring if authenticated
       if (this.authState$.value.isAuthenticated) {
         this.startTokenValidation();
+        this.startIdleMonitoring();
       }
 
       console.log('✅ SecureAuthService initialized successfully', {
@@ -184,8 +233,11 @@ export class SecureAuthService extends AuthService implements OnDestroy {
       this.setUserRole(this.resolveRole(user));
       this.loggedInStatus.next(true);
 
-      // Start token validation
+      // Start token validation + idle monitoring
+      this.sessionEnding = false;
       this.startTokenValidation();
+      this.recordActivity(true);
+      this.startIdleMonitoring();
 
       console.log('✅ Secure login successful');
       return {
@@ -225,6 +277,10 @@ export class SecureAuthService extends AuthService implements OnDestroy {
     try {
       console.log('🔐 Starting secure logout process...');
 
+      // Revoke the server-side session before clearing local state (needs the
+      // current sessionId). Best-effort — never blocks local logout.
+      await this.revokeServerSession();
+
       // Clear timers
       this.clearTimers();
 
@@ -245,8 +301,9 @@ export class SecureAuthService extends AuthService implements OnDestroy {
       this.currentUser = null;
       this.loggedInStatus.next(false);
 
-      // Clear any errors
+      // Clear any errors and dismiss any active session warning
       this.authError$.next(null);
+      this.clearSessionWarning();
 
       console.log('✅ Secure logout completed');
 
@@ -652,6 +709,13 @@ export class SecureAuthService extends AuthService implements OnDestroy {
     // Clear memory
     this.memoryOnlyToken = null;
 
+    // Clear persisted idle-activity marker
+    try {
+      localStorage.removeItem(SecureAuthService.LAST_ACTIVITY_KEY);
+    } catch {
+      // Ignore storage access errors (e.g. privacy mode)
+    }
+
     // Clear parent class storage
     super.clearStorage();
   }
@@ -680,6 +744,8 @@ export class SecureAuthService extends AuthService implements OnDestroy {
       clearTimeout(this.sessionWarningTimer);
       this.sessionWarningTimer = undefined;
     }
+
+    this.stopIdleMonitoring();
   }
 
   /**
@@ -699,14 +765,380 @@ export class SecureAuthService extends AuthService implements OnDestroy {
   }
 
   /**
-   * Show session timeout warning
+   * Show a session-timeout warning triggered by the absolute token lifetime
+   * approaching expiry (distinct from idle timeout). Emits on the shared
+   * warning channel so the UI can prompt the user.
    */
   private showSessionTimeoutWarning(timeUntilExpiry: number): void {
     const minutes = Math.ceil(timeUntilExpiry / (60 * 1000));
-    console.warn(`⚠️ Session expires in ${minutes} minutes`);
-    
-    // Could emit an event or show a toast notification here
-    // For now, just log the warning
+    console.warn(`⚠️ Session (token) expires in ${minutes} minutes`);
+
+    // Token lifetime cannot be extended client-side (no refresh token), so the
+    // user cannot keep the session alive here — they can only acknowledge it.
+    this.sessionWarning$.next({
+      reason: SessionEndReason.TOKEN_EXPIRED,
+      msUntilLogout: Math.max(0, timeUntilExpiry),
+      canExtend: false
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Idle / inactivity session management
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Observable stream of session warnings. The UI (AppComponent) subscribes to
+   * this to show a countdown dialog. Emits `null` when any active warning is
+   * dismissed (session extended) or resolved (logout).
+   */
+  getSessionWarning(): Observable<SessionWarning | null> {
+    return this.sessionWarning$.asObservable();
+  }
+
+  /**
+   * Extend / refresh the current session in response to explicit user intent
+   * (e.g. clicking "Stay logged in"). Resets the idle timer and clears the
+   * active warning. Returns false if there is no authenticated session.
+   */
+  extendSession(): boolean {
+    if (!this.authState$.value.isAuthenticated) {
+      return false;
+    }
+    this.recordActivity(true);
+    this.idleWarningActive = false;
+    this.clearSessionWarning();
+    console.log('🔐 Session extended by user activity');
+    return true;
+  }
+
+  /**
+   * Entry point for the HTTP interceptor to report a 401 on any API call so a
+   * server-invalidated session (idle/expired) ends the client session too.
+   */
+  async notifyUnauthorized(error: HttpErrorResponse): Promise<void> {
+    await this.handleServerSessionError(error);
+  }
+
+  /**
+   * Record user activity and reset the idle countdown. Throttled via
+   * `activityThrottle` so high-frequency events (mousemove/scroll) are cheap.
+   * @param force bypass the throttle (used on login / explicit extend).
+   */
+  recordActivity(force: boolean = false): void {
+    const now = Date.now();
+    if (!force && now < this.nextActivityRecordAt) {
+      return;
+    }
+    this.nextActivityRecordAt = now + this.authConfig.activityThrottle;
+    this.lastActivity = now;
+
+    try {
+      localStorage.setItem(SecureAuthService.LAST_ACTIVITY_KEY, String(now));
+    } catch {
+      // Ignore storage access errors (e.g. privacy mode)
+    }
+
+    // If a warning is showing and the user interacted, keep the session alive.
+    if (this.idleWarningActive) {
+      this.idleWarningActive = false;
+      this.clearSessionWarning();
+    }
+
+    // Inform the server of activity (throttled) so its LastActivityAt tracks
+    // genuine use. Forced calls (login / explicit extend) always send one.
+    if (force || now >= this.nextHeartbeatAt) {
+      this.nextHeartbeatAt = now + this.heartbeatThrottle;
+      void this.sendHeartbeat();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Server-side session synchronisation
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Resolve the API base URL from runtime configuration, with a sensible default.
+   */
+  private getApiBaseUrl(): string {
+    const config = this.configService.getCurrentConfig();
+    return config?.apiBaseUrl || 'https://sri-api.azurewebsites.net/api';
+  }
+
+  /**
+   * Whether the server round-trips make sense: we must be authenticated and
+   * hold a real server-issued session id (not the cookie placeholder).
+   */
+  private hasServerSession(): boolean {
+    const state = this.authState$.value;
+    return state.isAuthenticated && !!state.sessionId;
+  }
+
+  /**
+   * Send an activity heartbeat to the backend. The X-Session-ID header is added
+   * by the HTTP interceptor from the current auth state. A 401 means the server
+   * already ended the session (idle/expired); we end it locally with its reason.
+   */
+  private async sendHeartbeat(): Promise<void> {
+    if (!this.hasServerSession()) {
+      return;
+    }
+    try {
+      await firstValueFrom(
+        this.http.post(`${this.getApiBaseUrl()}/auth/session/heartbeat`, {}, { withCredentials: true })
+      );
+    } catch (error) {
+      await this.handleServerSessionError(error);
+    }
+  }
+
+  /**
+   * Validate the session with the backend without recording activity. On a
+   * session_invalid 401 the server-provided reason drives the local logout.
+   */
+  private async validateServerSession(): Promise<void> {
+    if (!this.hasServerSession()) {
+      return;
+    }
+    try {
+      await firstValueFrom(
+        this.http.get(`${this.getApiBaseUrl()}/auth/session/validate`, { withCredentials: true })
+      );
+    } catch (error) {
+      await this.handleServerSessionError(error);
+    }
+  }
+
+  /**
+   * Map a failed session API call to a local session end. Only a 401 is treated
+   * as the server ending the session; transient/network errors are ignored so a
+   * blip doesn't log the user out.
+   */
+  private async handleServerSessionError(error: unknown): Promise<void> {
+    const status = (error as HttpErrorResponse)?.status;
+    if (status !== 401) {
+      // Network / server hiccup — don't force a logout on a transient failure.
+      return;
+    }
+
+    const body: any = (error as HttpErrorResponse)?.error;
+    const reason = this.mapServerReason(body?.reason);
+    console.warn('🔐 Server reported session invalid:', body?.reason ?? 'unknown');
+    await this.endSession(reason);
+  }
+
+  /**
+   * Translate a backend session reason ('Idle' | 'Expired' | 'Logout') into the
+   * client SessionEndReason used for messaging.
+   */
+  private mapServerReason(reason: string | undefined): SessionEndReason {
+    switch (reason) {
+      case 'Idle':
+        return SessionEndReason.IDLE;
+      case 'Expired':
+        return SessionEndReason.STALE_LOGIN;
+      default:
+        return SessionEndReason.TOKEN_EXPIRED;
+    }
+  }
+
+  /**
+   * Tell the backend to revoke the current session. Best-effort: failures are
+   * swallowed so local logout always proceeds.
+   */
+  private async revokeServerSession(): Promise<void> {
+    if (!this.hasServerSession()) {
+      return;
+    }
+    try {
+      await firstValueFrom(
+        this.http.post(`${this.getApiBaseUrl()}/auth/session/logout`, {}, { withCredentials: true })
+      );
+    } catch {
+      // Ignore — the session will expire server-side regardless.
+    }
+  }
+
+  /**
+   * Start periodic server-side session validation.
+   */
+  private startServerValidation(): void {
+    this.stopServerValidation();
+    if (typeof window === 'undefined') {
+      return;
+    }
+    this.serverValidationTimer = window.setInterval(() => {
+      void this.validateServerSession();
+    }, this.serverValidationInterval);
+  }
+
+  private stopServerValidation(): void {
+    if (this.serverValidationTimer) {
+      clearInterval(this.serverValidationTimer);
+      this.serverValidationTimer = undefined;
+    }
+  }
+
+  /**
+   * Begin monitoring for user inactivity: attach activity listeners and start
+   * the polling timer that drives the warning and auto-logout.
+   */
+  private startIdleMonitoring(): void {
+    this.stopIdleMonitoring();
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    for (const evt of this.activityEvents) {
+      window.addEventListener(evt, this.activityHandler, { passive: true });
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
+
+    // Poll at a fraction of the warning duration (min 1s) so the countdown and
+    // the auto-logout fire promptly without a heavyweight timer.
+    const pollInterval = Math.max(1000, Math.floor(this.authConfig.idleWarningDuration / 4));
+    this.idleCheckTimer = window.setInterval(() => {
+      void this.checkIdleState();
+    }, pollInterval);
+
+    // The backend is authoritative on idle/expiry — poll it periodically too.
+    this.startServerValidation();
+  }
+
+  /**
+   * Remove activity listeners and stop the idle polling timer.
+   */
+  private stopIdleMonitoring(): void {
+    if (typeof window !== 'undefined') {
+      for (const evt of this.activityEvents) {
+        window.removeEventListener(evt, this.activityHandler);
+      }
+    }
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+    }
+    if (this.idleCheckTimer) {
+      clearInterval(this.idleCheckTimer);
+      this.idleCheckTimer = undefined;
+    }
+    this.stopServerValidation();
+    this.idleWarningActive = false;
+  }
+
+  /**
+   * Evaluate how long the user has been idle and act accordingly:
+   * - past the idle timeout  -> terminate the session (idle logout)
+   * - within the warning band -> emit/refresh a countdown warning
+   * - otherwise              -> ensure no stale warning is showing
+   */
+  private async checkIdleState(): Promise<void> {
+    if (!this.authState$.value.isAuthenticated) {
+      return;
+    }
+
+    // Use the most recent activity across tabs (persisted value may be newer).
+    const persisted = this.readPersistedLastActivity();
+    if (persisted && persisted > this.lastActivity) {
+      this.lastActivity = persisted;
+    }
+
+    const idleFor = Date.now() - this.lastActivity;
+    const { idleTimeout, idleWarningDuration } = this.authConfig;
+
+    if (idleFor >= idleTimeout) {
+      console.warn('🔐 User idle beyond timeout — ending session');
+      await this.endSession(SessionEndReason.IDLE);
+      return;
+    }
+
+    const msUntilLogout = idleTimeout - idleFor;
+    if (msUntilLogout <= idleWarningDuration) {
+      // Within the warning window: emit (or refresh) the countdown.
+      this.idleWarningActive = true;
+      this.sessionWarning$.next({
+        reason: SessionEndReason.IDLE,
+        msUntilLogout,
+        canExtend: true
+      });
+    } else if (this.idleWarningActive) {
+      // User became active again before timeout; dismiss the warning.
+      this.idleWarningActive = false;
+      this.clearSessionWarning();
+    }
+  }
+
+  /**
+   * Determine whether a just-restored persisted session is stale — i.e. the
+   * last recorded activity is older than the idle timeout, meaning the user
+   * was away long enough that the session should not be trusted.
+   */
+  private isPersistedSessionStale(): boolean {
+    const persisted = this.readPersistedLastActivity();
+    if (persisted === null) {
+      // No activity marker (fresh login path or first run): treat as active.
+      this.lastActivity = Date.now();
+      return false;
+    }
+    this.lastActivity = persisted;
+    return Date.now() - persisted >= this.authConfig.idleTimeout;
+  }
+
+  /**
+   * Read and parse the persisted last-activity timestamp, or null if absent/invalid.
+   */
+  private readPersistedLastActivity(): number | null {
+    try {
+      const raw = localStorage.getItem(SecureAuthService.LAST_ACTIVITY_KEY);
+      if (!raw) {
+        return null;
+      }
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Centralised session termination used by idle timeout and stale-login
+   * detection. Records the reason as an auth error and performs a full logout.
+   */
+  private async endSession(reason: SessionEndReason): Promise<void> {
+    // Guard against duplicate end flows (e.g. heartbeat and an API call both 401).
+    if (this.sessionEnding || !this.authState$.value.isAuthenticated) {
+      return;
+    }
+    this.sessionEnding = true;
+
+    const message = reason === SessionEndReason.IDLE
+      ? 'You were signed out due to inactivity. Please log in again.'
+      : 'Your previous session expired. Please log in again.';
+
+    this.handleAuthError({
+      type: AuthErrorType.SESSION_TIMEOUT,
+      message,
+      timestamp: new Date(),
+      recoverable: false,
+      context: { reason }
+    });
+
+    this.clearSessionWarning();
+    try {
+      await this.logout();
+    } finally {
+      this.sessionEnding = false;
+    }
+  }
+
+  /**
+   * Clear any active session warning on the stream.
+   */
+  private clearSessionWarning(): void {
+    if (this.sessionWarning$.value !== null) {
+      this.sessionWarning$.next(null);
+    }
   }
 
   /**

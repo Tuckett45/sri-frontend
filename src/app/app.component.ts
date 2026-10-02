@@ -1,8 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ConfigurationService } from './services/configuration.service';
 import { SecureAuthService } from './services/secure-auth.service';
+import {
+  SessionTimeoutDialogComponent,
+  SessionTimeoutDialogResult
+} from './components/modals/session-timeout-dialog/session-timeout-dialog.component';
+import { SessionWarning } from './models/auth.model';
 import { DeploymentNotificationIntegratorService } from './features/deployment/services/deployment-notification-integrator.service';
 import { AnalyticsService } from './shared/services/analytics.service';
 import { environment } from 'src/environments/environments';
@@ -33,6 +39,10 @@ export class AppComponent {
   private readonly notificationIntegrator = inject(DeploymentNotificationIntegratorService);
   private readonly analyticsService = inject(AnalyticsService);
   private readonly store = inject(Store);
+  private readonly dialog = inject(MatDialog);
+
+  /** Reference to the currently open session-timeout dialog, if any. */
+  private sessionTimeoutDialogRef: MatDialogRef<SessionTimeoutDialogComponent, SessionTimeoutDialogResult> | null = null;
 
   constructor(public router: Router) {}
 
@@ -90,6 +100,11 @@ export class AppComponent {
         }
       });
 
+      // React to session-timeout / idle warnings by showing a countdown dialog
+      this.authService.getSessionWarning().subscribe(warning => {
+        this.handleSessionWarning(warning);
+      });
+
       console.log('✅ Application initialized successfully');
       
       // Load mock data in development mode
@@ -100,6 +115,47 @@ export class AppComponent {
       console.error('❌ Failed to initialize application:', error);
       // Application can still function with degraded capabilities
     }
+  }
+
+  /**
+   * Show (or dismiss) the session-timeout warning dialog in response to the
+   * auth service's warning stream.
+   */
+  private handleSessionWarning(warning: SessionWarning | null): void {
+    // No active warning: close any open dialog (session was extended/resolved).
+    if (!warning) {
+      if (this.sessionTimeoutDialogRef) {
+        this.sessionTimeoutDialogRef.close();
+        this.sessionTimeoutDialogRef = null;
+      }
+      return;
+    }
+
+    // Already showing a dialog — let its own countdown keep running.
+    if (this.sessionTimeoutDialogRef) {
+      return;
+    }
+
+    this.sessionTimeoutDialogRef = this.dialog.open(SessionTimeoutDialogComponent, {
+      width: '420px',
+      disableClose: true,
+      data: {
+        reason: warning.reason,
+        msUntilLogout: warning.msUntilLogout,
+        canExtend: warning.canExtend
+      }
+    });
+
+    this.sessionTimeoutDialogRef.afterClosed().subscribe((result: SessionTimeoutDialogResult | undefined) => {
+      this.sessionTimeoutDialogRef = null;
+
+      if (result === 'extend') {
+        this.authService.extendSession();
+      } else if (result === 'logout') {
+        void this.authService.logout();
+      }
+      // 'expired' (or undefined): the auth service's idle timer handles logout.
+    });
   }
 
   private loadMockData(): void {

@@ -67,6 +67,7 @@ import { StreetSheetModalComponent } from './components/modals/street-sheet-moda
 import { StreetSheetComponent } from './components/street-sheet/street-sheet.component';
 import { StreetSheetMapComponent } from './components/street-sheet/street-sheet-map.component';
 import { DeleteConfirmationModalComponent } from './components/modals/delete-confirmation-modal/delete-confirmation-modal.component';
+import { SessionTimeoutDialogComponent } from './components/modals/session-timeout-dialog/session-timeout-dialog.component';
 import { OspCoordinatorModalComponent } from './components/modals/osp-coordinator-modal/osp-coordinator-modal.component';
 import { MarketControllerComponent } from './components/market-controller/market-controller.component';
 import { AdminUserApprovalComponent } from './components/admin-user-approval/admin-user-approval.component';
@@ -126,6 +127,7 @@ export const customCurrencyMaskConfig = {
   declarations: [
     AppComponent,
     DeleteConfirmationModalComponent,
+    SessionTimeoutDialogComponent,
     FilterComponent,
     ForgotPasswordModalComponent,
     LoginComponent,
