@@ -113,22 +113,14 @@ export class TechnicianService {
     return this.http.get<any>(this.apiUrl, { params })
       .pipe(
         switchMap(response => {
-          // API may return paginated response { items: [...], totalCount, hasNextPage } or a plain array
-          let technicians: Technician[];
-          let totalCount = 0;
-          let hasNextPage = false;
-
-          if (Array.isArray(response)) {
-            technicians = response;
-            totalCount = response.length;
-          } else if (response && Array.isArray(response.items)) {
-            technicians = response.items;
-            totalCount = response.totalCount || response.items.length;
-            hasNextPage = response.hasNextPage === true;
-          } else {
-            console.warn('[TechnicianService] Unexpected response format:', response);
-            technicians = [];
-          }
+          // API may return a paginated response or a plain array. The paginated
+          // envelope may be serialized as either camelCase ({ items, totalCount,
+          // hasNextPage }) or PascalCase ({ Items, TotalCount, HasNextPage })
+          // depending on the backend's JSON serializer, so handle both.
+          const parsed = this.parseTechnicianListResponse(response);
+          let technicians: Technician[] = parsed.items;
+          const totalCount = parsed.totalCount;
+          const hasNextPage = parsed.hasNextPage;
 
           // If there are more pages, fetch them all so the frontend has the complete dataset
           if (hasNextPage && totalCount > technicians.length) {
@@ -145,11 +137,7 @@ export class TechnicianService {
             return forkJoin(remainingPages).pipe(
               map(responses => {
                 for (const resp of responses) {
-                  if (resp && Array.isArray(resp.items)) {
-                    technicians = technicians.concat(resp.items);
-                  } else if (Array.isArray(resp)) {
-                    technicians = technicians.concat(resp);
-                  }
+                  technicians = technicians.concat(this.parseTechnicianListResponse(resp).items);
                 }
                 return technicians;
               })
@@ -181,6 +169,41 @@ export class TechnicianService {
       );
   }
 
+
+  /**
+   * Normalizes a technicians list response into a consistent shape, tolerating:
+   * - a plain array of technicians
+   * - a camelCase paginated envelope ({ items, totalCount, hasNextPage })
+   * - a PascalCase paginated envelope ({ Items, TotalCount, HasNextPage })
+   * This guards against the frontend silently returning an empty list when the
+   * backend serializer emits PascalCase keys.
+   */
+  private parseTechnicianListResponse(response: any): {
+    items: Technician[];
+    totalCount: number;
+    hasNextPage: boolean;
+  } {
+    if (Array.isArray(response)) {
+      return { items: response, totalCount: response.length, hasNextPage: false };
+    }
+
+    if (response && typeof response === 'object') {
+      const items = Array.isArray(response.items)
+        ? response.items
+        : Array.isArray(response.Items)
+          ? response.Items
+          : null;
+
+      if (items) {
+        const totalCount = response.totalCount ?? response.TotalCount ?? items.length;
+        const hasNextPage = (response.hasNextPage ?? response.HasNextPage) === true;
+        return { items, totalCount, hasNextPage };
+      }
+    }
+
+    console.warn('[TechnicianService] Unexpected response format:', response);
+    return { items: [], totalCount: 0, hasNextPage: false };
+  }
 
   /**
    * Apply role-based filtering to technicians
