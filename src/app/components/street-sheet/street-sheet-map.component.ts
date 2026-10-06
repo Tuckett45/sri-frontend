@@ -7,6 +7,9 @@ import { MapMarkerService } from 'src/app/services/map-marker.service';
 import { DatePipe } from '@angular/common';
 import { User } from 'src/app/models/user.model';
 import { StateLocation } from 'src/app/models/state-location.enum';
+// Note: `environment` import removed with the switch to keyless OpenStreetMap tiles.
+// Re-add `import { environment } from 'src/environments/environments';` if you
+// restore the CARTO Voyager basemap (which reads environment.cartoApiKey).
 
 // Fix Leaflet default icon paths broken by webpack
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -193,10 +196,17 @@ export class StreetSheetMapComponent implements AfterViewInit {
       zoomControl: true,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 20
+    // Keyless OpenStreetMap standard tiles (no API key required).
+    // To switch back to CARTO Voyager, restore the commented line below and
+    // provide a valid CARTO *Basemaps* key (from carto.com/basemaps/apikey) in
+    // environment.cartoApiKey:
+    // L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${environment.cartoApiKey}`, {
+    //   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    //   subdomains: 'abcd', maxZoom: 20
+    // }).addTo(this.map);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
     }).addTo(this.map);
 
     // Mark ready and flush any markers that arrived before init
