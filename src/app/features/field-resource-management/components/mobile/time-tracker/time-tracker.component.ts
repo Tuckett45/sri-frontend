@@ -5,7 +5,9 @@ import { takeUntil } from 'rxjs/operators';
 import * as L from 'leaflet';
 import { Job, JobStatus } from '../../../models/job.model';
 import { TimeEntry, GeoLocation } from '../../../models/time-entry.model';
-import { environment } from 'src/environments/environments';
+// Note: `environment` import removed with the switch to keyless OpenStreetMap tiles.
+// Re-add `import { environment } from 'src/environments/environments';` if you
+// restore the CARTO Voyager basemap (which reads environment.cartoApiKey).
 import { clockIn, clockOut, updateTimeEntry } from '../../../state/time-entries/time-entry.actions';
 import { updateJobStatus } from '../../../state/jobs/job.actions';
 import { selectActiveTimeEntry, selectLastCompletedTimeEntry } from '../../../state/time-entries/time-entry.selectors';
@@ -459,10 +461,17 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
       attributionControl: true
     });
 
-    L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${environment.cartoApiKey}`, {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 20
+    // Keyless OpenStreetMap standard tiles (no API key required).
+    // To switch back to CARTO Voyager, restore the commented line below and
+    // provide a valid CARTO *Basemaps* key (from carto.com/basemaps/apikey) in
+    // environment.cartoApiKey:
+    // L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${environment.cartoApiKey}`, {
+    //   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    //   subdomains: 'abcd', maxZoom: 20
+    // }).addTo(this.routeMap);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
     }).addTo(this.routeMap);
 
     const jobIcon = L.icon({
