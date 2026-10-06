@@ -7,6 +7,7 @@ import { MapMarkerService } from 'src/app/services/map-marker.service';
 import { DatePipe } from '@angular/common';
 import { User } from 'src/app/models/user.model';
 import { StateLocation } from 'src/app/models/state-location.enum';
+import { environment } from 'src/environments/environments';
 
 // Fix Leaflet default icon paths broken by webpack
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -193,7 +194,7 @@ export class StreetSheetMapComponent implements AfterViewInit {
       zoomControl: true,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${environment.cartoApiKey}`, {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 20

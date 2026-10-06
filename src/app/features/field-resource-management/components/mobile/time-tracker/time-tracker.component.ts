@@ -5,6 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import * as L from 'leaflet';
 import { Job, JobStatus } from '../../../models/job.model';
 import { TimeEntry, GeoLocation } from '../../../models/time-entry.model';
+import { environment } from 'src/environments/environments';
 import { clockIn, clockOut, updateTimeEntry } from '../../../state/time-entries/time-entry.actions';
 import { updateJobStatus } from '../../../state/jobs/job.actions';
 import { selectActiveTimeEntry, selectLastCompletedTimeEntry } from '../../../state/time-entries/time-entry.selectors';
@@ -458,7 +459,7 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
       attributionControl: true
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${environment.cartoApiKey}`, {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 20

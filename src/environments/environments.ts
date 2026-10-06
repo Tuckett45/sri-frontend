@@ -8,7 +8,9 @@ export const environment = {
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
   enableSignalR: false, // DISABLED: Azure SignalR instance deleted
-  googleAnalyticsId: 'G-XXXXXXXXXX' // Replace with actual GA4 Measurement ID
+  googleAnalyticsId: 'G-XXXXXXXXXX', // Replace with actual GA4 Measurement ID
+  // CARTO basemap API key (required for CARTO raster tiles)
+  cartoApiKey: 'eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfa2Y0M3c2Ym0iLCJqdGkiOiI1M2YzYjliYzEyNGZmMzIwNDI0YWM5MmRiNjQwMjU5OCJ9.PK2RLAWoyBqxbzCdvfAAHCeWIHsCS8NbvJ3Xz4XbnEo'
 };
 
 //Staging
@@ -21,7 +23,9 @@ export const staging_environment = {
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
   enableSignalR: false, // DISABLED: Azure SignalR instance deleted
-  googleAnalyticsId: 'G-XXXXXXXXXX' // Replace with actual GA4 Measurement ID for staging
+  googleAnalyticsId: 'G-XXXXXXXXXX', // Replace with actual GA4 Measurement ID for staging
+  // CARTO basemap API key (required for CARTO raster tiles)
+  cartoApiKey: 'eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfa2Y0M3c2Ym0iLCJqdGkiOiI1M2YzYjliYzEyNGZmMzIwNDI0YWM5MmRiNjQwMjU5OCJ9.PK2RLAWoyBqxbzCdvfAAHCeWIHsCS8NbvJ3Xz4XbnEo'
 };
 
 // Local server
@@ -34,5 +38,7 @@ export const local_environment = {
   receiptBlobBaseUrl: 'https://databaseblob.blob.core.windows.net/expenseimages',
   vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
   enableSignalR: false, // Disable SignalR for local development without backend
-  googleAnalyticsId: undefined // Disable analytics in local development
+  googleAnalyticsId: undefined, // Disable analytics in local development
+  // CARTO basemap API key (required for CARTO raster tiles)
+  cartoApiKey: 'eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfa2Y0M3c2Ym0iLCJqdGkiOiI1M2YzYjliYzEyNGZmMzIwNDI0YWM5MmRiNjQwMjU5OCJ9.PK2RLAWoyBqxbzCdvfAAHCeWIHsCS8NbvJ3Xz4XbnEo'
 };
