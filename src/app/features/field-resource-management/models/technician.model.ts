@@ -64,6 +64,22 @@ export enum TechnicianStatus {
   OffDuty = 'OffDuty'
 }
 
+/**
+ * Lightweight view of the crew a technician is assigned to (a technician is on at most
+ * one crew). Returned on the serialized Technician as the `crew` property by the
+ * technician list endpoint; undefined when the technician is not on any crew.
+ */
+export interface TechnicianCrewInfo {
+  crewId: string;
+  crewName: string;
+  /** The crew's company/client (free-text), from Crew.Company. */
+  company?: string;
+  /** The crew's current job id, if assigned to a job. */
+  currentJobId?: string;
+  /** The client of the crew's current job (free-text), from Job.Client, when present. */
+  currentJobClient?: string;
+}
+
 export interface Technician {
   id: string;
   firstName: string;
@@ -154,6 +170,10 @@ export interface Technician {
 
   // Real-time field status determined by backend on clock-in/out
   fieldStatus?: 'Available' | 'EnRoute' | 'OnSite' | 'ClockedOut';
+
+  // Crew the technician is assigned to (a technician is on at most one crew),
+  // populated by the technician list endpoint. Includes the crew's company/client.
+  crew?: TechnicianCrewInfo;
 
   createdAt: Date;
   updatedAt: Date;

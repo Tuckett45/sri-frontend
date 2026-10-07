@@ -45,6 +45,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   regionControl = new FormControl('');
   activeStatusControl = new FormControl('');
   referredByControl = new FormControl('');
+  companyControl = new FormControl(''); // Crew company/client (Crew.Company)
+  clientControl = new FormControl('');  // Crew current-job client (Job.Client)
   
   // Pagination
   pageSize = 50;
@@ -55,6 +57,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   roles = Object.values(TechnicianRole);
   availableRegions: string[] = [];
   availableReferrers: string[] = []; // Will be populated from technicians
+  availableCompanies: string[] = []; // Crew companies/clients, from technicians' crew info
+  availableClients: string[] = [];   // Crew current-job clients, from technicians' crew info
   
   // Current job map (technicianId → job label)
   technicianJobMap: Record<string, string> = {};
@@ -154,13 +158,23 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.referredByControl.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.applyFilters());
+
+    this.companyControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
+
+    this.clientControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
     
-    // Extract unique regions and referrers from all technicians
+    // Extract unique regions, referrers, crew companies and crew clients from all technicians
     this.technicians$
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
         const regionsSet = new Set<string>();
         const referrersSet = new Set<string>();
+        const companiesSet = new Set<string>();
+        const clientsSet = new Set<string>();
         technicians.forEach(tech => {
           if (tech.region) {
             regionsSet.add(tech.region);
@@ -168,9 +182,17 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
           if (tech.referredBy) {
             referrersSet.add(tech.referredBy);
           }
+          if (tech.crew?.company) {
+            companiesSet.add(tech.crew.company);
+          }
+          if (tech.crew?.currentJobClient) {
+            clientsSet.add(tech.crew.currentJobClient);
+          }
         });
         this.availableRegions = Array.from(regionsSet).sort();
         this.availableReferrers = Array.from(referrersSet).sort();
+        this.availableCompanies = Array.from(companiesSet).sort();
+        this.availableClients = Array.from(clientsSet).sort();
       });
 
     // Subscribe to technician → current job map
@@ -206,6 +228,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       isActive: this.activeStatusControl.value === 'active' ? true 
         : this.activeStatusControl.value === 'inactive' ? false 
         : undefined,
+      company: this.companyControl.value || undefined,
+      client: this.clientControl.value || undefined,
       page: this.pageIndex,
       pageSize: this.pageSize
     };
@@ -281,6 +305,12 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     if (this.referredByControl.value) {
       filters.push({ label: 'Referred By', value: this.referredByControl.value, key: 'referredBy' });
     }
+    if (this.companyControl.value) {
+      filters.push({ label: 'Company', value: this.companyControl.value, key: 'company' });
+    }
+    if (this.clientControl.value) {
+      filters.push({ label: 'Client', value: this.clientControl.value, key: 'client' });
+    }
     if (this.activeStatusControl.value) {
       const statusLabel = this.activeStatusControl.value === 'active' ? 'Active' : 'Inactive';
       filters.push({ label: 'Status', value: statusLabel, key: 'activeStatus' });
@@ -309,6 +339,12 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       case 'referredBy':
         this.referredByControl.setValue('');
         break;
+      case 'company':
+        this.companyControl.setValue('');
+        break;
+      case 'client':
+        this.clientControl.setValue('');
+        break;
       case 'activeStatus':
         this.activeStatusControl.setValue('');
         break;
@@ -322,9 +358,28 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.availabilityControl.setValue(false);
     this.regionControl.setValue('');
     this.referredByControl.setValue('');
+    this.companyControl.setValue('');
+    this.clientControl.setValue('');
     this.activeStatusControl.setValue('');
     this.pageIndex = 0; // Reset to first page
     this.store.dispatch(TechnicianActions.clearTechnicianFilters());
+  }
+
+  /**
+   * Crew display name for a technician — prefers the backend-provided crew
+   * (authoritative, returned by the list endpoint) and falls back to the
+   * client-side crew map derived from the loaded crews slice.
+   */
+  getCrewName(technician: Technician): string {
+    return technician.crew?.crewName || this.technicianCrewMap[technician.id] || '—';
+  }
+
+  /**
+   * Company/client for a technician's crew: the crew's own company (Crew.Company),
+   * falling back to the client of the crew's current job (Job.Client) when present.
+   */
+  getCrewClient(technician: Technician): string {
+    return technician.crew?.company || technician.crew?.currentJobClient || '—';
   }
   
   onPageChange(event: PageEvent): void {

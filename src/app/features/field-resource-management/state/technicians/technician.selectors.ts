@@ -122,6 +122,21 @@ export const selectFilteredTechnicians = createSelector(
       filtered = filtered.filter(tech => tech.isActive === filters.isActive);
     }
 
+    // Filter by crew company/client (Crew.Company, returned on technician.crew)
+    if (filters.company) {
+      filtered = filtered.filter(tech => tech.crew?.company === filters.company);
+    }
+
+    // Filter by the client of the crew's current job (Job.Client, returned on technician.crew)
+    if (filters.client) {
+      filtered = filtered.filter(tech => tech.crew?.currentJobClient === filters.client);
+    }
+
+    // Filter by crew id
+    if (filters.crewId) {
+      filtered = filtered.filter(tech => tech.crew?.crewId === filters.crewId);
+    }
+
     return filtered;
   }
 );
