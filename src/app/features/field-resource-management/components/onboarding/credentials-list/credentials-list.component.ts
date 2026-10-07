@@ -296,6 +296,7 @@ interface SortState {
                 <th class="center-col">Google Red</th>
                 <th class="center-col">Google LDAP</th>
                 <th class="center-col">Meta Green</th>
+                <th class="center-col">META Badge</th>
                 <th class="center-col">Actions</th>
               </tr>
             </thead>
@@ -310,6 +311,7 @@ interface SortState {
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.googleRedBadge)">{{ getYesNoIcon(summary.technician.googleRedBadge) }}</span></td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.googleLdap)">{{ getYesNoIcon(summary.technician.googleLdap) }}</span></td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.metaGreenListing)">{{ getYesNoIcon(summary.technician.metaGreenListing) }}</span></td>
+                <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.metaBadge)">{{ getYesNoIcon(summary.technician.metaBadge) }}</span></td>
                 <td class="actions-cell" (click)="$event.stopPropagation()">
                   <button class="icon-action-btn" (click)="openOnboardingInfoModal(summary)" title="Edit" aria-label="Edit badges">
                     <mat-icon>edit</mat-icon>
@@ -1378,6 +1380,7 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
         googleRedBadge: candidate.googleRedBadge || false,
         googleLdap: candidate.googleLdap || false,
         metaGreenListing: candidate.metaGreenListing || false,
+        metaBadge: candidate.metaBadge || false,
         obsTraining: candidate.obsTraining || false,
         osha10: candidate.osha10 || false,
         osha30: candidate.osha30 || false,
