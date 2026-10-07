@@ -98,19 +98,31 @@ import { Candidate, OfferStatus, ExperienceLevel } from '../../../models/onboard
             <span class="card-count warn">{{ incompleteCertsCount }}</span>
             <span class="card-label">Incomplete Certs</span>
           </div>
-          <div class="card">
+          <div class="card clickable" tabindex="0" role="button"
+               aria-label="View candidates with an incomplete drug test"
+               (click)="navigateToIncompleteDrugTest()"
+               (keydown.enter)="navigateToIncompleteDrugTest()">
             <span class="card-count warn">{{ incompleteDrugTestCount }}</span>
             <span class="card-label">Incomplete Drug Test</span>
           </div>
-          <div class="card">
+          <div class="card clickable" tabindex="0" role="button"
+               aria-label="View candidates starting within 14 days"
+               (click)="navigateToStartingWithin14Days()"
+               (keydown.enter)="navigateToStartingWithin14Days()">
             <span class="card-count">{{ startingWithin14DaysCount }}</span>
             <span class="card-label">Starting Within 14 Days</span>
           </div>
-          <div class="card">
+          <div class="card clickable" tabindex="0" role="button"
+               aria-label="View candidates with AMA/META Training"
+               (click)="navigateToTraining('amaMetaTraining')"
+               (keydown.enter)="navigateToTraining('amaMetaTraining')">
             <span class="card-count">{{ amaMetaTrainingCount }}</span>
             <span class="card-label">AMA/META Training</span>
           </div>
-          <div class="card">
+          <div class="card clickable" tabindex="0" role="button"
+               aria-label="View candidates with IES NEO Training"
+               (click)="navigateToTraining('iesNeoTraining')"
+               (keydown.enter)="navigateToTraining('iesNeoTraining')">
             <span class="card-count">{{ iesNeoTrainingCount }}</span>
             <span class="card-label">IES NEO Training</span>
           </div>
@@ -328,6 +340,18 @@ export class PipelineDashboardComponent implements OnInit {
 
   navigateToIncompleteCerts(): void {
     this.router.navigate(['candidates'], { relativeTo: this.route.parent, queryParams: { incompleteCerts: 'true' } });
+  }
+
+  navigateToIncompleteDrugTest(): void {
+    this.router.navigate(['candidates'], { relativeTo: this.route.parent, queryParams: { incompleteDrugTest: 'true' } });
+  }
+
+  navigateToStartingWithin14Days(): void {
+    this.router.navigate(['candidates'], { relativeTo: this.route.parent, queryParams: { startingWithin14Days: 'true' } });
+  }
+
+  navigateToTraining(training: 'amaMetaTraining' | 'iesNeoTraining'): void {
+    this.router.navigate(['candidates'], { relativeTo: this.route.parent, queryParams: { training } });
   }
 
   navigateToCandidate(id: string): void {

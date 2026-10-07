@@ -56,6 +56,7 @@ export interface TechnicianOnboardingFields {
   googleLdap?: boolean;
   metaGreenListing?: boolean;
   metaBadge?: boolean;
+  workedAtMetaSite?: boolean;
 
   // Training & Certs
   obsTraining?: boolean;

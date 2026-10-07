@@ -1164,6 +1164,8 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   referredByFilter = '';
   experienceLevelFilter: ExperienceLevel | 'none' | '' = '';
   incompleteCertsFilter = false;
+  incompleteDrugTestFilter = false;
+  startingWithin14DaysFilter = false;
   trainingFilter = '';
   certFilter = '';
   sortState: SortState | null = { column: 'createdAt', direction: 'desc' };
@@ -1211,7 +1213,8 @@ export class CandidateListComponent implements OnInit, OnDestroy {
 
     // Read query params for pre-filtering (from pipeline dashboard navigation)
     const params = this.route.snapshot.queryParams;
-    const hasQueryParams = params['offerStatus'] || params['search'] || params['incompleteCerts'] || params['experienceLevel'];
+    const hasQueryParams = params['offerStatus'] || params['search'] || params['incompleteCerts'] || params['experienceLevel']
+      || params['incompleteDrugTest'] || params['startingWithin14Days'] || params['training'];
 
     if (savedState && !hasQueryParams) {
       // Restore previous UI state
@@ -1221,6 +1224,8 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       this.referredByFilter = savedState.referredByFilter;
       this.experienceLevelFilter = (savedState.experienceLevelFilter || '') as ExperienceLevel | 'none' | '';
       this.incompleteCertsFilter = savedState.incompleteCertsFilter;
+      this.incompleteDrugTestFilter = savedState.incompleteDrugTestFilter ?? false;
+      this.startingWithin14DaysFilter = savedState.startingWithin14DaysFilter ?? false;
       this.trainingFilter = savedState.trainingFilter || '';
       this.certFilter = savedState.certFilter || '';
       this.sortState = savedState.sortColumn
@@ -1248,6 +1253,15 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       }
       if (params['incompleteCerts'] === 'true') {
         this.incompleteCertsFilter = true;
+      }
+      if (params['incompleteDrugTest'] === 'true') {
+        this.incompleteDrugTestFilter = true;
+      }
+      if (params['startingWithin14Days'] === 'true') {
+        this.startingWithin14DaysFilter = true;
+      }
+      if (params['training']) {
+        this.trainingFilter = params['training'];
       }
       if (params['experienceLevel']) {
         this.experienceLevelFilter = params['experienceLevel'] as ExperienceLevel | 'none';
@@ -1435,7 +1449,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           googleLdap: result.badgesAccess.googleLdap,
           metaGreenListing: result.badgesAccess.metaGreenListing,
           metaBadge: result.badgesAccess.metaBadge,
-          workedAtMetaSite: result.badgesAccess.workedAtMetaSite,
+          workedAtMetaSite: result.coreQualifications.workedAtMetaSite,
           obsTraining: result.trainingCerts.obsTraining,
           osha10: result.trainingCerts.osha10,
           osha30: result.trainingCerts.osha30,
@@ -1513,7 +1527,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           googleLdap: result.badgesAccess.googleLdap,
           metaGreenListing: result.badgesAccess.metaGreenListing,
           metaBadge: result.badgesAccess.metaBadge,
-          workedAtMetaSite: result.badgesAccess.workedAtMetaSite,
+          workedAtMetaSite: result.coreQualifications.workedAtMetaSite,
           obsTraining: result.trainingCerts.obsTraining,
           osha10: result.trainingCerts.osha10,
           osha30: result.trainingCerts.osha30,
@@ -1759,6 +1773,8 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       referredByFilter: this.referredByFilter,
       experienceLevelFilter: this.experienceLevelFilter,
       incompleteCertsFilter: this.incompleteCertsFilter,
+      incompleteDrugTestFilter: this.incompleteDrugTestFilter,
+      startingWithin14DaysFilter: this.startingWithin14DaysFilter,
       trainingFilter: this.trainingFilter,
       certFilter: this.certFilter,
       sortColumn: this.sortState?.column ?? null,
@@ -1884,6 +1900,22 @@ export class CandidateListComponent implements OnInit, OnDestroy {
       result = result.filter(
         (c) => !c.oshaCertified || !c.scissorLiftCertified
       );
+    }
+
+    // Incomplete drug test filter
+    if (this.incompleteDrugTestFilter) {
+      result = result.filter((c) => !c.drugTestComplete);
+    }
+
+    // Starting within 14 days filter
+    if (this.startingWithin14DaysFilter) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const in14 = new Date(today); in14.setDate(in14.getDate() + 14);
+      result = result.filter((c) => {
+        if (!c.startDate) return false;
+        const s = new Date(c.startDate); s.setHours(0, 0, 0, 0);
+        return s >= today && s <= in14;
+      });
     }
 
     // Certification filter (candidate must have the selected certification)
