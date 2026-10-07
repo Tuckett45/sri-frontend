@@ -246,6 +246,10 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
                 <span>META Badge</span>
                 <mat-slide-toggle formControlName="metaBadge"></mat-slide-toggle>
               </div>
+              <div class="toggle-item">
+                <span>Worked at Meta Site</span>
+                <mat-slide-toggle formControlName="workedAtMetaSite"></mat-slide-toggle>
+              </div>
             </div>
 
             <div class="step-actions">
@@ -534,7 +538,8 @@ export class AddCandidateModalComponent {
       googleRedBadge: [this.toBool(candidate?.googleRedBadge)],
       googleLdap: [this.toBool(candidate?.googleLdap)],
       metaGreenListing: [this.toBool(candidate?.metaGreenListing)],
-      metaBadge: [this.toBool(candidate?.metaBadge)]
+      metaBadge: [this.toBool(candidate?.metaBadge)],
+      workedAtMetaSite: [this.toBool(candidate?.workedAtMetaSite)]
     });
 
     this.trainingCertsForm = this.fb.group({

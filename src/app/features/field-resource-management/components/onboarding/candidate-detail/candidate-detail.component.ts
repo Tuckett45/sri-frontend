@@ -914,6 +914,7 @@ export class CandidateDetailComponent implements OnInit {
           googleLdap: result.badgesAccess.googleLdap,
           metaGreenListing: result.badgesAccess.metaGreenListing,
           metaBadge: result.badgesAccess.metaBadge,
+          workedAtMetaSite: result.badgesAccess.workedAtMetaSite,
           obsTraining: result.trainingCerts.obsTraining,
           osha10: result.trainingCerts.osha10,
           osha30: result.trainingCerts.osha30,

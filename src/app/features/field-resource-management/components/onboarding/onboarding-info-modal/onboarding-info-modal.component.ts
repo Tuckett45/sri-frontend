@@ -92,6 +92,10 @@ export interface OnboardingInfoDialogData {
             <span class="toggle-label">META Badge</span>
             <mat-slide-toggle formControlName="metaBadge" color="primary"></mat-slide-toggle>
           </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Worked at Meta Site</span>
+            <mat-slide-toggle formControlName="workedAtMetaSite" color="primary"></mat-slide-toggle>
+          </div>
         </div>
 
         <!-- Training & Certs -->
@@ -255,6 +259,7 @@ export class OnboardingInfoModalComponent implements OnInit {
       googleLdap: [tech.googleLdap || false],
       metaGreenListing: [tech.metaGreenListing || false],
       metaBadge: [tech.metaBadge || false],
+      workedAtMetaSite: [tech.workedAtMetaSite || false],
 
       // Training & Certs
       obsTraining: [tech.obsTraining || false],
@@ -304,6 +309,7 @@ export class OnboardingInfoModalComponent implements OnInit {
       googleLdap: v.googleLdap,
       metaGreenListing: v.metaGreenListing,
       metaBadge: v.metaBadge,
+      workedAtMetaSite: v.workedAtMetaSite,
 
       // Training & Certs
       obsTraining: v.obsTraining,

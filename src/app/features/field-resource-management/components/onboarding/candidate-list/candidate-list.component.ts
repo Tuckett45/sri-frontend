@@ -269,7 +269,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
                      (change)="onToggleSelect(candidate, $event)"
                      [attr.aria-label]="'Select ' + candidate.techName + ' for bulk conversion'" />
             </td>
-            <td>{{ candidate.techName }}<span class="badge-meta" *ngIf="candidate.amaMetaTraining" title="AMA/META Training">META</span><span class="badge-ies" *ngIf="candidate.iesNeoTraining" title="IES NEO Training">IES</span></td>
+            <td>{{ candidate.techName }}<span class="badge-meta" *ngIf="candidate.amaMetaTraining" title="AMA/META Training">META</span><span class="badge-ies" *ngIf="candidate.iesNeoTraining" title="IES NEO Training">IES</span><span class="badge-meta-site" *ngIf="candidate.workedAtMetaSite" title="Has previously worked at a Meta site">META SITE</span></td>
             <td>{{ candidate.techEmail }}</td>
             <td>{{ candidate.techPhone }}</td>
             <td class="center-col">{{ candidate.homeState || extractState(candidate.homeAddress) || '—' }}</td>
@@ -1079,6 +1079,20 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
       line-height: 1.3;
     }
 
+    .badge-meta-site {
+      display: inline-block;
+      padding: 0.125rem 0.4rem;
+      border-radius: 9999px;
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      background: #1877f2;
+      color: #ffffff;
+      margin-left: 0.375rem;
+      vertical-align: middle;
+      line-height: 1.3;
+    }
+
     :host ::ng-deep .mat-mdc-paginator {
       border-top: 1px solid #e0e0e0;
       background: #fafafa;
@@ -1421,6 +1435,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           googleLdap: result.badgesAccess.googleLdap,
           metaGreenListing: result.badgesAccess.metaGreenListing,
           metaBadge: result.badgesAccess.metaBadge,
+          workedAtMetaSite: result.badgesAccess.workedAtMetaSite,
           obsTraining: result.trainingCerts.obsTraining,
           osha10: result.trainingCerts.osha10,
           osha30: result.trainingCerts.osha30,
@@ -1498,6 +1513,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
           googleLdap: result.badgesAccess.googleLdap,
           metaGreenListing: result.badgesAccess.metaGreenListing,
           metaBadge: result.badgesAccess.metaBadge,
+          workedAtMetaSite: result.badgesAccess.workedAtMetaSite,
           obsTraining: result.trainingCerts.obsTraining,
           osha10: result.trainingCerts.osha10,
           osha30: result.trainingCerts.osha30,

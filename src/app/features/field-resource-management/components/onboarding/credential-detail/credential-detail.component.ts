@@ -814,6 +814,7 @@ export class CredentialDetailComponent implements OnInit, OnDestroy {
       googleLdap: candidate.googleLdap ? true : false,
       metaGreenListing: candidate.metaGreenListing ? true : false,
       metaBadge: candidate.metaBadge ? true : false,
+      workedAtMetaSite: candidate.workedAtMetaSite ? true : false,
       obsTraining: candidate.obsTraining ? true : false,
       osha10: candidate.osha10 || false,
       osha30: candidate.osha30 || false,
