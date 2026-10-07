@@ -375,11 +375,32 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Company/client for a technician's crew: the crew's own company (Crew.Company),
-   * falling back to the client of the crew's current job (Job.Client) when present.
+   * The company the crew belongs to (Crew.Company) — e.g. the subcontractor/vendor.
+   */
+  getCrewCompany(technician: Technician): string {
+    return technician.crew?.company || '—';
+  }
+
+  /**
+   * The CLIENT the technician's crew is working for: the client of the Job the crew is
+   * currently assigned to (Job.Client, e.g. FTI / IES / CBRE). This is the value IES cares
+   * about — it comes from the crew's current job, not the crew's own company.
    */
   getCrewClient(technician: Technician): string {
-    return technician.crew?.company || technician.crew?.currentJobClient || '—';
+    return technician.crew?.currentJobClient || '—';
+  }
+
+  /**
+   * The crew's current job label — prefers the backend-resolved job (client – site returned
+   * on technician.crew), falling back to the client-side job map derived from the crews/jobs
+   * slices.
+   */
+  getCurrentJob(technician: Technician): string {
+    const crew = technician.crew;
+    if (crew?.currentJobClient || crew?.currentJobSiteName) {
+      return [crew.currentJobClient, crew.currentJobSiteName].filter(Boolean).join(' – ');
+    }
+    return this.technicianJobMap[technician.id] || '—';
   }
   
   onPageChange(event: PageEvent): void {

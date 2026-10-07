@@ -142,14 +142,15 @@
         <div class="table-wrapper" *ngIf="!(loading$ | async) && !(error$ | async) && technicians.length > 0">
           <table class="technician-table">
             <colgroup>
+              <col style="width: 12%;">
               <col style="width: 13%;">
-              <col style="width: 14%;">
-              <col style="width: 9%;">
+              <col style="width: 8%;">
+              <col style="width: 6%;">
               <col style="width: 7%;">
-              <col style="width: 7%;">
               <col style="width: 9%;">
-              <col style="width: 11%;">
-              <col style="width: 11%;">
+              <col style="width: 8%;">
+              <col style="width: 8%;">
+              <col style="width: 10%;">
               <col style="width: 7%;">
               <col style="width: 12%;">
             </colgroup>
@@ -171,7 +172,8 @@
                   Region <span class="sort-icon">{{ getTableSortIcon('region') }}</span>
                 </th>
                 <th>Crew</th>
-                <th>Company / Client</th>
+                <th>Company</th>
+                <th>Client</th>
                 <th>Current Job</th>
                 <th (click)="onTableSort('fieldStatus')" class="sortable">
                   Field Status <span class="sort-icon">{{ getTableSortIcon('fieldStatus') }}</span>
@@ -196,8 +198,9 @@
                 <td><span class="role-badge">{{ technician.role }}</span></td>
                 <td>{{ technician.region || '—' }}</td>
                 <td>{{ getCrewName(technician) }}</td>
+                <td>{{ getCrewCompany(technician) }}</td>
                 <td>{{ getCrewClient(technician) }}</td>
-                <td class="job-cell">{{ technicianJobMap[technician.id] || '—' }}</td>
+                <td class="job-cell">{{ getCurrentJob(technician) }}</td>
                 <td>
                   <span class="field-status-badge" [ngClass]="getFieldStatusClass(technician)">
                     {{ getFieldStatusLabel(technician) }}
