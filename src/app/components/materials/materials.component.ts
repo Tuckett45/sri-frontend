@@ -38,7 +38,8 @@ import {
   MaterialTransferCreate,
   MaterialUpsert,
   TechnicianBalanceRow,
-  WorkbookImportSummary
+  WorkbookImportSummary,
+  WorkbookMaterialRow
 } from 'src/app/models/materials.model';
 
 type MaterialsTab =
@@ -157,14 +158,18 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   importResult: MaterialImportSummary | null = null;      // CSV (materials only)
   workbookResult: WorkbookImportSummary | null = null;    // combined workbook
   showImportErrors = false;
+  // Headers written to the single-sheet CSV template. These match the real VIMS
+  // (Vendor Inventory Management System) "Inventory Report" export verbatim so a file
+  // exported from VIMS can be re-imported with no editing.
   readonly importTemplateColumns = [
-    'Name', 'Sku', 'Category', 'Description', 'Unit',
-    'Site', 'Market', 'QuantityOnHand', 'ReorderLevel', 'UnitCost', 'IsSerialized'
+    'Contractor', 'Material', 'Material Description',
+    'Total Stock', 'Reserved Stock', 'Available Stock', 'Base Unit'
   ];
 
   /** Column headers for each sheet of the combined workbook template. */
   private readonly workbookTemplate: Record<string, string[]> = {
-    Materials: ['Name', 'Sku', 'Category', 'Description', 'Unit', 'Site', 'Market', 'QuantityOnHand', 'ReorderLevel', 'UnitCost', 'IsSerialized'],
+    // Materials sheet mirrors the VIMS export columns.
+    Materials: ['Contractor', 'Material', 'Material Description', 'Total Stock', 'Reserved Stock', 'Available Stock', 'Base Unit'],
     Stock: ['Sku', 'Site', 'QuantityOnHand', 'ReorderLevel', 'Market'],
     Orders: ['Sku', 'Direction', 'Quantity', 'OrderNumber', 'Status', 'Vendor', 'Site', 'Market', 'UnitCost', 'Notes'],
     Assignments: ['Sku', 'QuantityIssued', 'QuantityReturned', 'TechnicianId', 'TechnicianName', 'Site', 'Market', 'Notes'],
@@ -198,10 +203,21 @@ export class MaterialsComponent implements OnInit, OnDestroy {
    */
   private readonly columnAliases: Partial<Record<keyof MaterialsWorkbookImport, Record<string, keyof MaterialUpsert>>> = {
     materials: {
+      // VIMS "Inventory Report" headers (normalized: lower-case, spaces/underscores stripped).
+      contractor: 'contractor',
+      material: 'materialCode',
+      materialdescription: 'description',
+      totalstock: 'totalStock',
+      reservedstock: 'reservedStock',
+      availablestock: 'availableStock',
+      baseunit: 'unit',
+      // Legacy / template headers (kept so older workbooks still import).
       sku: 'sku',
       name: 'name',
       description: 'description',
       category: 'category',
+      unit: 'unit',
+      quantityonhand: 'quantityOnHand',
       unitcost: 'unitCost'
     }
   };
@@ -277,9 +293,11 @@ export class MaterialsComponent implements OnInit, OnDestroy {
 
   saveMaterial(): void {
     if (!this.newMaterial.name?.trim()) {
-      this.toastr.warning('Material name is required.');
+      this.toastr.warning('Material description is required.');
       return;
     }
+    this.syncAvailable(this.newMaterial);
+    if (!this.newMaterial.description?.trim()) this.newMaterial.description = this.newMaterial.name;
     this.materialsService.saveMaterial(this.newMaterial)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -302,7 +320,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   }
 
   isLowStock(material: Material): boolean {
-    return material.reorderLevel > 0 && material.quantityOnHand <= material.reorderLevel;
+    return material.reorderLevel > 0 && this.displayAvailable(material) <= material.reorderLevel;
   }
 
   // ---------------- Import (CSV or combined workbook) ----------------
@@ -327,7 +345,7 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     if (ext === 'xlsx' || ext === 'xls') {
       void this.importWorkbookFile(file);
     } else {
-      this.importCsvFile(file);
+      void this.importCsvFile(file);
     }
   }
 
@@ -346,8 +364,20 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     void this.importGpnWorkbook(file);
   }
 
-  /** Single-sheet CSV → materials catalog only. */
-  private importCsvFile(file: File): void {
+  /**
+   * Single-sheet CSV → materials catalog only.
+   *
+   * A VIMS "Inventory Report" export (headers include Contractor + Total/Reserved/Available
+   * Stock) is parsed in-browser with PapaParse and routed through the SAME VIMS-aware mapping
+   * as the workbook path (normalizeRowKeys → finalizeMaterialRow). This strips the thousands
+   * separators VIMS writes ("2,020") and derives Available = Total − Reserved before posting.
+   * Any other CSV is posted as-is to the backend /import endpoint (legacy behavior).
+   */
+  private async importCsvFile(file: File): Promise<void> {
+    if (await this.looksLikeVimsCsv(file)) {
+      await this.importVimsCsvFile(file);
+      return;
+    }
     this.beginImport();
     this.materialsService.importMaterials(file)
       .pipe(takeUntil(this.destroy$))
@@ -365,6 +395,69 @@ export class MaterialsComponent implements OnInit, OnDestroy {
               `${summary.inserted + summary.updated} imported, ${summary.errors.length} row(s) had errors.`,
               'Import finished with errors'
             );
+            this.showImportErrors = true;
+          }
+          this.loadMaterials();
+        },
+        error: err => { this.importing = false; this.toastr.error(this.errorText(err), 'Import failed'); }
+      });
+  }
+
+  /** Reads the CSV header row and reports whether it carries the VIMS inventory columns. */
+  private async looksLikeVimsCsv(file: File): Promise<boolean> {
+    let text: string;
+    try {
+      text = await file.text();
+    } catch {
+      return false;
+    }
+    const firstLine = text.split(/\r?\n/, 1)[0] ?? '';
+    const headers = new Set(
+      (Papa.parse<string[]>(firstLine).data[0] ?? []).map(h => this.normalizeHeader(String(h)))
+    );
+    // "material" + at least one of the VIMS stock columns is enough to disambiguate from the
+    // legacy template (Name/Sku/QuantityOnHand…).
+    return headers.has('material') &&
+      (headers.has('totalstock') || headers.has('reservedstock') || headers.has('availablestock'));
+  }
+
+  /**
+   * Parses a VIMS CSV in-browser and imports it as a single `materials` sheet through the
+   * workbook endpoint, so it shares the workbook path's comma-stripping, Available derivation,
+   * and per-row error reporting.
+   */
+  private async importVimsCsvFile(file: File): Promise<void> {
+    this.beginImport();
+    let rows: WorkbookMaterialRow[];
+    try {
+      const text = await file.text();
+      const parsed = Papa.parse<Record<string, any>>(text, { header: true, skipEmptyLines: 'greedy' });
+      rows = parsed.data
+        .filter(r => Object.values(r).some(v => v !== null && v !== undefined && String(v).trim() !== ''))
+        .map(r => this.normalizeRowKeys(r, 'materials') as WorkbookMaterialRow);
+    } catch (e: any) {
+      this.importing = false;
+      this.toastr.error(e?.message || 'Could not read the CSV file.', 'Import failed');
+      return;
+    }
+
+    if (rows.length === 0) {
+      this.importing = false;
+      this.toastr.warning('No data rows found below the header.', 'Nothing to import');
+      return;
+    }
+
+    this.materialsService.importWorkbook({ materials: rows })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: summary => {
+          this.importing = false;
+          this.workbookResult = summary;
+          const changed = summary.totalInserted + summary.totalUpdated;
+          if (summary.totalErrors === 0) {
+            this.toastr.success(`${changed} material(s) imported from VIMS export.`, 'Import complete');
+          } else {
+            this.toastr.warning(`${changed} imported, ${summary.totalErrors} row(s) had errors.`, 'Import finished with errors');
             this.showImportErrors = true;
           }
           this.loadMaterials();
@@ -492,13 +585,54 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Ensures an imported material row satisfies MaterialUpsert:
-   * - name is required, so fall back to Description when Name is absent.
+   * Parses a VIMS stock quantity. The export reports thousands-separated strings
+   * (e.g. "2,020", "900,100"), so strip commas/whitespace before converting. Returns
+   * undefined for blank cells so a missing column doesn't become 0.
+   */
+  private parseStockNumber(value: any): number | undefined {
+    if (value === null || value === undefined || value === '') return undefined;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+    const cleaned = String(value).replace(/[,\s]/g, '');
+    if (cleaned === '') return undefined;
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : undefined;
+  }
+
+  /**
+   * Ensures an imported material row satisfies MaterialUpsert, with VIMS-specific handling:
+   * - Stock quantities (Total/Reserved/Available/QuantityOnHand) are comma-stripped and
+   *   coerced to numbers (VIMS exports "2,020" style strings).
+   * - Available Stock is derived from Total - Reserved when the export omits it (and vice
+   *   versa); quantityOnHand mirrors availableStock for the legacy stock/ledger logic.
+   * - name is required: fall back to Material Description, then to the Material code.
+   * - sku falls back to the Material code so dependent sheets can still resolve by SKU.
    * - columns with no DTO home are dropped so they don't ride along as junk properties.
    */
   private finalizeMaterialRow(row: Record<string, any>): Record<string, any> {
-    if ((row['name'] === undefined || row['name'] === null || row['name'] === '') && row['description']) {
-      row['name'] = row['description'];
+    for (const key of ['totalStock', 'reservedStock', 'availableStock', 'quantityOnHand']) {
+      if (key in row) {
+        const parsed = this.parseStockNumber(row[key]);
+        if (parsed === undefined) delete row[key];
+        else row[key] = parsed;
+      }
+    }
+
+    const total = row['totalStock'];
+    const reserved = row['reservedStock'];
+    if (row['availableStock'] === undefined && typeof total === 'number') {
+      row['availableStock'] = total - (typeof reserved === 'number' ? reserved : 0);
+    }
+    if (row['availableStock'] !== undefined && row['quantityOnHand'] === undefined) {
+      row['quantityOnHand'] = row['availableStock'];
+    }
+
+    if ((row['name'] === undefined || row['name'] === null || row['name'] === '')) {
+      if (row['description']) row['name'] = row['description'];
+      else if (row['materialCode']) row['name'] = String(row['materialCode']);
+    }
+
+    if ((row['sku'] === undefined || row['sku'] === null || row['sku'] === '') && row['materialCode']) {
+      row['sku'] = String(row['materialCode']);
     }
 
     for (const key of Object.keys(row)) {
@@ -508,8 +642,9 @@ export class MaterialsComponent implements OnInit, OnDestroy {
   }
 
   private readonly materialFieldNames = new Set<keyof MaterialUpsert>([
-    'id', 'name', 'sku', 'category', 'description', 'unit',
-    'site', 'market', 'quantityOnHand', 'reorderLevel', 'unitCost', 'isSerialized'
+    'id', 'contractor', 'materialCode', 'name', 'sku', 'category', 'description', 'unit',
+    'site', 'market', 'totalStock', 'reservedStock', 'availableStock',
+    'quantityOnHand', 'reorderLevel', 'unitCost', 'isSerialized'
   ]);
 
   private isMaterialField(key: string): key is keyof MaterialUpsert {
@@ -1243,8 +1378,11 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     this.cancelInlineEdits();
     this.editingMaterialId = m.id;
     this.materialDraft = {
-      id: m.id, name: m.name, sku: m.sku, category: m.category, description: m.description,
-      unit: m.unit, site: m.site, market: m.market, quantityOnHand: m.quantityOnHand,
+      id: m.id, contractor: m.contractor, materialCode: m.materialCode, name: m.name,
+      sku: m.sku, category: m.category, description: m.description,
+      unit: m.unit, site: m.site, market: m.market,
+      totalStock: m.totalStock, reservedStock: m.reservedStock, availableStock: m.availableStock,
+      quantityOnHand: m.quantityOnHand,
       reorderLevel: m.reorderLevel, unitCost: m.unitCost, isSerialized: m.isSerialized
     };
   }
@@ -1257,8 +1395,29 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     if (this.materialDraft) this.materialDraft[key] = value;
   }
 
+  /** Exposes the current inline-edit draft so the template can keep Available in sync. */
+  materialDraftRef(): MaterialUpsert | null {
+    return this.materialDraft;
+  }
+
+  /**
+   * Keeps Available Stock = Total − Reserved as the user edits (VIMS derives Available this
+   * way). No-ops when either side is missing. Called from both the add form and inline edit.
+   */
+  syncAvailable(m: MaterialUpsert | null): void {
+    if (!m) return;
+    const total = Number(m.totalStock);
+    const reserved = Number(m.reservedStock) || 0;
+    if (Number.isFinite(total)) {
+      m.availableStock = total - reserved;
+      m.quantityOnHand = m.availableStock;
+    }
+  }
+
   saveInlineMaterial(): void {
-    if (!this.materialDraft?.name?.trim()) { this.toastr.warning('Material name is required.'); return; }
+    if (!this.materialDraft?.name?.trim()) { this.toastr.warning('Material description is required.'); return; }
+    this.syncAvailable(this.materialDraft);
+    if (!this.materialDraft.description?.trim()) this.materialDraft.description = this.materialDraft.name;
     this.savingInline = true;
     this.materialsService.saveMaterial(this.materialDraft)
       .pipe(takeUntil(this.destroy$))
@@ -1347,8 +1506,30 @@ export class MaterialsComponent implements OnInit, OnDestroy {
     return this.materials.find(m => m.id === materialId)?.name ?? materialId;
   }
 
+  /**
+   * VIMS stock display helpers. Older records (pre-VIMS) only carried `quantityOnHand`, so
+   * when the explicit Total/Reserved/Available fields are absent we fall back to it:
+   * Available := quantityOnHand, Reserved := 0, Total := quantityOnHand.
+   */
+  displayAvailable(m: Material): number {
+    return m.availableStock ?? m.quantityOnHand ?? 0;
+  }
+
+  displayReserved(m: Material): number {
+    return m.reservedStock ?? 0;
+  }
+
+  displayTotal(m: Material): number {
+    if (m.totalStock !== undefined && m.totalStock !== null) return m.totalStock;
+    return this.displayAvailable(m) + this.displayReserved(m);
+  }
+
   private emptyMaterial(): MaterialUpsert {
-    return { name: '', sku: '', category: '', unit: 'ea', site: '', market: '', quantityOnHand: 0, reorderLevel: 0, unitCost: null, isSerialized: false };
+    return {
+      contractor: '', materialCode: '', name: '', sku: '', category: '', unit: 'EA',
+      site: '', market: '', totalStock: 0, reservedStock: 0, availableStock: 0,
+      quantityOnHand: 0, reorderLevel: 0, unitCost: null, isSerialized: false
+    };
   }
 
   private emptyOrder(): MaterialOrderUpsert {

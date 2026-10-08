@@ -8,17 +8,20 @@
     <form (ngSubmit)="onSubmit()">
       <!-- ===================== MATERIAL ===================== -->
       <div *ngIf="kind === 'material'" class="form-grid">
-        <label>Name*<input type="text" name="mName" [(ngModel)]="material.name" required /></label>
+        <label>Contractor<input type="text" name="mContractor" [(ngModel)]="material.contractor" /></label>
+        <label>Material<input type="text" name="mCode" [(ngModel)]="material.materialCode" placeholder="VIMS material code" /></label>
+        <label>Material Description*<input type="text" name="mName" [(ngModel)]="material.name" required /></label>
         <label>SKU<input type="text" name="mSku" [(ngModel)]="material.sku" /></label>
         <label>Category<input type="text" name="mCategory" [(ngModel)]="material.category" /></label>
-        <label>Unit<input type="text" name="mUnit" [(ngModel)]="material.unit" /></label>
+        <label>Base Unit<input type="text" name="mUnit" [(ngModel)]="material.unit" maxlength="8" placeholder="EA, RL, FT…" /></label>
         <label>Site<input type="text" name="mSite" [(ngModel)]="material.site" /></label>
         <label>Market<input type="text" name="mMarket" [(ngModel)]="material.market" maxlength="16" /></label>
-        <label>On hand<input type="number" name="mQty" [(ngModel)]="material.quantityOnHand" min="0" /></label>
+        <label>Total Stock<input type="number" name="mTotal" [(ngModel)]="material.totalStock" (ngModelChange)="syncAvailable()" min="0" /></label>
+        <label>Reserved Stock<input type="number" name="mReserved" [(ngModel)]="material.reservedStock" (ngModelChange)="syncAvailable()" min="0" /></label>
+        <label>Available Stock<input type="number" name="mAvail" [(ngModel)]="material.availableStock" min="0" readonly /></label>
         <label>Reorder level<input type="number" name="mReorder" [(ngModel)]="material.reorderLevel" min="0" /></label>
         <label>Unit cost<input type="number" name="mCost" [(ngModel)]="material.unitCost" min="0" step="0.01" /></label>
         <label class="checkbox"><input type="checkbox" name="mSerial" [(ngModel)]="material.isSerialized" /> Serialized item</label>
-        <label class="full">Description<textarea name="mDesc" rows="2" [(ngModel)]="material.description"></textarea></label>
       </div>
 
       <!-- ===================== ORDER ===================== -->
