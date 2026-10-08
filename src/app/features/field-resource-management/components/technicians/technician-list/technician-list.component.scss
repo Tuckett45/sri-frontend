@@ -212,23 +212,45 @@
     gap: 8px;
   }
 
-  mat-chip {
-    background-color: #1565c0 !important;
-    color: #ffffff !important;
-    padding: 6px 12px;
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background-color: #1565c0;
+    color: #ffffff;
+    padding: 4px 6px 4px 12px;
+    border-radius: 16px;
     font-size: 13px;
     font-weight: 400;
-    border: none !important;
+    line-height: 1;
 
-    strong {
+    .filter-chip__text strong {
       margin-right: 4px;
     }
 
-    button[matChipRemove] {
-      margin-left: 4px;
-      opacity: 0.85;
+    .filter-chip__remove {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin: 0;
+      border: none;
+      background: transparent;
       cursor: pointer;
+      opacity: 0.85;
       color: #ffffff;
+      transition: opacity 0.15s;
+
+      &:hover,
+      &:focus-visible {
+        opacity: 1;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 1px;
+        border-radius: 50%;
+      }
 
       mat-icon {
         font-size: 18px;
@@ -237,20 +259,6 @@
         color: #ffffff;
       }
     }
-  }
-}
-
-::ng-deep .active-filters {
-  .mat-mdc-chip,
-  .mat-mdc-chip-row,
-  .mdc-evolution-chip {
-    background-color: #1565c0 !important;
-    border: none !important;
-  }
-
-  .mdc-evolution-chip__text-label,
-  .mat-mdc-chip-action-label {
-    color: #ffffff !important;
   }
 }
 
