@@ -254,6 +254,7 @@ interface SortState {
               <tr *ngFor="let summary of pagedTechnicians" class="technician-row" (click)="navigateToDetail(summary.technician.id)" tabindex="0" (keydown.enter)="navigateToDetail(summary.technician.id)">
                 <td class="name-cell">
                   <span class="tech-name">{{ summary.technician.firstName }} {{ summary.technician.lastName }}</span>
+                  <span class="badge-meta-site" *ngIf="summary.technician.workedAtMetaSite" title="Has previously worked at a Meta site">META SITE</span>
                 </td>
                 <td>{{ summary.technician.region || '\u2014' }}</td>
                 <td class="center-col">
@@ -296,12 +297,13 @@ interface SortState {
                 <th class="center-col">Google Red</th>
                 <th class="center-col">Google LDAP</th>
                 <th class="center-col">Meta Green</th>
+                <th class="center-col">META Badge</th>
                 <th class="center-col">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let summary of pagedTechnicians" class="technician-row" (click)="navigateToDetail(summary.technician.id)" tabindex="0" (keydown.enter)="navigateToDetail(summary.technician.id)">
-                <td class="name-cell"><span class="tech-name">{{ summary.technician.firstName }} {{ summary.technician.lastName }}</span></td>
+                <td class="name-cell"><span class="tech-name">{{ summary.technician.firstName }} {{ summary.technician.lastName }}</span><span class="badge-meta-site" *ngIf="summary.technician.workedAtMetaSite" title="Has previously worked at a Meta site">META SITE</span></td>
                 <td>{{ summary.technician.region || '\u2014' }}</td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.attBadge)">{{ getYesNoIcon(summary.technician.attBadge) }}</span></td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.comcastBadge)">{{ getYesNoIcon(summary.technician.comcastBadge) }}</span></td>
@@ -310,6 +312,7 @@ interface SortState {
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.googleRedBadge)">{{ getYesNoIcon(summary.technician.googleRedBadge) }}</span></td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.googleLdap)">{{ getYesNoIcon(summary.technician.googleLdap) }}</span></td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.metaGreenListing)">{{ getYesNoIcon(summary.technician.metaGreenListing) }}</span></td>
+                <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.metaBadge)">{{ getYesNoIcon(summary.technician.metaBadge) }}</span></td>
                 <td class="actions-cell" (click)="$event.stopPropagation()">
                   <button class="icon-action-btn" (click)="openOnboardingInfoModal(summary)" title="Edit" aria-label="Edit badges">
                     <mat-icon>edit</mat-icon>
@@ -337,7 +340,7 @@ interface SortState {
             </thead>
             <tbody>
               <tr *ngFor="let summary of pagedTechnicians" class="technician-row" (click)="navigateToDetail(summary.technician.id)" tabindex="0" (keydown.enter)="navigateToDetail(summary.technician.id)">
-                <td class="name-cell"><span class="tech-name">{{ summary.technician.firstName }} {{ summary.technician.lastName }}</span></td>
+                <td class="name-cell"><span class="tech-name">{{ summary.technician.firstName }} {{ summary.technician.lastName }}</span><span class="badge-meta-site" *ngIf="summary.technician.workedAtMetaSite" title="Has previously worked at a Meta site">META SITE</span></td>
                 <td>{{ summary.technician.region || '\u2014' }}</td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.obsTraining)">{{ getYesNoIcon(summary.technician.obsTraining) }}</span></td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.scissorLiftCertified)">{{ getYesNoIcon(summary.technician.scissorLiftCertified) }}</span></td>
@@ -371,7 +374,7 @@ interface SortState {
             </thead>
             <tbody>
               <tr *ngFor="let summary of pagedTechnicians" class="technician-row" (click)="navigateToDetail(summary.technician.id)" tabindex="0" (keydown.enter)="navigateToDetail(summary.technician.id)">
-                <td class="name-cell"><span class="tech-name">{{ summary.technician.firstName }} {{ summary.technician.lastName }}</span></td>
+                <td class="name-cell"><span class="tech-name">{{ summary.technician.firstName }} {{ summary.technician.lastName }}</span><span class="badge-meta-site" *ngIf="summary.technician.workedAtMetaSite" title="Has previously worked at a Meta site">META SITE</span></td>
                 <td>{{ summary.technician.region || '\u2014' }}</td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.ciKitAssigned)">{{ getYesNoIcon(summary.technician.ciKitAssigned) }}</span></td>
                 <td class="yn-cell center-col"><span [class]="getYesNoClass(summary.technician.fiberKitAssigned)">{{ getYesNoIcon(summary.technician.fiberKitAssigned) }}</span></td>
@@ -803,6 +806,20 @@ interface SortState {
 
     .name-cell { font-weight: 500; }
     .tech-name { color: #1e293b; }
+
+    .badge-meta-site {
+      display: inline-block;
+      padding: 0.125rem 0.4rem;
+      border-radius: 9999px;
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      background: #1877f2;
+      color: #ffffff;
+      margin-left: 0.375rem;
+      vertical-align: middle;
+      line-height: 1.3;
+    }
 
     /* Completion cell */
     .completion-cell {
@@ -1378,6 +1395,8 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
         googleRedBadge: candidate.googleRedBadge || false,
         googleLdap: candidate.googleLdap || false,
         metaGreenListing: candidate.metaGreenListing || false,
+        metaBadge: candidate.metaBadge || false,
+        workedAtMetaSite: candidate.workedAtMetaSite || false,
         obsTraining: candidate.obsTraining || false,
         osha10: candidate.osha10 || false,
         osha30: candidate.osha30 || false,

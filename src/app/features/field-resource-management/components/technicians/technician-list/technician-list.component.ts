@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/
 import { Store } from '@ngrx/store';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { takeUntil, debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -12,6 +12,8 @@ import { TechnicianFilters } from '../../../models/dtos/filters.dto';
 import * as TechnicianActions from '../../../state/technicians/technician.actions';
 import * as TechnicianSelectors from '../../../state/technicians/technician.selectors';
 import { selectTechnicianCurrentJobMap, selectTechnicianCrewMap } from '../../../state/technicians/technician.selectors';
+import * as CrewActions from '../../../state/crews/crew.actions';
+import * as JobActions from '../../../state/jobs/job.actions';
 import { ExportService } from '../../../services/export.service';
 import { TechnicianService } from '../../../services/technician.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
@@ -33,7 +35,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
   
-  displayedColumns: string[] = ['name', 'role', 'region', 'crew', 'travelStatus', 'status', 'currentJob', 'fieldStatus', 'actions'];
+  displayedColumns: string[] = ['name', 'role', 'region', 'crew', 'fieldStatus', 'actions'];
   
   // Expose UserRole enum for template
   UserRole = UserRole;
@@ -45,6 +47,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   regionControl = new FormControl('');
   activeStatusControl = new FormControl('');
   referredByControl = new FormControl('');
+  crewControl = new FormControl('');    // Crew the technician is assigned to (Crew.Id)
   
   // Pagination
   pageSize = 50;
@@ -55,8 +58,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   roles = Object.values(TechnicianRole);
   availableRegions: string[] = [];
   availableReferrers: string[] = []; // Will be populated from technicians
+  availableCrewOptions: { id: string; name: string }[] = []; // Crews, from technicians' crew info
   
-  // Current job map (technicianId → job label)
+  // Current job map (technicianId → job label) — used by the Pipeline/Schedule tab cards
   technicianJobMap: Record<string, string> = {};
   
   // Crew map (technicianId → crew name)
@@ -94,22 +98,31 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   }
   
   ngOnInit(): void {
-    // Load filters from URL query params
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+    // Hydrate filters from the URL ONCE on load. We take only the first emission:
+    // subsequent emissions come from our own updateUrlParams() calls, and re-reading
+    // them here would fight the user (e.g. re-adding a filter they just removed),
+    // using { emitEvent: false } so hydration doesn't trigger a redundant applyFilters.
+    this.route.queryParams.pipe(take(1), takeUntil(this.destroy$)).subscribe(params => {
       if (params['search']) {
-        this.searchControl.setValue(params['search']);
+        this.searchControl.setValue(params['search'], { emitEvent: false });
       }
       if (params['role']) {
-        this.roleControl.setValue(params['role']);
+        this.roleControl.setValue(params['role'], { emitEvent: false });
       }
       if (params['available']) {
-        this.availabilityControl.setValue(params['available'] === 'true');
+        this.availabilityControl.setValue(params['available'] === 'true', { emitEvent: false });
       }
       if (params['region']) {
-        this.regionControl.setValue(params['region']);
+        this.regionControl.setValue(params['region'], { emitEvent: false });
       }
       if (params['activeStatus']) {
-        this.activeStatusControl.setValue(params['activeStatus']);
+        this.activeStatusControl.setValue(params['activeStatus'], { emitEvent: false });
+      }
+      if (params['referredBy']) {
+        this.referredByControl.setValue(params['referredBy'], { emitEvent: false });
+      }
+      if (params['crewId']) {
+        this.crewControl.setValue(params['crewId'], { emitEvent: false });
       }
       // Load pagination from URL
       if (params['page']) {
@@ -118,10 +131,18 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       if (params['pageSize']) {
         this.pageSize = parseInt(params['pageSize'], 10);
       }
+      // Apply the hydrated filters once to the store.
+      this.applyFilters();
     });
 
     // Load technicians on init
     this.store.dispatch(TechnicianActions.loadTechnicians({ filters: {} }));
+
+    // Load crews and jobs: the crew-name fallback (selectTechnicianCrewMap) and the
+    // Pipeline/Schedule tab's current-job labels (selectTechnicianCurrentJobMap) are
+    // derived by joining technician → crew → active job from these slices.
+    this.store.dispatch(CrewActions.loadCrews({ filters: {} }));
+    this.store.dispatch(JobActions.loadJobs({ filters: {} }));
     
     // Setup search with debounce
     this.searchControl.valueChanges
@@ -154,13 +175,18 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.referredByControl.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.applyFilters());
+
+    this.crewControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
     
-    // Extract unique regions and referrers from all technicians
+    // Extract unique regions, referrers, and crews from all technicians
     this.technicians$
       .pipe(takeUntil(this.destroy$))
       .subscribe(technicians => {
         const regionsSet = new Set<string>();
         const referrersSet = new Set<string>();
+        const crewMap = new Map<string, string>(); // crewId → crewName
         technicians.forEach(tech => {
           if (tech.region) {
             regionsSet.add(tech.region);
@@ -168,12 +194,17 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
           if (tech.referredBy) {
             referrersSet.add(tech.referredBy);
           }
+          if (tech.crew?.crewId) {
+            crewMap.set(tech.crew.crewId, tech.crew.crewName || tech.crew.crewId);
+          }
         });
         this.availableRegions = Array.from(regionsSet).sort();
         this.availableReferrers = Array.from(referrersSet).sort();
+        this.availableCrewOptions = Array.from(crewMap, ([id, name]) => ({ id, name }))
+          .sort((a, b) => a.name.localeCompare(b.name));
       });
 
-    // Subscribe to technician → current job map
+    // Subscribe to technician → current job map (used by the Pipeline/Schedule tab cards)
     this.store.select(selectTechnicianCurrentJobMap)
       .pipe(takeUntil(this.destroy$))
       .subscribe(jobMap => {
@@ -206,6 +237,7 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       isActive: this.activeStatusControl.value === 'active' ? true 
         : this.activeStatusControl.value === 'inactive' ? false 
         : undefined,
+      crewId: this.crewControl.value || undefined,
       page: this.pageIndex,
       pageSize: this.pageSize
     };
@@ -228,31 +260,22 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
    * Update URL query params with current filters
    */
   private updateUrlParams(): void {
-    const queryParams: any = {};
-    
-    if (this.searchControl.value) {
-      queryParams.search = this.searchControl.value;
-    }
-    if (this.roleControl.value) {
-      queryParams.role = this.roleControl.value;
-    }
-    if (this.availabilityControl.value) {
-      queryParams.available = 'true';
-    }
-    if (this.regionControl.value) {
-      queryParams.region = this.regionControl.value;
-    }
-    if (this.activeStatusControl.value) {
-      queryParams.activeStatus = this.activeStatusControl.value;
-    }
-    // Add pagination to URL
-    if (this.pageIndex > 0) {
-      queryParams.page = this.pageIndex.toString();
-    }
-    if (this.pageSize !== 50) {
-      queryParams.pageSize = this.pageSize.toString();
-    }
-    
+    // Set each param to its value, or null so Angular's 'merge' handling REMOVES
+    // it from the URL. Omitting a cleared param would leave the stale value in the
+    // URL, which the queryParams subscription would then re-apply — making filters
+    // impossible to remove individually.
+    const queryParams: any = {
+      search: this.searchControl.value || null,
+      role: this.roleControl.value || null,
+      available: this.availabilityControl.value ? 'true' : null,
+      region: this.regionControl.value || null,
+      activeStatus: this.activeStatusControl.value || null,
+      referredBy: this.referredByControl.value || null,
+      crewId: this.crewControl.value || null,
+      page: this.pageIndex > 0 ? this.pageIndex.toString() : null,
+      pageSize: this.pageSize !== 50 ? this.pageSize.toString() : null
+    };
+
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams,
@@ -281,6 +304,11 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     if (this.referredByControl.value) {
       filters.push({ label: 'Referred By', value: this.referredByControl.value, key: 'referredBy' });
     }
+    if (this.crewControl.value) {
+      const crewName = this.availableCrewOptions.find(c => c.id === this.crewControl.value)?.name
+        || this.crewControl.value;
+      filters.push({ label: 'Crew', value: crewName, key: 'crewId' });
+    }
     if (this.activeStatusControl.value) {
       const statusLabel = this.activeStatusControl.value === 'active' ? 'Active' : 'Inactive';
       filters.push({ label: 'Status', value: statusLabel, key: 'activeStatus' });
@@ -292,7 +320,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   /**
    * Remove a specific filter
    */
-  removeFilter(key: string): void {
+  removeFilter(key: string, event?: Event): void {
+    event?.stopPropagation();
     switch (key) {
       case 'search':
         this.searchControl.setValue('');
@@ -309,6 +338,9 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       case 'referredBy':
         this.referredByControl.setValue('');
         break;
+      case 'crewId':
+        this.crewControl.setValue('');
+        break;
       case 'activeStatus':
         this.activeStatusControl.setValue('');
         break;
@@ -322,9 +354,19 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
     this.availabilityControl.setValue(false);
     this.regionControl.setValue('');
     this.referredByControl.setValue('');
+    this.crewControl.setValue('');
     this.activeStatusControl.setValue('');
     this.pageIndex = 0; // Reset to first page
     this.store.dispatch(TechnicianActions.clearTechnicianFilters());
+  }
+
+  /**
+   * Crew display name for a technician — prefers the backend-provided crew
+   * (authoritative, returned by the list endpoint) and falls back to the
+   * client-side crew map derived from the loaded crews slice.
+   */
+  getCrewName(technician: Technician): string {
+    return technician.crew?.crewName || this.technicianCrewMap[technician.id] || '—';
   }
   
   onPageChange(event: PageEvent): void {
@@ -552,6 +594,48 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       });
 
       this.snackBar.open('Technicians exported to CSV successfully', 'Close', { duration: 3000 });
+    });
+  }
+
+  /**
+   * Export technicians to Excel (XLSX)
+   */
+  exportToXLSX(): void {
+    this.technicians$.pipe(takeUntil(this.destroy$)).subscribe(async technicians => {
+      const headers = [
+        'ID',
+        'Name',
+        'Email',
+        'Phone',
+        'Role',
+        'Region',
+        'Status'
+      ];
+
+      const data = technicians.map(tech => [
+        tech.id,
+        this.getFullName(tech),
+        tech.email,
+        tech.phone,
+        tech.role,
+        tech.region,
+        this.getCurrentStatus(tech)
+      ]);
+
+      const filename = this.exportService.generateTimestampFilename('technicians', 'xlsx');
+
+      try {
+        await this.exportService.generateXLSX({
+          filename,
+          headers,
+          data,
+          sheetName: 'Technicians'
+        });
+
+        this.snackBar.open('Technicians exported to Excel successfully', 'Close', { duration: 3000 });
+      } catch (error) {
+        this.snackBar.open('Failed to export to Excel', 'Close', { duration: 5000 });
+      }
     });
   }
 

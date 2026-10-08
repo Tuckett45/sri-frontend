@@ -16,6 +16,10 @@
           <mat-icon>description</mat-icon>
           <span>Export to CSV</span>
         </button>
+        <button mat-menu-item (click)="exportToXLSX()">
+          <mat-icon>grid_on</mat-icon>
+          <span>Export to Excel</span>
+        </button>
         <button mat-menu-item (click)="exportToPDF()">
           <mat-icon>picture_as_pdf</mat-icon>
           <span>Export to PDF</span>
@@ -24,6 +28,10 @@
         <button mat-menu-item (click)="exportCrewByProjectToCSV()">
           <mat-icon>groups</mat-icon>
           <span>Crew by Project (CSV)</span>
+        </button>
+        <button mat-menu-item (click)="exportCrewByProjectToXLSX()">
+          <mat-icon>groups</mat-icon>
+          <span>Crew by Project (Excel)</span>
         </button>
         <button mat-menu-item (click)="exportCrewByProjectToPDF()">
           <mat-icon>groups</mat-icon>

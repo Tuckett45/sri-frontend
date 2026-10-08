@@ -47,6 +47,8 @@ export interface Candidate {
   googleRedBadge?: boolean;
   googleLdap?: boolean;
   metaGreenListing?: boolean;
+  metaBadge?: boolean;
+  workedAtMetaSite?: boolean;   // Has previously worked at a Meta site (shown as a flag next to the name)
 
   // Training & Certs
   obsTraining?: boolean;
@@ -110,6 +112,8 @@ export interface CreateCandidatePayload {
   googleRedBadge?: boolean;
   googleLdap?: boolean;
   metaGreenListing?: boolean;
+  metaBadge?: boolean;
+  workedAtMetaSite?: boolean;   // Has previously worked at a Meta site (shown as a flag next to the name)
 
   // Training & Certs
   obsTraining?: boolean;
@@ -163,6 +167,8 @@ export interface UpdateCandidatePayload {
   googleRedBadge?: boolean;
   googleLdap?: boolean;
   metaGreenListing?: boolean;
+  metaBadge?: boolean;
+  workedAtMetaSite?: boolean;   // Has previously worked at a Meta site (shown as a flag next to the name)
 
   // Training & Certs
   obsTraining?: boolean;

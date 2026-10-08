@@ -8,6 +8,8 @@ export interface CandidateListState {
   referredByFilter: string;
   experienceLevelFilter: string;
   incompleteCertsFilter: boolean;
+  incompleteDrugTestFilter?: boolean;
+  startingWithin14DaysFilter?: boolean;
   trainingFilter: string;
   certFilter: string;
   sortColumn: keyof Candidate | null;

@@ -92,6 +92,21 @@ export class TechnicianService {
         params = params.set('isActive', filters.isActive.toString());
       }
 
+      // Crew filter - technicians assigned to a specific crew
+      if (filters.crewId) {
+        params = params.set('crewId', filters.crewId);
+      }
+
+      // Company/client filter - the crew's company (Crew.Company)
+      if (filters.company) {
+        params = params.set('company', filters.company);
+      }
+
+      // Client filter - the client of the crew's current job (Job.Client)
+      if (filters.client) {
+        params = params.set('client', filters.client);
+      }
+
       // Pagination - page number
       if (filters.page !== undefined) {
         params = params.set('page', filters.page.toString());

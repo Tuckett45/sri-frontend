@@ -813,6 +813,8 @@ export class CredentialDetailComponent implements OnInit, OnDestroy {
       googleRedBadge: candidate.googleRedBadge ? true : false,
       googleLdap: candidate.googleLdap ? true : false,
       metaGreenListing: candidate.metaGreenListing ? true : false,
+      metaBadge: candidate.metaBadge ? true : false,
+      workedAtMetaSite: candidate.workedAtMetaSite ? true : false,
       obsTraining: candidate.obsTraining ? true : false,
       osha10: candidate.osha10 || false,
       osha30: candidate.osha30 || false,
@@ -924,6 +926,14 @@ export class CredentialDetailComponent implements OnInit, OnDestroy {
     if (candidate.metaGreenListing) {
       items.push({
         credential: { id: 'meta-green', name: 'Meta Green Listing', issueDate: new Date(candidate.createdAt), expirationDate: new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()), status: CertificationStatus.Active },
+        computedStatus: CertificationStatus.Active,
+        credentialType: 'Badge_Access'
+      });
+    }
+
+    if (candidate.metaBadge) {
+      items.push({
+        credential: { id: 'meta-badge', name: 'META Badge', issueDate: new Date(candidate.createdAt), expirationDate: new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()), status: CertificationStatus.Active },
         computedStatus: CertificationStatus.Active,
         credentialType: 'Badge_Access'
       });

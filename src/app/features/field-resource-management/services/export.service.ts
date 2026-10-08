@@ -24,6 +24,19 @@ export interface PdfExportOptions {
 }
 
 /**
+ * XLSX (Excel) export options
+ */
+export interface XlsxExportOptions {
+  filename: string;
+  headers: string[];
+  data: any[][];
+  /** Worksheet tab name (default: 'Sheet1'). Excel limits this to 31 characters. */
+  sheetName?: string;
+  /** Whether to include the header row (default: true). */
+  includeHeaders?: boolean;
+}
+
+/**
  * Service for exporting data to various formats
  * Handles CSV and PDF generation and file downloads
  */
@@ -121,6 +134,53 @@ export class ExportService {
     } catch (error) {
       console.error('Error generating PDF:', error);
       throw new Error('Failed to generate PDF. Please ensure jsPDF library is installed.');
+    }
+  }
+
+  /**
+   * Generates and downloads an XLSX (Excel) file.
+   *
+   * Builds a single worksheet from the provided headers and row data using the
+   * SheetJS (`xlsx`) library, which is dynamically imported to keep it out of the
+   * initial bundle (consistent with the PDF export above).
+   *
+   * @param options XLSX export options
+   */
+  async generateXLSX(options: XlsxExportOptions): Promise<void> {
+    const {
+      filename,
+      headers,
+      data,
+      sheetName = 'Sheet1',
+      includeHeaders = true
+    } = options;
+
+    try {
+      // Dynamic import of SheetJS to reduce initial bundle size.
+      const XLSX = await import('xlsx');
+
+      // Build an array-of-arrays: optional header row followed by the data rows.
+      // Normalize null/undefined cells to empty strings so Excel shows blanks.
+      const normalizeRow = (row: any[]): any[] =>
+        row.map(value => (value === null || value === undefined ? '' : value));
+
+      const aoa: any[][] = [];
+      if (includeHeaders) {
+        aoa.push(normalizeRow(headers));
+      }
+      data.forEach(row => aoa.push(normalizeRow(row)));
+
+      const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+      const workbook = XLSX.utils.book_new();
+
+      // Excel caps sheet names at 31 characters and disallows certain symbols.
+      const safeSheetName = sheetName.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31) || 'Sheet1';
+      XLSX.utils.book_append_sheet(workbook, worksheet, safeSheetName);
+
+      XLSX.writeFile(workbook, filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`);
+    } catch (error) {
+      console.error('Error generating XLSX:', error);
+      throw new Error('Failed to generate Excel file. Please ensure the xlsx library is installed.');
     }
   }
 

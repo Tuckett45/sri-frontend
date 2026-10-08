@@ -9,7 +9,7 @@ export interface CrewExportDialogData {
   /** All crews available for selection (already role-scoped/filtered by the caller). */
   crews: Crew[];
   /** Export format being requested, used only for display. */
-  format: 'csv' | 'pdf';
+  format: 'csv' | 'pdf' | 'xlsx';
 }
 
 /**
