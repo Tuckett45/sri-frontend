@@ -74,10 +74,12 @@ export interface TechnicianCrewInfo {
   crewName: string;
   /** The crew's company/client (free-text), from Crew.Company. */
   company?: string;
-  /** The crew's current job id, if assigned to a job. */
+  /** The crew's current job id, if assigned to a job (resolved via Crew.CurrentJobId or Job.CrewId). */
   currentJobId?: string;
   /** The client of the crew's current job (free-text), from Job.Client, when present. */
   currentJobClient?: string;
+  /** The site name of the crew's current job (Job.SiteName), when present. */
+  currentJobSiteName?: string;
 }
 
 export interface Technician {
