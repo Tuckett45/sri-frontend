@@ -117,6 +117,9 @@ export class MaterialsEditModalComponent {
   onSubmit(): void {
     if (this.kind === 'material') {
       if (!this.material.name?.trim()) return;
+      this.syncAvailable();
+      // VIMS "Material Description" is the primary label; mirror it into description too.
+      if (!this.material.description?.trim()) this.material.description = this.material.name;
       this.save.emit({ ...this.material });
     } else if (this.kind === 'order') {
       if (!this.order.materialId || !this.order.quantity || this.order.quantity <= 0) return;
@@ -144,8 +147,22 @@ export class MaterialsEditModalComponent {
     this.cancel.emit();
   }
 
+  /** Keeps Available Stock = Total − Reserved as the user edits the material form. */
+  syncAvailable(): void {
+    const total = Number(this.material.totalStock);
+    const reserved = Number(this.material.reservedStock) || 0;
+    if (Number.isFinite(total)) {
+      this.material.availableStock = total - reserved;
+      this.material.quantityOnHand = this.material.availableStock;
+    }
+  }
+
   private emptyMaterial(): MaterialUpsert {
-    return { name: '', sku: '', category: '', description: '', unit: 'ea', site: '', market: '', quantityOnHand: 0, reorderLevel: 0, unitCost: null, isSerialized: false };
+    return {
+      contractor: '', materialCode: '', name: '', sku: '', category: '', description: '', unit: 'EA',
+      site: '', market: '', totalStock: 0, reservedStock: 0, availableStock: 0,
+      quantityOnHand: 0, reorderLevel: 0, unitCost: null, isSerialized: false
+    };
   }
 
   private emptyOrder(): MaterialOrderUpsert {

@@ -15,16 +15,39 @@ export type MaterialAssignmentStatus =
   | 'PartiallyReturned'
   | 'Returned';
 
-/** A material catalog entry / on-hand inventory record for a given site (market). */
+/**
+ * A material catalog entry / on-hand inventory record for a given site (market).
+ *
+ * The stock figures mirror the VIMS (Vendor Inventory Management System) export, which
+ * reports three distinct quantities per contractor/material:
+ *   - totalStock      — everything physically held
+ *   - reservedStock   — allocated/committed and therefore not issuable
+ *   - availableStock  — issuable now (= totalStock - reservedStock)
+ *
+ * `quantityOnHand` is retained for backward compatibility and tracks `availableStock`.
+ */
 export interface Material {
   id: string;
+  /** Contractor the stock belongs to (VIMS "Contractor", e.g. "1000000027"). */
+  contractor?: string | null;
+  /** Material code / number (VIMS "Material", e.g. "7049049" or "1001241-01"). */
+  materialCode?: string | null;
   sku?: string | null;
   name: string;
   category?: string | null;
+  /** VIMS "Material Description". */
   description?: string | null;
+  /** VIMS "Base Unit" (EA, RL, FT, PK, …). */
   unit?: string | null;
   site?: string | null;
   market?: string | null;
+  /** VIMS "Total Stock". */
+  totalStock?: number;
+  /** VIMS "Reserved Stock". */
+  reservedStock?: number;
+  /** VIMS "Available Stock" (= totalStock - reservedStock). */
+  availableStock?: number;
+  /** Legacy alias of availableStock, kept for existing stock/ledger logic. */
   quantityOnHand: number;
   reorderLevel: number;
   unitCost?: number | null;
@@ -80,6 +103,8 @@ export interface MaterialAssignment {
 
 export interface MaterialUpsert {
   id?: string | null;
+  contractor?: string | null;
+  materialCode?: string | null;
   name: string;
   sku?: string | null;
   category?: string | null;
@@ -87,6 +112,9 @@ export interface MaterialUpsert {
   unit?: string | null;
   site?: string | null;
   market?: string | null;
+  totalStock?: number;
+  reservedStock?: number;
+  availableStock?: number;
   quantityOnHand?: number;
   reorderLevel?: number;
   unitCost?: number | null;
@@ -148,6 +176,8 @@ export interface MaterialImportSummary {
 // dependent row references its material by SKU; the backend resolves SKU -> id.
 
 export interface WorkbookMaterialRow {
+  contractor?: string | null;
+  materialCode?: string | null;
   name: string;
   sku?: string | null;
   category?: string | null;
@@ -155,6 +185,9 @@ export interface WorkbookMaterialRow {
   unit?: string | null;
   site?: string | null;
   market?: string | null;
+  totalStock?: number;
+  reservedStock?: number;
+  availableStock?: number;
   quantityOnHand?: number;
   reorderLevel?: number;
   unitCost?: number | null;
@@ -420,12 +453,17 @@ export interface MaterialCountLineInput {
 
 export interface MaterialStockReportRow {
   materialId: string;
+  contractor?: string | null;
+  materialCode?: string | null;
   sku?: string | null;
   name: string;
   category?: string | null;
   unit?: string | null;
   site: string;
   market?: string | null;
+  totalStock?: number;
+  reservedStock?: number;
+  availableStock?: number;
   quantityOnHand: number;
   reorderLevel: number;
   isLowStock: boolean;

@@ -23,13 +23,16 @@
         <button type="button" class="scan-btn" (click)="openScanner('material')" title="Scan SKU/serial">Scan</button>
       </h2>
       <div class="form-grid">
-        <label>Name*<input type="text" name="name" [(ngModel)]="newMaterial.name" required /></label>
-        <label>SKU<input type="text" name="sku" [(ngModel)]="newMaterial.sku" /></label>
+        <label>Contractor<input type="text" name="contractor" [(ngModel)]="newMaterial.contractor" /></label>
+        <label>Material<input type="text" name="materialCode" [(ngModel)]="newMaterial.materialCode" placeholder="VIMS material code" /></label>
+        <label>Material Description*<input type="text" name="name" [(ngModel)]="newMaterial.name" required /></label>
         <label>Category<input type="text" name="category" [(ngModel)]="newMaterial.category" /></label>
-        <label>Unit<input type="text" name="unit" [(ngModel)]="newMaterial.unit" /></label>
+        <label>Base Unit<input type="text" name="unit" [(ngModel)]="newMaterial.unit" maxlength="8" placeholder="EA, RL, FT…" /></label>
         <label>Site<input type="text" name="site" [(ngModel)]="newMaterial.site" /></label>
         <label>Market<input type="text" name="market" [(ngModel)]="newMaterial.market" maxlength="16" /></label>
-        <label>Opening qty<input type="number" name="qtyOnHand" [(ngModel)]="newMaterial.quantityOnHand" min="0" /></label>
+        <label>Total Stock<input type="number" name="totalStock" [(ngModel)]="newMaterial.totalStock" (ngModelChange)="syncAvailable(newMaterial)" min="0" /></label>
+        <label>Reserved Stock<input type="number" name="reservedStock" [(ngModel)]="newMaterial.reservedStock" (ngModelChange)="syncAvailable(newMaterial)" min="0" /></label>
+        <label>Available Stock<input type="number" name="availableStock" [(ngModel)]="newMaterial.availableStock" min="0" readonly /></label>
         <label>Reorder level<input type="number" name="reorderLevel" [(ngModel)]="newMaterial.reorderLevel" min="0" /></label>
         <label>Unit cost<input type="number" name="unitCost" [(ngModel)]="newMaterial.unitCost" min="0" step="0.01" /></label>
         <label class="checkbox">
@@ -142,18 +145,20 @@
 
     <table *ngIf="!loadingMaterials && materials.length > 0" class="data-table">
       <thead>
-        <tr><th>Name</th><th>SKU</th><th>Category</th><th>Site</th><th>Market</th><th>On hand</th><th>Reorder</th><th>Type</th><th></th></tr>
+        <tr><th>Contractor</th><th>Material</th><th>Material Description</th><th>Site</th><th>Total Stock</th><th>Reserved Stock</th><th>Available Stock</th><th>Base Unit</th><th>Reorder</th><th>Type</th><th></th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let m of materialsPager.items" [class.low-stock]="isLowStock(m)" [class.editing]="editingMaterialId === m.id">
           <!-- read mode -->
           <ng-container *ngIf="editingMaterialId !== m.id">
-            <td>{{ m.name }}</td>
-            <td>{{ m.sku }}</td>
-            <td>{{ m.category }}</td>
+            <td>{{ m.contractor }}</td>
+            <td>{{ m.materialCode || m.sku }}</td>
+            <td>{{ m.description || m.name }}</td>
             <td>{{ m.site }}</td>
-            <td>{{ m.market }}</td>
-            <td>{{ m.quantityOnHand }} {{ m.unit }}<span *ngIf="isLowStock(m)" class="badge warn">low</span></td>
+            <td>{{ displayTotal(m) | number }}</td>
+            <td>{{ displayReserved(m) | number }}</td>
+            <td>{{ displayAvailable(m) | number }}<span *ngIf="isLowStock(m)" class="badge warn">low</span></td>
+            <td>{{ m.unit }}</td>
             <td>{{ m.reorderLevel }}</td>
             <td><span *ngIf="m.isSerialized" class="badge">serial</span></td>
             <td class="row-actions">
@@ -164,12 +169,14 @@
           </ng-container>
           <!-- inline edit mode -->
           <ng-container *ngIf="editingMaterialId === m.id">
+            <td><input type="text" class="inline-input" [ngModel]="materialField('contractor')" (ngModelChange)="setMaterialField('contractor', $event)" [name]="'m-contr-' + m.id" /></td>
+            <td><input type="text" class="inline-input" [ngModel]="materialField('materialCode')" (ngModelChange)="setMaterialField('materialCode', $event)" [name]="'m-code-' + m.id" /></td>
             <td><input type="text" class="inline-input" [ngModel]="materialField('name')" (ngModelChange)="setMaterialField('name', $event)" [name]="'m-name-' + m.id" /></td>
-            <td><input type="text" class="inline-input" [ngModel]="materialField('sku')" (ngModelChange)="setMaterialField('sku', $event)" [name]="'m-sku-' + m.id" /></td>
-            <td><input type="text" class="inline-input" [ngModel]="materialField('category')" (ngModelChange)="setMaterialField('category', $event)" [name]="'m-cat-' + m.id" /></td>
             <td><input type="text" class="inline-input" [ngModel]="materialField('site')" (ngModelChange)="setMaterialField('site', $event)" [name]="'m-site-' + m.id" /></td>
-            <td><input type="text" class="inline-input" [ngModel]="materialField('market')" (ngModelChange)="setMaterialField('market', $event)" [name]="'m-mkt-' + m.id" maxlength="16" /></td>
-            <td><input type="number" class="inline-input" [ngModel]="materialField('quantityOnHand')" (ngModelChange)="setMaterialField('quantityOnHand', $event)" [name]="'m-qty-' + m.id" min="0" /></td>
+            <td><input type="number" class="inline-input" [ngModel]="materialField('totalStock')" (ngModelChange)="setMaterialField('totalStock', $event); syncAvailable(materialDraftRef())" [name]="'m-total-' + m.id" min="0" /></td>
+            <td><input type="number" class="inline-input" [ngModel]="materialField('reservedStock')" (ngModelChange)="setMaterialField('reservedStock', $event); syncAvailable(materialDraftRef())" [name]="'m-reserved-' + m.id" min="0" /></td>
+            <td><input type="number" class="inline-input" [ngModel]="materialField('availableStock')" (ngModelChange)="setMaterialField('availableStock', $event)" [name]="'m-avail-' + m.id" min="0" readonly /></td>
+            <td><input type="text" class="inline-input" [ngModel]="materialField('unit')" (ngModelChange)="setMaterialField('unit', $event)" [name]="'m-unit-' + m.id" maxlength="8" /></td>
             <td><input type="number" class="inline-input" [ngModel]="materialField('reorderLevel')" (ngModelChange)="setMaterialField('reorderLevel', $event)" [name]="'m-re-' + m.id" min="0" /></td>
             <td><span *ngIf="m.isSerialized" class="badge">serial</span></td>
             <td class="row-actions">
@@ -630,13 +637,17 @@
 
     <h3>Stock on hand ({{ stockReport.length }} rows)</h3>
     <table *ngIf="stockReport.length > 0" class="data-table">
-      <thead><tr><th>Material</th><th>SKU</th><th>Site</th><th>On hand</th><th>Reorder</th><th>Low?</th><th>Value</th></tr></thead>
+      <thead><tr><th>Contractor</th><th>Material</th><th>Material Description</th><th>Site</th><th>Total</th><th>Reserved</th><th>Available</th><th>Base Unit</th><th>Reorder</th><th>Low?</th><th>Value</th></tr></thead>
       <tbody>
         <tr *ngFor="let r of stockReportPager.items" [class.low-stock]="r.isLowStock">
+          <td>{{ r.contractor }}</td>
+          <td>{{ r.materialCode || r.sku }}</td>
           <td>{{ r.name }}</td>
-          <td>{{ r.sku }}</td>
           <td>{{ r.site }}</td>
-          <td>{{ r.quantityOnHand }} {{ r.unit }}</td>
+          <td>{{ (r.totalStock ?? r.quantityOnHand) | number }}</td>
+          <td>{{ (r.reservedStock ?? 0) | number }}</td>
+          <td>{{ (r.availableStock ?? r.quantityOnHand) | number }}</td>
+          <td>{{ r.unit }}</td>
           <td>{{ r.reorderLevel }}</td>
           <td>{{ r.isLowStock ? 'Yes' : '' }}</td>
           <td>{{ r.extendedValue | currency }}</td>
