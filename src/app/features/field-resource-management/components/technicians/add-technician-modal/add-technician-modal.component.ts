@@ -123,7 +123,9 @@ export class AddTechnicianModalComponent {
       cienaBasicTraining: [this.toBool(technician?.cienaBasicTraining)],
       googleRedBadge: [this.toBool(technician?.googleRedBadge)],
       googleLdap: [this.toBool(technician?.googleLdap)],
-      metaGreenListing: [this.toBool(technician?.metaGreenListing)]
+      metaGreenListing: [this.toBool(technician?.metaGreenListing)],
+      metaBadge: [this.toBool(technician?.metaBadge)],
+      workedAtMetaSite: [this.toBool(technician?.workedAtMetaSite)]
     });
 
     this.trainingCertsForm = this.fb.group({
@@ -424,6 +426,8 @@ export class AddTechnicianModalComponent {
       googleRedBadge: !!badges.googleRedBadge,
       googleLdap: !!badges.googleLdap,
       metaGreenListing: !!badges.metaGreenListing,
+      metaBadge: !!badges.metaBadge,
+      workedAtMetaSite: !!badges.workedAtMetaSite,
 
       // Training & certs
       obsTraining: !!training.obsTraining,

@@ -15,6 +15,12 @@ export interface TechnicianFilters {
   referredBy?: string;
   isAvailable?: boolean;
   isActive?: boolean;
+  /** Filter to technicians assigned to a specific crew. */
+  crewId?: string;
+  /** Filter by the crew's company/client (Crew.Company). */
+  company?: string;
+  /** Filter by the client of the crew's current job (Job.Client). */
+  client?: string;
   page?: number;
   pageSize?: number;
 }

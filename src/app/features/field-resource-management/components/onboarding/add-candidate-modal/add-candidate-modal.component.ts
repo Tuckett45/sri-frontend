@@ -201,6 +201,10 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
                 <span>Military Background</span>
                 <mat-slide-toggle formControlName="militaryBackground"></mat-slide-toggle>
               </div>
+              <div class="toggle-item">
+                <span>Worked at Meta Site</span>
+                <mat-slide-toggle formControlName="workedAtMetaSite"></mat-slide-toggle>
+              </div>
             </div>
 
             <div class="step-actions">
@@ -241,6 +245,10 @@ import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
               <div class="toggle-item">
                 <span>Meta Green Listing</span>
                 <mat-slide-toggle formControlName="metaGreenListing"></mat-slide-toggle>
+              </div>
+              <div class="toggle-item">
+                <span>META Badge</span>
+                <mat-slide-toggle formControlName="metaBadge"></mat-slide-toggle>
               </div>
             </div>
 
@@ -519,7 +527,8 @@ export class AddCandidateModalComponent {
       shiftAvailability: [this.toBool(candidate?.shiftAvailability)],
       backgroundCheckComplete: [this.toBool(candidate?.backgroundCheckComplete)],
       drugScreenComplete: [this.toBool(candidate?.drugTestComplete)],
-      militaryBackground: [this.toBool(candidate?.militaryBackground)]
+      militaryBackground: [this.toBool(candidate?.militaryBackground)],
+      workedAtMetaSite: [this.toBool(candidate?.workedAtMetaSite)]
     });
 
     this.badgesAccessForm = this.fb.group({
@@ -529,7 +538,8 @@ export class AddCandidateModalComponent {
       cienaBasicTraining: [this.toBool(candidate?.cienaBasicTraining)],
       googleRedBadge: [this.toBool(candidate?.googleRedBadge)],
       googleLdap: [this.toBool(candidate?.googleLdap)],
-      metaGreenListing: [this.toBool(candidate?.metaGreenListing)]
+      metaGreenListing: [this.toBool(candidate?.metaGreenListing)],
+      metaBadge: [this.toBool(candidate?.metaBadge)]
     });
 
     this.trainingCertsForm = this.fb.group({

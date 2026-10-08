@@ -16,6 +16,10 @@
           <mat-icon>description</mat-icon>
           <span>Export to CSV</span>
         </button>
+        <button mat-menu-item (click)="exportToXLSX()">
+          <mat-icon>grid_on</mat-icon>
+          <span>Export to Excel</span>
+        </button>
         <button mat-menu-item (click)="exportToPDF()">
           <mat-icon>picture_as_pdf</mat-icon>
           <span>Export to PDF</span>
@@ -83,6 +87,14 @@
           </mat-select>
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="filter-field filter-field--narrow">
+          <mat-label>Crew</mat-label>
+          <mat-select [formControl]="crewControl">
+            <mat-option value="">All Crews</mat-option>
+            <mat-option *ngFor="let crew of availableCrewOptions" [value]="crew.id">{{ crew.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
         <mat-checkbox [formControl]="availabilityControl" class="availability-toggle">
           Available Only
         </mat-checkbox>
@@ -95,13 +107,16 @@
       <!-- Active Filter Chips -->
       <div class="active-filters" *ngIf="getActiveFilters().length > 0">
         <span class="filter-label">Active Filters:</span>
-        <div class="filter-chips">
-          <mat-chip *ngFor="let filter of getActiveFilters()" [removable]="true" (removed)="removeFilter(filter.key)">
-            <strong>{{ filter.label }}:</strong> {{ filter.value }}
-            <button matChipRemove [attr.aria-label]="'Remove ' + filter.label + ' filter'">
+        <div class="filter-chips" aria-label="Active filters">
+          <span class="filter-chip" *ngFor="let filter of getActiveFilters()">
+            <span class="filter-chip__text"><strong>{{ filter.label }}:</strong> {{ filter.value }}</span>
+            <button type="button"
+                    class="filter-chip__remove"
+                    (click)="removeFilter(filter.key, $event)"
+                    [attr.aria-label]="'Remove ' + filter.label + ' filter'">
               <mat-icon>cancel</mat-icon>
             </button>
-          </mat-chip>
+          </span>
         </div>
       </div>
 
@@ -126,14 +141,13 @@
         <div class="table-wrapper" *ngIf="!(loading$ | async) && !(error$ | async) && technicians.length > 0">
           <table class="technician-table">
             <colgroup>
-              <col style="width: 14%;">
-              <col style="width: 16%;">
+              <col style="width: 15%;">
+              <col style="width: 18%;">
+              <col style="width: 11%;">
+              <col style="width: 9%;">
               <col style="width: 10%;">
-              <col style="width: 8%;">
-              <col style="width: 8%;">
+              <col style="width: 13%;">
               <col style="width: 10%;">
-              <col style="width: 12%;">
-              <col style="width: 8%;">
               <col style="width: 14%;">
             </colgroup>
             <thead>
@@ -154,7 +168,6 @@
                   Region <span class="sort-icon">{{ getTableSortIcon('region') }}</span>
                 </th>
                 <th>Crew</th>
-                <th>Current Job</th>
                 <th (click)="onTableSort('fieldStatus')" class="sortable">
                   Field Status <span class="sort-icon">{{ getTableSortIcon('fieldStatus') }}</span>
                 </th>
@@ -177,8 +190,7 @@
                 <td>{{ technician.phone }}</td>
                 <td><span class="role-badge">{{ technician.role }}</span></td>
                 <td>{{ technician.region || '—' }}</td>
-                <td>{{ technicianCrewMap[technician.id] || '—' }}</td>
-                <td class="job-cell">{{ technicianJobMap[technician.id] || '—' }}</td>
+                <td>{{ getCrewName(technician) }}</td>
                 <td>
                   <span class="field-status-badge" [ngClass]="getFieldStatusClass(technician)">
                     {{ getFieldStatusLabel(technician) }}
