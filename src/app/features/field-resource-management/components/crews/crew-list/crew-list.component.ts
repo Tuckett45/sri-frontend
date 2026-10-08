@@ -515,7 +515,7 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
    * Open the crew-selection dialog, then run the given export with the chosen crews.
    */
   private selectCrewsThenExport(
-    format: 'csv' | 'pdf',
+    format: 'csv' | 'pdf' | 'xlsx',
     exportFn: (crews: Crew[]) => void
   ): void {
     this.crews$.pipe(take(1), takeUntil(this.destroy$)).subscribe(crews => {
@@ -526,7 +526,7 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
 
       const dialogRef = this.dialog.open<
         CrewExportDialogComponent,
-        { crews: Crew[]; format: 'csv' | 'pdf' },
+        { crews: Crew[]; format: 'csv' | 'pdf' | 'xlsx' },
         CrewExportDialogResult
       >(CrewExportDialogComponent, {
         width: '560px',
@@ -574,6 +574,43 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     this.snackBar.open('Crews exported to CSV successfully', 'Close', { duration: 3000 });
+  }
+
+  /**
+   * Export crews to Excel (prompts the user to choose which crews first).
+   */
+  exportToXLSX(): void {
+    this.selectCrewsThenExport('xlsx', crews => { void this.generateCrewsXLSX(crews); });
+  }
+
+  private async generateCrewsXLSX(crews: Crew[]): Promise<void> {
+    const headers = [
+      'Crew Name',
+      'Market',
+      'Job',
+      'Job Status',
+      'Member Name',
+      'Role',
+      'Phone',
+      'Email'
+    ];
+
+    const data = this.buildCrewMemberRows(crews);
+
+    const filename = this.exportService.generateTimestampFilename('crews', 'xlsx');
+
+    try {
+      await this.exportService.generateXLSX({
+        filename,
+        headers,
+        data,
+        sheetName: 'Crews'
+      });
+
+      this.snackBar.open('Crews exported to Excel successfully', 'Close', { duration: 3000 });
+    } catch (error) {
+      this.snackBar.open('Failed to export to Excel', 'Close', { duration: 5000 });
+    }
   }
 
   /**
@@ -820,6 +857,45 @@ export class CrewListComponent implements OnInit, OnDestroy, AfterViewInit {
         this.snackBar.open('Crew by project exported to PDF successfully', 'Close', { duration: 3000 });
       } catch (error) {
         this.snackBar.open('Failed to export to PDF', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  /**
+   * Export crew members grouped by their assigned project to Excel.
+   * Includes each member's name, email, phone, and Facebook URL (no IDs).
+   */
+  exportCrewByProjectToXLSX(): void {
+    this.crews$.pipe(take(1), takeUntil(this.destroy$)).subscribe(async crews => {
+      const headers = [
+        'Project',
+        'Crew Name',
+        'Name',
+        'Email',
+        'Phone',
+        'Facebook URL'
+      ];
+
+      const data = this.buildCrewByProjectRows(crews);
+
+      if (data.length === 0) {
+        this.snackBar.open('No crew members to export', 'Close', { duration: 3000 });
+        return;
+      }
+
+      const filename = this.exportService.generateTimestampFilename('crew-by-project', 'xlsx');
+
+      try {
+        await this.exportService.generateXLSX({
+          filename,
+          headers,
+          data,
+          sheetName: 'Crew by Project'
+        });
+
+        this.snackBar.open('Crew by project exported to Excel successfully', 'Close', { duration: 3000 });
+      } catch (error) {
+        this.snackBar.open('Failed to export to Excel', 'Close', { duration: 5000 });
       }
     });
   }

@@ -165,6 +165,25 @@ export class AuditLogViewerComponent implements OnInit {
     });
   }
 
+  async onExportToXLSX(): Promise<void> {
+    const headers = ['Timestamp', 'User', 'Action Type', 'Entity', 'Entity ID', 'IP Address'];
+    const data = this.dataSource.filteredData.map(log => [
+      this.exportService.formatDate(log.timestamp, 'YYYY-MM-DD HH:mm:ss'),
+      log.user,
+      log.actionType,
+      log.entity,
+      log.entityId,
+      log.ipAddress || ''
+    ]);
+
+    await this.exportService.generateXLSX({
+      filename: this.exportService.generateTimestampFilename('audit-log', 'xlsx'),
+      headers,
+      data,
+      sheetName: 'Audit Log'
+    });
+  }
+
   getActionIcon(actionType: string): string {
     const iconMap: { [key: string]: string } = {
       'CREATE': 'add_circle',

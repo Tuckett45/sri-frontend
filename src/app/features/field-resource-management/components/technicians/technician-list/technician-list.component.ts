@@ -598,6 +598,48 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Export technicians to Excel (XLSX)
+   */
+  exportToXLSX(): void {
+    this.technicians$.pipe(takeUntil(this.destroy$)).subscribe(async technicians => {
+      const headers = [
+        'ID',
+        'Name',
+        'Email',
+        'Phone',
+        'Role',
+        'Region',
+        'Status'
+      ];
+
+      const data = technicians.map(tech => [
+        tech.id,
+        this.getFullName(tech),
+        tech.email,
+        tech.phone,
+        tech.role,
+        tech.region,
+        this.getCurrentStatus(tech)
+      ]);
+
+      const filename = this.exportService.generateTimestampFilename('technicians', 'xlsx');
+
+      try {
+        await this.exportService.generateXLSX({
+          filename,
+          headers,
+          data,
+          sheetName: 'Technicians'
+        });
+
+        this.snackBar.open('Technicians exported to Excel successfully', 'Close', { duration: 3000 });
+      } catch (error) {
+        this.snackBar.open('Failed to export to Excel', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  /**
    * Export technicians to PDF
    */
   async exportToPDF(): Promise<void> {
