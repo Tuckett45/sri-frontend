@@ -52,7 +52,7 @@ Update `src/environments/environments.ts` with the VAPID public key from backend
 export const environment = {
   production: true,
   apiUrl: 'https://sri-api.azurewebsites.net/api',
-  apiSubscriptionKey: 'ffd675634ab645d7845640bb88d672d8',
+  apiSubscriptionKey: '<fetched-securely-at-runtime>',
   vapidPublicKey: 'BEl62iUVgU...' // Replace with actual key
 };
 ```

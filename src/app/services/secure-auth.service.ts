@@ -336,11 +336,18 @@ export class SecureAuthService extends AuthService implements OnDestroy {
           return new HttpHeaders();
         }
 
-        return new HttpHeaders({
+        // Subscription key is fetched at runtime from the backend configuration
+        // service — never hardcoded in source (see ConfigurationService).
+        const subscriptionKey = this.configService.getCurrentConfig()?.apiSubscriptionKey ?? '';
+
+        let headers = new HttpHeaders({
           'Authorization': `Bearer ${token}`,
-          'X-Session-ID': state.sessionId || '',
-          'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
+          'X-Session-ID': state.sessionId || ''
         });
+        if (subscriptionKey) {
+          headers = headers.set('Ocp-Apim-Subscription-Key', subscriptionKey);
+        }
+        return headers;
       })
     );
   }

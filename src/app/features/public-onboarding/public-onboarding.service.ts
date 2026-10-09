@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environments';
+import { ApiHeadersService } from '../../services/api-headers.service';
 
 export type VestSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
 
@@ -40,11 +42,17 @@ export interface PublicCandidateSubmissionPayload {
 @Injectable()
 export class PublicOnboardingService {
   private readonly baseUrl = `${environment.atlasApiUrl}/public/onboarding`;
+  private readonly apiHeadersService = inject(ApiHeadersService);
 
-  private readonly headers = new HttpHeaders({
-    'Content-Type': 'application/json',
-    'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
-  });
+  /** Subscription key is resolved at runtime from backend config — never hardcoded. */
+  private get headers(): HttpHeaders {
+    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const key = this.apiHeadersService.getApiSubscriptionKey();
+    if (key) {
+      headers = headers.set('Ocp-Apim-Subscription-Key', key);
+    }
+    return headers;
+  }
 
   constructor(private http: HttpClient) {}
 
@@ -70,9 +78,11 @@ export class PublicOnboardingService {
     const formData = new FormData();
     formData.append('file', file);
     // Do not set Content-Type header for multipart; browser handles boundary
-    const headers = new HttpHeaders({
-      'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
-    });
+    let headers = new HttpHeaders();
+    const key = this.apiHeadersService.getApiSubscriptionKey();
+    if (key) {
+      headers = headers.set('Ocp-Apim-Subscription-Key', key);
+    }
     return this.http
       .post<{ url: string }>(`${this.baseUrl}/candidates/${candidateId}/${fileType}`, formData, {
         headers,

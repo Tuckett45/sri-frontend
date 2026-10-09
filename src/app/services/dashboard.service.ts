@@ -14,10 +14,11 @@ import { User } from '../models/user.model';
     providedIn: 'root'
   })
 export class DashboardService {
+    // Note: the subscription key is injected globally by the HTTP interceptor at
+    // runtime (resolved from backend config) — it must never be hardcoded here.
     private httpOptions = {
         headers: new HttpHeaders({
-          'Content-Type': 'application/json',
-          'Ocp-Apim-Subscription-Key': 'ffd675634ab645d7845640bb88d672d8'
+          'Content-Type': 'application/json'
         })
       };
 
