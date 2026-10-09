@@ -44,3 +44,16 @@ Thumbs.db
 .env
 src/environments/environments.ts
 backend/app.js
+
+# Example/template env file is committed; the real one is ignored above.
+# (src/environments/environments.ts is already ignored.)
+
+# Built Angular bundles published to GitHub Pages (docs/). These are generated
+# artifacts and previously leaked a baked-in API key — do not commit them.
+docs/*.js
+docs/*.js.map
+docs/*.css
+docs/main.*.js
+docs/polyfills.*.js
+docs/runtime.*.js
+docs/styles.*.css
