@@ -3,6 +3,7 @@ import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators }
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { OnboardingService } from '../../../services/onboarding.service';
+import { CandidateListStateService } from '../../../services/candidate-list-state.service';
 import { GeocodingService } from 'src/app/services/geocoding.service';
 import { StateAbbreviation } from 'src/app/models/state-abbreviation.enum';
 import { HasUnsavedChanges } from '../../../guards/unsaved-changes.guard';
@@ -561,7 +562,8 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
     private route: ActivatedRoute,
     private router: Router,
     private onboardingService: OnboardingService,
-    private geocodingService: GeocodingService
+    private geocodingService: GeocodingService,
+    private listStateService: CandidateListStateService
   ) {}
 
   ngOnInit(): void {
@@ -745,6 +747,8 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
         this.successMessage = 'Candidate created successfully.';
         this.candidateForm.reset();
         this.candidateForm.markAsPristine();
+        // Invalidate the cached candidate list so it reloads fresh data on return.
+        this.listStateService.invalidateData();
         this.router.navigate(['../'], { relativeTo: this.route });
       },
       error: (err) => {
@@ -787,6 +791,10 @@ export class CandidateFormComponent implements OnInit, HasUnsavedChanges {
         this.submitted = true;
         this.successMessage = 'Candidate updated successfully.';
         this.candidateForm.markAsPristine();
+        // Invalidate the cached candidate list so the edited candidate (including
+        // any status change) shows up when the user navigates back, instead of
+        // requiring a hard refresh.
+        this.listStateService.invalidateData();
       },
       error: (err) => {
         this.submitting = false;

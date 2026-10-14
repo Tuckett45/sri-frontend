@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin, Observable } from 'rxjs';
 import { OnboardingService } from '../../../services/onboarding.service';
+import { CandidateListStateService } from '../../../services/candidate-list-state.service';
 import { Candidate, OfferStatus } from '../../../models/onboarding.models';
 import { OnboardingInfoModalComponent } from '../onboarding-info-modal/onboarding-info-modal.component';
 import { AddCandidateModalComponent } from '../add-candidate-modal/add-candidate-modal.component';
@@ -840,7 +841,8 @@ export class CandidateDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
-    private onboardingService: OnboardingService
+    private onboardingService: OnboardingService,
+    private listStateService: CandidateListStateService
   ) {}
 
   @HostListener('document:click', ['$event'])
@@ -943,7 +945,13 @@ export class CandidateDetailComponent implements OnInit {
     if (!this.candidate) return;
     this.showStatusMenu = false;
     this.onboardingService.updateCandidate(this.candidateId, { offerStatus: status }).subscribe({
-      next: () => this.loadCandidate(),
+      next: () => {
+        // Mark the cached candidate list stale so it reloads fresh data (with the
+        // new status) when the user navigates back — without this the list shows
+        // stale cached data and requires a hard refresh to pick up the change.
+        this.listStateService.invalidateData();
+        this.loadCandidate();
+      },
       error: () => {
         alert('Failed to update status. Please try again.');
       }
