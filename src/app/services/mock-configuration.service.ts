@@ -18,7 +18,7 @@ export class MockConfigurationService {
   private readonly mockConfig: RuntimeConfiguration = {
     vapidPublicKey: 'BOg-2-T3wIzg42wyoCXxTdkYqShVYCQ87g_ZXUS6lYG-ymcoYfl3qpXq3ImqMoJ9UY1EQAxXBLaywuvuF21yD4s',
     apiBaseUrl: environment.apiUrl,
-    apiSubscriptionKey: 'ffd675634ab645d7845640bb88d672d8', // This would be securely managed on backend
+    apiSubscriptionKey: '', // Mock only — real key is securely fetched from backend at runtime
     pushSubscriptionEndpoint: `${environment.apiUrl}/push-subscriptions`,
     retryConfiguration: DEFAULT_RETRY_CONFIG,
     notificationSettings: {
