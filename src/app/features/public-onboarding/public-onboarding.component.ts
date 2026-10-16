@@ -144,7 +144,9 @@ export class PublicOnboardingComponent implements OnInit {
       referredBy: formValue.referredBy || undefined,
       facebookProfileUrl: formValue.facebookProfileUrl?.trim() || undefined,
       startDate: formValue.startDate,
-      experienceLevel: 'no_experience_green',
+      // Experience level is intentionally NOT set here. Public (ARK) applicants
+      // do not vet themselves; leaving it unset keeps the candidate in
+      // "needs_review" until a reviewer assigns an experience level in-app.
       drugTestComplete: false,
       oshaCertified: false,
       scissorLiftCertified: false,
@@ -388,7 +390,6 @@ export class PublicOnboardingComponent implements OnInit {
       referredBy: [''],
       facebookProfileUrl: ['', [Validators.required, PublicOnboardingComponent.facebookUrlValidator]],
       startDate: ['', Validators.required],
-      experienceLevel: ['no_experience_green'],
     });
   }
 
