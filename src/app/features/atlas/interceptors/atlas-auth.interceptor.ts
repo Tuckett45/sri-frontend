@@ -143,14 +143,20 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
     }
 
     // Check if the URL targets the configured ATLAS platform API base URL.
-    // This is the authoritative check: every ATLAS API call (pto-requests,
-    // overtime-requests, hierarchy, managers, etc.) hits environment.atlasApiUrl,
-    // and all of them require the Bearer token / userId claim server-side.
-    // Without this, feature endpoints like /v1/pto-requests and
-    // /v1/overtime-requests went out unauthenticated and the API returned 401.
     if (environment.atlasApiUrl && url.startsWith(environment.atlasApiUrl)) {
       return true;
     }
+
+    // Skip external domains to avoid leaking credentials
+    try {
+      const parsed = new URL(url, window.location.origin);
+      const host = parsed.hostname;
+      if (host !== window.location.hostname &&
+          !host.includes('atlas-api') &&
+          !host.includes('sri-backend')) {
+        return false;
+      }
+    } catch { /* relative URL — continue checking */ }
 
     // Check if URL matches any ATLAS endpoint patterns
     const atlasPatterns = [

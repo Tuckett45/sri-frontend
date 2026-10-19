@@ -9,8 +9,7 @@ import { EffectsModule } from '@ngrx/effects';
 import { SharedMaterialModule } from './shared-material.module';
 // Routing
 import { FieldResourceManagementRoutingModule } from './field-resource-management-routing.module';
-// Mock Interceptor for local development
-import { MockOnboardingInterceptor } from './interceptors/mock-onboarding.interceptor';
+// MockOnboardingInterceptor removed — real backend API is now available
 
 // State Management - Reducers
 import { technicianReducer } from './state/technicians/technician.reducer';
@@ -279,8 +278,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     // Error handling
     { provide: ErrorHandler, useClass: GlobalErrorHandlerService },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
-    // Mock data interceptor for local development (remove when real API is available)
-    { provide: HTTP_INTERCEPTORS, useClass: MockOnboardingInterceptor, multi: true }
+    // MockOnboardingInterceptor removed — real backend API is available
   ]
 })
 export class FieldResourceManagementModule {
