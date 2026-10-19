@@ -7,14 +7,11 @@ import * as RolePermissionsActions from './role-permissions.actions';
 import { RolePermission } from '../../models/permission.model';
 import { ApiHeadersService } from '../../services/api-headers.service';
 import { ConfigurationService } from '../../services/configuration.service';
+import { environment } from '../../../environments/environments';
 
-/**
- * Effects for role permissions state management
- * Handles API calls for loading and updating permissions
- */
 @Injectable()
 export class RolePermissionsEffects {
-  private apiUrl: string = 'https://sri-api.azurewebsites.net/api';
+  private apiUrl: string = environment.apiUrl;
 
   constructor(
     private actions$: Actions,
@@ -22,7 +19,6 @@ export class RolePermissionsEffects {
     private apiHeaders: ApiHeadersService,
     private configService: ConfigurationService
   ) {
-    // Get API URL from configuration
     const config = this.configService.getCurrentConfig();
     if (config?.apiBaseUrl) {
       this.apiUrl = config.apiBaseUrl;

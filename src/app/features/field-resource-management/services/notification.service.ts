@@ -14,8 +14,7 @@ import { environment } from '../../../../environments/environments';
   providedIn: 'root'
 })
 export class NotificationService {
-  // private readonly apiUrl = `${environment.atlasApiUrl}/notifications`;
-  private readonly apiUrl = ''; // DISABLED: notifications endpoint not available locally
+  private readonly apiUrl = `${environment.atlasApiUrl}/notifications`;
 
   constructor(private http: HttpClient) {}
 

@@ -12,7 +12,7 @@ import { environment } from '../../../../environments/environments';
 /**
  * Base API URL - uses environment configuration for correct backend targeting
  */
-export const API_BASE_URL = environment.apiUrl;
+export const API_BASE_URL = environment.atlasApiUrl;
 
 /**
  * Budget API Endpoints

@@ -270,7 +270,7 @@ export class AtlasConfigService {
    */
   private getProductionConfig(): AtlasConfiguration {
     return {
-      baseUrl: 'https://sri-api.azurewebsites.net/api/atlas',
+      baseUrl: environment.atlasApiUrl || 'https://atlas-api-fqf5e6dfgdebepan.centralus-01.azurewebsites.net/v1',
       apiVersion: 'v1',
       endpoints: {
         deployments: '/v1/deployments',
