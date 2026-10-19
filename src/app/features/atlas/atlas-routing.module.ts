@@ -19,16 +19,14 @@ import { QueryResultsComponent } from './components/query-builder/query-results.
 import { QueryTemplateComponent } from './components/query-builder/query-template.component';
 import { IntegrationStatusComponent } from './components/admin/integration-status.component';
 
-// DISABLED: Role-based dashboard components - routes disabled
-// import { CMDashboardComponent } from '../field-resource-management/components/reporting/cm-dashboard/cm-dashboard.component';
-// import { AdminDashboardComponent } from '../field-resource-management/components/reporting/admin-dashboard/admin-dashboard.component';
+import { CMDashboardComponent } from '../field-resource-management/components/reporting/cm-dashboard/cm-dashboard.component';
+import { AdminDashboardComponent } from '../field-resource-management/components/reporting/admin-dashboard/admin-dashboard.component';
 
 // Guards
 import { AtlasFeatureGuard } from './guards/index';
-// DISABLED: Guards for disabled CM/Admin dashboard routes
-// import { CMGuard } from '../../guards/cm.guard';
-// import { EnhancedRoleGuard } from '../../guards/enhanced-role.guard';
-// import { UserRole } from '../../models/role.enum';
+import { CMGuard } from '../../guards/cm.guard';
+import { EnhancedRoleGuard } from '../../guards/enhanced-role.guard';
+import { UserRole } from '../../models/role.enum';
 
 /**
  * ATLAS Routing Module
@@ -74,39 +72,36 @@ const routes: Routes = [
         pathMatch: 'full'
       },
 
-      // DISABLED: CM Dashboard - routes disabled
-      // {
-      //   path: 'cm',
-      //   children: [
-      //     {
-      //       path: 'dashboard',
-      //       component: CMDashboardComponent,
-      //       canActivate: [CMGuard],
-      //       data: { 
-      //         title: 'CM Dashboard',
-      //         breadcrumb: 'CM Dashboard'
-      //       }
-      //     }
-      //   ]
-      // },
+      {
+        path: 'cm',
+        children: [
+          {
+            path: 'dashboard',
+            component: CMDashboardComponent,
+            canActivate: [CMGuard],
+            data: {
+              title: 'CM Dashboard',
+              breadcrumb: 'CM Dashboard'
+            }
+          }
+        ]
+      },
 
-      // DISABLED: Admin Dashboard route - component removed
-      // Admin route now only has integration-status
       {
         path: 'admin',
         children: [
-          // {
-          //   path: 'dashboard',
-          //   component: AdminDashboardComponent,
-          //   canActivate: [EnhancedRoleGuard],
-          //   data: { 
-          //     title: 'Admin Dashboard',
-          //     breadcrumb: 'Admin Dashboard',
-          //     roleGuard: {
-          //       allowedRoles: [UserRole.Admin]
-          //     }
-          //   }
-          // },
+          {
+            path: 'dashboard',
+            component: AdminDashboardComponent,
+            canActivate: [EnhancedRoleGuard],
+            data: {
+              title: 'Admin Dashboard',
+              breadcrumb: 'Admin Dashboard',
+              roleGuard: {
+                allowedRoles: [UserRole.Admin]
+              }
+            }
+          },
           {
             path: 'integration-status',
             component: IntegrationStatusComponent,
