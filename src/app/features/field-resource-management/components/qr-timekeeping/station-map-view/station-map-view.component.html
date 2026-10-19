@@ -1,0 +1,56 @@
+<!-- Station Map View Component Template -->
+<!-- Requirements: 8.1, 8.2, 8.3 -->
+
+<div class="station-map-container">
+  <!-- Header -->
+  <div class="map-header p-4 md:p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-gray-800">Station Map</h2>
+        <p class="text-sm text-gray-500" *ngIf="jobName">{{ jobName }}</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <!-- Legend -->
+        <div class="hidden md:flex items-center gap-3 text-xs">
+          <span class="flex items-center gap-1">
+            <span class="legend-dot legend-active"></span> Active
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="legend-dot legend-low-activity"></span> Low Activity
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="legend-dot legend-inactive"></span> Inactive
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading$ | async" class="flex justify-center items-center py-24">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  <!-- Map Container -->
+  <div *ngIf="!(loading$ | async)" class="map-wrapper">
+    <div id="map"
+         leaflet
+         [leafletOptions]="mapOptions"
+         (leafletMapReady)="onMapReady($event)"
+         class="leaflet-map">
+    </div>
+  </div>
+
+  <!-- Mobile Legend -->
+  <div class="flex md:hidden items-center justify-center gap-4 py-3 text-xs bg-white border-t">
+    <span class="flex items-center gap-1">
+      <span class="legend-dot legend-active"></span> Active
+    </span>
+    <span class="flex items-center gap-1">
+      <span class="legend-dot legend-low-activity"></span> Low Activity
+    </span>
+    <span class="flex items-center gap-1">
+      <span class="legend-dot legend-inactive"></span> Inactive
+    </span>
+  </div>
+</div>

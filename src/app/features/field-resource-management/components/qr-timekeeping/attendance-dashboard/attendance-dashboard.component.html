@@ -1,0 +1,199 @@
+<!-- Attendance Dashboard Component Template -->
+<!-- Requirements: 9.1-9.8, 13.4 -->
+
+<div class="attendance-dashboard-container p-4 md:p-6">
+  <!-- Offline Banner -->
+  <div *ngIf="isOffline"
+       class="offline-banner mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+    <mat-icon class="text-amber-600">cloud_off</mat-icon>
+    <span class="text-amber-800 text-sm font-medium">Data may be stale — you are currently offline.</span>
+  </div>
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Attendance Dashboard</h1>
+      <p class="text-sm text-gray-500 mt-1">Monitor workforce presence across sites</p>
+    </div>
+    <div class="mt-4 md:mt-0">
+      <button mat-raised-button color="accent" (click)="exportToCsv()">
+        <mat-icon>download</mat-icon>
+        Export to CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" *ngIf="summary$ | async as summary">
+    <mat-card class="summary-card present-card">
+      <mat-card-content class="text-center py-4">
+        <div class="text-3xl font-bold text-green-700">{{ summary.presentCount }}</div>
+        <div class="text-sm text-gray-600 mt-1">Present</div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="summary-card absent-card">
+      <mat-card-content class="text-center py-4">
+        <div class="text-3xl font-bold text-red-700">{{ summary.absentCount }}</div>
+        <div class="text-sm text-gray-600 mt-1">Absent</div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="summary-card incomplete-card">
+      <mat-card-content class="text-center py-4">
+        <div class="text-3xl font-bold text-amber-700">{{ summary.incompleteCount }}</div>
+        <div class="text-sm text-gray-600 mt-1">Incomplete</div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="summary-card active-card">
+      <mat-card-content class="text-center py-4">
+        <div class="text-3xl font-bold text-blue-700">{{ summary.stillActiveCount }}</div>
+        <div class="text-sm text-gray-600 mt-1">Still Active</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="mb-6">
+    <mat-card-content class="py-4">
+      <div class="flex flex-col md:flex-row md:items-end gap-4">
+        <!-- Date Picker (single day) -->
+        <div *ngIf="!isRangeMode">
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="picker" [formControl]="selectedDate"
+                   (dateChange)="onDateChanged()">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <!-- Date Range Picker -->
+        <div *ngIf="isRangeMode" class="flex gap-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Start Date</mat-label>
+            <input matInput [matDatepicker]="startPicker" [formControl]="startDate"
+                   (dateChange)="onDateRangeChanged()">
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>End Date</mat-label>
+            <input matInput [matDatepicker]="endPicker" [formControl]="endDate"
+                   (dateChange)="onDateRangeChanged()">
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <!-- Toggle range mode -->
+        <button mat-stroked-button (click)="toggleRangeMode()" class="h-14">
+          <mat-icon>{{ isRangeMode ? 'today' : 'date_range' }}</mat-icon>
+          {{ isRangeMode ? 'Single Day' : 'Date Range' }}
+        </button>
+
+        <!-- Site Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Site</mat-label>
+          <mat-select [value]="selectedSiteId"
+                      (selectionChange)="onSiteChanged($event.value)">
+            <mat-option [value]="null">All Sites</mat-option>
+            <mat-option *ngFor="let site of availableSites" [value]="site.id">
+              {{ site.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- Date range error -->
+      <div *ngIf="dateRangeError" class="text-red-600 text-sm mt-2 flex items-center gap-1">
+        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">error</mat-icon>
+        {{ dateRangeError }}
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Status Filter Tabs -->
+  <mat-tab-group (selectedTabChange)="onStatusFilterChanged(['all', 'present', 'absent', 'incomplete'][$event.index])"
+                 class="mb-4">
+    <mat-tab label="All"></mat-tab>
+    <mat-tab label="Present"></mat-tab>
+    <mat-tab label="Absent"></mat-tab>
+    <mat-tab label="Incomplete"></mat-tab>
+  </mat-tab-group>
+
+  <!-- Loading -->
+  <div *ngIf="loading$ | async" class="flex justify-center py-12">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  <!-- Attendance Table -->
+  <mat-card *ngIf="!(loading$ | async)">
+    <mat-card-content>
+      <div class="overflow-x-auto">
+        <table mat-table [dataSource]="filterByStatus((records$ | async) || [])" class="w-full">
+          <!-- Technician Name -->
+          <ng-container matColumnDef="technicianName">
+            <th mat-header-cell *matHeaderCellDef>Technician</th>
+            <td mat-cell *matCellDef="let record">{{ record.technicianName }}</td>
+          </ng-container>
+
+          <!-- Check-In Time -->
+          <ng-container matColumnDef="checkInTime">
+            <th mat-header-cell *matHeaderCellDef>Check-In</th>
+            <td mat-cell *matCellDef="let record">
+              {{ record.checkInTime ? (record.checkInTime | date:'shortTime') : '—' }}
+            </td>
+          </ng-container>
+
+          <!-- Check-Out Time -->
+          <ng-container matColumnDef="checkOutTime">
+            <th mat-header-cell *matHeaderCellDef>Check-Out</th>
+            <td mat-cell *matCellDef="let record">
+              {{ record.checkOutTime ? (record.checkOutTime | date:'shortTime') : '—' }}
+            </td>
+          </ng-container>
+
+          <!-- Status -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let record">
+              <span class="status-badge" [ngClass]="getStatusClass(record.status)">
+                {{ record.status }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Total Hours -->
+          <ng-container matColumnDef="totalHours">
+            <th mat-header-cell *matHeaderCellDef>Hours</th>
+            <td mat-cell *matCellDef="let record">{{ record.totalHours | number:'1.1-2' }}</td>
+          </ng-container>
+
+          <!-- Time Category Breakdown -->
+          <ng-container matColumnDef="timeCategoryBreakdown">
+            <th mat-header-cell *matHeaderCellDef>Categories</th>
+            <td mat-cell *matCellDef="let record">
+              <span class="text-xs text-gray-600">
+                {{ formatCategoryBreakdown(record.timeCategoryBreakdown) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Entry Count -->
+          <ng-container matColumnDef="entryCount">
+            <th mat-header-cell *matHeaderCellDef>Entries</th>
+            <td mat-cell *matCellDef="let record">{{ record.entryCount }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filterByStatus((records$ | async) || []).length === 0" class="text-center py-8 text-gray-400">
+        <mat-icon style="font-size: 48px; width: 48px; height: 48px;">assignment_late</mat-icon>
+        <p class="mt-2">No attendance records found for the selected filters.</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

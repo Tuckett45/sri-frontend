@@ -1,0 +1,245 @@
+<!-- Reconciliation Detail Component Template -->
+<!-- Requirements: 10.5, 10.6, 11.1-11.6, 15.2 -->
+
+<div class="reconciliation-detail-container p-4 md:p-6">
+  <!-- Back Navigation -->
+  <button mat-button (click)="goBack()" class="mb-4">
+    <mat-icon>arrow_back</mat-icon>
+    Back to Reconciliation
+  </button>
+
+  <!-- Loading -->
+  <div *ngIf="loading$ | async" class="flex justify-center py-12">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  <!-- Report Header -->
+  <ng-container *ngIf="report$ | async as report">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">Reconciliation Report</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        {{ report.startDate | date:'mediumDate' }} — {{ report.endDate | date:'mediumDate' }}
+        <span class="ml-4 text-gray-400">Generated {{ report.generatedAt | date:'medium' }}</span>
+      </p>
+    </div>
+  </ng-container>
+
+  <!-- Report Summary -->
+  <ng-container *ngIf="summary$ | async as summary">
+    <mat-card class="mb-6">
+      <mat-card-header>
+        <mat-card-title class="text-base font-medium">Report Summary</mat-card-title>
+        <mat-card-subtitle *ngIf="!isReportValid(summary)" class="text-red-600">
+          Warning: Report integrity check failed
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="pt-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div class="text-center p-3 bg-gray-50 rounded-lg">
+            <div class="text-2xl font-bold text-gray-800">{{ summary.totalRecords }}</div>
+            <div class="text-xs text-gray-500 mt-1">Total Records</div>
+          </div>
+          <div class="text-center p-3 bg-green-50 rounded-lg">
+            <div class="text-2xl font-bold text-green-700">{{ summary.matchCount }}</div>
+            <div class="text-xs text-gray-500 mt-1">Matches</div>
+          </div>
+          <div class="text-center p-3 bg-red-50 rounded-lg">
+            <div class="text-2xl font-bold text-red-700">{{ summary.discrepancyCount }}</div>
+            <div class="text-xs text-gray-500 mt-1">Discrepancies</div>
+          </div>
+          <div class="text-center p-3 bg-amber-50 rounded-lg">
+            <div class="text-2xl font-bold text-amber-700">{{ summary.pendingCount }}</div>
+            <div class="text-xs text-gray-500 mt-1">Pending</div>
+          </div>
+          <div class="text-center p-3 bg-blue-50 rounded-lg">
+            <div class="text-2xl font-bold text-blue-700">{{ summary.resolvedCount }}</div>
+            <div class="text-xs text-gray-500 mt-1">Resolved</div>
+          </div>
+        </div>
+
+        <!-- Additional metrics -->
+        <div class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100">
+          <div class="text-center">
+            <span class="text-sm text-gray-500">Discrepancy Rate</span>
+            <div class="font-bold text-lg">{{ summary.discrepancyPercentage | number:'1.1-1' }}%</div>
+          </div>
+          <div class="text-center">
+            <span class="text-sm text-gray-500">Escalated</span>
+            <div class="font-bold text-lg">{{ summary.escalatedCount }}</div>
+          </div>
+          <div class="text-center">
+            <span class="text-sm text-gray-500">Total Variance</span>
+            <div class="font-bold text-lg">{{ summary.totalHoursVariance | number:'1.1-2' }}h</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+
+  <!-- Discrepancy Type Filter -->
+  <div *ngIf="(discrepancies$ | async)?.length" class="mb-4 flex items-center gap-4">
+    <span class="text-sm font-medium text-gray-600">Filter by type:</span>
+    <mat-button-toggle-group [value]="typeFilter"
+                             (change)="filterDiscrepancies($event.value)">
+      <mat-button-toggle value="all">All</mat-button-toggle>
+      <mat-button-toggle value="hours">Hours</mat-button-toggle>
+      <mat-button-toggle value="category">Category</mat-button-toggle>
+      <mat-button-toggle value="both">Both</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  <!-- Discrepancies Table -->
+  <mat-card *ngIf="!useVirtualScroll && (filteredDiscrepancies$ | async)?.length">
+    <mat-card-content>
+      <div class="overflow-x-auto">
+        <table mat-table [dataSource]="(filteredDiscrepancies$ | async) || []" class="w-full">
+          <!-- Technician Name -->
+          <ng-container matColumnDef="technicianName">
+            <th mat-header-cell *matHeaderCellDef>Technician</th>
+            <td mat-cell *matCellDef="let d">{{ d.technicianName || '—' }}</td>
+          </ng-container>
+
+          <!-- Work Date -->
+          <ng-container matColumnDef="workDate">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let d">{{ d.workDate | date:'shortDate' }}</td>
+          </ng-container>
+
+          <!-- Atlas Hours -->
+          <ng-container matColumnDef="atlasHours">
+            <th mat-header-cell *matHeaderCellDef>Atlas Hours</th>
+            <td mat-cell *matCellDef="let d">{{ d.atlasHours | number:'1.2-2' }}</td>
+          </ng-container>
+
+          <!-- Celerity Hours -->
+          <ng-container matColumnDef="celerityHours">
+            <th mat-header-cell *matHeaderCellDef>Celerity Hours</th>
+            <td mat-cell *matCellDef="let d">{{ d.celerityHours | number:'1.2-2' }}</td>
+          </ng-container>
+
+          <!-- Hours Variance -->
+          <ng-container matColumnDef="hoursVariance">
+            <th mat-header-cell *matHeaderCellDef>Variance</th>
+            <td mat-cell *matCellDef="let d"
+                [ngClass]="{'text-red-600': d.hoursVariance > 0, 'text-green-600': d.hoursVariance < 0}">
+              {{ d.hoursVariance > 0 ? '+' : '' }}{{ d.hoursVariance | number:'1.2-2' }}
+            </td>
+          </ng-container>
+
+          <!-- Discrepancy Type -->
+          <ng-container matColumnDef="discrepancyType">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let d">
+              <span class="type-badge" [ngClass]="getTypeClass(d.discrepancyType)">
+                {{ d.discrepancyType }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Status -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let d">
+              <span class="status-badge" [ngClass]="getStatusClass(d.status)">
+                {{ d.status }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let d">
+              <ng-container *ngIf="d.status !== 'Resolved'">
+                <button mat-icon-button color="primary"
+                        matTooltip="Resolve"
+                        (click)="openResolveDialog(d)">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+                <button mat-icon-button color="warn"
+                        matTooltip="Escalate"
+                        (click)="openEscalateDialog(d)">
+                  <mat-icon>arrow_upward</mat-icon>
+                </button>
+              </ng-container>
+              <span *ngIf="d.status === 'Resolved'" class="text-xs text-gray-400 italic">
+                Resolved
+              </span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Virtual Scroll for large lists -->
+  <mat-card *ngIf="useVirtualScroll && (filteredDiscrepancies$ | async)?.length">
+    <mat-card-content>
+      <cdk-virtual-scroll-viewport itemSize="52" class="virtual-scroll-viewport">
+        <div class="overflow-x-auto">
+          <table mat-table [dataSource]="(filteredDiscrepancies$ | async) || []" class="w-full">
+            <ng-container matColumnDef="technicianName">
+              <th mat-header-cell *matHeaderCellDef>Technician</th>
+              <td mat-cell *matCellDef="let d">{{ d.technicianName || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="workDate">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let d">{{ d.workDate | date:'shortDate' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="atlasHours">
+              <th mat-header-cell *matHeaderCellDef>Atlas</th>
+              <td mat-cell *matCellDef="let d">{{ d.atlasHours | number:'1.2-2' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="celerityHours">
+              <th mat-header-cell *matHeaderCellDef>Celerity</th>
+              <td mat-cell *matCellDef="let d">{{ d.celerityHours | number:'1.2-2' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="hoursVariance">
+              <th mat-header-cell *matHeaderCellDef>Variance</th>
+              <td mat-cell *matCellDef="let d"
+                  [ngClass]="{'text-red-600': d.hoursVariance > 0, 'text-green-600': d.hoursVariance < 0}">
+                {{ d.hoursVariance > 0 ? '+' : '' }}{{ d.hoursVariance | number:'1.2-2' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="discrepancyType">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let d">
+                <span class="type-badge" [ngClass]="getTypeClass(d.discrepancyType)">{{ d.discrepancyType }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let d">
+                <span class="status-badge" [ngClass]="getStatusClass(d.status)">{{ d.status }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let d">
+                <ng-container *ngIf="d.status !== 'Resolved'">
+                  <button mat-icon-button color="primary" matTooltip="Resolve"
+                          (click)="openResolveDialog(d)"><mat-icon>check_circle</mat-icon></button>
+                  <button mat-icon-button color="warn" matTooltip="Escalate"
+                          (click)="openEscalateDialog(d)"><mat-icon>arrow_upward</mat-icon></button>
+                </ng-container>
+                <span *ngIf="d.status === 'Resolved'" class="text-xs text-gray-400 italic">Resolved</span>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- No discrepancies -->
+  <div *ngIf="(filteredDiscrepancies$ | async)?.length === 0 && (summary$ | async) && !(loading$ | async)"
+       class="text-center py-8 text-gray-400">
+    <mat-icon style="font-size: 48px; width: 48px; height: 48px;">verified</mat-icon>
+    <p class="mt-2">No discrepancies match the selected filter.</p>
+  </div>
+</div>

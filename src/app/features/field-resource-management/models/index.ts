@@ -43,6 +43,9 @@ export * from './quote-workflow.model';
 // PTO models
 export * from './pto.models';
 
+// QR Timekeeping models
+export * from './qr-timekeeping.model';
+
 // DTOs
 export * from './dtos/technician.dto';
 export * from './dtos/job.dto';

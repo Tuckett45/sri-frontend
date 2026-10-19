@@ -1,0 +1,36 @@
+<div class="qr-time-history">
+  <h2>Recent QR Scans</h2>
+
+  <mat-list *ngIf="scanHistory$ | async as history">
+    <ng-container *ngIf="history.length > 0; else emptyState">
+      <mat-list-item *ngFor="let event of history; trackBy: trackByScanEvent" class="scan-event-item">
+        <mat-icon matListItemIcon [class]="event.isSuccessful ? 'icon-success' : 'icon-failure'">
+          {{ event.isSuccessful ? 'check_circle' : 'cancel' }}
+        </mat-icon>
+
+        <div matListItemTitle class="scan-event-title">
+          <span class="station-identifier">{{ event.scannedValue }}</span>
+          <span class="scan-type-badge" [ngClass]="getScanTypeBadgeClass(event.scanType)">
+            {{ getScanTypeLabel(event.scanType) }}
+          </span>
+        </div>
+
+        <div matListItemLine class="scan-event-details">
+          <span class="scan-timestamp">{{ event.scanTimestamp | date:'medium' }}</span>
+        </div>
+
+        <div matListItemLine *ngIf="event.scanType === 'Rejected' && event.rejectionReason" class="rejection-reason">
+          <mat-icon class="icon-warning" inline>warning</mat-icon>
+          <span>{{ event.rejectionReason }}</span>
+        </div>
+      </mat-list-item>
+    </ng-container>
+  </mat-list>
+
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <mat-icon class="empty-icon">history</mat-icon>
+      <p>No scan history yet.</p>
+    </div>
+  </ng-template>
+</div>
