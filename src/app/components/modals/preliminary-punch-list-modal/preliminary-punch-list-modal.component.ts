@@ -266,9 +266,52 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   }
 
   getErrorCodes(){
-    this.punchListService.getErrorCodes().subscribe((errorCodes: ErrorCodes[]) => {
-      this.errorCodes = errorCodes;
-    })
+    this.punchListService.getErrorCodes().subscribe({
+      next: (response: any) => {
+        // The API may return a raw array or an envelope ({ items|data|results: [...] }).
+        // Guard the shape so a wrapped/null response never leaves the dropdowns empty.
+        const codes = Array.isArray(response)
+          ? response
+          : (response?.items ?? response?.data ?? response?.results ?? []);
+
+        if (Array.isArray(codes) && codes.length > 0) {
+          this.errorCodes = codes;
+        } else {
+          // API reachable but returned nothing usable — fall back so the form is still usable.
+          this.useFallbackErrorCodes();
+        }
+      },
+      error: () => {
+        // API failed (network/offline/500/auth). Never leave the QC team with empty dropdowns.
+        this.useFallbackErrorCodes();
+      }
+    });
+  }
+
+  /**
+   * Populate the Issue Area / Category / Sub Category dropdowns from the built-in
+   * dataset when the error-codes API is unavailable or returns nothing.
+   * Each quality issue is used as both category and sub category so all three
+   * cascading dropdowns remain functional offline / during API outages.
+   */
+  private useFallbackErrorCodes(): void {
+    const fallback: ErrorCodes[] = [];
+    for (const area of this.issueAreaList) {
+      const issues = this.qualityIssuesMap[area] || [];
+      if (issues.length === 0) {
+        fallback.push(new ErrorCodes(uuidv4(), area, '', '', '', ''));
+        continue;
+      }
+      for (const issue of issues) {
+        fallback.push(new ErrorCodes(uuidv4(), area, issue, issue, '', ''));
+      }
+    }
+    this.errorCodes = fallback;
+    this.toastr.warning(
+      'Issue options could not be loaded from the server. Using the built-in list so you can still complete this report.',
+      'Offline issue list',
+      { timeOut: 6000, closeButton: true }
+    );
   }
 
   initializeImages(imageIds: PunchListImages[], formArrayName: 'issueImages' | 'resolutionImages') {
