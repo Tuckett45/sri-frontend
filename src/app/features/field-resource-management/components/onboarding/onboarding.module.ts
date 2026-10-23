@@ -31,10 +31,12 @@ import { GoalEditModalComponent } from './goal-edit-modal/goal-edit-modal.compon
 import { ConfirmDeleteModalComponent } from './confirm-delete-modal/confirm-delete-modal.component';
 import { GenerateLinkDialogComponent } from './generate-link-dialog/generate-link-dialog.component';
 import { CandidateNotesDialogComponent } from './candidate-notes-dialog/candidate-notes-dialog.component';
+import { AccountProvisioningComponent } from './account-provisioning/account-provisioning.component';
 
 @NgModule({
   declarations: [
     OnboardingNavComponent,
+    AccountProvisioningComponent,
     CandidateListComponent,
     CandidateFormComponent,
     PipelineDashboardComponent,

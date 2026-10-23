@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, from, throwError } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
-import { environment } from 'src/environments/environments';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { environment } from '../../../../environments/environments';
 
 /** Request to provision M365/login accounts for an existing technician. */
 export interface NewHireOnboardingRequest {
@@ -38,13 +38,17 @@ export interface AvailableLicense {
   prepaidEnabledUnits?: number;
 }
 
-@Injectable()
-export class NewHireOnboardingService {
+/**
+ * Calls the ATLAS atlas-api new-hire provisioning endpoints.
+ * Used by the Account Provisioning tab in the FRM Onboarding section.
+ */
+@Injectable({ providedIn: 'root' })
+export class AccountProvisioningService {
   private readonly baseUrl = `${environment.atlasApiUrl}/onboarding/new-hire`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
-  /** Wraps a request with the current user's Bearer token (same pattern as FieldResourceService). */
+  /** Wraps a request with the current user's Bearer token (same pattern as other FRM services). */
   private withAuth<T>(callback: (options: { headers: HttpHeaders }) => Observable<T>): Observable<T> {
     return from(this.authService.getAccessToken()).pipe(
       switchMap(token => {
