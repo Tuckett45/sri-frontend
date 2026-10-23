@@ -84,6 +84,11 @@ const routes: Routes = [
     path: 'onboarding',
     loadChildren: () => import('./features/public-onboarding/public-onboarding.module').then(m => m.PublicOnboardingModule)
   },
+  {
+    path: 'admin/new-hire',
+    loadChildren: () => import('./features/admin-new-hire/admin-new-hire.module').then(m => m.AdminNewHireModule),
+    canActivate: [AuthGuard]
+  },
   { path: '**', redirectTo: '/login' }
 ];
 
