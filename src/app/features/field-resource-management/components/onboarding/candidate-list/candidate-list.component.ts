@@ -1150,6 +1150,8 @@ export class CandidateListComponent implements OnInit, OnDestroy {
   errorMessage = '';
   successMessage = '';
   convertingId: string | null = null;
+  /** True when in-memory candidates no longer match the server; cache must be discarded on destroy. */
+  private cachedDataStale = false;
 
   // Bulk selection
   selectedCandidateIds = new Set<string>();
@@ -1275,6 +1277,11 @@ export class CandidateListComponent implements OnInit, OnDestroy {
     // Persist state whenever the component is destroyed (navigating away)
     if (this.candidates.length > 0) {
       this.saveListState();
+      // If data changed while we were here (e.g. a conversion), force a fresh API load
+      // next time but keep filters/sort/page position.
+      if (this.cachedDataStale) {
+        this.listStateService.invalidateData();
+      }
     }
   }
 
@@ -1597,10 +1604,23 @@ export class CandidateListComponent implements OnInit, OnDestroy {
     this.onboardingService.convertToTechnician(candidate.candidateId).subscribe({
       next: (result) => {
         this.convertingId = null;
+        // The backend flips offerStatus to 'onboarded'. Reflect that locally and flag the
+        // cached list as stale: ngOnDestroy re-saves this.candidates when we navigate away,
+        // which would otherwise restore the old 'hired_assigned' row on return.
+        candidate.offerStatus = 'onboarded';
+        candidate.promotedToTechnicianId = result.technicianId;
+        this.cachedDataStale = true;
+        this.listStateService.invalidateData();
         this.router.navigate(['/field-resource-management/onboarding/credentials', result.technicianId]);
       },
-      error: () => {
+      error: (err) => {
         this.convertingId = null;
+        if (err?.statusCode === 400 && err?.message?.includes('already been promoted')) {
+          // Backend auto-repairs the candidate status in this case; reload to show it.
+          this.successMessage = `${candidate.techName} was already promoted. Status has been updated.`;
+          this.loadCandidates(true);
+          return;
+        }
         this.errorMessage = 'Failed to convert candidate to technician. Please try again.';
       }
     });

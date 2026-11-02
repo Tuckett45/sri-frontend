@@ -931,6 +931,7 @@ export class CandidateDetailComponent implements OnInit {
         };
         this.onboardingService.updateCandidate(this.candidateId, payload).subscribe({
           next: () => {
+            this.listStateService.invalidateData();
             this.uploadCandidateFiles(this.candidateId, result.files, () => this.loadCandidate());
           },
           error: () => {
@@ -1018,6 +1019,8 @@ export class CandidateDetailComponent implements OnInit {
     this.onboardingService.convertToTechnician(this.candidateId).subscribe({
       next: (result) => {
         this.isConverting = false;
+        // Candidate is now 'onboarded' on the server; drop the cached list so it reloads.
+        this.listStateService.invalidateData();
         // Navigate to the new technician's detail page
         this.router.navigate(['/field-resource-management/onboarding/credentials', result.technicianId]);
       },
@@ -1026,6 +1029,7 @@ export class CandidateDetailComponent implements OnInit {
         // Handle "already promoted" gracefully — reload to reflect repaired status
         if (err?.statusCode === 400 && err?.message?.includes('already been promoted')) {
           alert('This candidate has already been promoted to a technician. The status has been updated.');
+          this.listStateService.invalidateData();
           this.loadCandidate();
         } else {
           alert('Failed to convert candidate to technician. Please try again.');
