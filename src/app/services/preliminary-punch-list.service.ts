@@ -2,7 +2,7 @@ import { Injectable, effect } from '@angular/core';
 import { BehaviorSubject, Observable, from, throwError, of } from 'rxjs';
 import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
-import { PreliminaryPunchList, IssueArea } from '../models/preliminary-punch-list.model';
+import { PreliminaryPunchList } from '../models/preliminary-punch-list.model';
 import { environment, local_environment } from '../../environments/environments';
 import { User } from '../models/user.model';
 import { OfflineCacheService } from './offline-cache.service';
@@ -181,10 +181,12 @@ export class PreliminaryPunchListService {
           map(resp => this.normalizePaged<PreliminaryPunchList>(resp, pageNumber, pageSize)),
           map(resp => ({
             ...resp,
-            items: resp.items.map(p => {
-              p.issues.forEach((ia: IssueArea) => {
-                if (typeof ia.category === 'string') ia.category = ia.category;
-              });
+            items: (resp.items ?? []).map(p => {
+              // Guard against records that come back with a null/undefined issues
+              // collection so the whole list load doesn't throw.
+              if (!Array.isArray(p.issues)) {
+                p.issues = [];
+              }
               return p;
             })
           })),
