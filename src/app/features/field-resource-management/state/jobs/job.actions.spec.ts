@@ -52,6 +52,8 @@ describe('Job Actions', () => {
       state: 'TX',
       zipCode: '78701'
     },
+    region: 'CENTRAL',
+    market: 'AUSTIN',
     jobType: JobType.Install,
     scopeDescription: 'Repair damaged cables',
     priority: Priority.P2,

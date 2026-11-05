@@ -51,6 +51,7 @@ describe('UI Selectors', () => {
     scheduleViewMode: ScheduleViewMode.Technicians,
     selectedDate: new Date('2024-01-15T00:00:00Z'),
     sidebarOpen: true,
+    sidebarCollapsed: false,
     mobileMenuOpen: false,
     mapView: {
       center: { lat: 32.7767, lng: -96.7970 },
@@ -568,6 +569,7 @@ describe('UI Connection Status Selectors', () => {
     scheduleViewMode: ScheduleViewMode.Technicians,
     selectedDate: new Date('2024-01-15T00:00:00Z'),
     sidebarOpen: true,
+    sidebarCollapsed: false,
     mobileMenuOpen: false,
     mapView: {
       center: { lat: 32.7767, lng: -96.7970 },
