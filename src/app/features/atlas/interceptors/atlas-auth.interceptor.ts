@@ -56,9 +56,11 @@ export class AtlasAuthInterceptor implements HttpInterceptor {
         // Add ATLAS-specific headers (Requirement 1.3)
         const atlasHeaders: { [key: string]: string } = {};
 
-        // Add Azure API Management subscription key
-        const subscriptionKey = this.apiHeadersService.getApiSubscriptionKey() || 'ffd675634ab645d7845640bb88d672d8';
-        atlasHeaders['Ocp-Apim-Subscription-Key'] = subscriptionKey;
+        // Add Azure API Management subscription key (resolved at runtime; never hardcoded)
+        const subscriptionKey = this.apiHeadersService.getApiSubscriptionKey();
+        if (subscriptionKey) {
+          atlasHeaders['Ocp-Apim-Subscription-Key'] = subscriptionKey;
+        }
 
         // Add API version header
         const apiVersion = this.configService.getApiVersion();
