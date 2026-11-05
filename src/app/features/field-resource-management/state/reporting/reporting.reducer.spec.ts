@@ -13,6 +13,7 @@ describe('ReportingReducer', () => {
     totalActiveJobs: 25,
     totalAvailableTechnicians: 15,
     jobsByStatus: {
+      [JobStatus.Future]: 3,
       [JobStatus.NotStarted]: 5,
       [JobStatus.EnRoute]: 10,
       [JobStatus.OnSite]: 8,

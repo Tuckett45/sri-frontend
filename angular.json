@@ -147,8 +147,9 @@
               "src/app/features/field-resource-management/state/jobs/job.effects.spec.ts",
               "src/app/features/field-resource-management/state/crews/crew.effects.spec.ts",
               "src/app/features/field-resource-management/state/crews/crew.selectors.spec.ts",
-              "src/app/features/field-resource-management/state/reporting/*.spec.ts",
-              "src/app/features/field-resource-management/state/assignments/*.spec.ts",
+              "src/app/features/field-resource-management/state/reporting/reporting.effects.spec.ts",
+              "src/app/features/field-resource-management/state/reporting/reporting.selectors.spec.ts",
+              "src/app/features/field-resource-management/state/assignments/assignment.effects.spec.ts",
               "src/app/features/field-resource-management/services/frm-signalr.service.spec.ts",
               "src/app/features/field-resource-management/services/geolocation.service.spec.ts",
               "src/app/features/field-resource-management/services/reporting.service.spec.ts",
@@ -159,7 +160,6 @@
               "src/app/features/field-resource-management/state/technicians/technician.reducer.spec.ts",
               "src/app/features/field-resource-management/state/time-entries/time-entry.reducer.spec.ts",
               "src/app/features/field-resource-management/state/timecards/timecard-budget-integration.spec.ts",
-              "src/app/features/field-resource-management/state/jobs/job.actions.spec.ts",
 
               "src/app/features/field-resource-management/components/technicians/technician-list/technician-list.component.spec.ts",
               "src/app/features/field-resource-management/services/job.service.spec.ts",
@@ -180,9 +180,7 @@
               "src/app/features/field-resource-management/components/shared/**/*.spec.ts",
               "src/app/features/field-resource-management/components/technicians/**/*.spec.ts",
               "src/app/features/field-resource-management/components/timecards/**/*.spec.ts",
-              "src/app/features/field-resource-management/services/onboarding.service.spec.ts",
-              "src/app/features/field-resource-management/state/ui/ui.reducer.spec.ts",
-              "src/app/features/field-resource-management/state/ui/ui.selectors.spec.ts"
+              "src/app/features/field-resource-management/services/onboarding.service.spec.ts"
             ]
           }
         }

@@ -33,24 +33,23 @@ describe('Assignment Actions', () => {
   const mockTechnicianMatch: TechnicianMatch = {
     technician: {
       id: 'tech-1',
-      technicianId: 'T-001',
       firstName: 'John',
       lastName: 'Doe',
       email: 'john@example.com',
       phone: '555-0100',
       role: 'Installer' as any,
-      employmentType: 'W2' as any,
-      homeBase: 'Dallas Office',
       region: 'DALLAS',
       skills: [],
       certifications: [],
       availability: [],
+      isAvailable: true,
       isActive: true,
       createdAt: new Date(),
-      company: 'TEST_COMPANY',      updatedAt: new Date()
+      updatedAt: new Date()
     },
     matchPercentage: 95,
     missingSkills: [],
+    expiredCertifications: [],
     currentWorkload: 3,
     hasConflicts: false,
     conflicts: []

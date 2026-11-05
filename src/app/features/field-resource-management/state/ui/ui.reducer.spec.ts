@@ -537,6 +537,7 @@ describe('UI Reducer', () => {
         scheduleViewMode: ScheduleViewMode.Technicians,
         selectedDate: new Date('2024-01-15'),
         sidebarOpen: false,
+        sidebarCollapsed: false,
         mobileMenuOpen: true,
         mapView: {
           center: { lat: 32.7767, lng: -96.7970 },
