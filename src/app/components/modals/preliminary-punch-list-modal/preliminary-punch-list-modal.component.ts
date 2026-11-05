@@ -203,7 +203,7 @@ export class PreliminaryPunchListModalComponent implements OnInit {
       vendorName: [this.data?.vendorName || '', Validators.required],
       streetAddress: [this.data?.streetAddress || '', Validators.required],
       city: [this.data?.city || '', [Validators.required, Validators.pattern('^[a-zA-Z ]*$')]], 
-      state: [this.data?.state.toUpperCase() || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
+      state: [(this.data?.state ?? '').toUpperCase() || '', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]], 
       issues: this.fb.array(this.getInitialIssueAreas(this.data)),
       additionalConcerns: [this.data?.additionalConcerns || ''],
       createdBy: [this.data?.createdBy || null],
@@ -299,11 +299,14 @@ export class PreliminaryPunchListModalComponent implements OnInit {
     for (const area of this.issueAreaList) {
       const issues = this.qualityIssuesMap[area] || [];
       if (issues.length === 0) {
-        fallback.push(new ErrorCodes(uuidv4(), area, '', '', '', ''));
         continue;
       }
       for (const issue of issues) {
-        fallback.push(new ErrorCodes(uuidv4(), area, issue, issue, '', ''));
+        // The built-in dataset is two levels (area -> issue). Map the specific
+        // issue to the Category dropdown and provide a single "N/A" Sub Category
+        // so the required third dropdown is satisfiable without redundantly
+        // echoing the category label.
+        fallback.push(new ErrorCodes(uuidv4(), area, issue, 'N/A', '', ''));
       }
     }
     this.errorCodes = fallback;
@@ -448,23 +451,28 @@ export class PreliminaryPunchListModalComponent implements OnInit {
   }
 
   getDistinctAreas(): string[] {
-    return this.errorCodes
-      .map(ec => ec.area)
+    return (this.errorCodes ?? [])
+      .map(ec => ec?.area)
+      .filter((area): area is string => !!area)
       .filter((area, index, self) => self.indexOf(area) === index);
   }
   
 
   getDistinctCategories(selectedArea: string): string[] {
-    return this.errorCodes
-      .filter(ec => ec.area === selectedArea)
-      .map(ec => ec.category)
+    if (!selectedArea) return [];
+    return (this.errorCodes ?? [])
+      .filter(ec => ec?.area === selectedArea)
+      .map(ec => ec?.category)
+      .filter((cat): cat is string => !!cat)
       .filter((cat, index, self) => self.indexOf(cat) === index);
   }
 
   getDistinctSubCategories(selectedCategory: string): string[] {
-    return this.errorCodes
-      .filter(ec => ec.category === selectedCategory)
-      .map(ec => ec.subCategory)
+    if (!selectedCategory) return [];
+    return (this.errorCodes ?? [])
+      .filter(ec => ec?.category === selectedCategory)
+      .map(ec => ec?.subCategory)
+      .filter((sub): sub is string => !!sub)
       .filter((sub, index, self) => self.indexOf(sub) === index);
   }
 
@@ -716,17 +724,29 @@ export class PreliminaryPunchListModalComponent implements OnInit {
 
       
   
-      punchList.issues = punchList.issues.map((issue: any) => {
+      punchList.issues = (punchList.issues ?? []).map((issue: any) => {
         const resolvedSub = Array.isArray(issue.subCategory)
           ? issue.subCategory.join(',')
           : issue.subCategory ?? '';
-      
+
+        // Resolve the matching error code on the full area/category/subCategory
+        // selection rather than a loose substring match, so we don't mis-assign
+        // an errorCodeId when sub-category labels overlap across areas.
+        const matched = this.errorCodes.find(errorCode =>
+          errorCode.area === issue.area &&
+          errorCode.category === issue.category &&
+          errorCode.subCategory === resolvedSub
+        ) ?? this.errorCodes.find(errorCode =>
+          errorCode.area === issue.area &&
+          errorCode.category === issue.category
+        );
+
         return {
           ...issue,
           area: issue.area,
           category: issue.category,
           subCategory: resolvedSub,
-          errorCodeId: this.errorCodes.find(errorCode => issue.subCategory?.includes(errorCode.subCategory))?.id
+          errorCodeId: matched?.id ?? issue.errorCodeId ?? ''
         };
       });
   
