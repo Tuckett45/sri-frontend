@@ -179,7 +179,10 @@
               "src/app/features/field-resource-management/components/scheduling/**/*.spec.ts",
               "src/app/features/field-resource-management/components/shared/**/*.spec.ts",
               "src/app/features/field-resource-management/components/technicians/**/*.spec.ts",
-              "src/app/features/field-resource-management/components/timecards/**/*.spec.ts"
+              "src/app/features/field-resource-management/components/timecards/**/*.spec.ts",
+              "src/app/features/field-resource-management/services/onboarding.service.spec.ts",
+              "src/app/features/field-resource-management/state/ui/ui.reducer.spec.ts",
+              "src/app/features/field-resource-management/state/ui/ui.selectors.spec.ts"
             ]
           }
         }
