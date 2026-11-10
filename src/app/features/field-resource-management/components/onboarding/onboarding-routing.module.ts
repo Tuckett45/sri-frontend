@@ -11,7 +11,9 @@ import { CredentialFormComponent } from './credential-form/credential-form.compo
 import { OnboardingChecklistComponent } from './onboarding-checklist/onboarding-checklist.component';
 import { ReferralTrackerComponent } from './referral-tracker/referral-tracker.component';
 import { CandidateDetailComponent } from './candidate-detail/candidate-detail.component';
+import { AccountProvisioningComponent } from './account-provisioning/account-provisioning.component';
 import { UnsavedChangesGuard } from '../../guards/unsaved-changes.guard';
+import { AdminGuard } from '../../guards/admin.guard';
 
 const routes: Routes = [
   {
@@ -54,6 +56,12 @@ const routes: Routes = [
         path: 'referrals',
         component: ReferralTrackerComponent,
         data: { title: 'Referral Tracker', breadcrumb: 'Referrals' }
+      },
+      {
+        path: 'account-provisioning',
+        component: AccountProvisioningComponent,
+        canActivate: [AdminGuard],
+        data: { title: 'Account Provisioning', breadcrumb: 'Account Provisioning' }
       },
       {
         path: 'credentials',
