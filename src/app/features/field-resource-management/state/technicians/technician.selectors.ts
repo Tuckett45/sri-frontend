@@ -10,6 +10,7 @@
 
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { TechnicianState } from './technician.state';
+import { phoneMatchesSearch } from '../../utils/phone-search.util';
 import { technicianAdapter } from './technician.reducer';
 import { Technician } from '../../models/technician.model';
 import { User } from '../../../../models/user.model';
@@ -98,6 +99,7 @@ export const selectFilteredTechnicians = createSelector(
         `${tech.firstName} ${tech.lastName}`.toLowerCase().includes(searchLower) ||
         tech.id.toLowerCase().includes(searchLower) ||
         tech.email.toLowerCase().includes(searchLower) ||
+        phoneMatchesSearch(tech.phone, searchLower) ||
         (tech.referredBy && tech.referredBy.toLowerCase().includes(searchLower))
       );
     }
@@ -436,6 +438,7 @@ export const selectFilteredScopedTechnicians = (user: User, dataScopes: DataScop
         `${tech.firstName} ${tech.lastName}`.toLowerCase().includes(searchLower) ||
         tech.id.toLowerCase().includes(searchLower) ||
         tech.email.toLowerCase().includes(searchLower) ||
+        phoneMatchesSearch(tech.phone, searchLower) ||
         (tech.referredBy && tech.referredBy.toLowerCase().includes(searchLower))
       );
     }

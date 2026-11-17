@@ -43,6 +43,8 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
   it_testing: 'IT/Testing',
 };
 
+import { phoneMatchesSearch } from '../../../utils/phone-search.util';
+
 @Component({
   selector: 'app-candidate-list',
   template: `
@@ -103,7 +105,7 @@ const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
                  type="text"
                  [value]="searchText"
                  (input)="onSearchChange($event)"
-                 placeholder="Search by name, email, or home state" />
+                 placeholder="Search by name, email, phone, or home state" />
         </div>
         <div class="filter-field">
           <label for="statusFilter">Offer Status</label>
@@ -1885,6 +1887,7 @@ export class CandidateListComponent implements OnInit, OnDestroy {
         (c) =>
           c.techName.toLowerCase().includes(term) ||
           c.techEmail.toLowerCase().includes(term) ||
+          phoneMatchesSearch(c.techPhone, term) ||
           (c.homeState || this.extractState(c.homeAddress) || '').toLowerCase().includes(term)
       );
     }
