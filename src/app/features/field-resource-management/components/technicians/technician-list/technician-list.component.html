@@ -46,7 +46,7 @@
       <!-- Search and Filters -->
       <div class="tab-filters">
         <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Search by name or ID</mat-label>
+          <mat-label>Search by name, ID, or phone</mat-label>
           <input matInput [formControl]="searchControl">
           <mat-icon matPrefix>search</mat-icon>
           <button mat-icon-button matSuffix *ngIf="searchControl.value" (click)="searchControl.setValue('')" aria-label="Clear search">

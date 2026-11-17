@@ -25,6 +25,8 @@ import { UserRole } from '../../../../../models/role.enum';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
+import { phoneMatchesSearch } from '../../../utils/phone-search.util';
+
 @Component({
   selector: 'app-technician-list',
   templateUrl: './technician-list.component.html',
@@ -780,7 +782,8 @@ export class TechnicianListComponent implements OnInit, OnDestroy {
       filtered = filtered.filter(t => {
         const fullName = `${t.firstName} ${t.lastName}`.toLowerCase();
         const crew = (this.technicianCrewMap[t.id] || '').toLowerCase();
-        return fullName.includes(search) || crew.includes(search) || (t.region || '').toLowerCase().includes(search);
+        return fullName.includes(search) || crew.includes(search) || (t.region || '').toLowerCase().includes(search) ||
+          phoneMatchesSearch(t.phone, search);
       });
     }
 

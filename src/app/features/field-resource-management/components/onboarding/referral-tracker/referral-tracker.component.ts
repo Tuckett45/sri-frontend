@@ -10,6 +10,8 @@ import {
   ReferralImportResult,
 } from '../../../models/referral.models';
 
+import { phoneMatchesSearch } from '../../../utils/phone-search.util';
+
 @Component({
   selector: 'app-referral-tracker',
   template: `
@@ -139,7 +141,7 @@ import {
         <input
           type="text"
           class="search-input"
-          placeholder="Search by name, email, or referrer..."
+          placeholder="Search by name, email, phone, or referrer..."
           (input)="onSearchInput($event)"
           aria-label="Search referrals"
         />
@@ -613,6 +615,7 @@ export class ReferralTrackerComponent implements OnInit, OnDestroy {
       filtered = filtered.filter(r =>
         `${r.firstName} ${r.lastName}`.toLowerCase().includes(term) ||
         r.email.toLowerCase().includes(term) ||
+        phoneMatchesSearch(r.phone, term) ||
         r.referredFrom.toLowerCase().includes(term)
       );
     }

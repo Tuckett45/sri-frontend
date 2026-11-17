@@ -59,6 +59,8 @@ interface SortState {
   direction: SortDirection;
 }
 
+import { phoneMatchesSearch } from '../../../utils/phone-search.util';
+
 @Component({
   selector: 'app-credentials-list',
   template: `
@@ -80,10 +82,10 @@ interface SortState {
           <input
             type="text"
             class="search-input"
-            placeholder="Search by name, email, or region..."
+            placeholder="Search by name, email, phone, or region..."
             [value]="filters.searchTerm"
             (input)="onSearchInput($event)"
-            aria-label="Search technicians by name, email, or region"
+            aria-label="Search technicians by name, email, phone, or region"
           />
         </div>
         <div class="filter-field">
@@ -1265,7 +1267,8 @@ export class CredentialsListComponent implements OnInit, OnDestroy {
         const fullName = `${summary.technician.firstName} ${summary.technician.lastName}`.toLowerCase();
         const email = summary.technician.email.toLowerCase();
         const region = (summary.technician.region || '').toLowerCase();
-        return fullName.includes(term) || email.includes(term) || region.includes(term);
+        return fullName.includes(term) || email.includes(term) || region.includes(term) ||
+          phoneMatchesSearch(summary.technician.phone, term);
       });
     }
 
